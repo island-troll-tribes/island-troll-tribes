@@ -5,7 +5,7 @@
 
 library ArrayLists
     
-    //! textmacro ARRAYLIST takes TYPE, NAME
+    //! textmacro ARRAYLIST takes TYPE, NAME, NULLVAL
     
     struct ArrayList$NAME$
 
@@ -31,14 +31,14 @@ library ArrayLists
             if i>=0 and i<=.itsIndex then
                 return .s[i]
             endif
-            return .s[0]
+            return $NULLVAL$
         endmethod
         
         method operator [] takes integer i returns $TYPE$
             if i>=0 and i<=.itsIndex then
                 return .s[i]
             endif
-            return .s[0]
+            return $NULLVAL$
         endmethod
         
         method operator []= takes integer i, $TYPE$ what returns nothing
@@ -98,6 +98,13 @@ library ArrayLists
                 set i=i+1
             endloop
         endmethod
+	
+		method pop takes nothing returns $TYPE$
+	  		local $TYPE$ v = .s[.itsIndex]
+	  		set .itsIndex = .itsIndex - 1
+	 		set .s[.itsIndex] = $NULLVAL$
+	  		return v
+	  	endmethod
     
         method removeAll takes $TYPE$ what returns nothing
             local integer i=0
@@ -132,11 +139,11 @@ library ArrayLists
     //! endtextmacro
 	
 	// NATIVE TYPES:
-	//! runtextmacro ARRAYLIST("string","String")
-	//! runtextmacro ARRAYLIST("integer","Integer")
-	//! runtextmacro ARRAYLIST("real","Real")
-	//! runtextmacro ARRAYLIST("handle","Handle")
-	//! runtextmacro ARRAYLIST("boolean","Boolean")
+	//! runtextmacro ARRAYLIST("string","String","\"\"")
+	//! runtextmacro ARRAYLIST("integer","Integer","0")
+	//! runtextmacro ARRAYLIST("real","Real","0.0")
+	//! runtextmacro ARRAYLIST("handle","Handle","null")
+	//! runtextmacro ARRAYLIST("boolean","Boolean","false")
 	
 	// FOR NON-NATIVE TYPES, CREATE YOUR OWN
     

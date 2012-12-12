@@ -2,7 +2,7 @@
 //===========================================================================
 //TESH.scrollpos=-1
 //TESH.alwaysfold=0
-library ittEvent
+library ittEvent requires MMD, PublicLibrary
 
     ////////////////////////////////////////////////////////////////
     /// ittEvent Structure
@@ -19,11 +19,26 @@ library ittEvent
         // Constructor
         public static method create takes string eventName, integer TYPE  returns ittEvent
             local ittEvent myself = ittEvent.allocate()
-            // UpdateValueInt (string name, player p, integer op, integer value)
-            call DefineValue (eventName, TYPE, GOAL_HIGH, SUGGEST_LEADERBOARD)
+	  		local integer  goal   = GOAL_HIGH
+	  		if TYPE == TYPE_STRING then
+				set goal = GOAL_NONE
+			endif
+            call DefineValue (eventName, TYPE, goal, SUGGEST_LEADERBOARD)
             set myself.isTracking = eventName
             set myself.itsType = TYPE
             return myself
+        endmethod
+
+        public method operator []= takes player pid, string value returns nothing
+	  		debug call DisplayTextToPlayer(pid, 0, 0, "Storing ITT MMD event "+.isTracking+" for "+GetPlayerRealName(pid))
+            if .itsType == TYPE_STRING then
+	  			debug call DisplayTextToPlayer(pid, 0, 0, "MMD event value: "+value)
+                call UpdateValueString(.isTracking, pid, value)
+            elseif .itsType == TYPE_INT then
+                call UpdateValueInt(.isTracking, pid, OP_ADD, S2I(value))
+            elseif .itsType == TYPE_REAL then
+                call UpdateValueReal(.isTracking, pid, OP_ADD, S2R(value))
+            endif
         endmethod
         
         // Update int value
@@ -46,4 +61,5 @@ library ittEvent
         
     endstruct
     
-endlibrary//===========================================================================
+endlibrary
+//===========================================================================

@@ -6,13 +6,6 @@
 
 library SmokeHouse {
     
-    public {
-        constant integer SPELL_SMOKE_MEAT = SPELL_SMOKE_MEAT;
-        constant integer ITEM_COOKED_MEAT = ITEM_COOKED_MEAT;
-        constant integer ITEM_SMOKED_MEAT = ITEM_SMOKED_MEAT;
-        constant integer ITEM_DISEASED_MEAT = ITEM_DISEASED_MEAT;
-    }
-    
     private {
         constant real COOKED_TO_SMOKED_EFFICIENCY = 0.75;
         constant real DISEASED_TO_SMOKED_EFFICIENCY = 0.49;

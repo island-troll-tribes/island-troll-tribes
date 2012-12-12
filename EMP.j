@@ -1,9 +1,3 @@
-
-//
-// o01J
-//===========================================================================
-//TESH.scrollpos=17
-//TESH.alwaysfold=0
 function Trig_EMP_Conditions takes nothing returns boolean
     return GetSpellAbilityId() == 'A06N'
 endfunction

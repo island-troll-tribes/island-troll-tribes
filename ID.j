@@ -1,7 +1,5 @@
 
 //===========================================================================
-//TESH.scrollpos=0
-//TESH.alwaysfold=0
 //! zinc
 
 //#########################################################
@@ -23,446 +21,446 @@
 
 library ID {
 
-    public { 
-        
-        //#####################################################
-        // Classes
-        //#####################################################
-        
-        constant integer UNIT_HUNTER                  = 'O00A';
-        constant integer UNIT_TRACKER                 = 'O00Y';
-        constant integer UNIT_WARRIOR                 = 'O00O';
-        constant integer UNIT_JUGGERNAUT              = 'O016';
-        
-        constant integer UNIT_BEAST_MASTER            = 'O00F';
-        constant integer UNIT_TRUE_FORM               = 'O00Z';
-        constant integer UNIT_CHICKEN_FORM            = 'O017';
-        constant integer UNIT_ULTIMATE_FORM           = 'O010';
-        
-        constant integer UNIT_MAGE                    = 'O00D';
-        constant integer UNIT_ELEMENTALIST            = 'O00U';
-        constant integer UNIT_HYPNOTIST               = 'O00R';
-        constant integer UNIT_DEMENTIA_MASTER         = 'O014';
-        
-        constant integer UNIT_PRIEST                  = 'O00G';
-        constant integer UNIT_BOOSTER                 = 'O00P';
-        constant integer UNIT_MASTER_HEALER           = 'O00S';
-        constant integer UNIT_SAGE                    = 'O011';
-        
-        constant integer UNIT_THIEF                   = 'O00E';
-        constant integer UNIT_ESCAPE_ARTIST           = 'O00T';
-        constant integer UNIT_CONTORTIONIST           = 'O00Q';
-        constant integer UNIT_ASSASSIN                = 'O012';
-        
-        constant integer UNIT_SCOUT                   = 'O00C';
-        constant integer UNIT_OBSERVER                = 'O00W';
-        constant integer UNIT_RADAR_SCOUT             = 'O00V';
-        constant integer UNIT_SPY                     = 'O015';
-        
-        constant integer UNIT_GATHERER                = 'O00B';
-        constant integer UNIT_RADAR_GATHERER          = 'O00N';
-        constant integer UNIT_HERB_MASTER             = 'O00X';
-        constant integer UNIT_OMNIGATHERER            = 'O013';
+	public { 
+		
+		//#####################################################
+		// Classes
+		//#####################################################
+		
+		constant integer UNIT_HUNTER                  = 'O00A';
+		constant integer UNIT_TRACKER                 = 'O00Y';
+		constant integer UNIT_WARRIOR                 = 'O00O';
+		constant integer UNIT_JUGGERNAUT              = 'O016';
+		
+		constant integer UNIT_BEAST_MASTER            = 'O00F';
+		constant integer UNIT_TRUE_FORM               = 'O00Z';
+		constant integer UNIT_CHICKEN_FORM            = 'O017';
+		constant integer UNIT_ULTIMATE_FORM           = 'O010';
+		
+		constant integer UNIT_MAGE                    = 'O00D';
+		constant integer UNIT_ELEMENTALIST            = 'O00U';
+		constant integer UNIT_HYPNOTIST               = 'O00R';
+		constant integer UNIT_DEMENTIA_MASTER         = 'O014';
+		
+		constant integer UNIT_PRIEST                  = 'O00G';
+		constant integer UNIT_BOOSTER                 = 'O00P';
+		constant integer UNIT_MASTER_HEALER           = 'O00S';
+		constant integer UNIT_SAGE                    = 'O011';
+		
+		constant integer UNIT_THIEF                   = 'O00E';
+		constant integer UNIT_ESCAPE_ARTIST           = 'O00T';
+		constant integer UNIT_CONTORTIONIST           = 'O00Q';
+		constant integer UNIT_ASSASSIN                = 'O012';
+		
+		constant integer UNIT_SCOUT                   = 'O00C';
+		constant integer UNIT_OBSERVER                = 'O00W';
+		constant integer UNIT_RADAR_SCOUT             = 'O00V';
+		constant integer UNIT_SPY                     = 'O015';
+		
+		constant integer UNIT_GATHERER                = 'O00B';
+		constant integer UNIT_RADAR_GATHERER          = 'O00N';
+		constant integer UNIT_HERB_MASTER             = 'O00X';
+		constant integer UNIT_OMNIGATHERER            = 'O013';
 
-        constant integer UNIT_ISLAND_TROLL            = 'O000';
-        constant integer UNIT_DRUNKEN_TROLL           = 'O01N';
-        constant integer UNIT_HEAD_HUNTER             = 'O01K';
-        constant integer UNIT_ARCHER_INTREPIDE        = 'O01M';
-        constant integer UNIT_MIRROR_TROLL            = 'O01A';
-        constant integer UNIT_MIRROR_TROLL_CLONE      = 'O01B';
-        constant integer UNIT_NECROMANCER             = 'O01D';
-        constant integer UNIT_SHAMAN                  = 'O01F';
-        constant integer UNIT_SHADOW_ARCHER           = 'O01L';
-        constant integer UNIT_SHADOW_HUNTER           = 'Shad';
-        constant integer UNIT_SPIRIT_WALKER           = 'O01Q';
-        constant integer UNIT_TRACKER_TOURNY_2011     = 'O01H';
-        constant integer UNIT_TRICKSTER               = 'O019';
-        constant integer UNIT_TROLL_BRAWLER           = 'O01O';
-        constant integer UNIT_TROLL_BREWMASTER        = 'O01P';
-        constant integer UNIT_TROLL_CONARTIST         = 'O01C';
-        constant integer UNIT_TROLL_MAGE_ALT          = 'O01I';
-        constant integer UNIT_TROLL_WITCH_DOCTOR      = 'O01E';
-        constant integer UNIT_EA_TOURNY_2011          = 'O01G';
-        
-        
-        //#####################################################
-        // Units
-        //#####################################################
-        
-        // Bosses
-        constant integer UNIT_ALIGATOR_MAN            = 'n011';
-        constant integer UNIT_ANCIENT_HYDRA           = 'n018';
-        constant integer UNIT_DISCO_DUCK              = 'n016';
-        constant integer UNIT_LESSER_HYDRA            = 'n01A';
-        constant integer UNIT_MAGENTA_FISH            = 'n01C';
-        constant integer UNIT_MAMMOTH                 = 'n005';
-        constant integer UNIT_ONE                     = 'O00M';
-        constant integer UNIT_RAPID_TURTLE            = 'n017';
+		constant integer UNIT_ISLAND_TROLL            = 'O000';
+		constant integer UNIT_DRUNKEN_TROLL           = 'O01N';
+		constant integer UNIT_HEAD_HUNTER             = 'O01K';
+		constant integer UNIT_ARCHER_INTREPIDE        = 'O01M';
+		constant integer UNIT_MIRROR_TROLL            = 'O01A';
+		constant integer UNIT_MIRROR_TROLL_CLONE      = 'O01B';
+		constant integer UNIT_NECROMANCER             = 'O01D';
+		constant integer UNIT_SHAMAN                  = 'O01F';
+		constant integer UNIT_SHADOW_ARCHER           = 'O01L';
+		constant integer UNIT_SHADOW_HUNTER           = 'Shad';
+		constant integer UNIT_SPIRIT_WALKER           = 'O01Q';
+		constant integer UNIT_TRACKER_TOURNY_2011     = 'O01H';
+		constant integer UNIT_TRICKSTER               = 'O019';
+		constant integer UNIT_TROLL_BRAWLER           = 'O01O';
+		constant integer UNIT_TROLL_BREWMASTER        = 'O01P';
+		constant integer UNIT_TROLL_CONARTIST         = 'O01C';
+		constant integer UNIT_TROLL_MAGE_ALT          = 'O01I';
+		constant integer UNIT_TROLL_WITCH_DOCTOR      = 'O01E';
+		constant integer UNIT_EA_TOURNY_2011          = 'O01G';
+		
+		
+		//#####################################################
+		// Units
+		//#####################################################
+		
+		// Bosses
+		constant integer UNIT_ALIGATOR_MAN            = 'n011';
+		constant integer UNIT_ANCIENT_HYDRA           = 'n018';
+		constant integer UNIT_DISCO_DUCK              = 'n016';
+		constant integer UNIT_LESSER_HYDRA            = 'n01A';
+		constant integer UNIT_MAGENTA_FISH            = 'n01C';
+		constant integer UNIT_MAMMOTH                 = 'n005';
+		constant integer UNIT_ONE                     = 'O00M';
+		constant integer UNIT_RAPID_TURTLE            = 'n017';
 
-        // Creatures
-        constant integer UNIT_ADULT_ELK               = 'n00F';
-        constant integer UNIT_ADULT_JUNGLE_BEAR       = 'n00D';
-        constant integer UNIT_ADULT_JUNGLE_WOLF       = 'n00E';
-        constant integer UNIT_ALPHA_HAWK              = 'n00G';
-        constant integer UNIT_BRONZE_DRAGON           = 'n00W';
-        constant integer UNIT_BRONZE_DRAGON_HATCHLING = 'n00V';
-        constant integer UNIT_BEAR_CUB                = 'n00A';
-        constant integer UNIT_ELDER_PANTHER           = 'n01B';
-        constant integer UNIT_ELK                     = 'n002';
-        constant integer UNIT_ELK_ADOLESCENT          = 'n00C';
-        constant integer UNIT_FAWN                    = 'n009';
-        constant integer UNIT_FISH                    = 'n006';
-        constant integer UNIT_FOREST_DRAGON           = 'n00Q';
-        constant integer UNIT_FOREST_DRAGON_HATCHLING = 'n00P';
-        constant integer UNIT_GREATER_BRONZE_DRAGON   = 'n00X';
-        constant integer UNIT_GREATER_FOREST_DRAGON   = 'n00R';
-        constant integer UNIT_GREATER_NETHER_DRAGON   = 'n00O';
-        constant integer UNIT_GREATER_RED_DRAGON      = 'n00U';
-        constant integer UNIT_GREEN_FISH              = 'n008';
-        constant integer UNIT_HAWK                    = 'n00I';
-        constant integer UNIT_HAWK_ADOLESCENT         = 'n007';
-        constant integer UNIT_HAWK_HATCHLING          = 'n00H';
-        constant integer UNIT_JUNGLE_BEAR             = 'n000';
-        constant integer UNIT_JUNGLE_WOLF             = 'n001';
-        constant integer UNIT_MAMMOTH_BABY            = 'n015';
-        constant integer UNIT_NETHER_DRAGON_HATCHLING = 'n00J';
-        constant integer UNIT_PANTHER                 = 'n010';
-        constant integer UNIT_RED_DRAGON_HATCHLING    = 'n00S';
-        constant integer UNIT_SNAKE                   = 'n012';
-        constant integer UNIT_WOLF_PUP                = 'n00B';
-        
-        // Buildings
-        constant integer UNIT_ARMORY                  = 'o003';
-        constant integer UNIT_BUILDING_TREE           = 'h005';
-        constant integer UNIT_FIRE                    = 'h000';
-        constant integer UNIT_DEFENSE_WARD            = 'h035';
-        constant integer UNIT_ENSNARE_TRAP            = 'o006';
-        constant integer UNIT_HATCHERY                = 'o00L';
-        constant integer UNIT_MAGE_FIRE               = 'h007';
-        constant integer UNIT_MAGE_FIRE_SUMMONED      = 'h008';
-        constant integer UNIT_POT                     = 'o00K';
-        constant integer UNIT_MUD_HUT                 = 'o002';
-        constant integer UNIT_OMNITOWER               = 'h02F';
-        constant integer UNIT_SMOKE_HOUSE             = 'h003';
-        constant integer UNIT_SPIRIT_WARD             = 'h006';
-        constant integer UNIT_STORAGE_HUT             = 'h004';
-        constant integer UNIT_TANNERY                 = 'o004';
-        constant integer UNIT_TELEPORTATION_BEACON    = 'h02E';
-        constant integer UNIT_TENT                    = 'n004';
-        constant integer UNIT_TROLL_BURROW            = 'o01J';
-        constant integer UNIT_TROLL_HUT               = 'o001';
-        constant integer UNIT_TROLL_TOTEM             = 'o00H';
-        constant integer UNIT_TROLL_TRANSPORT_SHIP    = 'etrs';
-        constant integer UNIT_WITCH_DOCTORS_HIT       = 'o005';
-        constant integer UNIT_WORKSHOP                = 'o00I';
+		// Creatures
+		constant integer UNIT_ADULT_ELK               = 'n00F';
+		constant integer UNIT_ADULT_JUNGLE_BEAR       = 'n00D';
+		constant integer UNIT_ADULT_JUNGLE_WOLF       = 'n00E';
+		constant integer UNIT_ALPHA_HAWK              = 'n00G';
+		constant integer UNIT_BRONZE_DRAGON           = 'n00W';
+		constant integer UNIT_BRONZE_DRAGON_HATCHLING = 'n00V';
+		constant integer UNIT_BEAR_CUB                = 'n00A';
+		constant integer UNIT_ELDER_PANTHER           = 'n01B';
+		constant integer UNIT_ELK                     = 'n002';
+		constant integer UNIT_ELK_ADOLESCENT          = 'n00C';
+		constant integer UNIT_FAWN                    = 'n009';
+		constant integer UNIT_FISH                    = 'n006';
+		constant integer UNIT_FOREST_DRAGON           = 'n00Q';
+		constant integer UNIT_FOREST_DRAGON_HATCHLING = 'n00P';
+		constant integer UNIT_GREATER_BRONZE_DRAGON   = 'n00X';
+		constant integer UNIT_GREATER_FOREST_DRAGON   = 'n00R';
+		constant integer UNIT_GREATER_NETHER_DRAGON   = 'n00O';
+		constant integer UNIT_GREATER_RED_DRAGON      = 'n00U';
+		constant integer UNIT_GREEN_FISH              = 'n008';
+		constant integer UNIT_HAWK                    = 'n00I';
+		constant integer UNIT_HAWK_ADOLESCENT         = 'n007';
+		constant integer UNIT_HAWK_HATCHLING          = 'n00H';
+		constant integer UNIT_JUNGLE_BEAR             = 'n000';
+		constant integer UNIT_JUNGLE_WOLF             = 'n001';
+		constant integer UNIT_MAMMOTH_BABY            = 'n015';
+		constant integer UNIT_NETHER_DRAGON_HATCHLING = 'n00J';
+		constant integer UNIT_PANTHER                 = 'n010';
+		constant integer UNIT_RED_DRAGON_HATCHLING    = 'n00S';
+		constant integer UNIT_SNAKE                   = 'n012';
+		constant integer UNIT_WOLF_PUP                = 'n00B';
+		
+		// Buildings
+		constant integer UNIT_ARMORY                  = 'o003';
+		constant integer UNIT_BUILDING_TREE           = 'h005';
+		constant integer UNIT_FIRE                    = 'h000';
+		constant integer UNIT_DEFENSE_WARD            = 'h035';
+		constant integer UNIT_ENSNARE_TRAP            = 'o006';
+		constant integer UNIT_HATCHERY                = 'o00L';
+		constant integer UNIT_MAGE_FIRE               = 'h007';
+		constant integer UNIT_MAGE_FIRE_SUMMONED      = 'h008';
+		constant integer UNIT_POT                     = 'o00K';
+		constant integer UNIT_MUD_HUT                 = 'o002';
+		constant integer UNIT_OMNITOWER               = 'h02F';
+		constant integer UNIT_SMOKE_HOUSE             = 'h003';
+		constant integer UNIT_SPIRIT_WARD             = 'h006';
+		constant integer UNIT_STORAGE_HUT             = 'h004';
+		constant integer UNIT_TANNERY                 = 'o004';
+		constant integer UNIT_TELEPORTATION_BEACON    = 'h02E';
+		constant integer UNIT_TENT                    = 'n004';
+		constant integer UNIT_TROLL_BURROW            = 'o01J';
+		constant integer UNIT_TROLL_HUT               = 'o001';
+		constant integer UNIT_TROLL_TOTEM             = 'o00H';
+		constant integer UNIT_TROLL_TRANSPORT_SHIP    = 'etrs';
+		constant integer UNIT_WITCH_DOCTORS_HIT       = 'o005';
+		constant integer UNIT_WORKSHOP                = 'o00I';
 
-        // Bushes
-        constant integer UNIT_BLUE_HERB_BUSH          = 'h01J';
-        constant integer UNIT_HAISETSU_BUSH           = 'h025';
-        constant integer UNIT_HIDDEN_STASH            = 'h01F';
-        constant integer UNIT_MUSHROOM_COLONY         = 'h024';
-        constant integer UNIT_ORANGE_HERB_BUSH        = 'h01K';
-        constant integer UNIT_PURPLE_HERB_BUSH        = 'h026';
-        constant integer UNIT_SCOUTS_BUSH             = 'h02J';
-        constant integer UNIT_THIEFS_BUSH             = 'h01G';
-        constant integer UNIT_THISTLE_SHRUB           = 'h01H';
-        constant integer UNIT_WATER_HERB_BUSH         = 'h01I';
-        constant integer UNIT_YELLOW_HERB_BUSH        = 'h01L';
+		// Bushes
+		constant integer UNIT_BLUE_HERB_BUSH          = 'h01J';
+		constant integer UNIT_HAISETSU_BUSH           = 'h025';
+		constant integer UNIT_HIDDEN_STASH            = 'h01F';
+		constant integer UNIT_MUSHROOM_COLONY         = 'h024';
+		constant integer UNIT_ORANGE_HERB_BUSH        = 'h01K';
+		constant integer UNIT_PURPLE_HERB_BUSH        = 'h026';
+		constant integer UNIT_SCOUTS_BUSH             = 'h02J';
+		constant integer UNIT_THIEFS_BUSH             = 'h01G';
+		constant integer UNIT_THISTLE_SHRUB           = 'h01H';
+		constant integer UNIT_WATER_HERB_BUSH         = 'h01I';
+		constant integer UNIT_YELLOW_HERB_BUSH        = 'h01L';
 
-        // Merchants and Map Buildings
-        constant integer UNIT_CRAFT_MASTER            = 'n00N';
-        constant integer UNIT_OMINOUS_ALTAR           = 'n019';
-        constant integer UNIT_TRADING_SHIP_1          = 'h001';
-        constant integer UNIT_TRADING_SHIP_2          = 'o008';
-        constant integer UNIT_TRADING_SHIP_3          = 'u000';
-        constant integer UNIT_TRADING_SHIP_4          = 'h002';
-        constant integer UNIT_TRADING_SHIP_5          = 'o007';
-        constant integer UNIT_TRADING_SHIP_6          = 'e000';
-        constant integer UNIT_TRADING_SHIP_7          = 'h02I';
-        constant integer UNIT_TRADING_SHIP_8          = 'h02L';
-        constant integer UNIT_TROLL_MERCHANT          = 'n013';
+		// Merchants and Map Buildings
+		constant integer UNIT_CRAFT_MASTER            = 'n00N';
+		constant integer UNIT_OMINOUS_ALTAR           = 'n019';
+		constant integer UNIT_TRADING_SHIP_1          = 'h001';
+		constant integer UNIT_TRADING_SHIP_2          = 'o008';
+		constant integer UNIT_TRADING_SHIP_3          = 'u000';
+		constant integer UNIT_TRADING_SHIP_4          = 'h002';
+		constant integer UNIT_TRADING_SHIP_5          = 'o007';
+		constant integer UNIT_TRADING_SHIP_6          = 'e000';
+		constant integer UNIT_TRADING_SHIP_7          = 'h02I';
+		constant integer UNIT_TRADING_SHIP_8          = 'h02L';
+		constant integer UNIT_TROLL_MERCHANT          = 'n013';
 
-        // Spell Related Units
-        constant integer UNIT_BLUR_IMAGE              = 'n014';
-        constant integer UNIT_BEE                     = 'n00M';
-        constant integer UNIT_BEE_HIVE                = 'n00L';
-        constant integer UNIT_BEE_HIVE_SUMMONED       = 'n00Z';
-        constant integer UNIT_DISEASE_CLOUD           = 'uplg';
-        constant integer UNIT_DUMMY                   = 'h02U';
-        constant integer UNIT_AMHS_DUMMY              = 'h02T';
-        constant integer UNIT_UNUSED_DUMMY            = 'h02S';
-        constant integer UNIT_LIVING_CLAY             = 'nglm';
-        constant integer UNIT_LOCUST                  = 'u003';
-        constant integer UNIT_LOCUST_ALT              = 'u002';
-        constant integer UNIT_LOCUST_DARK_NODE        = 'u007';
-        constant integer UNIT_LOCUST_FIRE_LORD        = 'u00B';
-        constant integer UNIT_LOCUST_GHOST            = 'u00D';
-        constant integer UNIT_LOCUST_INNER_FIRE       = 'u004';
-        constant integer UNIT_LOCUST_KA               = 'u009';
-        constant integer UNIT_LOCUST_LEZ              = 'u008';
-        constant integer UNIT_LOCUST_LIGHT_NODE       = 'u006';
-        constant integer UNIT_LOCUST_NEL              = 'u00A';
-        constant integer UNIT_LOCUST_OPPOSING_PANTHER = 'u00E';
-        constant integer UNIT_LOCUST_POOP             = 'u005';
-        constant integer UNIT_LOCUST_SKELETON         = 'u001';
-        constant integer UNIT_LOCUST_WATER_LORD       = 'u00C';
-        constant integer UNIT_MASTER_CASTER           = 'o009';
-        constant ingeter UNIT_TRADE_ZEPPELIN          = 'u00F';
-        constant integer UNIT_UBER_HIVE               = 'n00Y';
+		// Spell Related Units
+		constant integer UNIT_BLUR_IMAGE              = 'n014';
+		constant integer UNIT_BEE                     = 'n00M';
+		constant integer UNIT_BEE_HIVE                = 'n00L';
+		constant integer UNIT_BEE_HIVE_SUMMONED       = 'n00Z';
+		constant integer UNIT_DISEASE_CLOUD           = 'uplg';
+		constant integer UNIT_DUMMY                   = 'h02U';
+		constant integer UNIT_AMHS_DUMMY              = 'h02T';
+		constant integer UNIT_UNUSED_DUMMY            = 'h02S';
+		constant integer UNIT_LIVING_CLAY             = 'nglm';
+		constant integer UNIT_LOCUST                  = 'u003';
+		constant integer UNIT_LOCUST_ALT              = 'u002';
+		constant integer UNIT_LOCUST_DARK_NODE        = 'u007';
+		constant integer UNIT_LOCUST_FIRE_LORD        = 'u00B';
+		constant integer UNIT_LOCUST_GHOST            = 'u00D';
+		constant integer UNIT_LOCUST_INNER_FIRE       = 'u004';
+		constant integer UNIT_LOCUST_KA               = 'u009';
+		constant integer UNIT_LOCUST_LEZ              = 'u008';
+		constant integer UNIT_LOCUST_LIGHT_NODE       = 'u006';
+		constant integer UNIT_LOCUST_NEL              = 'u00A';
+		constant integer UNIT_LOCUST_OPPOSING_PANTHER = 'u00E';
+		constant integer UNIT_LOCUST_POOP             = 'u005';
+		constant integer UNIT_LOCUST_SKELETON         = 'u001';
+		constant integer UNIT_LOCUST_WATER_LORD       = 'u00C';
+		constant integer UNIT_MASTER_CASTER           = 'o009';
+		constant integer UNIT_TRADE_ZEPPELIN          = 'u00F';
+		constant integer UNIT_UBER_HIVE               = 'n00Y';
 
-        // Unclassified
-        constant integer UNIT_CHICKEN                 = 'nech';
-        constant integer UNIT_FARM                    = 'hhou';
-        constant integer UNIT_FOOTMAN                 = 'hfoo';
-        constant integer UNIT_HERO_PICKER             = 'O00J';
-        constant integer UNIT_LIVING_CLAY_UNUSED      = 'oeye';
-        constant integer UNIT_MEAT                    = 'n003';
-        constant integer UNIT_PEASANT                 = 'hpea';
-        constant integer UNIT_PEON                    = 'opeo';
-        constant integer UNIT_SMOKED_MEAT             = 'h03G';
-        constant integer UNIT_SOUL_REFLECTION_1       = 'h038';
-        constant integer UNIT_SOUL_REFLECTION_2       = 'h039';
-        constant integer UNIT_SOUL_REFLECTION_3       = 'h03A';
-        constant integer UNIT_TEST_CLOAK              = 'o018';
-        constant integer UNIT_TRADE_ZEPPELIN_ALT      = 'n01D';
-        
-        
-        //#####################################################
-        // Spells
-        //#####################################################
-        
-        // Pet spells
-        constant integer SPELL_PET_ATTACK             = 'A01B';
-        constant integer SPELL_PET_BRING_ITEMS        = 'A06R';
-        constant integer SPELL_PET_DROP_ITEMS         = 'A03R';
-        constant integer SPELL_PET_FOLLOW             = 'A01C';
-        constant integer SPELL_PET_GO_TO_HATCHERY     = 'A03O';
-        constant integer SPELL_PET_RELEASE            = 'A04D';
-        constant integer SPELL_PET_SCOUT              = 'A03L';
-        constant integer SPELL_PET_SLEEP              = 'A01E';
-        constant integer SPELL_PET_STAY               = 'A01D';
-        constant integer SPELL_PET_TAME               = 'A01A';
+		// Unclassified
+		constant integer UNIT_CHICKEN                 = 'nech';
+		constant integer UNIT_FARM                    = 'hhou';
+		constant integer UNIT_FOOTMAN                 = 'hfoo';
+		constant integer UNIT_HERO_PICKER             = 'O00J';
+		constant integer UNIT_LIVING_CLAY_UNUSED      = 'oeye';
+		constant integer UNIT_MEAT                    = 'n003';
+		constant integer UNIT_PEASANT                 = 'hpea';
+		constant integer UNIT_PEON                    = 'opeo';
+		constant integer UNIT_SMOKED_MEAT             = 'h03G';
+		constant integer UNIT_SOUL_REFLECTION_1       = 'h038';
+		constant integer UNIT_SOUL_REFLECTION_2       = 'h039';
+		constant integer UNIT_SOUL_REFLECTION_3       = 'h03A';
+		constant integer UNIT_TEST_CLOAK              = 'o018';
+		constant integer UNIT_TRADE_ZEPPELIN_ALT      = 'n01D';
+		
+		
+		//#####################################################
+		// Spells
+		//#####################################################
+		
+		// Pet spells
+		constant integer SPELL_PET_ATTACK             = 'A01B';
+		constant integer SPELL_PET_BRING_ITEMS        = 'A06R';
+		constant integer SPELL_PET_DROP_ITEMS         = 'A03R';
+		constant integer SPELL_PET_FOLLOW             = 'A01C';
+		constant integer SPELL_PET_GO_TO_HATCHERY     = 'A03O';
+		constant integer SPELL_PET_RELEASE            = 'A04D';
+		constant integer SPELL_PET_SCOUT              = 'A03L';
+		constant integer SPELL_PET_SLEEP              = 'A01E';
+		constant integer SPELL_PET_STAY               = 'A01D';
+		constant integer SPELL_PET_TAME               = 'A01A';
 
-        // Building Spells
+		// Building Spells
         constant integer SPELL_SMOKE_MEAT             = 'A0C8';
-        
-        
-        //#####################################################
-        // Items
-        //#####################################################
+		
+		
+		//#####################################################
+		// Items
+		//#####################################################
 
-        // Treasure
-        constant integer ITEM_ANCIENT_BOW             = 'I04G';
-        constant integer ITEM_BOW_BLOOD_GOD           = 'I04I';
-        constant integer ITEM_CLAY_EXPLOSION          = 'I03E';
-        constant integer ITEM_DD_PINION_FIRE          = 'I03W';
-        constant integer ITEM_DD_PINION_PAIN          = 'I03X';
-        constant integer ITEM_DD_PINION_SHADOW        = 'I03Y';
-        constant integer ITEM_DUSTY_OLD_BOW           = 'I04F';
-        constant integer ITEM_GLOWING_ANCIENT_BOW     = 'I04H';
-        constant integer ITEM_HORN_MAMMOTH            = 'I01E';
-        constant integer ITEM_HYDRA_CLAWS             = 'I049';
-        constant integer ITEM_HYDRA_SCALE             = 'I047';
-        constant integer ITEM_HYDRAAC_FINS            = 'I048';
-        constant integer ITEM_MED_BEAST_MASTER        = 'I03Q';
-        constant integer ITEM_MED_PRIEST              = 'I03R';
-        constant integer ITEM_MED_SCOUT               = 'I03S';
-        constant integer ITEM_MED_GATHERER            = 'I03T';
-        constant integer ITEM_MED_MAGE                = 'I03U';
-        constant integer ITEM_MED_THIEF               = 'I03P';
-        constant integer ITEM_MED_HUNTER              = 'I03O';
-        constant integer ITEM_MED_HEAD_HUNER          = 'I04U';
-        constant integer ITEM_THIEF_MED               = 'I023';
+		// Treasure
+		constant integer ITEM_ANCIENT_BOW             = 'I04G';
+		constant integer ITEM_BOW_BLOOD_GOD           = 'I04I';
+		constant integer ITEM_CLAY_EXPLOSION          = 'I03E';
+		constant integer ITEM_DD_PINION_FIRE          = 'I03W';
+		constant integer ITEM_DD_PINION_PAIN          = 'I03X';
+		constant integer ITEM_DD_PINION_SHADOW        = 'I03Y';
+		constant integer ITEM_DUSTY_OLD_BOW           = 'I04F';
+		constant integer ITEM_GLOWING_ANCIENT_BOW     = 'I04H';
+		constant integer ITEM_HORN_MAMMOTH            = 'I01E';
+		constant integer ITEM_HYDRA_CLAWS             = 'I049';
+		constant integer ITEM_HYDRA_SCALE             = 'I047';
+		constant integer ITEM_HYDRAAC_FINS            = 'I048';
+		constant integer ITEM_MED_BEAST_MASTER        = 'I03Q';
+		constant integer ITEM_MED_PRIEST              = 'I03R';
+		constant integer ITEM_MED_SCOUT               = 'I03S';
+		constant integer ITEM_MED_GATHERER            = 'I03T';
+		constant integer ITEM_MED_MAGE                = 'I03U';
+		constant integer ITEM_MED_THIEF               = 'I03P';
+		constant integer ITEM_MED_HUNTER              = 'I03O';
+		constant integer ITEM_MED_HEAD_HUNER          = 'I04U';
+		constant integer ITEM_THIEF_MED               = 'I023';
 
-        // Materials
-        constant integer ITEM_BLUE_HERB               = 'I01X';
-        constant integer ITEM_BONE                    = 'I007';
-        constant integer ITEM_BUTSU                   = 'I02B';
-        constant integer ITEM_CLAY_BALL               = 'I005';
-        constant integer ITEM_ELK_HIDE                = 'I009';
-        constant integer ITEM_FLINT                   = 'I002';
-        constant integer ITEM_HARDEN_SCALES           = 'I04A';
-        constant integer ITEM_HAWK_EGG                = 'I01M';
-        constant integer ITEM_JUNGLE_WOLF_HIDE        = 'I00A';
-        constant integer ITEM_JUNGLE_BEAR_HIDE        = 'I00B';
-        constant integer ITEM_MAGIC                   = 'I03V';
-        constant integer ITEM_MANA_CRYSTAL            = 'I000';
-        constant integer ITEM_MUSHROOM                = 'I00E';
-        constant integer ITEM_ORANGE_HERB             = 'I01Y';
-        constant integer ITEM_PURPLE_HERB             = 'I02C';
-        constant integer ITEM_RIVER_STEM              = 'I01W';
-        constant integer ITEM_RIVER_ROOT              = 'I01V';
-        constant integer ITEM_STICK                   = 'I004';
-        constant integer ITEM_STONE                   = 'I001';
-        constant integer ITEM_TINDER                  = 'I006';
-        constant integer ITEM_YELLOW_HERB             = 'I01Z';
-        
-        // Potions
-        constant integer ITEM_ACID_BOMB               = 'I04K';
-        constant integer ITEM_ANTI_MAGIC_POTION       = 'I02M';
-        constant integer ITEM_ANABOLIC_POTION         = 'I02H';
-        constant integer ITEM_CURE_ALL                = 'I03G';
-        constant integer ITEM_DISEASE_POTION          = 'I02Y';
-        constant integer ITEM_DRUNKS_POTION           = 'I02J';
-        constant integer ITEM_ELEMENTAL_SHIELD_POTION = 'I02I';
-        constant integer ITEM_ESSENCE_BEES            = 'I02V';
-        constant integer ITEM_FERVER_POTION           = 'I02L';
-        constant integer ITEM_HEALING_POTION_I        = 'I02D';
-        constant integer ITEM_HEALING_POTION_II       = 'I02E';
-        constant integer ITEM_HEALING_POTION_III      = 'I02F';
-        constant integer ITEM_HEALING_POTION_IV       = 'I02G';
-        constant integer ITEM_MANA_POTION_I           = 'I02N';
-        constant integer ITEM_MANA_POTION_II          = 'I02O';
-        constant integer ITEM_MANA_POTION_III         = 'I02P';
-        constant integer ITEM_MANA_POTION_IV          = 'I02Q';
-        constant integer ITEM_NAPALM                  = 'I04N';
-        constant integer ITEM_NETHER_POTION           = 'I02K';
-        constant integer ITEM_POTION_TWIN_ISLANDS     = 'I02U';
+		// Materials
+		constant integer ITEM_BLUE_HERB               = 'I01X';
+		constant integer ITEM_BONE                    = 'I007';
+		constant integer ITEM_BUTSU                   = 'I02B';
+		constant integer ITEM_CLAY_BALL               = 'I005';
+		constant integer ITEM_ELK_HIDE                = 'I009';
+		constant integer ITEM_FLINT                   = 'I002';
+		constant integer ITEM_HARDEN_SCALES           = 'I04A';
+		constant integer ITEM_HAWK_EGG                = 'I01M';
+		constant integer ITEM_JUNGLE_WOLF_HIDE        = 'I00A';
+		constant integer ITEM_JUNGLE_BEAR_HIDE        = 'I00B';
+		constant integer ITEM_MAGIC                   = 'I03V';
+		constant integer ITEM_MANA_CRYSTAL            = 'I000';
+		constant integer ITEM_MUSHROOM                = 'I00E';
+		constant integer ITEM_ORANGE_HERB             = 'I01Y';
+		constant integer ITEM_PURPLE_HERB             = 'I02C';
+		constant integer ITEM_RIVER_STEM              = 'I01W';
+		constant integer ITEM_RIVER_ROOT              = 'I01V';
+		constant integer ITEM_STICK                   = 'I004';
+		constant integer ITEM_STONE                   = 'I001';
+		constant integer ITEM_TINDER                  = 'I006';
+		constant integer ITEM_YELLOW_HERB             = 'I01Z';
+		
+		// Potions
+		constant integer ITEM_ACID_BOMB               = 'I04K';
+		constant integer ITEM_ANTI_MAGIC_POTION       = 'I02M';
+		constant integer ITEM_ANABOLIC_POTION         = 'I02H';
+		constant integer ITEM_CURE_ALL                = 'I03G';
+		constant integer ITEM_DISEASE_POTION          = 'I02Y';
+		constant integer ITEM_DRUNKS_POTION           = 'I02J';
+		constant integer ITEM_ELEMENTAL_SHIELD_POTION = 'I02I';
+		constant integer ITEM_ESSENCE_BEES            = 'I02V';
+		constant integer ITEM_FERVER_POTION           = 'I02L';
+		constant integer ITEM_HEALING_POTION_I        = 'I02D';
+		constant integer ITEM_HEALING_POTION_II       = 'I02E';
+		constant integer ITEM_HEALING_POTION_III      = 'I02F';
+		constant integer ITEM_HEALING_POTION_IV       = 'I02G';
+		constant integer ITEM_MANA_POTION_I           = 'I02N';
+		constant integer ITEM_MANA_POTION_II          = 'I02O';
+		constant integer ITEM_MANA_POTION_III         = 'I02P';
+		constant integer ITEM_MANA_POTION_IV          = 'I02Q';
+		constant integer ITEM_NAPALM                  = 'I04N';
+		constant integer ITEM_NETHER_POTION           = 'I02K';
+		constant integer ITEM_POTION_TWIN_ISLANDS     = 'I02U';
 
-        // Other Mixing Pot Items
-        constant integer ITEM_DARK_ROCK               = 'I02R';
-        constant integer ITEM_GEM_OF_KNOWLEDGE        = 'I03F';
-        constant integer ITEM_SPIRIT_WATER            = 'I027';
-        constant integer ITEM_SPIRIT_WIND             = 'I026';
-        
-        // Edibles
-        constant integer ITEM_ACORN                   = 'I021';
+		// Other Mixing Pot Items
+		constant integer ITEM_DARK_ROCK               = 'I02R';
+		constant integer ITEM_GEM_OF_KNOWLEDGE        = 'I03F';
+		constant integer ITEM_SPIRIT_WATER            = 'I027';
+		constant integer ITEM_SPIRIT_WIND             = 'I026';
+		
+		// Edibles
+		constant integer ITEM_ACORN                   = 'I021';
         constant integer ITEM_COOKED_MEAT             = 'I00L';
-        constant integer ITEM_DISEASED_MEAT           = 'I02Z';
-        constant integer ITEM_MAGIC_ACORN             = 'I022';
-        constant integer ITEM_SMOKED_MEAT             = 'I04X';
-        
-        // Workshop Items
-        constant integer ITEM_ANABOLIC_BOOTS          = 'I03K';
-        constant integer ITEM_BATTLE_ARMOR            = 'I03I';
-        constant integer ITEM_BATTLE_AXE              = 'I04M';
-        constant integer ITEM_BATTLE_GLOVES           = 'I03L';
-        constant integer ITEM_BATTLE_SHIELD           = 'I046';
-        constant integer ITEM_BATTLE_SUIT             = 'I04O';
-        constant integer ITEM_BEE_HIVE                = 'I02T';
-        constant integer ITEM_BLOW_GUN                = 'I01T';
-        constant integer ITEM_CAMOUFLAGE_COAT         = 'I02W';
-        constant integer ITEM_DARK_THISTLES           = 'I02X';
-        constant integer ITEM_EMP                     = 'I03M';
-        constant integer ITEM_FIRE_BOMB               = 'I04J';
-        constant integer ITEM_NETS                    = 'I024';
-        constant integer ITEM_SMOKE_BOMB              = 'I02A';
-        constant integer ITEM_SONAR_COMPASS           = 'I01S';
-        constant integer ITEM_THISTLES                = 'I020';
+		constant integer ITEM_DISEASED_MEAT           = 'I02Z';
+		constant integer ITEM_MAGIC_ACORN             = 'I022';
+		constant integer ITEM_SMOKED_MEAT             = 'I04X';
+		
+		// Workshop Items
+		constant integer ITEM_ANABOLIC_BOOTS          = 'I03K';
+		constant integer ITEM_BATTLE_ARMOR            = 'I03I';
+		constant integer ITEM_BATTLE_AXE              = 'I04M';
+		constant integer ITEM_BATTLE_GLOVES           = 'I03L';
+		constant integer ITEM_BATTLE_SHIELD           = 'I046';
+		constant integer ITEM_BATTLE_SUIT             = 'I04O';
+		constant integer ITEM_BEE_HIVE                = 'I02T';
+		constant integer ITEM_BLOW_GUN                = 'I01T';
+		constant integer ITEM_CAMOUFLAGE_COAT         = 'I02W';
+		constant integer ITEM_DARK_THISTLES           = 'I02X';
+		constant integer ITEM_EMP                     = 'I03M';
+		constant integer ITEM_FIRE_BOMB               = 'I04J';
+		constant integer ITEM_NETS                    = 'I024';
+		constant integer ITEM_SMOKE_BOMB              = 'I02A';
+		constant integer ITEM_SONAR_COMPASS           = 'I01S';
+		constant integer ITEM_THISTLES                = 'I020';
 
-        // Witch Doctor's Hut Items
-        constant integer ITEM_CLOAK_OF_FLAMES         = 'I04B';
-        constant integer ITEM_CLOAK_OF_FROST          = 'I04C';
-        constant integer ITEM_CLOAK_OF_HEALING        = 'I04E';
-        constant integer ITEM_LIVING_CLAY             = 'I01G';
-        constant integer ITEM_MAGIC_SEED              = 'I01K';
-        constant integer ITEM_POISON                  = 'I01O';
-        constant integer ITEM_POISON_SPEAR            = 'I01B';
-        constant integer ITEM_REFINED_POISON_SPEAR    = 'I01C';
-        constant integer ITEM_SCROLL_CYCLONE          = 'I028';
-        constant integer ITEM_SCROLL_ENTANGLING_ROOTS = 'I01J';
-        constant integer ITEM_SCROLL_FIREBALL         = 'I01H';
-        constant integer ITEM_SCROLL_LIVING_DEAD      = 'I01I';
-        constant integer ITEM_SCROLL_STONE_ARMOR      = 'I01F';
-        constant integer ITEM_SCROLL_TSUNAMI          = 'I029';
-        constant integer ITEM_ULTRA_POISON            = 'I01N';
-        constant integer ITEM_ULTRA_POISON_SPEAR      = 'I01D';
-        
-        // Armory Items
-        constant integer ITEM_BONE_BOOTS              = 'I00N';
-        constant integer ITEM_BONE_COAT               = 'I00X';
-        constant integer ITEM_BONE_GLOVES             = 'I012';
-        constant integer ITEM_BONE_SHIELD             = 'I044';
-        constant integer ITEM_DARK_SPEAR              = 'I03H';
-        constant integer ITEM_FILNT_AXE               = 'I017';
-        constant integer ITEM_IRON_AXE                = 'I019';
-        constant integer ITEM_IRON_BOOTS              = 'I00O';
-        constant integer ITEM_IRON_COAT               = 'I00Y';
-        constant integer ITEM_IRON_GLOVES             = 'I014';
-        constant integer ITEM_IRON_INGOT              = 'I00U';
-        constant integer ITEM_IRON_SHIELD             = 'I042';
-        constant integer ITEM_IRON_SPEAR              = 'I01P';
-        constant integer ITEM_MAGE_MASHER             = 'I03J';
-        constant integer ITEM_SHIELD                  = 'I045';
-        constant integer ITEM_SPEAR                   = 'I016';
-        constant integer ITEM_STEEL_AXE               = 'I01A';
-        constant integer ITEM_STEEL_BOOTS             = 'I00P';
-        constant integer ITEM_STEEL_COAT              = 'I00Z';
-        constant integer ITEM_STEEL_GLOVES            = 'I015';
-        constant integer ITEM_STEEL_INGOT             = 'I00T';
-        constant integer ITEM_STEEL_SHIELD            = 'I043';
-        constant integer ITEM_STEEL_SPEAR             = 'I01Q';
-        constant integer ITEM_STONE_AXE               = 'I018';
+		// Witch Doctor's Hut Items
+		constant integer ITEM_CLOAK_OF_FLAMES         = 'I04B';
+		constant integer ITEM_CLOAK_OF_FROST          = 'I04C';
+		constant integer ITEM_CLOAK_OF_HEALING        = 'I04E';
+		constant integer ITEM_LIVING_CLAY             = 'I01G';
+		constant integer ITEM_MAGIC_SEED              = 'I01K';
+		constant integer ITEM_POISON                  = 'I01O';
+		constant integer ITEM_POISON_SPEAR            = 'I01B';
+		constant integer ITEM_REFINED_POISON_SPEAR    = 'I01C';
+		constant integer ITEM_SCROLL_CYCLONE          = 'I028';
+		constant integer ITEM_SCROLL_ENTANGLING_ROOTS = 'I01J';
+		constant integer ITEM_SCROLL_FIREBALL         = 'I01H';
+		constant integer ITEM_SCROLL_LIVING_DEAD      = 'I01I';
+		constant integer ITEM_SCROLL_STONE_ARMOR      = 'I01F';
+		constant integer ITEM_SCROLL_TSUNAMI          = 'I029';
+		constant integer ITEM_ULTRA_POISON            = 'I01N';
+		constant integer ITEM_ULTRA_POISON_SPEAR      = 'I01D';
+		
+		// Armory Items
+		constant integer ITEM_BONE_BOOTS              = 'I00N';
+		constant integer ITEM_BONE_COAT               = 'I00X';
+		constant integer ITEM_BONE_GLOVES             = 'I012';
+		constant integer ITEM_BONE_SHIELD             = 'I044';
+		constant integer ITEM_DARK_SPEAR              = 'I03H';
+		constant integer ITEM_FILNT_AXE               = 'I017';
+		constant integer ITEM_IRON_AXE                = 'I019';
+		constant integer ITEM_IRON_BOOTS              = 'I00O';
+		constant integer ITEM_IRON_COAT               = 'I00Y';
+		constant integer ITEM_IRON_GLOVES             = 'I014';
+		constant integer ITEM_IRON_INGOT              = 'I00U';
+		constant integer ITEM_IRON_SHIELD             = 'I042';
+		constant integer ITEM_IRON_SPEAR              = 'I01P';
+		constant integer ITEM_MAGE_MASHER             = 'I03J';
+		constant integer ITEM_SHIELD                  = 'I045';
+		constant integer ITEM_SPEAR                   = 'I016';
+		constant integer ITEM_STEEL_AXE               = 'I01A';
+		constant integer ITEM_STEEL_BOOTS             = 'I00P';
+		constant integer ITEM_STEEL_COAT              = 'I00Z';
+		constant integer ITEM_STEEL_GLOVES            = 'I015';
+		constant integer ITEM_STEEL_INGOT             = 'I00T';
+		constant integer ITEM_STEEL_SHIELD            = 'I043';
+		constant integer ITEM_STEEL_SPEAR             = 'I01Q';
+		constant integer ITEM_STONE_AXE               = 'I018';
 
-        // Tannery Items
-        constant integer ITEM_BEAR_SKIN_BOOTS         = 'I00S';
-        constant integer ITEM_BEAR_SKIN_COAT          = 'I00W';
-        constant integer ITEM_BEAR_SKIN_GLOVES        = 'I013';
-        constant integer ITEM_ELK_SKIN_BOOTS          = 'I00M';
-        constant integer ITEM_ELK_SKIN_COAT           = 'I00Q';
-        constant integer ITEM_ELK_SKIN_GLOVES         = 'I010';
-        constant integer ITEM_WOLF_SKIN_BOOTS         = 'I00R';
-        constant integer ITEM_WOLF_SKIN_COAT          = 'I00V';
-        constant integer ITEM_WOLF_SKIN_GLOVES        = 'I011';
-        
-        // Building Kits
-        constant integer ITEM_ARMORY_KIT              = 'I00F';
-        constant integer ITEM_DEFENSIVE_WARD_KIT      = 'I04L';
-        constant integer ITEM_ENSNARE_TRAP_KIT        = 'I00I';
-        constant integer ITEM_FIRE_KIT                = 'I003';
-        constant integer ITEM_HATCHERY_KIT            = 'I02S';
-        constant integer ITEM_MAGE_FIRE_KIT           = 'I01R';
-        constant integer ITEM_MUD_HUT_KIT             = 'I00D';
-        constant integer ITEM_OMNIDEFENDER_KIT        = 'I03C';
-        constant integer ITEM_POT_KIT                 = 'I025';
-        constant integer ITEM_SMOKE_HOUSE_KIT         = 'I00J';
-        constant integer ITEM_SPIRIT_WARD_KIT         = 'I01L';
-        constant integer ITEM_STORAGE_HUT_KIT         = 'I00K';
-        constant integer ITEM_TANNERY_KIT             = 'I00G';
-        constant integer ITEM_TELEPORT_BEACON_KIT     = 'I03B';
-        constant integer ITEM_TENT_KIT                = 'I008';
-        constant integer ITEM_TRANSPORT_SHIP_KIT      = 'I03D';
-        constant integer ITEM_TROLL_BURROW_KIT        = 'I04R';
-        constant integer ITEM_TROLL_HUT_KIT           = 'I00C';
-        constant integer ITEM_WITCH_DOCTORS_HUT_KIT   = 'I00H';
-        constant integer ITEM_WORKSHOP_KIT            = 'I01U';
-        
-        // Unclassified Items
-        constant integer ITEM_BATTLE_SUIT_SPELLS      = 'I04Q';
-        constant integer ITEM_BATTLE_SUIT_SPELLS_TWO  = 'I04V';
-        constant integer ITEM_CHEESE                  = 'I04S';
-        constant integer ITEM_HEAD_HUNTER_STEEL_SPEAR = 'I04W';
-        constant integer ITEM_HERB_RECIPE_1           = 'I030';
-        constant integer ITEM_HERB_RECIPE_2           = 'I031';
-        constant integer ITEM_HERB_RECIPE_3           = 'I032';
-        constant integer ITEM_HERB_RECIPE_4           = 'I033';
-        constant integer ITEM_HERB_RECIPE_5           = 'I034';
-        constant integer ITEM_HERB_RECIPE_6           = 'I035';
-        constant integer ITEM_HERB_RECIPE_7           = 'I036';
-        constant integer ITEM_HERB_RECIPE_8           = 'I037';
-        constant integer ITEM_HERB_RECIPE_9           = 'I038';
-        constant integer ITEM_HERB_RECIPE_10          = 'I039';
-        constant integer ITEM_HERB_RECIPE_11          = 'I03A';
-        constant integer ITEM_HYDRA_HINT              = 'I04D';
-        constant integer ITEM_OPPOSING_NIGHT_ITEM     = 'I041';
-        constant integer ITEM_PANTHER_HIDE            = 'I04T';
-        constant integer ITEM_SECRET_HINT             = 'I03N';
-        constant integer ITEM_TOME_LOSS               = 'I040';
-        constant integer ITEM_REPAIR_HAMMER           = 'I03Z';
-        
-        
-        //#####################################################
-        // Destructibles
-        //#####################################################
+		// Tannery Items
+		constant integer ITEM_BEAR_SKIN_BOOTS         = 'I00S';
+		constant integer ITEM_BEAR_SKIN_COAT          = 'I00W';
+		constant integer ITEM_BEAR_SKIN_GLOVES        = 'I013';
+		constant integer ITEM_ELK_SKIN_BOOTS          = 'I00M';
+		constant integer ITEM_ELK_SKIN_COAT           = 'I00Q';
+		constant integer ITEM_ELK_SKIN_GLOVES         = 'I010';
+		constant integer ITEM_WOLF_SKIN_BOOTS         = 'I00R';
+		constant integer ITEM_WOLF_SKIN_COAT          = 'I00V';
+		constant integer ITEM_WOLF_SKIN_GLOVES        = 'I011';
+		
+		// Building Kits
+		constant integer ITEM_ARMORY_KIT              = 'I00F';
+		constant integer ITEM_DEFENSIVE_WARD_KIT      = 'I04L';
+		constant integer ITEM_ENSNARE_TRAP_KIT        = 'I00I';
+		constant integer ITEM_FIRE_KIT                = 'I003';
+		constant integer ITEM_HATCHERY_KIT            = 'I02S';
+		constant integer ITEM_MAGE_FIRE_KIT           = 'I01R';
+		constant integer ITEM_MUD_HUT_KIT             = 'I00D';
+		constant integer ITEM_OMNIDEFENDER_KIT        = 'I03C';
+		constant integer ITEM_POT_KIT                 = 'I025';
+		constant integer ITEM_SMOKE_HOUSE_KIT         = 'I00J';
+		constant integer ITEM_SPIRIT_WARD_KIT         = 'I01L';
+		constant integer ITEM_STORAGE_HUT_KIT         = 'I00K';
+		constant integer ITEM_TANNERY_KIT             = 'I00G';
+		constant integer ITEM_TELEPORT_BEACON_KIT     = 'I03B';
+		constant integer ITEM_TENT_KIT                = 'I008';
+		constant integer ITEM_TRANSPORT_SHIP_KIT      = 'I03D';
+		constant integer ITEM_TROLL_BURROW_KIT        = 'I04R';
+		constant integer ITEM_TROLL_HUT_KIT           = 'I00C';
+		constant integer ITEM_WITCH_DOCTORS_HUT_KIT   = 'I00H';
+		constant integer ITEM_WORKSHOP_KIT            = 'I01U';
+		
+		// Unclassified Items
+		constant integer ITEM_BATTLE_SUIT_SPELLS      = 'I04Q';
+		constant integer ITEM_BATTLE_SUIT_SPELLS_TWO  = 'I04V';
+		constant integer ITEM_CHEESE                  = 'I04S';
+		constant integer ITEM_HEAD_HUNTER_STEEL_SPEAR = 'I04W';
+		constant integer ITEM_HERB_RECIPE_1           = 'I030';
+		constant integer ITEM_HERB_RECIPE_2           = 'I031';
+		constant integer ITEM_HERB_RECIPE_3           = 'I032';
+		constant integer ITEM_HERB_RECIPE_4           = 'I033';
+		constant integer ITEM_HERB_RECIPE_5           = 'I034';
+		constant integer ITEM_HERB_RECIPE_6           = 'I035';
+		constant integer ITEM_HERB_RECIPE_7           = 'I036';
+		constant integer ITEM_HERB_RECIPE_8           = 'I037';
+		constant integer ITEM_HERB_RECIPE_9           = 'I038';
+		constant integer ITEM_HERB_RECIPE_10          = 'I039';
+		constant integer ITEM_HERB_RECIPE_11          = 'I03A';
+		constant integer ITEM_HYDRA_HINT              = 'I04D';
+		constant integer ITEM_OPPOSING_NIGHT_ITEM     = 'I041';
+		constant integer ITEM_PANTHER_HIDE            = 'I04T';
+		constant integer ITEM_SECRET_HINT             = 'I03N';
+		constant integer ITEM_TOME_LOSS               = 'I040';
+		constant integer ITEM_REPAIR_HAMMER           = 'I03Z';
+		
+		
+		//#####################################################
+		// Destructibles
+		//#####################################################
 
-        constant integer DEST_FALSE_TREE              = 'B004';
-        constant integer DEST_RUINS_TREE              = 'ZTtw';
-        constant integer DEST_RUINS_TREE_CANOPY       = 'ZTtc';
-        constant integer DEST_RUINS_TREE_ITEM         = 'B002';
-        constant integer DEST_SUPER_TREE              = 'B000';
-        constant integer DEST_SUPER_TREE_CANOPY       = 'B001';
+		constant integer DEST_FALSE_TREE              = 'B004';
+		constant integer DEST_RUINS_TREE              = 'ZTtw';
+		constant integer DEST_RUINS_TREE_CANOPY       = 'ZTtc';
+		constant integer DEST_RUINS_TREE_ITEM         = 'B002';
+		constant integer DEST_SUPER_TREE              = 'B000';
+		constant integer DEST_SUPER_TREE_CANOPY       = 'B001';
 
-    }
+	}
 }
 
 //! endzinc

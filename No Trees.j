@@ -1,9 +1,5 @@
-
-//===========================================================================
-//TESH.scrollpos=0
-//TESH.alwaysfold=0
 function Trig_no_trees_Conditions takes nothing returns boolean
-return not udg_STARTED and mode_enter and udg_TREES==true
+	return not udg_STARTED and mode_enter and udg_TREES==true
 endfunction
 
 function Trig_no_trees_Func001Func001001 takes nothing returns boolean
@@ -101,4 +97,3 @@ function InitTrig_no_trees takes nothing returns nothing
     call TriggerAddCondition( gg_trg_no_trees, Condition( function Trig_no_trees_Conditions ) )
     call TriggerAddAction( gg_trg_no_trees, function Trig_no_trees_Actions )
 endfunction
-//===========================================================================

@@ -1,10 +1,21 @@
 //! zinc
 
-library ArgsUtils requires ArrayLists, IDUtils, Table {
+library ArgsUtils requires ArrayLists, IDUtils, Table, TypeStructs {
 	
 	public struct ArgsList extends ArrayListString {
-		public string cmd;
-		public player triggerPlayer;
+		string cmd;
+		player triggerPlayer;
+		
+		method inspect() {
+			debug {
+			  	integer i;
+				BJDebugMsg("Inspecting ArgsList "+I2S(this));
+				BJDebugMsg("cmd="+cmd);
+				for (0 <= i < size()) {
+					BJDebugMsg("Args["+I2S(i)+"]="+this[i]);
+				}
+			}
+		}
 	}
 	
 	// Break down a command like a list of arguments like in shell programs
@@ -84,13 +95,6 @@ library ArgsUtils requires ArrayLists, IDUtils, Table {
 	
 	function TestArgsUtils(ArgsList a) {
 		integer i;
-		timer t;
-		debug {
-			BJDebugMsg("cmd="+a.cmd);
-			for (0 <= i < a.size()) {
-				BJDebugMsg("Args["+I2S(i)+"]="+a[i]);
-			}
-		}
 		if (a[0] == "spawn") {
 			debug BJDebugMsg("Creating "+I2S(S2ID(a[2])));
 			if (a[1] == "unit") {
@@ -108,12 +112,19 @@ library ArgsUtils requires ArrayLists, IDUtils, Table {
 						a.destroy();
 					}
 					else {
-						t = NewTimer();
-						SetTimerData(t, integer(a));
-						TimerStart(t, S2R(a[3]), true, function() {
+						TimerStart(NewTimerEx(a), S2R(a[3]), true, function() {
 							ArgsList a = GetTimerData(GetExpiredTimer());
-							if (a.length() > 0) {
-								CreateUnit(a.triggerPlayer, UNIT_ALL.pop(), S2R(a[4]), S2R(a[5]), 270);
+							if (UNIT_ALL.length() >= 0) {
+								debug BJDebugMsg("UNIT_ALL.last = "+ID2S(UNIT_ALL[UNIT_ALL.length()-1]));
+								TimerStart(
+									NewTimerEx(Unit[CreateUnit(a.triggerPlayer, UNIT_ALL.pop(), S2R(a[4]), S2R(a[5]), 270)]),
+									S2R(a[3]),
+									false,
+									function() {
+										RemoveUnit(Unit(GetTimerData(GetExpiredTimer())).unit);
+										ReleaseTimer(GetExpiredTimer());
+								});
+								
 							} else {
 								ReleaseTimer(GetExpiredTimer());
 								a.destroy();
@@ -126,12 +137,11 @@ library ArgsUtils requires ArrayLists, IDUtils, Table {
 						DisplayTextToPlayer(a.triggerPlayer, 0, 0, "syntax: -tau spawn all items <time between> <loc x> <loc y>");
 					}
 					else {
-						t = NewTimer();
-						SetTimerData(t, a);
-						TimerStart(t, S2R(a[3]), true, function() {
+						TimerStart(NewTimerEx(a), S2R(a[3]), true, function() {
 							ArgsList a = GetTimerData(GetExpiredTimer());
-							if (a.length() > 0) {
-								CreateUnit(a.triggerPlayer, ITEM_ALL.pop(), S2R(a[4]), S2R(a[5]), 270);
+							if (ITEM_ALL.length() >= 0) {
+								debug BJDebugMsg("ITEM_ALL.last = "+ID2S(ITEM_ALL[ITEM_ALL.length()-1]));
+								CreateItem(ITEM_ALL.pop(), S2R(a[4]), S2R(a[5]));
 							} else {
 								ReleaseTimer(GetExpiredTimer());
 								a.destroy();
@@ -141,7 +151,6 @@ library ArgsUtils requires ArrayLists, IDUtils, Table {
 				}
 			}
 		}
-		t = null;
 	}
 			  
 	function onInit() {

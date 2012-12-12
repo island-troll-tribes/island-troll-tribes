@@ -101,8 +101,8 @@ library ArrayLists
 	
 		method pop takes nothing returns $TYPE$
 	  		local $TYPE$ v = .s[.itsIndex]
-	  		set .itsIndex = .itsIndex - 1
 	 		set .s[.itsIndex] = $NULLVAL$
+	  		set .itsIndex = .itsIndex - 1
 	  		return v
 	  	endmethod
     

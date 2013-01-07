@@ -1,8 +1,4 @@
 
-//===========================================================================
-//TESH.scrollpos=0
-//TESH.alwaysfold=0
-
 library ArrayLists
     
     //! textmacro ARRAYLIST takes TYPE, NAME, NULLVAL

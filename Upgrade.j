@@ -162,7 +162,6 @@ endif
 
 endfunction
 
-//===========================================================================
 function InitTrig_upgrade takes nothing returns nothing
     set gg_trg_upgrade = CreateTrigger(  )
     call TriggerRegisterAnyUnitEventBJ( gg_trg_upgrade, EVENT_PLAYER_HERO_SKILL )

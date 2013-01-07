@@ -26,7 +26,7 @@ function Doodad000881_DropItems takes nothing returns nothing
     if (canDrop) then
         // Item set 0
         call RandomDistReset(  )
-        call RandomDistAddItem( 'I02G', 20 )
+        call RandomDistAddItem( ITEM_HEALING_POTION_IV, 20 )
         call RandomDistAddItem( -1, 80 )
         set itemID = RandomDistChoose(  )
         if (trigUnit != null) then
@@ -62,7 +62,7 @@ function Doodad001476_DropItems takes nothing returns nothing
     if (canDrop) then
         // Item set 0
         call RandomDistReset(  )
-        call RandomDistAddItem( 'I02G', 20 )
+        call RandomDistAddItem( ITEM_HEALING_POTION_IV, 20 )
         call RandomDistAddItem( -1, 80 )
         set itemID = RandomDistChoose(  )
         if (trigUnit != null) then
@@ -98,7 +98,7 @@ function Doodad001928_DropItems takes nothing returns nothing
     if (canDrop) then
         // Item set 0
         call RandomDistReset(  )
-        call RandomDistAddItem( 'I01D', 5 )
+        call RandomDistAddItem( ITEM_ULTRA_POISON_SPEAR, 5 )
         call RandomDistAddItem( -1, 95 )
         set itemID = RandomDistChoose(  )
         if (trigUnit != null) then
@@ -134,8 +134,8 @@ function Doodad002625_DropItems takes nothing returns nothing
     if (canDrop) then
         // Item set 0
         call RandomDistReset(  )
-        call RandomDistAddItem( 'I01A', 49 )
-        call RandomDistAddItem( 'I00T', 50 )
+        call RandomDistAddItem( ITEM_STEEL_AXE, 49 )
+        call RandomDistAddItem( ITEM_STEEL_INGOT, 50 )
         call RandomDistAddItem( -1, 1 )
         set itemID = RandomDistChoose(  )
         if (trigUnit != null) then
@@ -171,8 +171,8 @@ function Doodad002635_DropItems takes nothing returns nothing
     if (canDrop) then
         // Item set 0
         call RandomDistReset(  )
-        call RandomDistAddItem( 'I01A', 49 )
-        call RandomDistAddItem( 'I00T', 50 )
+        call RandomDistAddItem( ITEM_STEEL_AXE, 49 )
+        call RandomDistAddItem( ITEM_STEEL_INGOT, 50 )
         call RandomDistAddItem( -1, 1 )
         set itemID = RandomDistChoose(  )
         if (trigUnit != null) then
@@ -208,7 +208,7 @@ function Doodad002881_DropItems takes nothing returns nothing
     if (canDrop) then
         // Item set 0
         call RandomDistReset(  )
-        call RandomDistAddItem( 'I01D', 5 )
+        call RandomDistAddItem( ITEM_ULTRA_POISON_SPEAR, 5 )
         call RandomDistAddItem( -1, 95 )
         set itemID = RandomDistChoose(  )
         if (trigUnit != null) then
@@ -244,7 +244,7 @@ function Doodad002882_DropItems takes nothing returns nothing
     if (canDrop) then
         // Item set 0
         call RandomDistReset(  )
-        call RandomDistAddItem( 'I02G', 20 )
+        call RandomDistAddItem( ITEM_HEALING_POTION_IV, 20 )
         call RandomDistAddItem( -1, 80 )
         set itemID = RandomDistChoose(  )
         if (trigUnit != null) then
@@ -280,7 +280,7 @@ function Doodad004327_DropItems takes nothing returns nothing
     if (canDrop) then
         // Item set 0
         call RandomDistReset(  )
-        call RandomDistAddItem( 'I02G', 20 )
+        call RandomDistAddItem( ITEM_HEALING_POTION_IV, 20 )
         call RandomDistAddItem( -1, 80 )
         set itemID = RandomDistChoose(  )
         if (trigUnit != null) then

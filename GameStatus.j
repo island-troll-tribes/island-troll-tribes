@@ -1,0 +1,138 @@
+library GameStatus initializer Ini /*
+    
+    GameStatus 3.1 by Bribe, special thanks to Troll-Brain
+    
+    Check if a game is online, a replay or is a single-player game.
+    
+    function GetGameStatus
+        takes nothing
+            returns integer
+        
+        Get the status of the game. This function cannot be called until the
+        OnGameStatusFound function has run (so don't use this check during an
+        initialization or 0-second timer, wait for this function).
+        
+        It returns one of the three constants:
+            
+            GAME_STATUS_OFFLINE
+            GAME_STATUS_ONLINE
+            GAME_STATUS_REPLAY
+    
+    function OnGameStatusFound
+        takes code func
+            returns nothing
+    
+        Executes the function when the game's status has been detected.
+        
+        Example use:
+        
+            OnGameStatusFound(function OnLoad)
+        
+        You are not able to use TriggerSleepAction from this function.
+*/
+    globals
+        //-------------------------------------------------------------------
+        // A game cache will be used to determine if the game is an online
+        // multiplayer game.
+        //
+        private constant string CACHE_PATH = "GAME_STATUS"
+        
+        //-------------------------------------------------------------------
+        constant integer GAME_STATUS_OFFLINE = 0
+        constant integer GAME_STATUS_ONLINE  = 1
+        constant integer GAME_STATUS_REPLAY  = 2
+        
+        //-------------------------------------------------------------------
+        // If ReloadGameCachesFromDisk returns true, cheats can be used (it's
+        // an offline game).
+        //
+        private integer status = IntegerTertiaryOp(ReloadGameCachesFromDisk(), GAME_STATUS_OFFLINE, GAME_STATUS_REPLAY)
+        private integer n = -1
+        private trigger t = CreateTrigger()
+        private triggeraction array funcs
+    endglobals
+    
+    //=======================================================================
+    function GetGameStatus takes nothing returns integer
+        return status
+    endfunction
+    
+    //=======================================================================
+    function OnGameStatusFound takes code func returns nothing
+        set n = n + 1
+        set funcs[n] = TriggerAddAction(t, func)
+    endfunction
+    
+    private function Execute takes nothing returns nothing
+        call TriggerExecute(t)
+        loop
+            exitwhen n < 0
+            call TriggerRemoveAction(t, funcs[n])
+            set funcs[n] = null
+            set n = n - 1
+        endloop
+        call DestroyTrigger(t)
+        set t = null
+    endfunction
+    
+    //=======================================================================
+    /* private */ function GameStatus___failSafePrivateFunction takes nothing returns nothing
+        call TriggerSleepAction(0)
+        call Execute()
+    endfunction
+    
+    //=======================================================================
+    private function Ini takes nothing returns nothing
+        local boolean b = false
+        local integer i = 12
+        local gamecache g
+        local string s = ""
+        if bj_isSinglePlayer then
+            //Execute a failsafe function because a replay of an offline
+            //single-player game will crash the thread if it uses a
+            //TriggerSyncReady/TriggerSleepAction which wasn't originally
+            //in the game.
+            call ExecuteFunc("GameStatus___failSafePrivateFunction")
+            if status != GAME_STATUS_OFFLINE then
+                call TriggerSyncReady()
+                //If the thread didn't crash, the game is an online single
+                //player game or is a replay of one. Better just say "online"
+                //to be safe because no one has found a way to detect it that
+                //can't be abused.
+                set status = GAME_STATUS_ONLINE
+            endif
+        else
+            //Flush the cache just in case it didn't get to that point
+            //last time.
+            call FlushGameCache(InitGameCache(CACHE_PATH))
+            set g = InitGameCache(CACHE_PATH)
+            loop
+                set i = i - 1
+                set s = I2S(i)
+                if GetLocalPlayer() == Player(i) then
+                    //Broadcast the boolean to all players.
+                    call StoreBoolean(g, "", s, true)
+                    call SyncStoredBoolean(g, "", s)
+                endif
+                exitwhen i == 0
+            endloop
+            call TriggerSyncReady()
+            loop
+                //A replay will show only 1 player has the boolean.
+                if GetStoredBoolean(g, "", I2S(i)) then
+                    if b then
+                        set status = GAME_STATUS_ONLINE
+                        exitwhen true
+                    endif
+                    set b = true
+                endif
+                set i = i + 1
+                exitwhen i == 12
+            endloop
+            call FlushGameCache(g)
+            set g = null
+            call Execute()
+        endif
+    endfunction
+    
+endlibrary

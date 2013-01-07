@@ -1,7 +1,3 @@
-
-//===========================================================================
-//TESH.scrollpos=-1
-//TESH.alwaysfold=0
 library Table /* made by Bribe, special thanks to Vexorian & Nestharus, version 3.1.0.1
     
     One map, one hashtable. Welcome to NewTable 3.1
@@ -130,6 +126,82 @@ private module $TYPE$m
 endmodule
 //! endtextmacro
     
+//! textmacro NEW_ARRAY_BASIC_STRING_KEY takes SUPER, FUNC, TYPE
+private struct $TYPE$ss extends array
+    method operator [] takes string key returns $TYPE$
+        return Load$FUNC$(ht, this, StringHash(key))
+    endmethod
+    method operator []= takes string key, $TYPE$ value returns nothing
+        call Save$FUNC$(ht, this, StringHash(key), value)
+    endmethod
+    method has takes string key returns boolean
+        return HaveSaved$SUPER$(ht, this, StringHash(key))
+    endmethod
+    method remove takes string key returns nothing
+        call RemoveSaved$SUPER$(ht, this, StringHash(key))
+    endmethod
+endstruct
+private module $TYPE$ms
+    method operator $TYPE$_s takes nothing returns $TYPE$ss
+        return this
+    endmethod
+endmodule
+//! endtextmacro
+    
+//! textmacro NEW_ARRAY_BASIC_HANDLE_KEY takes SUPER, FUNC, TYPE
+private struct $TYPE$sh extends array
+    method operator [] takes handle key returns $TYPE$
+        return Load$FUNC$(ht, this, GetHandleId(key))
+    endmethod
+    method operator []= takes handle key, $TYPE$ value returns nothing
+        call Save$FUNC$(ht, this, GetHandleId(key), value)
+    endmethod
+    method has takes handle key returns boolean
+        return HaveSaved$SUPER$(ht, this, GetHandleId(key))
+    endmethod
+    method remove takes handle key returns nothing
+        call RemoveSaved$SUPER$(ht, this, GetHandleId(key))
+    endmethod
+endstruct
+private module $TYPE$mh
+    method operator $TYPE$_h takes nothing returns $TYPE$sh
+        return this
+    endmethod
+endmodule
+//! endtextmacro
+    
+//! textmacro NEW_ARRAY_STRING_KEY takes FUNC, TYPE
+private struct $TYPE$ss extends array
+    method operator [] takes string key returns $TYPE$
+        return Load$FUNC$Handle(ht, this, StringHash(key))
+    endmethod
+    method operator []= takes string key, $TYPE$ value returns nothing
+        call Save$FUNC$Handle(ht, this, StringHash(key), value)
+    endmethod
+endstruct
+private module $TYPE$ms
+    method operator $TYPE$_s takes nothing returns $TYPE$ss
+        return this
+    endmethod
+endmodule
+//! endtextmacro
+    
+//! textmacro NEW_ARRAY_HANDLE_KEY takes FUNC, TYPE
+private struct $TYPE$sh extends array
+    method operator [] takes handle key returns $TYPE$
+        return Load$FUNC$Handle(ht, this, GetHandleId(key))
+    endmethod
+    method operator []= takes handle key, $TYPE$ value returns nothing
+        call Save$FUNC$Handle(ht, this, GetHandleId(key), value)
+    endmethod
+endstruct
+private module $TYPE$mh
+    method operator $TYPE$_h takes nothing returns $TYPE$sh
+        return this
+    endmethod
+endmodule
+//! endtextmacro
+    
 //Run these textmacros to include the entire hashtable API as wrappers.
 //Don't be intimidated by the number of macros - Vexorian's map optimizer is
 //supposed to kill functions which inline (all of these functions inline).
@@ -175,6 +247,94 @@ endmodule
 //! runtextmacro NEW_ARRAY("FogState", "fogstate")
 //! runtextmacro NEW_ARRAY("FogModifier", "fogmodifier")
 //! runtextmacro NEW_ARRAY("Hashtable", "hashtable")
+
+//! runtextmacro NEW_ARRAY_BASIC_STRING_KEY("Integer", "Integer", "integer")
+//! runtextmacro NEW_ARRAY_BASIC_STRING_KEY("Real", "Real", "real")
+//! runtextmacro NEW_ARRAY_BASIC_STRING_KEY("Boolean", "Boolean", "boolean")
+//! runtextmacro NEW_ARRAY_BASIC_STRING_KEY("String", "Str", "string")
+    
+//! runtextmacro NEW_ARRAY_STRING_KEY("Player", "player")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Widget", "widget")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Destructable", "destructable")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Item", "item")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Unit", "unit")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Ability", "ability")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Timer", "timer")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Trigger", "trigger")
+//! runtextmacro NEW_ARRAY_STRING_KEY("TriggerCondition", "triggercondition")
+//! runtextmacro NEW_ARRAY_STRING_KEY("TriggerAction", "triggeraction")
+//! runtextmacro NEW_ARRAY_STRING_KEY("TriggerEvent", "event")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Force", "force")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Group", "group")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Location", "location")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Rect", "rect")
+//! runtextmacro NEW_ARRAY_STRING_KEY("BooleanExpr", "boolexpr")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Sound", "sound")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Effect", "effect")
+//! runtextmacro NEW_ARRAY_STRING_KEY("UnitPool", "unitpool")
+//! runtextmacro NEW_ARRAY_STRING_KEY("ItemPool", "itempool")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Quest", "quest")
+//! runtextmacro NEW_ARRAY_STRING_KEY("QuestItem", "questitem")
+//! runtextmacro NEW_ARRAY_STRING_KEY("DefeatCondition", "defeatcondition")
+//! runtextmacro NEW_ARRAY_STRING_KEY("TimerDialog", "timerdialog")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Leaderboard", "leaderboard")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Multiboard", "multiboard")
+//! runtextmacro NEW_ARRAY_STRING_KEY("MultiboardItem", "multiboarditem")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Trackable", "trackable")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Dialog", "dialog")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Button", "button")
+//! runtextmacro NEW_ARRAY_STRING_KEY("TextTag", "texttag")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Lightning", "lightning")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Image", "image")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Ubersplat", "ubersplat")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Region", "region")
+//! runtextmacro NEW_ARRAY_STRING_KEY("FogState", "fogstate")
+//! runtextmacro NEW_ARRAY_STRING_KEY("FogModifier", "fogmodifier")
+//! runtextmacro NEW_ARRAY_STRING_KEY("Hashtable", "hashtable")
+
+//! runtextmacro NEW_ARRAY_BASIC_HANDLE_KEY("Integer", "Integer", "integer")
+//! runtextmacro NEW_ARRAY_BASIC_HANDLE_KEY("Real", "Real", "real")
+//! runtextmacro NEW_ARRAY_BASIC_HANDLE_KEY("Boolean", "Boolean", "boolean")
+//! runtextmacro NEW_ARRAY_BASIC_HANDLE_KEY("String", "Str", "string")
+    
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Player", "player")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Widget", "widget")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Destructable", "destructable")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Item", "item")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Unit", "unit")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Ability", "ability")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Timer", "timer")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Trigger", "trigger")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("TriggerCondition", "triggercondition")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("TriggerAction", "triggeraction")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("TriggerEvent", "event")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Force", "force")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Group", "group")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Location", "location")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Rect", "rect")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("BooleanExpr", "boolexpr")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Sound", "sound")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Effect", "effect")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("UnitPool", "unitpool")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("ItemPool", "itempool")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Quest", "quest")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("QuestItem", "questitem")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("DefeatCondition", "defeatcondition")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("TimerDialog", "timerdialog")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Leaderboard", "leaderboard")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Multiboard", "multiboard")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("MultiboardItem", "multiboarditem")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Trackable", "trackable")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Dialog", "dialog")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Button", "button")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("TextTag", "texttag")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Lightning", "lightning")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Image", "image")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Ubersplat", "ubersplat")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Region", "region")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("FogState", "fogstate")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("FogModifier", "fogmodifier")
+//! runtextmacro NEW_ARRAY_HANDLE_KEY("Hashtable", "hashtable")
     
 struct Table extends array
     
@@ -221,6 +381,90 @@ struct Table extends array
     implement fogmodifierm
     implement hashtablem
     
+    implement realms
+    implement booleanms
+    implement stringms
+    implement playerms
+    implement widgetms
+    implement destructablems
+    implement itemms
+    implement unitms
+    implement abilityms
+    implement timerms
+    implement triggerms
+    implement triggerconditionms
+    implement triggeractionms
+    implement eventms
+    implement forcems
+    implement groupms
+    implement locationms
+    implement rectms
+    implement boolexprms
+    implement soundms
+    implement effectms
+    implement unitpoolms
+    implement itempoolms
+    implement questms
+    implement questitemms
+    implement defeatconditionms
+    implement timerdialogms
+    implement leaderboardms
+    implement multiboardms
+    implement multiboarditemms
+    implement trackablems
+    implement dialogms
+    implement buttonms
+    implement texttagms
+    implement lightningms
+    implement imagems
+    implement ubersplatms
+    implement regionms
+    implement fogstatems
+    implement fogmodifierms
+    implement hashtablems
+    
+    implement realmh
+    implement booleanmh
+    implement stringmh
+    implement playermh
+    implement widgetmh
+    implement destructablemh
+    implement itemmh
+    implement unitmh
+    implement abilitymh
+    implement timermh
+    implement triggermh
+    implement triggerconditionmh
+    implement triggeractionmh
+    implement eventmh
+    implement forcemh
+    implement groupmh
+    implement locationmh
+    implement rectmh
+    implement boolexprmh
+    implement soundmh
+    implement effectmh
+    implement unitpoolmh
+    implement itempoolmh
+    implement questmh
+    implement questitemmh
+    implement defeatconditionmh
+    implement timerdialogmh
+    implement leaderboardmh
+    implement multiboardmh
+    implement multiboarditemmh
+    implement trackablemh
+    implement dialogmh
+    implement buttonmh
+    implement texttagmh
+    implement lightningmh
+    implement imagemh
+    implement ubersplatmh
+    implement regionmh
+    implement fogstatemh
+    implement fogmodifiermh
+    implement hashtablemh
+
     method operator handle takes nothing returns handles
         return this
     endmethod

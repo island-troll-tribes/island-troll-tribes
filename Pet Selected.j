@@ -1,7 +1,4 @@
 
-//===========================================================================
-//TESH.scrollpos=0
-//TESH.alwaysfold=0
 function SelectedEnemyBuilding takes nothing returns boolean
 return((IsUnitEnemy(GetTriggerUnit(),GetTriggerPlayer()))and(IsUnitType(GetTriggerUnit(),UNIT_TYPE_STRUCTURE)))!=null
 endfunction

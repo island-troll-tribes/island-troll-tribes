@@ -58,6 +58,7 @@ endglobals
         private integer tt = 0
         private integer st = 0
         private timer t = CreateTimer()
+        public  Table stackables
     endglobals
 
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -65,15 +66,9 @@ endglobals
     //  Access a table to find out stackability of item
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     function GetItemStackCount takes item i returns integer i
-        local integer j = 0
-        local integer k = GetItemTypeId(i)
-        loop
-            exitwhen j > udg_stackables_UBound
-            if udg_stackables[j] == k then
-                    return udg_stackable_max[j]
-            endif
-            set j = j + 1
-        endloop
+        if stackables.has(GetItemTypeId(i)) then
+            return stackables[GetItemTypeId(i)]
+        endif
         return 0
     endfunction
 
@@ -567,6 +562,51 @@ endglobals
         return false
     endfunction
 
+    private function initStackables takes nothing returns boolean
+        stackables = Table.create()
+        stackables[ITEM_IRON_SPEAR]              =  3             
+        stackables[ITEM_LIVING_CLAY]             =  6            
+        stackables[ITEM_MAGIC_SEED]              =  6             
+        stackables[ITEM_NETS]                    =  8                   
+        stackables[ITEM_POISON_SPEAR]            =  5           
+        stackables[ITEM_REFINED_POISON_SPEAR]    =  4   
+        stackables[ITEM_SPEAR]                   =  6                  
+        stackables[ITEM_STEEL_SPEAR]             =  2            
+        stackables[ITEM_THISTLES]                =  15              
+        stackables[ITEM_ULTRA_POISON_SPEAR]      =  2     
+        stackables[ITEM_ACORN]                   =  10                 
+        stackables[ITEM_COOKED_MEAT]             =  10           
+        stackables[ITEM_MAGIC_ACORN]             =  8            
+        stackables[ITEM_SMOKE_BOMB]              =  5             
+        stackables[ITEM_HEALING_POTION_I]        =  6       
+        stackables[ITEM_HEALING_POTION_II]       =  5      
+        stackables[ITEM_HEALING_POTION_III]      =  4     
+        stackables[ITEM_HEALING_POTION_IV]       =  4      
+        stackables[ITEM_ANABOLIC_POTION]         =  2        
+        stackables[ITEM_DRUNKS_POTION]           =  3          
+        stackables[ITEM_ELEMENTAL_SHIELD_POTION] =  3
+        stackables[ITEM_NETHER_POTION]           =  5          
+        stackables[ITEM_MANA_POTION_I]           =  6          
+        stackables[ITEM_MANA_POTION_II]          =  5         
+        stackables[ITEM_MANA_POTION_III]         =  4        
+        stackables[ITEM_MANA_POTION_IV]          =  4         
+        stackables[ITEM_FERVER_POTION]           =  2          
+        stackables[ITEM_ANTI_MAGIC_POTION]       =  4      
+        stackables[ITEM_DARK_THISTLES]           =  15         
+        stackables[ITEM_BEE_HIVE]                =  2               
+        stackables[ITEM_DISEASE_POTION]          =  2         
+        stackables[ITEM_ENSNARE_TRAP_KIT]        =  3       
+        stackables[ITEM_POTION_TWIN_ISLANDS]     =  2    
+        stackables[ITEM_DARK_SPEAR]              =  3             
+        stackables[ITEM_CURE_ALL]                =  6               
+        stackables[ITEM_DISEASED_MEAT]           =  10         
+        stackables[ITEM_FIRE_BOMB]               =  2              
+        stackables[ITEM_ACID_BOMB]               =  2              
+        stackables[ITEM_NAPALM]                  =  1                 
+        stackables[ITEM_SMOKED_MEAT]             =  12           
+        return false
+    endfunction
+
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     // TRIGGER INITIALIZER
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -586,6 +626,7 @@ endglobals
         call TriggerAddCondition( gg_trg_EasyItemStacknSplit, function ActionController )
         call TriggerAddCondition( CancelTrigger, function CancelController )
         call TriggerAddCondition( PreloadTrigger, function PreloadController )
+        call TriggerAddCondition( PreloadTrigger, function initStackables )
     endfunction
 
 endlibrary//===========================================================================

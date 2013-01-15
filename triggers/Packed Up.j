@@ -1,71 +1,31 @@
 
-//===========================================================================
-function Trig_packed_up_Conditions takes nothing returns boolean
-    if ( not ( GetSpellAbilityId() == 'A003' ) ) then
+scope BuildingPacking initializer onInit
+    // requires ID
+
+    function PackBuilding takes nothing returns boolean
+        if not GetSpellAbilityId() == SPELL_PACK_BUILDING then
+            return false
+        endif
+        if GetUnitTypeId( GetTriggerUnit() ) == ITEM_FIRE_KIT then
+            call RemoveUnit( GetTriggerUnit() )
+            call CreateItem( ITEM_FIRE_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()) )
+        elseif GetUnitTypeId( GetTriggerUnit() ) == UNIT_MAGE_FIRE then
+            call RemoveUnit( GetTriggerUnit() )
+            call CreateItem( UNIT_MAGE_FIRE, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()) )
+        elseif GetUnitTypeId( GetTriggerUnit() ) == UNIT_TENT then
+            call RemoveUnit( GetTriggerUnit() )
+            call CreateItem( UNIT_TENT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()) )
+        elseif GetUnitTypeId( GetTriggerUnit() ) == UNIT_MAGE_FIRE_SUMMONED then
+            call RemoveUnit( GetTriggerUnit() )
+        endif
         return false
-    endif
-    if ( not ( udg_STARTED == true ) ) then
-        return false
-    endif
-    return true
-endfunction
+    endfunction
 
-function Trig_packed_up_Func001C takes nothing returns boolean
-    if ( not ( GetUnitTypeId(GetSpellAbilityUnit()) == UNIT_FIRE ) ) then
-        return false
-    endif
-    return true
-endfunction
+    //===========================================================================
+    function onInit takes nothing returns nothing
+        local trigger t = CreateTrigger()
+        call TriggerRegisterAnyUnitEventBJ( t, EVENT_PLAYER_UNIT_SPELL_FINISH )
+        call TriggerAddCondition( t, Condition( function PackBuilding ) )
+    endfunction
 
-function Trig_packed_up_Func002C takes nothing returns boolean
-    if ( not ( GetUnitTypeId(GetSpellAbilityUnit()) == UNIT_TENT ) ) then
-        return false
-    endif
-    return true
-endfunction
-
-function Trig_packed_up_Func003C takes nothing returns boolean
-    if ( not ( GetUnitTypeId(GetSpellAbilityUnit()) == UNIT_MAGE_FIRE ) ) then
-        return false
-    endif
-    return true
-endfunction
-
-function Trig_packed_up_Func004C takes nothing returns boolean
-    if ( not ( GetUnitTypeId(GetSpellAbilityUnit()) == UNIT_MAGE_FIRE_SUMMONED ) ) then
-        return false
-    endif
-    return true
-endfunction
-
-function Trig_packed_up_Actions takes nothing returns nothing
-    if ( Trig_packed_up_Func001C() ) then
-        call RemoveUnit( GetSpellAbilityUnit() )
-        call CreateItemLoc( ITEM_FIRE_KIT, GetUnitLoc(GetSpellAbilityUnit()) )
-    else
-    endif
-    if ( Trig_packed_up_Func002C() ) then
-        call RemoveUnit( GetSpellAbilityUnit() )
-        call CreateItemLoc( ITEM_TENT_KIT, GetUnitLoc(GetSpellAbilityUnit()) )
-    else
-    endif
-    if ( Trig_packed_up_Func003C() ) then
-        call RemoveUnit( GetSpellAbilityUnit() )
-        call CreateItemLoc( ITEM_MAGE_FIRE_KIT, GetUnitLoc(GetSpellAbilityUnit()) )
-    else
-    endif
-    if ( Trig_packed_up_Func004C() ) then
-        call RemoveUnit( GetSpellAbilityUnit() )
-    else
-    endif
-endfunction
-
-//===========================================================================
-function InitTrig_packed_up takes nothing returns nothing
-    set gg_trg_packed_up = CreateTrigger(  )
-    call TriggerRegisterAnyUnitEventBJ( gg_trg_packed_up, EVENT_PLAYER_UNIT_SPELL_FINISH )
-    call TriggerAddCondition( gg_trg_packed_up, Condition( function Trig_packed_up_Conditions ) )
-    call TriggerAddAction( gg_trg_packed_up, function Trig_packed_up_Actions )
-endfunction
-
-//===========================================================================
+endscope

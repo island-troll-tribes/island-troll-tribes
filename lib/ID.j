@@ -242,7 +242,8 @@ library ID {
 		constant integer SPELL_PET_TAME               = 'A01A';
 
 		// Building Spells
-        constant integer SPELL_SMOKE_MEAT             = 'A0C8';
+		constant integer SPELL_SMOKE_MEAT             = 'A0C8';
+		constant integer SPELL_PACK_BUILDING          = 'A003';
 		
 		
 		//#####################################################

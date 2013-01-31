@@ -42,6 +42,10 @@ library ChangeLog requires Constants {
             changes[this].string[length] = change;
             length += 1;
         }
+
+        method add(string change) {
+            push(change);
+        }
         
         method each(player p, StringFn f) {
             integer i = 0;

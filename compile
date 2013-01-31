@@ -1,0 +1,161 @@
+#!/usr/bin/ruby
+
+require 'erb'
+
+class String
+  def camelize
+    string = self.downcase.split('_').to_a.map{|i|i.capitalize}.join
+  end
+end
+
+class JassCompiler
+
+end
+
+class Assembler
+
+  CLIJASSHELPER_EXE = "jasshelper/clijasshelper.exe --scriptonly --debug /home/quazz/ittdev/wc3dir/utils/common.j /home/quazz/ittdev/wc3dir/utils/Blizzard.j "
+
+  @root
+  @output
+  @tmp_path
+  @output_path
+  @errors
+
+  def extract_globals(path)
+    File.open(path, 'r') do |f|
+      @ids = f.read.scan(/constant \w{1,} (\w{1,}) *= *(\'[A-Za-z0-9]{4}\')/)
+    end
+  end
+
+  def initialize(options = {:output => "tmp.j", })
+    @root = Dir.getwd
+    @tmp_path = "tmp_#{Time.now.strftime("%s")}.j"
+    @output = File.open(@tmp_path, 'w')
+    @output_path = "#{@root}/#{options[:output]}"
+    @errors = []
+    @compiled_by = options[:owner]
+  end
+
+  def extract_jasshelper_errors(jasshelper_out)
+    jasshelper_out.gsub! /\r\n?/, "\n"
+    reasons = jasshelper_out.scan(/Line (\d*): *(.*)/).map{|i|{i[0].to_i => i[1]}}
+    code    = jasshelper_out.scan(/(\d*) \| (.*\n)/).inject({}){|m,i|m.merge! Hash[i[0].to_i, i[1]]}
+    reasons.each do |i|
+      i = i.shift
+      l = i[0]
+      r = i[1]
+      c = []
+      o = l
+      j = 1
+      while code[l]
+        c.push code[l]
+        l += 1
+      end
+      l = o - 1
+      while code[l]
+        c.unshift code[l]
+        l -= 1
+        j += 1
+      end
+      @errors << {:reason => r, :lines => c, :fix_line => j, :line_number => o}
+    end
+  end
+
+  def call_jasshelper
+    jasshelper_out = `#{CLIJASSHELPER_EXE} #{@tmp_path} #{@output_path}`
+    if $? == 0
+      File.unlink @tmp_path
+    else
+      File.open 'logs/jasshelper.log', 'a' do |f|
+        f << "User " <<`whoami`
+        f << "Compiling @ #{Time.now}" << "\n"
+        f << `git log -1` << "\n"
+        f << jasshelper_out << "\n"
+      end
+      extract_jasshelper_errors(jasshelper_out)
+    end
+  end
+
+  def display_errors
+    puts " mapscript: #{@tmp_path}, #{@errors.length} Compile Errors..."
+    puts ""
+    @errors.each_with_index do |error, i|
+      if error[:lines].any?
+        code = error[:lines].join
+        msg  = "#{i+1} - Line #{error[:fix_line]}: #{error[:reason]}"
+        puts "_" * msg.length
+        puts msg
+        puts "¯" * msg.length
+        puts code
+        puts "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
+      else
+        puts "Line #{error[:line_number]}: #{error[:reason]}"
+      end
+    end
+  end
+
+  def compile
+    close_output
+    call_jasshelper
+    if @errors.any?
+      display_errors
+    else
+      puts "Compilation success!"
+      return 0
+    end
+  end
+
+  def add_file(f)
+    File.open(f, 'r') do |file|
+      contents = file.read
+      if File.extname(f) == ".erb"
+        contents = ERB.new(contents, 0, '%<>').result(binding)
+        f[".erb"] = ""
+      end
+      if File.extname(f) == ".j"
+        @output << "\n" << contents#.split(/\r\n?/).map{|i| unless i['//'] then "#{i}// #{f}" else i end}.join
+      elsif File.extname(f)  == ".zn"
+        @output << "\n//! zinc\n"
+        @output << contents << "\n"
+        @output << "\n//! endzinc\n"
+      end
+    end
+  end
+
+  def assemble_dir(dir = @root)
+    dir = File.expand_path dir
+    Dir.chdir dir
+    Dir.glob("*") do |f|
+      if File.directory? f
+        assemble_dir dir + "/" + f
+        Dir.chdir dir
+      else
+        add_file(f)
+      end
+    end
+    Dir.chdir @root
+  end
+
+  def close_output
+    @output.close
+  end
+
+end
+
+itt_builder = Assembler.new({
+  :output => "out.j",
+  :owner  => "quazz"
+})
+itt_builder.extract_globals 'src/lib/ID.j'
+itt_builder.assemble_dir 'src/lib'
+itt_builder.assemble_dir 'src/init/map'
+itt_builder.assemble_dir 'src/changelogs'
+itt_builder.assemble_dir 'src/systems'
+itt_builder.assemble_dir 'src/triggers'
+itt_builder.assemble_dir 'src/bosses'
+itt_builder.assemble_dir 'src/spells'
+itt_builder.assemble_dir 'src/init/objects'
+itt_builder.add_file 'src/init/triggers/Custom Triggers.j'
+itt_builder.add_file 'src/init/triggers/Main & Config.j'
+itt_builder.compile

@@ -1,0 +1,45 @@
+
+//! zinc
+
+library IDUtils requires ArrayLists {
+
+	public {
+		ArrayListInteger UNIT_ALL;
+		ArrayListInteger ITEM_ALL;
+		ArrayListInteger DEST_ALL;
+		ArrayListInteger SPELL_ALL;
+	}
+
+	public function S2ID (string s) -> integer {
+
+<% @ids.each do |v, _| %>
+		<%= %(if (s == "#{v}") return #{v}) %>;
+<% end %>
+
+		return 0;
+	}
+
+	public function ID2S (integer i) -> string {
+
+<% @ids.each do |v, _| %>
+		<%= %(if (i == #{v}) return "#{v}") %>;
+<% end %>
+
+		return "";
+	}
+
+	function onInit() {
+		UNIT_ALL  = ArrayListInteger.create();
+		ITEM_ALL  = ArrayListInteger.create();
+		DEST_ALL  = ArrayListInteger.create();
+		SPELL_ALL = ArrayListInteger.create();
+
+<% @ids.each do |v, _| %>
+		<%= %(#{v.split('_').first}_ALL.push(#{v})) %>;
+<% end %>
+
+	}
+
+}
+
+//! endzinc

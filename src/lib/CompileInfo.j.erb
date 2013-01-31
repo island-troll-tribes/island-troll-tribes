@@ -1,0 +1,31 @@
+//! zinc
+
+library CompileInfo {
+
+  public string CompiledBy = "<%= @compiled_by %>";
+
+  public struct DateCompiled {
+
+    static constant integer year      = <%= Time.now.strftime("%Y").to_i %>;
+    static constant integer dayOfYear = <%= Time.now.strftime("%j").to_i %>;
+    static constant integer month     = <%= Time.now.strftime("%m").to_i %>;
+    static constant integer day       = <%= Time.now.strftime("%d").to_i %>;
+    static constant integer hours     = <%= Time.now.strftime("%H").to_i %>;
+    static constant integer minutes   = <%= Time.now.strftime("%M").to_i %>;
+    static constant integer seconds   = <%= Time.now.strftime("%S").to_i %>;
+
+    static method operator to_s() -> string {
+      return I2S(year) + "-" + I2S(month) + "-" + I2S(day) + " " +
+             I2S(hours) + ":" + I2S(minutes) + ":" + I2S(seconds);
+    }
+
+    static method onInit() {
+      debug {
+        BJDebugMsg(DateCompiled.to_s);
+      }
+    }
+  }
+
+}
+
+//! endzinc

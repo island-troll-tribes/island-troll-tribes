@@ -1,10 +1,14 @@
 #!/usr/bin/ruby
 
 require 'erb'
+require 'digest/md5'
 
 class String
   def camelize
-    string = self.downcase.split('_').to_a.map{|i|i.capitalize}.join
+    self.downcase.split('_').to_a.map{|i|i.capitalize}.join
+  end
+  def to_boolean
+    self == 'true'
   end
 end
 
@@ -35,6 +39,7 @@ class Assembler
     @output_path = "#{@root}/#{options[:output]}"
     @errors = []
     @compiled_by = options[:owner]
+    @pregenerated = options[:pregenerated]
   end
 
   def extract_jasshelper_errors(jasshelper_out)
@@ -110,11 +115,20 @@ class Assembler
     File.open(f, 'r') do |file|
       contents = file.read
       if File.extname(f) == ".erb"
-        contents = ERB.new(contents, 0, '%<>').result(binding)
+        if @pregenerated
+          File.open "#{@root}/generated-jass/#{f}", 'r' do |a|
+            contents = a.read
+          end
+        else
+          contents = ERB.new(contents, 0, '%<>').result(binding)
+          File.open "#{@root}/generated-jass/#{f}", 'w' do |a|
+            a << contents
+          end
+        end
         f[".erb"] = ""
       end
       if File.extname(f) == ".j"
-        @output << "\n" << contents#.split(/\r\n?/).map{|i| unless i['//'] then "#{i}// #{f}" else i end}.join
+        @output << "\n" << contents
       elsif File.extname(f)  == ".zn"
         @output << "\n//! zinc\n"
         @output << contents << "\n"
@@ -137,25 +151,80 @@ class Assembler
     Dir.chdir @root
   end
 
+  def add(path)
+    if File.directory? path
+      assemble_dir path
+    elsif File.exists? path
+      add_file path
+    else
+      raise "Path doesn't exist: #{path}"
+    end
+  end
+
   def close_output
     @output.close
   end
 
 end
 
-itt_builder = Assembler.new({
-  :output => "out.j",
-  :owner  => "quazz"
-})
+def extract_options(a)
+  r = {}
+  a.each do |i|
+    o, v = i.split ':'
+    r[o.to_sym] = v
+  end
+  r
+end
+
+default_file_order = [
+  'lib',
+  'init/map',
+  'changelogs',
+  'systems',
+  'triggers',
+  'bosses',
+  'spells',
+  'init/objects',
+  'init/triggers/Custom Triggers.j',
+  'init/triggers/Main & Config.j'
+]
+
+opt = extract_options(ARGV)
+opt = {
+  :output       => opt[:out] || "out.j",
+  :owner        => opt[:owner] || `whoami`.chomp,
+  :pregenerated => opt[:pregenerated] ? opt[:pregenerated].to_boolean : true,
+  :build_order  => opt[:build_order] ? (File.exists?(opt[:build_order]) && !File.directory?(opt[:build_order]) ? File.read(opt[:build_order]) : opt[:build_order]).split(/,|\n/).map{|i|i.strip}.reject{|i|i.empty?} : default_file_order,
+  :debug        => opt[:debug] ? opt[:debug].to_boolean : false
+}
+p opt if opt[:debug]
+
+if ARGV[0] == 'help' || ARGV[0] == '--help'
+  puts <<-EOS
+Compiles src/(*.j|*.zn|*.*.erb) into a single map source file
+Displays errors to stdout
+
+Usage:
+./compile [options]
+
+Optional Options:
+owner:(owner name)                         defaults `whoami`
+out:(output filename)                      defaults out.j
+pregenerated:(whether to eval *.erb)       defaults false
+debug:(whether to print script debug msgs) defaults false
+build_order:(list paths relative to src/)  defaults\n#{default_file_order.join("\n")}
+
+Example:
+./compile owner:quazz out:itt.j pregenerated:true build_order:one.j,two.j,aDir
+
+NOTE: static erb will be off by default when compiling into the map
+EOS
+  exit
+end
+
+itt_builder = Assembler.new(opt)
 itt_builder.extract_globals 'src/lib/ID.j'
-itt_builder.assemble_dir 'src/lib'
-itt_builder.assemble_dir 'src/init/map'
-itt_builder.assemble_dir 'src/changelogs'
-itt_builder.assemble_dir 'src/systems'
-itt_builder.assemble_dir 'src/triggers'
-itt_builder.assemble_dir 'src/bosses'
-itt_builder.assemble_dir 'src/spells'
-itt_builder.assemble_dir 'src/init/objects'
-itt_builder.add_file 'src/init/triggers/Custom Triggers.j'
-itt_builder.add_file 'src/init/triggers/Main & Config.j'
+opt[:build_order].each do |f|
+  itt_builder.add "src/#{f}"
+end
 itt_builder.compile

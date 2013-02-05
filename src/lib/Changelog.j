@@ -1,7 +1,7 @@
 
 //! zinc
 
-library ChangeLog requires Constants {
+library ChangeLog requires Utils, Constants {
 
     constant string ChangeLogNoticeString = GENERAL_COLOR+"Type "+ENERGY_COLOR+"-changelog"+GENERAL_COLOR+" to view changelog for this version";
 
@@ -26,7 +26,7 @@ library ChangeLog requires Constants {
             this.major   = major;
             this.minor   = minor;
             this.length  = 0;
-            this.version = R2S(major) + I2S(minor);
+            this.version = R2S(major) + A2S(minor);
 
             thistype.numVersions += 1;
             thistype.versions.integer_s[version] = this;
@@ -35,7 +35,11 @@ library ChangeLog requires Constants {
         }
 
         method toString() -> string {
-            return "v" + R2S(major) + I2S(minor);
+            return "v" + version;
+        }
+
+        method operator to_s() -> string {
+            return toString();
         }
 
         method push(string change) {

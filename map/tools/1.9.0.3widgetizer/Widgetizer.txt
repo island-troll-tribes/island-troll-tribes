@@ -1,0 +1,229 @@
+========================================================================================================
+Warcraft III Widgetizer 1.9.0.3 - Created by PitzerMike - April 3rd 2008
+========================================================================================================
+
+TODO
+
+- Clean garbage values above NewLevel
+- Fix calculated slk columns like mindmg and maxdmg for <...> tooltip queries
+
+CHANGELOG
+
+- Fixed a problem with wrong default values for unchanged ability data introduced in a recent update
+- Fixed a tooltip problem introduced in a recent update
+- Fixed a problem with Names that originally contained commas
+- Fixed a problem with slk strings starting with - which could cause crashes and not loaded models
+- Fixed a bug where objects used in triggers had a chance to get erased
+- Fixed a problem with multilevel tooltips
+- Level 4 data is not put into the SLK anymore because that might screw up higher levels of the ability
+  This is because the level 4 columns in the SLK represent the default values for higher levels
+- However if the ability has no more than 4 levels, level 4 can and will be put into the SLK
+- Found a list of abilities that cannot be put into the SLK because they would get broken
+  Such abilities now stay in the w3a file as a whole (the most important is Command Aura)
+- Made it so that all levels of profile data are externalized to the TXT file
+  This means that CustomKeys.txt files can be used to completely translate maps
+  However it also means that " characters are replaced with single quotes in strings
+- Fixed a problem where profile data of base abilities had a chance to get lost
+- Fixed trouble with linebreaks in interface strings
+- Fixed a problem where buffs could be erased although they were needed
+- Added detailed instructions and a tool to obtain the proper input files
+- Fixed a bug in the w3i parser that could cause a out of memory exception
+- Cooldown group references are not followed any more
+- Fixed problem with resolving references for abilities with less than 4 levels
+- Added reference tracing option to help resolve the reason why objects do net get cleaned
+- Fixed purple boxes problem
+- Fixed a runtime error with the Clean TXT/SLK File option
+- Now supports natural linebreaks in strings in additoin to |n
+- Fixed a problem with reasearches on the Temple of the Damned unit
+- Hopefully fixed a problem with certain doodads showing up as checkered boxes in the game
+- Fixed a bug where tech requirements were overlooked when scanning for referenced objects to keep
+- Closing the Window during the conversion will now immediately stop it
+- Now using 1.20 input files
+- Fixed some problems with GlobalStrings.fdf 
+- In the INI file you can now exclude certain object ids and change ids from the conversion
+- Added capability of converting game interface and gameplay constants data
+- Added capability of replacing the ids of changed objects
+- Added capability of keeping comments in the resulting files
+- Fixed a problem with CustomKeys.txt files
+- Fixed a problem that changed the experience gain rate of certain heros
+- Fixed a problem with ability levels of 4 and above
+- Fixed a problem that removed certain required buffs
+- Changed the default dataset to to Custom_V1 dataset
+- Added an option to keep objects referenced with triggers
+- Made the remove unused objects checkboxes independent of the other settings
+- Added seperate options to remove unused objects for each object type
+- Fixed a bug that caused upgrade requirements for level 2 or higher to disappear
+- Fixed a bug that caused extended tooltips for abilities and upgrades with more than one level to get
+  screwed up sometimes
+- Fixed a bug that screwed up tinting colors of doodads with more than one variation
+- Fixed a problem with inherited ability values that caused ability levels of 5 and higher to get
+  screwed up
+- Increased the hashtable sizes so it won't fail on maps with a large number of objects
+- Added the HashtableSizes entry to the ini file to make the hashtable sizes customizable
+
+
+DISCLAIMER
+
+This program is distributed as is. You use it at your own risk.
+The creator is not liable for any damage, data loss, loss of profits or
+any other kind of loss while using this software.
+It has been tested thoroughly and scanned for viruses.
+
+
+DESCRIPTION
+
+The Widgetizer is designed to reduce the loading times of your maps. It will take object
+definition files as input and generate new SLK and TXT files which, imported to your map
+can reduce the loading times of your map by more than 50 percent.
+
+
+INSTALLATION
+
+Simply unzip this archive into a folder of your choice, make sure you retain the directory
+structure and all SLK and TXT files are in the Input folder. These are the files the generated
+files will be based off.
+If you are missing the Visual Basic 6 runtime files or MSSTDFMT.dll, download and install
+the runtime pack from http://www.wc3campaigns.net/umswe/weu/RuntimeFiles.exe
+
+
+LANGUAGE SUPPORT
+
+I'm only providing the latest english files here (TFT 1.20). If you intend to base the
+generated files off another version you can replace all the files in the Input\ folder
+by your own files.
+Another option is to delete all files from the Input\ folder. Then the tool will try to
+extract all required files from the game archives on your computer.
+If the map being converted contains any of those SLK or TXT files they will be loaded instead
+of the files from the Input\ folder.
+
+
+USAGE
+
+1) Start the Widgetizer, click the add button and browse for the map you want to widgetize.
+   The map will then appear in the source file list.
+
+2) Now you'll have to decide which object types you want to convert, usually you will want to
+   convert all object types, simply activate the appropriate checkboxes.
+
+3) Now there we have some advanced settings.
+
+   -> Remove Unused Objects:   these seven checkboxes allow you to specify which unused objects
+                               will be removed from the output files, turning these options off will
+                               result in all the standard objects being kept in the output files
+
+   -> Keep Placed Objects:     this checkbox decides if all items, units, doodads and destructables
+                               placed on the map will be kept, also units and
+                               items on random tables will be kept if this option is on
+
+   -> Keep Trigger Referenced Objects: this checkbox decides if objects that are referenced somewhere
+                                       in the triggers of the map will be kept, also tech items that
+                                       have their availablity changed in the map properties screen
+                                       will be kept as well as
+
+   -> Keep Referenced Objects: this checkbox decides if all kept objects are scanned for references
+                               to other objects, those will be kept too if this option is on, this
+                               option will often cause the whole techtree of a race to be kept
+
+   -> Ignore Basic References: in the ini file of this tool you'll find a basic exception list with
+                               object ids that shouldn't be removed (for example the move and attack
+                               abilities and the peasant unit), now if the second checkbox is on, the
+                               objects referenced by these objects (for example all buildings built
+                               by the peasant) will also be kept, you probably don't want that, so you
+                               can activate this option to ignore those references of basic objects
+
+   -> Clean Trigger Strings:   many strings like unit names, editor suffixes, tooltips and the like
+                               are saved in the map's WTS file, during the conversion the references
+                               to those strings will be replaced by the actual strings, in most cases
+                               the string entry in the WTS file will then be obsolete, thus can be
+                               removed, that's what this checkbox does (only if the same string is
+                               reused in other places like in the map script, this can cause problems)
+
+   -> Clean SLK Tables:        will remove optional data from the SLK tables like comments, beta flags
+                               and hyphens and will remove comments and empty lines from the resulting
+                               TXT files, if this is not checked comments will be kept and comments that
+                               start with //:: will be appended to the end of each file
+
+   -> Custom Keys Resistant:   will guarantee that the resulting map will work with CustomKeys.txt files
+                               exactly like the source map would (meaning that your changes will override
+                               possible CustomKeys.txt files)
+
+   -> Reference Logging:       will create a ReferenceLog.txt file in the output folder, where you can
+                               see why certain objects didn't get cleaned
+
+4) So now we're ready to click the compile button to start the conversion.
+   Be patient with the tool, especially on large maps the conversion can take quite long
+   (up to 5 minutes on older processors or big maps, usually about 1 minute).
+
+5) Find the generated files in the Output\ folder of the Widgetizer. You will most likely only be
+   interested in the created map file. It will have the same name as the original map.
+   To open the converted map in the World Editor without errors (and to be able to edit it after
+   the converion) start the editor with the generated Editor Patch.exe file.
+  
+   For mods and total conversions it will also compile a ROC Patch.exe and a TFT Patch.exe file.
+   They can be used to not have to import the compiled files into each of your maps. If you're going
+   to use such a patch make sure to delete all custom object data from the maps you're using it on
+   (w3u, w3t, w3b, w3d, w3a, w3h, w3q). The hidden option to convert gameplay constants and game
+   interface settings can be activated with the INI key Constants.
+
+   You can have the Widgetizer automatically replace the id of your customized objects by an id of
+   your choice. Therefore change the name of the object in the object editor to the format
+   Name::newid (fex Blast::Abla will change the id of the ability from A000 to Abla). After the 
+   id was replaced, the appended id will be removed from the object name.
+
+
+KNOWN ISSUES
+
+When you play a different map after having played a widgetized map you get checkered boxes instead
+of doodads?
+This is a problem caused by the bad loading system that Blizzard made for Warcraft III. Unfortunately
+I can't fix Blizzard's bugs, so if that matters to you simply exclude doodads and destructables
+from the conversion process.
+
+You get error messages about files that couldn't be added to the new map?
+This happens when you try to convert protected maps respectively maps with an incomplete listfile.
+The Widgetizer can collect missing file names to some extent but in some cases cannot resolve all
+missing file names. In this case the rewritten map will be missing one or more files.
+Don't widgetize protected maps or simply provide an updated listfile in this case!
+
+One of the generated Patch files says "Couldn't find target to patch"?
+This happens if a certain registry key is mssing that links the patch to the installation directory
+of Warcraft. Start regedit and look for the key InstallPath in
+HKEY_CURRENT_USER\Software\Blizzard Entertainment\Warcraft III\
+Set it to the real path of Warcraft or if it's missing create the string key and set it to the
+correct path.
+
+The editor patch doesn't work?
+Delete local Units\ Custom_V1\Units\ and Custom_V0\Units\ folders if they exist.
+
+The Widgetizer complains about a missing DLL file?
+In this case get the required runtime files from http://www.wc3campaigns.net/umswe/weu/RuntimeFiles.exe
+and install them.
+
+
+UNINSTALLATION
+
+Simpy remove the directory where you unzipped the Widgetizer to.
+
+
+CREDITS
+
+Special thanks go to Panto who gave me the idea and who spent a lot of time testing the tool on
+his new AOS map Unlikely Allies. Check out the forums at www.wc3campaigns.com regularly to not miss
+its release. Thanks to Litany, Jida and Xaran Alamas for beta testing help and especially Vexorian
+who found a very nifty bug. Thanks to IceFrog for his bug reports.
+Thanks to wc3campaigns for their hosting.
+
+
+CONTACT
+
+Make bug reports in the editing tools forum at http://www.wc3campaigns.net
+You may also write me an e-mail to PitzerMike@gmx.at
+
+Give due credit to the creator of this program!
+Have fun!
+
+
+  /\/\/\/\/\
+ /          \
+/ PitzerMike \
+\____________/

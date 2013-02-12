@@ -11,8 +11,11 @@ class String
   end
 end
 
-class JassCompiler
-
+def load_all_helpers
+  Dir.glob('helpers/*.rb') do |h|
+    require h
+    include Object.const_get File.basename(h, '.rb')
+  end
 end
 
 class Assembler
@@ -39,6 +42,7 @@ class Assembler
     @errors = []
     @compiled_by = options[:owner]
     @pregenerated = options[:pregenerated]
+    @jasshelper = options[:do_jasshelper]
   end
 
   def extract_jasshelper_errors(jasshelper_out)
@@ -101,7 +105,11 @@ class Assembler
 
   def compile
     close_output
-    call_jasshelper
+    if @jasshelper
+      call_jasshelper
+    else
+      `mv #{@tmp_path} #{@output_path}`
+    end
     if @errors.any?
       display_errors
     else
@@ -190,11 +198,12 @@ default_file_order = [
 
 opt = extract_options(ARGV)
 opt = {
-  :output       => opt[:out] || "out.j",
-  :owner        => opt[:owner] || `whoami`.chomp,
-  :pregenerated => opt[:pregenerated] ? opt[:pregenerated].to_boolean : false,
-  :build_order  => opt[:build_order] ? (File.exists?(opt[:build_order]) && !File.directory?(opt[:build_order]) ? File.read(opt[:build_order]) : opt[:build_order]).split(/,|\n/).map{|i|i.strip}.reject{|i|i.empty?} : default_file_order,
-  :debug        => opt[:debug] ? opt[:debug].to_boolean : false
+  :output        => opt[:out] || "out.j",
+  :owner         => opt[:owner] || `whoami`.chomp,
+  :do_jasshelper => opt[:do_jasshelper] ? opt[:do_jasshelper].to_boolean  : false,
+  :pregenerated  => opt[:pregenerated] ? opt[:pregenerated].to_boolean : false,
+  :build_order   => opt[:build_order] ? (File.exists?(opt[:build_order]) && !File.directory?(opt[:build_order]) ? File.read(opt[:build_order]) : opt[:build_order]).split(/,|\n/).map{|i|i.strip}.reject{|i|i.empty?} : default_file_order,
+  :debug         => opt[:debug] ? opt[:debug].to_boolean : false
 }
 p opt if opt[:debug]
 
@@ -221,9 +230,19 @@ EOS
   exit
 end
 
+
 itt_builder = Assembler.new(opt)
+
+unless opt[:pregenerated]
+  puts 'loading helpers...' if opt[:debug]
+  load_all_helpers
+  puts 'loaded helpers...' if opt[:debug]
+end
+
 itt_builder.extract_globals 'src/lib/ID.j'
+
 opt[:build_order].each do |f|
   itt_builder.add "src/#{f}"
 end
+
 itt_builder.compile

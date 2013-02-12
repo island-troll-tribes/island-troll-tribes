@@ -2,18 +2,18 @@
 //===========================================================================
 //TESH.scrollpos=0
 //TESH.alwaysfold=0
-library InventoryItems initializer init requires SmokeHouse, PublicLibrary
+library InventoryItems initializer init requires PublicLibrary
 
     function EnforceInventoryItemLimits takes nothing returns nothing
-        local item m= GetManipulatedItem()
-        local unit u= GetManipulatingUnit()
+        local integer i = 0
+        local integer a = 0
+        local integer q = 0
         local item t
-        local boolean bol1= checkTroll(GetManipulatingUnit())
-        local boolean bol2= false
-        local integer i= 0
-        local integer a= 0
-        local integer q= 0
-        if not(udg_ITEM_LIMIT_MODE) then 
+        local item m = GetManipulatedItem()
+        local unit u = GetManipulatingUnit()
+        local boolean bol1 = checkTroll(GetManipulatingUnit())
+        local boolean bol2 = false
+        if not(udg_ITEM_LIMIT_MODE) then
             return
         elseif bol1 then
             loop

@@ -244,6 +244,20 @@ library ID {
 		// Building Spells
 		constant integer SPELL_SMOKE_MEAT             = 'A0C8';
 		constant integer SPELL_PACK_BUILDING          = 'A003';
+
+		// Item Spells
+		constant integer SPELL_DISEASE                = 'A041';
+		//constant integer SPELL_                       = '';
+		//constant integer SPELL_                       = '';
+		//constant integer SPELL_                       = '';
+		//constant integer SPELL_                       = '';
+		//constant integer SPELL_                       = '';
+		//constant integer SPELL_                       = '';
+		//constant integer SPELL_                       = '';
+		//constant integer SPELL_                       = '';
+		//constant integer SPELL_                       = '';
+		//constant integer SPELL_                       = '';
+		//constant integer SPELL_                       = '';
 		
 		
 		//#####################################################

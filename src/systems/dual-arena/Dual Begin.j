@@ -30,7 +30,7 @@ function Trig_Dual_Begin_Actions takes nothing returns nothing
         call ResetTrigger(gg_trg_End_Dual)
         call TriggerRegisterUnitEvent( gg_trg_End_Dual, udg_DualUnit1, EVENT_UNIT_DEATH )
         call TriggerRegisterUnitEvent( gg_trg_End_Dual, udg_DualUnit2, EVENT_UNIT_DEATH )
-        call TriggerAddAction( gg_trg_End_Dual, function Trig_End_Dual_Actions )
+        call TriggerAddAction( gg_trg_End_Dual, function EndDual_Actions )
     else
         call DisplayTextToForce( GetForceOfPlayer(GetOwningPlayer(udg_DualUnit1)), "|c00ffffebYour Duel has been cancelled!|r" )
         call DisplayTextToForce( GetForceOfPlayer(GetOwningPlayer(udg_DualUnit2)), "|c00ffffebYour Duel has been cancelled!|r" )

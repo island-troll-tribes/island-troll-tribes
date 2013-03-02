@@ -12,7 +12,7 @@ local real Y = LoadReal(udg_GameHash, StringHash("ship2"), StringHash("Y"))
 local timer t
 if SHIP2_STOPPED then
     set t = NewTimer()
-    call TimerStart(t,0,false, function shipStop2)
+    call TimerStart(t,0,false, function ShipStop2)
     set t = null
 else
     call IssuePointOrder( udg_ship2, "move", X, Y) 

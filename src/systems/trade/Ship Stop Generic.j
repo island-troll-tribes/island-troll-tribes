@@ -10,13 +10,6 @@ function FilterShip1 takes nothing returns boolean
     return GetFilterUnit() == udg_ship
 endfunction
 
-function shipTimerStart takes nothing returns nothing
-local real X = LoadReal(udg_GameHash, StringHash("ship"), StringHash("X"))
-local real Y = LoadReal(udg_GameHash, StringHash("ship"), StringHash("Y"))
-call IssuePointOrder( udg_ship, "move", X, Y)
-set SHIP_STOPPED = false
-endfunction
-
 function Trig_ship_stop_generic_Actions takes nothing returns nothing
     local real X = 0
     local real Y = 0
@@ -97,7 +90,7 @@ else
     call SaveReal(udg_GameHash, StringHash("ship"), StringHash("Y"), Y)
     set SHIP_STOPPED = true
     call IssueImmediateOrder( udg_ship, "stop")
-    call TimerStart(t__boat1, 15, false, function shipTimerStart)
+    call TimerStart(t__boat1, 15, false, function ShipTimerStart)
 endif
 set u = null
 endfunction

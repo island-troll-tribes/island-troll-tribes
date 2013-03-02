@@ -3,20 +3,13 @@ function Trig_Ship_Ordered_Object_Conditions takes nothing returns boolean
     return GetOrderedUnit() == udg_ship
 endfunction
 
-function shipStop takes nothing returns nothing
-local timer t = GetExpiredTimer()
-call IssueImmediateOrder( udg_ship, "stop")
-call ReleaseTimer(t)
-set t = null
-endfunction
-
 function Trig_Ship_Ordered_Object_Actions takes nothing returns nothing
 local real X = LoadReal(udg_GameHash, StringHash("ship"), StringHash("X"))
 local real Y = LoadReal(udg_GameHash, StringHash("ship"), StringHash("Y"))
 local timer t
 if SHIP_STOPPED then
     set t = NewTimer()
-    call TimerStart(t,0,false, function shipStop)
+    call TimerStart(t,0,false, function ShipStop)
     set t = null
 else
     call IssuePointOrder( udg_ship, "move", X, Y) 

@@ -89,7 +89,7 @@ else
     call SaveReal(udg_GameHash, StringHash("ship2"), StringHash("Y"), Y)
     set SHIP2_STOPPED = true
     call IssueImmediateOrder( udg_ship2, "stop")
-    call TimerStart(t__boat2, 15, false, function shipTimerStart2)
+    call TimerStart(t__boat2, 15, false, function ShipTimerStart2)
 endif
 
 set u = null

@@ -9,7 +9,7 @@ endfunction
 function Trig_bought_but_keep_moving_Actions takes nothing returns nothing
 set SHIP_STOPPED = true
 call IssueImmediateOrder( udg_ship, "holdposition")
-call TimerStart(t__boat1, 7.5 , false, function shipTimerStart)
+call TimerStart(t__boat1, 7.5 , false, function ShipTimerStart)
 endfunction
 
 //===========================================================================

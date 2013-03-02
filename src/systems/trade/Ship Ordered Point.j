@@ -14,7 +14,7 @@ local real y2 = GetOrderPointY()
 local timer t
 if SHIP_STOPPED then
     set t = NewTimer()
-    call TimerStart(t,0,false, function shipStop)
+    call TimerStart(t,0,false, function ShipStop)
     set t = null
 elseif (x2 != X) and (y2 != Y) then
     call IssuePointOrder( udg_ship, "move", X, Y) 

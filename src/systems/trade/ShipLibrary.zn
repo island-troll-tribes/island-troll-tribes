@@ -1,0 +1,30 @@
+
+library Ship requires TimerUtils {
+  public {
+    function ShipStop() {
+      timer t = GetExpiredTimer();
+      IssueImmediateOrder( udg_ship, "stop");
+      ReleaseTimer(t);
+      t = null;
+    }
+    function ShipStop2() {
+      timer t = GetExpiredTimer();
+      IssueImmediateOrder( udg_ship2, "stop");
+      ReleaseTimer(t);
+      t = null;
+    }
+
+    function ShipTimerStart() {
+      real X = LoadReal(udg_GameHash, StringHash("ship"), StringHash("X"));
+      real Y = LoadReal(udg_GameHash, StringHash("ship"), StringHash("Y"));
+      IssuePointOrder( udg_ship, "move", X, Y );
+      SHIP_STOPPED = false;
+    }
+    function ShipTimerStart2() {
+      real X = LoadReal(udg_GameHash, StringHash("ship2"), StringHash("X"));
+      real Y = LoadReal(udg_GameHash, StringHash("ship2"), StringHash("Y"));
+      IssuePointOrder( udg_ship2, "move", X, Y );
+      SHIP2_STOPPED = false;
+    }
+  }
+}

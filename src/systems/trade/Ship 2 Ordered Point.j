@@ -6,13 +6,6 @@ function Trig_Ship_2_Ordered_Point_Conditions takes nothing returns boolean
     return GetOrderedUnit() == udg_ship2
 endfunction
 
-function shipStop2 takes nothing returns nothing
-local timer t = GetExpiredTimer()
-call IssueImmediateOrder( udg_ship2, "stop")
-call ReleaseTimer(t)
-set t = null
-endfunction
-
 function Trig_Ship_2_Ordered_Point_Actions takes nothing returns nothing
 local real X = LoadReal(udg_GameHash, StringHash("ship2"), StringHash("X"))
 local real Y = LoadReal(udg_GameHash, StringHash("ship2"), StringHash("Y"))
@@ -21,7 +14,7 @@ local real y2 = GetOrderPointY()
 local timer t
 if SHIP2_STOPPED then
     set t = NewTimer()
-    call TimerStart(t,0,false, function shipStop2)
+    call TimerStart(t,0,false, function ShipStop2)
     set t = null
 elseif (x2 != X) and (y2 != Y) then
     call IssuePointOrder( udg_ship2, "move", X, Y)

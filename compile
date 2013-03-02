@@ -123,12 +123,12 @@ class Assembler
       contents = file.read
       if File.extname(f) == ".erb"
         if @pregenerated
-          File.open "#{@root}/generated-jass/#{f}", 'r' do |a|
+          File.open "#{@root}/generated-jass/#{File.basename(f)}", 'r' do |a|
             contents = a.read
           end
         else
           contents = ERB.new(contents, 0, '%<>').result(binding)
-          File.open "#{@root}/generated-jass/#{f}", 'w' do |a|
+          File.open "#{@root}/generated-jass/#{File.basename(f)}", 'w' do |a|
             a << contents
           end
         end
@@ -192,6 +192,7 @@ default_file_order = [
   'bosses',
   'spells',
   'init/objects',
+  'init/triggers/Custom Objects.j.erb',
   'init/triggers/Custom Triggers.j',
   'init/triggers/Main & Config.j'
 ]

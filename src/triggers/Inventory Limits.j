@@ -1,7 +1,4 @@
 
-//===========================================================================
-//TESH.scrollpos=0
-//TESH.alwaysfold=0
 library InventoryItems initializer init requires PublicLibrary
 
     function EnforceInventoryItemLimits takes nothing returns nothing

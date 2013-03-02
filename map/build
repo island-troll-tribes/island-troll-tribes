@@ -2,6 +2,9 @@
 
 require 'fileutils'
 
+MAC_OS = RbConfig::CONFIG['host_os'] =~ /darwin/ ? true : false
+puts "Detected mac OS... prefixing exe calls with wine" if MAC_OS
+
 CWD = Dir.getwd
 DIR = File.dirname(__FILE__)
 
@@ -24,19 +27,19 @@ def do_compile
 end
 
 def do_jasshelper
-  cmd = "'#{JASSHELPER_PATH}' #{"--debug" if $opt[:debug]} #{"--scriptonly" if $opt[:script_only]} #{"--nooptimize" if $opt[:no_optimize]} '#{COMMON_J_PATH}' '#{BLIZZARD_J_PATH}' '#{$opt[:map_script_path] || $opt[:script_only][:path]}' '#{$opt[:map_unpro_path] || "out_"+$opt[:script_only][:path]}'"
+  cmd = "#{'wine ' if MAC_OS}'#{JASSHELPER_PATH}' #{"--debug" if $opt[:debug]} #{"--scriptonly" if $opt[:script_only]} #{"--nooptimize" if $opt[:no_optimize]} '#{COMMON_J_PATH}' '#{BLIZZARD_J_PATH}' '#{$opt[:map_script_path] || $opt[:script_only][:path]}' '#{$opt[:map_unpro_path] || "out_"+$opt[:script_only][:path]}'"
   puts cmd if $opt[:debug_script]
   `#{cmd}`
 end
 
 def do_optimizer
-  cmd = "'#{OPTIMIZER_PATH}' '#{$opt[:map_unpro_path]}' --do '#{$opt[:map_output_path]}' --checkall --tweak '#{File.join(%W[#{OPTIMIZER_DIR} settings.vxtweak])}' --exit"
+  cmd = "#{'wine ' if MAC_OS}'#{OPTIMIZER_PATH}' '#{$opt[:map_unpro_path]}' --do '#{$opt[:map_output_path]}' --checkall --tweak '#{File.join(%W[#{OPTIMIZER_DIR} settings.vxtweak])}' --exit"
   puts cmd if $opt[:debug_script]
   `#{cmd}`
 end
 
 def do_widgetizer
-  cmd = "'#{WIDGETIZER_PATH}' '#{$opt[:map_output_path]}' '#{File.join(%W[#{WIDGETIZER_DIR} settings.ini])}'"
+  cmd = "#{'wine ' if MAC_OS}'#{WIDGETIZER_PATH}' '#{$opt[:map_output_path]}' '#{File.join(%W[#{WIDGETIZER_DIR} settings.ini])}'"
   puts cmd if $opt[:debug_script]
   `#{cmd}`
 end
@@ -102,7 +105,7 @@ def main
     :script_only     => $opt[:script_only]     ? eval($opt[:script_only])   : false,
     :map_unpro_path  => $opt[:map_unpro_path]  ? File.expand_path($opt[:map_unpro_path])  : Dir.glob(File.join(%W[base-maps *.w3x])).sort.reverse.first,
     :map_script_path => $opt[:map_script_path] ? File.expand_path($opt[:map_script_path]) : File.join(%W[.. out.j]),
-    :map_output_path => $opt[:map_output_path] ? File.expand_path($opt[:map_output_path]) : File.join(%W[compiled-maps ITT_#{`cd #{DIR} ..  && git log -1 --pretty=oneline`[/\A\w*/].strip}_#{Time.now.to_i}.w3x])
+    :map_output_path => $opt[:map_output_path] ? File.expand_path($opt[:map_output_path]) : File.join(%W[compiled-maps ITT_#{`git log -1 --pretty=oneline`[/\A\w*/].strip}_#{Time.now.to_i}.w3x])
   })
 
   if $opt[:env] == 'beta'

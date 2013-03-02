@@ -2,6 +2,9 @@
 
 require 'erb'
 
+MAC_OS = RbConfig::CONFIG['host_os'] =~ /darwin/ ? true : false
+puts "Detected mac OS... prefixing exe calls with wine" if MAC_OS
+
 class String
   def camelize
     self.downcase.split('_').to_a.map{|i|i.capitalize}.join
@@ -20,7 +23,7 @@ end
 
 class Assembler
 
-  CLIJASSHELPER_EXE = "jasshelper/clijasshelper.exe --scriptonly --debug #{File.expand_path "common.j", File.dirname(__FILE__)} #{File.expand_path "Blizzard.j", File.dirname(__FILE__)} "
+  CLIJASSHELPER_EXE = "#{"wine " if MAC_OS}jasshelper/clijasshelper.exe --scriptonly --debug #{File.expand_path "common.j", File.dirname(__FILE__)} #{File.expand_path "Blizzard.j", File.dirname(__FILE__)} "
 
   @root
   @output

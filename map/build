@@ -1,16 +1,17 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 
 require 'fileutils'
 
-DIR = File.expand_path File.dirname(__FILE__)
+CWD = Dir.getwd
+DIR = File.dirname(__FILE__)
 
-JASSHELPER_PATH = "#{DIR}/tools/0.A.2.B.jasshelper/executable/clijasshelper.exe"
-OPTIMIZER_DIR   = "#{DIR}/tools/5.0wc3mapoptimizer"
-OPTIMIZER_PATH  = "#{OPTIMIZER_DIR}/VXJWTSOPT.exe"
-WIDGETIZER_DIR  = "#{DIR}/tools/1.9.0.3widgetizer"
-WIDGETIZER_PATH = "#{WIDGETIZER_DIR}/BatWidgetizer.exe"
-BLIZZARD_J_PATH = "#{DIR}/tools/blizzard.j"
-COMMON_J_PATH   = "#{DIR}/tools/common.j"
+JASSHELPER_PATH = File.join %W[tools 0.A.2.B.jasshelper executable clijasshelper.exe]
+OPTIMIZER_DIR   = File.join %W[tools 5.0wc3mapoptimizer]
+OPTIMIZER_PATH  = File.join %W[#{OPTIMIZER_DIR} VXJWTSOPT.exe]
+WIDGETIZER_DIR  = File.join %W[tools 1.9.0.3widgetizer]
+WIDGETIZER_PATH = File.join %W[#{WIDGETIZER_DIR} BatWidgetizer.exe]
+BLIZZARD_J_PATH = File.join %W[tools blizzard.j]
+COMMON_J_PATH   = File.join %W[tools common.j]
 
 def do_compile
   wd = Dir.getwd
@@ -29,13 +30,13 @@ def do_jasshelper
 end
 
 def do_optimizer
-  cmd = "'#{OPTIMIZER_PATH}' '#{$opt[:map_unpro_path]}' --do '#{$opt[:map_output_path]}' --checkall --tweak '#{OPTIMIZER_DIR}/settings.vxtweak' --exit"
+  cmd = "'#{OPTIMIZER_PATH}' '#{$opt[:map_unpro_path]}' --do '#{$opt[:map_output_path]}' --checkall --tweak '#{File.join(%W[#{OPTIMIZER_DIR} settings.vxtweak])}' --exit"
   puts cmd if $opt[:debug_script]
   `#{cmd}`
 end
 
 def do_widgetizer(map_path)
-  cmd = "'#{WIDGETIZER_PATH}' '#{map_path}' '#{WIDGETIZER_DIR}/settings.ini'"
+  cmd = "'#{WIDGETIZER_PATH}' '#{map_path}' '#{File.join(%W[#{WIDGETIZER_DIR} settings.ini])}'"
   puts cmd if $opt[:debug_script]
   `#{cmd}`
 end
@@ -86,40 +87,45 @@ def extract_options(a)
   r
 end
 
-$opt = extract_options ARGV
-$opt.merge!({
-  :debug_script    => $opt[:debug_script]    ? eval($opt[:debug_script])  : false,
-  :do_jasshelper   => $opt[:do_jasshelper]   ? eval($opt[:do_jasshelper]) : true,
-  :do_compile      => $opt[:do_compile]      ? eval($opt[:do_compile])    : false,
-  :do_optimizer    => $opt[:do_optimizer]    ? eval($opt[:do_optimizer])  : true,
-  :do_widgetizer   => $opt[:do_widgetizer]   ? eval($opt[:do_widgetizer]) : false,
-  :no_optimize     => $opt[:no_optimize]     ? eval($opt[:no_optimize])   : false,
-  :debug           => $opt[:debug]           ? eval($opt[:debug])         : false,
-  :script_only     => $opt[:script_only]     ? eval($opt[:script_only])   : false,
-  :map_unpro_path  => $opt[:map_unpro_path]  ? File.expand_path($opt[:map_unpro_path])  : Dir.glob("#{DIR}/base-maps/*.w3x").sort.reverse.first,
-  :map_script_path => $opt[:map_script_path] ? File.expand_path($opt[:map_script_path]) : "#{DIR}/../out.j",
-  :map_output_path => $opt[:map_output_path] ? File.expand_path($opt[:map_output_path]) : "#{DIR}/compiled-maps/ITT_#{`cd #{DIR}/../ && git log -1 --pretty=oneline`[/\A\w*/].strip}_#{Time.now.to_i}.w3x"
-})
+def main
+  Dir.chdir DIR
 
-if $opt[:env] == 'beta'
+  $opt = extract_options ARGV
   $opt.merge!({
-    :debug => true
+    :debug_script    => $opt[:debug_script]    ? eval($opt[:debug_script])  : false,
+    :do_jasshelper   => $opt[:do_jasshelper]   ? eval($opt[:do_jasshelper]) : true,
+    :do_compile      => $opt[:do_compile]      ? eval($opt[:do_compile])    : false,
+    :do_optimizer    => $opt[:do_optimizer]    ? eval($opt[:do_optimizer])  : true,
+    :do_widgetizer   => $opt[:do_widgetizer]   ? eval($opt[:do_widgetizer]) : false,
+    :no_optimize     => $opt[:no_optimize]     ? eval($opt[:no_optimize])   : false,
+    :debug           => $opt[:debug]           ? eval($opt[:debug])         : false,
+    :script_only     => $opt[:script_only]     ? eval($opt[:script_only])   : false,
+    :map_unpro_path  => $opt[:map_unpro_path]  ? File.expand_path($opt[:map_unpro_path])  : Dir.glob(File.join(%W[base-maps *.w3x])).sort.reverse.first,
+    :map_script_path => $opt[:map_script_path] ? File.expand_path($opt[:map_script_path]) : File.join(%W[.. out.j]),
+    :map_output_path => $opt[:map_output_path] ? File.expand_path($opt[:map_output_path]) : File.join(%W[compiled-maps ITT_#{`cd #{DIR} ..  && git log -1 --pretty=oneline`[/\A\w*/].strip}_#{Time.now.to_i}.w3x])
   })
-elsif $opt[:env] == 'pro'
-  $opt.merge!({
-    :debug => false,
-    :do_widgetizer => true
-  })
-elsif $opt[:env] == 'WEC' # World Editor Compatible
-  $opt.merge!({
-    :debug => true,
-    :do_widgetizer => false,
-    :do_optimizer => false,
-    :do_compile => {:do_jasshelper => false}
-  })
+
+  if $opt[:env] == 'beta'
+    $opt.merge!({
+      :debug => true
+    })
+  elsif $opt[:env] == 'pro'
+    $opt.merge!({
+      :debug => false,
+      :do_widgetizer => true
+    })
+  elsif $opt[:env] == 'WEC' # World Editor Compatible
+    $opt.merge!({
+      :debug => true,
+      :do_widgetizer => false,
+      :do_optimizer => false,
+      :do_compile => {:do_jasshelper => false}
+    })
+  end
+
+  p $opt if $opt[:debug_script]
+
+  do_build
 end
 
-p $opt if $opt[:debug_script]
-
-Dir.chdir DIR
-do_build
+main

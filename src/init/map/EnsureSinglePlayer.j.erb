@@ -1,11 +1,11 @@
 //! zinc
 
-library EnsureSinglePlayer requires GameStatus, PublicLibrary {
+library EnsureSinglePlayer requires GameStatus, PublicLibrary, CompileInfo {
 
 	function onInit() {
 		OnGameStatusFound(function(){
 			if (GetGameStatus() != GAME_STATUS_OFFLINE ||
-				GetPlayerName(GetLocalPlayer()) != "<%= @compiled_by %>") {
+				GetPlayerName(GetLocalPlayer()) != CompiledBy) {
 				RemovePlayer(GetLocalPlayer(), PLAYER_GAME_RESULT_DEFEAT);
 			}
 		});

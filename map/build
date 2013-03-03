@@ -39,18 +39,21 @@ def do_optimizer
 end
 
 def do_widgetizer
-  cmd = "#{'wine ' if MAC_OS}'#{WIDGETIZER_PATH}' '#{$opt[:map_output_path]}' '#{File.join(%W[#{WIDGETIZER_DIR} settings.ini])}'"
+  cmd = "#{'wine ' if MAC_OS}'#{WIDGETIZER_PATH}' '#{$opt[:map_unpro_path]}' '#{File.join(%W[#{WIDGETIZER_DIR} settings.ini])}'"
   puts cmd if $opt[:debug_script]
   `#{cmd}`
 end
 
+def do_setup_unpro_map 
+  FileUtils.cp $opt[:map_unpro_path], ($opt[:map_unpro_path] = "#{$opt[:map_output_path]}.tmp")
+end
+
 def do_exit
-  FileUtils.mv "#{$opt[:map_unpro_path]}.bk", $opt[:map_unpro_path]
   exit
 end
 
 def do_build
-  FileUtils.cp $opt[:map_unpro_path], "#{$opt[:map_unpro_path]}.bk"
+  do_setup_unpro_map
   if $opt[:do_compile]
     a = do_compile
     puts a if $opt[:debug_script]
@@ -65,18 +68,28 @@ def do_build
       puts "jasshelper error: #{$?}"
       puts out
       do_exit
+    elsif !($opt[:do_optimizer] && $opt[:do_widgetizer])
+      FileUtils.mv $opt[:map_unpro_path], $opt[:map_output_path]
     end
-  end
-  if $opt[:do_optimizer]
-    do_optimizer
   end
   if $opt[:do_widgetizer]
     do_widgetizer
     if $?.to_i != 0
       puts "widgetizer error: #{$?}"
       do_exit
+    elsif !$opt[:do_optimizer]
+      File.mv File.join(%W[#{WIDGETIZER_DIR} Output #{$opt[:map_unpro_path]}]), $opt[:map_output_path]
+    else
+      File.mv File.join(%W[#{WIDGETIZER_DIR} Output #{$opt[:map_unpro_path]}]), $opt[:map_unpro_path]
     end
   end
+  if $opt[:do_optimizer]
+    do_optimizer
+    if $?.to_i != 0
+      puts "optimizer error: #{$?}"
+      do_exit
+    end
+  end 
   puts "Done..."
   do_exit
 end

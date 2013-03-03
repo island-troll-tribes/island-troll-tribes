@@ -3,7 +3,7 @@
 require 'fileutils'
 
 MAC_OS = RbConfig::CONFIG['host_os'] =~ /darwin/ ? true : false
-puts "Detected mac OS... prefixing exe calls with wine" if MAC_OS
+puts "Detected mac OS........prefixing exe calls with wine" if MAC_OS
 
 CWD = Dir.getwd
 DIR = File.dirname(__FILE__)
@@ -39,13 +39,14 @@ def do_optimizer
 end
 
 def do_widgetizer
-  cmd = "#{'wine ' if MAC_OS}'#{WIDGETIZER_PATH}' '#{$opt[:map_unpro_path]}' '#{File.join(%W[#{WIDGETIZER_DIR} settings.ini])}'"
+  cmd = "#{'wine ' if MAC_OS}'#{WIDGETIZER_PATH}' '#{$opt[:map_unpro_path]}' '#{File.join(%W[#{WIDGETIZER_DIR} Widgetizer.ini])}'"
   puts cmd if $opt[:debug_script]
   `#{cmd}`
 end
 
 def do_setup_unpro_map 
-  FileUtils.cp $opt[:map_unpro_path], ($opt[:map_unpro_path] = "#{$opt[:map_output_path]}.tmp")
+  File.mkdir 'compiled-maps' unless File.exists? 'compiled-maps'
+  FileUtils.cp $opt[:map_unpro_path], ($opt[:map_unpro_path] = "#{$opt[:map_output_path]}.tmp.w3x")
 end
 
 def do_exit
@@ -55,42 +56,48 @@ end
 def do_build
   do_setup_unpro_map
   if $opt[:do_compile]
+    print "Compiling map script..."
     a = do_compile
     puts a if $opt[:debug_script]
     if $? != 0
       puts "compile error: #{$?.to_i}"
       do_exit
     end
+    puts "done"
   end
   if $opt[:do_jasshelper]
+    print "Executing jasshelper..."
     out = do_jasshelper
     if $?.to_i != 0
       puts "jasshelper error: #{$?}"
       puts out
       do_exit
-    elsif !($opt[:do_optimizer] && $opt[:do_widgetizer])
+    elsif !($opt[:do_optimizer] || $opt[:do_widgetizer])
       FileUtils.mv $opt[:map_unpro_path], $opt[:map_output_path]
     end
+    puts "done"
   end
   if $opt[:do_widgetizer]
+    print "Widgetizing............"
     do_widgetizer
     if $?.to_i != 0
       puts "widgetizer error: #{$?}"
       do_exit
     elsif !$opt[:do_optimizer]
-      File.mv File.join(%W[#{WIDGETIZER_DIR} Output #{$opt[:map_unpro_path]}]), $opt[:map_output_path]
-    else
-      File.mv File.join(%W[#{WIDGETIZER_DIR} Output #{$opt[:map_unpro_path]}]), $opt[:map_unpro_path]
+      FileUtils.mv $opt[:map_unpro_path], $opt[:map_output_path]
     end
+    puts "done"
   end
   if $opt[:do_optimizer]
+    print "Optimizing............."
     do_optimizer
     if $?.to_i != 0
       puts "optimizer error: #{$?}"
       do_exit
     end
-  end 
-  puts "Done..."
+    puts "done"
+  end
+  puts "Finished building map!"
   do_exit
 end
 
@@ -110,7 +117,7 @@ def main
   $opt.merge!({
     :debug_script    => $opt[:debug_script]    ? eval($opt[:debug_script])  : false,
     :do_jasshelper   => $opt[:do_jasshelper]   ? eval($opt[:do_jasshelper]) : true,
-    :do_compile      => $opt[:do_compile]      ? eval($opt[:do_compile])    : false,
+    :do_compile      => $opt[:do_compile]      ? eval($opt[:do_compile])    : true,
     :do_optimizer    => $opt[:do_optimizer]    ? eval($opt[:do_optimizer])  : true,
     :do_widgetizer   => $opt[:do_widgetizer]   ? eval($opt[:do_widgetizer]) : false,
     :no_optimize     => $opt[:no_optimize]     ? eval($opt[:no_optimize])   : false,
@@ -124,6 +131,10 @@ def main
   if $opt[:env] == 'beta'
     $opt.merge!({
       :debug => true
+    })
+  elsif $opt[:env] == 'optimized'
+    $opt.merge!({
+      :debug => false
     })
   elsif $opt[:env] == 'pro'
     $opt.merge!({

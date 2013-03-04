@@ -27,7 +27,7 @@ def do_compile
 end
 
 def do_jasshelper
-  cmd = "#{'wine ' if MAC_OS}'#{JASSHELPER_PATH}' #{"--debug" if $opt[:debug]} #{"--scriptonly" if $opt[:script_only]} #{"--nooptimize" if $opt[:no_optimize]} '#{COMMON_J_PATH}' '#{BLIZZARD_J_PATH}' '#{$opt[:map_script_path] || $opt[:script_only][:path]}' '#{$opt[:map_unpro_path] || "out_"+$opt[:script_only][:path]}'"
+  cmd = "#{"sh -c \"" if WIN_OS}#{'wine ' if MAC_OS}'#{JASSHELPER_PATH}' #{"--debug" if $opt[:debug]} #{"--scriptonly" if $opt[:script_only]} #{"--nooptimize" if $opt[:no_optimize]} '#{COMMON_J_PATH}' '#{BLIZZARD_J_PATH}' '#{$opt[:map_script_path] || $opt[:script_only][:path]}' '#{$opt[:map_unpro_path] || "out_"+$opt[:script_only][:path]}'#{"\"" if WIN_OS}"
   puts cmd if $opt[:debug_script]
   `#{cmd}`
 end

@@ -2,8 +2,10 @@
 
 require 'fileutils'
 
+WIN_OS = RbConfig::CONFIG['host_os'] =~ /mswin|mingw|cygwin/
 MAC_OS = RbConfig::CONFIG['host_os'] =~ /darwin/ ? true : false
 puts "Detected mac OS........prefixing exe calls with wine" if MAC_OS
+puts "Detected windows os....prefixing system calls with sh -c" if WIN_OS
 
 CWD = Dir.getwd
 DIR = File.dirname(__FILE__)
@@ -19,7 +21,7 @@ COMMON_J_PATH   = File.join %W[tools common.j]
 def do_compile
   wd = Dir.getwd
   Dir.chdir '..'
-  cmd = "./compile do_jasshelper:false #{$opt[:do_compile].is_a?(Hash) ? $opt[:do_compile].inject([]){|i,v|i<<"'"+v[0].to_s+":"+v[1].to_s+"'"}.join(' ') : nil}"
+  cmd = "#{'ruby ' if WIN_OS}./compile do_jasshelper:false #{$opt[:do_compile].is_a?(Hash) ? $opt[:do_compile].inject([]){|i,v|i<<"'"+v[0].to_s+":"+v[1].to_s+"'"}.join(' ') : nil}"
   puts cmd if $opt[:debug_script]
   r = `#{cmd}`
   Dir.chdir wd
@@ -33,13 +35,13 @@ def do_jasshelper
 end
 
 def do_optimizer
-  cmd = "#{'wine ' if MAC_OS}'#{OPTIMIZER_PATH}' '#{$opt[:map_unpro_path]}' --do '#{$opt[:map_output_path]}' --checkall --tweak '#{File.join(%W[#{OPTIMIZER_DIR} settings.vxtweak])}' --exit"
+  cmd = "#{"sh -c \"" if WIN_OS}#{'wine ' if MAC_OS}'#{OPTIMIZER_PATH}' '#{$opt[:map_unpro_path]}' --do '#{$opt[:map_output_path]}' --checkall --tweak '#{File.join(%W[#{OPTIMIZER_DIR} settings.vxtweak])}' --exit#{"\"" if WIN_OS}"
   puts cmd if $opt[:debug_script]
   `#{cmd}`
 end
 
 def do_widgetizer
-  cmd = "#{'wine ' if MAC_OS}'#{WIDGETIZER_PATH}' '#{$opt[:map_unpro_path]}' '#{File.join(%W[#{WIDGETIZER_DIR} Widgetizer.ini])}'"
+  cmd = "#{"sh -c \"" if WIN_OS}#{'wine ' if MAC_OS}'#{WIDGETIZER_PATH}' '#{$opt[:map_unpro_path]}' '#{File.join(%W[#{WIDGETIZER_DIR} Widgetizer.ini])}'#{"\"" if WIN_OS}"
   puts cmd if $opt[:debug_script]
   `#{cmd}`
 end

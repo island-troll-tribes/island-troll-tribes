@@ -170,14 +170,17 @@ library ID {
 		// Merchants and Map Buildings
 		constant integer UNIT_CRAFT_MASTER            = 'n00N';
 		constant integer UNIT_OMINOUS_ALTAR           = 'n019';
-		constant integer UNIT_TRADING_SHIP_1          = 'h001';
-		constant integer UNIT_TRADING_SHIP_2          = 'o008';
-		constant integer UNIT_TRADING_SHIP_3          = 'u000';
-		constant integer UNIT_TRADING_SHIP_4          = 'h002';
-		constant integer UNIT_TRADING_SHIP_5          = 'o007';
-		constant integer UNIT_TRADING_SHIP_6          = 'e000';
-		constant integer UNIT_TRADING_SHIP_7          = 'h02I';
-		constant integer UNIT_TRADING_SHIP_8          = 'h02L';
+		constant integer UNIT_TRADE_SHIP_1            = 'ts01';
+		constant integer UNIT_TRADE_SHIP_2            = 'ts02';
+		constant integer UNIT_TRADE_SHIP_3            = 'ts03';
+		constant integer UNIT_TRADING_SHIP_1_OLD      = 'h001';
+		constant integer UNIT_TRADING_SHIP_2_OLD      = 'o008';
+		constant integer UNIT_TRADING_SHIP_3_OLD      = 'u000';
+		constant integer UNIT_TRADING_SHIP_4_OLD      = 'h002';
+		constant integer UNIT_TRADING_SHIP_5_OLD      = 'o007';
+		constant integer UNIT_TRADING_SHIP_6_OLD      = 'e000';
+		constant integer UNIT_TRADING_SHIP_7_OLD      = 'h02I';
+		constant integer UNIT_TRADING_SHIP_8_OLD      = 'h02L';
 		constant integer UNIT_TROLL_MERCHANT          = 'n013';
 
 		// Spell Related Units

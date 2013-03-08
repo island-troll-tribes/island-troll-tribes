@@ -82,7 +82,7 @@ if IsWidgetInRect(gg_rct_ship_make,u) or IsWidgetInRect(gg_rct_fork_1_gone,u) or
     //call DisplayTimedTextToPlayer(GetLocalPlayer(),0,0,40,"S2: Done")
     call RemoveUnit( udg_ship2 )
     set udg_shipOn2 = false
-    call ConditionalTriggerExecute( gg_trg_ship_make_2_Copy )
+    call CreateRandomTradeShipSouth()
 else
     //call DisplayText("stepped")
     call SaveReal(udg_GameHash, StringHash("ship2"), StringHash("X"), X)

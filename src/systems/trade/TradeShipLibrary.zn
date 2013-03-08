@@ -1,0 +1,83 @@
+
+library TradeShip requires TimerUtils, PublicLibrary {
+  ArrayListInteger TradeShipIds;
+
+  public {
+
+
+    rect TRADE_SHIP_WEST_SPAWN;
+    rect TRADE_SHIP_SOUTH_SPAWN;
+  }
+
+  function CreateTradeShip(integer id, real x, real y) -> unit {
+    return CreateUnit(Player(15), id, x, y, 0);
+  }
+
+  function CreateRandomTradeShip(real x, real y) -> unit {
+    return CreateTradeShip( TradeShipIds[GetRandomInt(0, TradeShipIds.length())], x, y );
+  }
+
+  public {
+    function ShipStop() {
+      timer t = GetExpiredTimer();
+      IssueImmediateOrder( udg_ship, "stop");
+      ReleaseTimer(t);
+      t = null;
+    }
+
+    function ShipStop2() {
+      timer t = GetExpiredTimer();
+      IssueImmediateOrder( udg_ship2, "stop");
+      ReleaseTimer(t);
+      t = null;
+    }
+
+    function ShipTimerStart() {
+      real X = LoadReal(udg_GameHash, StringHash("ship"), StringHash("X"));
+      real Y = LoadReal(udg_GameHash, StringHash("ship"), StringHash("Y"));
+      IssuePointOrder( udg_ship, "move", X, Y );
+      SHIP_STOPPED = false;
+    }
+
+    function ShipTimerStart2() {
+      real X = LoadReal(udg_GameHash, StringHash("ship2"), StringHash("X"));
+      real Y = LoadReal(udg_GameHash, StringHash("ship2"), StringHash("Y"));
+      IssuePointOrder( udg_ship2, "move", X, Y );
+      SHIP2_STOPPED = false;
+    }
+
+    function CreateRandomTradeShipWest() {
+      if (!udg_shipOn && AllowTrade) {
+        udg_ship = CreateRandomTradeShip(GetRectCenterX(TRADE_SHIP_WEST_SPAWN), GetRectCenterY(TRADE_SHIP_WEST_SPAWN));
+        udg_shipOn = true;
+      }
+    }
+
+    function CreateRandomTradeShipSouth() {
+      if (!udg_shipOn2 && AllowTrade) {
+        udg_ship2 = CreateRandomTradeShip(GetRectCenterX(TRADE_SHIP_SOUTH_SPAWN), GetRectCenterY(TRADE_SHIP_SOUTH_SPAWN));
+        udg_shipOn2 = true;
+      }
+    }
+  }
+
+  function onInit() {
+    TRADE_SHIP_WEST_SPAWN  = gg_rct_ship_make;
+    TRADE_SHIP_SOUTH_SPAWN = gg_rct_ship_gone;
+
+    TradeShipIds = ArrayListInteger.create();
+
+    TradeShipIds.push(UNIT_TRADE_SHIP_1);
+    TradeShipIds.push(UNIT_TRADE_SHIP_2);
+    TradeShipIds.push(UNIT_TRADE_SHIP_3);
+
+    TimerStart(NewTimer(), 2., false, function() {
+      if (AllowTrade) {
+        CreateRandomTradeShipWest();
+        CreateRandomTradeShipSouth();
+        PauseUnit(udg_ship, true);
+        PauseUnit(udg_ship2, true);
+      }
+    });
+  }
+}

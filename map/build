@@ -52,6 +52,11 @@ def do_setup_unpro_map
 end
 
 def do_exit
+  if $opt[:launchwc3]
+    cmd = "\"C:\\Program Files\\Warcraft III\\Frozen Throne.exe\" -window -loadfile #{File.expand_path($opt[:map_output_path]).gsub("/","\\").gsub(/\Ac/,"C")}" if $opt[:launchwc3] and WIN_OS
+    puts cmd if $opt[:debug_script]
+    `#{cmd}`
+  end
   exit
 end
 
@@ -97,6 +102,7 @@ def do_build
       puts "optimizer error: #{$?}"
       do_exit
     end
+    FileUtils.rm $opt[:map_unpro_path]
     puts "done"
   end
   puts "Finished building map!"
@@ -119,36 +125,43 @@ def main
   $opt.merge!({
     :debug_script    => $opt[:debug_script]    ? eval($opt[:debug_script])  : false,
     :do_jasshelper   => $opt[:do_jasshelper]   ? eval($opt[:do_jasshelper]) : true,
-    :do_compile      => $opt[:do_compile]      ? eval($opt[:do_compile])    : true,
-    :do_optimizer    => $opt[:do_optimizer]    ? eval($opt[:do_optimizer])  : true,
+    :do_compile      => $opt[:do_compile]      ? eval($opt[:do_compile])    : {:do_jasshelper => false, :pregenerated => false},
+    :do_optimizer    => $opt[:do_optimizer]    ? eval($opt[:do_optimizer])  : false,
     :do_widgetizer   => $opt[:do_widgetizer]   ? eval($opt[:do_widgetizer]) : false,
     :no_optimize     => $opt[:no_optimize]     ? eval($opt[:no_optimize])   : false,
     :debug           => $opt[:debug]           ? eval($opt[:debug])         : false,
     :script_only     => $opt[:script_only]     ? eval($opt[:script_only])   : false,
+    :launchwc3       => $opt[:launchwc3]       ? eval($opt[:launchwc3])     : false,
     :map_unpro_path  => $opt[:map_unpro_path]  ? File.expand_path($opt[:map_unpro_path])  : Dir.glob(File.join(%W[base-maps *.w3x])).sort.reverse.first,
     :map_script_path => $opt[:map_script_path] ? File.expand_path($opt[:map_script_path]) : File.join(%W[.. out.j]),
-    :map_output_path => $opt[:map_output_path] ? File.expand_path($opt[:map_output_path]) : File.join(%W[compiled-maps ITT_#{`git log -1 --pretty=oneline`[/\A\w*/].strip}_#{Time.now.to_i}.w3x])
+    :map_output_path => $opt[:map_output_path] ? File.expand_path($opt[:map_output_path]) : File.join(%W[compiled-maps ITT_#{`git log -1 --pretty=oneline`[/\A\w*/].strip[1..5]}_#{Time.now.to_i}.w3x])
   })
 
   if $opt[:env] == 'beta'
     $opt.merge!({
-      :debug => true
+      :debug => true,
+    })
+  elsif $opt[:env] == 'test'
+    $opt.merge!({
+      :debug => true,
+      :launchwc3 => true,
+      #:map_output_path => File.expand_path(File.join(%W[Program\ Files Warcraft\ III Maps itt-test ITT_#{`git log -1 --pretty=oneline`[/\A\w*/].strip[1..5]}_#{Time.now.to_i}.test.w3x]), "/"),
     })
   elsif $opt[:env] == 'optimized'
     $opt.merge!({
-      :debug => false
+      :do_optimizer => true,
     })
   elsif $opt[:env] == 'pro'
     $opt.merge!({
       :debug => false,
-      :do_widgetizer => true
+      :do_widgetizer => true,
+      :do_optimizer => true,
     })
   elsif $opt[:env] == 'WEC' # World Editor Compatible
     $opt.merge!({
       :debug => true,
       :do_widgetizer => false,
       :do_optimizer => false,
-      :do_compile => {:do_jasshelper => false}
     })
   end
 
@@ -158,3 +171,4 @@ def main
 end
 
 main
+

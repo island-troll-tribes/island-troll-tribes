@@ -84,7 +84,7 @@ if IsWidgetInRect(gg_rct_ship_gone,u) or IsWidgetInRect(gg_rct_fork_1_gone,u) or
     call PolledWait( 1.00 )
     call RemoveUnit( udg_ship )
     set udg_shipOn = false
-    call ConditionalTriggerExecute( gg_trg_ship_make_2 )
+    call CreateRandomTradeShipWest()
 else
     call SaveReal(udg_GameHash, StringHash("ship"), StringHash("X"), X)
     call SaveReal(udg_GameHash, StringHash("ship"), StringHash("Y"), Y)

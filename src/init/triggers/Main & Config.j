@@ -31,12 +31,7 @@ endfunction
 //***************************************************************************
 
 function config takes nothing returns nothing
-    local string versionName = "Island Troll Tribes"
-    set versionName = versionName + " " + ChangeLog.newest.toString()
-    static if DEBUG then
-        set versionName = versionName + " BETA"
-    endif
-    call SetMapName( versionName )
+    call SetMapName( "TRIGSTR_003" )
     call SetMapDescription( "TRIGSTR_005" )
     call SetPlayers( 12 )
     call SetTeams( 12 )

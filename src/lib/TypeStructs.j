@@ -3,7 +3,7 @@
 library TypeStructs {
 	
 	public struct String {
-		private string s="";
+		private string s = "";
 		
 		static method new (string a) -> thistype {
 			thistype b = thistype.allocate();
@@ -44,16 +44,32 @@ library TypeStructs {
 	}
 
 	public struct Unit {
-		unit u;
+		unit self;
 		
 		static method operator[] (unit p) -> thistype {
 			thistype a = thistype.allocate();
-			a.u = p;
+			a.self = p;
 			return a;
 		}
 		
 		method operator unit() -> unit {
-			return u;
+			return self;
+		}
+
+		method operator health() -> real {
+			return GetUnitState( self, UNIT_STATE_LIFE );
+		}
+
+		method operator health=(real x) {
+			SetUnitState( self, UNIT_STATE_LIFE, x );
+		}
+
+		method operator x= (real value) {
+			SetUnitX( self, value );
+		}
+
+		method operator y= (real value) {
+			SetUnitY( self, value );
 		}
 	}
 		  
@@ -76,8 +92,7 @@ library TypeStructs {
 	function onInit() {
 		debug {
 			String str = String.new("hi there");
-			str.val = "hi";
-			BJDebugMsg(str.val);
+			Unit[CreateUnit( Player(0), 'hfoo', -4000, 2500, 270 )].health = 0;
 		}
 	}
 }

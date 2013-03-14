@@ -1,60 +1,83 @@
 //! zinc
 
 library TypeStructs {
+
+	real ON_THE_FLY_LIFE_TIME = 1.0;
+
+//! textmacro TYPE_GENERAL_METHODS takes TYPE, CAPITALIZED_TYPE
+	module $CAPITALIZED_TYPE$GeneralMethods {
+
+		method timedDestroy() {
+			timer t = NewTimer();
+			SetTimerData( t, this );
+
+			TimerStart( t, ON_THE_FLY_LIFE_TIME, false, function() {
+				timer t = GetExpiredTimer();
+				thistype( GetTimerData( t ) ).destroy();
+				ReleaseTimer( t );
+			});
+		}
+		
+		static method operator[] ($TYPE$ b) -> thistype {
+			thistype x = thistype.allocate();
+			x.self = b;
+			x.timedDestroy();
+			return x;
+		}
+		
+		method operator $TYPE$ () -> $TYPE$ {
+			return self;
+		}
+	}
+//! endtextmacro
+//! runtextmacro TYPE_GENERAL_METHODS("string", "String")
+//! runtextmacro TYPE_GENERAL_METHODS("unit", "Unit")
 	
 	public struct String {
-		private string s = "";
+		private string self = "";
 		
 		static method new (string a) -> thistype {
 			thistype b = thistype.allocate();
-			b.s = a;
+			b.self = a;
+			return b;
+		}
+		
+		static method create (string a) -> thistype {
+			thistype b = thistype.allocate();
+			b.self = a;
 			return b;
 		}
 		
 		method operator==(String a) -> boolean {
-			return s == a.val;
+			return self == a.val;
 		}
 		
 		method operator val() -> string {
-			return s;
+			return self;
 		}
 		
 		method operator val=(string a) {
-			s = a;
+			self = a;
 		}
 		
 		method operator length() -> integer {
-			return StringLength(s);
+			return StringLength(self);
 		}
 		
 		method operator[] (integer i) -> string {
-			return SubString(s, i, i+1);
+			return SubString(self, i, i+1);
 		}
 		
 		method operator[]= (integer i, string j) -> string {
-			s = SubString(s, 0, i) + j + SubString(s, i+1, StringLength(s));
-			return s;
+			self = SubString(self, 0, i) + j + SubString(self, i+1, StringLength(self));
+			return self;
 		}
-		
-		static method operator[] (string a) -> thistype {
-			thistype b = thistype.allocate();
-			b.s = a;
-			return b;
-		}
+
+		module StringGeneralMethods;
 	}
 
 	public struct Unit {
 		unit self;
-		
-		static method operator[] (unit p) -> thistype {
-			thistype a = thistype.allocate();
-			a.self = p;
-			return a;
-		}
-		
-		method operator unit() -> unit {
-			return self;
-		}
 
 		method operator health() -> real {
 			return GetUnitState( self, UNIT_STATE_LIFE );
@@ -71,28 +94,14 @@ library TypeStructs {
 		method operator y= (real value) {
 			SetUnitY( self, value );
 		}
+
+		module UnitGeneralMethods;
 	}
-		  
-//! textmacro CREATE_TYPE_STRUCT takes TYPE, UCASE_TYPE, NULL_VALUE
-	public struct $UCASE_TYPE$ {
-		$TYPE$ a;
-		
-		static method operator[] ($TYPE$ b) -> thistype {
-			thistype i = thistype.allocate();
-			i.a = b;
-			return i;
-		}
-		
-		method operator $TYPE$ () -> $TYPE$ {
-			return a;
-		}
-	}
-//! endtextmacro
 	
 	function onInit() {
 		debug {
 			String str = String.new("hi there");
-			Unit[CreateUnit( Player(0), 'hfoo', -4000, 2500, 270 )].health = 0;
+			CreateUnit( Player(0), 'hfoo', -4000, 2500, 270 ):Unit.health = 0;
 		}
 	}
 }

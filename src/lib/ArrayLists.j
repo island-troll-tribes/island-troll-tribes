@@ -39,6 +39,7 @@ library ArrayLists
         
         method operator []= takes integer i, $TYPE$ what returns nothing
             if i>=0 and i<=.itsIndex then
+                set .itsIndex = .itsIndex + 1
                 set .s[i] = what
             endif
         endmethod

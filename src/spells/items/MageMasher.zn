@@ -1,0 +1,112 @@
+library MageMasher requires ID, DUMMYLIB, TimerUtils {
+    
+    public { 
+        integer MAGE_MASHER_CLASSES[];
+        integer MAGE_MASHER_CLASSES_UB;
+    }
+
+    struct PlayerBlockedOnPlayer {
+        integer attackerPlayerId;
+        integer defenderPlayerId;
+
+        static method create(unit attacker, unit defender) -> thistype {
+            thistype a = thistype.allocate();
+            timer t = NewTimer();
+            SetTimerData( t, a );
+
+            TimerStart( t, 3.0, false, function() {
+                timer t = GetExpiredTimer();
+                PlayerBlockedOnPlayer b = GetTimerData( t );
+                ReleaseTimer( t );
+                pbob[b.attackerPlayerId][b.defenderPlayerId] = 0;
+                b.destroy();
+            });
+
+            a.attackerPlayerId = GetPlayerId( GetOwningPlayer( attacker ) );
+            a.defenderPlayerId = GetPlayerId( GetOwningPlayer( defender ) );
+            pbob[a.attackerPlayerId][a.defenderPlayerId] = 1;
+            return a;
+        }
+    }
+
+    trigger t = CreateTrigger();
+    trigger u = CreateTrigger();
+    integer pbob[12][12];
+
+    public function CheckMashableTroll(unit u) -> boolean {
+        integer uid = GetUnitTypeId(u);
+        integer i = 0;
+        for ( 0 <= i <= MAGE_MASHER_CLASSES_UB ) {
+            if ( uid == MAGE_MASHER_CLASSES[i] ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function PlayerIsBlockedOnPlayer(unit attacker, unit defender) -> boolean {
+        return pbob[GetPlayerId( GetOwningPlayer( attacker ) )][GetPlayerId( GetOwningPlayer( defender ) )] == 1;
+    }
+    
+    function AttackerHasMageMasher() -> boolean {
+        integer i = 0;
+        item    j;
+
+        for ( 0 <= i <= bj_MAX_INVENTORY ) {
+            j = UnitItemInSlot(GetAttacker(), i);
+            if ( (j != null) && ( GetItemTypeId( j )  == ITEM_MAGE_MASHER ) ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function SilenceAndManaBurn() {
+        unit attacker = GetAttacker();
+        unit defender = GetTriggerUnit();
+        timer t;
+
+        if ( PlayerIsBlockedOnPlayer( attacker, defender ) || GetEventDamage() < .01 ) {
+            return;
+        }
+
+        // silence Percentage
+        if ( GetRandomReal(0, 100) <= 21.00 ) {
+            masterCastAtCaster( attacker, defender, 0, 0, 'A064', "soulburn" );
+        }
+        
+        // manaburn percentage
+        if ( GetRandomReal(0, 100) <= 29.00 && CheckMashableTroll( defender ) ) {
+            masterCastAtCaster( attacker, defender, 0, 0, 'A065', "manaburn" );
+            PlayerBlockedOnPlayer.create(attacker, defender);
+        }
+    }
+    
+    function RegisterUnit() {
+        if ( checkTroll( GetTriggerUnit() ) ) {
+            TriggerRegisterUnitEvent( u, GetTriggerUnit(), EVENT_UNIT_DAMAGED );
+        }
+    }
+
+    function onInit() {
+        region r = CreateRegion();
+        RegionAddRect( r, bj_mapInitialPlayableArea );
+        
+        TriggerRegisterEnterRegion( t, r, null );
+        TriggerAddAction( t, function RegisterUnit );
+        
+        TriggerAddCondition( u, Condition( function AttackerHasMageMasher ) );
+        TriggerAddAction( u, function SilenceAndManaBurn );
+        
+        MAGE_MASHER_CLASSES[0] = UNIT_MAGE;
+        MAGE_MASHER_CLASSES[1] = UNIT_ELEMENTALIST;
+        MAGE_MASHER_CLASSES[2] = UNIT_HYPNOTIST;
+        MAGE_MASHER_CLASSES[3] = UNIT_DEMENTIA_MASTER;
+        MAGE_MASHER_CLASSES[4] = UNIT_PRIEST;
+        MAGE_MASHER_CLASSES[5] = UNIT_BOOSTER;
+        MAGE_MASHER_CLASSES[6] = UNIT_MASTER_HEALER;
+        MAGE_MASHER_CLASSES[7] = UNIT_SAGE;
+        MAGE_MASHER_CLASSES_UB = 7;
+    }
+}

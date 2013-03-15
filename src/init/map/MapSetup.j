@@ -326,6 +326,7 @@ function Startup_Timer takes nothing returns nothing
 /////////////////////////////////////////////////////////////////////////////////////////////////////    
 //call DisplayTText(GREEN_COLOR+ "0", 20)
     if checkHCLletter(".") and clanhcl then //twgb
+        set HostingClan = "TwGB"
         set clanhcl = false
         call DisplayTText("
 "+GENERAL_COLOR+"This game is hosted by: |r"+GREEN_COLOR+"Clan TwGB @ Azeroth|r
@@ -382,37 +383,46 @@ function Startup_Timer takes nothing returns nothing
     if checkHCLletter("0") and clanhcl then
        set clanhcl = false
         call DisplayTText(GREEN_COLOR+"This game is hosted by: Clan TdiT|r",50)
+        set HostingClan = "TdiT"
     endif
     if checkHCLletter("1") and clanhcl then
         set clanhcl = false
         call DisplayTText(GREEN_COLOR+"This game is hosted by: Clan Sort|r",50)
+        set HostingClan = "Sort"
     endif
     if checkHCLletter("2") and clanhcl then
         call DisplayTText(GREEN_COLOR+"This game is hosted by: Clan TwA", 50)
+        set HostingClan = "TwA"
     endif
     if checkHCLletter("3") and clanhcl then
         set clanhcl = false
         call DisplayTText(GREEN_COLOR+"This game is hosted by: Clan EITT|r",50)
+        set HostingClan = "EITT"
     endif
     if checkHCLletter("4") and clanhcl then
         set clanhcl = false
         call DisplayTText(GREEN_COLOR+"This game is hosted by: Clan TmsT|r",50)
+        set HostingClan = "TmsT"
     endif
     if checkHCLletter("5") and clanhcl then
         set clanhcl = false
         call DisplayTText(GREEN_COLOR+"This game is hosted by: Clan TwS|r",50)
+        set HostingClan = "TwS"
     endif
     if checkHCLletter("6") and clanhcl then
         set clanhcl = false
         call DisplayTText(GREEN_COLOR+"This game is hosted by: Clan BiTT|r",50)
+        set HostingClan = "BiTT"
     endif
     if checkHCLletter("7") and clanhcl then
         set clanhcl = false
         call DisplayTText(GREEN_COLOR+"This game is hosted by: Clan ITTP|r",50)
+        set HostingClan = "ITTP"
     endif
     if checkHCLletter("8") and clanhcl then
         set clanhcl = false
         call DisplayTText(GREEN_COLOR+"This game is hosted by: Clan TSOT|r",50)
+        set HostingClan = "TSOT"
     endif
     
     call TimerStart(INSTANCE_TIMER, 36, false, function FirstSpawnItemsAnimals)

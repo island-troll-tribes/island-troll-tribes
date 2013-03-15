@@ -154,47 +154,25 @@ globals
 endglobals
 
 function getRandomTroll takes player play, real x, real y returns unit
-    local integer t=GetRandomInt(1,9)
-   
-	if real_random and udg_AllTroll == 0 then // applies ONLY for -equal random
-        set t=GetRandomInt(1,7)
-        if(t==1) then
-            return CreateUnit( play,UNIT_GATHERER,x,y, 0.00 )
-        elseif (t==2) then
-            return CreateUnit( play,UNIT_HUNTER,x,y, 0.00 )
-        elseif(t==3) then
-            return CreateUnit( play, UNIT_SCOUT, x,y, 0.0 )
-        elseif(t==4) then
-            return CreateUnit( play, UNIT_MAGE, x,y, 0.0 )
-        elseif(t==5) then
-            return CreateUnit( play, UNIT_THIEF, x,y, 0.0 )
-        elseif(t==6) then
-            return CreateUnit( play, UNIT_BEAST_MASTER, x,y, 0.0 )
-        elseif(t==7) then
-            return CreateUnit( play, UNIT_PRIEST, x,y, 0.0 )
-        endif
-    else
-        if udg_AllTroll != 0 then//takes care of -all modes
-            set t = udg_AllTroll
-        endif
-        // gatherer in 1, 2, 3 (3/9)
-        // rest are in 1/9
-        
-        if(t<=3) then
-            return CreateUnit( play,UNIT_GATHERER,x,y, 0.00 )
-        elseif (t==4) then
-            return CreateUnit( play,UNIT_HUNTER,x,y, 0.00 )
-        elseif(t==5) then
-            return CreateUnit( play, UNIT_SCOUT, x,y, 0.0 )
-        elseif(t==6) then
-            return CreateUnit( play, UNIT_MAGE, x,y, 0.0 )
-        elseif(t==7) then
-            return CreateUnit( play, UNIT_THIEF, x,y, 0.0 )
-        elseif(t==8) then
-            return CreateUnit( play, UNIT_BEAST_MASTER, x,y, 0.0 )
-        elseif(t==9) then
-            return CreateUnit( play, UNIT_PRIEST, x,y, 0.0 )
-        endif
+    local integer t = GetRandomInt( 1, 7 )
+    if udg_AllTroll != 0 then
+        // takes care of -all modes
+        set t = udg_AllTroll
+    endif
+    if ( t == 1 ) then
+        return CreateUnit( play, UNIT_GATHERER, x, y, 0.0 )
+    elseif ( t == 2 ) then
+        return CreateUnit( play, UNIT_HUNTER, x, y, 0.0 )
+    elseif ( t == 3 ) then
+        return CreateUnit( play, UNIT_SCOUT, x, y, 0.0 )
+    elseif ( t == 4 ) then
+        return CreateUnit( play, UNIT_MAGE, x, y, 0.0 )
+    elseif ( t == 5 ) then
+        return CreateUnit( play, UNIT_THIEF, x, y, 0.0 )
+    elseif ( t == 6 ) then
+        return CreateUnit( play, UNIT_BEAST_MASTER, x, y, 0.0 )
+    elseif ( t == 7 ) then
+        return CreateUnit( play, UNIT_PRIEST, x, y, 0.0 )
     endif
     return null
 endfunction

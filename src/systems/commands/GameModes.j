@@ -145,15 +145,6 @@ elseif s=="-fs" and modeAllow[18] and TimerGetRemaining(INSTANCE_TIMER) > 5 then
     call ExecuteFunc("RecallFirst")
     //call TimerStart(INSTANCE_TIMER, 0, false, function FirstSpawnItemsAnimals)
     set modeAllow[18] = false
-elseif s=="-classic" and modeAllow[19] then
-    set display = "Classic mode has been enabled. All building from the original ice trolls are enabled."
-    set udg_CLASSIC_MODE = true
-    call ConditionalTriggerExecute( gg_trg_init_classic )
-    set modeAllow[19] = false
-elseif s=="-classic items" and modeAllow[20] then
-    set display = "The extended build menus have been disabled. Only original ICe Trolls items can be made now."
-    set udg_EXTRA_MODE = false
-    set modeAllow[20] = false
 elseif s=="-no trade" and modeAllow[21] then
     set AllowTrade = false
     set display = "Trade ships and merchants have been disabled."

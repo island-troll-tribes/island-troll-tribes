@@ -12,7 +12,7 @@ function CreateModeBoardAndShow takes nothing returns nothing
 local string array CMD_NAME
 local string array CMD_DES
 local string COLOR = ""
-local integer MAX_CMDS = 38
+local integer MAX_CMDS = 36
 local integer INT = 1
 //  Names
 //      Advantages
@@ -42,20 +42,18 @@ set CMD_NAME[22] = "-lil"
 set CMD_NAME[23] = "-no horn"
 //      Miscellaneous
 set CMD_NAME[24] = "-Test Mode"
-set CMD_NAME[25] = "-classic"
-set CMD_NAME[26] = "-classic items"
-set CMD_NAME[27] = "-elimination"
-set CMD_NAME[28] = "-all <class>"
-set CMD_NAME[29] = "-no exp"
-set CMD_NAME[30] = "-no herbs"
-set CMD_NAME[31] = "-no trees"
-set CMD_NAME[32] = "-no boats"
-set CMD_NAME[33] = "-no trade"
-set CMD_NAME[34] = "-no shields"
-set CMD_NAME[35] = "-fs"
-set CMD_NAME[36] = "-nt ####"
-set CMD_NAME[37] = "-op"
-set CMD_NAME[38] = "-tko"
+set CMD_NAME[25] = "-elimination"
+set CMD_NAME[26] = "-all <class>"
+set CMD_NAME[27] = "-no exp"
+set CMD_NAME[28] = "-no herbs"
+set CMD_NAME[29] = "-no trees"
+set CMD_NAME[30] = "-no boats"
+set CMD_NAME[31] = "-no trade"
+set CMD_NAME[32] = "-no shields"
+set CMD_NAME[33] = "-fs"
+set CMD_NAME[34] = "-nt ####"
+set CMD_NAME[35] = "-op"
+set CMD_NAME[36] = "-tko"
 //  Descriptions
 //      A
 set CMD_DES[1] = "increases amount of heat a fire gives per cast"
@@ -84,20 +82,18 @@ set CMD_DES[22] = "lowers maximum items available at once"
 //      M
 set CMD_DES[23] = "boss items such as the mammoth horn does not drop"
 set CMD_DES[24] = "win conditions are disabled, tribes are given a spirit ward"
-set CMD_DES[25] = "sets the game to classic ice troll tribe gameplay, heros applied"
-set CMD_DES[26] = "further extends classic style by modifying items as well"
-set CMD_DES[27] = "spirit ward is disabled"
-set CMD_DES[28] = "forces a certain/random class, eg: -all thief, -all random"
-set CMD_DES[29] = "removes experience gain from hostile units/heros"
-set CMD_DES[30] = "removes herb bushes from the game"
-set CMD_DES[31] = "removes all trees from the game"
-set CMD_DES[32] = "disables development of transport boats"
-set CMD_DES[33] = "removes all troll merchants, trade boats from the game"
-set CMD_DES[34] = "disables creation of shield-type armory"
-set CMD_DES[35] = "initializes a fast start, reducing game start timer to 4 seconds"
-set CMD_DES[36] = "sets noob time to specific amount, eg: \"-nt 1051\""
-set CMD_DES[37] = "unlocks over powered items added since 2.52a"
-set CMD_DES[38] = "Allies cant attack ally trolls"
+set CMD_DES[25] = "spirit ward is disabled"
+set CMD_DES[26] = "forces a certain/random class, eg: -all thief, -all random"
+set CMD_DES[27] = "removes experience gain from hostile units/heros"
+set CMD_DES[28] = "removes herb bushes from the game"
+set CMD_DES[29] = "removes all trees from the game"
+set CMD_DES[30] = "disables development of transport boats"
+set CMD_DES[31] = "removes all troll merchants, trade boats from the game"
+set CMD_DES[32] = "disables creation of shield-type armory"
+set CMD_DES[33] = "initializes a fast start, reducing game start timer to 4 seconds"
+set CMD_DES[34] = "sets noob time to specific amount, eg: \"-nt 1051\""
+set CMD_DES[35] = "unlocks over powered items added since 2.52a"
+set CMD_DES[36] = "Allies cant attack ally trolls"
 //
 set MODE_BOARD = CreateMultiboard()
 call MultiboardSetColumnCount(MODE_BOARD, 2)

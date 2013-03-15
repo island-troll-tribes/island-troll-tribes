@@ -162,10 +162,6 @@ elseif s=="-no shields" and modeAllow[22] then
     set allow_Shields = false
     set display = "Shield type items have been disabled from creation."
     set modeAllow[22] = false
-elseif s=="-equal random" and modeAllow[23] then
-    set real_random = true
-    set display = "Randoming now has an equal fixed seed for all classes. (Applies to both -all random and time out randoms.)"
-    set modeAllow[23] = false
 elseif s=="-test mode" and modeAllow[24] then
     set modeAllow[24] = false
     set i = 4

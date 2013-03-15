@@ -12,7 +12,7 @@ function CreateModeBoardAndShow takes nothing returns nothing
 local string array CMD_NAME
 local string array CMD_DES
 local string COLOR = ""
-local integer MAX_CMDS = 39
+local integer MAX_CMDS = 38
 local integer INT = 1
 //  Names
 //      Advantages
@@ -54,9 +54,8 @@ set CMD_NAME[33] = "-no trade"
 set CMD_NAME[34] = "-no shields"
 set CMD_NAME[35] = "-fs"
 set CMD_NAME[36] = "-nt ####"
-set CMD_NAME[37] = "-equal random"
-set CMD_NAME[38] = "-op"
-set CMD_NAME[39] = "-tko"
+set CMD_NAME[37] = "-op"
+set CMD_NAME[38] = "-tko"
 //  Descriptions
 //      A
 set CMD_DES[1] = "increases amount of heat a fire gives per cast"
@@ -97,9 +96,8 @@ set CMD_DES[33] = "removes all troll merchants, trade boats from the game"
 set CMD_DES[34] = "disables creation of shield-type armory"
 set CMD_DES[35] = "initializes a fast start, reducing game start timer to 4 seconds"
 set CMD_DES[36] = "sets noob time to specific amount, eg: \"-nt 1051\""
-set CMD_DES[37] = "sets an equal seed for both (-all random) and time out randoms"
-set CMD_DES[38] = "unlocks over powered items added since 2.52a"
-set CMD_DES[39] = "Allies cant attack ally trolls"
+set CMD_DES[37] = "unlocks over powered items added since 2.52a"
+set CMD_DES[38] = "Allies cant attack ally trolls"
 //
 set MODE_BOARD = CreateMultiboard()
 call MultiboardSetColumnCount(MODE_BOARD, 2)

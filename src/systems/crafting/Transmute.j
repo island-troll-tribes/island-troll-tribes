@@ -103,7 +103,7 @@ local item added
             call UnitAddItem(GetTriggerUnit(), added)
             call itemLower(6)
         endif
-        if i[0] == ITEM_STONE and i[1] == ITEM_CLAY_BALL and i[2] == ITEM_CLAY_BALL then
+        if i[0] == ITEM_STICK and checkHide( t[1] ) and i[2] == ITEM_CLAY_BALL then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
             call RemoveItem(t[2])

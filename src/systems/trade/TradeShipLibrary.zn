@@ -1,20 +1,21 @@
 
-library TradeShip requires TimerUtils, PublicLibrary {
+library TradeShip requires TimerUtils, PublicLibrary, IDUtils {
   ArrayListInteger TradeShipIds;
 
   public {
-
-
     rect TRADE_SHIP_WEST_SPAWN;
     rect TRADE_SHIP_SOUTH_SPAWN;
   }
 
   function CreateTradeShip(integer id, real x, real y) -> unit {
+    debug {
+      BJDebugMsg( "Creating Trade Ship " + ID2S(id) );
+    }
     return CreateUnit(Player(15), id, x, y, 0);
   }
 
   function CreateRandomTradeShip(real x, real y) -> unit {
-    return CreateTradeShip( TradeShipIds[GetRandomInt(0, TradeShipIds.length())], x, y );
+    return CreateTradeShip( TradeShipIds[GetRandomInt(0, TradeShipIds.length() - 1)], x, y );
   }
 
   public {
@@ -71,12 +72,13 @@ library TradeShip requires TimerUtils, PublicLibrary {
     TradeShipIds.push(UNIT_TRADE_SHIP_2);
     TradeShipIds.push(UNIT_TRADE_SHIP_3);
 
-    TimerStart(NewTimer(), 2., false, function() {
-      if (AllowTrade) {
+    TimerStart( NewTimer(), 2., false, function() {
+      ReleaseTimer( GetExpiredTimer() );
+      if ( AllowTrade ) {
         CreateRandomTradeShipWest();
         CreateRandomTradeShipSouth();
-        PauseUnit(udg_ship, true);
-        PauseUnit(udg_ship2, true);
+        PauseUnit( udg_ship, true );
+        PauseUnit( udg_ship2, true );
       }
     });
   }

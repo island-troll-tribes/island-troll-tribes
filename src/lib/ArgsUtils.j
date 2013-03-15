@@ -117,15 +117,20 @@ library ArgsUtils requires ArrayLists, IDUtils, Table, TypeStructs {
 							if (UNIT_ALL.length() > 0) {
 								debug BJDebugMsg("UNIT_ALL.last = "+ID2S(UNIT_ALL[UNIT_ALL.length()-1]));
 								TimerStart(
-									NewTimerEx(Unit[CreateUnit(a.triggerPlayer, UNIT_ALL.pop(), S2R(a[4]), S2R(a[5]), 270)]),
-									S2R(a[3])-0.01,
+									NewTimerEx( Unit.new( CreateUnit( a.triggerPlayer, 
+									                                  UNIT_ALL.pop(), 
+									                                  S2R(a[4]), 
+									                                  S2R(a[5]), 
+									                                  270 ))),
+									S2R( a[3] ) - 0.01,
 									false,
 									function() {
-										Unit u = GetTimerData(GetExpiredTimer());
-										RemoveUnit(u.unit);
+										Unit u = GetTimerData( GetExpiredTimer() );
+										RemoveUnit( u.unit );
 										u.destroy();
-										ReleaseTimer(GetExpiredTimer());
-								});
+										ReleaseTimer( GetExpiredTimer() );
+									}
+								);
 							} else {
 								ReleaseTimer(GetExpiredTimer());
 								a.destroy();

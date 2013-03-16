@@ -94,64 +94,66 @@ library ArgsUtils requires ArrayLists, IDUtils, Table, TypeStructs {
 	
 	function TestArgsUtils(ArgsList a) {
 		integer i;
-		if (a[0] == "spawn") {
-			debug BJDebugMsg("Creating "+I2S(S2ID(a[2])));
-			if (a[1] == "unit") {
-				CreateUnit(a.triggerPlayer, S2ID(a[2]), S2R(a[3]), S2R(a[4]), 270);
-				a.destroy();
-			}
-			else if (a[1] == "item") {
-				CreateItem(S2ID(a[2]), S2R(a[3]), S2R(a[4]));
-				a.destroy();
-			}
-			else if (a[1] == "all") {
-				if (a[2] == "units") {
-					if (a[3] == "--help") {
-						DisplayTextToPlayer(a.triggerPlayer, 0, 0, "syntax: -tau spawn all units <time between> <loc x> <loc y>");
-						a.destroy();
-					}
-					else {
-						TimerStart(NewTimerEx(a), S2R(a[3]), true, function() {
-							ArgsList a = GetTimerData(GetExpiredTimer());
-							if (UNIT_ALL.length() > 0) {
-								debug BJDebugMsg("UNIT_ALL.last = "+ID2S(UNIT_ALL[UNIT_ALL.length()-1]));
-								TimerStart(
-									NewTimerEx( Unit.new( CreateUnit( a.triggerPlayer, 
-									                                  UNIT_ALL.pop(), 
-									                                  S2R(a[4]), 
-									                                  S2R(a[5]), 
-									                                  270 ))),
-									S2R( a[3] ) - 0.01,
-									false,
-									function() {
-										Unit u = GetTimerData( GetExpiredTimer() );
-										RemoveUnit( u.unit );
-										u.destroy();
-										ReleaseTimer( GetExpiredTimer() );
-									}
-								);
-							} else {
-								ReleaseTimer(GetExpiredTimer());
-								a.destroy();
-							}
-						});
-					}
+		static if (DEBUG_MODE) {
+			if (a[0] == "spawn") {
+				debug BJDebugMsg("Creating "+I2S(S2ID(a[2])));
+				if (a[1] == "unit") {
+					CreateUnit(a.triggerPlayer, S2ID(a[2]), S2R(a[3]), S2R(a[4]), 270);
+					a.destroy();
 				}
-				else if (a[2] == "items") {
-					if (a[3] == "--help") {
-						DisplayTextToPlayer(a.triggerPlayer, 0, 0, "syntax: -tau spawn all items <time between> <loc x> <loc y>");
+				else if (a[1] == "item") {
+					CreateItem(S2ID(a[2]), S2R(a[3]), S2R(a[4]));
+					a.destroy();
+				}
+				else if (a[1] == "all") {
+					if (a[2] == "units") {
+						if (a[3] == "--help") {
+							DisplayTextToPlayer(a.triggerPlayer, 0, 0, "syntax: -tau spawn all units <time between> <loc x> <loc y>");
+							a.destroy();
+						}
+						else {
+							TimerStart(NewTimerEx(a), S2R(a[3]), true, function() {
+								ArgsList a = GetTimerData(GetExpiredTimer());
+								if (UNIT_ALL.length() > 0) {
+									debug BJDebugMsg("UNIT_ALL.last = "+ID2S(UNIT_ALL[UNIT_ALL.length()-1]));
+									TimerStart(
+										NewTimerEx( Unit.new( CreateUnit( a.triggerPlayer, 
+										                                  UNIT_ALL.pop(), 
+										                                  S2R(a[4]), 
+										                                  S2R(a[5]), 
+										                                  270 ))),
+										S2R( a[3] ) - 0.01,
+										false,
+										function() {
+											Unit u = GetTimerData( GetExpiredTimer() );
+											RemoveUnit( u.unit );
+											u.destroy();
+											ReleaseTimer( GetExpiredTimer() );
+										}
+									);
+								} else {
+									ReleaseTimer(GetExpiredTimer());
+									a.destroy();
+								}
+							});
+						}
 					}
-					else {
-						TimerStart(NewTimerEx(a), S2R(a[3]), true, function() {
-							ArgsList a = GetTimerData(GetExpiredTimer());
-							if (ITEM_ALL.length() >= 0) {
-								debug BJDebugMsg("ITEM_ALL.last = "+ID2S(ITEM_ALL[ITEM_ALL.length()-1]));
-								CreateItem(ITEM_ALL.pop(), S2R(a[4]), S2R(a[5]));
-							} else {
-								ReleaseTimer(GetExpiredTimer());
-								a.destroy();
-							}
-						});
+					else if (a[2] == "items") {
+						if (a[3] == "--help") {
+							DisplayTextToPlayer(a.triggerPlayer, 0, 0, "syntax: -tau spawn all items <time between> <loc x> <loc y>");
+						}
+						else {
+							TimerStart(NewTimerEx(a), S2R(a[3]), true, function() {
+								ArgsList a = GetTimerData(GetExpiredTimer());
+								if (ITEM_ALL.length() >= 0) {
+									debug BJDebugMsg("ITEM_ALL.last = "+ID2S(ITEM_ALL[ITEM_ALL.length()-1]));
+									CreateItem(ITEM_ALL.pop(), S2R(a[4]), S2R(a[5]));
+								} else {
+									ReleaseTimer(GetExpiredTimer());
+									a.destroy();
+								}
+							});
+						}
 					}
 				}
 			}

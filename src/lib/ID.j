@@ -226,6 +226,7 @@ library ID {
 		constant integer UNIT_SOUL_REFLECTION_3       = 'h03A';
 		constant integer UNIT_TEST_CLOAK              = 'o018';
 		constant integer UNIT_TRADE_ZEPPELIN_ALT      = 'n01D';
+		constant integer UNIT_ULTRA_FOOTMAN           = 'xFOO';
 		
 		
 		//#####################################################

@@ -1,9 +1,7 @@
 
 //! zinc
 
-library ChangeLog requires Utils, Constants {
-
-    constant string ChangeLogNoticeString = GENERAL_COLOR+"Type "+ENERGY_COLOR+"-changelog"+GENERAL_COLOR+" to view changelog for this version";
+library ChangeLog requires Utils, ArgsUtils, Constants {
 
     type IntFn extends function(integer);
     type StringFn extends function(string);
@@ -123,6 +121,9 @@ library ChangeLog requires Utils, Constants {
     }
 
     public function DisplayChangeLog(player p) {
+        debug {
+            BJDebugMsg( "Newest ChangeLog: " + ChangeLog.newest.to_s + " (" + I2S( ChangeLog.newest ) + ")" );
+        }
         ChangeLog.newest.displayForPlayer(p);
     }
     

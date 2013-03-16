@@ -76,6 +76,11 @@ library Constants {
     constant string SPECIAL_COLOR   = "|cffff6347";
   }
 
+  /* Language constants */
+  public {
+    constant string ChangeLogNoticeString = GENERAL_COLOR+"Type "+ENERGY_COLOR+"-changelog"+GENERAL_COLOR+" to view changelog for this version";
+  }
+
   /* InitArrays */
   function onInit () {
     COLOR_CODE[0]  = "|cffff0303";

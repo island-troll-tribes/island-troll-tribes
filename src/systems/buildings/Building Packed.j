@@ -6,7 +6,7 @@ scope BuildingPacking initializer onInit
         if not (GetSpellAbilityId() == SPELL_PACK_BUILDING) then
             return false
         endif
-        if GetUnitTypeId( GetTriggerUnit() ) == ITEM_FIRE_KIT then
+        if GetUnitTypeId( GetTriggerUnit() ) == UNIT_FIRE then
             call RemoveUnit( GetTriggerUnit() )
             call CreateItem( ITEM_FIRE_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()) )
         elseif GetUnitTypeId( GetTriggerUnit() ) == UNIT_MAGE_FIRE then

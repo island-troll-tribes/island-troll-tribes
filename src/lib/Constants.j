@@ -64,21 +64,21 @@ library Constants {
   public {
     string COLOR_CODE[];
 
-    constant string DASH            = "|cffb8860b - |r";
-    constant string ENERGY_COLOR    = "|cff6495ed";
-    constant string GENERAL_COLOR   = "|cffc2e8eb";
-    constant string GOLD_COLOR      = "|cffffd700";
-    constant string GRAY_COLOR      = "|cffa0a0a0";
-    constant string GREEN_COLOR     = "|cff00df00";
-    constant string HEALTH_COLOR    = "|cffd67a7a";
-    constant string HIGHLIGHT_COLOR = "|cffdeb887";
-    constant string RED_COLOR       = "|cffff0000";
-    constant string SPECIAL_COLOR   = "|cffff6347";
+    constant string DASH            = "|cffb8860b - |r";   // DarkGoldenRod
+    constant string ENERGY_COLOR    = "|cff6495ed";        // CornflowerBlue
+    constant string GENERAL_COLOR   = "|cffc2e8eb";        // LightBlue
+    constant string GOLD_COLOR      = "|cffffd700";        // Gold
+    constant string GRAY_COLOR      = "|cffa0a0a0";        // Gray
+    constant string GREEN_COLOR     = "|cff00df00";        // LimeGreen
+    constant string HIGHLIGHT_COLOR = "|cffdeb887";        // BurlyWood
+    constant string RED_COLOR       = "|cffff0000";        // Red
+    constant string SPECIAL_COLOR   = "|cffff6347";        // Tomato
+    constant string HEALTH_COLOR    = "|cffd67a7a";        // Salmon
   }
 
   /* Language constants */
   public {
-    constant string ChangeLogNoticeString = GENERAL_COLOR+"Type "+ENERGY_COLOR+"-changelog"+GENERAL_COLOR+" to view changelog for this version";
+    constant string CHANGE_LOG_NOTICE_STRING = GENERAL_COLOR+"Type "+ENERGY_COLOR+"-changelog"+GENERAL_COLOR+" to view changelog for this version";
   }
 
   /* InitArrays */

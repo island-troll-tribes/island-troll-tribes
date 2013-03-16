@@ -51,7 +51,7 @@ library ChangeLog requires Utils, ArgsUtils, Constants {
         method each(player p, StringFn f) {
             integer i = 0;
             for (0 <= i < length) {
-                f.evaluate(changes[this].string[i]);
+                f.evaluate( changes[this].string[i] );
             }
         }
 
@@ -67,21 +67,20 @@ library ChangeLog requires Utils, ArgsUtils, Constants {
             return rev < t.rev;
         }
 
-        method toFormattedString() -> string {
+        method changesToFormattedString() -> string {
             integer i = 0;
-            string  s = "";
-            s += GENERAL_COLOR + "Change Log for|r " + GOLD_COLOR + toString() + "|r|n";
+            string  s = GENERAL_COLOR;
             for ( 0 <= i < length ) {
-                s += HIGHLIGHT_COLOR + changes[this].string[i] + "|r|n";
+                s += DASH + changes[this].string[i] + "|n";
             }
             return s + "|n";
         }
 
         method displayForPlayer(player p) {
             integer i = 0;
-            DisplayTimedTextToPlayer( p, 0, 0, 30, GENERAL_COLOR + "Change Log for " + GOLD_COLOR + toString() );
+            DisplayTimedTextToPlayer( p, 0, 0, 30, ENERGY_COLOR + "Change Log for " + GOLD_COLOR + toString() );
             for (0 <= i < length) {
-                DisplayTimedTextToPlayer( p, 0, 0, 30, HIGHLIGHT_COLOR + changes[this].string[i] );
+                DisplayTimedTextToPlayer( p, 0, 0, 30, DASH + GENERAL_COLOR + changes[this].string[i] );
             }
         }
 
@@ -142,23 +141,20 @@ library ChangeLog requires Utils, ArgsUtils, Constants {
 
     function CreateChangeLogQuest() {
         integer i = 0;
-        string  s = SPECIAL_COLOR + "Change Logs|r|n|n";
 
-        for ( 0 < i <= ChangeLog.numVersions ) {
-            s += ChangeLog(i).toFormattedString();
+        for ( ChangeLog.numVersions >= i > 0 ) {
+            CreateQuestBJ( 
+                bj_QUESTTYPE_REQ_DISCOVERED,
+                SPECIAL_COLOR + "Change Log " + GOLD_COLOR + ChangeLog(i).toString(),
+                ChangeLog(i).changesToFormattedString(),
+                "ReplaceableTextures\\CommandButtons\\BTNBerserkForTrolls.blp"
+            );
         }
-
-        CreateQuestBJ( 
-            bj_QUESTTYPE_REQ_DISCOVERED,
-            SPECIAL_COLOR + "Change Logs",
-            s,
-            "ReplaceableTextures\\CommandButtons\\BTNBerserkForTrolls.blp"
-        );
     }
 
     function DisplayNotice() {
         ReleaseTimer( GetExpiredTimer() );
-        DisplayTextToPlayer( GetLocalPlayer(), 0, 0, ChangeLogNoticeString );
+        DisplayTextToPlayer( GetLocalPlayer(), 0, 0, CHANGE_LOG_NOTICE_STRING );
     }
 
     function onInit() {

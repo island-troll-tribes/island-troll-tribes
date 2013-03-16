@@ -21,7 +21,7 @@ COMMON_J_PATH   = File.join %W[tools common.j]
 def do_compile
   wd = Dir.getwd
   Dir.chdir '..'
-  cmd = "#{'ruby ' if WIN_OS}./compile do_jasshelper:false #{$opt[:do_compile].is_a?(Hash) ? $opt[:do_compile].inject([]){|i,v|i<<"'"+v[0].to_s+":"+v[1].to_s+"'"}.join(' ') : nil}"
+  cmd = "#{'ruby ' if WIN_OS}./compile do_jasshelper:false env:#{$opt[:env]} owner:#{$opt[:owner]} #{$opt[:do_compile].is_a?(Hash) ? $opt[:do_compile].inject([]){|i,v|i<<"'"+v[0].to_s+":"+v[1].to_s+"'"}.join(' ') : nil}"
   puts cmd if $opt[:debug_script]
   r = `#{cmd}`
   Dir.chdir wd
@@ -124,6 +124,7 @@ def main
   $opt = extract_options ARGV
   p $opt if $opt[:debug_script]
   $opt.merge!({
+    :env             => $opt[:env]             ? $opt[:env]                 : 'beta',
     :debug_script    => $opt[:debug_script]    ? eval($opt[:debug_script])  : false,
     :do_jasshelper   => $opt[:do_jasshelper]   ? eval($opt[:do_jasshelper]) : true,
     :do_compile      => $opt[:do_compile]      ? eval($opt[:do_compile])    : {:do_jasshelper => false, :pregenerated => false},
@@ -157,6 +158,7 @@ def main
       :debug => false,
       :do_widgetizer => true,
       :do_optimizer => true,
+      :do_compile => {:pregenerated => false, :generate => false}
     })
   elsif $opt[:env] == 'WEC' # World Editor Compatible
     $opt.merge!({

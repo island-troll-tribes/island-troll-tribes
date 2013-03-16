@@ -1,6 +1,4 @@
 
-//! zinc
-
 library ChangeLog requires Utils, ArgsUtils, Constants {
 
     type IntFn extends function(integer);
@@ -11,20 +9,21 @@ library ChangeLog requires Utils, ArgsUtils, Constants {
         static TableArray changes;
         static Table      versions;
         static integer    numVersions;
-        static thistype   newest;
 
-        private real       major;
-        private integer    minor;
-        private integer    length;
-        private string     version;
+        private integer   major;
+        private integer   minor;
+        private integer   rev;
+        private integer   length;
+        private string    version;
 
-        static method create(real major, integer minor) -> thistype {
+        static method create(integer major, integer minor, integer rev) -> thistype {
             thistype this = thistype.allocate();
 
             this.major   = major;
             this.minor   = minor;
+            this.rev     = rev;
             this.length  = 0;
-            this.version = R2S(major) + A2S(minor);
+            this.version = I2S(major) + "." + I2S(minor) + A2S(rev);
 
             thistype.numVersions += 1;
             thistype.versions.integer_s[version] = this;
@@ -48,7 +47,7 @@ library ChangeLog requires Utils, ArgsUtils, Constants {
         method add(string change) {
             push(change);
         }
-        
+
         method each(player p, StringFn f) {
             integer i = 0;
             for (0 <= i < length) {
@@ -61,13 +60,18 @@ library ChangeLog requires Utils, ArgsUtils, Constants {
                 return true;
             if (major > t.major)
                 return false;
-            return minor < t.minor;
+            if (minor < t.minor)
+                return true;
+            if (minor > t.minor)
+                return false;
+            return rev < t.rev;
         }
 
         method displayForPlayer(player p) {
             integer i = 0;
+            DisplayTimedTextToPlayer( p, 0, 0, 30, HIGHLIGHT_COLOR + "Change Log for " + GOLD_COLOR + toString() );
             for (0 <= i < length) {
-                DisplayTimedTextToPlayer(p,0,0,30,GENERAL_COLOR+changes[this].string[i]);
+                DisplayTimedTextToPlayer( p, 0, 0, 30, GENERAL_COLOR + changes[this].string[i] );
             }
         }
 
@@ -75,6 +79,19 @@ library ChangeLog requires Utils, ArgsUtils, Constants {
             integer i = 0;
             for (0 <= i < thistype.numVersions)
                 fn.evaluate(thistype(i));
+        }
+
+        static method operator newest () -> thistype {
+            integer i;
+            integer n = thistype(1);
+
+            for ( 2 <= i <= numVersions ) {
+                if ( thistype(i) > thistype(n) ) {
+                    n = thistype(i);
+                }
+            }
+
+            return n;
         }
 
         static method getVersion(string whichVersion) -> thistype {
@@ -85,22 +102,15 @@ library ChangeLog requires Utils, ArgsUtils, Constants {
             changes     = TableArray[0x2000];
             versions    = Table.create();
             numVersions = 0;
-
-            TimerStart(CreateTimer(), 0., false, function() {
-                ChangeLog.foreach(function(ChangeLog this){
-                    if (this > ChangeLog.newest) {
-                        ChangeLog.newest = this;
-                    }
-                });
-            });
         }
-        
+
         method inspect() {
             debug {
                 integer i;
                 BJDebugMsg("Inspecting ChangeLog "+I2S(this));
-                BJDebugMsg("major="+R2S(major));
+                BJDebugMsg("major="+I2S(major));
                 BJDebugMsg("minor="+I2S(minor));
+                BJDebugMsg("rev="+I2S(rev));
                 BJDebugMsg("version="+version);
                 for (0 <= i < length) {
                     BJDebugMsg("changes[this]["+I2S(i)+"]="+changes[this].string[i]);
@@ -120,20 +130,28 @@ library ChangeLog requires Utils, ArgsUtils, Constants {
         }
     }
 
-    public function DisplayChangeLog(player p) {
-        debug {
-            BJDebugMsg( "Newest ChangeLog: " + ChangeLog.newest.to_s + " (" + I2S( ChangeLog.newest ) + ")" );
-        }
-        ChangeLog.newest.displayForPlayer(p);
-    }
-    
     function DisplayNotice() {
         DisplayTextToPlayer( GetLocalPlayer(), 0, 0, ChangeLogNoticeString );
-	}
-    
+    }
+
     function onInit() {
 		TimerStart( CreateTimer(), 120, false, function DisplayNotice );
+
+
+        ChatCommands.registerArgFunc( null, "changelog", function(ArgsList a) {
+            debug {
+                BJDebugMsg( "Newest ChangeLog: " + ChangeLog.newest.to_s + " (" + I2S( ChangeLog.newest ) + ")" );
+            }
+
+            if ( a[0] == "" )
+                ChangeLog.newest.displayForPlayer( a.triggerPlayer );
+            else
+                ChangeLog.getVersion( a[0] ).displayForPlayer( a.triggerPlayer );
+        });
+
+        TimerStart( NewTimer(), 0., false, function() {
+            ReleaseTimer( GetExpiredTimer() );
+            ChangeLog.inspectAll();
+        });
     }
 }
-
-//! endzinc

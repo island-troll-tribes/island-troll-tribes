@@ -179,8 +179,6 @@ function Commands_Action takes nothing returns nothing
             set display = "Current FogZ: "+I2S(R2I(r))+" Default: 5000"
         endif
         set d_color = GRAY_COLOR
-    elseif SubString(s,0,10)=="-changelog" then
-        call DisplayChangeLog(GetTriggerPlayer())
     endif
     
     if udg_STARTED then

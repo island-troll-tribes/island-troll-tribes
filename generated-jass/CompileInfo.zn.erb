@@ -1,4 +1,4 @@
-library CompileInfo {
+library CompileInfo requires Constants, ArgsUtils {
 
   public struct CompileInfo {
 
@@ -9,7 +9,7 @@ library CompileInfo {
     static constant integer month      = 3;
     static constant integer day        = 15;
     static constant integer hours      = 22;
-    static constant integer minutes    = 12;
+    static constant integer minutes    = 31;
     static constant integer seconds    = 45;
 
     static method operator dateTime () -> string {
@@ -22,6 +22,13 @@ library CompileInfo {
         BJDebugMsg( "Compiled by: " + CompileInfo.compiledBy );
         BJDebugMsg( "Compiled on: " + CompileInfo.dateTime );
       }
+
+      ChatCommands.registerArgFunc( null, "compileinfo", function(ArgsList a) {
+        DisplayTextToPlayer( GetLocalPlayer(), 0, 0, 
+          GRAY_COLOR + "Compiled by: |r" + GENERAL_COLOR + CompileInfo.compiledBy );
+        DisplayTextToPlayer( GetLocalPlayer(), 0, 0, 
+          GRAY_COLOR + "Compiled by: |r" + GENERAL_COLOR + CompileInfo.dateTime );
+      });
     }
   }
 }

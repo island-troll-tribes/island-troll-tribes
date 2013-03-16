@@ -46,6 +46,7 @@ class Assembler
     @compiled_by = options[:owner]
     @pregenerated = options[:pregenerated]
     @jasshelper = options[:do_jasshelper]
+    @generate = options[:generate]
     @opt = options
   end
 
@@ -135,7 +136,7 @@ class Assembler
           contents = ERB.new(contents, 0, '%<>').result(binding)
           File.open "#{@root}/generated-jass/#{File.basename(f)}", 'w' do |a|
             a << contents
-          end
+          end if @generate
         end
         f[".erb"] = ""
       end
@@ -206,7 +207,8 @@ opt = extract_options(ARGV)
 opt = {
   :env           => opt[:env] || "test",
   :output        => opt[:out] || "out.j",
-  :owner         => opt[:owner] || `whoami`.chomp,
+  :owner         => opt[:owner] || `whoami`.chomp.split("\\").last,
+  :generate      => opt[:generate] || false,
   :do_jasshelper => opt[:do_jasshelper] ? opt[:do_jasshelper].to_boolean : true,
   :pregenerated  => opt[:pregenerated] ? opt[:pregenerated].to_boolean : false,
   :build_order   => opt[:build_order] ? (File.exists?(opt[:build_order]) && !File.directory?(opt[:build_order]) ? File.read(opt[:build_order]) : opt[:build_order]).split(/,|\n/).map{|i|i.strip}.reject{|i|i.empty?} : default_file_order,

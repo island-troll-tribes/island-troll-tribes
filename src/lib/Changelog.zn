@@ -9,6 +9,7 @@ library ChangeLog requires Utils, ArgsUtils, Constants {
         static TableArray changes;
         static Table      versions;
         static integer    numVersions;
+        static thistype   cachedNewest = -1;
 
         private integer   major;
         private integer   minor;
@@ -87,20 +88,22 @@ library ChangeLog requires Utils, ArgsUtils, Constants {
         static method foreach(IntFn fn) {
             integer i = 0;
             for ( 0 <= i <= thistype.numVersions )
-                fn.evaluate(thistype(i));
+                fn.evaluate( thistype(i) );
         }
 
         static method operator newest () -> thistype {
             integer i;
-            integer n = thistype(1);
 
-            for ( 2 <= i <= numVersions ) {
-                if ( thistype(i) > thistype(n) ) {
-                    n = thistype(i);
+            if ( cachedNewest == -1 ) {
+                cachedNewest = thistype(1);
+                for ( 2 <= i <= numVersions ) {
+                    if ( thistype(i) > thistype(cachedNewest) ) {
+                        cachedNewest = thistype(i);
+                    }
                 }
             }
 
-            return n;
+            return cachedNewest;
         }
 
         static method getVersion(string whichVersion) -> thistype {

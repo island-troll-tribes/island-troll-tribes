@@ -46,7 +46,9 @@ scope Hints initializer onInit
     elseif i == 5 then
         call PingMinimapLocForForceEx( HINT_FORCE, GetUnitLoc(Mammoth), 4.00, bj_MINIMAPPINGSTYLE_FLASHY, 100, 100, 100 )
     endif
-    call DisplayTimedTextToPlayer(GetLocalPlayer(), 0, 0, 12,GOLD_COLOR+"Hint: |r"+GENERAL_COLOR+HINTS[i]+"|r")
+    if IsPlayerInForce(GetLocalPlayer(), toForce) then
+      call DisplayTimedTextToPlayer( GetLocalPlayer(), 0, 0, 12, GOLD_COLOR + "Hint: |r" + GENERAL_COLOR + HINTS[i] + "|r" )
+    endif
   endfunction
 
   //===========================================================================

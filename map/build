@@ -52,11 +52,6 @@ def do_setup_unpro_map
 end
 
 def do_exit
-  if $opt[:launchwc3]
-    cmd = "\"C:\\Program Files\\Warcraft III\\Frozen Throne.exe\" -window -loadfile #{File.expand_path($opt[:map_output_path]).gsub("/","\\").gsub(/\Ac/,"C")}" if $opt[:launchwc3] and WIN_OS
-    puts cmd if $opt[:debug_script]
-    `#{cmd}`
-  end
   exit
 end
 
@@ -106,6 +101,15 @@ def do_build
     puts "done"
   end
   puts "Finished building map!"
+  if $opt[:launchwc3]
+    if WIN_OS
+      cmd = "\"C:\\Program Files\\Warcraft III\\Frozen Throne.exe\" #{"-window" if $opt[:launchwc3][:windowed]} -loadfile #{File.expand_path($opt[:map_output_path]).gsub("/","\\").gsub(/\Ac/,"C")}"
+    elsif MAC_OS
+      cmd = "'/Applications/Frozen Throne' #{"-window" if $opt[:launchwc3].is_a?(Hash) && $opt[:launchwc3][:windowed]} -loadfile i:/map/#{$opt[:map_output_path]}"
+    end
+    puts cmd if $opt[:debug_script]
+    `#{cmd}`
+  end
   do_exit
 end
 
@@ -146,7 +150,7 @@ def main
   elsif $opt[:env] == 'test'
     $opt.merge!({
       :debug => true,
-      :launchwc3 => true,
+      :launchwc3 => {:windowed=>true},
       #:map_output_path => File.expand_path(File.join(%W[Program\ Files Warcraft\ III Maps itt-test ITT_#{`git log -1 --pretty=oneline`[/\A\w*/].strip[1..5]}_#{Time.now.to_i}.test.w3x]), "/"),
     })
   elsif $opt[:env] == 'optimized'

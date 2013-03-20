@@ -1,0 +1,119 @@
+
+library FriendlyIdSpawn requires ChatCommands {
+
+  function FriendlyIdSpawn(ArgsList a) {
+    integer i;
+    unit    u;
+
+    string id = a[0];
+    string x  = a[1];
+    string y  = a[2];
+    string p  = a[3];
+
+    if ( id == "" ) {
+      BJDebugMsg( GENERAL_COLOR + "=== Friendly ID Spawn!! ===" );
+      BJDebugMsg( " " );
+      BJDebugMsg( " " );
+      BJDebugMsg( GENERAL_COLOR + "Syntax:" );
+      BJDebugMsg( " " );
+      BJDebugMsg( DASH + GENERAL_COLOR + "-spawn UNIT_MAMMOTH [x y [player id, 0 = red]]" );
+      BJDebugMsg( DASH + GENERAL_COLOR + "default x, y => next to your hero" );
+      BJDebugMsg( DASH + GENERAL_COLOR + "default player => you" );
+      BJDebugMsg( " " );
+      BJDebugMsg( DASH + GENERAL_COLOR + "-spawn ITEM_BATTLE_GLOVES [x y]" );
+      BJDebugMsg( DASH + GENERAL_COLOR + "default x, y => next to your hero" );
+      a.destroy();
+      return;
+    }
+
+    if ( x == "" ) {
+      u = GetPlayersTroll( a.triggerPlayer );
+      x = R2S( GetUnitX( u ) + 100 * Cos( Deg2Rad( GetUnitFacing( u ) ) ) );
+      y = R2S( GetUnitY( u ) + 100 * Sin( Deg2Rad( GetUnitFacing( u ) ) ) );
+      p = I2S( GetPlayerId( a.triggerPlayer ) );
+      u = null;
+    }
+
+    if ( SubString( id, 0, 4 ) == "UNIT" ) {
+      CreateUnit( Player( S2I( p ) ), S2ID( id ), S2R( x ), S2R( y ), 270 );
+    }
+    else if ( SubString( a[0], 0, 4 ) == "ITEM" ) {
+      CreateItem( S2ID( id ), S2R( x ), S2R( y ) );
+    }
+    else {
+      BJDebugMsg( COLOR_CODE[0] + "Only UNIT and ITEM are supported right now" );
+    }
+
+    debug BJDebugMsg( "Creating " + SubString( a[0], 5, 99) );
+    a.destroy();
+    return;
+
+    /* not implemented yet */
+
+    if (a[1] == "unit") {
+      CreateUnit(a.triggerPlayer, S2ID(a[2]), S2R(a[3]), S2R(a[4]), 270);
+      a.destroy();
+    }
+    else if (a[1] == "item") {
+      CreateItem(S2ID(a[2]), S2R(a[3]), S2R(a[4]));
+      a.destroy();
+    }
+    else if (a[1] == "all") {
+      if (a[2] == "units") {
+        if (a[3] == "--help") {
+          DisplayTextToPlayer(a.triggerPlayer, 0, 0, "syntax: -tau spawn all units <time between> <loc x> <loc y>");
+          a.destroy();
+        }
+        else {
+          TimerStart(NewTimerEx(a), S2R(a[3]), true, function() {
+            ArgsList a = GetTimerData(GetExpiredTimer());
+            if (UNIT_ALL.length() > 0) {
+              debug BJDebugMsg("UNIT_ALL.last = "+ID2S(UNIT_ALL[UNIT_ALL.length()-1]));
+              TimerStart(
+                NewTimerEx( Unit.new( CreateUnit( a.triggerPlayer, 
+                                                  UNIT_ALL.pop(), 
+                                                  S2R(a[4]), 
+                                                  S2R(a[5]), 
+                                                  270 ))),
+                S2R( a[3] ) - 0.01,
+                false,
+                function() {
+                  Unit u = GetTimerData( GetExpiredTimer() );
+                  RemoveUnit( u.unit );
+                  u.destroy();
+                  ReleaseTimer( GetExpiredTimer() );
+                }
+              );
+            } else {
+              ReleaseTimer(GetExpiredTimer());
+              a.destroy();
+            }
+          });
+        }
+      }
+      else if (a[2] == "items") {
+        if (a[3] == "--help") {
+          DisplayTextToPlayer(a.triggerPlayer, 0, 0, "syntax: -tau spawn all items <time between> <loc x> <loc y>");
+        }
+        else {
+          TimerStart(NewTimerEx(a), S2R(a[3]), true, function() {
+            ArgsList a = GetTimerData(GetExpiredTimer());
+            if (ITEM_ALL.length() >= 0) {
+              debug BJDebugMsg("ITEM_ALL.last = "+ID2S(ITEM_ALL[ITEM_ALL.length()-1]));
+              CreateItem(ITEM_ALL.pop(), S2R(a[4]), S2R(a[5]));
+            } else {
+              ReleaseTimer(GetExpiredTimer());
+              a.destroy();
+            }
+          });
+        }
+      }
+    }
+  }
+        
+  function onInit() {
+    debug {
+      ChatCommands.registerArgFunc(Player(0), "spawn", FriendlyIdSpawn);
+    }
+  }
+}

@@ -1,0 +1,46 @@
+
+library ChatCommands requires ArgsUtils {
+  
+  public {
+    type ArgFunc extends function(ArgsList);
+  }
+  
+  public struct ChatCommands {
+    private static trigger chatEvent;
+    private static TableArray cmdFns;
+    
+    static method registerArgFunc(player forWho, string command, ArgFunc fn) {
+      integer i;
+      if (forWho == null) {
+        for (0 <= i <= 11) {
+          cmdFns[i][StringHash(command)] = fn;
+        } 
+      } else
+        cmdFns[GetPlayerId(forWho)][StringHash(command)] = fn;
+    }
+    
+    static method executeArgFunc() {
+      ArgsList a = ProcessArgs(GetEventPlayerChatString());
+      ArgFunc fn;
+      a.triggerPlayer = GetTriggerPlayer();
+      if (cmdFns[GetPlayerId(a.triggerPlayer)].has(StringHash(a.cmd))) {
+        fn = cmdFns[GetPlayerId(a.triggerPlayer)][StringHash(a.cmd)];
+        fn.evaluate(a);
+      }
+    }
+              
+    static method onInit() {
+      integer i = 0;
+      
+      cmdFns = TableArray[12];
+      chatEvent = CreateTrigger();
+    
+      for (0 <= i <= 11) {
+        if (GetPlayerSlotState(Player(i)) == PLAYER_SLOT_STATE_PLAYING) {
+          TriggerRegisterPlayerChatEvent(chatEvent, Player(i), "-", false);
+        }
+      }
+      TriggerAddAction(chatEvent, static method ChatCommands.executeArgFunc);
+    }
+  }
+}

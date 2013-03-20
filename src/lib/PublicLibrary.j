@@ -248,6 +248,10 @@ function getPlayersTroll takes player p returns unit
     return udg_parameterUnit
 endfunction
 
+function GetPlayersTroll takes player p returns unit
+    return udg_PUnits[GetPlayerId(p)]
+endfunction
+
 function cleanInventory takes unit u returns nothing
     local integer temp=UnitInventorySize(u)
     local integer temp2

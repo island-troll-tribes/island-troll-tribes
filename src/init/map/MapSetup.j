@@ -261,6 +261,12 @@ function Startup_Timer takes nothing returns nothing
     set MODES_TIMER_DIALOG = CreateTimerDialog(MODES_TIMER)
     call TimerDialogSetTitle(MODES_TIMER_DIALOG,"Game Starting")
     call TimerDialogDisplay(MODES_TIMER_DIALOG,true)
+
+    // debug modes
+    static if DEBUG_MODE then
+        call GameModes_Action("-test mode",Player(0))
+    endif
+
     //HCL Modes``
     
     if checkHCLletter("a") then //no boats

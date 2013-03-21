@@ -1,0 +1,28 @@
+#!/bin/sh
+
+
+cd "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd ..
+
+output="${2:-itt_pro.w3x}"
+
+echo "Preparing to build $output"
+
+if [ -f "$output" ]; then
+  echo "Removing old ($output) files"
+  rm "$output"*
+fi
+
+echo "Building $output"
+./map/build env:pro map_output_path:"../$output"
+
+echo "Copying $output to clantwgb.com"
+scp "$output" Jesse@clantwgb.com:"/cygdrive/c/Users/Jesse/gpp\ priv-bot/maps"
+echo "Copied!"
+
+echo "Creating ${output}.cfg"
+sed -e "s/\${output}/${output}/" scripts/itt.cfg.template > tmp.cfg && scp tmp.cfg Jesse@clantwgb.com:"/cygdrive/c/Users/Jesse/gpp\ priv-bot/mapcfgs/${output}.cfg" && rm tmp.cfg
+
+echo "Finished deploying $output"
+
+exit

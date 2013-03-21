@@ -5,7 +5,7 @@
 Script which takes an unportected ITT map and applies any build settings passed via argv
 upon on it then turns it into a working wc3 map file.
 
-    _Options_            _Default_                   _Description_
+    __Options__          __Default__                 __Description__
     env                  beta                        map environment: each environment has default build settings
     debug_script         false                       debug this build script
     do_jasshelper        true                        turns vJass & ZINC into JASS

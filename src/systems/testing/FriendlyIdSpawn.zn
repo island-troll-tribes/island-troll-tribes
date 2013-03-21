@@ -1,114 +1,164 @@
 
 library FriendlyIdSpawn requires ChatCommands {
 
+  struct data {
+    real x;
+    real y;
+    real t;
+    integer u;
+    integer id;
+    integer pid;
+    integer next;
+  }
+
+  function DisplayHelp() {
+    BJDebugMsg( GENERAL_COLOR + "=== Friendly ID Spawn!! ===" );
+    BJDebugMsg( " " );
+    BJDebugMsg( " " );
+    BJDebugMsg( GENERAL_COLOR + "Syntax:" );
+    BJDebugMsg( " " );
+    BJDebugMsg( GENERAL_COLOR + "-spawn UNIT_MAMMOTH [x y [player id, 0 = red]]" );
+    BJDebugMsg( GENERAL_COLOR + "default x, y => next to your hero" );
+    BJDebugMsg( GENERAL_COLOR + "default player => you" );
+    BJDebugMsg( " " );
+    BJDebugMsg( GENERAL_COLOR + "-spawn ITEM_BATTLE_GLOVES [x y]" );
+    BJDebugMsg( GENERAL_COLOR + "default x, y => next to your hero" );
+    BJDebugMsg( " " );
+    BJDebugMsg( GENERAL_COLOR + "-spawn all (units|items) [x y [time between]]" );
+    BJDebugMsg( GENERAL_COLOR + "default x, y => next to your hero" );
+    BJDebugMsg( GENERAL_COLOR + "default time between => 1s, only relevant for all units" );
+  }
+
+  function SpawnAllItems() {
+    data d = GetTimerData( GetExpiredTimer() );
+
+    if ( d.next < ITEM_ALL.length() ) {
+      CreateItem( ITEM_ALL[d.next], d.x, d.y );
+      d.next += 1;
+    } else {
+      ReleaseTimer( GetExpiredTimer() );
+      d.destroy();
+    }
+  }
+
+  function SpawnAllUnits() {
+    data d = GetTimerData( GetExpiredTimer() );
+
+    if ( d.next < UNIT_ALL.length() ) {
+
+      debug BJDebugMsg( ENERGY_COLOR + "Spawning " + ID2S( UNIT_ALL[d.next] ));
+      d.u = Unit.new( CreateUnit( Player(0), UNIT_ALL[d.next], d.x, d.y, 270 ));
+
+      TimerStart( NewTimerEx( d ), d.t - 0.01, false, function() {
+        data d = GetTimerData( GetExpiredTimer() );
+        RemoveUnit( Unit( d.u ).unit );
+        Unit( d.u ).destroy();
+        d.next += 1;
+        ReleaseTimer( GetExpiredTimer() );
+      });
+
+    } else {
+      ReleaseTimer( GetExpiredTimer() );
+      Unit( d.u ).destroy();
+      d.destroy();
+    }
+  }
+
+  function SpawnAll(ArgsList a) {
+    data d = data.create();
+    unit u;
+
+    if ( a[2] == "" ) {
+      u = GetPlayersTroll( a.triggerPlayer );
+      d.x = GetUnitX( u ) + 500 * Cos( Deg2Rad( GetUnitFacing( u )));
+      d.y = GetUnitY( u ) + 500 * Sin( Deg2Rad( GetUnitFacing( u )));
+      d.t = 1.;
+      u = null;
+    }
+    else {
+      d.x = S2R( a[2] );
+      d.y = S2R( a[3] );
+      if ( a[4] != "" )
+        d.t = S2R( a[4] );
+      else
+        d.t = 1.;
+    }
+
+    if ( a[1] == "items" ) {
+      TimerStart( NewTimerEx( d ), d.t, true, function SpawnAllItems );
+    }
+    else if ( a[1] == "units" ) {
+      TimerStart( NewTimerEx( d ), d.t, true, function SpawnAllUnits );
+    }
+    else {
+      BJDebugMsg( COLOR_CODE[0] + "Couldn't figure out what you want me to do!" );
+      DisplayHelp();
+      a.destroy();
+    }
+  }
+
   function FriendlyIdSpawn(ArgsList a) {
-    integer i;
-    unit    u;
+    data d;
+    unit u;
 
-    string id = a[0];
-    string x  = a[1];
-    string y  = a[2];
-    string p  = a[3];
-
-    if ( id == "" ) {
-      BJDebugMsg( GENERAL_COLOR + "=== Friendly ID Spawn!! ===" );
-      BJDebugMsg( " " );
-      BJDebugMsg( " " );
-      BJDebugMsg( GENERAL_COLOR + "Syntax:" );
-      BJDebugMsg( " " );
-      BJDebugMsg( DASH + GENERAL_COLOR + "-spawn UNIT_MAMMOTH [x y [player id, 0 = red]]" );
-      BJDebugMsg( DASH + GENERAL_COLOR + "default x, y => next to your hero" );
-      BJDebugMsg( DASH + GENERAL_COLOR + "default player => you" );
-      BJDebugMsg( " " );
-      BJDebugMsg( DASH + GENERAL_COLOR + "-spawn ITEM_BATTLE_GLOVES [x y]" );
-      BJDebugMsg( DASH + GENERAL_COLOR + "default x, y => next to your hero" );
+    if ( a[0] == "" ) {
+      DisplayHelp();
       a.destroy();
       return;
     }
 
-    if ( x == "" ) {
-      u = GetPlayersTroll( a.triggerPlayer );
-      x = R2S( GetUnitX( u ) + 100 * Cos( Deg2Rad( GetUnitFacing( u ) ) ) );
-      y = R2S( GetUnitY( u ) + 100 * Sin( Deg2Rad( GetUnitFacing( u ) ) ) );
-      p = I2S( GetPlayerId( a.triggerPlayer ) );
-      u = null;
+    // we have an argument
+
+    if ( a[0] == "all" ) {
+      SpawnAll( a );
+      return;
     }
 
-    if ( SubString( id, 0, 4 ) == "UNIT" ) {
-      CreateUnit( Player( S2I( p ) ), S2ID( id ), S2R( x ), S2R( y ), 270 );
+    // we have an ID, and we are spawning only 1 thing
+
+    if ( S2ID( a[0] ) == 0 ) {
+      BJDebugMsg( COLOR_CODE[0] + "ID " + a[0] + " Not Found!" );
+      a.destroy();
+      return;
+    }
+
+    // we have a valid id
+
+    d     = data.create();
+    d.id  = S2ID( a[0] );
+
+    if ( a[1] == "" ) {
+      u     = GetPlayersTroll( a.triggerPlayer );
+      d.x   = GetUnitX( u ) + 100 * Cos( Deg2Rad( GetUnitFacing( u )));
+      d.y   = GetUnitY( u ) + 100 * Sin( Deg2Rad( GetUnitFacing( u )));
+      d.pid = GetPlayerId( a.triggerPlayer );
+      u     = null;
+    }
+    else {
+      d.x   = S2R( a[1] );
+      d.y   = S2R( a[2] );
+      if ( a[3] != "" )
+        d.pid = S2I( a[3] );
+      else
+        d.pid = GetPlayerId( a.triggerPlayer );
+    }
+
+    // we have the data
+
+    if ( SubString( a[0], 0, 4 ) == "UNIT" ) {
+      CreateUnit( Player( d.pid ), d.id, d.x, d.y, 270 );
     }
     else if ( SubString( a[0], 0, 4 ) == "ITEM" ) {
-      CreateItem( S2ID( id ), S2R( x ), S2R( y ) );
+      CreateItem( d.id, d.x, d.y );
     }
     else {
       BJDebugMsg( COLOR_CODE[0] + "Only UNIT and ITEM are supported right now" );
+      DisplayHelp();
     }
 
     debug BJDebugMsg( "Creating " + SubString( a[0], 5, 99) );
     a.destroy();
     return;
-
-    /* not implemented yet */
-
-    if (a[1] == "unit") {
-      CreateUnit(a.triggerPlayer, S2ID(a[2]), S2R(a[3]), S2R(a[4]), 270);
-      a.destroy();
-    }
-    else if (a[1] == "item") {
-      CreateItem(S2ID(a[2]), S2R(a[3]), S2R(a[4]));
-      a.destroy();
-    }
-    else if (a[1] == "all") {
-      if (a[2] == "units") {
-        if (a[3] == "--help") {
-          DisplayTextToPlayer(a.triggerPlayer, 0, 0, "syntax: -tau spawn all units <time between> <loc x> <loc y>");
-          a.destroy();
-        }
-        else {
-          TimerStart(NewTimerEx(a), S2R(a[3]), true, function() {
-            ArgsList a = GetTimerData(GetExpiredTimer());
-            if (UNIT_ALL.length() > 0) {
-              debug BJDebugMsg("UNIT_ALL.last = "+ID2S(UNIT_ALL[UNIT_ALL.length()-1]));
-              TimerStart(
-                NewTimerEx( Unit.new( CreateUnit( a.triggerPlayer, 
-                                                  UNIT_ALL.pop(), 
-                                                  S2R(a[4]), 
-                                                  S2R(a[5]), 
-                                                  270 ))),
-                S2R( a[3] ) - 0.01,
-                false,
-                function() {
-                  Unit u = GetTimerData( GetExpiredTimer() );
-                  RemoveUnit( u.unit );
-                  u.destroy();
-                  ReleaseTimer( GetExpiredTimer() );
-                }
-              );
-            } else {
-              ReleaseTimer(GetExpiredTimer());
-              a.destroy();
-            }
-          });
-        }
-      }
-      else if (a[2] == "items") {
-        if (a[3] == "--help") {
-          DisplayTextToPlayer(a.triggerPlayer, 0, 0, "syntax: -tau spawn all items <time between> <loc x> <loc y>");
-        }
-        else {
-          TimerStart(NewTimerEx(a), S2R(a[3]), true, function() {
-            ArgsList a = GetTimerData(GetExpiredTimer());
-            if (ITEM_ALL.length() >= 0) {
-              debug BJDebugMsg("ITEM_ALL.last = "+ID2S(ITEM_ALL[ITEM_ALL.length()-1]));
-              CreateItem(ITEM_ALL.pop(), S2R(a[4]), S2R(a[5]));
-            } else {
-              ReleaseTimer(GetExpiredTimer());
-              a.destroy();
-            }
-          });
-        }
-      }
-    }
   }
         
   function onInit() {

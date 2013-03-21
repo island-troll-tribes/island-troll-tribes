@@ -5,15 +5,15 @@
 Script which takes an unportected ITT map and applies any build settings passed via argv
 upon on it then turns it into a working wc3 map file.
 
-    Options______________Default_____________________Description______________________________________________________________
+    Options______________Default_____________________Description_________________________________________________________
     env                  beta                        map environment: each environment has default build settings
     debug_script         false                       debug this build script
     do_jasshelper        true                        turns vJass & ZINC into JASS
     do_compile           true                        turns ../src into out.j. When false, looks for {map_script_path}
-    do_optimizer         false                       uses Vexorian's map optimizer to make the map run faster and be protected
+    do_optimizer         false                       uses Vexorian's map optimizer to protect and make the map run faster
     do_widgetizer        false                       uses PitzerMike's map widgetizer to make map load faster
     debug                false                       whether the --debug flag should be passed to jasshelper
-    launchwc3            false                       whether the script should launch wc3 with the map loaded upon completion
+    launchwc3            false                       whether the script should launch wc3 with the map loaded on exit
     map_unpro_path       base-maps/{highest}.w3x     the base map file to inject script into
     map_script_path      ../out.j                    map script path to load into map
     map_output_path      ITT_{commit}_{time}.w3x     path where to put the compiled map

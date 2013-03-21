@@ -44,9 +44,7 @@ class Assembler
     @output_path = "#{@root}/#{options[:output]}"
     @errors = []
     @compiled_by = options[:owner]
-    @pregenerated = options[:pregenerated]
     @jasshelper = options[:do_jasshelper]
-    @generate = options[:generate]
     @opt = options
   end
 
@@ -128,16 +126,7 @@ class Assembler
     File.open(f, 'r') do |file|
       contents = file.read
       if File.extname(f) == ".erb"
-        if @pregenerated
-          File.open "#{@root}/generated-jass/#{File.basename(f)}", 'r' do |a|
-            contents = a.read
-          end
-        else
-          contents = ERB.new(contents, 0, '%<>').result(binding)
-          File.open "#{@root}/generated-jass/#{File.basename(f)}", 'w' do |a|
-            a << contents
-          end if @generate
-        end
+        contents = ERB.new(contents, 0, '%<>').result(binding)
         f[".erb"] = ""
       end
       if File.extname(f) == ".j"
@@ -209,8 +198,6 @@ opt = {
   :output        => opt[:out] || "out.j",
   :owner         => opt[:owner] || `whoami`.chomp.split("\\").last,
   :do_jasshelper => opt[:do_jasshelper] ? opt[:do_jasshelper].to_boolean : true,
-  :pregenerated  => opt[:pregenerated] ? opt[:pregenerated].to_boolean : false,
-  :generate      => opt[:generate] ? opt[:generate].to_boolean : false,
   :build_order   => opt[:build_order] ? (File.exists?(opt[:build_order]) && !File.directory?(opt[:build_order]) ? File.read(opt[:build_order]) : opt[:build_order]).split(/,|\n/).map{|i|i.strip}.reject{|i|i.empty?} : default_file_order,
   :debug         => opt[:debug] ? opt[:debug].to_boolean : false
 }
@@ -227,14 +214,12 @@ Usage:
 Optional Options:
 owner:(owner name)                         defaults `whoami`
 out:(output filename)                      defaults out.j
-pregenerated:(whether to eval *.erb)       defaults false
 debug:(whether to print script debug msgs) defaults false
 build_order:(list paths relative to src/)  defaults\n#{default_file_order.join("\n")}
 
 Example:
-./compile owner:quazz out:itt.j pregenerated:true build_order:one.j,two.j,aDir
+./compile owner:quazz out:itt.j build_order:one.j,two.j,aDir
 
-NOTE: static erb will be off by default when compiling into the map
 EOS
   exit
 end
@@ -242,11 +227,9 @@ end
 
 itt_builder = Assembler.new(opt)
 
-unless opt[:pregenerated]
-  puts 'loading helpers...' if opt[:debug]
-  load_all_helpers
-  puts 'loaded helpers...' if opt[:debug]
-end
+puts 'loading helpers...' if opt[:debug]
+load_all_helpers
+puts 'loaded helpers...' if opt[:debug]
 
 itt_builder.extract_globals 'src/lib/ID.j'
 

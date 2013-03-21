@@ -131,7 +131,7 @@ def main
     :env             => $opt[:env]             ? $opt[:env]                 : 'beta',
     :debug_script    => $opt[:debug_script]    ? eval($opt[:debug_script])  : false,
     :do_jasshelper   => $opt[:do_jasshelper]   ? eval($opt[:do_jasshelper]) : true,
-    :do_compile      => $opt[:do_compile]      ? eval($opt[:do_compile])    : {:do_jasshelper => false, :pregenerated => false},
+    :do_compile      => $opt[:do_compile]      ? eval($opt[:do_compile])    : {:do_jasshelper => false},
     :do_optimizer    => $opt[:do_optimizer]    ? eval($opt[:do_optimizer])  : false,
     :do_widgetizer   => $opt[:do_widgetizer]   ? eval($opt[:do_widgetizer]) : false,
     :no_optimize     => $opt[:no_optimize]     ? eval($opt[:no_optimize])   : false,
@@ -146,6 +146,8 @@ def main
   if $opt[:env] == 'beta'
     $opt.merge!({
       :debug => true,
+      :do_widgetizer => true,
+      :do_optimizer => true,
     })
   elsif $opt[:env] == 'test'
     $opt.merge!({
@@ -156,17 +158,18 @@ def main
     $opt.merge!({
       :do_optimizer => true,
     })
+  elsif $opt[:env] == 'widgetized'
+    $opt.merge!({
+      :do_widgetizer => true,
+    })
   elsif $opt[:env] == 'pro'
     $opt.merge!({
-      :debug => false,
       :do_widgetizer => true,
       :do_optimizer => true,
     })
   elsif $opt[:env] == 'WEC' # World Editor Compatible
     $opt.merge!({
       :debug => true,
-      :do_widgetizer => false,
-      :do_optimizer => false,
     })
   end
 

@@ -350,6 +350,9 @@ endfunction
 function checkTroll takes unit u returns boolean
     return UNIT_TROLL_ALL.has( GetUnitTypeId(u) )
 endfunction
+function CheckTroll takes unit u returns boolean
+    return UNIT_TROLL_ALL.has( GetUnitTypeId(u) )
+endfunction
 
 function checkHawk takes unit u returns boolean
     return GetUnitTypeId(u) == UNIT_BRONZE_DRAGON_HATCHLING or GetUnitTypeId(u) == UNIT_FOREST_DRAGON_HATCHLING or GetUnitTypeId(u) == UNIT_HAWK_HATCHLING or GetUnitTypeId(u) == UNIT_NETHER_DRAGON_HATCHLING or GetUnitTypeId(u) == UNIT_RED_DRAGON_HATCHLING or GetUnitTypeId(u) == UNIT_BRONZE_DRAGON or GetUnitTypeId(u) == UNIT_FOREST_DRAGON or GetUnitTypeId(u) == UNIT_HAWK or GetUnitTypeId(u) == UNIT_HAWK_ADOLESCENT or GetUnitTypeId(u) == 'n00K' or GetUnitTypeId(u) == 'n00T' or GetUnitTypeId(u) == UNIT_ALPHA_HAWK or GetUnitTypeId(u) == UNIT_GREATER_BRONZE_DRAGON or GetUnitTypeId(u) == UNIT_GREATER_FOREST_DRAGON or GetUnitTypeId(u) == UNIT_GREATER_NETHER_DRAGON or GetUnitTypeId(u) == UNIT_GREATER_RED_DRAGON

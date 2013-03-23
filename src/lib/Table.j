@@ -489,6 +489,12 @@ struct Table extends array
     method has takes integer key returns boolean
         return HaveSavedInteger(ht, this, key)
     endmethod
+    method has_s takes string key returns boolean
+        return HaveSavedInteger(ht, this, StringHash(key))
+    endmethod
+    method has_h takes handle key returns boolean
+        return HaveSavedInteger(ht, this, GetHandleId(key))
+    endmethod
     
     //call tb.remove(294080)
     method remove takes integer key returns nothing

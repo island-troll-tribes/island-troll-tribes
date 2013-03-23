@@ -18,62 +18,33 @@ library Constants {
     constant integer TROLL_SUPER_CLASS = 102;
   }
 
-  /* Dialog button hotkey constants */
-  public {
-    constant integer HK_ESC=512;
-    
-    constant integer HK_0 = 48;
-    constant integer HK_1 = 49;
-    constant integer HK_2 = 50;
-    constant integer HK_3 = 51;
-    constant integer HK_4 = 52;
-    constant integer HK_5 = 53;
-    constant integer HK_6 = 54;
-    constant integer HK_7 = 55;
-    constant integer HK_8 = 56;
-    constant integer HK_9 = 57;
-    
-    constant integer HK_A = 65;
-    constant integer HK_B = 66;
-    constant integer HK_C = 67;
-    constant integer HK_D = 68;
-    constant integer HK_E = 69;
-    constant integer HK_F = 70;
-    constant integer HK_G = 71;
-    constant integer HK_H = 72;
-    constant integer HK_I = 73;
-    constant integer HK_J = 74;
-    constant integer HK_K = 75;
-    constant integer HK_L = 76;
-    constant integer HK_M = 77;
-    constant integer HK_N = 78;
-    constant integer HK_O = 79;
-    constant integer HK_P = 80;
-    constant integer HK_Q = 81;
-    constant integer HK_R = 82;
-    constant integer HK_S = 83;
-    constant integer HK_T = 84;
-    constant integer HK_U = 85;
-    constant integer HK_V = 86;
-    constant integer HK_W = 87;
-    constant integer HK_X = 88;
-    constant integer HK_Y = 89;
-    constant integer HK_Z = 90;
-  }
-
   public {
     string COLOR_CODE[];
 
-    constant string DASH            = "|cffb8860b - |r";   // DarkGoldenRod
-    constant string ENERGY_COLOR    = "|cff6495ed";        // CornflowerBlue
-    constant string GENERAL_COLOR   = "|cffc2e8eb";        // LightBlue
-    constant string GOLD_COLOR      = "|cffffd700";        // Gold
-    constant string GRAY_COLOR      = "|cffa0a0a0";        // Gray
-    constant string GREEN_COLOR     = "|cff00df00";        // LimeGreen
-    constant string HIGHLIGHT_COLOR = "|cffdeb887";        // BurlyWood
-    constant string RED_COLOR       = "|cffff0000";        // Red
-    constant string SPECIAL_COLOR   = "|cffff6347";        // Tomato
-    constant string HEALTH_COLOR    = "|cffd67a7a";        // Salmon
+    constant string DASH             = "|cffb8860b - |r";   // DarkGoldenRod
+    constant string ENERGY_COLOR     = "|cff6495ed";        // CornflowerBlue
+    constant string GENERAL_COLOR    = "|cffc2e8eb";        // LightBlue
+    constant string GOLD_COLOR       = "|cffffd700";        // Gold
+    constant string GRAY_COLOR       = "|cffa0a0a0";        // Gray
+    constant string GREEN_COLOR      = "|cff00df00";        // LimeGreen
+    constant string HIGHLIGHT_COLOR  = "|cffdeb887";        // BurlyWood
+    constant string RED_COLOR        = "|cffff0000";        // Red
+    constant string SPECIAL_COLOR    = "|cffff6347";        // Tomato
+    constant string HEALTH_COLOR     = "|cffd67a7a";        // Salmon
+
+    constant string COLOR_RED        = "|cffff0303";
+    constant string COLOR_BLUE       = "|cff0042ff";
+    constant string COLOR_TEAL       = "|cff1ce6b9";
+    constant string COLOR_PURPLE     = "|cff540081";
+    constant string COLOR_YELLOW     = "|cfffffc00";
+    constant string COLOR_ORANGE     = "|cfffe8a0e";
+    constant string COLOR_GREEN      = "|cff20c000";
+    constant string COLOR_PINK       = "|cffe55bb0";
+    constant string COLOR_GRAY       = "|cff959697";
+    constant string COLOR_LIGHT_BLUE = "|cff7fbff1";
+    constant string COLOR_DARK_GREEN = "|cff106246";
+    constant string COLOR_BROWN      = "|cff492a04";
+    constant string COLOR_BLACK      = "|cff696969";
   }
 
   /* Language constants */
@@ -83,19 +54,19 @@ library Constants {
 
   /* InitArrays */
   function onInit () {
-    COLOR_CODE[0]  = "|cffff0303";
-    COLOR_CODE[1]  = "|cff0042ff";
-    COLOR_CODE[2]  = "|cff1ce6b9";
-    COLOR_CODE[3]  = "|cff540081";
-    COLOR_CODE[4]  = "|cfffffc00";
-    COLOR_CODE[5]  = "|cfffe8a0e";
-    COLOR_CODE[6]  = "|cff20c000";
-    COLOR_CODE[7]  = "|cffe55bb0";
-    COLOR_CODE[8]  = "|cff959697";
-    COLOR_CODE[9]  = "|cff7fbff1";
-    COLOR_CODE[10] = "|cff106246";
-    COLOR_CODE[11] = "|cff492a04";
-    COLOR_CODE[12] = "|cff696969";
+    COLOR_CODE[0]  = COLOR_RED;
+    COLOR_CODE[1]  = COLOR_BLUE;
+    COLOR_CODE[2]  = COLOR_TEAL;
+    COLOR_CODE[3]  = COLOR_PURPLE;
+    COLOR_CODE[4]  = COLOR_YELLOW;
+    COLOR_CODE[5]  = COLOR_ORANGE;
+    COLOR_CODE[6]  = COLOR_GREEN;
+    COLOR_CODE[7]  = COLOR_PINK;
+    COLOR_CODE[8]  = COLOR_GRAY;
+    COLOR_CODE[9]  = COLOR_LIGHT_BLUE;
+    COLOR_CODE[10] = COLOR_DARK_GREEN;
+    COLOR_CODE[11] = COLOR_BROWN;
+    COLOR_CODE[12] = COLOR_BLACK;
 
     UNIT_TROLL_ALL = Table.create();
     UNIT_TROLL_ALL[UNIT_HUNTER]          = TROLL_BASE_CLASS;
@@ -126,6 +97,49 @@ library Constants {
     UNIT_TROLL_ALL[UNIT_RADAR_GATHERER]  = TROLL_SUB_CLASS;
     UNIT_TROLL_ALL[UNIT_HERB_MASTER]     = TROLL_SUB_CLASS;
     UNIT_TROLL_ALL[UNIT_OMNIGATHERER]    = TROLL_SUPER_CLASS;
+  }
+
+  /* Dialog button hotkey constants */
+  public {
+    constant integer HK_ESC=512;
+
+    constant integer HK_0 = 48;
+    constant integer HK_1 = 49;
+    constant integer HK_2 = 50;
+    constant integer HK_3 = 51;
+    constant integer HK_4 = 52;
+    constant integer HK_5 = 53;
+    constant integer HK_6 = 54;
+    constant integer HK_7 = 55;
+    constant integer HK_8 = 56;
+    constant integer HK_9 = 57;
+
+    constant integer HK_A = 65;
+    constant integer HK_B = 66;
+    constant integer HK_C = 67;
+    constant integer HK_D = 68;
+    constant integer HK_E = 69;
+    constant integer HK_F = 70;
+    constant integer HK_G = 71;
+    constant integer HK_H = 72;
+    constant integer HK_I = 73;
+    constant integer HK_J = 74;
+    constant integer HK_K = 75;
+    constant integer HK_L = 76;
+    constant integer HK_M = 77;
+    constant integer HK_N = 78;
+    constant integer HK_O = 79;
+    constant integer HK_P = 80;
+    constant integer HK_Q = 81;
+    constant integer HK_R = 82;
+    constant integer HK_S = 83;
+    constant integer HK_T = 84;
+    constant integer HK_U = 85;
+    constant integer HK_V = 86;
+    constant integer HK_W = 87;
+    constant integer HK_X = 88;
+    constant integer HK_Y = 89;
+    constant integer HK_Z = 90;
   }
 
 }

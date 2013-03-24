@@ -17,12 +17,18 @@ fi
 echo "Building $output"
 ./map/build env:pro map_output_path:"../$output"
 
+echo $?
+
+if [ $? != 0 ]; then
+  exit
+fi
+
 echo "Copying $output to clantwgb.com"
-scp "$output" Jesse@clantwgb.com:"/cygdrive/c/Users/Jesse/gpp\ priv-bot/maps"
+scp "$output" Jesse@clantwgb.com:"/cygdrive/c/Users/Jesse/twgbhost/maps"
 echo "Copied!"
 
 echo "Creating ${cfg}.cfg"
-sed -e "s/\${output}/${output}/" scripts/itt.cfg.template > tmp.cfg && scp tmp.cfg Jesse@clantwgb.com:"/cygdrive/c/Users/Jesse/gpp\ priv-bot/mapcfgs/${cfg}" && rm tmp.cfg
+sed -e "s/\${output}/${output}/" scripts/itt.cfg.template > tmp.cfg && scp tmp.cfg Jesse@clantwgb.com:"/cygdrive/c/Users/Jesse/twgbhost/mapcfgs/${cfg}" && rm tmp.cfg
 
 echo "Finished deploying $output"
 

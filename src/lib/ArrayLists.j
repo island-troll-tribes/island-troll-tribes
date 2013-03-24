@@ -121,7 +121,7 @@ library ArrayLists
                     endif
             endloop
         endmethod
-       
+
     endstruct
     
     //! endtextmacro

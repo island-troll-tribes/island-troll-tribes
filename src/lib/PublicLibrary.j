@@ -311,6 +311,18 @@ function countItem takes unit u,integer itm returns integer
     return count
 endfunction
 
+function UnitHasItemType takes unit u, integer id returns boolean
+    local integer i = 0
+    loop
+        exitwhen i > 5
+        if GetItemTypeId( UnitItemInSlot( u, i ) ) == id then
+            return true
+        endif
+        set i = i + 1
+    endloop
+    return false
+endfunction
+
 function removeItem takes unit u,integer itm returns nothing
     local integer t=0
     loop

@@ -27,12 +27,14 @@ scope Hints initializer onInit
   function RecipeIslandHint takes nothing returns nothing
     local real x = GetRectCenterX(gg_rct_vision)
     local real y = GetRectCenterY(gg_rct_vision)
-    call DisplayTimedTextToPlayer(GetEnumPlayer(),0,0,15,GOLD_COLOR+"Hint: |r"+GENERAL_COLOR+"For help on building, refer to these shops or for some basics, the quest log.|r")
-    call PingMinimapForForceEx( HINT_FORCE, x, y, 7.00, bj_MINIMAPPINGSTYLE_FLASHY, 100, 100, 100 )
-    call PolledWait( 1.00 )
-    call PingMinimapForForceEx( HINT_FORCE, x, y, 7.00, bj_MINIMAPPINGSTYLE_FLASHY, 100, 100, 100 )
-    call PolledWait( 1.00 )
-    call PingMinimapForForceEx( HINT_FORCE, x, y, 7.00, bj_MINIMAPPINGSTYLE_FLASHY, 100, 100, 100 )
+    if IsPlayerInForce( GetLocalPlayer(), HINT_FORCE ) then
+      call DisplayTimedTextToPlayer(GetLocalPlayer(),0,0,15,GOLD_COLOR+"Hint: |r"+GENERAL_COLOR+"For help on building, refer to these shops or for some basics, the quest log.|r")
+      call PingMinimapForForceEx( HINT_FORCE, x, y, 7.00, bj_MINIMAPPINGSTYLE_FLASHY, 100, 100, 100 )
+      call PolledWait( 1.00 )
+      call PingMinimapForForceEx( HINT_FORCE, x, y, 7.00, bj_MINIMAPPINGSTYLE_FLASHY, 100, 100, 100 )
+      call PolledWait( 1.00 )
+      call PingMinimapForForceEx( HINT_FORCE, x, y, 7.00, bj_MINIMAPPINGSTYLE_FLASHY, 100, 100, 100 )
+    endif
   endfunction
 
   function DisplayTurnOffHintsHint takes nothing returns nothing
@@ -41,13 +43,15 @@ scope Hints initializer onInit
 
   function DisplayHintsToPlayers takes nothing returns nothing
     local integer i = GetRandomInt(1,numHints)
-    if i == 2 then
-        call PingMinimapLocForForceEx( HINT_FORCE, GetUnitLoc(gg_unit_n00N_0017), 7.00, bj_MINIMAPPINGSTYLE_FLASHY, 100, 100, 100 )
-    elseif i == 5 then
-        call PingMinimapLocForForceEx( HINT_FORCE, GetUnitLoc(Mammoth), 4.00, bj_MINIMAPPINGSTYLE_FLASHY, 100, 100, 100 )
-    endif
-    if IsPlayerInForce(GetLocalPlayer(), HINT_FORCE) then
-      call DisplayTimedTextToPlayer( GetLocalPlayer(), 0, 0, 12, GOLD_COLOR + "Hint: |r" + GENERAL_COLOR + HINTS[i] + "|r" )
+    if IsPlayerInForce( GetLocalPlayer(), HINT_FORCE ) then
+      if i == 2 then
+          call PingMinimapLocForForceEx( HINT_FORCE, GetUnitLoc(gg_unit_n00N_0017), 7.00, bj_MINIMAPPINGSTYLE_FLASHY, 100, 100, 100 )
+      elseif i == 5 then
+          call PingMinimapLocForForceEx( HINT_FORCE, GetUnitLoc(Mammoth), 4.00, bj_MINIMAPPINGSTYLE_FLASHY, 100, 100, 100 )
+      endif
+      if IsPlayerInForce(GetLocalPlayer(), HINT_FORCE) then
+        call DisplayTimedTextToPlayer( GetLocalPlayer(), 0, 0, 12, GOLD_COLOR + "Hint: |r" + GENERAL_COLOR + HINTS[i] + "|r" )
+      endif
     endif
   endfunction
 

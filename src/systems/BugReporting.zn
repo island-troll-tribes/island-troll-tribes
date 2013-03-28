@@ -1,38 +1,37 @@
 
 library BugReporting requires ittEvent, TimerUtils, ArgsUtils {
 
-  ittEvent bugs;
-  string playerBugs[12];
+  ittEvent bugEvents[];
+  integer  numBugs[12];
+  integer  numEvents = 1;
 
   function ReportBug(ArgsList a) {
-    playerBugs[GetPlayerId( a.triggerPlayer )] += "\"" + a.fullMessage + "\",";
-    bugs[a.triggerPlayer] = playerBugs[GetPlayerId( a.triggerPlayer )] + "]";
-    DisplayTextToPlayer( 
-        a.triggerPlayer,
-        0,
-        0,
-        GRAY_COLOR + "Thanks for reporting a bug " + GetPlayerRealName( a.triggerPlayer ) + "!"
-    );
+    integer b = numBugs[ GetPlayerId( a.triggerPlayer ) ] + 1;
+    if ( b > numEvents ) {
+      bugEvents[ b ] = ittEvent.create( "bug" + I2S( b ), TYPE_STRING );
+    }
+    numBugs[ GetPlayerId( a.triggerPlayer ) ] += 1;
+
+    DisplayTextToPlayer( a.triggerPlayer, 0, 0,
+        GRAY_COLOR + "Thanks for reporting a bug|r " + COLOR_CODE[GetPlayerId( a.triggerPlayer )] + GetPlayerRealName( a.triggerPlayer ) + "|r" + GRAY_COLOR + "!|r" );
+    bugEvents[ b ][ a.triggerPlayer ] = a.fullMessage;
     a.destroy();
   }
 
   function onInit() {
     integer i;
 
-    for ( 0 <= i < 12 ) {
-      playerBugs[i] = "[";
-    }
-
     TimerStart( NewTimer(), 1, false, function() {
       ReleaseTimer( GetExpiredTimer() );
 
-      if ( HostingClan != "" ) {
-        bugs = ittEvent.create( "bugs", TYPE_STRING );
+      if ( HostingClan != "" || DEBUG_MODE ) {
+        bugEvents[1] = ittEvent.create( "bug1", TYPE_STRING );
         ChatCommands.registerArgFunc( null, "bug", ReportBug );
 
         TimerStart(NewTimer(), 300, false, function() {
           ReleaseTimer( GetExpiredTimer() );
-          DisplayTextToPlayer( GetLocalPlayer(), 0, 0, GENERAL_COLOR + "Use \"-bug <message to explain bug>\" to report a bug with " + HostingClan );
+          DisplayTextToPlayer( GetLocalPlayer(), 0, 0,
+              GENERAL_COLOR + "Use |r" + ENERGY_COLOR + "-bug the mammoth is flying!|r" + GENERAL_COLOR + " to report a bug with |r" + GOLD_COLOR +  "Clan " + HostingClan "|r" );
         });
       }
     });

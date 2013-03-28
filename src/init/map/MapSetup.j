@@ -2,9 +2,9 @@
 // HCL Modes
 // a = No Boats
 // B = Elimination
-// c= All Random
+// c = All Random
 // D = No Horn
-// e= 6v6
+// e = 6v6
 // f = EQUAL random
 // g = fast start
 // h = -hm
@@ -329,49 +329,6 @@ function Startup_Timer takes nothing returns nothing
     else
         call DisplayTText(COLOR_CODE[GetPlayerId(modePlayer)]+GetPlayerName(modePlayer)+"|r"+GENERAL_COLOR+" can choose game modes.|r", 40)
     endif
-/////////////////////////////////////////////////////////////////////////////////////////////////////    
-//call DisplayTText(GREEN_COLOR+ "0", 20)
-    if checkHCLletter(".") and clanhcl then //twgb
-        set HostingClan = "TwGB"
-        set clanhcl = false
-        call DisplayTText("
-"+GENERAL_COLOR+"This game is hosted by: |r"+GREEN_COLOR+"Clan TwGB @ Azeroth|r
-"+GENERAL_COLOR+"Remember, this is a "+RED_COLOR+"BETA|r"+GENERAL_COLOR+" map|r
-"+GENERAL_COLOR+"Please email bugs & suggestions to "+ENERGY_COLOR+"djrquazz@gmail.com|r
-"+GOLD_COLOR+"Website:|r http://www.clantwgb.com",60)
-    else
-        static if PRIVATE_MAP then
-            call ClearTextMessages()
-            call ShowInterface(false, 0)
-            call EnableUserControl(false)
-            call DisplayTText(RED_COLOR+"BETA TESTING ON TwGB BOTS ONLY",60*60)
-        endif
-    endif
-
-//    if checkHCLletter(".") and clanhcl then //tournament announce
-//        set clanhcl = false
-//        call DisplayTText(GREEN_COLOR+"This game is hosted by: Clan TwGB
-//TwGB would like to inform players of this game there will be a Spring Tournament on April 30th at 7:00 PM EST, 2v2 Double Elimination, Final Match contains a surprise for both teams.|r", 50)
-//    endif
-    
-//    if checkHCLletter("t") then // t for tournament
-//        set clanhcl=false
-//        call DisplayTText(GOLD_COLOR+"This game is hosted by: Clan TwGB
-//Welcome to the 2011 Spring Tournament! Modes are:|r", 50)
-//        call GameModes_Action("-elimination",Player(0))
-//        call GameModes_Action("-no boats",Player(0))
-//        set mode_enter = false
-//        call DisplayTText(GENERAL_COLOR+"Mode input is locked.", 50)
-//    endif
-    
-//    if checkHCLletter("z") then // z for end of alphabet, but also for boss fight
-//        call DisplayTText(GREEN_COLOR+"Welcome to the final round of the spring tournament!
-//Stick around at the end of the match for some special action.|r", 50)
-//        set udg_EpicBossFight=true
-//    endif
-    
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-    //end HCL
     
     /*
     - Clan TdiT = 0
@@ -385,52 +342,48 @@ function Startup_Timer takes nothing returns nothing
     - Clan TSOT = 8
     - Clan TwGB = .
     */
-    
-    if checkHCLletter("0") and clanhcl then
-       set clanhcl = false
-        call DisplayTText(GREEN_COLOR+"This game is hosted by: Clan TdiT|r",50)
+
+    if checkHCLletter(".") then
+        set HostingClan = "TwGB"
+    elseif checkHCLletter("0") then
         set HostingClan = "TdiT"
-    endif
-    if checkHCLletter("1") and clanhcl then
-        set clanhcl = false
-        call DisplayTText(GREEN_COLOR+"This game is hosted by: Clan Sort|r",50)
+    elseif checkHCLletter("1") then
         set HostingClan = "Sort"
-    endif
-    if checkHCLletter("2") and clanhcl then
-        call DisplayTText(GREEN_COLOR+"This game is hosted by: Clan TwA", 50)
+    elseif checkHCLletter("2") then
         set HostingClan = "TwA"
-    endif
-    if checkHCLletter("3") and clanhcl then
-        set clanhcl = false
-        call DisplayTText(GREEN_COLOR+"This game is hosted by: Clan EITT|r",50)
+    elseif checkHCLletter("3") then
         set HostingClan = "EITT"
-    endif
-    if checkHCLletter("4") and clanhcl then
-        set clanhcl = false
-        call DisplayTText(GREEN_COLOR+"This game is hosted by: Clan TmsT|r",50)
+    elseif checkHCLletter("4") then
         set HostingClan = "TmsT"
-    endif
-    if checkHCLletter("5") and clanhcl then
-        set clanhcl = false
-        call DisplayTText(GREEN_COLOR+"This game is hosted by: Clan TwS|r",50)
+    elseif checkHCLletter("5") then
         set HostingClan = "TwS"
-    endif
-    if checkHCLletter("6") and clanhcl then
-        set clanhcl = false
-        call DisplayTText(GREEN_COLOR+"This game is hosted by: Clan BiTT|r",50)
+    elseif checkHCLletter("6") then
         set HostingClan = "BiTT"
-    endif
-    if checkHCLletter("7") and clanhcl then
-        set clanhcl = false
-        call DisplayTText(GREEN_COLOR+"This game is hosted by: Clan ITTP|r",50)
+    elseif checkHCLletter("7") then
         set HostingClan = "ITTP"
-    endif
-    if checkHCLletter("8") and clanhcl then
-        set clanhcl = false
-        call DisplayTText(GREEN_COLOR+"This game is hosted by: Clan TSOT|r",50)
+    elseif checkHCLletter("8") then
         set HostingClan = "TSOT"
     endif
-    
+
+    if not( HostingClan == "" ) then
+        call DisplayTText( GENERAL_COLOR + "This game is hosted by: " + GREEN_COLOR + "Clan " + HostingClan + "|r", 50 )
+    endif
+
+    // anti beta map shit
+    if checkHCLletter(".") then
+        call DisplayTText("
+"+GENERAL_COLOR+"Remember, this is a "+RED_COLOR+"BETA|r"+GENERAL_COLOR+" map|r
+"+GENERAL_COLOR+"Please email bugs & suggestions to "+ENERGY_COLOR+"djrquazz@gmail.com|r
+"+GOLD_COLOR+"Website:|r http://www.clantwgb.com",60)
+    else
+        static if PRIVATE_MAP then
+            call ClearTextMessages()
+            call ShowInterface(false, 0)
+            call EnableUserControl(false)
+            call DisplayTText(RED_COLOR+"BETA TESTING ON TwGB BOTS ONLY",5000)
+        endif
+    endif
+
     call TimerStart(INSTANCE_TIMER, 36, false, function FirstSpawnItemsAnimals)
     call MultiboardDisplay(MODE_BOARD,true)
     call MultiboardMinimize(MODE_BOARD,true)
@@ -560,7 +513,6 @@ globals
     timerdialog MODES_TIMER_DIALOG
     timerdialog NOOB_TIME_DIALOG
     integer array pnamePresent
-    boolean clanhcl = true
     boolean array isobserver
     boolean obs_present = false
 endglobals

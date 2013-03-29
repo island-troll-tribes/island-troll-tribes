@@ -14,14 +14,16 @@ function DiseaseCloudActions takes nothing returns boolean
 
     loop
         exitwhen k < 0
-            if GetItemTypeId( UnitItemInSlot( q, k ) ) == ITEM_COOKED_MEAT then
-                set foodCount = foodCount + GetItemCharges( UnitItemInSlot( q, k ) )
+            set i = UnitItemInSlot( q, k )
+            if GetItemTypeId( i ) == ITEM_COOKED_MEAT then
+                set foodCount = foodCount + GetItemCharges( i )
+                call RemoveItem( i )
             endif
         set k = k - 1
     endloop
     if foodCount > 0 then
         set i = CreateItem( ITEM_COOKED_MEAT, 0, 0  )
-        if foodCount > 10 then
+        if foodCount >= 10 then
             call SetItemCharges( i, 10 )
         else
             call SetItemCharges( i, foodCount )

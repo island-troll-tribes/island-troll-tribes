@@ -1,5 +1,4 @@
 
-//===========================================================================
 //! zinc
 
 //#########################################################
@@ -392,7 +391,7 @@ library ID {
 		constant integer ITEM_BONE_GLOVES             = 'I012';
 		constant integer ITEM_BONE_SHIELD             = 'I044';
 		constant integer ITEM_DARK_SPEAR              = 'I03H';
-		constant integer ITEM_FILNT_AXE               = 'I017';
+		constant integer ITEM_FLINT_AXE               = 'I017';
 		constant integer ITEM_IRON_AXE                = 'I019';
 		constant integer ITEM_IRON_BOOTS              = 'I00O';
 		constant integer ITEM_IRON_COAT               = 'I00Y';

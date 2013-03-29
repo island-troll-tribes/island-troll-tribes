@@ -402,7 +402,7 @@ function checkSpell takes item i returns boolean
 endfunction
 
 function checkAxeShield takes item i returns boolean
-    return GetItemTypeId(i) == ITEM_FILNT_AXE or GetItemTypeId(i) == ITEM_STONE_AXE or GetItemTypeId(i) == ITEM_IRON_AXE or GetItemTypeId(i) == ITEM_STEEL_AXE or GetItemTypeId(i)==ITEM_MAGE_MASHER or GetItemTypeId(i) == ITEM_SHIELD or GetItemTypeId(i) == ITEM_BONE_SHIELD or GetItemTypeId(i) == ITEM_IRON_SHIELD or GetItemTypeId(i) == ITEM_STEEL_SHIELD or GetItemTypeId(i) == ITEM_BATTLE_SHIELD or GetItemTypeId(i) == ITEM_BATTLE_AXE or GetItemTypeId(i) == ITEM_BATTLE_SUIT
+    return GetItemTypeId(i) == ITEM_FLINT_AXE or GetItemTypeId(i) == ITEM_STONE_AXE or GetItemTypeId(i) == ITEM_IRON_AXE or GetItemTypeId(i) == ITEM_STEEL_AXE or GetItemTypeId(i)==ITEM_MAGE_MASHER or GetItemTypeId(i) == ITEM_SHIELD or GetItemTypeId(i) == ITEM_BONE_SHIELD or GetItemTypeId(i) == ITEM_IRON_SHIELD or GetItemTypeId(i) == ITEM_STEEL_SHIELD or GetItemTypeId(i) == ITEM_BATTLE_SHIELD or GetItemTypeId(i) == ITEM_BATTLE_AXE or GetItemTypeId(i) == ITEM_BATTLE_SUIT
 endfunction
 //
 function checkBattleSuit takes item i returns boolean
@@ -420,7 +420,7 @@ endfunction
 //Battle Suit Checks
 //Battle Suit/Battle Axe/Standard Axes/Shields
 //function checkBattleSuit takes item i returns boolean
-//    return GetItemTypeId(i) == ITEM_FILNT_AXE or GetItemTypeId(i) == ITEM_STONE_AXE or GetItemTypeId(i) == ITEM_IRON_AXE or GetItemTypeId(i) == ITEM_STEEL_AXE or GetItemTypeId(i)==ITEM_MAGE_MASHER or GetItemTypeId(i) == ITEM_SHIELD or GetItemTypeId(i) == ITEM_BONE_SHIELD or GetItemTypeId(i) == ITEM_IRON_SHIELD or GetItemTypeId(i) == ITEM_STEEL_SHIELD or GetItemTypeId(i) == ITEM_BATTLE_SHIELD or GetItemTypeId(i) == ITEM_BATTLE_SUIT or GetItemTypeId(i) == ITEM_BATTLE_AXE
+//    return GetItemTypeId(i) == ITEM_FLINT_AXE or GetItemTypeId(i) == ITEM_STONE_AXE or GetItemTypeId(i) == ITEM_IRON_AXE or GetItemTypeId(i) == ITEM_STEEL_AXE or GetItemTypeId(i)==ITEM_MAGE_MASHER or GetItemTypeId(i) == ITEM_SHIELD or GetItemTypeId(i) == ITEM_BONE_SHIELD or GetItemTypeId(i) == ITEM_IRON_SHIELD or GetItemTypeId(i) == ITEM_STEEL_SHIELD or GetItemTypeId(i) == ITEM_BATTLE_SHIELD or GetItemTypeId(i) == ITEM_BATTLE_SUIT or GetItemTypeId(i) == ITEM_BATTLE_AXE
 //endfunction
 //Battle Suit/Glove Checks
 //function checkBattleGloves takes item i returns boolean

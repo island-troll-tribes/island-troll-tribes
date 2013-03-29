@@ -299,7 +299,7 @@ local item added
             call RemoveItem(t[0])
             call RemoveItem(t[1])
             call RemoveItem(t[2])
-            set added = CreateItem(ITEM_FILNT_AXE, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+            set added = CreateItem(ITEM_FLINT_AXE, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
             call UnitAddItem(GetTriggerUnit(), added)
             call itemLower(3)
         endif

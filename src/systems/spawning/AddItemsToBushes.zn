@@ -1,0 +1,79 @@
+
+library AddItemsToBushes requires ID {
+    function AddItemToBush() {
+        unit u = GetEnumUnit();
+        integer uid = GetUnitTypeId( u );
+        integer i;
+        if ( UnitInventoryCount( u ) < 6 ) {
+            if ( uid == UNIT_BLUE_HERB_BUSH )
+                UnitAddItemById( u, ITEM_BLUE_HERB );
+            else if ( uid == UNIT_ORANGE_HERB_BUSH )
+                UnitAddItemById( u, ITEM_ORANGE_HERB );
+            else if ( uid == UNIT_YELLOW_HERB_BUSH )
+                UnitAddItemById( u, ITEM_YELLOW_HERB );
+            else if ( uid == UNIT_PURPLE_HERB_BUSH )
+                UnitAddItemById( u, ITEM_PURPLE_HERB );
+            else if ( uid == UNIT_THISTLE_SHRUB )
+                UnitAddItemById( u, ITEM_THISTLES );
+            else if ( uid == UNIT_HAISETSU_BUSH )
+                UnitAddItemById( u, ITEM_BUTSU );
+            else if ( uid == UNIT_MUSHROOM_COLONY && 
+                      GetRandomInt( 1, 2 ) == 1 )
+                UnitAddItemById( u, ITEM_MUSHROOM );
+            else if ( uid == UNIT_WATER_HERB_BUSH ) {
+                if ( GetRandomInt( 1, 5 ) <= 2 )
+                    UnitAddItemById( u, ITEM_RIVER_ROOT );
+                else
+                    UnitAddItemById( u, ITEM_RIVER_STEM );
+            }
+            else if ( uid == UNIT_HIDDEN_STASH ) {
+                i = GetRandomInt( 1, 6 );
+                if ( i >= 3 )
+                    UnitAddItemById( u, ITEM_ACORN );
+                if ( i == 4 )
+                    UnitAddItemById( u, ITEM_MAGIC_ACORN );
+                else if ( i == 5 )
+                    UnitAddItemById( u, ITEM_CLAY_BALL );
+                else if ( i == 6 )
+                    UnitAddItemById( u, ITEM_MUSHROOM );
+            }
+            else if ( uid == UNIT_THIEFS_BUSH ) {
+                i = GetRandomInt( 1, 8 );
+                if ( i == 1 )
+                    UnitAddItemById( u, ITEM_MANA_CRYSTAL );
+                else if ( i == 2 )
+                    UnitAddItemById( u, ITEM_SMOKE_BOMB );
+                else if ( i == 3 )
+                    UnitAddItemById( u, ITEM_NETS );
+                else if ( i == 4 )
+                    UnitAddItemById( u, ITEM_COOKED_MEAT );
+                else if ( i == 5 )
+                    UnitAddItemById( u, ITEM_STONE );
+                else if ( i == 6 )
+                    UnitAddItemById( u, ITEM_THIEF_MED );
+                else if ( i == 7 )
+                    UnitAddItemById( u, ITEM_HEALING_POTION_III );
+                else
+                    UnitAddItemById( u, ITEM_MANA_POTION_III );
+            }
+            else if ( uid == UNIT_SCOUTS_BUSH ) {
+                if ( GetRandomInt( 1, 8 ) < 8 )
+                    UnitAddItemById( u, ITEM_LIVING_CLAY );
+                else
+                    UnitAddItemById( u, ITEM_CLAY_EXPLOSION );
+            }
+        }
+        u = null;
+    }
+
+    function AddItemsToBushes () {
+        if ( !udg_EXTRA_MODE ) return;
+        ForGroup( udg_plants, function AddItemToBush );
+    }
+
+    function onInit() {
+        gg_trg_add_items_to_plants = CreateTrigger(  );
+        TriggerAddAction( gg_trg_add_items_to_plants,
+                          function AddItemsToBushes );
+    }
+}

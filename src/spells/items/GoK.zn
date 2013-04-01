@@ -3,21 +3,30 @@ library GoK requires ID, Table {
 
     Table gokClassMultiplier;
 
-    function AddGoKXP() -> boolean {
-        if ( !gokClassMultiplier.has( GetUnitTypeId( GetKillingUnit() ) ) )                return false;
-        if ( GetUnitAbilityLevel( GetKillingUnit(), BUFF_GOK ) == 0 )                      return false;
-        if ( IsUnitEnemy( GetKillingUnit(), GetOwningPlayer( GetDyingUnit() ) ) == false ) return false;
-        if ( IsUnitType( GetDyingUnit(), UNIT_TYPE_HERO ) == true )
-            AddHeroXP( GetKillingUnit(), gokClassMultiplier[GetUnitTypeId( GetKillingUnit() )] * GetUnitLevel( GetDyingUnit() ) * 2, true );
+    function AddBonusXP() {
+        if ( GetUnitAbilityLevel( GetEnumUnit(), BUFF_GOK ) == 0 )              return;
+        if ( !gokClassMultiplier.has( GetUnitTypeId( GetEnumUnit() ) ) )        return;
+        if ( !IsUnitEnemy( GetEnumUnit(), GetOwningPlayer( GetDyingUnit() ) ) ) return;
+
+        if ( IsUnitType( GetDyingUnit(), UNIT_TYPE_HERO ) )
+            AddHeroXP( GetEnumUnit(), gokClassMultiplier[GetUnitTypeId( GetEnumUnit() )] * GetUnitLevel( GetDyingUnit() ) * 2, true );
         else
-            AddHeroXP( GetKillingUnit(), gokClassMultiplier[GetUnitTypeId( GetKillingUnit() )] * GetUnitLevel( GetDyingUnit() ), true );
-        return false; // success
+            AddHeroXP( GetEnumUnit(), gokClassMultiplier[GetUnitTypeId( GetEnumUnit() )] * GetUnitLevel( GetDyingUnit() ), true );
+    }
+
+    function FindRecipients() -> boolean{
+        group g = CreateGroup();
+        GroupEnumUnitsInRangeOfLoc( g, GetUnitLoc( GetDyingUnit() ), 500, null );
+        ForGroup( g, function AddBonusXP );
+        DestroyGroup( g );
+        g = null;
+        return false;
     }
 
     function onInit() {
         trigger t = CreateTrigger(  );
         TriggerRegisterAnyUnitEventBJ( t, EVENT_PLAYER_UNIT_DEATH );
-        TriggerAddCondition( t, Condition( function AddGoKXP ) );
+        TriggerAddCondition( t, Condition( function FindRecipients ) );
 
         gokClassMultiplier = Table.create();
         gokClassMultiplier[UNIT_GATHERER]        = 30;

@@ -226,12 +226,12 @@ library ID {
 		constant integer UNIT_TEST_CLOAK              = 'o018';
 		constant integer UNIT_TRADE_ZEPPELIN_ALT      = 'n01D';
 		constant integer UNIT_ULTRA_FOOTMAN           = 'xFOO';
-		
-		
+
+
 		//#####################################################
 		// Spells
 		//#####################################################
-		
+
 		// Pet spells
 		constant integer SPELL_PET_ATTACK             = 'A01B';
 		constant integer SPELL_PET_BRING_ITEMS        = 'A06R';
@@ -251,19 +251,15 @@ library ID {
 		// Item Spells
 		constant integer SPELL_DISEASE                = 'A041';
 		constant integer SPELL_CURE_ALL_ITEM          = 'A05K';
-		//constant integer SPELL_                       = '';
-		//constant integer SPELL_                       = '';
-		//constant integer SPELL_                       = '';
-		//constant integer SPELL_                       = '';
-		//constant integer SPELL_                       = '';
-		//constant integer SPELL_                       = '';
-		//constant integer SPELL_                       = '';
-		//constant integer SPELL_                       = '';
-		//constant integer SPELL_                       = '';
-		//constant integer SPELL_                       = '';
-		//constant integer SPELL_                       = '';
-		
-		
+
+
+		//#####################################################
+		// Buffs
+		//#####################################################
+
+		constant integer BUFF_GOK                     = 'Bakb';
+
+
 		//#####################################################
 		// Items
 		//#####################################################

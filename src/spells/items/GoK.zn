@@ -1,0 +1,40 @@
+
+library GoK requires ID, Table {
+
+    Table gokClassMultiplier;
+
+    function AddGoKXP() -> boolean {
+        if ( !gokClassMultiplier.has( GetUnitTypeId( GetKillingUnit() ) ) )                return false;
+        if ( GetUnitAbilityLevel( GetKillingUnit(), BUFF_GOK ) == 0 )                      return false;
+        if ( IsUnitEnemy( GetKillingUnit(), GetOwningPlayer( GetDyingUnit() ) ) == false ) return false;
+        if ( IsUnitType( GetDyingUnit(), UNIT_TYPE_HERO ) == true )
+            AddHeroXP( GetKillingUnit(), gokClassMultiplier[GetUnitTypeId( GetKillingUnit() )] * GetUnitLevel( GetDyingUnit() ) * 2, true );
+        else
+            AddHeroXP( GetKillingUnit(), gokClassMultiplier[GetUnitTypeId( GetKillingUnit() )] * GetUnitLevel( GetDyingUnit() ), true );
+        return false; // success
+    }
+
+    function onInit() {
+        trigger t = CreateTrigger(  );
+        TriggerRegisterAnyUnitEventBJ( t, EVENT_PLAYER_UNIT_DEATH );
+        TriggerAddCondition( t, Condition( function AddGoKXP ) );
+
+        gokClassMultiplier = Table.create();
+        gokClassMultiplier[UNIT_GATHERER]        = 30;
+        gokClassMultiplier[UNIT_HERB_MASTER]     = 10;
+        gokClassMultiplier[UNIT_RADAR_GATHERER]  = 15;
+        gokClassMultiplier[UNIT_OMNIGATHERER]    = 20;
+        gokClassMultiplier[UNIT_SCOUT]           = 20;
+        gokClassMultiplier[UNIT_OBSERVER]        = 10;
+        gokClassMultiplier[UNIT_RADAR_SCOUT]     = 15;
+        gokClassMultiplier[UNIT_SPY]             = 20;
+        gokClassMultiplier[UNIT_MAGE]            = 20;
+        gokClassMultiplier[UNIT_HYPNOTIST]       = 5;
+        gokClassMultiplier[UNIT_ELEMENTALIST]    = 10;
+        gokClassMultiplier[UNIT_DEMENTIA_MASTER] = 15;
+        gokClassMultiplier[UNIT_PRIEST]          = 25;
+        gokClassMultiplier[UNIT_BOOSTER]         = 15;
+        gokClassMultiplier[UNIT_MASTER_HEALER]   = 10;
+        gokClassMultiplier[UNIT_SAGE]            = 20;
+    }
+}

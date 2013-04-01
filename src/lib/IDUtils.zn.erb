@@ -2,10 +2,9 @@
 library IDUtils requires ArrayLists {
 
 	public {
-		ArrayListInteger UNIT_ALL;
-		ArrayListInteger ITEM_ALL;
-		ArrayListInteger DEST_ALL;
-		ArrayListInteger SPELL_ALL;
+<% @ids.map{|id,_|id.split('_').first}.uniq.each do |v,_| %>
+		ArrayListInteger <%= v %>_ALL;
+<% end %>
 	}
 
 	public function S2ID (string s) -> integer {
@@ -27,10 +26,9 @@ library IDUtils requires ArrayLists {
 	}
 
 	function onInit() {
-		UNIT_ALL  = ArrayListInteger.create();
-		ITEM_ALL  = ArrayListInteger.create();
-		DEST_ALL  = ArrayListInteger.create();
-		SPELL_ALL = ArrayListInteger.create();
+<% @ids.map{|id,_|id.split('_').first}.uniq.each do |v,_| %>
+		<%= v %>_ALL  = ArrayListInteger.create();
+<% end %>
 
 <% @ids.each do |v, _| %>
 		<%= %(#{v.split('_').first}_ALL.push(#{v})) %>;

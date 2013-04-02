@@ -1,6 +1,16 @@
 #!/bin/sh
 
 
+if [ "$1" = "--help" ]; then
+  echo "deploy [output_map_name [output_map_cfg_name [output_map_env [relative_deploy_to_path]]]]"
+  echo "defaults:"
+  echo " - output_map_name           itt_pro.w3x"
+  echo " - output_map_cfg_name       \${output_map_name}.cfg"
+  echo " - output_map_env            pro"
+  echo " - relative_deploy_to_path   twgbhost"
+  exit
+fi
+
 cd "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd ..
 
@@ -30,7 +40,7 @@ scp "$output" Jesse@clantwgb.com:"/cygdrive/c/Users/Jesse/${dest}/maps"
 echo "Copied!"
 
 echo "Creating ${cfg} and copying to $dest"
-sed -e "s/\${output}/${output}/" scripts/itt.cfg.template | sed -e "s/\${env}/${env}/" > tmp.cfg && scp tmp.cfg Jesse@clantwgb.com:"/cygdrive/c/Users/Jesse/${dest}/mapcfgs/${cfg}" && rm tmp.cfg
+sed -e "s/\${output}/${output}/" scripts/itt.cfg.template | sed -e "s/\${env}/${env}/" > $cfg && scp $cfg Jesse@clantwgb.com:"/cygdrive/c/Users/Jesse/${dest}/mapcfgs" && rm $cfg
 
 echo "Finished deploying $output"
 

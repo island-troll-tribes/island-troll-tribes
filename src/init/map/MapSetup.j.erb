@@ -369,12 +369,8 @@ function Startup_Timer takes nothing returns nothing
         call DisplayTText( GENERAL_COLOR + "This game is hosted by: " + GREEN_COLOR + "Clan " + HostingClan + "|r", 50 )
     endif
 
-    // anti beta map shit
-    if checkHCLletter(".") then
-        call DisplayTText("
-"+GENERAL_COLOR+"Remember, this is a "+RED_COLOR+"BETA|r"+GENERAL_COLOR+" map|r
-"+GENERAL_COLOR+"Please email bugs & suggestions to "+ENERGY_COLOR+"djrquazz@gmail.com|r
-"+GOLD_COLOR+"Website:|r http://www.clantwgb.com",60)
+    if HostingClan == "TwGB" then
+        call DisplayTText( GOLD_COLOR + "Website:|r http://www.clantwgb.com", 50 )
     else
         static if PRIVATE_MAP then
             call ClearTextMessages()
@@ -384,41 +380,14 @@ function Startup_Timer takes nothing returns nothing
         endif
     endif
 
+<% if @opt[:env] != 'pro' %>
+    call DisplayTText( RED_COLOR + "Please remember, this is a BETA map!", 50 )
+<% end %>
+
     call TimerStart(INSTANCE_TIMER, 36, false, function FirstSpawnItemsAnimals)
     call MultiboardDisplay(MODE_BOARD,true)
     call MultiboardMinimize(MODE_BOARD,true)
 endfunction
-
-/*
-function ISDATAFarm1 takes nothing returns boolean
-return GetUnitTypeId(GetFilterUnit()) == UNIT_FARM and GetOwningPlayer(GetFilterUnit()) == Player(0)
-endfunction
-function ISDATAFarm2 takes nothing returns boolean
-return GetUnitTypeId(GetFilterUnit()) == UNIT_FARM and GetOwningPlayer(GetFilterUnit()) == Player(1)
-endfunction
-function ISDATAFarm3 takes nothing returns boolean
-return GetUnitTypeId(GetFilterUnit()) == UNIT_FARM and GetOwningPlayer(GetFilterUnit()) == Player(2)
-endfunction
-globals
-integer effectdoocount = 27 //start int
-group gGoogFarms = CreateGroup()
-endglobals
-function FarmiestBoundaries takes nothing returns nothing
-local unit u = GetEnumUnit()
-local player p = GetOwningPlayer(u)
-local integer i = GetPlayerId(p)
-local real x = GetUnitX(u)
-local real y = GetUnitY(u)
-if i == 0 then
-call DisplayText("set spawnBoundE["+I2S(effectdoocount)+"] = AddSpecialEffect(island1Mark, "+R2S(x)+", "+R2S(y)+")")
-elseif i == 1 then
-call DisplayText("set spawnBoundE["+I2S(effectdoocount)+"] = AddSpecialEffect(island2Mark, "+R2S(x)+", "+R2S(y)+")")
-elseif i == 2 then
-call DisplayText("set spawnBoundE["+I2S(effectdoocount)+"] = AddSpecialEffect(island3Mark, "+R2S(x)+", "+R2S(y)+")")
-endif
-set effectdoocount = effectdoocount + 1
-endfunction
-*/
 
 function MapSetupActions takes nothing returns nothing
     local integer i = 0
@@ -448,12 +417,6 @@ function MapSetupActions takes nothing returns nothing
     call LocustDisplayUnits()
     call TimerStart(t,0,false,function Startup_Timer)
     call TimerStart(GAME_TIMER, 99999999, false, null)
-    
-    /*
-    albinoblackbat = -19246298
-    */
-    
-    //call DisplayText(I2S(StringHash("albinoblackbat")))
     
     loop
         exitwhen i > 11
@@ -489,19 +452,7 @@ function MapSetupActions takes nothing returns nothing
     call DisplayTText(GENERAL_COLOR+"You will be appointed a random troll if you do not pick.|r", 40)
     call DisplayTimedTextToPlayer(modePlayer,0,0,10,GENERAL_COLOR+"You have 10 seconds to type "+HIGHLIGHT_COLOR+"-6v6|r"+GENERAL_COLOR+" before it is automatically disabled.|r")
     call DisplayTText(GENERAL_COLOR+"Type "+HIGHLIGHT_COLOR+"-repick|r"+GENERAL_COLOR+" to repick a troll.|r", 40)
-    
-    
-    // Spawn camp generator boundaries... lol using farms!!
-    // using GameCaptureX (greatness)
-    /*
-    
-    call GroupEnumUnitsInRect(gGoogFarms, GetWorldBounds(), function ISDATAFarm1)
-    call ForGroup(gGoogFarms ,function FarmiestBoundaries)
-    call GroupEnumUnitsInRect(gGoogFarms, GetWorldBounds(), function ISDATAFarm2)
-    call ForGroup(gGoogFarms ,function FarmiestBoundaries)
-    call GroupEnumUnitsInRect(gGoogFarms, GetWorldBounds(), function ISDATAFarm3)
-    call ForGroup(gGoogFarms ,function FarmiestBoundaries)
-    */
+
     set t = null
 endfunction
 
@@ -517,9 +468,7 @@ globals
     boolean obs_present = false
 endglobals
 
-//===========================================================================
 function InitTrig_MapSetup takes nothing returns nothing
     set gg_trg_MapSetup = CreateTrigger(  )
     call TriggerAddAction( gg_trg_MapSetup, function MapSetupActions )
 endfunction
-//===========================================================================

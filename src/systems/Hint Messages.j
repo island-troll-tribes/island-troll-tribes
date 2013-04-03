@@ -46,7 +46,7 @@ scope Hints initializer onInit
   function DisplayHintsToPlayers takes nothing returns nothing
     local integer i = GetRandomInt(1,numHints)
     if i == 2 then
-        call PingMinimapLocForForceEx( HINT_FORCE, GetUnitLoc(gg_unit_n00N_0017), 7.00, bj_MINIMAPPINGSTYLE_FLASHY, 100, 100, 100 )
+        call PingMinimapLocForForceEx( HINT_FORCE, GetUnitLoc(MASTER_CRAFTER), 7.00, bj_MINIMAPPINGSTYLE_FLASHY, 100, 100, 100 )
     elseif i == 5 then
         call PingMinimapLocForForceEx( HINT_FORCE, GetUnitLoc(Mammoth), 4.00, bj_MINIMAPPINGSTYLE_FLASHY, 100, 100, 100 )
     endif

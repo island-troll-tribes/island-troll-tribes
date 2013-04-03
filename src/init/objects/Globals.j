@@ -631,7 +631,7 @@ globals
     unit                    gg_unit_O00J_0024          = null
     unit                    gg_unit_o00I_0173          = null
     unit                    gg_unit_o00H_0032          = null
-    unit                    gg_unit_n00N_0017          = null
+    unit                    MASTER_CRAFTER             = null
     unit                    gg_unit_o005_0176          = null
     unit                    gg_unit_h000_0181          = null
     unit                    gg_unit_n019_0145          = null

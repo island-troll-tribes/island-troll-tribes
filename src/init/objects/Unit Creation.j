@@ -299,7 +299,7 @@ library InitUnits requires ItemTables
         local real life
 
         set u = CreateUnit( p, 'h00J', 1920.0, -10816.0, 270.000 )
-        set gg_unit_n00N_0017 = CreateUnit( p, 'n00N', 1216.0, -1216.0, 270.000 )
+        set MASTER_CRAFTER = CreateUnit( p, 'n00N', 1216.0, -1216.0, 270.000 )
         set u = CreateUnit( p, 'h00A', 2432.0, -11136.0, 270.000 )
         set u = CreateUnit( p, 'h016', 1600.0, -10880.0, 270.000 )
         set u = CreateUnit( p, 'h00W', 2240.0, -10816.0, 270.000 )

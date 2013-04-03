@@ -1167,7 +1167,7 @@ endfunction
 
 function LockMammoth takes nothing returns nothing
     call SetDestructableInvulnerable( gg_dest_ZTsx_3140, true )
-    set Mammoth = gg_unit_n005_0034
+    set Mammoth = MAMMOTH
     call SetUnitOwner( Mammoth, Player(12), true )
 endfunction
 

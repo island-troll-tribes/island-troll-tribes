@@ -209,7 +209,7 @@ library InitUnits requires ItemTables
         local real life
 
         set u = CreateUnit( p, 'n01B', -11338.7, -9959.1, 313.436 )
-        set gg_unit_n005_0034 = CreateUnit( p, 'n005', 1124.8, 431.4, 180.000 )
+        set MAMMOTH = CreateUnit( p, 'n005', 1124.8, 431.4, 180.000 )
         set u = CreateUnit( p, 'O00M', -6906.7, 10871.3, 228.704 )
         call SetUnitState( u, UNIT_STATE_MANA, 3 )
         call IssueImmediateOrder( u, "webon" )

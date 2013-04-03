@@ -624,7 +624,7 @@ globals
     trigger                 gg_trg_SpiritDOC           = null
     trigger                 gg_trg_Effect_Add          = null
     trigger                 gg_trg_Effect_Remove       = null
-    unit                    gg_unit_n005_0034          = null
+    unit                    MAMMOTH                    = null
     unit                    gg_unit_O00J_0027          = null
     unit                    gg_unit_O00J_0026          = null
     unit                    gg_unit_O00J_0025          = null

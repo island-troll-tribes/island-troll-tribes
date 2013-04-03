@@ -38,7 +38,9 @@ scope Hints initializer onInit
   endfunction
 
   function DisplayTurnOffHintsHint takes nothing returns nothing
-    call DisplayTimedTextToPlayer(GetLocalPlayer(), 0, 0, 12,GOLD_COLOR+"Hint: |r"+GENERAL_COLOR+HINTS[11]+"|r")
+    if IsPlayerInForce( GetLocalPlayer(), HINT_FORCE ) then
+      call DisplayTimedTextToPlayer(GetLocalPlayer(), 0, 0, 12,GOLD_COLOR+"Hint: |r"+GENERAL_COLOR+HINTS[11]+"|r")
+    endif
   endfunction
 
   function DisplayHintsToPlayers takes nothing returns nothing

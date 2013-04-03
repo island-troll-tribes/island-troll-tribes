@@ -1,45 +1,17 @@
 
-//===========================================================================
-function Trig_stat_display_Func001C takes nothing returns boolean
-    if ( not ( GetUnitStateSwap(UNIT_STATE_LIFE, GetEnumUnit()) == 20.00 ) ) then
-        return false
+function DisplayStatsWarningMessages takes nothing returns nothing
+    if GetUnitState( GetEnumUnit(), UNIT_STATE_LIFE ) == 20.00 then
+        call DisplayTimedTextToPlayer( GetOwningPlayer( GetEnumUnit() ), 0, 0, 5.00, COLOR_RED + "Your health is low, eat some food!" )
     endif
-    return true
-endfunction
-
-function Trig_stat_display_Func002C takes nothing returns boolean
-    if ( not ( GetUnitStateSwap(UNIT_STATE_MANA, GetEnumUnit()) == 20.00 ) ) then
-        return false
+    if GetUnitState( GetEnumUnit(), UNIT_STATE_MANA ) == 20.00 then
+        call DisplayTimedTextToPlayer( GetOwningPlayer( GetEnumUnit() ), 0, 0, 5.00, COLOR_RED + "Your energy is low, get some sleep!" )
     endif
-    return true
-endfunction
-
-function Trig_stat_display_Func003C takes nothing returns boolean
-    if ( not ( GetPlayerState(GetOwningPlayer(GetEnumUnit()), PLAYER_STATE_RESOURCE_GOLD) == 20 ) ) then
-        return false
-    endif
-    return true
-endfunction
-
-function Trig_stat_display_Actions takes nothing returns nothing
-    if ( Trig_stat_display_Func001C() ) then
-        call DisplayTimedTextToForce( GetForceOfPlayer(GetOwningPlayer(GetEnumUnit())), 5.00, "TRIGSTR_1173" )
-    else
-    endif
-    if ( Trig_stat_display_Func002C() ) then
-        call DisplayTimedTextToForce( GetForceOfPlayer(GetOwningPlayer(GetEnumUnit())), 5.00, "TRIGSTR_1174" )
-    else
-    endif
-    if ( Trig_stat_display_Func003C() ) then
-        call DisplayTimedTextToForce( GetForceOfPlayer(GetOwningPlayer(GetEnumUnit())), 5.00, "TRIGSTR_1175" )
-    else
+    if GetPlayerState( GetOwningPlayer( GetEnumUnit() ), PLAYER_STATE_RESOURCE_GOLD ) == 20 then
+        call DisplayTimedTextToPlayer( GetOwningPlayer( GetEnumUnit() ), 0, 0, 5.00, COLOR_RED + "Your heat is low, get close to a fire!" )
     endif
 endfunction
 
-//===========================================================================
 function InitTrig_stat_display takes nothing returns nothing
     set gg_trg_stat_display = CreateTrigger(  )
-    call TriggerAddAction( gg_trg_stat_display, function Trig_stat_display_Actions )
+    call TriggerAddAction( gg_trg_stat_display, function DisplayStatsWarningMessages )
 endfunction
-
-//===========================================================================

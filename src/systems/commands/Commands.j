@@ -210,15 +210,6 @@ globals
     integer array currentcolor
 endglobals
 
-function ControlCameraZoom takes nothing returns nothing
-    local integer i = 0
-    loop
-        exitwhen i == 12
-        call ZoomSetCamera( i )
-        set i = i + 1
-    endloop
-endfunction
-
 //===========================================================================
 function InitTrig_Commands takes nothing returns nothing
     local integer i = 0

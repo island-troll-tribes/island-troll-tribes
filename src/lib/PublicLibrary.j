@@ -1314,10 +1314,21 @@ function DisplayNewLine takes nothing returns nothing
     call DisplayNewLineToPlayer( GetLocalPlayer() )
 endfunction
 
+function ControlCameraZoom takes nothing returns nothing
+    local integer i = 0
+    loop
+        exitwhen i == 12
+        call ZoomSetCamera( i )
+        set i = i + 1
+    endloop
+endfunction
+
 function initPublicLibrary takes nothing returns nothing
-    local timer t = CreateTimer()
+    local timer t = NewTimer()
     call TimerStart( t, 0., false, function SetRealNames )
-	set t=null
+    set t = NewTimer()
+    call TimerStart( t, 1., true, function ControlCameraZoom )
+    set t = null
 endfunction
 
 endlibrary

@@ -253,34 +253,32 @@ endfunction
 
 function Startup_Timer takes nothing returns nothing
     local integer i = 0
-    local integer x = 0
     local timer t
+
     call ReleaseTimer(GetExpiredTimer())
     call LockMammoth()
     call TimerStart(MODES_TIMER, 40, false, function GenerateMap)
+
     set MODES_TIMER_DIALOG = CreateTimerDialog(MODES_TIMER)
     call TimerDialogSetTitle(MODES_TIMER_DIALOG,"Game Starting")
     call TimerDialogDisplay(MODES_TIMER_DIALOG,true)
 
     // debug modes
     static if DEBUG_MODE then
-        call GameModes_Action("-test mode",Player(0))
+        set HOSTING_CLAN = "DevSquad"
+        //call GameModes_Action("-test mode",Player(0))
     endif
 
-    //HCL Modes``
+    //HCL Modes
     
     if checkHCLletter("a") then //no boats
-        //call ConditionalTriggerExecute(gg_trg_no_Boats)
         call GameModes_Action("-no boats",Player(0))
     endif
     if checkHCLletter("b") then //elimination
-        //call ConditionalTriggerExecute(gg_trg_Elimination)
         call GameModes_Action("-elimination",Player(0))
     endif
     
     if checkHCLletter("c") then //all random
-        //set udg_AllTroll = 0
-        //call ConditionalTriggerExecute(gg_trg_all_modes)
         call GameModes_Action("-all random",Player(0))
     endif
     
@@ -344,33 +342,44 @@ function Startup_Timer takes nothing returns nothing
     */
 
     if checkHCLletter(".") then
-        set HostingClan = "TwGB"
+        set HOSTING_CLAN = "TwGB"
     elseif checkHCLletter("0") then
-        set HostingClan = "TdiT"
+        set HOSTING_CLAN = "TdiT"
     elseif checkHCLletter("1") then
-        set HostingClan = "Sort"
+        set HOSTING_CLAN = "Sort"
     elseif checkHCLletter("2") then
-        set HostingClan = "TwA"
+        set HOSTING_CLAN = "TwA"
     elseif checkHCLletter("3") then
-        set HostingClan = "EITT"
+        set HOSTING_CLAN = "EITT"
     elseif checkHCLletter("4") then
-        set HostingClan = "TmsT"
+        set HOSTING_CLAN = "TmsT"
     elseif checkHCLletter("5") then
-        set HostingClan = "TwS"
+        set HOSTING_CLAN = "TwS"
     elseif checkHCLletter("6") then
-        set HostingClan = "BiTT"
+        set HOSTING_CLAN = "BiTT"
     elseif checkHCLletter("7") then
-        set HostingClan = "ITTP"
+        set HOSTING_CLAN = "ITTP"
     elseif checkHCLletter("8") then
-        set HostingClan = "TSOT"
+        set HOSTING_CLAN = "TSOT"
     endif
 
-    if not( HostingClan == "" ) then
-        call DisplayTText( GENERAL_COLOR + "This game is hosted by: " + GREEN_COLOR + "Clan " + HostingClan + "|r", 50 )
+<% if @opt[:env] != 'pro' %>
+    call DisplayTText( RED_COLOR + "Please remember, this is a BETA map!", 50 )
+<% else %>
+    call DisplayNewLine()
+<% end %>
+
+    if not( HOSTING_CLAN == "" ) then
+        call DisplayTText( GENERAL_COLOR + "This game is hosted by " + GREEN_COLOR + "Clan " + HOSTING_CLAN + "|r", 50 )
     endif
 
-    if HostingClan == "TwGB" then
+    if HOSTING_CLAN == "TwGB" or HOSTING_CLAN == "DevSquad" then
         call DisplayTText( GOLD_COLOR + "Website:|r http://www.clantwgb.com", 50 )
+        loop
+            exitwhen i == 7
+            call DisplayNewLine()
+            set i = i + 1
+        endloop
     else
         static if PRIVATE_MAP then
             call ClearTextMessages()
@@ -379,10 +388,6 @@ function Startup_Timer takes nothing returns nothing
             call DisplayTText(RED_COLOR+"BETA TESTING ON TwGB BOTS ONLY",5000)
         endif
     endif
-
-<% if @opt[:env] != 'pro' %>
-    call DisplayTText( RED_COLOR + "Please remember, this is a BETA map!", 50 )
-<% end %>
 
     call TimerStart(INSTANCE_TIMER, 36, false, function FirstSpawnItemsAnimals)
     call MultiboardDisplay(MODE_BOARD,true)

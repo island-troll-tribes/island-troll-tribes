@@ -1306,10 +1306,18 @@ function ManaBurn takes unit whichUnit, real dmg returns nothing
 	set tt=null
 endfunction
 
+function DisplayNewLineToPlayer takes player p returns nothing
+    call DisplayTextToPlayer( p, 0, 0, " " )
+endfunction
+
+function DisplayNewLine takes nothing returns nothing
+    call DisplayNewLineToPlayer( GetLocalPlayer() )
+endfunction
+
 function initPublicLibrary takes nothing returns nothing
     local timer t = CreateTimer()
     call TimerStart( t, 0., false, function SetRealNames )
 	set t=null
 endfunction
 
-endlibrary//===========================================================================
+endlibrary

@@ -31,7 +31,7 @@ endfunction
 //***************************************************************************
 
 function config takes nothing returns nothing
-    call SetMapName( "TRIGSTR_003" )
+    call SetMapName( "Island Troll Tribes v2.88c" )
     call SetMapDescription( "TRIGSTR_005" )
     call SetPlayers( 12 )
     call SetTeams( 12 )

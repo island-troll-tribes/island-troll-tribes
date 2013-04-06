@@ -544,7 +544,7 @@ local item added
                 call UnitAddItemByIdSwapped( ITEM_CLOAK_OF_HEALING, GetTriggerUnit() )
                 call itemLower(2)
             endif
-            if i[0] == ITEM_MAGIC and i[1] == ITEM_BONE_COAT and i[1] == ITEM_DARK_ROCK then
+            if i[0] == ITEM_MAGIC and i[1] == ITEM_BONE_COAT and i[2] == ITEM_DARK_ROCK then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
                 call RemoveItem(t[2])

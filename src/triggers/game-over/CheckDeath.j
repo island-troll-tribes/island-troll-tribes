@@ -9,7 +9,7 @@ endfunction
 
 function addStatDeathXP takes nothing returns nothing
     call AddHeroXPSwapped( ( 150 * GetUnitLevel(udg_parameterUnit) ), GetEnumUnit(), true )
-    call checkMageKill( GetEnumUnit() )
+    call RegisterEnergyOrHeatKill( GetEnumUnit() )
 endfunction
 
 function checkTrollDeath takes nothing returns nothing

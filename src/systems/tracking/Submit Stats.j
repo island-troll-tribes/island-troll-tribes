@@ -1,31 +1,5 @@
 
-//===========================================================================
-//TESH.scrollpos=0
-//TESH.alwaysfold=0
 library StatsSubmitting
-    
-    ///////////////////////////////////////////////////////////////
-    /// Implementing the ittStruct
-    ///////////////////////////////////////////////////////////////
-        
-    function submitStatsFor takes player whichPlayer returns nothing
-        local integer pid=GetPlayerId( whichPlayer )
-        if ((GetPlayerController(whichPlayer) == MAP_CONTROL_USER) and (GetPlayerSlotState(whichPlayer) == PLAYER_SLOT_STATE_PLAYING or GetPlayerSlotState(whichPlayer) == PLAYER_SLOT_STATE_LEFT)) then
-            call deaths.updateIntValue (whichPlayer, playerDeaths[pid])
-            call kills.updateIntValue (whichPlayer, playerKills[pid])
-            call gold.updateIntValue (whichPlayer, playerGold[pid])
-        endif
-    endfunction
-
-    function submitStats takes nothing returns nothing
-        local integer i=0
-        loop
-            exitwhen i==12
-                call submitStatsFor( Player(i) )
-                call PolledWait(0.05)
-            set i=i+1                
-        endloop
-    endfunction
 
     function displayStats takes nothing returns nothing
         local integer i=0
@@ -81,4 +55,4 @@ library StatsSubmitting
         call MultiboardMinimize(mb, false)
     endfunction
     
-endlibrary//===========================================================================
+endlibrary

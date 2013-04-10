@@ -1323,6 +1323,53 @@ function ControlCameraZoom takes nothing returns nothing
     endloop
 endfunction
 
+// http://www.thehelper.net/threads/jass-return-item-cost.53645/
+function GetItemGoldCostById takes integer uid returns integer
+    local integer Val = GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_GOLD)
+    local integer ValB = GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_LUMBER)
+    local integer Diff
+    local unit U = CreateUnitAtLoc(Player(15),'nshe',GetRectCenter(GetPlayableMapRect()),bj_UNIT_FACING)
+    call AdjustPlayerStateBJ(50000,Player(15),PLAYER_STATE_RESOURCE_GOLD)
+    call AdjustPlayerStateBJ(50000,Player(15),PLAYER_STATE_RESOURCE_LUMBER)
+    call UnitAddAbilityBJ('Asid',U)
+    set Diff = GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_GOLD)
+    call AddItemToStockBJ(uid,U,1,1)
+    call IssueTrainOrderByIdBJ(U,uid)
+    set Diff = Diff - GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_GOLD)
+    call SetPlayerState(Player(15),PLAYER_STATE_RESOURCE_GOLD,Val)
+    call SetPlayerState(Player(15),PLAYER_STATE_RESOURCE_LUMBER,ValB)
+    call RemoveItem(UnitItemInSlot(U,1))
+    call RemoveUnit(U)
+    return Diff
+endfunction
+
+function GetItemLumberCostById takes integer uid returns integer
+    local integer Val = GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_GOLD)
+    local integer ValB = GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_LUMBER)
+    local integer Diff
+    local unit U = CreateUnitAtLoc(Player(15),'nshe',GetRectCenter(GetPlayableMapRect()),bj_UNIT_FACING)
+    call AdjustPlayerStateBJ(50000,Player(15),PLAYER_STATE_RESOURCE_GOLD)
+    call AdjustPlayerStateBJ(50000,Player(15),PLAYER_STATE_RESOURCE_LUMBER)
+    call UnitAddAbilityBJ('Asid',U)
+    set Diff = GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_LUMBER)
+    call AddItemToStockBJ(uid,U,1,1)
+    call IssueTrainOrderByIdBJ(U,uid)
+    set Diff = Diff - GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_LUMBER)
+    call SetPlayerState(Player(15),PLAYER_STATE_RESOURCE_GOLD,Val)
+    call SetPlayerState(Player(15),PLAYER_STATE_RESOURCE_LUMBER,ValB)
+    call RemoveItem(UnitItemInSlot(U,1))
+    call RemoveUnit(U)
+    return Diff
+endfunction
+
+function GetItemLumberCost takes item i returns integer
+    return GetItemLumberCostById(GetItemTypeId(i))
+endfunction
+
+function GetItemGoldCost takes item i returns integer
+    return GetItemGoldCostById(GetItemTypeId(i))
+endfunction
+
 function initPublicLibrary takes nothing returns nothing
     local timer t = NewTimer()
     call TimerStart( t, 0., false, function SetRealNames )

@@ -1,0 +1,57 @@
+
+library PlayerStats requires ittEvent {
+
+    ittEvent deaths;
+    ittEvent kills;
+    ittEvent gold;
+
+    public {
+        integer playerKills[];
+        integer playerDeaths[];
+        integer playerGold[];
+    }
+    
+    public function RegisterEnergyOrHeatKill(unit u) {
+        if ( CheckTroll( u )  && !udg_NOOB_TIME )
+            kills.addForPlayer( GetOwningPlayer(u), 1 );
+    }
+    
+    function RegisterDeath() {
+        unit killer = GetKillingUnit();
+        if ( IsUnitType( GetTriggerUnit(), UNIT_TYPE_HERO ) && !udg_NOOB_TIME ) {
+            if ( killer != null && !IsUnitAlly( killer, GetOwningPlayer( GetTriggerUnit() ) ) ) {
+                kills.addForPlayer( GetOwningPlayer (killer), 1 );
+                playerKills[GetPlayerId( GetOwningPlayer( killer ) )] += 1;
+            }
+            deaths.addForPlayer( GetOwningPlayer( GetTriggerUnit() ), 1 );
+            playerDeaths[GetPlayerId( GetOwningPlayer( GetTriggerUnit() ) )] += 1;
+        }
+    }
+    
+    function onInit() {
+        timer t = CreateTimer();
+
+        TimerStart( t, 1.5, false, function() {
+            integer i = 0;
+            trigger t = CreateTrigger();
+            trigger u = CreateTrigger();
+
+            deaths = ittEvent.create("Deaths", TYPE_INT);
+            kills = ittEvent.create("Kills", TYPE_INT);
+            gold = ittEvent.create("Gold", TYPE_INT);
+
+            for ( 0 < i < 12 ) {
+                if ( GetPlayerController( Player( i ) ) == MAP_CONTROL_USER && GetPlayerSlotState( Player( i ) ) == PLAYER_SLOT_STATE_PLAYING )
+                    TriggerRegisterPlayerUnitEvent( t, Player( i ), EVENT_PLAYER_UNIT_DEATH, null );
+            }
+            TriggerAddAction ( t, function RegisterDeath );
+
+            TriggerRegisterAnyUnitEventBJ( u, EVENT_PLAYER_UNIT_PAWN_ITEM );
+            TriggerAddAction( u, function() {
+                integer cost = GetItemLumberCost( GetSoldItem() );
+                gold.addForPlayer( GetOwningPlayer( GetTriggerUnit() ), cost );
+                playerGold[GetPlayerId( GetOwningPlayer( GetTriggerUnit() ) )] += cost;
+            });
+        });
+    }
+}

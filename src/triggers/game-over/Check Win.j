@@ -170,7 +170,6 @@ function Trig_check_win_Actions takes nothing returns nothing
         
         if GAME_END then
             call displayStats() // HCL STATS
-            call submitStats() // HCL STATS
             
             if udg_SIX_SIX then
                 if udg_integerParameter == 0 then

@@ -1,0 +1,39 @@
+
+library ClassTracking requires ittEvent {
+
+  integer playerClass[];
+  ittEvent trollClass;
+
+  function EmitPlayersTrollClasses() {
+    integer i = GetTimerData( GetExpiredTimer() );
+
+    if ( i == 12 ) {
+      ReleaseTimer( GetExpiredTimer() );
+    } else {
+      if ( playerClass[i] == 0 )
+        trollClass[Player(i)] = "RANDOM";
+      else
+        trollClass[Player(i)] = ID2S( playerClass[i] );
+
+      SetTimerData( GetExpiredTimer(), i + 1 );
+    }
+  }
+
+  public function RegisterPlayersTrollClasses() {
+    integer i;
+    timer t = NewTimer();
+
+    for ( 0 <= i < 12 ) {
+      playerClass[i] = GetUnitTypeId( GetPlayersTroll( Player( i ) ) );
+    }
+
+    SetTimerData( t, 0 );
+    TimerStart( t, 1.0, true, function EmitPlayersTrollClasses );
+
+    t = null;
+  }
+
+  function onInit() {
+    trollClass = ittEvent.create( "class", TYPE_STRING );
+  }
+}

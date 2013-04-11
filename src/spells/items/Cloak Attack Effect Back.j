@@ -2,8 +2,8 @@
 //===========================================================================
 //TESH.scrollpos=0
 //TESH.alwaysfold=0
-function CheckTrolling takes nothing returns boolean
-    return checkTroll(GetTriggerUnit())
+function IsUnitTrolling takes nothing returns boolean
+    return IsUnitTroll(GetTriggerUnit())
 endfunction
 
 function healeffectcoat takes nothing returns nothing
@@ -56,7 +56,7 @@ endglobals
 function InitTrig_cloak_attack_effect_back takes nothing returns nothing
     set gg_trg_cloak_attack_effect_back = CreateTrigger(  )
     call TriggerRegisterAnyUnitEventBJ( gg_trg_cloak_attack_effect_back, EVENT_PLAYER_UNIT_ATTACKED )
-    call TriggerAddCondition( gg_trg_cloak_attack_effect_back, Condition( function CheckTrolling ) )
+    call TriggerAddCondition( gg_trg_cloak_attack_effect_back, Condition( function IsUnitTrolling ) )
     call TriggerAddAction( gg_trg_cloak_attack_effect_back, function EffectItype )
     call TriggerAddAction(trighealhit, function healeffectcoat)
 endfunction

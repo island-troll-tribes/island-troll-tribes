@@ -20,7 +20,7 @@ endif
 endfunction
 
 function AoEHeatUpV takes nothing returns nothing
-    if checkTroll(GetSpellTargetUnit()) then
+    if IsUnitTroll(GetSpellTargetUnit()) then
         if GetUnitAbilityLevel(GetSpellTargetUnit(), 'BCbf') > 0 then
             call UnitRemoveAbility( GetSpellTargetUnit() ,'BCbf')
         endif
@@ -31,7 +31,7 @@ endfunction
 
 /*
 function Trig_heat_Actions takes nothing returns nothing
-    set udg_booleanParameter = checkTroll(GetSpellTargetUnit())
+    set udg_booleanParameter = IsUnitTroll(GetSpellTargetUnit())
     if udg_booleanParameter then
         if GetUnitAbilityLevel(GetSpellTargetUnit(), 'BCbf') > 0 then
             call UnitRemoveAbility( GetSpellTargetUnit() ,'BCbf')

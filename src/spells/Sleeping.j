@@ -61,7 +61,7 @@ function Trig_sleeping_Actions takes nothing returns nothing
         call SetUnitManaBJ( GetSpellTargetUnit(), ( GetUnitStateSwap(UNIT_STATE_MANA, GetSpellTargetUnit()) + 200.00 ) )
     else
     endif
-    set udg_booleanParameter=checkTroll(GetSpellAbilityUnit())
+    set udg_booleanParameter=IsUnitTroll(GetSpellAbilityUnit())
     if ( Trig_sleeping_Func005C() ) then
         call SetUnitManaBJ( GetSpellTargetUnit(), ( GetUnitStateSwap(UNIT_STATE_MANA, GetSpellTargetUnit()) + 80.00 ) )
         call SetUnitLifeBJ( GetSpellTargetUnit(), ( GetUnitStateSwap(UNIT_STATE_LIFE, GetSpellTargetUnit()) - 20.00 ) )

@@ -1,18 +1,10 @@
 
-//
-// I04M = Baxe
-// I03I =  Battle Armor
-// I03L = Battle Gloves
-// I046 = Battle Shield
-//===========================================================================
-//TESH.scrollpos=0
-//TESH.alwaysfold=1
 function Trig_transmute_Conditions takes nothing returns boolean
     return udg_STARTED
 endfunction
 
 function Trig_transmute_Actions takes nothing returns nothing
-local boolean bol1 = checkTroll(GetTriggerUnit())
+local boolean bol1 = IsUnitTroll(GetTriggerUnit())
 local boolean bol2 = false
 local item array t
 local integer array i  
@@ -34,7 +26,7 @@ local item added
             call UnitAddItem(GetTriggerUnit(), added)
             call itemLower(2)
         endif
-        set bol1=checkHide(t[1])
+        set bol1=IsItemHide(t[1])
         if i[0] == ITEM_STICK and bol1 and i[2] == ITEM_STICK then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
@@ -43,8 +35,8 @@ local item added
             call UnitAddItem(GetTriggerUnit(), added)
             call itemLower(3)
         endif
-        set bol1 = checkHide(t[3])
-        set bol2 = checkHide(t[4])
+        set bol1 = IsItemHide(t[3])
+        set bol2 = IsItemHide(t[4])
         if i[0] == ITEM_CLAY_BALL and i[1] == ITEM_STICK and i[2] == ITEM_STICK and bol1 and bol2 then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
@@ -55,17 +47,7 @@ local item added
             call UnitAddItem(GetTriggerUnit(), added)
             call itemLower(5)
         endif
-        //orc burrow  tinder/stick/stone/hide 
-//        if i[0] == ITEM_TINDER and i[1] == ITEM_STICK and i[2] == ITEM_STONE and i[3] == ITEM_ELK_HIDE then
-//            call RemoveItem(t[0])
-//            call RemoveItem(t[1])
-//            call RemoveItem(t[2])
-//            call RemoveItem(t[3])
-//            set added = CreateItem(ITEM_TROLL_BURROW_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
-//            call UnitAddItem(GetTriggerUnit(), added)
-//            call itemLower(4)        
-//        endif
-         if i[0] == ITEM_CLAY_BALL and i[1] == ITEM_CLAY_BALL and i[2] == ITEM_CLAY_BALL and i[3] == ITEM_CLAY_BALL then
+        if i[0] == ITEM_CLAY_BALL and i[1] == ITEM_CLAY_BALL and i[2] == ITEM_CLAY_BALL and i[3] == ITEM_CLAY_BALL then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
             call RemoveItem(t[2])
@@ -103,7 +85,7 @@ local item added
             call UnitAddItem(GetTriggerUnit(), added)
             call itemLower(6)
         endif
-        if i[0] == ITEM_STICK and checkHide( t[1] ) and i[2] == ITEM_CLAY_BALL then
+        if i[0] == ITEM_STICK and IsItemHide( t[1] ) and i[2] == ITEM_CLAY_BALL then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
             call RemoveItem(t[2])
@@ -111,7 +93,7 @@ local item added
             call UnitAddItem(GetTriggerUnit(), added)
             call itemLower(3)
         endif
-        set bol1 = checkHide(t[0])
+        set bol1 = IsItemHide(t[0])
         if bol1 and i[1] == ITEM_STICK and i[2] == ITEM_TINDER and i[3] == ITEM_CLAY_BALL then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
@@ -180,7 +162,7 @@ local item added
             set i[e] = GetItemTypeId(t[e])
             set e = e +1
         endloop
-        set bol1 = checkPole(t[1])
+        set bol1 = IsItemPole(t[1])
         if i[0] == ITEM_TINDER and bol1 and i[2] == ITEM_STICK then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
@@ -189,7 +171,7 @@ local item added
             call UnitAddItem(GetTriggerUnit(), added)
             call itemLower(3)
         endif
-        set bol1 = checkBaseBoots(t[0])
+        set bol1 = IsItemBasicBoots(t[0])
         if bol1 and i[1] == ITEM_BONE and i[2] == ITEM_BONE and i[3] == ITEM_BONE and i[4] == ITEM_BONE and i[5] == ITEM_BONE then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
@@ -200,7 +182,7 @@ local item added
             set added = CreateItem(ITEM_BONE_BOOTS, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
             call UnitAddItem(GetTriggerUnit(), added)
         endif
-        set bol1 = checkBaseGloves(t[0])
+        set bol1 = IsItemBasicGloves(t[0])
         if bol1 and i[1] == ITEM_BONE and i[2] == ITEM_BONE and i[3] == ITEM_BONE and i[4] == ITEM_BONE and i[5] == ITEM_BONE then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
@@ -211,7 +193,7 @@ local item added
             set added = CreateItem(ITEM_BONE_GLOVES, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
             call UnitAddItem(GetTriggerUnit(), added)
         endif
-        set bol1 = checkBaseCoat(t[0])
+        set bol1 = IsItemBasicCoat(t[0])
         if bol1 and i[1] == ITEM_BONE and i[2] == ITEM_BONE and i[3] == ITEM_BONE and i[4] == ITEM_BONE and i[5] == ITEM_BONE then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
@@ -222,7 +204,7 @@ local item added
             set added = CreateItem(ITEM_BONE_COAT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
             call UnitAddItem(GetTriggerUnit(), added)
         endif
-        set bol1 = checkBaseBoots(t[0])
+        set bol1 = IsItemBasicBoots(t[0])
         if bol1 and i[1] == ITEM_IRON_INGOT and i[2] == ITEM_IRON_INGOT then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
@@ -230,7 +212,7 @@ local item added
             set added = CreateItem(ITEM_IRON_BOOTS, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
             call UnitAddItem(GetTriggerUnit(), added)
         endif
-        set bol1 = checkBaseGloves(t[0])
+        set bol1 = IsItemBasicGloves(t[0])
         if bol1 and i[1] == ITEM_IRON_INGOT and i[2] == ITEM_IRON_INGOT then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
@@ -238,7 +220,7 @@ local item added
             set added = CreateItem(ITEM_IRON_GLOVES, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
             call UnitAddItem(GetTriggerUnit(), added)
         endif
-        set bol1 = checkBaseCoat(t[0])
+        set bol1 = IsItemBasicCoat(t[0])
         if bol1 and i[1] == ITEM_IRON_INGOT and i[2] == ITEM_IRON_INGOT then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
@@ -246,7 +228,7 @@ local item added
             set added = CreateItem(ITEM_IRON_COAT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
             call UnitAddItem(GetTriggerUnit(), added)
         endif
-        set bol1 = checkBaseBoots(t[0])
+        set bol1 = IsItemBasicBoots(t[0])
         if bol1 and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_STEEL_INGOT then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
@@ -254,7 +236,7 @@ local item added
             set added = CreateItem(ITEM_STEEL_BOOTS, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
             call UnitAddItem(GetTriggerUnit(), added)
         endif
-        set bol1 = checkBaseGloves(t[0])
+        set bol1 = IsItemBasicGloves(t[0])
         if bol1 and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_STEEL_INGOT then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
@@ -262,7 +244,7 @@ local item added
             set added = CreateItem(ITEM_STEEL_GLOVES, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
             call UnitAddItem(GetTriggerUnit(), added)
         endif
-        set bol1 = checkBaseCoat(t[0])
+        set bol1 = IsItemBasicCoat(t[0])
         if bol1 and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_STEEL_INGOT then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
@@ -286,7 +268,7 @@ local item added
             call UnitAddItem(GetTriggerUnit(), added)
             call itemLower(2)
         endif
-        set bol1 = checkPole(t[1])
+        set bol1 = IsItemPole(t[1])
         if i[0] == ITEM_STONE and bol1 then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
@@ -294,7 +276,7 @@ local item added
             call UnitAddItem(GetTriggerUnit(), added)
             call itemLower(2)
         endif
-        set bol1 = checkPole(t[0])
+        set bol1 = IsItemPole(t[0])
         if bol1 and i[1] == ITEM_FLINT and i[2] == ITEM_FLINT then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
@@ -303,7 +285,7 @@ local item added
             call UnitAddItem(GetTriggerUnit(), added)
             call itemLower(3)
         endif
-        set bol1 = checkPole(t[0])
+        set bol1 = IsItemPole(t[0])
         if bol1 and i[1] == ITEM_STONE and i[2] == ITEM_STONE then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
@@ -312,7 +294,7 @@ local item added
             call UnitAddItem(GetTriggerUnit(), added)
             call itemLower(3)
         endif
-        set bol1 = checkPole(t[0])
+        set bol1 = IsItemPole(t[0])
         if bol1 and i[1] == ITEM_IRON_INGOT and i[2] == ITEM_IRON_INGOT then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
@@ -321,7 +303,7 @@ local item added
             call UnitAddItem(GetTriggerUnit(), added)
             call itemLower(1)
         endif
-        set bol1 = checkPole(t[0])
+        set bol1 = IsItemPole(t[0])
         if bol1 and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_STEEL_INGOT then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
@@ -331,28 +313,28 @@ local item added
             call itemLower(1)
         endif
         if udg_EXTRA_MODE then
-            set bol1 = checkPole(t[1])
+            set bol1 = IsItemPole(t[1])
             if i[0] == ITEM_IRON_INGOT and bol1 then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
                 call UnitAddItemByIdSwapped( ITEM_IRON_SPEAR, GetTriggerUnit() )
                 call itemLower(1)
             endif
-            set bol1 = checkPole(t[1])
+            set bol1 = IsItemPole(t[1])
             if i[0] == ITEM_STEEL_INGOT and bol1 then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
                 call UnitAddItemByIdSwapped( ITEM_STEEL_SPEAR, GetTriggerUnit() )
                 call itemLower(1)
             endif
-            set bol1 = checkPole(t[1])
+            set bol1 = IsItemPole(t[1])
             if i[0] == ITEM_DARK_ROCK and bol1 then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
                 call UnitAddItemByIdSwapped( ITEM_DARK_SPEAR, GetTriggerUnit() )
                 call itemLower(1)
             endif
-            set bol1 = checkPole(t[0])
+            set bol1 = IsItemPole(t[0])
             if bol1 and i[1] == ITEM_SPIRIT_WIND and i[2] == ITEM_SPIRIT_WATER and i[3] == ITEM_MANA_CRYSTAL then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -363,7 +345,7 @@ local item added
             endif
             //Regular Shield VVVVVVVVVVVVVVVV any hide/stick/stick
             if allow_Shields then
-                set bol1 = checkHide(t[0])
+                set bol1 = IsItemHide(t[0])
                 if bol1 and i[1] == ITEM_STICK and i[2] == ITEM_STICK then
                     call RemoveItem(t[0])
                     call RemoveItem(t[1])
@@ -373,7 +355,7 @@ local item added
                     call itemLower(3)
                 endif
         
-                set bol1 = checkBaseShield(t[0])
+                set bol1 = IsItemBasicShield(t[0])
                 if bol1 and i[1] == ITEM_IRON_INGOT and i[2] == ITEM_IRON_INGOT then
                     call RemoveItem(t[0])
                     call RemoveItem(t[1])
@@ -382,7 +364,7 @@ local item added
                     call UnitAddItem(GetTriggerUnit(), added)
                 endif
 
-                set bol1 = checkBaseShield(t[0])
+                set bol1 = IsItemBasicShield(t[0])
                 if bol1 and i[1] == ITEM_BONE and i[2] == ITEM_BONE and i[3] == ITEM_BONE and i[4] == ITEM_BONE and i[5] == ITEM_BONE then
                     call RemoveItem(t[0])
                     call RemoveItem(t[1])
@@ -394,7 +376,7 @@ local item added
                     call UnitAddItem(GetTriggerUnit(), added)
                 endif
 
-                set bol1 = checkBaseShield(t[0])
+                set bol1 = IsItemBasicShield(t[0])
                 if bol1 and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_STEEL_INGOT then
                     call RemoveItem(t[0])
                     call RemoveItem(t[1])
@@ -646,8 +628,8 @@ local item added
             call UnitAddItem(GetTriggerUnit(), added)
             call SetItemCharges(added, e)
         endif
-        set bol1 = checkHide(t[4])
-        set bol2 = checkHide(t[5])
+        set bol1 = IsItemHide(t[4])
+        set bol2 = IsItemHide(t[5])
         if not udg_DisabledBoats and i[0] == ITEM_STICK and i[1] == ITEM_STICK and i[2] == ITEM_CLAY_BALL and i[3] == ITEM_CLAY_BALL and bol1 and bol2 then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
@@ -739,12 +721,9 @@ local item added
     set added = null
 endfunction
 
-//===========================================================================
 function InitTrig_transmute takes nothing returns nothing
     set gg_trg_transmute = CreateTrigger(  )
     call TriggerRegisterAnyUnitEventBJ( gg_trg_transmute, EVENT_PLAYER_UNIT_PICKUP_ITEM )
     call TriggerAddCondition( gg_trg_transmute, Condition( function Trig_transmute_Conditions ) )
     call TriggerAddAction( gg_trg_transmute, function Trig_transmute_Actions )
 endfunction
-
-//===========================================================================

@@ -1,7 +1,4 @@
 
-//===========================================================================
-//TESH.scrollpos=0
-//TESH.alwaysfold=0
 function Trig_check_win_Conditions takes nothing returns boolean
     return not udg_NOOB_TIME and not udg_NOOB_MODE
 endfunction

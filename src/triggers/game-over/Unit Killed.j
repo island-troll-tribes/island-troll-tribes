@@ -1,6 +1,6 @@
 
 function Trig_unit_killed_Actions takes nothing returns nothing
-    if checkTroll(GetDyingUnit()) then
+    if IsUnitTroll(GetDyingUnit()) then
         call ConditionalTriggerExecute( gg_trg_check_win )
     endif
 endfunction

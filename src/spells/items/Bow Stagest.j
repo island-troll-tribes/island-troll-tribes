@@ -27,7 +27,7 @@ function Boat_Actions__Fire takes nothing returns nothing
         endif
         if GetSpellAbilityId() == 'A0A9' then
             set t = GetSpellTargetUnit()
-            if GetUnitState(t, UNIT_STATE_LIFE) < 86 and checkTroll(t) then
+            if GetUnitState(t, UNIT_STATE_LIFE) < 86 and IsUnitTroll(t) then
                 call masterCastAtCaster(u,u,0,0,'A01U',"bloodlust")
             endif
         endif

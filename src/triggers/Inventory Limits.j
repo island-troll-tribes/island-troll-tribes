@@ -8,7 +8,7 @@ library InventoryItems initializer init requires PublicLibrary
         local item t
         local item m = GetManipulatedItem()
         local unit u = GetManipulatingUnit()
-        local boolean bol1 = checkTroll(GetManipulatingUnit())
+        local boolean bol1 = IsUnitTroll(GetManipulatingUnit())
         local boolean bol2 = false
         if not(udg_ITEM_LIMIT_MODE) then
             return
@@ -25,47 +25,47 @@ library InventoryItems initializer init requires PublicLibrary
                     endif
                     
                     // ---- Checks for Spell Type Items ; Returns true if the item is
-                    set bol1=checkSpell(t)
-                    set bol2=checkSpell(m)
+                    set bol1=IsItemSpell(t)
+                    set bol2=IsItemSpell(m)
                     if bol1 and bol2 then
                         call UnitRemoveItem(u, m)
                     endif
                     
                     // ---- Checks for Boot Type Items
-                    set bol1=checkBoots(t)
-                    set bol2=checkBoots(m)
+                    set bol1=IsItemBoots(t)
+                    set bol2=IsItemBoots(m)
                     if bol1 and bol2 then
                         call UnitRemoveItem(u, m)
                     endif
                     
                     // ----
-                    set bol1=checkCoat(t)
-                    set bol2=checkCoat(m)
+                    set bol1=IsItemCoat(t)
+                    set bol2=IsItemCoat(m)
                     if bol1 and bol2 then
                         call UnitRemoveItem(u, m)
                     endif
                     
                     // ----
-                    set bol1=checkGloves(t)
-                    set bol2=checkGloves(m)
+                    set bol1=IsItemGloves(t)
+                    set bol2=IsItemGloves(m)
                     if bol1 and bol2 then
                         call UnitRemoveItem(u, m)
                     endif
                     
                     // ----
-                    set bol1=checkAxeShield(t)
-                    set bol2=checkAxeShield(m)
+                    set bol1=IsItemAxeOrShield(t)
+                    set bol2=IsItemAxeOrShield(m)
                     if bol1 and bol2 then
                         set q=0
                         loop
                             exitwhen q > 6
-                            if checkAxeShield(UnitItemInSlot(u, q)) then
+                            if IsItemAxeOrShield(UnitItemInSlot(u, q)) then
                                 set a=a + 1
                             endif
-                            if checkBattleSuit(UnitItemInSlot(u, q)) then
+                            if GetItemTypeId(UnitItemInSlot(u, q)) == ITEM_BATTLE_SUIT then
                                 set a=a + 1
                             endif
-                            if checkBattleAxe(UnitItemInSlot(u, q)) then
+                            if GetItemTypeId(UnitItemInSlot(u, q)) == ITEM_BATTLE_AXE then
                                 set a=a + 1
                             endif
                             set q=q + 1
@@ -76,14 +76,12 @@ library InventoryItems initializer init requires PublicLibrary
                     endif
                     
                     // ----
-                    set bol1 = checkBaxeBshield(t)
-                    set bol2 = checkBaxeBshield(m)
-                    if bol1 and bol2 then
+                    if (GetItemTypeId(t) == ITEM_BATTLE_SHIELD or GetItemTypeId(t) == ITEM_BATTLE_AXE) and (GetItemTypeId(m) == ITEM_BATTLE_SHIELD or GetItemTypeId(m) == ITEM_BATTLE_AXE) then
                         call UnitRemoveItem(u, m)
                     endif
                     // ----
-                    set bol1=checkPinion(t)
-                    set bol2=checkPinion(m)
+                    set bol1=IsItemPinion(t)
+                    set bol2=IsItemPinion(m)
                     if bol1 and bol2 then
                         call UnitRemoveItem(u, m)
                     endif

@@ -15,7 +15,7 @@ function ItemFilterSpecific takes nothing returns nothing
     local integer i = 0
     local item it
     local integer pid = GetPlayerId(GetOwningPlayer(u))
-    //if checkTroll(GetEnumUnit()) then
+    //if IsUnitTroll(GetEnumUnit()) then
         set BATTLE_SHIELD_NUMBER[pid] = 0
         set frostar[pid] = false
         set healar[pid] = false

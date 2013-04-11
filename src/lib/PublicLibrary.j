@@ -10,7 +10,7 @@
 //     endif
 //===========================================================================
 
-library PublicLibrary initializer initPublicLibrary requires TimerUtils, IDUtils, Constants
+library PublicLibrary initializer initPublicLibrary requires TimerUtils, IDUtils, Constants, FilterTypeIsThing
 
 function IsThereItemInSlot takes unit u, integer i returns boolean
     if ( not ( UnitItemInSlotBJ(u, i) != null ) ) then
@@ -241,15 +241,19 @@ function checkGrow takes unit u returns nothing
     endif
 endfunction
 
-
-//NEW
 function getPlayersTroll takes player p returns unit
     set udg_parameterUnit=udg_PUnits[GetPlayerId(p)]
     return udg_parameterUnit
 endfunction
 
 function GetPlayersTroll takes player p returns unit
-    return udg_PUnits[GetPlayerId(p)]
+    local group g = CreateGroup()
+    local unit u
+    call GroupEnumUnitsOfPlayer( g, p, Condition( function FilterUnitIsTroll ) )
+    set u = FirstOfGroup( g )
+    call DestroyGroup( g )
+    set g = null
+    return u
 endfunction
 
 function cleanInventory takes unit u returns nothing
@@ -358,107 +362,19 @@ function checkItem takes unit u, integer itm returns boolean
     return false
 endfunction
 
-
-function checkTroll takes unit u returns boolean
-    return UNIT_TROLL_ALL.has( GetUnitTypeId( u ) ) or GetUnitTypeId( u ) == UNIT_CRAFT_MASTER // pretty hacky... oh well...
-endfunction
-function CheckTroll takes unit u returns boolean
-    return UNIT_TROLL_ALL.has( GetUnitTypeId( u ) ) or GetUnitTypeId( u ) == UNIT_CRAFT_MASTER // pretty hacky... oh well...
-endfunction
-
-function checkHawk takes unit u returns boolean
-    return GetUnitTypeId(u) == UNIT_BRONZE_DRAGON_HATCHLING or GetUnitTypeId(u) == UNIT_FOREST_DRAGON_HATCHLING or GetUnitTypeId(u) == UNIT_HAWK_HATCHLING or GetUnitTypeId(u) == UNIT_NETHER_DRAGON_HATCHLING or GetUnitTypeId(u) == UNIT_RED_DRAGON_HATCHLING or GetUnitTypeId(u) == UNIT_BRONZE_DRAGON or GetUnitTypeId(u) == UNIT_FOREST_DRAGON or GetUnitTypeId(u) == UNIT_HAWK or GetUnitTypeId(u) == UNIT_HAWK_ADOLESCENT or GetUnitTypeId(u) == 'n00K' or GetUnitTypeId(u) == 'n00T' or GetUnitTypeId(u) == UNIT_ALPHA_HAWK or GetUnitTypeId(u) == UNIT_GREATER_BRONZE_DRAGON or GetUnitTypeId(u) == UNIT_GREATER_FOREST_DRAGON or GetUnitTypeId(u) == UNIT_GREATER_NETHER_DRAGON or GetUnitTypeId(u) == UNIT_GREATER_RED_DRAGON
-endfunction
-
-function checkHide takes item i returns boolean
-    return GetItemTypeId(i) == ITEM_ELK_HIDE or GetItemTypeId(i) == ITEM_JUNGLE_WOLF_HIDE or GetItemTypeId(i) == ITEM_JUNGLE_BEAR_HIDE
-endfunction
-
-function checkPole takes item i returns boolean
-    return GetItemTypeId(i) == ITEM_BONE or GetItemTypeId(i) == ITEM_STICK
-endfunction
-
-function checkCoat takes item i returns boolean
-    local boolean b = GetItemTypeId(i) == ITEM_ELK_SKIN_COAT or GetItemTypeId(i) == ITEM_BEAR_SKIN_COAT or GetItemTypeId(i) == ITEM_WOLF_SKIN_COAT or GetItemTypeId(i) == ITEM_BONE_COAT or GetItemTypeId(i) == ITEM_BATTLE_SUIT
-    local boolean b2 = GetItemTypeId(i) == ITEM_IRON_COAT or GetItemTypeId(i) == ITEM_STEEL_COAT or GetItemTypeId(i) == ITEM_CAMOUFLAGE_COAT or GetItemTypeId(i)==ITEM_BATTLE_ARMOR or GetItemTypeId(i) == ITEM_BATTLE_SUIT
-    local boolean b3 = GetItemTypeId(i) == ITEM_HARDEN_SCALES or GetItemTypeId(i) == ITEM_CLOAK_OF_FLAMES or GetItemTypeId(i) == ITEM_CLOAK_OF_FROST or GetItemTypeId(i) == ITEM_CLOAK_OF_HEALING or GetItemTypeId(i) == ITEM_BATTLE_SUIT
-    return b or b2 or b3
-endfunction
-
-function checkPinion takes item i returns boolean
-    return GetItemTypeId(i) == ITEM_DD_PINION_FIRE or GetItemTypeId(i) == ITEM_DD_PINION_SHADOW or GetItemTypeId(i) == ITEM_DD_PINION_PAIN
-endfunction
-
-function checkGloves takes item i returns boolean
-    return GetItemTypeId(i) == ITEM_ELK_SKIN_GLOVES or GetItemTypeId(i) == ITEM_WOLF_SKIN_GLOVES or GetItemTypeId(i) == ITEM_BEAR_SKIN_GLOVES or GetItemTypeId(i) == ITEM_BONE_GLOVES or GetItemTypeId(i) == ITEM_IRON_GLOVES or GetItemTypeId(i) == ITEM_STEEL_GLOVES or GetItemTypeId(i) == ITEM_BATTLE_GLOVES or GetItemTypeId(i) == ITEM_HYDRA_CLAWS or GetItemTypeId(i) == ITEM_BATTLE_SUIT
-endfunction
-
-function checkBoots takes item i returns boolean
-    return GetItemTypeId(i) == ITEM_ELK_SKIN_BOOTS or GetItemTypeId(i) == ITEM_WOLF_SKIN_BOOTS or GetItemTypeId(i) == ITEM_BEAR_SKIN_BOOTS or GetItemTypeId(i) == ITEM_BONE_BOOTS or GetItemTypeId(i) == ITEM_IRON_BOOTS or GetItemTypeId(i) == ITEM_STEEL_BOOTS or GetItemTypeId(i) == ITEM_ANABOLIC_BOOTS or GetItemTypeId(i) == ITEM_HYDRAAC_FINS or GetItemTypeId(i) == ITEM_BATTLE_SUIT
-endfunction
-
-function checkSpell takes item i returns boolean
-    return GetItemTypeId(i) == ITEM_LIVING_CLAY or GetItemTypeId(i) == ITEM_MAGIC_SEED or GetItemTypeId(i) == ITEM_SCROLL_FIREBALL or GetItemTypeId(i) == ITEM_SCROLL_LIVING_DEAD or GetItemTypeId(i) == ITEM_SCROLL_ENTANGLING_ROOTS or GetItemTypeId(i) == ITEM_SCROLL_STONE_ARMOR or GetItemTypeId(i) == ITEM_SCROLL_CYCLONE or GetItemTypeId(i) == ITEM_SCROLL_TSUNAMI
-endfunction
-
-function checkAxeShield takes item i returns boolean
-    return GetItemTypeId(i) == ITEM_FLINT_AXE or GetItemTypeId(i) == ITEM_STONE_AXE or GetItemTypeId(i) == ITEM_IRON_AXE or GetItemTypeId(i) == ITEM_STEEL_AXE or GetItemTypeId(i)==ITEM_MAGE_MASHER or GetItemTypeId(i) == ITEM_SHIELD or GetItemTypeId(i) == ITEM_BONE_SHIELD or GetItemTypeId(i) == ITEM_IRON_SHIELD or GetItemTypeId(i) == ITEM_STEEL_SHIELD or GetItemTypeId(i) == ITEM_BATTLE_SHIELD or GetItemTypeId(i) == ITEM_BATTLE_AXE or GetItemTypeId(i) == ITEM_BATTLE_SUIT
-endfunction
-//
-function checkBattleSuit takes item i returns boolean
-    return GetItemTypeId(i) == ITEM_BATTLE_SUIT
-endfunction
-
-function checkBattleAxe takes item i returns boolean
-    return GetItemTypeId(i) == ITEM_BATTLE_AXE
-endfunction
-
-function checkBaxeBshield takes item i returns boolean
-    return GetItemTypeId(i) == ITEM_BATTLE_AXE or GetItemTypeId(i) == ITEM_BATTLE_SHIELD
-endfunction
-
-//Battle Suit Checks
-//Battle Suit/Battle Axe/Standard Axes/Shields
-//function checkBattleSuit takes item i returns boolean
-//    return GetItemTypeId(i) == ITEM_FLINT_AXE or GetItemTypeId(i) == ITEM_STONE_AXE or GetItemTypeId(i) == ITEM_IRON_AXE or GetItemTypeId(i) == ITEM_STEEL_AXE or GetItemTypeId(i)==ITEM_MAGE_MASHER or GetItemTypeId(i) == ITEM_SHIELD or GetItemTypeId(i) == ITEM_BONE_SHIELD or GetItemTypeId(i) == ITEM_IRON_SHIELD or GetItemTypeId(i) == ITEM_STEEL_SHIELD or GetItemTypeId(i) == ITEM_BATTLE_SHIELD or GetItemTypeId(i) == ITEM_BATTLE_SUIT or GetItemTypeId(i) == ITEM_BATTLE_AXE
-//endfunction
-//Battle Suit/Glove Checks
-//function checkBattleGloves takes item i returns boolean
-//    return GetItemTypeId(i) == ITEM_ELK_SKIN_GLOVES or GetItemTypeId(i) == ITEM_WOLF_SKIN_GLOVES or GetItemTypeId(i) == ITEM_BEAR_SKIN_GLOVES or GetItemTypeId(i) == ITEM_BONE_GLOVES or GetItemTypeId(i) == ITEM_IRON_GLOVES or GetItemTypeId(i) == ITEM_STEEL_GLOVES or GetItemTypeId(i) == ITEM_BATTLE_GLOVES or GetItemTypeId(i) == ITEM_HYDRA_CLAWS or GetItemTypeId(i) == ITEM_BATTLE_SUIT
-//endfunction    
-
-////bases
-function checkBaseBoots takes item i returns boolean
-    return GetItemTypeId(i) == ITEM_WOLF_SKIN_BOOTS or GetItemTypeId(i) == ITEM_ELK_SKIN_BOOTS or GetItemTypeId(i) == ITEM_BEAR_SKIN_BOOTS
-endfunction
-
-function checkBaseGloves takes item i returns boolean
-    return GetItemTypeId(i) == ITEM_ELK_SKIN_GLOVES or GetItemTypeId(i) == ITEM_WOLF_SKIN_GLOVES or GetItemTypeId(i) == ITEM_BEAR_SKIN_GLOVES
-endfunction
-
-function checkBaseCoat takes item i returns boolean
-    return GetItemTypeId(i) == ITEM_ELK_SKIN_COAT or GetItemTypeId(i) == ITEM_BEAR_SKIN_COAT or GetItemTypeId(i) == ITEM_WOLF_SKIN_COAT
-endfunction
-
-function checkBaseShield takes item i returns boolean
-    return GetItemTypeId(i) == ITEM_SHIELD
-endfunction
-
-/////////////////
-
 function countHeat takes nothing returns nothing
     local unit u=udg_parameterUnit
     local integer t=0
     local integer warm=0
     loop
         exitwhen t > 5
-        if (checkCoat(UnitItemInSlot(u, t))) then
+        if (IsItemCoat(UnitItemInSlot(u, t))) then
             set warm=warm+5
         endif
-        if (checkBoots(UnitItemInSlot(u, t))) then
+        if (IsItemBoots(UnitItemInSlot(u, t))) then
             set warm=warm+2
         endif
-        if (checkGloves(UnitItemInSlot(u, t))) then
+        if (IsItemGloves(UnitItemInSlot(u, t))) then
             set warm=warm+2
         endif
         if(GetItemTypeId(UnitItemInSlot(u, t)) == ITEM_DD_PINION_FIRE) then
@@ -1192,7 +1108,7 @@ function ConvertEnumCorpseToCookedMeat takes nothing returns nothing
 endfunction
 
 function presCheck takes nothing returns boolean
-   return IsUnitAlly(GetFilterUnit(), GetOwningPlayer(udg_parameterUnit)) and checkTroll(GetFilterUnit()) and GetFilterUnit()!=udg_parameterUnit
+   return IsUnitAlly(GetFilterUnit(), GetOwningPlayer(udg_parameterUnit)) and IsUnitTroll(GetFilterUnit()) and GetFilterUnit()!=udg_parameterUnit
 endfunction
 
 /*

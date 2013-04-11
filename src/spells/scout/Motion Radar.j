@@ -124,7 +124,7 @@ loop//actual pinging
         call PingMinimapLocForForceEx( GetPlayersAllies(GetOwningPlayer(c)), GetUnitLoc(u), 3.00, bj_MINIMAPPINGSTYLE_FLASHY, 100, 100, 100 )
     elseif(IsUnitType(u, UNIT_TYPE_FLYING)) then
         call PingMinimapLocForForceEx( GetPlayersAllies(GetOwningPlayer(c)), GetUnitLoc(u), 3.00, bj_MINIMAPPINGSTYLE_FLASHY, 100, 80, 40 )
-    elseif(checkTroll(u)) then
+    elseif(IsUnitTroll(u)) then
         call PingMinimapLocForForceEx( GetPlayersAllies(GetOwningPlayer(c)), GetUnitLoc(u), 5.00, bj_MINIMAPPINGSTYLE_ATTACK, 100, 0, 0 )
     elseif(GetUnitTypeId(u) == UNIT_FISH or GetUnitTypeId(u) == UNIT_GREEN_FISH) then
         call PingMinimapLocForForceEx( GetPlayersAllies(GetOwningPlayer(c)), GetUnitLoc(u), 3.00, bj_MINIMAPPINGSTYLE_FLASHY, 40, 40, 100 )

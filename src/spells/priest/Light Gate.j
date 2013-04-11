@@ -7,7 +7,7 @@ return GetSpellAbilityId() == 'A01H'
 endfunction
 
 function lightCheck takes nothing returns boolean
-     return (IsUnitEnemy(GetFilterUnit(), GetOwningPlayer(udg_parameterUnit))==false and IsUnitAliveBJ(GetFilterUnit()) and checkTroll(GetFilterUnit()))
+     return (IsUnitEnemy(GetFilterUnit(), GetOwningPlayer(udg_parameterUnit))==false and IsUnitAliveBJ(GetFilterUnit()) and IsUnitTroll(GetFilterUnit()))
 endfunction
 
 function growLightGate takes nothing returns nothing

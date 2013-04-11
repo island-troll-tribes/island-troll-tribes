@@ -5,7 +5,7 @@
 //TESH.scrollpos=18
 //TESH.alwaysfold=0
 function Smell_Condition takes nothing returns boolean
-    return checkTroll(GetManipulatingUnit()) and TRACKER_PRESENT
+    return IsUnitTroll(GetManipulatingUnit()) and TRACKER_PRESENT
 endfunction
 
 function clearSmell takes nothing returns nothing

@@ -1,7 +1,4 @@
 
-//===========================================================================
-//TESH.scrollpos=245
-//TESH.alwaysfold=0
 globals
     boolean Mammoth_Dead = false
     boolean DD_Dead = false
@@ -307,7 +304,7 @@ local player p = GetOwningPlayer(dying)
         endif
     endif
     endif
-    set udg_booleanParameter = checkTroll(dying)
+    set udg_booleanParameter = IsUnitTroll(dying)
     if udg_booleanParameter and GetUnitAbilityLevel(dying, 'BIil') == 0 then
         loop
             exitwhen i > R2I(( 3.00 * udg_FOOD_FOR_KILL_PROPORTION ))
@@ -480,7 +477,7 @@ local player p = GetOwningPlayer(dying)
         endif
         call RemoveUnit( dying )
     endif
-    set udg_booleanParameter = checkHawk(dying)
+    set udg_booleanParameter = IsUnitHawk(dying)
     if udg_booleanParameter then
         loop
             exitwhen i > R2I(( 2.00 * udg_FOOD_FOR_KILL_PROPORTION ))

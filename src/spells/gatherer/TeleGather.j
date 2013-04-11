@@ -1,13 +1,4 @@
 
-//
-//         if(GetUnitTypeId(a) == UNIT_HERB_MASTER or GetUnitTypeId(a) == UNIT_OMNIGATHERER) then
-//             set q=100 // poss
-//         else
-//             set q=-70 // 0% for Radar Scout to get herbs
-//         endif
-//===========================================================================
-//TESH.scrollpos=0
-//TESH.alwaysfold=0
 function Trig_TeleGather_Conditions takes nothing returns boolean
     if ( not ( UnitHasBuffBJ(GetManipulatingUnit(), 'B00H') == true ) ) then
         return false
@@ -31,25 +22,25 @@ if b != null then
         elseif GetUnitTypeId(a) == UNIT_OMNIGATHERER then
             set r = GetRandomReal(0, 100)-5*4 //low: -20
         endif
-        if(checkHide(i)) then
+        if(IsItemHide(i)) then
             set q=55
         endif
-        if(checkCoat(i)) then
+        if(IsItemCoat(i)) then
             set q=30
         endif
-        if(checkBoots(i)) then
+        if(IsItemBoots(i)) then
             set q=30
         endif
-        if(checkGloves(i)) then
+        if(IsItemGloves(i)) then
             set q=30
         endif
-        if(checkAxeShield(i)) then
+        if(IsItemAxeOrShield(i)) then
             set q=25
         endif
-        if(checkPole(i)) then
+        if(IsItemPole(i)) then
             set q=55
         endif
-        if(checkSpell(i)) then
+        if(IsItemSpell(i)) then
             set q=15
         endif
         if(GetItemTypeId(i) == ITEM_MANA_CRYSTAL) then

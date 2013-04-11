@@ -9,7 +9,7 @@ endfunction
 function Web_Modded_BuffCounterStack takes nothing returns nothing
 local unit u
 local unit t = GetSpellTargetUnit()
-if GetUnitAbilityLevel(t, 'Beng') > 0 and checkTroll(t) then
+if GetUnitAbilityLevel(t, 'Beng') > 0 and IsUnitTroll(t) then
     set u = GetSpellAbilityUnit()
     call IssueImmediateOrder(u, "stop")
     set u = null

@@ -1,9 +1,6 @@
 
-//===========================================================================
-//TESH.scrollpos=0
-//TESH.alwaysfold=0
 function Trig_noob_time_revive_Conditions takes nothing returns boolean
-    return udg_NOOB_TIME and GetPlayerSlotState(GetOwningPlayer(GetDyingUnit())) == PLAYER_SLOT_STATE_PLAYING and checkTroll(GetDyingUnit())
+    return udg_NOOB_TIME and GetPlayerSlotState(GetOwningPlayer(GetDyingUnit())) == PLAYER_SLOT_STATE_PLAYING and IsUnitTroll(GetDyingUnit())
 endfunction
 
 function Trig_noob_time_revive_Actions takes nothing returns nothing

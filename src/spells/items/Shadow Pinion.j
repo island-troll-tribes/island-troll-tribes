@@ -53,7 +53,7 @@ function Trig_Shadow_Pinion_Actions takes nothing returns nothing
     local trigger q
     local item i=GetManipulatedItem()
     local unit u=GetManipulatingUnit()
-    if(checkTroll(u)==false) then
+    if(IsUnitTroll(u)==false) then
         set u=null
         return
     endif

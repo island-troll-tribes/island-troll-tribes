@@ -12,7 +12,7 @@ function Trig_Fowl_Play_Func001001003 takes nothing returns boolean
 endfunction
 
 function Trig_Fowl_Play_Func001A takes nothing returns nothing
-if(checkTroll(GetEnumUnit())) then
+if(IsUnitTroll(GetEnumUnit())) then
  call masterCastAtTarget(GetSpellAbilityUnit(),GetEnumUnit(),0,0,'AChx',"hex")
 endif
 endfunction

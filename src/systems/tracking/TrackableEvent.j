@@ -14,7 +14,7 @@ library ittEvent requires MMD, PublicLibrary
         /////////////////////////////////////////////
         
         // Constructor
-        public static method create takes string eventName, integer TYPE  returns ittEvent
+        public static method create takes string eventName, integer TYPE returns ittEvent
             local ittEvent myself = ittEvent.allocate()
 	  		local integer  goal   = GOAL_HIGH
 	  		if TYPE == TYPE_STRING then
@@ -28,6 +28,9 @@ library ittEvent requires MMD, PublicLibrary
 
         public method operator []= takes player pid, string value returns nothing
 	  		debug call DisplayTextToPlayer(pid, 0, 0, "Storing ITT MMD event "+.isTracking+" for "+GetPlayerRealName(pid))
+            if not((GetPlayerController(pid) == MAP_CONTROL_USER) and (GetPlayerSlotState(pid) == PLAYER_SLOT_STATE_PLAYING or GetPlayerSlotState(pid) == PLAYER_SLOT_STATE_LEFT)) then
+                return
+            endif
             if .itsType == TYPE_STRING then
 	  			debug call DisplayTextToPlayer(pid, 0, 0, "MMD event value: "+value)
                 call UpdateValueString(.isTracking, pid, value)

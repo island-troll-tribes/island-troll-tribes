@@ -11,7 +11,7 @@ module CreateObject
   }.freeze
 
   def create_object(type, baseid, custid, properties)
-    jass = "//! external ObjectMerger #{OBJECT_TYPES[type.downcase]} #{baseid} #{custid} #{properties.map{|p,v|p+" "+[v].flatten.map{|s|if s.class.name != "String" then s else '"'+s+'"' end}.join(" ")}.join(" ")} |\n"
+    jass = "///! external ObjectMerger #{OBJECT_TYPES[type.downcase]} #{baseid} #{custid} #{properties.map{|p,v|p+" "+[v].flatten.map{|s|if s.class.name != "String" then s else '"'+s+'"' end}.join(" ")}.join(" ")} |\n"
   end
 
   def create_item(baseid, custid, properties)

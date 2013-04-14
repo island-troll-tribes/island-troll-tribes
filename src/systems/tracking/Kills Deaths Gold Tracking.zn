@@ -13,15 +13,14 @@ library PlayerStats requires ittEvent {
     
     public function RegisterEnergyOrHeatKill(unit u) {
         if ( IsUnitTroll( u ) && !udg_NOOB_TIME )
-            kills.addForPlayer( GetOwningPlayer(u), 1 );
+            kills.addForPlayer( GetOwningPlayer( u ), 1 );
     }
     
     function RegisterDeath() {
-        unit killer = GetKillingUnit();
-        if ( IsUnitType( GetTriggerUnit(), UNIT_TYPE_HERO ) && !udg_NOOB_TIME ) {
-            if ( killer != null && !IsUnitAlly( killer, GetOwningPlayer( GetTriggerUnit() ) ) ) {
-                kills.addForPlayer( GetOwningPlayer (killer), 1 );
-                playerKills[GetPlayerId( GetOwningPlayer( killer ) )] += 1;
+        if ( IsUnitTroll( GetTriggerUnit() ) && !udg_NOOB_TIME ) {
+            if ( GetKillingUnit() != null && !IsUnitAlly( GetKillingUnit(), GetOwningPlayer( GetTriggerUnit() ) ) ) {
+                kills.addForPlayer( GetOwningPlayer( GetKillingUnit() ), 1 );
+                playerKills[GetPlayerId( GetOwningPlayer( GetKillingUnit() ) )] += 1;
             }
             deaths.addForPlayer( GetOwningPlayer( GetTriggerUnit() ), 1 );
             playerDeaths[GetPlayerId( GetOwningPlayer( GetTriggerUnit() ) )] += 1;
@@ -46,7 +45,7 @@ library PlayerStats requires ittEvent {
             kills = ittEvent.create("kills", TYPE_INT);
             gold = ittEvent.create("gold", TYPE_INT);
 
-            for ( 0 < i < 12 ) {
+            for ( 0 <= i < 12 ) {
                 if ( GetPlayerController( Player( i ) ) == MAP_CONTROL_USER && GetPlayerSlotState( Player( i ) ) == PLAYER_SLOT_STATE_PLAYING )
                     TriggerRegisterPlayerUnitEvent( t, Player( i ), EVENT_PLAYER_UNIT_DEATH, null );
             }

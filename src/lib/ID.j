@@ -251,6 +251,7 @@ library ID {
 		// Item Spells
 		constant integer SPELL_DISEASE                = 'A041';
 		constant integer SPELL_CURE_ALL_ITEM          = 'A05K';
+		constant integer SPELL_SUPER_FORM_CAST        = 'A03N';
 
 
 		//#####################################################

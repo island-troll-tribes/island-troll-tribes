@@ -3,7 +3,7 @@
 //TESH.scrollpos=0
 //TESH.alwaysfold=0
 function Trig_Super_Form_Conditions takes nothing returns boolean
-    return(GetSpellAbilityId()==SPELL_PET_BRING_ITEMS)
+    return(GetSpellAbilityId()==SPELL_SUPER_FORM_CAST)
 endfunction
 
 function Trig_Super_Form_Actions takes nothing returns nothing

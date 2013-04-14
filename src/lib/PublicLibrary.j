@@ -1239,6 +1239,41 @@ function ControlCameraZoom takes nothing returns nothing
     endloop
 endfunction
 
+function Round takes real r returns integer
+    if r - I2R(R2I(r)) >= 0.5 then
+        return R2I(r+1)
+    else
+        return R2I(r)
+    endif
+endfunction
+
+// http://kattana.users.whitehat.dk/script/?script=216
+function GetNextItemEnum takes nothing returns nothing
+    if DistanceBetweenPoints(GetItemLoc(GetEnumItem()),GetRectCenter(bj_isUnitGroupInRectRect)) < bj_randomSubGroupChance then
+        set bj_itemRandomCurrentPick = GetEnumItem()
+        set bj_randomSubGroupChance = DistanceBetweenPoints(GetItemLoc(GetEnumItem()),GetRectCenter(bj_isUnitGroupInRectRect))
+    endif
+endfunction
+
+function FindNextItem takes location L returns item
+    local real TempR = bj_randomSubGroupChance
+    local item TempI = bj_itemRandomCurrentPick
+    local item TempItm
+    local rect R = bj_isUnitGroupInRectRect
+    set bj_randomSubGroupChance = 1000000
+    set bj_isUnitGroupInRectRect = RectFromLoc(Location(0,0),Location(2,2))
+    call MoveRectToLoc(bj_isUnitGroupInRectRect,L)
+    call EnumItemsInRect(GetEntireMapRect(),null,function GetNextItemEnum)
+    set bj_randomSubGroupChance = TempR
+    call RemoveRect(bj_isUnitGroupInRectRect)
+    set bj_isUnitGroupInRectRect = R
+    set R = null
+    set TempItm = bj_itemRandomCurrentPick
+    set bj_itemRandomCurrentPick = TempI
+    set TempI = null
+    return TempItm
+endfunction
+
 // http://www.thehelper.net/threads/jass-return-item-cost.53645/
 function GetItemGoldCostById takes integer uid returns integer
     local integer Val = GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_GOLD)
@@ -1254,8 +1289,9 @@ function GetItemGoldCostById takes integer uid returns integer
     set Diff = Diff - GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_GOLD)
     call SetPlayerState(Player(15),PLAYER_STATE_RESOURCE_GOLD,Val)
     call SetPlayerState(Player(15),PLAYER_STATE_RESOURCE_LUMBER,ValB)
-    call RemoveItem(UnitItemInSlot(U,1))
+    call RemoveItem(FindNextItem(GetUnitLoc(U)))
     call RemoveUnit(U)
+    set U = null
     return Diff
 endfunction
 
@@ -1273,8 +1309,9 @@ function GetItemLumberCostById takes integer uid returns integer
     set Diff = Diff - GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_LUMBER)
     call SetPlayerState(Player(15),PLAYER_STATE_RESOURCE_GOLD,Val)
     call SetPlayerState(Player(15),PLAYER_STATE_RESOURCE_LUMBER,ValB)
-    call RemoveItem(UnitItemInSlot(U,1))
+    call RemoveItem(FindNextItem(GetUnitLoc(U)))
     call RemoveUnit(U)
+    set U = null
     return Diff
 endfunction
 
@@ -1284,6 +1321,10 @@ endfunction
 
 function GetItemGoldCost takes item i returns integer
     return GetItemGoldCostById(GetItemTypeId(i))
+endfunction
+
+function GetItemSellPrice takes item i returns integer
+    return Round( GetItemLumberCost( i ) * 0.635 )
 endfunction
 
 function initPublicLibrary takes nothing returns nothing

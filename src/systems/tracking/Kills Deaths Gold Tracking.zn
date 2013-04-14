@@ -27,6 +27,12 @@ library PlayerStats requires ittEvent {
             playerDeaths[GetPlayerId( GetOwningPlayer( GetTriggerUnit() ) )] += 1;
         }
     }
+
+    function RegisterGold() {
+        integer sellPrice = GetItemSellPrice( GetSoldItem() );
+        gold.addForPlayer( GetOwningPlayer( GetTriggerUnit() ), sellPrice );
+        playerGold[GetPlayerId( GetOwningPlayer( GetTriggerUnit() ) )] += sellPrice;
+    }
     
     function onInit() {
         timer t = CreateTimer();
@@ -36,9 +42,9 @@ library PlayerStats requires ittEvent {
             trigger t = CreateTrigger();
             trigger u = CreateTrigger();
 
-            deaths = ittEvent.create("Deaths", TYPE_INT);
-            kills = ittEvent.create("Kills", TYPE_INT);
-            gold = ittEvent.create("Gold", TYPE_INT);
+            deaths = ittEvent.create("deaths", TYPE_INT);
+            kills = ittEvent.create("kills", TYPE_INT);
+            gold = ittEvent.create("gold", TYPE_INT);
 
             for ( 0 < i < 12 ) {
                 if ( GetPlayerController( Player( i ) ) == MAP_CONTROL_USER && GetPlayerSlotState( Player( i ) ) == PLAYER_SLOT_STATE_PLAYING )
@@ -47,11 +53,7 @@ library PlayerStats requires ittEvent {
             TriggerAddAction ( t, function RegisterDeath );
 
             TriggerRegisterAnyUnitEventBJ( u, EVENT_PLAYER_UNIT_PAWN_ITEM );
-            TriggerAddAction( u, function() {
-                integer cost = GetItemLumberCost( GetSoldItem() );
-                gold.addForPlayer( GetOwningPlayer( GetTriggerUnit() ), cost );
-                playerGold[GetPlayerId( GetOwningPlayer( GetTriggerUnit() ) )] += cost;
-            });
+            TriggerAddAction( u, function RegisterGold );
         });
     }
 }

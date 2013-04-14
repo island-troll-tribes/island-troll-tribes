@@ -3,6 +3,7 @@ library ClassTracking requires ittEvent {
 
   integer playerClass[];
   ittEvent trollClass;
+  ittEvent randomClass;
 
   function EmitPlayersTrollClasses() {
     integer i = GetTimerData( GetExpiredTimer() );
@@ -10,8 +11,10 @@ library ClassTracking requires ittEvent {
     if ( i == 12 ) {
       ReleaseTimer( GetExpiredTimer() );
     } else {
-      if ( playerClass[i] == 0 )
-        trollClass[Player(i)] = "RANDOM";
+      if ( playerClass[i] == 0 ) {
+        randomClass[Player(i)] = 1;
+        trollClass[Player(i)] = ID2S( GetPlayersTroll( Player(i ) ) );
+      }
       else
         trollClass[Player(i)] = ID2S( playerClass[i] );
 
@@ -36,7 +39,8 @@ library ClassTracking requires ittEvent {
   function onInit() {
     TimerStart( NewTimer(), 0.75, false, function() {
       ReleaseTimer( GetExpiredTimer() );
-      trollClass = ittEvent.create( "class", TYPE_STRING );
+      trollClass  = ittEvent.create( "class", TYPE_STRING );
+      randomClass = ittEvent.create( "random", TYPE_INT );
     });
   }
 }

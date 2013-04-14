@@ -1128,7 +1128,7 @@ globals
 endglobals
 
 function ZoomSetCamera takes integer i returns nothing
-    if GetLocalPlayer()==Player(i) and not( GetGameStatus() == GAME_STATUS_REPLAY ) then
+    if GetLocalPlayer()==Player(i) then
         call SetCameraField(CAMERA_FIELD_ZOFFSET,ZOOM_DISTANCE[i],1)
         call SetCameraField(CAMERA_FIELD_FARZ,ZOOM_FOGZ[i],0)
     endif

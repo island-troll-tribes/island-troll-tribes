@@ -15,8 +15,13 @@ library BugReporting requires ittEvent, TimerUtils, ArgsUtils {
 
     DisplayTextToPlayer( a.triggerPlayer, 0, 0,
         GRAY_COLOR + "Thanks for reporting a bug|r " + COLOR_CODE[GetPlayerId( a.triggerPlayer )] + GetPlayerRealName( a.triggerPlayer ) + "|r" + GRAY_COLOR + "!|r" );
-    bugEvents[ b ][ a.triggerPlayer ] = a.fullMessage;
-    a.destroy();
+
+    TimerStart( NewTimerEx( a ), 0.5, false, function() {
+      ArgsList a = GetTimerData( GetExpiredTimer() );
+      bugEvents[ b ][ a.triggerPlayer ] = a.fullMessage;
+      a.destroy();
+      ReleaseTimer( GetExpiredTimer() );
+    });
   }
 
   function onInit() {

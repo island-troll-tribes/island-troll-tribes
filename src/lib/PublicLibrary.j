@@ -31,9 +31,9 @@ function DisplayTimedTextToNoticeObservers takes real duration, string message r
 
     set bj_cineFadeContinueTrans = duration
     set bj_lastPlayedMusic = message
-    
+
     call ForForce(bj_FORCE_ALL_PLAYERS,function ReplayToNoticeObservers)
-    
+
     set bj_cineFadeContinueTrans = r
     set bj_lastPlayedMusic = s
 endfunction
@@ -50,9 +50,9 @@ function DisplayTimedTextToObservers takes real duration, string message returns
 
     set bj_cineFadeContinueTrans = duration
     set bj_lastPlayedMusic = message
-    
+
     call ForForce(bj_FORCE_ALL_PLAYERS,function ReplayToObservers)
-    
+
     set bj_cineFadeContinueTrans = r
     set bj_lastPlayedMusic = s
 endfunction
@@ -67,9 +67,9 @@ function DisplayTimedTextToAll takes real duration, string message returns nothi
 
     set bj_cineFadeContinueTrans = duration
     set bj_lastPlayedMusic = message
-    
+
     call ForForce(bj_FORCE_ALL_PLAYERS,function ReplayToAll)
-    
+
     set bj_cineFadeContinueTrans = r
     set bj_lastPlayedMusic = s
 endfunction
@@ -195,7 +195,7 @@ function prepareSpells takes nothing returns nothing
     set udg_spells[12]='A01K'
     set udg_spells[13]='A020'
     set udg_spells[14]='A01X'
-    
+
     set udg_spells[15]='A05C'
     set udg_spells[16]='A05G'
     set udg_spells[17]='A01U'
@@ -204,7 +204,7 @@ function prepareSpells takes nothing returns nothing
     set udg_spells[20]='Aspl'
     set udg_spells[21]='ACif'
     set udg_spells[22]='Arej'
-    
+
     set udg_spellStrings[0]="cyclone"
     set udg_spellStrings[1]="impale"
     set udg_spellStrings[2]="carrionswarm"
@@ -228,7 +228,7 @@ function prepareSpells takes nothing returns nothing
     set udg_spellStrings[20]="spiritlink"
     set udg_spellStrings[21]="innerfire"
     set udg_spellStrings[22]="rejuvination"
-    
+
 endfunction
 
 function checkGrow takes unit u returns nothing
@@ -264,13 +264,13 @@ function cleanInventory takes unit u returns nothing
         exitwhen temp == 1 or left==0
         if(UnitItemInSlotBJ(u, temp) == null) then
             set temp2=temp-1
-            
+
             loop
                 exitwhen (UnitItemInSlotBJ(u, temp2) != null) or temp2==1
                 set temp2=temp2-1
             endloop
-            
-            
+
+
             call UnitDropItemSlotBJ( u, UnitItemInSlotBJ(u, temp2), temp )
         endif
         set left=left-1
@@ -297,7 +297,7 @@ function modStats takes nothing returns nothing
     set udg_MUSHROOM_RATE = RMinBJ(1.2,udg_MUSHROOM_RATE+0.4)
     set udg_STICK_RATE = RMinBJ(4.5,udg_STICK_RATE+0.5)
     set udg_TINDER_RATE = RMaxBJ(.7,udg_TINDER_RATE-0.6)
-    
+
     set udg_ITEM_BASE = RMaxBJ(.15,udg_ITEM_BASE-0.2)
     set udg_FOOD_BASE = RMaxBJ(.15,udg_FOOD_BASE-0.2)
 endfunction
@@ -388,9 +388,9 @@ endfunction
 
 function setUpSkillTriggers takes unit u returns nothing
     local player p=GetOwningPlayer(u)
-    
-    
-    
+
+
+
     if(GetUnitTypeId(u)==UNIT_GATHERER) then//gatherer
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_TeleGather_Cast, p ,EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_item_radar, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
@@ -401,17 +401,17 @@ function setUpSkillTriggers takes unit u returns nothing
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_radar_skill_5, p ,EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_radar_skill_6, p ,EVENT_PLAYER_UNIT_SPELL_EFFECT )
         //call TriggerRegisterPlayerUnitEventSimple( gg_trg_ItemPull, p ,EVENT_PLAYER_UNIT_SPELL_EFFECT )
-        
-        
-        
+
+
+
     elseif(GetUnitTypeId(u)==UNIT_HUNTER) then//hunter
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Sniff, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Dissentary_Track, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Homeing_Beacon_Ping, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Homing_Beacon_Cast, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
-        
-        
-        
+
+
+
     elseif(GetUnitTypeId(u)==UNIT_THIEF) then//thief
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_blur, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_TeleThief_Cast, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
@@ -420,9 +420,9 @@ function setUpSkillTriggers takes unit u returns nothing
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Jump, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_blink_ww_short_radius, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_master_Thief, p, EVENT_PLAYER_UNIT_ATTACKED )
-        
-        
-        
+
+
+
     elseif(GetUnitTypeId(u)==UNIT_PRIEST) then//priest
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_cloud_cast, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Angelic_Orb, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
@@ -436,8 +436,8 @@ function setUpSkillTriggers takes unit u returns nothing
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Hidden_Power_All, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Multiwave, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Light_Gate, p, EVENT_PLAYER_UNIT_SPELL_CHANNEL )
-        
-        
+
+
     elseif(GetUnitTypeId(u)==UNIT_MAGE) then//mage
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_jeoulusy, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_seizures, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
@@ -456,22 +456,22 @@ function setUpSkillTriggers takes unit u returns nothing
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Invoke_Runes, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Rune_Release, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Dark_Gate, p, EVENT_PLAYER_UNIT_SPELL_CHANNEL )
-        
+
     elseif(GetUnitTypeId(u)==UNIT_BEAST_MASTER) then//beast master
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_TeleHawk_Cast, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_tamed_abilities, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_tamed_animal_adding, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_release, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Fowl_Play, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
-        
-        
+
+
     elseif(GetUnitTypeId(u)==UNIT_SCOUT) then//scout
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Motion_Radar, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_ward_the_area, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_enemy_radar, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Chain_Reveal, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
     endif
-    
+
 	set p=null
 endfunction
 
@@ -661,10 +661,10 @@ function spawnItems takes nothing returns nothing
     //magic
     call ItemPoolAddItemType(p,ITEM_MAGIC,.25)
     set curIsland=GetRandomInt(0,3)
-    
+
     loop
         exitwhen spawnCount>3
-        
+
         if(curIsland==0) then
             set loopStart=1
             set loopStop=R2I(udg_NORTH_LEFT_ITEM*udg_SPAWN_BASE)
@@ -704,7 +704,7 @@ function spawnItems takes nothing returns nothing
         set curIsland=ModuloInteger(curIsland+1,4)
         set spawnCount=spawnCount+1
     endloop
-    
+
     call modStats()
     set p=null
 	set q=null
@@ -754,7 +754,7 @@ function spawnAnimals takes nothing returns nothing
         endif
         set loopStart = loopStart + 1
     endloop
-    
+
     set loopStop=R2I(udg_NORTH_RIGHT_FOOD*udg_FOOD_BASE)
     set loopStart=1
     loop
@@ -770,7 +770,7 @@ function spawnAnimals takes nothing returns nothing
         endif
         set loopStart = loopStart + 1
     endloop
-    
+
     set loopStop=R2I(udg_SOUTH_RIGHT_FOOD*udg_FOOD_BASE)
     set loopStart=1
     loop
@@ -786,7 +786,7 @@ function spawnAnimals takes nothing returns nothing
         endif
         set loopStart = loopStart + 1
     endloop
-    
+
     set loopStop=R2I(udg_SOUTH_LEFT_FOOD*udg_FOOD_BASE)
     set loopStart=1
     loop
@@ -1048,6 +1048,7 @@ endfunction
 
 function SetRealNames takes nothing returns nothing
     local integer INTEGER = 0
+    call ReleaseTimer( GetExpiredTimer() )
     loop
         exitwhen INTEGER > 11
         if GetPlayerSlotState(Player(INTEGER)) == PLAYER_SLOT_STATE_PLAYING then
@@ -1092,7 +1093,7 @@ function SyncTradeboats takes nothing returns nothing
         call SetUnitX(udg_ship, -80.009 )
         call SetUnitY(udg_ship, -9282.713)
         call IssuePointOrder( udg_ship, "move", 1, 1)
-    
+
         call PauseUnit(udg_ship2,false)
         call SetUnitX(udg_ship2, -9508.619)
         call SetUnitY(udg_ship2, 660.332)
@@ -1217,7 +1218,7 @@ function ManaBurn takes unit whichUnit, real dmg returns nothing
         call SetTextTagVisibility(tt, true)
         call SetTextTagFadepoint(tt, 2.0)
         call SetTextTagLifespan(tt, 5.0)
-        call SetTextTagPermanent(tt, false)   
+        call SetTextTagPermanent(tt, false)
     endif
 	set tt=null
 endfunction
@@ -1330,7 +1331,7 @@ endfunction
 function initPublicLibrary takes nothing returns nothing
     local timer t = NewTimer()
     call TimerStart( t, 0., false, function SetRealNames )
-    set t = NewTimer()
+    set t = CreateTimer()
     call TimerStart( t, 1., true, function ControlCameraZoom )
     set t = null
 endfunction

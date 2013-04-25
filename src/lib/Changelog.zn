@@ -28,7 +28,7 @@ library ChangeLog requires Utils, ArgsUtils, Constants {
 
             thistype.numVersions += 1;
             thistype.versions.integer_s[version] = this;
-            
+
             return this;
         }
 
@@ -133,7 +133,7 @@ library ChangeLog requires Utils, ArgsUtils, Constants {
             }
         }
 
-        static method inspectAll() {  
+        static method inspectAll() {
             debug {
                 BJDebugMsg( "Inspecting ChangeLogs" );
                 BJDebugMsg( "numVersions=" + I2S(numVersions) );
@@ -149,7 +149,7 @@ library ChangeLog requires Utils, ArgsUtils, Constants {
         integer i = 0;
 
         for ( ChangeLog.numVersions >= i > 0 ) {
-            CreateQuestBJ( 
+            CreateQuestBJ(
                 bj_QUESTTYPE_REQ_DISCOVERED,
                 SPECIAL_COLOR + "Change Log " + GOLD_COLOR + ChangeLog(i).toString(),
                 ChangeLog(i).changesToFormattedString(),
@@ -167,6 +167,8 @@ library ChangeLog requires Utils, ArgsUtils, Constants {
 		TimerStart( NewTimer(), 120, false, function DisplayNotice );
 
         TimerStart( NewTimer(), 0., false, function() {
+            ReleaseTimer( GetExpiredTimer() );
+
             ChatCommands.registerArgFunc( null, "changelog", function(ArgsList a) {
                 if ( a[0] == "" )
                     ChangeLog.newest.displayForPlayer( a.triggerPlayer );
@@ -174,7 +176,6 @@ library ChangeLog requires Utils, ArgsUtils, Constants {
                     ChangeLog.getVersion( a[0] ).displayForPlayer( a.triggerPlayer );
             });
 
-            ReleaseTimer( GetExpiredTimer() );
             CreateChangeLogQuest();
         });
     }

@@ -1,6 +1,6 @@
 library MageMasher requires ID, DUMMYLIB, TimerUtils {
-    
-    public { 
+
+    public {
         integer MAGE_MASHER_CLASSES[];
         integer MAGE_MASHER_CLASSES_UB;
     }
@@ -51,7 +51,6 @@ library MageMasher requires ID, DUMMYLIB, TimerUtils {
     function SilenceAndManaBurn() {
         unit attacker = GetEventDamageSource();
         unit defender = GetTriggerUnit();
-        timer t;
 
         if ( PlayerIsBlockedOnPlayer( attacker, defender ) || GetEventDamage() < .01 ) {
             debug BJDebugMsg( "SilenceAndManaBurn blocked!" );
@@ -65,7 +64,7 @@ library MageMasher requires ID, DUMMYLIB, TimerUtils {
             debug BJDebugMsg( "SilenceAndManaBurn silencing!" );
             masterCastAtCaster( attacker, defender, 0, 0, 'A064', "soulburn" );
         }
-        
+
         // manaburn percentage
         if ( GetRandomReal(0, 100) <= 29.0 && CheckMashableTroll( defender ) ) {
             debug BJDebugMsg( "SilenceAndManaBurn manaburning!" );
@@ -76,7 +75,7 @@ library MageMasher requires ID, DUMMYLIB, TimerUtils {
         attacker = null;
         defender = null;
     }
-    
+
     function RegisterUnit() {
         if ( IsUnitTroll( GetEnteringUnit() ) ) {
             debug BJDebugMsg( "RegisterUnit registering " + ID2S( GetUnitTypeId( GetEnteringUnit() ) ) );
@@ -87,15 +86,15 @@ library MageMasher requires ID, DUMMYLIB, TimerUtils {
     function onInit() {
         region r = CreateRegion();
         RegionAddRect( r, bj_mapInitialPlayableArea );
-        
+
         TriggerRegisterEnterRegion( t, r, null );
         TriggerAddAction( t, function RegisterUnit );
-        
+
         TriggerAddCondition( u, Condition( function() -> boolean {
             return UnitHasItemType( GetEventDamageSource(), ITEM_MAGE_MASHER );
         }));
         TriggerAddAction( u, function SilenceAndManaBurn );
-        
+
         MAGE_MASHER_CLASSES[0] = UNIT_MAGE;
         MAGE_MASHER_CLASSES[1] = UNIT_ELEMENTALIST;
         MAGE_MASHER_CLASSES[2] = UNIT_HYPNOTIST;

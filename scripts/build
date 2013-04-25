@@ -7,25 +7,22 @@ MAC_OS = RbConfig::CONFIG['host_os'] =~ /darwin/ ? true : false
 puts "Detected mac OS........prefixing exe calls with wine" if MAC_OS
 puts "Detected windows os....prefixing system calls with sh -c" if WIN_OS
 
-CWD = Dir.getwd
-DIR = File.dirname(__FILE__)
+Dir.chdir File.dirname(__FILE__)
+Dir.chdir '..'
 
-JASSHELPER_PATH = File.join %W[tools 0.A.2.B.jasshelper executable clijasshelper.exe]
-OPTIMIZER_DIR   = File.join %W[tools 5.0wc3mapoptimizer]
+COMPILER_PATH   = File.join %W[scripts compile]
+JASSHELPER_PATH = File.join %W[tools jasshelper clijasshelper.exe]
+OPTIMIZER_DIR   = File.join %W[tools wc3mapoptimizer]
 OPTIMIZER_PATH  = File.join %W[#{OPTIMIZER_DIR} VXJWTSOPT.exe]
-WIDGETIZER_DIR  = File.join %W[tools 1.9.0.3widgetizer]
+WIDGETIZER_DIR  = File.join %W[tools widgetizer]
 WIDGETIZER_PATH = File.join %W[#{WIDGETIZER_DIR} BatWidgetizer.exe]
 BLIZZARD_J_PATH = File.join %W[tools blizzard.j]
 COMMON_J_PATH   = File.join %W[tools common.j]
 
 def do_compile
-  wd = Dir.getwd
-  Dir.chdir '..'
-  cmd = "#{'ruby ' if WIN_OS}./compile do_jasshelper:false env:#{$opt[:env]} owner:#{$opt[:owner]} #{$opt[:do_compile].is_a?(Hash) ? $opt[:do_compile].inject([]){|i,v|i<<"'"+v[0].to_s+":"+v[1].to_s+"'"}.join(' ') : nil}"
+  cmd = "#{'ruby ' if WIN_OS}#{COMPILER_PATH} do_jasshelper:false env:#{$opt[:env]} owner:#{$opt[:owner]} #{$opt[:do_compile].is_a?(Hash) ? $opt[:do_compile].inject([]){|i,v|i<<"'"+v[0].to_s+":"+v[1].to_s+"'"}.join(' ') : nil}"
   puts cmd if $opt[:debug_script]
   r = `#{cmd}`
-  Dir.chdir wd
-  r
 end
 
 def do_jasshelper
@@ -121,8 +118,6 @@ def extract_options(a)
 end
 
 def main
-  Dir.chdir DIR
-
   $opt = extract_options ARGV
   p $opt if $opt[:debug_script]
   $opt.merge!({

@@ -2,6 +2,9 @@
 
 require 'erb'
 
+Dir.chdir File.dirname(__FILE__)
+Dir.chdir '..'
+
 MAC_OS = RbConfig::CONFIG['host_os'] =~ /darwin/ ? true : false
 puts "Detected mac OS... prefixing exe calls with wine" if MAC_OS
 
@@ -23,7 +26,7 @@ end
 
 class Assembler
 
-  CLIJASSHELPER_EXE = "#{"wine " if MAC_OS}jasshelper/clijasshelper.exe --scriptonly --debug #{File.expand_path "src/common.j", File.dirname(__FILE__)} #{File.expand_path "src/blizzard.j", File.dirname(__FILE__)} "
+  CLIJASSHELPER_EXE = "#{"wine " if MAC_OS}tools/jasshelper/clijasshelper.exe --scriptonly --debug #{File.expand_path "src/common.j", File.dirname(__FILE__)} #{File.expand_path "src/blizzard.j", File.dirname(__FILE__)} "
 
   @root
   @output
@@ -78,6 +81,7 @@ class Assembler
     if $? == 0
       File.unlink @tmp_path
     else
+      Dir.mkdir 'logs' unless File.exists? 'logs'
       File.open 'logs/jasshelper.log', 'a' do |f|
         f << "User " <<`whoami`
         f << "Compiling @ #{Time.now}" << "\n"

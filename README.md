@@ -1,8 +1,18 @@
-## Island Troll Tribes Source ##
+# Island Troll Tribes Source #
 
 This is the map source to the Warcraft III custom map Island Troll Tribes.
 It is written in JASS, vJass, and ZINC.
 If you wish to work on the project you can fork it and issue pull requests.
+
+## Official Versions ##
+
+I am willing to sponsor versions branching off this as official if they meet certain 
+criteria. I'm not sure what the criteria is yet but they must be at least balanced.
+
+Eventually they will be listed here, but for now I'll only put where you can download
+my own versions
+
+[quazz.clantwgb.com](http://quazz.clantwgb.com)
 
 ___To build:___  
 

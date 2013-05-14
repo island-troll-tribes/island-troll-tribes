@@ -88,3 +88,12 @@ follow the prompts
     $ cd island-troll-tribes
     $ scripts/build
 
+    # didn't work?
+    # is your wc3 dir on windows in C:\Program Files\Warcraft III\ ?
+    # maybe your path is too long; wc3 can only test maps which have
+    # paths less than a very small number of characters (not quite
+    # sure how many)
+    #
+    # try putting island-troll-tribes on your root drive (or if your
+    # fancy creating a link to the compiled-maps dir from your drive)
+

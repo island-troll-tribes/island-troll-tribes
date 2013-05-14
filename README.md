@@ -60,3 +60,31 @@ Where all the map building tools are
  - widgetizer
  - optimizer
 
+## setting up
+
+Get git if you don't have it: http://git-scm.com
+Fork it!
+
+follow the prompts
+
+    # ignore if you've done this before
+    $ git config --global user.name your-wc3-screen-name
+    $ git config --global user.email where-we-can-reach-you@example.com
+
+    # ssh keys!
+    $ ssh-keygen -t rsa -C same-email@example.com
+
+    # add your key (now at ~/.ssh/id_rsa.pub) to github
+
+    # clone it!
+    $ git clone git@github.com:your-username/island-troll-tribes
+
+    # get ruby! (depending on OS there are different ways...)
+    # windows? http://rubyinstaller.org/downloads
+    # make sure its in your path! don't know how?
+    $ which ruby
+
+    # try building!
+    $ cd island-troll-tribes
+    $ scripts/build
+

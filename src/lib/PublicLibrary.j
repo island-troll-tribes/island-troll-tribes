@@ -1,15 +1,3 @@
-
-//
-//         elseif t <= 4 then
-//             call CreateUnit(Player(12), UNIT_HAWK, x, y, 270 )
-//         elseif t <= 6 then
-//             call CreateUnit(Player(12), UNIT_GREEN_FISH, x, y, 270 )
-//         else
-//             call CreateUnit(Player(12), UNIT_FISH, x, y, 270 )
-//         endif
-//     endif
-//===========================================================================
-
 library PublicLibrary initializer initPublicLibrary requires TimerUtils, IDUtils, Constants, FilterTypeIsThing
 
 function IsThereItemInSlot takes unit u, integer i returns boolean
@@ -176,8 +164,6 @@ function getRandomTroll takes player play, real x, real y returns unit
     endif
     return null
 endfunction
-
-
 
 function prepareSpells takes nothing returns nothing
     set udg_spells[0]='S000'

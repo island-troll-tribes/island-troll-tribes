@@ -3,13 +3,16 @@ library FilterTypeIsThing requires IsTypeThing {
 
 <%  @ids.each do |id, _| %>
 <%    if id =~ /^ITEM_/ || id =~ /^UNIT_/ || id =~ /^DEST_/ %>
-<%       type  = id.split('_').first.capitalize %>
-<%       thing = id.split('_')[1,99].join('_').downcase.camelize %>
-<%       if type == "Dest" then type = "Destructable" end %>
+<%      type  = id.split('_').first.capitalize %>
+<%      thing = id.split('_')[1,99].join('_').downcase.camelize %>
+<%      if type == "Dest" then type = "Destructable" end %>
+<%      if @opt[:env] != 'pro' || `git grep Filter#{type}Is#{thing} -- '..' | wc -l`.to_i > 0 %>
+
   public function Filter<%= type %>Is<%= thing %>() -> boolean {
     return Get<%= type %>TypeId(GetFilter<%= type %>()) == <%= id %> && GetWidgetLife(GetFilter<%= type %>()) > 0;
   }
 
+<%      end %>
 <%    end %>
 <%  end %>
 

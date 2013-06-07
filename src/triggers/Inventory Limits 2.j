@@ -1,7 +1,3 @@
-
-//===========================================================================
-//TESH.scrollpos=0
-//TESH.alwaysfold=0
 /*
     Pick and Drop events are unreliable -- so this completely checks if item is present in the unit's inventory.
 */
@@ -65,7 +61,6 @@ integer array BATTLE_SHIELD_NUMBER
 group pick_dropgroup = CreateGroup()
 endglobals
 
-//===========================================================================
 function InitTrig_pickdrop_2 takes nothing returns nothing
     set gg_trg_pickdrop_2 = CreateTrigger(  )
     call TriggerRegisterAnyUnitEventBJ( gg_trg_pickdrop_2, EVENT_PLAYER_UNIT_PICKUP_ITEM )
@@ -74,4 +69,3 @@ function InitTrig_pickdrop_2 takes nothing returns nothing
     call TriggerAddAction( gg_trg_pickdrop_2, function ItemGroupLoop )
 endfunction
 
-//===========================================================================

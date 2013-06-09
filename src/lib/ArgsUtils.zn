@@ -1,62 +1,71 @@
 
 library ArgsUtils requires ArrayLists, IDUtils, Table, TypeStructs {
-	
-	public struct ArgsList extends ArrayListString {
-		string cmd;
-		string fullMessage;
-		player triggerPlayer;
-		
-		method inspect() {
-			debug {
-				integer i;
-				BJDebugMsg("Inspecting ArgsList "+I2S(this));
-				BJDebugMsg("cmd="+cmd);
-				for (0 <= i < size()) {
-					BJDebugMsg("Args["+I2S(i)+"]="+this[i]);
-				}
-			}
-		}
 
-		method onDestroy() {
-			triggerPlayer = null;
-			fullMessage = "";
-			cmd = "";
-		}
-	}
-	
-	// Break down a command like a list of arguments like in shell programs
-	public function ProcessArgs(string s) -> ArgsList {
-		ArgsList a = ArgsList.create();
-		boolean  b = false;
-		integer  i = 0;
-		string   c = "";
-		string   d = "";
-		s = s + " ";
-		debug BJDebugMsg("ArgsUtils: For String <"+s+">");
-		for (0 <= i < StringLength(s)) {
-			c = SubString(s, i, i+1);
-			if (b) {
-				a.fullMessage += c;
-			}
-			if (i == 0 && c == "-") {
-				// Do Nothing
-			}
-			else if (c == " ") {
-				if (b) {
-					a.push(d);
-					debug BJDebugMsg("ArgsUtils: Pushed Arg <"+d+">");
-				} else {
-					a.cmd = d;
-					b = true;
-					debug BJDebugMsg("ArgsUtils: Setting Command to <"+a.cmd+">");
-				}
-				d = "";
-			}
-			else {
-				d = d + c;
-			}
-		}
-		debug BJDebugMsg("ArgsUtils: Setting Full Message to <"+a.fullMessage+">");
-		return a;
-	}
+  public struct ArgsList extends ArrayListString {
+    string cmd;
+    string fullMessage;
+    player triggerPlayer;
+
+    static method create() -> thistype {
+      thistype self = thistype.allocate();
+      self.cmd = "";
+      self.fullMessage = "";
+      self.triggerPlayer = null;
+      return self;
+    }
+
+    method operator triggerPlayerId() -> integer {
+      return GetPlayerId( triggerPlayer );
+    }
+
+    method inspect() {
+      debug {
+        integer i;
+        BJDebugMsg("Inspecting ArgsList "+I2S(this));
+        BJDebugMsg("cmd="+cmd);
+        for (0 <= i < size()) {
+          BJDebugMsg("Args["+I2S(i)+"]="+this[i]);
+        }
+      }
+    }
+
+    method onDestroy() {
+      triggerPlayer = null;
+      fullMessage = "";
+      cmd = "";
+    }
+
+    // Break down a command like a list of arguments like in shell programs
+    static method processArgs(string s) -> ArgsList {
+      ArgsList a = ArgsList.create();
+      boolean  b = false;
+      integer  i = 0;
+      string   c = "";
+      string   d = "";
+      s = s + " ";
+      debug BJDebugMsg("ArgsUtils: For String <"+s+">");
+      for (0 <= i < StringLength(s)) {
+        c = SubString(s, i, i+1);
+        if (b) {
+          a.fullMessage += c;
+        }
+        if (c == " ") {
+          if (b) {
+            a.push(d);
+            debug BJDebugMsg("ArgsUtils: Pushed Arg <"+d+">");
+          } else {
+            a.cmd = d;
+            b = true;
+            debug BJDebugMsg("ArgsUtils: Setting Command to <"+a.cmd+">");
+          }
+          d = "";
+        }
+        else if (i > 0 && c != "-") {
+          d = d + c;
+        }
+      }
+      debug BJDebugMsg("ArgsUtils: Setting Full Message to <"+a.fullMessage+">");
+      return a;
+    }
+  }
 }

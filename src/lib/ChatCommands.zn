@@ -20,12 +20,14 @@ library ChatCommands requires ArgsUtils {
     }
     
     static method executeArgFunc() {
-      ArgsList a = ProcessArgs(GetEventPlayerChatString());
+      ArgsList a = ArgsList.processArgs(GetEventPlayerChatString());
       ArgFunc fn;
       a.triggerPlayer = GetTriggerPlayer();
       if (cmdFns[GetPlayerId(a.triggerPlayer)].has(StringHash(StringCase(a.cmd, false)))) {
         fn = cmdFns[GetPlayerId(a.triggerPlayer)][StringHash(StringCase(a.cmd, false))];
         fn.evaluate(a);
+      } else {
+        a.destroy();
       }
     }
               

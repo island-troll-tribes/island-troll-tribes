@@ -14,7 +14,6 @@ function main takes nothing returns nothing
     call SetAmbientDaySound( "SunkenRuinsDay" )
     call SetAmbientNightSound( "SunkenRuinsNight" )
     call SetMapMusic( "Music", true, 0 )
-    call CreateRegions(  )
     call CreateAllDestructables(  )
     call CreateAllUnits(  )
     call InitBlizzard(  )

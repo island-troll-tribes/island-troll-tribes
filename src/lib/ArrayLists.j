@@ -122,6 +122,10 @@ library ArrayLists
             endloop
         endmethod
 
+        method getRandom takes nothing returns $TYPE$
+          return .s[GetRandomInt( 0, .itsIndex )]
+        endmethod
+
     endstruct
     
     //! endtextmacro

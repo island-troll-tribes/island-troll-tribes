@@ -21,7 +21,10 @@ scope Hints initializer onInit
     set HINTS[11] = "To toggle hints, type "+HIGHLIGHT_COLOR+"-h|r."
     set HINTS[12] = "Speed, strategy, and meat are crucial to winning wars."
     set HINTS[13] = "Use quickmake skills and unload items to quickly manage the inventories of buildings."
-    set numHints = 13
+    set HINTS[14] = "Type "+ENERGY_COLOR+"-changelog|r"+GENERAL_COLOR+" to view changelog for this version";
+    set HINTS[15] = "Use |r" + ENERGY_COLOR + "-bug the mammoth is flying!|r" + GENERAL_COLOR + " to report a bug with |r" + GOLD_COLOR +  "Clan " + HOSTING_CLAN + "|r"
+    set HINTS[16] = "Use |r" + ENERGY_COLOR + "-register rendo@example.com|r" + GENERAL_COLOR + " to register your email with |r" + GOLD_COLOR + "Clan " + HOSTING_CLAN + "|r" + GENERAL_COLOR + " to recieve info about arranged games and other news|r"
+    set numHints = 16
   endfunction
 
   function RecipeIslandHint takes nothing returns nothing
@@ -49,6 +52,8 @@ scope Hints initializer onInit
         call PingMinimapLocForForceEx( HINT_FORCE, GetUnitLoc(MASTER_CRAFTER), 7.00, bj_MINIMAPPINGSTYLE_FLASHY, 100, 100, 100 )
     elseif i == 5 then
         call PingMinimapLocForForceEx( HINT_FORCE, GetUnitLoc(Mammoth), 4.00, bj_MINIMAPPINGSTYLE_FLASHY, 100, 100, 100 )
+    elseif ( i == 15 or i == 16 ) and HOSTING_CLAN == ""
+        set i = ModuloInteger( i + 1, numHints )
     endif
     if IsPlayerInForce(GetLocalPlayer(), HINT_FORCE) then
       call DisplayTimedTextToPlayer( GetLocalPlayer(), 0, 0, 12, GOLD_COLOR + "Hint: |r" + GENERAL_COLOR + HINTS[i] + "|r" )

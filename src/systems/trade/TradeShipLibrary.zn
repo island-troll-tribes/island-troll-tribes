@@ -1,82 +1,59 @@
 
-library TradeShip requires TimerUtils, PublicLibrary, IDUtils {
-  ArrayListInteger TradeShipIds;
+library TradeShip requires IDUtils, TradeShipRoute, InitRegions {
+  public ArrayListInteger TradeShipIds;
 
-  public {
-    rect TRADE_SHIP_WEST_SPAWN;
-    rect TRADE_SHIP_SOUTH_SPAWN;
-  }
-
-  function CreateTradeShip(integer id, real x, real y) -> unit {
-    debug {
-      BJDebugMsg( "Creating Trade Ship " + ID2S(id) );
-    }
-    return CreateUnit(Player(15), id, x, y, 0);
-  }
-
-  function CreateRandomTradeShip(real x, real y) -> unit {
-    return CreateTradeShip( TradeShipIds[GetRandomInt(0, TradeShipIds.length() - 1)], x, y );
-  }
-
-  public {
-    function ShipStop() {
-      IssueImmediateOrder( udg_ship, "stop");
-      ReleaseTimer( GetExpiredTimer() );
-    }
-
-    function ShipStop2() {
-      IssueImmediateOrder( udg_ship2, "stop");
-      ReleaseTimer( GetExpiredTimer() );
-    }
-
-    function ShipTimerStart() {
-      real X = LoadReal(udg_GameHash, StringHash("ship"), StringHash("X"));
-      real Y = LoadReal(udg_GameHash, StringHash("ship"), StringHash("Y"));
-      IssuePointOrder( udg_ship, "move", X, Y );
-      SHIP_STOPPED = false;
-      ReleaseTimer( GetExpiredTimer() );
-    }
-
-    function ShipTimerStart2() {
-      real X = LoadReal(udg_GameHash, StringHash("ship2"), StringHash("X"));
-      real Y = LoadReal(udg_GameHash, StringHash("ship2"), StringHash("Y"));
-      IssuePointOrder( udg_ship2, "move", X, Y );
-      SHIP2_STOPPED = false;
-      ReleaseTimer( GetExpiredTimer() );
-    }
-
-    function CreateRandomTradeShipWest() {
-      if (!udg_shipOn && AllowTrade) {
-        udg_ship = CreateRandomTradeShip(GetRectCenterX(TRADE_SHIP_WEST_SPAWN), GetRectCenterY(TRADE_SHIP_WEST_SPAWN));
-        udg_shipOn = true;
-      }
-    }
-
-    function CreateRandomTradeShipSouth() {
-      if (!udg_shipOn2 && AllowTrade) {
-        udg_ship2 = CreateRandomTradeShip(GetRectCenterX(TRADE_SHIP_SOUTH_SPAWN), GetRectCenterY(TRADE_SHIP_SOUTH_SPAWN));
-        udg_shipOn2 = true;
-      }
-    }
-  }
+  TradeShipRoute westToEastRoute;
+  TradeShipRoute southToNorthRoute;
 
   function onInit() {
-    TRADE_SHIP_WEST_SPAWN  = gg_rct_ship_make;
-    TRADE_SHIP_SOUTH_SPAWN = gg_rct_ship_gone;
+    TradeShipStop branch1;
+    TradeShipStop fork1;
+    TradeShipStop fork2;
 
     TradeShipIds = ArrayListInteger.create();
 
-    TradeShipIds.push(UNIT_TRADE_SHIP_1);
-    TradeShipIds.push(UNIT_TRADE_SHIP_2);
-    TradeShipIds.push(UNIT_TRADE_SHIP_3);
+    TradeShipIds.push( UNIT_TRADE_SHIP_1 );
+    TradeShipIds.push( UNIT_TRADE_SHIP_2 );
+    TradeShipIds.push( UNIT_TRADE_SHIP_3 );
 
-    TimerStart( NewTimer(), 2., false, function() {
-      ReleaseTimer( GetExpiredTimer() );
+    southToNorthRoute = TradeShipRoute.create();
+
+    branch1 = southToNorthRoute.createFirstStop( gg_rct_ship_make );
+    branch1.addStop( gg_rct_ship_stop_1 );
+    branch1.addStop( gg_rct_ship_stop_2 );
+    branch1.addStop( gg_rct_ship_stop_3 );
+    fork1 = branch1.addStop( gg_rct_ship_fork_1 ).addFork( gg_rct_ship_stop_1_1 );
+    branch1.addStop( gg_rct_fork_1_stop );
+    branch1.addStop( gg_rct_fork_1_gone ); // end of path
+    fork2 = fork1.addStop( gg_rct_ship_stop_1_2 ).addFork( gg_rct_ship_stop_3_1 );
+    fork1.addStop( gg_rct_fork_2_stop );
+    fork1.addStop( gg_rct_fork_2_gone ); // end of path
+    fork2.addStop( gg_rct_ship_stop_3_2 );
+    fork2.addStop( gg_rct_ship_stop_3_3 );
+    fork2.addStop( gg_rct_ship_gone ); // end of path
+
+    westToEastRoute = TradeShipRoute.create();
+
+    branch1 = westToEastRoute.createFirstStop( gg_rct_ship_gone );
+    branch1.addStop( gg_rct_ship_stop_3_3 );
+    branch1.addStop( gg_rct_ship_stop_3_2 );
+    branch1.addStop( gg_rct_ship_stop_3_1 );
+    fork1 = branch1.addStop( gg_rct_ship_fork_2 ).addFork( gg_rct_ship_stop_1_2 );
+    branch1.addStop( gg_rct_fork_2_stop );
+    branch1.addStop( gg_rct_fork_2_gone ); // end of path
+    fork1.addStop( gg_rct_ship_stop_1_1 );
+    fork2 = fork1.addStop( gg_rct_ship_fork_1 ).addFork( gg_rct_ship_stop_3 );
+    fork1.addStop( gg_rct_fork_1_stop );
+    fork1.addStop( gg_rct_fork_1_gone ); // end of path
+    fork2.addStop( gg_rct_ship_stop_3 );
+    fork2.addStop( gg_rct_ship_stop_2 );
+    fork2.addStop( gg_rct_ship_stop_1 );
+    fork2.addStop( gg_rct_ship_make ); // end of path
+
+    Map.onGameStart( function() {
       if ( AllowTrade ) {
-        CreateRandomTradeShipWest();
-        CreateRandomTradeShipSouth();
-        PauseUnit( udg_ship, true );
-        PauseUnit( udg_ship2, true );
+        westToEastRoute.createNextShip().moveToNextStop();
+        southToNorthRoute.createNextShip().moveToNextStop();
       }
     });
   }

@@ -500,6 +500,12 @@ struct Table extends array
     method remove takes integer key returns nothing
         call RemoveSavedInteger(ht, this, key)
     endmethod
+    method remove_s takes string key returns nothing
+        call RemoveSavedInteger(ht, this, StringHash(key))
+    endmethod
+    method remove_h takes handle key returns nothing
+        call RemoveSavedInteger(ht, this, GetHandleId(key))
+    endmethod
     
     //Remove all data from a Table instance
     method flush takes nothing returns nothing

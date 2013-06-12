@@ -1,0 +1,65 @@
+
+library TradeShipStop requires PublicLibrary {
+
+  public struct TradeShipStop {
+    private TradeShipRoute route;
+    private rect stopAt;
+    private thistype nextStop;
+    private thistype forkTo;
+
+    static method create( TradeShipRoute r, rect s ) -> thistype {
+      thistype self = thistype.allocate();
+      self.route = r;
+      self.stopAt = s;
+      self.nextStop = -1;
+      self.forkTo = -1;
+      r.addRect( s );
+      return self;
+    }
+
+    method containsShip() -> boolean {
+      return IsWidgetInRect( stopAt, route.getShip() );
+    }
+
+    method operator next() -> thistype {
+      if ( forkTo < 0 || GetRandomInt( 0, 1 ) == 0 ) {
+        return nextStop;
+      } else {
+        return forkTo;
+      }
+    }
+
+    method addStop( rect r ) -> thistype {
+      if ( nextStop >= 0 ) {
+        return nextStop.addStop( r );
+      } else {
+        nextStop = thistype.create( route, r );
+        return nextStop;
+      }
+    }
+
+    /* we can only add one fork */
+    method addFork( rect r ) -> thistype {
+      if ( forkTo < 0 ) {
+        forkTo = thistype.create( route, r );
+        return forkTo;
+      }
+      debug BJDebugMsg( "Attempting to add multiple forks to " + I2S( this ) );
+      return -1;
+    }
+
+    method isEndOfRoute() -> boolean {
+      return nextStop == -1;
+    }
+
+    method operator x() -> real {
+      return GetRectCenterX( stopAt );
+    }
+
+    method operator y() -> real {
+      return GetRectCenterY( stopAt );
+    }
+
+  }
+}
+

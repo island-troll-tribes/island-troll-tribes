@@ -625,8 +625,8 @@ local item added
             call RemoveItem(t[0])
             call RemoveItem(t[1])
             set added = CreateItem(ITEM_DARK_THISTLES, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
-            call UnitAddItem(GetTriggerUnit(), added)
             call SetItemCharges(added, e)
+            call UnitAddItem(GetTriggerUnit(), added)
         endif
         set bol1 = IsItemHide(t[4])
         set bol2 = IsItemHide(t[5])

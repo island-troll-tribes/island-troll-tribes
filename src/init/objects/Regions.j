@@ -5,8 +5,8 @@
 //*
 //***************************************************************************
 
-library InitRegions
-    function CreateRegions takes nothing returns nothing
+library InitRegions initializer onInit
+    private function onInit takes nothing returns nothing
         local weathereffect we
 
         set gg_rct_out_1_1 = Rect( -7040.0, 160.0, -4160.0, 576.0 )

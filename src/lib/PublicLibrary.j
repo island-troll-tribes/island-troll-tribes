@@ -1,4 +1,8 @@
-library PublicLibrary initializer initPublicLibrary requires TimerUtils, IDUtils, Constants, FilterTypeIsThing
+library PublicLibrary initializer initPublicLibrary requires TimerUtils, IDUtils, Constants, FilterTypeIsThing, InitRegions
+
+function GetExpiredTimerData takes nothing returns integer
+  return GetTimerData( GetExpiredTimer() )
+endfunction
 
 function IsThereItemInSlot takes unit u, integer i returns boolean
     if ( not ( UnitItemInSlotBJ(u, i) != null ) ) then
@@ -81,8 +85,8 @@ endfunction
 function IsWidgetInRect takes rect r, widget w returns boolean
     local real x = GetWidgetX( w )
     local real y = GetWidgetY( w )
-    local real collision = 25
-    if x < GetRectMaxX(r) + collision and x > GetRectMinX(r) - collision and y < GetRectMaxY(r) + collision and y > GetRectMinY(r) - collision then
+    local real collision = 100
+    if GetRectMinX(r) - collision <= x and x <= GetRectMaxX(r) + collision and GetRectMinY(r) - collision <= y and y <= GetRectMaxY(r) + collision then
         return true
     endif
     return false
@@ -1074,18 +1078,6 @@ function LockMammoth takes nothing returns nothing
     call SetUnitOwner( Mammoth, Player(12), true )
 endfunction
 
-function SyncTradeboats takes nothing returns nothing
-        call PauseUnit(udg_ship,false)
-        call SetUnitX(udg_ship, -80.009 )
-        call SetUnitY(udg_ship, -9282.713)
-        call IssuePointOrder( udg_ship, "move", 1, 1)
-
-        call PauseUnit(udg_ship2,false)
-        call SetUnitX(udg_ship2, -9508.619)
-        call SetUnitY(udg_ship2, 660.332)
-        call IssuePointOrder( udg_ship2, "move", 1, 1)
-endfunction
-
 function ConvertEnumCorpseToCookedMeat takes nothing returns nothing
   local unit u = GetEnumUnit()
   local integer INTEGER = 0
@@ -1097,17 +1089,6 @@ endfunction
 function presCheck takes nothing returns boolean
    return IsUnitAlly(GetFilterUnit(), GetOwningPlayer(udg_parameterUnit)) and IsUnitTroll(GetFilterUnit()) and GetFilterUnit()!=udg_parameterUnit
 endfunction
-
-/*
-function AntiStuckBoat takes nothing returns nothing
-    if udg_ship != null then
-        call IssuePointOrder( udg_ship, "move", 1, 1)
-    endif
-    if udg_ship2 != null then
-        call IssuePointOrder( udg_ship2, "move", 1, 1)
-    endif
-endfunction
-*/
 
 globals
     real array ZOOM_DISTANCE

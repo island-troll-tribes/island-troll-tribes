@@ -1,15 +1,12 @@
 
-//===========================================================================
-//TESH.scrollpos=12
-//TESH.alwaysfold=0
 function removeHerbs takes unit u returns nothing
-call removeItem(u,ITEM_RIVER_STEM)
-call removeItem(u,ITEM_RIVER_ROOT)
-call removeItem(u,ITEM_BLUE_HERB)
-call removeItem(u,ITEM_ORANGE_HERB)
-call removeItem(u,ITEM_YELLOW_HERB)
-call removeItem(u,ITEM_PURPLE_HERB)
-call removeItem(u,ITEM_BUTSU)
+    call removeItem(u,ITEM_RIVER_STEM)
+    call removeItem(u,ITEM_RIVER_ROOT)
+    call removeItem(u,ITEM_BLUE_HERB)
+    call removeItem(u,ITEM_ORANGE_HERB)
+    call removeItem(u,ITEM_YELLOW_HERB)
+    call removeItem(u,ITEM_PURPLE_HERB)
+    call removeItem(u,ITEM_BUTSU)
 endfunction
 
 
@@ -26,8 +23,7 @@ function Trig_mixing_pot_stuff_Actions takes nothing returns nothing
     local integer specCount
     local integer specTypes=0
     local item i
-    if (  GetSpellAbilityId() == 'A05A' ) then
-
+    if GetSpellAbilityId() == 'A05A'  then
         set rivStem=countItem(u,ITEM_RIVER_STEM)
         set rivRoot=countItem(u,ITEM_RIVER_ROOT)
         set blu=countItem(u,ITEM_BLUE_HERB)
@@ -93,15 +89,6 @@ function Trig_mixing_pot_stuff_Actions takes nothing returns nothing
         if(rivStem>5) then
             call removeHerbs(u)
             call UnitAddItemByIdSwapped( ITEM_ANABOLIC_POTION, u ) // Anabolic
-            return
-        endif
-        if(butsu>2) then
-            call removeHerbs(u)
-            set i = UnitAddItemByIdSwapped( ITEM_CURE_ALL, u ) // CureAll
-            if (butsu>5) then
-                call SetItemCharges( i, 2 )
-            endif
-            set i = null
             return
         endif
         if(rivStem>2 and spec and rivRoot>0) then
@@ -172,14 +159,23 @@ function Trig_mixing_pot_stuff_Actions takes nothing returns nothing
             call UnitAddItemByIdSwapped( ITEM_SPIRIT_WATER, u ) // Water
             return
         endif
+        if(butsu>2) then
+            call removeHerbs(u)
+            set i = UnitAddItemByIdSwapped( ITEM_CURE_ALL, u ) // CureAll
+            if (butsu>5) then
+                call SetItemCharges( i, 2 )
+            else
+                call SetItemCharges( i, 1 )
+            endif
+            set i = null
+            return
+        endif
     endif
 endfunction
 
-//===========================================================================
 function InitTrig_mixing_pot_stuff takes nothing returns nothing
     set gg_trg_mixing_pot_stuff = CreateTrigger(  )
     call TriggerRegisterAnyUnitEventBJ( gg_trg_mixing_pot_stuff, EVENT_PLAYER_UNIT_SPELL_CAST )
     call TriggerAddAction( gg_trg_mixing_pot_stuff, function Trig_mixing_pot_stuff_Actions )
 endfunction
 
-//===========================================================================

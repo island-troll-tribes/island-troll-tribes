@@ -1,182 +1,175 @@
 
 library ChangeLog requires Utils, ArgsUtils, Constants {
 
-    type IntFn extends function(integer);
-    type StringFn extends function(string);
+  type IntFn extends function(integer);
+  type StringFn extends function(string);
 
-    public struct ChangeLog {
+  public struct ChangeLog {
 
-        static TableArray changes;
-        static Table      versions;
-        static integer    numVersions;
-        static thistype   cachedNewest = -1;
+    static TableArray changes;
+    static Table      versions;
+    static integer    numVersions;
+    static thistype   cachedNewest = -1;
 
-        private integer   major;
-        private integer   minor;
-        private integer   rev;
-        private integer   length;
-        private string    version;
+    private integer   major;
+    private integer   minor;
+    private integer   rev;
+    private integer   length;
+    private string    version;
 
-        static method create(integer major, integer minor, integer rev) -> thistype {
-            thistype this = thistype.allocate();
+    static method create(integer major, integer minor, integer rev) -> thistype {
+      thistype this = thistype.allocate();
 
-            this.major   = major;
-            this.minor   = minor;
-            this.rev     = rev;
-            this.length  = 0;
-            this.version = I2S(major) + "." + I2S(minor) + A2S(rev);
+      this.major   = major;
+      this.minor   = minor;
+      this.rev     = rev;
+      this.length  = 0;
+      this.version = I2S(major) + "." + I2S(minor) + A2S(rev);
 
-            thistype.numVersions += 1;
-            thistype.versions.integer_s[version] = this;
+      thistype.numVersions += 1;
+      thistype.versions.integer_s[version] = this;
 
-            return this;
-        }
-
-        method toString() -> string {
-            return "v" + version;
-        }
-
-        method operator to_s() -> string {
-            return toString();
-        }
-
-        method push(string change) {
-            changes[this].string[length] = change;
-            length += 1;
-        }
-
-        method add(string change) {
-            push(change);
-        }
-
-        method each(player p, StringFn f) {
-            integer i = 0;
-            for (0 <= i < length) {
-                f.evaluate( changes[this].string[i] );
-            }
-        }
-
-        method operator<(thistype t) -> boolean {
-            if (major < t.major)
-                return true;
-            if (major > t.major)
-                return false;
-            if (minor < t.minor)
-                return true;
-            if (minor > t.minor)
-                return false;
-            return rev < t.rev;
-        }
-
-        method changesToFormattedString() -> string {
-            integer i = 0;
-            string  s = GENERAL_COLOR;
-            for ( 0 <= i < length ) {
-                s += DASH + changes[this].string[i] + "|n";
-            }
-            return s + "|n";
-        }
-
-        method displayForPlayer(player p) {
-            integer i = 0;
-            DisplayTimedTextToPlayer( p, 0, 0, 30, ENERGY_COLOR + "Change Log for " + GOLD_COLOR + toString() );
-            for (0 <= i < length) {
-                DisplayTimedTextToPlayer( p, 0, 0, 30, DASH + GENERAL_COLOR + changes[this].string[i] );
-            }
-        }
-
-        static method foreach(IntFn fn) {
-            integer i = 0;
-            for ( 0 <= i <= thistype.numVersions )
-                fn.evaluate( thistype(i) );
-        }
-
-        static method operator newest () -> thistype {
-            integer i;
-
-            if ( cachedNewest == -1 ) {
-                cachedNewest = thistype(1);
-                for ( 2 <= i <= numVersions ) {
-                    if ( thistype(i) > thistype(cachedNewest) ) {
-                        cachedNewest = thistype(i);
-                    }
-                }
-            }
-
-            return cachedNewest;
-        }
-
-        static method getVersion(string whichVersion) -> thistype {
-            if ( StringCase( SubString( whichVersion, 0, 1 ), false ) == "v" ) {
-                whichVersion = SubString( whichVersion, 1, 255 );
-            }
-            return thistype( thistype.versions.integer_s[whichVersion] );
-        }
-
-        static method onInit() {
-            changes     = TableArray[0x2000];
-            versions    = Table.create();
-            numVersions = 0;
-        }
-
-        method inspect() {
-            debug {
-                integer i;
-                BJDebugMsg( "Inspecting ChangeLog " + I2S(this) );
-                BJDebugMsg( "major=" + I2S(major) );
-                BJDebugMsg( "minor=" + I2S(minor) );
-                BJDebugMsg( "rev=" + I2S(rev) );
-                BJDebugMsg( "version=" + version ) ;
-                for ( 0 <= i < length ) {
-                    BJDebugMsg( "changes[this][" + I2S(i) + "]=" + changes[this].string[i] );
-                }
-            }
-        }
-
-        static method inspectAll() {
-            debug {
-                BJDebugMsg( "Inspecting ChangeLogs" );
-                BJDebugMsg( "numVersions=" + I2S(numVersions) );
-                BJDebugMsg( "newest=" + I2S(newest) );
-                thistype.foreach( function(ChangeLog i){
-                    i.inspect();
-                });
-            }
-        }
+      return this;
     }
 
-    function CreateChangeLogQuest() {
-        integer i = 0;
+    method toString() -> string {
+      return "v" + version;
+    }
 
-        for ( ChangeLog.numVersions >= i > 0 ) {
-            CreateQuestBJ(
-                bj_QUESTTYPE_REQ_DISCOVERED,
-                SPECIAL_COLOR + "Change Log " + GOLD_COLOR + ChangeLog(i).toString(),
-                ChangeLog(i).changesToFormattedString(),
-                "ReplaceableTextures\\CommandButtons\\BTNBerserkForTrolls.blp"
-            );
+    method operator to_s() -> string {
+      return toString();
+    }
+
+    method push(string change) {
+      changes[this].string[length] = change;
+      length += 1;
+    }
+
+    method add(string change) {
+      push(change);
+    }
+
+    method each(player p, StringFn f) {
+      integer i = 0;
+      for (0 <= i < length) {
+        f.evaluate( changes[this].string[i] );
+      }
+    }
+
+    method operator<(thistype t) -> boolean {
+      if (major < t.major)
+        return true;
+      if (major > t.major)
+        return false;
+      if (minor < t.minor)
+        return true;
+      if (minor > t.minor)
+        return false;
+      return rev < t.rev;
+    }
+
+    method changesToFormattedString() -> string {
+      integer i = 0;
+      string  s = GENERAL_COLOR;
+      for ( 0 <= i < length ) {
+        s += DASH + changes[this].string[i] + "|n";
+      }
+      return s + "|n";
+    }
+
+    method displayForPlayer(player p) {
+      integer i = 0;
+      DisplayTimedTextToPlayer( p, 0, 0, 30, ENERGY_COLOR + "Change Log for " + GOLD_COLOR + toString() );
+      for (0 <= i < length) {
+        DisplayTimedTextToPlayer( p, 0, 0, 30, DASH + GENERAL_COLOR + changes[this].string[i] );
+      }
+    }
+
+    static method foreach(IntFn fn) {
+      integer i = 0;
+      for ( 0 <= i <= thistype.numVersions )
+        fn.evaluate( thistype(i) );
+    }
+
+    static method operator newest () -> thistype {
+      integer i;
+
+      if ( cachedNewest == -1 ) {
+        cachedNewest = thistype(1);
+        for ( 2 <= i <= numVersions ) {
+          if ( thistype(i) > thistype(cachedNewest) ) {
+            cachedNewest = thistype(i);
+          }
         }
+      }
+
+      return cachedNewest;
     }
 
-    function DisplayNotice() {
-        ReleaseTimer( GetExpiredTimer() );
-        DisplayTextToPlayer( GetLocalPlayer(), 0, 0, CHANGE_LOG_NOTICE_STRING );
+    static method getVersion(string whichVersion) -> thistype {
+      if ( StringCase( SubString( whichVersion, 0, 1 ), false ) == "v" ) {
+        whichVersion = SubString( whichVersion, 1, 255 );
+      }
+      return thistype( thistype.versions.integer_s[whichVersion] );
     }
 
-    function onInit() {
-		TimerStart( NewTimer(), 120, false, function DisplayNotice );
+    static method onInit() {
+      changes     = TableArray[0x2000];
+      versions    = Table.create();
+      numVersions = 0;
+    }
 
-        TimerStart( NewTimer(), 0., false, function() {
-            ReleaseTimer( GetExpiredTimer() );
+    method inspect() {
+      debug {
+        integer i;
+        BJDebugMsg( "Inspecting ChangeLog " + I2S(this) );
+        BJDebugMsg( "major=" + I2S(major) );
+        BJDebugMsg( "minor=" + I2S(minor) );
+        BJDebugMsg( "rev=" + I2S(rev) );
+        BJDebugMsg( "version=" + version ) ;
+        for ( 0 <= i < length ) {
+          BJDebugMsg( "changes[this][" + I2S(i) + "]=" + changes[this].string[i] );
+        }
+      }
+    }
 
-            ChatCommands.registerArgFunc( null, "changelog", function(ArgsList a) {
-                if ( a[0] == "" )
-                    ChangeLog.newest.displayForPlayer( a.triggerPlayer );
-                else
-                    ChangeLog.getVersion( a[0] ).displayForPlayer( a.triggerPlayer );
-            });
-
-            CreateChangeLogQuest();
+    static method inspectAll() {
+      debug {
+        BJDebugMsg( "Inspecting ChangeLogs" );
+        BJDebugMsg( "numVersions=" + I2S(numVersions) );
+        BJDebugMsg( "newest=" + I2S(newest) );
+        thistype.foreach( function(ChangeLog i){
+          i.inspect();
         });
+      }
     }
+  }
+
+  function CreateChangeLogQuest() {
+    integer i = 0;
+
+    for ( ChangeLog.numVersions >= i > 0 ) {
+      CreateQuestBJ(
+          bj_QUESTTYPE_REQ_DISCOVERED,
+          SPECIAL_COLOR + "Change Log " + GOLD_COLOR + ChangeLog(i).toString(),
+          ChangeLog(i).changesToFormattedString(),
+          "ReplaceableTextures\\CommandButtons\\BTNBerserkForTrolls.blp"
+          );
+    }
+  }
+
+  function onInit() {
+    TimerStart( NewTimer(), 0., false, function() {
+      ReleaseTimer( GetExpiredTimer() );
+
+      ChatCommands.registerArgFunc( null, "changelog", function(ArgsList a) {
+        if ( a[0] == "" )
+          ChangeLog.newest.displayForPlayer( a.triggerPlayer );
+        else
+          ChangeLog.getVersion( a[0] ).displayForPlayer( a.triggerPlayer );
+      });
+
+      CreateChangeLogQuest();
+    });
+  }
 }

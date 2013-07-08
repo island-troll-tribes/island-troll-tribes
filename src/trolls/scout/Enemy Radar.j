@@ -3,10 +3,6 @@ function Trig_enemy_radar_Conditions takes nothing returns boolean
     return GetSpellAbilityId() == 'A02T' or GetSpellAbilityId() == 'A07U'
 endfunction
 
-function Trig_enemy_radar_Func001Func001Func001C takes nothing returns boolean
-    return GetUnitTypeId(GetEnumUnit()) == UNIT_ELK
-endfunction
-
 function Trig_enemy_radar_Func001Func001C takes nothing returns boolean
     if ( not ( IsPlayerEnemy(GetOwningPlayer(GetEnumUnit()), GetOwningPlayer(GetSpellAbilityUnit())) == true ) ) then
         return false

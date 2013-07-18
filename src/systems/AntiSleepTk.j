@@ -7,7 +7,7 @@
 //  their team from team killing them using sleep. It is 
 //  activated by a message entered from user.
 
-library antiSleepTk initializer init
+library antiSleepTk initializer init requires Hints
 	
 	//	VARIABLES:
 	//		each players "switch" for allowing allies to sleep them
@@ -49,22 +49,6 @@ library antiSleepTk initializer init
             call DisplayTextToPlayer(GetTriggerPlayer(), 0, 0, GENERAL_COLOR+"Sleep protection turned "+ENERGY_COLOR+"OFF")
 		endif
 	endfunction
-	
-	//  NOTICE: 
-	//		displayed 80 seconds into game
-	//   	notice to players that in this version update
-	//		~Sleep Team Killing can be disabled!~
-	//
-	//		note: too be removed once people are familiar with it,
-	//		and left in change log. my intent with this message is,
-	//		quite frankly, no one reads the changelog, this way its 
-	//		hard to miss. 
-	//
-	//		No More Complaints of TK!
-	//
-	private function displayNotice takes nothing returns nothing
-		call DisplayTextToForce( bj_FORCE_ALL_PLAYERS, GENERAL_COLOR+"Use "+ENERGY_COLOR+"-sleep on"+GENERAL_COLOR+" to stop allies from sleeping you" )
-	endfunction
     
 	//	INITIALIZER:
 	//		prepares the functions:
@@ -94,7 +78,8 @@ library antiSleepTk initializer init
 		call TriggerAddAction( sleepSwitch, function flickSleepSwitch )
 		call TriggerAddAction( t, function stopTk )
 		call TriggerAddCondition( t, Condition( function stopTkFilter ) )
-		call TimerStart( c, 180, false, function displayNotice )
+
+                call Hints.add( "Use "+ENERGY_COLOR+"-sleep on"+GENERAL_COLOR+" to stop allies from sleeping you" )
 	endfunction
 endlibrary
 //===========================================================================

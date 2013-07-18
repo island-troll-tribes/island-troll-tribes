@@ -76,16 +76,7 @@ function Commands_Action takes nothing returns nothing
     local integer i = 0
     local integer ttt = StringHash(s2)
     local real r = 0
-    if s=="-h" then
-        if IsPlayerInForce(p, HINT_FORCE) then
-            set display = "Your tips are now off."
-            call ForceRemovePlayer(HINT_FORCE,p)
-        else
-            set display = "Your tips are now on."
-            call ForceAddPlayer(HINT_FORCE,p)
-        endif
-        set d_color = GRAY_COLOR
-    elseif s=="-clear" then
+    if s=="-clear" then
         if GetLocalPlayer() == p then
             call ClearTextMessages()
         endif

@@ -123,10 +123,10 @@ library InitUnits requires ItemTables
         local integer unitID
         local trigger t
         local real life
-
-        set u = CreateUnit( p, 'O00J', 2240.3, -4387.9, 141.256 )
+    
+        set u = CreateUnit( p, 'O00J', 2236.7, -4330.0, 141.256 )
     endfunction
-
+    
     //===========================================================================
     function CreateUnitsForPlayer9 takes nothing returns nothing
         local player p = Player(9)
@@ -134,10 +134,10 @@ library InitUnits requires ItemTables
         local integer unitID
         local trigger t
         local real life
-
-        set u = CreateUnit( p, 'O00J', 2244.4, -4574.6, 181.225 )
+    
+        set u = CreateUnit( p, 'O00J', 2303.1, -4585.8, 181.225 )
     endfunction
-
+    
     //===========================================================================
     function CreateUnitsForPlayer10 takes nothing returns nothing
         local player p = Player(10)
@@ -145,10 +145,10 @@ library InitUnits requires ItemTables
         local integer unitID
         local trigger t
         local real life
-
-        set u = CreateUnit( p, 'O00J', 2262.1, -4482.0, 170.227 )
+    
+        set u = CreateUnit( p, 'O00J', 2301.1, -4452.8, 170.227 )
     endfunction
-
+    
     //===========================================================================
     function CreateBuildingsForPlayer11 takes nothing returns nothing
         local player p = Player(11)
@@ -156,10 +156,10 @@ library InitUnits requires ItemTables
         local integer unitID
         local trigger t
         local real life
-
+    
         set u = CreateUnit( p, 'o00H', 2048.0, -4480.0, 270.000 )
     endfunction
-
+    
     //===========================================================================
     function CreateUnitsForPlayer11 takes nothing returns nothing
         local player p = Player(11)
@@ -167,9 +167,10 @@ library InitUnits requires ItemTables
         local integer unitID
         local trigger t
         local real life
-
-        set u = CreateUnit( p, 'O00J', 2223.8, -4658.9, 317.844 )
+    
+        set u = CreateUnit( p, 'O00J', 2224.6, -4699.4, 317.844 )
     endfunction
+
 
     //===========================================================================
     function CreateNeutralHostileBuildings takes nothing returns nothing

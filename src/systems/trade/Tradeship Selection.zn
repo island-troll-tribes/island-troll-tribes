@@ -1,0 +1,37 @@
+library TradeShipSelection requires TradeShip {
+  
+    function cond() -> boolean {
+        return !TradeShipIds.has(GetUnitTypeId(GetTriggerUnit()));
+    }
+    
+    function action() {
+        unit ship, u = GetTriggerUnit();
+        player p = GetTriggerPlayer();
+        integer i;
+    
+        if (IsUnitAlly(u, p)) {
+            for (1 <= i <= TradeShipRoute.length) {
+                ship = TradeShipRoute[i].getShip();
+                if (IsUnitSelected(ship, p) && GetLocalPlayer() == p) {
+                    SelectUnit(ship, false);
+                }
+            }
+        }
+    
+        u = null;
+        p = null;
+        ship = null;
+    }
+
+    function onInit() {
+        integer i;
+        trigger t = CreateTrigger();
+ 
+        for (0 <= i <= 11) {
+        TriggerRegisterPlayerSelectionEventBJ(t, Player(i), true);
+        }
+    
+        TriggerAddCondition(t, function cond);
+        TriggerAddAction(t, function action);
+    }
+}

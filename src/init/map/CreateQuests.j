@@ -17,7 +17,7 @@ call CreateQuestBJ( bj_QUESTTYPE_REQ_DISCOVERED,HIGHLIGHT_COLOR+"Cool Commands",
 "+HIGHLIGHT_COLOR+"-f ####:|r set your camera distance (4000 to 100000) default: 5000", "ReplaceableTextures\\WorldEditUI\\Editor-Force.blp" )
 //_//_//_//
 
-call CreateQuestBJ( bj_QUESTTYPE_REQ_DISCOVERED,GENERAL_COLOR+"Shouts",ENERGY_COLOR+"Authors:|r"+GENERAL_COLOR+" Moop, PL0X_J33BUS, RocketRusty, Quazz|r
+call CreateQuestBJ( bj_QUESTTYPE_REQ_DISCOVERED,GENERAL_COLOR+"Shouts",ENERGY_COLOR+"Authors:|r"+GENERAL_COLOR+" Moop, PL0X_J33BUS, RocketRusty, Quazz, Mephisto.|r
 "+GENERAL_COLOR+"Xel'Naga:|r For creating the original ice trolls
 "+GENERAL_COLOR+"Foosh:|r For being almost as good as me at ice trolls
 "+GENERAL_COLOR+"Clan RPP of USWest
@@ -25,7 +25,7 @@ call CreateQuestBJ( bj_QUESTTYPE_REQ_DISCOVERED,GENERAL_COLOR+"Shouts",ENERGY_CO
 ", "ReplaceableTextures\\CommandButtons\\BTNBattleRoar.blp" )
 
 //_//_//_//
-call CreateQuestBJ( bj_QUESTTYPE_REQ_DISCOVERED, GOLD_COLOR+"Contact",ENERGY_COLOR+"Quazz: djrquazz@gmail.com
+call CreateQuestBJ( bj_QUESTTYPE_REQ_DISCOVERED, GOLD_COLOR+"Contact",ENERGY_COLOR+"Quazz: djrquazz@gmail.com ; Mephisto.: lmlsa@hotmail.com
 
 Checkout our github: https://github.com/theQuazz/island-troll-tribes
 ", "ReplaceableTextures\\CommandButtons\\BTNSilence.blp" )
@@ -36,9 +36,9 @@ call CreateQuestBJ( bj_QUESTTYPE_REQ_DISCOVERED, "Clans", "For a more updated of
 "+GOLD_COLOR+"Europe (Northrend):|r
 - Clan ITTP
 
-If you want your clan to show up on the list get in touch with Quazz!
+If you want your clan to show up on the list get in touch with Quazz or Mephisto.!
 
-Last updated: Quazz, January, 2013
+Last updated: Mephisto., May, 2014
 ", "ReplaceableTextures\\CommandButtons\\BTNBansheeMaster.blp" )
 //_//_//_//
 
@@ -92,11 +92,16 @@ There are also Scout's Bushes which only he can get to.
 Observer can be used to mine your base, or to keep an eye on key areas.
 ", "ReplaceableTextures\\CommandButtons\\BTNChaosWarlockGreen.blp" )
 
-
 call CreateQuestBJ( bj_QUESTTYPE_OPT_DISCOVERED, "Thief Tips", "The Thief is a powerful, but often wrongly used class.
 The thief can be used to get mildly rare items from Thief's Bushes, or he can be used to get potentially powerful items from enemies bases.
 He is the best at demolition bases and can stunt the growth of bases early on by stealing stones/mana crystals.
 ", "ReplaceableTextures\\CommandButtons\\BTNDarkTrollTrapper.blp" )
+
+call CreateQuestBJ( bj_QUESTTYPE_OPT_DISCOVERED, "Drunken troll Tips", "The Drunken troll is a very useful class as it can drench enemy units into alcohol causing them to be less able to fight and thus ensure victory.
+With decent damage, attack speed and movement speed drunken troll is a beast early game.
+However, has it goes on and on anti-magic shield will counter drunken haze.
+Best option for late game is brawler.
+", "ReplaceableTextures\\CommandButtons\\BTNHeadhunter.blp" )
 
 endfunction
 

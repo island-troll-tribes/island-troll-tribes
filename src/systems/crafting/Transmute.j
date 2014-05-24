@@ -414,6 +414,18 @@ local item added
             call UnitAddItemByIdSwapped( ITEM_LIVING_CLAY, GetTriggerUnit() )
             call itemLower(2)
         endif
+        if i[0] == ITEM_IRON_INGOT and i[1] == ITEM_MANA_CRYSTAL then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call UnitAddItemByIdSwapped( ITEM_SCROLL_AGE, GetTriggerUnit() )
+            call itemLower(1)
+        endif
+        if i[0] == ITEM_ANABOLIC_POTION and i[1] == ITEM_MANA_CRYSTAL then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call UnitAddItemByIdSwapped( ITEM_SCROLL_SWIFTNESS, GetTriggerUnit() )
+            call itemLower(1)
+        endif
         if i[0] == ITEM_STONE and i[1] == ITEM_MANA_CRYSTAL then
             call RemoveItem(t[0])
             call RemoveItem(t[1])

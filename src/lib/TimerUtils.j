@@ -158,13 +158,11 @@ library TimerUtils initializer init
                     static if( USE_FLEXIBLE_OFFSET) then
                         if (GetHandleId(tT[0])-VOFFSET<0) or (GetHandleId(tT[0])-VOFFSET>=ARRAY_SIZE) then
                             //all right, couldn't fix it
-                            call BJDebugMsg("NewTimer: Unable to allocate a timer, you should probably set TimerUtils_USE_HASH_TABLE to true or fix timer leaks.")
                             return null
                         endif
                     else
                         if (GetHandleId(tT[0])-OFFSET<0) or (GetHandleId(tT[0])-OFFSET>=ARRAY_SIZE) then
                             //all right, couldn't fix it
-                            call BJDebugMsg("NewTimer: Unable to allocate a timer, you should probably set TimerUtils_USE_HASH_TABLE to true or fix timer leaks.")
                             return null
                         endif
                     endif

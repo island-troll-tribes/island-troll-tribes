@@ -595,7 +595,7 @@ endglobals
         set STACKABLES[ITEM_FIRE_BOMB]               =  2              
         set STACKABLES[ITEM_ACID_BOMB]               =  2              
         set STACKABLES[ITEM_NAPALM]                  =  1                 
-        set STACKABLES[ITEM_SMOKED_MEAT]             =  12           
+        set STACKABLES[ITEM_SMOKED_MEAT]             =  10           
         return false
     endfunction
 

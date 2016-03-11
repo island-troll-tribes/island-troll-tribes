@@ -126,6 +126,21 @@ function Trig_upgrade_Actions takes nothing returns nothing
       set UNIT_ID_REPLACE = UNIT_TROLL_BRAWLER
   elseif SKILL_UPGRADE == 'S00P' then
       set UNIT_ID_REPLACE = UNIT_TROLL_BREWMASTER
+  // Supersub
+  elseif SKILL_UPGRADE == 'S00Q' then
+      set UNIT_ID_REPLACE = UNIT_SAGE
+  elseif SKILL_UPGRADE == 'S00R' then
+      set UNIT_ID_REPLACE = UNIT_ASSASSIN
+  elseif SKILL_UPGRADE == 'S00S' then
+      set UNIT_ID_REPLACE = UNIT_JUGGERNAUT
+  elseif SKILL_UPGRADE == 'S00U' then
+	  set UNIT_ID_REPLACE = UNIT_SPY
+  elseif SKILL_UPGRADE == 'S00W' then
+      set UNIT_ID_REPLACE = UNIT_OMNIGATHERER
+  elseif SKILL_UPGRADE == 'S00V' then
+      set UNIT_ID_REPLACE = UNIT_DEMENTIA_MASTER
+  elseif SKILL_UPGRADE == 'S00T' then
+      set UNIT_ID_REPLACE = UNIT_ULTIMATE_FORM
   endif
   
   if UNIT_ID_REPLACE != 0 then

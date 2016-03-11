@@ -80,7 +80,7 @@ function Trig_stack_array_inits_Actions takes nothing returns nothing
   set udg_stackable_max[36]=2//Fire Bomb
   set udg_stackable_max[37]=2//Acid BomB
   set udg_stackable_max[38]=1//napalm
-  set udg_stackable_max[39]=12//Smoked Meat
+  set udg_stackable_max[39]=10//Smoked Meat
   
   set udg_stackables_UBound=39
 endfunction

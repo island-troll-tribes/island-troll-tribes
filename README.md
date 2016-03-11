@@ -71,4 +71,14 @@ This application requires Ruby
     #
     # try putting island-troll-tribes on your root drive (or if your
     # fancy creating a link to the compiled-maps dir from your drive)
+    # 
+    # Still doesn't work? Try adding ruby environment variable path by 
+    # going in : System -> Advanced Parameters -> Environment Variable
+    # find the Path variable and add your ruby bin directory, for 
+    # Example :
+    #
+    # C:\Ruby22-x64\bin;
+    # 
+    # Make sure you have a semi-colon before between the last path
+    # and the ruby path you just added
 

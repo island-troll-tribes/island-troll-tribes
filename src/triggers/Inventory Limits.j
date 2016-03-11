@@ -19,10 +19,10 @@ library InventoryItems initializer init requires PublicLibrary
                 
                 if ( m != t ) then
                 
-                    // ---- check for double stacking Smoked Meat
-                    if (GetItemTypeId(m)==ITEM_SMOKED_MEAT and GetItemTypeId(t)==ITEM_SMOKED_MEAT) then
-                        call UnitRemoveItem(u, m)
-                    endif
+                    // ---- check for double stacking Smoked Meat -- UNUSED
+                    //if (GetItemTypeId(m)==ITEM_SMOKED_MEAT and GetItemTypeId(t)==ITEM_SMOKED_MEAT) then
+                    //    call UnitRemoveItem(u, m)
+                    //endif
                     
                     // ---- Checks for Spell Type Items ; Returns true if the item is
                     set bol1=IsItemSpell(t)

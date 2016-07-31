@@ -1217,7 +1217,6 @@ function CreateNeutralPassiveBuildings takes nothing returns nothing
     set u = CreateUnit( p, 'h025', -1536.0, -4096.0, 270.000 )
     set u = CreateUnit( p, 'h01I', 7360.0, -1088.0, 270.000 )
     set u = CreateUnit( p, 'h025', -3008.0, -6464.0, 270.000 )
-    set u = CreateUnit( p, 'n019', 192.0, 3136.0, 270.000 )
     set u = CreateUnit( p, 'h031', 1728.0, -11584.0, 270.000 )
 endfunction
 

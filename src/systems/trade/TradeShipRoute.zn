@@ -13,6 +13,7 @@ library TradeShipRoute requires TradeShipStop, IDUtils {
     private region        stopsAtRegions;
     private TradeShipStop nextStop;
     private TradeShipStop firstStop;
+    private timer         moveTimer = null;
 
     private static method onInit() {
       whenEnterRegion = CreateTrigger();
@@ -78,7 +79,11 @@ library TradeShipRoute requires TradeShipStop, IDUtils {
     }
 
     method moveToNextStop() -> thistype {
-      IssuePointOrder( tradeShip, "move", nextStop.x, nextStop.y );
+      moveTimer = NewTimerEx( this );
+      TimerStart( moveTimer, 2.5, true, function() {
+        TradeShipRoute this = TradeShipRoute( GetTimerData( GetExpiredTimer() ) );
+        IssuePointOrder( tradeShip, "move", nextStop.x, nextStop.y );
+      });
       return this;
     }
 
@@ -93,6 +98,9 @@ library TradeShipRoute requires TradeShipStop, IDUtils {
 
     private method processEnterRegion() {
       if ( nextStop.containsShip() ) {
+        ReleaseTimer( moveTimer );
+        moveTimer = null;
+
         if ( nextStop.isEndOfRoute() ) {
           removeShip().createNextShip().moveToNextStop();
         } else {
@@ -114,3 +122,5 @@ library TradeShipRoute requires TradeShipStop, IDUtils {
 
   }
 }
+
+// Export New MapOut.j...

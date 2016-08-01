@@ -1,0 +1,54 @@
+library TradeShipSpawnOrder requires ID {
+
+	public struct TradeShipIdListNode {
+		private TradeShipIdListNode next = -1;
+		private integer id;
+
+		public static method create(integer id) -> thistype {
+      		thistype self = thistype.allocate();
+      		self.id = id;
+      		return self;
+		}
+
+		public method getId() -> integer {
+			return id;
+		}
+
+		public method getNext() -> thistype {
+			return next;
+		}
+
+		public method append(thistype what) -> thistype {
+			next = what;
+			return next;
+		}
+
+		public method repeat() -> thistype {
+			return append(this);
+		}
+	}
+
+	private TradeShipIdListNode head = -1;
+
+	public function GetTradeShipSpawnOrder() -> TradeShipIdListNode {
+		return head;
+	}
+
+	private function onInit() {
+		TradeShipIdListNode ts1 = TradeShipIdListNode.create(UNIT_TRADE_SHIP_1);
+		TradeShipIdListNode ts2 = TradeShipIdListNode.create(UNIT_TRADE_SHIP_2);
+		TradeShipIdListNode ts3 = TradeShipIdListNode.create(UNIT_TRADE_SHIP_3);
+		TradeShipIdListNode ts4 = TradeShipIdListNode.create(UNIT_TRADE_SHIP_4);
+		TradeShipIdListNode ts5 = TradeShipIdListNode.create(UNIT_TRADE_SHIP_5);
+		TradeShipIdListNode ts6 = TradeShipIdListNode.create(UNIT_TRADE_SHIP_6);
+
+		ts1.append(ts2)
+			.append(ts3)
+			.append(ts4)
+			.append(ts5)
+			.append(ts6)
+			.append(ts5);
+
+		head = ts1;
+	}
+}

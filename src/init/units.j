@@ -9,6 +9,7 @@ library InitializeUnits initializer onInit
 		set gg_unit_o00K_0174 = CreateUnit( Player( PLAYER_NEUTRAL_PASSIVE ), 'o00K', 1600.0, -11136.0, 270.000 )
 		set gg_unit_o005_0176 = CreateUnit( Player( PLAYER_NEUTRAL_PASSIVE ), 'o005', 1728.0, -10880.0, 270.000 )
 		set gg_unit_o004_0179 = CreateUnit( Player( PLAYER_NEUTRAL_PASSIVE ), 'o004', 2048.0, -10816.0, 270.000 )
-		set gg_unit_h000_0181 = CreateUnit( Player( PLAYER_NEUTRAL_PASSIVE ), 'h000', 2048.0, -11200.0, 270.000 )		
+		set gg_unit_h000_0181 = CreateUnit( Player( PLAYER_NEUTRAL_PASSIVE ), 'h000', 2048.0, -11200.0, 270.000 )
+		set gg_unit_O00B_0180 = CreateUnit( Player( PLAYER_NEUTRAL_PASSIVE ), 'O00B', 2309.0, -11213.2, 172.169 )
 	endfunction
 endlibrary

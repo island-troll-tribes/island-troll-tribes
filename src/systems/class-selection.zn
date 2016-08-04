@@ -1,0 +1,36 @@
+library ClassSelection requires ID, InitializeUnits {
+
+	unit picker[12];
+
+	function onInit() {
+		integer i;
+		unit totem;
+		for (0 <= i < 12) {
+			totem = troll_totem[i/4];
+			picker[i] = CreateUnit(Player(i), UNIT_HERO_PICKER, GetUnitX(totem) + 800, GetUnitY(totem) + 800, 0);
+			UnitShareVision(totem, Player(i), true);
+		}
+		totem = null;
+
+		TimerStart(NewTimer(), 0.1, false, function() {
+			integer i;
+			unit totem;
+			for (0 <= i < 12) {
+				totem = troll_totem[i/4];
+				if (GetLocalPlayer() == Player(i)) {
+					SelectUnit(totem, true);
+				}
+			}
+			ReleaseTimer(GetExpiredTimer());
+			totem = null;
+		});
+
+		Map.onGameStart(function() {
+			integer i;
+			for (0 <= i < 12) {
+				RemoveUnit(picker[i]);
+				picker[i] = null;
+			}
+		});
+	}
+}

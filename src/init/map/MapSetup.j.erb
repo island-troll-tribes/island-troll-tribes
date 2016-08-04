@@ -144,6 +144,9 @@ endfunction
 
 function Start_Game takes nothing returns nothing
     call ReleaseTimer(GetExpiredTimer())
+
+    call Map.fireStartGameEvents()
+
     call DisplayTText(GENERAL_COLOR+"Game has begun.|r", 10)
 
     set NOOB_TIME_DIALOG = CreateTimerDialog(udg_noobTimer)
@@ -218,8 +221,6 @@ function GenerateMap takes nothing returns nothing
         set udg_orders[INTEGER] = "stay"
         set INTEGER = INTEGER + 1
     endloop
-
-    call Map.fireStartGameEvents()
 
     call TimerStart(t , 3, false, function Start_Game)
     set t = null

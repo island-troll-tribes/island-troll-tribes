@@ -1,5 +1,9 @@
 library PublicLibrary initializer initPublicLibrary requires TimerUtils, IDUtils, Constants, FilterTypeIsThing
 
+globals
+integer array TEAM_PLAYER
+endglobals
+
 function GetExpiredTimerData takes nothing returns integer
   return GetTimerData( GetExpiredTimer() )
 endfunction
@@ -236,7 +240,7 @@ function getPlayersTroll takes player p returns unit
     return udg_parameterUnit
 endfunction
 
-function GetPlayersTroll takes player p returns unit
+function GetPlayerTroll takes player p returns unit
     local group g = CreateGroup()
     local unit u
     call GroupEnumUnitsOfPlayer( g, p, Condition( function FilterUnitIsTroll ) )
@@ -244,6 +248,10 @@ function GetPlayersTroll takes player p returns unit
     call DestroyGroup( g )
     set g = null
     return u
+endfunction
+
+function GetPlayerTribe takes player p returns force
+    return TEAM[TEAM_PLAYER[GetPlayerId(p)]]
 endfunction
 
 function cleanInventory takes unit u returns nothing

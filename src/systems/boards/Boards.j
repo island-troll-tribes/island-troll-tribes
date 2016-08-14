@@ -12,7 +12,6 @@ globals
 multiboard array BOARD_TEAM
 integer array BOARD_INT
 integer array PLAYER_INT_BOARD
-integer array TEAM_PLAYER
 multiboard OBSERVER_BOARD
 dialog array OBSERVER_DIALOG
 button array O_DBUTTON

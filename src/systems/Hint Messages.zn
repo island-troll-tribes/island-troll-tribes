@@ -1,12 +1,16 @@
 
-library Hints requires Map, TimerUtils {
+library Hints requires Map, ChatCommands, TimerUtils {
+
+  constant string HINTS_OFF_MESSAGE = GENERAL_COLOR + "Your hints are now " + GOLD_COLOR + "off" + GENERAL_COLOR + ".";
+  constant string HINTS_ON_MESSAGE = GENERAL_COLOR + "Your hints are now " + GOLD_COLOR + "on" + GENERAL_COLOR + ".";
 
   public struct Hints {
-    public  static constant real TIME_BETWEEN_HINTS = 120.0;
+    public  static constant real TIME_BETWEEN_HINTS = 60.0;
 
     public  static force   players = CreateForce();
     private static integer next = 0;
 
+    private boolean used = true;
     private trigger action = null;
     private string  message;
 
@@ -18,7 +22,7 @@ library Hints requires Map, TimerUtils {
 
     public method addAction(code what) -> thistype {
       this.action = CreateTrigger();
-      TriggerAddAction( this.action, what );
+      TriggerAddAction(this.action, what);
       return this;
     }
 
@@ -30,61 +34,63 @@ library Hints requires Map, TimerUtils {
 
     public static method getNext() -> thistype {
       next += 1;
-      if (thistype(next).message == "") {
+      if (thistype(next).used == false) {
         next = 1;
       }
       return thistype(next);
     }
 
     public static method pingLoc(location which) {
-      PingMinimapLocForForceEx( Hints.players, which, 7.00, bj_MINIMAPPINGSTYLE_FLASHY, 100, 100, 100 );
+      PingMinimapLocForForceEx(Hints.players, which, 7.00, bj_MINIMAPPINGSTYLE_FLASHY, 100, 100, 100);
     }
 
     public static method pingUnit(unit which) {
-      Hints.pingLoc( GetUnitLoc( which ) );
+      Hints.pingLoc(GetUnitLoc(which));
     }
 
     public method display() {
-      DisplayTimedTextToPlayer( GetLocalPlayer(), 0, 0, 12, GOLD_COLOR + "Hint: |r" + GENERAL_COLOR + message + "|r" );
+      if ( IsPlayerInForce(GetLocalPlayer(), this.players)) {
+        DisplayTimedTextToPlayer(GetLocalPlayer(), 0, 0, 12, GOLD_COLOR + "Hint: |r" + GENERAL_COLOR + message + "|r");
+      }
       if (this.action != null) {
-        TriggerExecute( this.action );
+        TriggerExecute(this.action);
       }
     }
 
     public static method displayPeriodic() {
-      TimerStart( NewTimer(), TIME_BETWEEN_HINTS, false, function() { Hints.getNext().display(); });
+      TimerStart(NewTimer(), TIME_BETWEEN_HINTS, true, function() { Hints.getNext().display(); });
     }
 
-    public static method addPlayer( player p ) {
-      ForceAddPlayer( players, p );
-      DisplayTimedTextToPlayer( p, 0, 0, 5, GRAY_COLOR + "Your hints are now on" );
+    public static method addPlayer(player p) {
+      ForceAddPlayer(players, p);
+      DisplayTimedTextToPlayer(p, 0, 0, 5, HINTS_ON_MESSAGE);
     }
 
     public static method removePlayer( player p ) {
       ForceRemovePlayer( players, p );
-      DisplayTimedTextToPlayer( p, 0, 0, 5, GRAY_COLOR + "Your hints are now off." );
+      DisplayTimedTextToPlayer(p, 0, 0, 5, HINTS_OFF_MESSAGE);
     }
 
-    public static method togglePlayer( player p ) {
-      if ( IsPlayerInForce(  p, players ) )
-        Hints.removePlayer( p );
+    public static method togglePlayer(player p) {
+      if ( IsPlayerInForce(p, players))
+        Hints.removePlayer(p);
       else
-        Hints.addPlayer( p );
+        Hints.addPlayer(p);
     }
 
-    public static method onInit() {
+    public static method initialize() {
       integer i;
 
       for (0 <= i <= 11) {
-        if ( !IsPlayerObserver( Player( i ) ) )
-          ForceAddPlayer( players, Player( i ) );
+        if ( !IsPlayerObserver(Player(i)) )
+          ForceAddPlayer(players, Player(i));
       }
 
-      ChatCommands.registerArgFunc( null, "h", static method( ArgsList args ) {
-        togglePlayer( args.triggerPlayer );
+      ChatCommands.registerArgFunc(null, "h", static method(ArgsList args) {
+        togglePlayer(args.triggerPlayer);
       });
 
-      Map.onGameStart( static method Hints.displayPeriodic );
+      Map.onGameStart(static method Hints.displayPeriodic);
     }
   }
 
@@ -103,8 +109,8 @@ library Hints requires Map, TimerUtils {
     Hints.add( "If you have no hunter, fires can be used to trap elk. They also make cheap lookouts." );
     Hints.add( "Speed, strategy, and meat are crucial to winning wars." );
     Hints.add( "Use quickmake skills and unload items to quickly manage the inventories of buildings." );
-    Hints.add( "Type " + ENERGY_COLOR + "-changelog|r" + GENERAL_COLOR + " to view changelog for this version" );
     Hints.add( "You can attack the Master Crafter in the middle of the map to advertise a duel. You can attack it again to cancel the advertisement." ).addAction( function() { Hints.pingUnit( MASTER_CRAFTER ); } );
+    Hints.initialize();
   }
 
 }

@@ -6,17 +6,6 @@
 //TESH.alwaysfold=0
 library GAMEMODULES requires PublicLibrary
 
-function m2v2s_Activiate takes nothing returns nothing
-local integer i = 0
-local integer ib = 0
-    call DisableTrigger( gg_trg_reviving_2 )
-    call DisableTrigger( gg_trg_spirit_ward_selection_2 )
-    call DisableTrigger( gg_trg_spirit_ward_selection_3 )
-    call DisableTrigger( gg_trg_spirit_ward_selection )
-    call EnableTrigger( gg_trg_spirit_ward_selection_6v6 )
-    call EnableTrigger( gg_trg_spirit_ward_selection_3_6v6 )
-    call DisplayText("2v2s mode enabled.")
-endfunction
 
 function IncreaseMaxHeat takes nothing returns nothing
     if GetPlayerState(GetEnumPlayer(), PLAYER_STATE_RESOURCE_GOLD) > 0 then
@@ -234,13 +223,6 @@ elseif SubString(s,0,4)=="-nt "then
     set display = "Team Kills are turned off!"
     set modeAllow[30] = false
 
-/*
-elseif s=="-2s" and modeAllow[30] then
-    set m2v2s = true
-    call m2v2s_Activiate()
-    set modeAllow[30] = false            
-// THIS ARRAY SPOT HAS BEEN JACKED BY QUAZZ!! it is being used by -tko
-*/
 elseif s=="-op" and modeAllow[31] then
     set BETA = true
     set modeAllow[31] = false

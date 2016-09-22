@@ -4,12 +4,6 @@ function Trig_noob_time_off_Conditions takes nothing returns boolean
 endfunction
 
 function Trig_noob_time_off_Actions takes nothing returns nothing
-  local timer t
-  if spawnBound then
-  set t = NewTimer()
-  call TimerStart(t, 0, false, function RemoveAllSpawnBoundEffects)
-  set t = null
-  endif
   set udg_NOOB_TIME = false
   call TimerDialogDisplay(NOOB_TIME_DIALOG,false)
   call DestroyTimerDialog(NOOB_TIME_DIALOG)

@@ -1,0 +1,114 @@
+library CheckWin requires PublicLibrary, ClassSelection, MMD {
+
+	boolean tribeWasStillAlive[12];
+	public boolean GAME_END = false;
+
+	function notNoobTime() -> boolean {
+	    return !udg_NOOB_TIME && !udg_NOOB_MODE;
+	}
+
+	function customVictory() {
+		FlagPlayer(GetEnumPlayer(), FLAG_WINNER);
+    	CVic(GetEnumPlayer(), true, true);
+	}
+
+	function customDefeat() {
+		FlagPlayer(GetEnumPlayer(), FLAG_LOSER);
+    	CDef(GetEnumPlayer(), "You have been defeated.");
+	}
+
+	function winTimer() {
+		integer i;
+
+	    ReleaseTimer(GetExpiredTimer());
+
+		for (0 <= i < GameConfig.getInstance().getNumTribes()) {
+			if (tribeWasStillAlive[i]) {
+				ForForce(TEAM[i + 1], function customVictory);
+			} else {
+				ForForce(TEAM[i + 1], function customDefeat);
+			}
+		}
+	}
+
+	function checkWin() {
+		integer i, j;
+		integer pid;
+		integer ppt = GameConfig.getInstance().getNumPlayersPerTribe();
+		integer nt = GameConfig.getInstance().getNumTribes();
+		integer numTribesAlive = 0;
+		boolean alive[];
+		timer t;
+		timerdialog dt;
+
+		for (0 <= i < nt) {
+			if (tribeWasStillAlive[i]) {
+				alive[i] = false;
+
+				for (0 <= j < ppt) {
+					pid = i * ppt + j;
+					if (GetUnitState(GetPlayerTroll(Player(pid)), UNIT_STATE_LIFE) > .455) {
+						alive[i] = true;
+					}
+				}
+
+				if (alive[i]) {
+					numTribesAlive += 1;
+				}
+			}
+		}
+
+		if (numTribesAlive > 1) {
+			for (0 <= i < nt) {
+				if (!alive[i] && tribeWasStillAlive[i]) {
+					ForForce(TEAM[i + 1], function customDefeat);
+					DisplayTText(HIGHLIGHT_COLOR + "Tribe " + I2S(i + 1) + " has been defeated.", 30);
+					tribeWasStillAlive[i] = false;
+				}
+			}
+		} else {
+			for (0 <= i < nt) {
+				if (alive[i]) {
+					DisplayTimedTextToForce(TEAM[i + 1], 60, HIGHLIGHT_COLOR + "You have won! Please play again!");
+				}
+				else if (tribeWasStillAlive[i]) {
+					DisplayTimedTextToForce(TEAM[i + 1], 60, HIGHLIGHT_COLOR + "Your tribe has been killed! Please play again.");
+				}
+			}
+
+			displayStats();
+			GAME_END = true;
+
+            t = NewTimer();
+            dt = CreateTimerDialog(t);
+            TimerStart(t, 20, false, function winTimer);
+            TimerDialogSetTitle(dt, "Game ends in...");
+            TimerDialogDisplay(dt, true);
+		}
+	}
+
+	function removeNonPresentTribes() {
+		integer i, j;
+		integer pid;
+		integer ppt = GameConfig.getInstance().getNumPlayersPerTribe();
+		integer nt = GameConfig.getInstance().getNumTribes();
+
+		for (0 <= i < nt) {
+			tribeWasStillAlive[i] = false;
+			for (0 <= j < ppt) {
+				pid = i * ppt + j;
+				if (!isobserver[pid] && GetPlayerController(Player(pid)) == MAP_CONTROL_USER) {
+					tribeWasStillAlive[i] = true;
+				}
+			}
+		}
+	}
+
+	function onInit() {
+		Map.onGameStart(function removeNonPresentTribes);
+
+    	gg_trg_check_win = CreateTrigger();
+    	TriggerAddCondition(gg_trg_check_win, Condition(function notNoobTime));
+    	TriggerAddAction(gg_trg_check_win, function checkWin);
+	}
+}

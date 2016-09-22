@@ -59,8 +59,12 @@ library SpiritWard requires ID, Table, PublicLibrary {
   }
 
   function onReviveFinish() {
+    if (GetPlayerSlotState(GetOwningPlayer(GetRevivingUnit())) != PLAYER_SLOT_STATE_PLAYING) {
+      KillUnit(GetRevivingUnit());
+      return;
+    }
     if (GetUnitTypeId(GetTriggerUnit()) == UNIT_SPIRIT_WARD) {
-      SetPlayerState(GetTriggerPlayer(), PLAYER_STATE_RESOURCE_GOLD, udg_MAX_HEAT);
+      SetPlayerState(GetOwningPlayer(GetRevivingUnit()), PLAYER_STATE_RESOURCE_GOLD, udg_MAX_HEAT);
     }
   }
 

@@ -9,9 +9,10 @@ endfunction
 function Trig_update_names_Actions takes nothing returns nothing
 local integer BOARD = 1
 local integer PID = 0
+local integer numTribes = GameConfig.getInstance().getNumTribes()
 
 loop
-    exitwhen BOARD > 3
+    exitwhen BOARD > numTribes
     loop
         exitwhen PID > 11
         if IsPlayerInForce(Player(PID),TEAM[BOARD]) then

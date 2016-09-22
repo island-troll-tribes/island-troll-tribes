@@ -128,13 +128,8 @@ elseif s=="-no horn" and modeAllow[17]then
     set display = "Boss prizes like the mammoth horn have been disabled."
     set modeAllow[17] = false
 
-    
-elseif s=="-fs" and modeAllow[18] and TimerGetRemaining(INSTANCE_TIMER) > 5 then // MISCELLANEOUS
-    set display = "Fast Start|r has been activated."
-    call ExecuteFunc("RecallFirst")
-    //call TimerStart(INSTANCE_TIMER, 0, false, function FirstSpawnItemsAnimals)
-    set modeAllow[18] = false
-elseif s=="-no trade" and modeAllow[21] then
+
+elseif s=="-no trade" and modeAllow[21] then // MISCELLANEOUS
     set AllowTrade = false
     set display = "Trade ships and merchants have been disabled."
     set modeAllow[21] = false
@@ -167,9 +162,6 @@ elseif s=="-no exp" and modeAllow[26] then
     set udg_EXPERIENCE_MODE = false
     set display = "Experience mode has been disabled. Trolls can no longer level up."
     set modeAllow[26] = false
-elseif s=="-6v6" and modeAllow[27] then
-    call TriggerExecute(gg_trg_test_6v6)
-    set modeAllow[27] = false
 elseif s=="-no boats" and modeAllow[28] then
     set udg_DisabledBoats = true
     set display = "|c00800040Transport ships have been disabled."

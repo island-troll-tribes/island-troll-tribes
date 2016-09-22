@@ -55,7 +55,7 @@ function Trig_no_trees_Func003001002001 takes nothing returns boolean
 endfunction
 
 function Trig_no_trees_Func003001002002 takes nothing returns boolean
-    return ( IsUnitType(GetFilterUnit(), UNIT_TYPE_TOWNHALL) == false )
+    return ( IsUnitType(GetFilterUnit(), UNIT_TYPE_ANCIENT) == true )
 endfunction
 
 function Trig_no_trees_Func003001002 takes nothing returns boolean

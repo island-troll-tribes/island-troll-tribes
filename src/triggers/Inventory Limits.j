@@ -85,6 +85,10 @@ library InventoryItems initializer init requires PublicLibrary
                     if bol1 and bol2 then
                         call UnitRemoveItem(u, m)
                     endif
+
+                    if GetItemTypeId(m) == ITEM_ANABOLIC_BOOTS and IsUnitThiefClass(u) then
+                        call UnitRemoveItem(u, m)
+                    endif
                 endif
                 set i=i + 1
             endloop

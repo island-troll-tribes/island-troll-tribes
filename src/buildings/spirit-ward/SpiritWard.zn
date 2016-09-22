@@ -1,0 +1,102 @@
+library SpiritWard requires ID, Table, PublicLibrary {
+  Table wardTable;
+
+  function isWardReviving(unit u) -> boolean {
+    return wardTable.boolean.has(GetHandleId(u));
+  }
+
+  function setWardStartedReviving(unit u) {
+    wardTable.boolean[GetHandleId(u)] = true;
+  }
+
+  function setWardStoppedReviving(unit u) {
+    wardTable.boolean.remove(GetHandleId(u));
+  }
+
+	function onPlayerLeave() {
+    group g = GetUnitsOfPlayerAndTypeId(GetTriggerPlayer(), UNIT_SPIRIT_WARD);
+    unit u = GetPlayerTroll(GetTriggerPlayer());
+    force f = GetPlayerTribe(GetTriggerPlayer());
+    unit d;
+
+    if (CountUnitsInGroup(g) >= 1) {
+      if (GetUnitState(u, UNIT_STATE_LIFE) <= 0) {
+        RemoveUnit(u);
+      }
+
+      d = FirstOfGroup(g);
+      while (d != null) {
+        SetUnitOwner(GetEnumUnit(), ForcePickRandomPlayer(f), false);
+        GroupRemoveUnit(g, d);
+      }
+    }
+
+    DestroyGroup(g);
+    g = null;
+    f = null;
+    u = null;
+    d = null;
+	}
+
+  function onPlayerSelectWard() {
+    if (GetUnitTypeId(GetTriggerUnit()) == UNIT_SPIRIT_WARD &&
+        IsUnitAlly(GetTriggerUnit(), GetTriggerPlayer()) &&
+        !isWardReviving(GetTriggerUnit())) {
+      SetUnitOwner(GetTriggerUnit(), GetTriggerPlayer(), false);
+    }
+  }
+
+  function onReviveStart() {
+    if (GetUnitTypeId(GetTriggerUnit()) == UNIT_SPIRIT_WARD) {
+      setWardStartedReviving(GetTriggerUnit());
+    }
+  }
+
+  function onReviveStop() {
+    if (GetUnitTypeId(GetTriggerUnit()) == UNIT_SPIRIT_WARD) {
+      setWardStoppedReviving(GetTriggerUnit());
+    }
+  }
+
+  function onReviveFinish() {
+    if (GetPlayerSlotState(GetOwningPlayer(GetRevivingUnit())) != PLAYER_SLOT_STATE_PLAYING) {
+      KillUnit(GetRevivingUnit());
+      return;
+    }
+    if (GetUnitTypeId(GetTriggerUnit()) == UNIT_SPIRIT_WARD) {
+      SetPlayerState(GetOwningPlayer(GetRevivingUnit()), PLAYER_STATE_RESOURCE_GOLD, udg_MAX_HEAT);
+    }
+  }
+
+	function onInit() {
+		trigger leaveTrigger = CreateTrigger();
+    trigger selectWardTrigger = CreateTrigger();
+    trigger reviveStartTrigger = CreateTrigger();
+    trigger reviveStopTrigger = CreateTrigger();
+    trigger reviveFinishTrigger = CreateTrigger();
+		integer i;
+
+    wardTable = Table.create();
+
+		for (0 <= i < 12) {
+      TriggerRegisterPlayerEventLeave(leaveTrigger, Player(i));
+      TriggerRegisterPlayerUnitEvent(selectWardTrigger, Player(i), EVENT_PLAYER_UNIT_SELECTED, null);
+      TriggerRegisterPlayerUnitEvent(reviveStartTrigger, Player(i), EVENT_PLAYER_HERO_REVIVE_START, null);
+      TriggerRegisterPlayerUnitEvent(reviveStopTrigger, Player(i), EVENT_PLAYER_HERO_REVIVE_CANCEL, null);
+      TriggerRegisterPlayerUnitEvent(reviveStopTrigger, Player(i), EVENT_PLAYER_HERO_REVIVE_FINISH, null);
+      TriggerRegisterPlayerUnitEvent(reviveFinishTrigger, Player(i), EVENT_PLAYER_HERO_REVIVE_FINISH, null);
+		}
+
+    TriggerAddAction(leaveTrigger, function onPlayerLeave);
+    TriggerAddAction(selectWardTrigger, function onPlayerSelectWard);
+    TriggerAddAction(reviveStartTrigger, function onReviveStart);
+    TriggerAddAction(reviveStopTrigger, function onReviveStop);
+    TriggerAddAction(reviveStopTrigger, function onReviveFinish);
+
+    leaveTrigger = null;
+    selectWardTrigger = null;
+    reviveStartTrigger = null;
+    reviveStopTrigger = null;
+    reviveFinishTrigger = null;
+	}
+}

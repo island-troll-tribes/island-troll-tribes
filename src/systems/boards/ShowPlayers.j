@@ -5,10 +5,11 @@
 function Trig_ShowPlayer12_Actions takes nothing returns nothing
 local integer PLAYER_INT = 0
 local integer BOARD_INT2 = 1
+local integer numTribes = GameConfig.getInstance().getNumTribes()
 
 //call DisplayTimedTextToPlayer(GetLocalPlayer(),0,0,40,"Show Start")
 loop
-    exitwhen BOARD_INT2 > 3
+    exitwhen BOARD_INT2 > numTribes
     loop
         exitwhen PLAYER_INT > 11 
         if IsPlayerInForce(Player(PLAYER_INT),TEAM[BOARD_INT2]) then

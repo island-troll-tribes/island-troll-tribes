@@ -18,6 +18,20 @@
 // 7 =  ittp
 // 8 = tsot
 
+library MapSetup initializer onInit requires TimerUtils, PublicLibrary, ClassTracking, GameMode
+
+globals
+    integer MODES_TIME_LIMIT = 15
+    boolean mode_enter = true
+    timer MODES_TIMER = CreateTimer()
+    timer GAME_TIMER = CreateTimer()
+    timerdialog MODES_TIMER_DIALOG
+    timerdialog NOOB_TIME_DIALOG
+    integer array pnamePresent
+    boolean array isobserver
+    boolean obs_present = false
+endglobals
+
 function GetHost takes nothing returns nothing
     local gamecache g = InitGameCache("ITT.w3v")
     call StoreInteger(g, "Map", "Host", GetPlayerId(GetLocalPlayer ()))
@@ -27,107 +41,6 @@ function GetHost takes nothing returns nothing
     set udg_Host = Player( GetStoredInteger(g, "Map", "Host" ))
     call FlushGameCache(g )
     set g = null
-endfunction
-
-globals
-    effect array spawnBoundE
-    string island1Mark = "Doodads\\Cinematic\\GlowingRunes\\GlowingRunes4.mdl"
-    string island2Mark = "Doodads\\Cinematic\\GlowingRunes\\GlowingRunes8.mdl"
-    string island3Mark = "Doodads\\Cinematic\\GlowingRunes\\GlowingRunes3.mdl"
-    integer totalEffectsMark
-    boolean spawnBound = false
-endglobals
-
-function RemoveAllSpawnBoundEffects takes nothing returns nothing
-local integer i = 0
-call ReleaseTimer(GetExpiredTimer())
-loop
-    exitwhen i > totalEffectsMark
-    call DestroyEffect(spawnBoundE[i])
-    set spawnBoundE[i] = null
-    set i = i + 1
-endloop
-endfunction
-
-function SpawnBoundariesEffect takes nothing returns nothing
-    call ReleaseTimer(GetExpiredTimer())
-    set spawnBoundE[0] = AddSpecialEffect(island1Mark, -4160.000, 1920.000)
-    set spawnBoundE[1] = AddSpecialEffect(island1Mark, -4288.000, 1920.000)
-    set spawnBoundE[2] = AddSpecialEffect(island1Mark, -4416.000, 1920.000)
-    set spawnBoundE[3] = AddSpecialEffect(island1Mark, -4416.000, 2048.000)
-    set spawnBoundE[4] = AddSpecialEffect(island1Mark, -4480.000, 2176.000)
-    set spawnBoundE[5] = AddSpecialEffect(island1Mark, -4480.000, 2304.000)
-    set spawnBoundE[6] = AddSpecialEffect(island1Mark, -4480.000, 2432.000)
-    set spawnBoundE[7] = AddSpecialEffect(island1Mark, -4480.000, 2560.000)
-    set spawnBoundE[8] = AddSpecialEffect(island1Mark, -4352.000, 2688.000)
-    set spawnBoundE[9] = AddSpecialEffect(island1Mark, -4224.000, 2816.000)
-    set spawnBoundE[10] = AddSpecialEffect(island1Mark, -4096.000, 2944.000)
-    set spawnBoundE[11] = AddSpecialEffect(island1Mark, -3968.000, 3072.000)
-    set spawnBoundE[12] = AddSpecialEffect(island1Mark, -3840.000, 3072.000)
-    set spawnBoundE[13] = AddSpecialEffect(island1Mark, -3712.000, 2944.000)
-    set spawnBoundE[14] = AddSpecialEffect(island1Mark, -3584.000, 2880.000)
-    set spawnBoundE[15] = AddSpecialEffect(island1Mark, -3456.000, 2880.000)
-    set spawnBoundE[16] = AddSpecialEffect(island1Mark, -3328.000, 2880.000)
-    set spawnBoundE[17] = AddSpecialEffect(island1Mark, -3200.000, 2880.000)
-    set spawnBoundE[18] = AddSpecialEffect(island1Mark, -3072.000, 2688.000)
-    set spawnBoundE[19] = AddSpecialEffect(island1Mark, -2944.000, 2560.000)
-    set spawnBoundE[20] = AddSpecialEffect(island1Mark, -3136.000, 2432.000)
-    set spawnBoundE[21] = AddSpecialEffect(island1Mark, -3264.000, 2368.000)
-    set spawnBoundE[22] = AddSpecialEffect(island1Mark, -3392.000, 2368.000)
-    set spawnBoundE[23] = AddSpecialEffect(island1Mark, -3520.000, 2368.000)
-    set spawnBoundE[24] = AddSpecialEffect(island1Mark, -3648.000, 2304.000)
-    set spawnBoundE[25] = AddSpecialEffect(island1Mark, -3776.000, 2304.000)
-    set spawnBoundE[26] = AddSpecialEffect(island1Mark, -3904.000, 2304.000)
-    set spawnBoundE[27] = AddSpecialEffect(island1Mark, -4032.000, 2112.000)
-
-    set spawnBoundE[28] = AddSpecialEffect(island2Mark, 4352.000, 1792.000)
-    set spawnBoundE[29] = AddSpecialEffect(island2Mark, 4288.000, 1600.000)
-    set spawnBoundE[30] = AddSpecialEffect(island2Mark, 4288.000, 1408.000)
-    set spawnBoundE[31] = AddSpecialEffect(island2Mark, 4416.000, 1280.000)
-    set spawnBoundE[32] = AddSpecialEffect(island2Mark, 4544.000, 1152.000)
-    set spawnBoundE[33] = AddSpecialEffect(island2Mark, 4736.000, 1152.000)
-    set spawnBoundE[34] = AddSpecialEffect(island2Mark, 4928.000, 1152.000)
-    set spawnBoundE[35] = AddSpecialEffect(island2Mark, 5056.000, 1216.000)
-    set spawnBoundE[36] = AddSpecialEffect(island2Mark, 5056.000, 1408.000)
-    set spawnBoundE[37] = AddSpecialEffect(island2Mark, 5056.000, 1600.000)
-    set spawnBoundE[38] = AddSpecialEffect(island2Mark, 5184.000, 1728.000)
-    set spawnBoundE[39] = AddSpecialEffect(island2Mark, 5184.000, 1920.000)
-    set spawnBoundE[40] = AddSpecialEffect(island2Mark, 5184.000, 2112.000)
-    set spawnBoundE[41] = AddSpecialEffect(island2Mark, 4416.000, 2112.000)
-    set spawnBoundE[42] = AddSpecialEffect(island2Mark, 4416.000, 2304.000)
-    set spawnBoundE[43] = AddSpecialEffect(island2Mark, 4416.000, 2432.000)
-    set spawnBoundE[44] = AddSpecialEffect(island2Mark, 4480.000, 2560.000)
-    set spawnBoundE[45] = AddSpecialEffect(island2Mark, 4672.000, 2560.000)
-    set spawnBoundE[46] = AddSpecialEffect(island2Mark, 4864.000, 2496.000)
-    set spawnBoundE[47] = AddSpecialEffect(island2Mark, 4992.000, 2368.000)
-    set spawnBoundE[48] = AddSpecialEffect(island2Mark, 5120.000, 2240.000)
-
-    set spawnBoundE[49] = AddSpecialEffect(island3Mark, 2176.000, -4096.000)
-    set spawnBoundE[50] = AddSpecialEffect(island3Mark, 2368.000, -4096.000)
-    set spawnBoundE[51] = AddSpecialEffect(island3Mark, 2560.000, -4224.000)
-    set spawnBoundE[52] = AddSpecialEffect(island3Mark, 2624.000, -4416.000)
-    set spawnBoundE[53] = AddSpecialEffect(island3Mark, 2624.000, -4608.000)
-    set spawnBoundE[54] = AddSpecialEffect(island3Mark, 2560.000, -4800.000)
-    set spawnBoundE[55] = AddSpecialEffect(island3Mark, 2368.000, -4864.000)
-    set spawnBoundE[56] = AddSpecialEffect(island3Mark, 2176.000, -4864.000)
-    set spawnBoundE[57] = AddSpecialEffect(island3Mark, 1984.000, -4864.000)
-    set spawnBoundE[58] = AddSpecialEffect(island3Mark, 1792.000, -4864.000)
-    set spawnBoundE[59] = AddSpecialEffect(island3Mark, 1600.000, -4928.000)
-    set spawnBoundE[60] = AddSpecialEffect(island3Mark, 1408.000, -4928.000)
-    set spawnBoundE[61] = AddSpecialEffect(island3Mark, 1984.000, -4160.000)
-    set spawnBoundE[62] = AddSpecialEffect(island3Mark, 1856.000, -4224.000)
-    set spawnBoundE[63] = AddSpecialEffect(island3Mark, 1728.000, -4352.000)
-    set spawnBoundE[64] = AddSpecialEffect(island3Mark, 1600.000, -4416.000)
-    set spawnBoundE[65] = AddSpecialEffect(island3Mark, 1472.000, -4352.000)
-    set spawnBoundE[66] = AddSpecialEffect(island3Mark, 1280.000, -4288.000)
-    set spawnBoundE[67] = AddSpecialEffect(island3Mark, 1088.000, -4352.000)
-    set spawnBoundE[68] = AddSpecialEffect(island3Mark, 960.000, -4480.000)
-    set spawnBoundE[69] = AddSpecialEffect(island3Mark, 1024.000, -4672.000)
-    set spawnBoundE[70] = AddSpecialEffect(island3Mark, 1088.000, -4800.000)
-    set spawnBoundE[71] = AddSpecialEffect(island3Mark, 1280.000, -4928.000)
-
-    set spawnBoundE[72] = AddSpecialEffect(island2Mark, 4352.000, 1984.000) // woops
-    set totalEffectsMark = 72
 endfunction
 
 function ItemRecipeVision takes nothing returns nothing
@@ -150,29 +63,14 @@ function Start_Game takes nothing returns nothing
     call DisplayTText(GENERAL_COLOR+"Game has begun.|r", 10)
 
     set NOOB_TIME_DIALOG = CreateTimerDialog(udg_noobTimer)
-    call TimerDialogSetTitle(NOOB_TIME_DIALOG, "Noob Time Over")
+    call TimerDialogSetTitle(NOOB_TIME_DIALOG, "Grace Period")
     call TimerDialogDisplay(NOOB_TIME_DIALOG, true)
-    call TimerStart( udg_noobTimer, udg_NOOB_TIME_LEFT , false , null )
-    call ConditionalTriggerExecute( gg_trg_init_exp )
+    call TimerStart(udg_noobTimer, udg_NOOB_TIME_LEFT , false , null)
 
     call RegisterPlayersTrollClasses()
     
-    if udg_SIX_SIX then
-        call TriggerExecute(gg_trg_Startup_6v6)
-    else
-        call TriggerExecute(gg_trg_Startup_Normal)
-    endif
-    
-    call TriggerExecute(gg_trg_exp_remove_or_add)
-    
     call TriggerRegisterTimerEvent( gg_trg_stats_degrading, udg_STAT_LOWER_INTERVAL, true)
     call TriggerRegisterTimerEvent( gg_trg_warmth, udg_CLOTHS_HEATUP_INTERVAL, true )
-    if spawnBound then
-        call DisplayTText("These designated areas have been marked with spawn camping boundaries.", 10)
-        call PingMinimapEx(GetRectCenterX(gg_rct_revive_1),GetRectCenterY(gg_rct_revive_1),10,99,0,0,true)
-        call PingMinimapEx(GetRectCenterX(gg_rct_revive_2),GetRectCenterY(gg_rct_revive_2),10,99,0,0,true)
-        call PingMinimapEx(GetRectCenterX(gg_rct_revive_3),GetRectCenterY(gg_rct_revive_3),10,99,0,0,true)
-    endif
 endfunction
 
 function RemoveUnitX takes nothing returns nothing
@@ -198,8 +96,11 @@ function LocustDisplayUnits takes nothing returns nothing
     call UnitAddAbility( gg_unit_O00B_0180 , 'Aloc')
 endfunction
 
+function FirstSpawnItemsAnimals takes nothing returns nothing
+    call TriggerExecute(gg_trg_spawn_call_first)
+endfunction
+
 function GenerateMap takes nothing returns nothing
-    local timer t = NewTimer()
     local timer t2
     local integer INTEGER = 0
     local group g
@@ -212,9 +113,6 @@ function GenerateMap takes nothing returns nothing
     else
         call TriggerExecute(gg_trg_ShowPlayers)
     endif
-    call TimerDialogDisplay(MODES_TIMER_DIALOG,false)
-    call DestroyTimerDialog(MODES_TIMER_DIALOG)
-    call DisplayTText(GENERAL_COLOR+"Game mode set. Generating map...|r", 5)
     
     loop
         exitwhen INTEGER > 11
@@ -222,17 +120,17 @@ function GenerateMap takes nothing returns nothing
         set INTEGER = INTEGER + 1
     endloop
 
-    call TimerStart(t , 3, false, function Start_Game)
-    set t = null
+    call ExecuteFunc("Start_Game")
+    call FirstSpawnItemsAnimals()
 endfunction
 
-function FirstSpawnItemsAnimals takes nothing returns nothing
-    call TriggerExecute(gg_trg_spawn_call_first)
-    call TimerStart(MODES_TIMER, 4, false, function GenerateMap)
-endfunction
-
-function RecallFirst takes nothing returns nothing
-    call TimerStart(INSTANCE_TIMER, 0, false, function FirstSpawnItemsAnimals)
+function ModesTimerFinished takes nothing returns nothing
+    set mode_enter = false
+    call GameMode.deregisterAll()
+    call TimerDialogDisplay(MODES_TIMER_DIALOG,false)
+    call DestroyTimerDialog(MODES_TIMER_DIALOG)
+    call MultiboardDisplay(MODE_BOARD,false)
+    call ExecuteFunc("StartClassSelection")
 endfunction
 
 function Startup_Timer takes nothing returns nothing
@@ -241,11 +139,7 @@ function Startup_Timer takes nothing returns nothing
 
     call ReleaseTimer(GetExpiredTimer())
     call LockMammoth()
-    call TimerStart(MODES_TIMER, 40, false, function GenerateMap)
-
-    set MODES_TIMER_DIALOG = CreateTimerDialog(MODES_TIMER)
-    call TimerDialogSetTitle(MODES_TIMER_DIALOG,"Game Starting")
-    call TimerDialogDisplay(MODES_TIMER_DIALOG,true)
+    call prepareSpells()
 
     // debug modes
     static if DEBUG_MODE then
@@ -278,10 +172,6 @@ function Startup_Timer takes nothing returns nothing
         call GameModes_Action("-equal random",Player(0))
     endif
     
-    if checkHCLletter("g") then //fs
-        call GameModes_Action("-fs",Player(0))
-    endif
-    
     if checkHCLletter("h") then //-hm
         call GameModes_Action("-hm",Player(0))
     endif
@@ -298,18 +188,13 @@ function Startup_Timer takes nothing returns nothing
         call GameModes_Action("-tko",Player(0))
     endif
     
-    if checkHCLletter(",") then //spawn boundaries show
-        set t = NewTimer()
-        set spawnBound = true
-        call TimerStart(t, 0, false, function SpawnBoundariesEffect)
-        set t = null
-    endif
-    
     if checkHCLletter("=") then //locks hcl
         set mode_enter = false
+        set MODES_TIME_LIMIT = 0
         call DisplayTText(GENERAL_COLOR+"Mode input is locked.", 45)
     else
         call DisplayTText(COLOR_CODE[GetPlayerId(modePlayer)]+GetPlayerName(modePlayer)+"|r"+GENERAL_COLOR+" can choose game modes.|r", 40)
+        call DisplayTimedTextToPlayer(modePlayer,0,0,10,GENERAL_COLOR+"You have 15 seconds to enter modes|r")
     endif
     
     /*
@@ -375,12 +260,15 @@ function Startup_Timer takes nothing returns nothing
         endif
     endif
 
-    call TimerStart(INSTANCE_TIMER, 36, false, function FirstSpawnItemsAnimals)
+    call TimerStart(MODES_TIMER, MODES_TIME_LIMIT, false, function ModesTimerFinished)
+    set MODES_TIMER_DIALOG = CreateTimerDialog(MODES_TIMER)
+    call TimerDialogSetTitle(MODES_TIMER_DIALOG,"Select Modes")
+    call TimerDialogDisplay(MODES_TIMER_DIALOG,true)
     call MultiboardDisplay(MODE_BOARD,true)
     call MultiboardMinimize(MODE_BOARD,true)
 endfunction
 
-function MapSetupActions takes nothing returns nothing
+private function onInit takes nothing returns nothing
     local integer i = 0
     local timer t = NewTimer()
     
@@ -402,7 +290,6 @@ function MapSetupActions takes nothing returns nothing
     set udg_jumpCache = bj_lastCreatedGameCache
     set udg_GameHash = InitHashtable()
     
-    call prepareSpells()
     call GetHost()
     call UpdateBoardsLoopInit()
     call LocustDisplayUnits()
@@ -431,32 +318,14 @@ function MapSetupActions takes nothing returns nothing
         set i = i + 1
     endloop
     
+    call GameMode.registerAll(modePlayer)
     call TriggerRegisterPlayerChatEvent( gg_trg_GameModes, modePlayer, "-", false )
     call TriggerRegisterPlayerChatEvent( gg_trg_no_trees, modePlayer, "-no trees", true )
     call TriggerRegisterPlayerChatEvent( gg_trg_no_herbs, modePlayer, "-no herbs", true )
     debug call DisplayTText("DEBUG MODE ACTIVE.", 999)
     call DisplayTText(COLOR_CODE[GetPlayerId(udg_Host)]+GetPlayerName(udg_Host)+"|r"+GENERAL_COLOR+" has been detected as the host.|r", 40)
-    call DisplayTText(GENERAL_COLOR+"Choose a troll class while waiting for the modes to be selected.|r", 40)
-    call DisplayTText(GENERAL_COLOR+"You will be appointed a random troll if you do not pick.|r", 40)
-    call DisplayTimedTextToPlayer(modePlayer,0,0,10,GENERAL_COLOR+"You have 10 seconds to type "+HIGHLIGHT_COLOR+"-6v6|r"+GENERAL_COLOR+" before it is automatically disabled.|r")
-    call DisplayTText(GENERAL_COLOR+"Type "+HIGHLIGHT_COLOR+"-repick|r"+GENERAL_COLOR+" to repick a troll.|r", 40)
 
     set t = null
 endfunction
 
-globals
-    boolean mode_enter = true
-    timer INSTANCE_TIMER = CreateTimer()
-    timer MODES_TIMER = CreateTimer()
-    timer GAME_TIMER = CreateTimer()
-    timerdialog MODES_TIMER_DIALOG
-    timerdialog NOOB_TIME_DIALOG
-    integer array pnamePresent
-    boolean array isobserver
-    boolean obs_present = false
-endglobals
-
-function InitTrig_MapSetup takes nothing returns nothing
-    set gg_trg_MapSetup = CreateTrigger(  )
-    call TriggerAddAction( gg_trg_MapSetup, function MapSetupActions )
-endfunction
+endlibrary

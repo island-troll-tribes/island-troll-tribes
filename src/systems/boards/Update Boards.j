@@ -53,9 +53,10 @@ endfunction
 function Trig_update_boards_Actions takes nothing returns nothing
 local integer BOARD = 1
 local integer PID = 0
+local integer numTribes = GameConfig.getInstance().getNumTribes()
 call measureTime()
 loop
-    exitwhen BOARD > 3
+    exitwhen BOARD > numTribes
     call MultiboardSetTitleText(BOARD_TEAM[BOARD], "Team Stats - "+gameTimeStr)
     loop
         exitwhen PID > 11

@@ -12,7 +12,6 @@ globals
 multiboard array BOARD_TEAM
 integer array BOARD_INT
 integer array PLAYER_INT_BOARD
-integer array TEAM_PLAYER
 multiboard OBSERVER_BOARD
 dialog array OBSERVER_DIALOG
 button array O_DBUTTON
@@ -55,9 +54,10 @@ endfunction
 function CreateTrollStatusBoard takes nothing returns nothing
 local integer INTEGER = 1
 local integer PLAYER_INT = 0
+local integer numTribes = GameConfig.getInstance().getNumTribes()
 
     loop
-        exitwhen INTEGER > 3
+        exitwhen INTEGER > numTribes
         // LOOP PER BOARD:
         set BOARD_INT[INTEGER] = 0
         

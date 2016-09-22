@@ -6,17 +6,6 @@
 //TESH.alwaysfold=0
 library GAMEMODULES requires PublicLibrary
 
-function m2v2s_Activiate takes nothing returns nothing
-local integer i = 0
-local integer ib = 0
-    call DisableTrigger( gg_trg_reviving_2 )
-    call DisableTrigger( gg_trg_spirit_ward_selection_2 )
-    call DisableTrigger( gg_trg_spirit_ward_selection_3 )
-    call DisableTrigger( gg_trg_spirit_ward_selection )
-    call EnableTrigger( gg_trg_spirit_ward_selection_6v6 )
-    call EnableTrigger( gg_trg_spirit_ward_selection_3_6v6 )
-    call DisplayText("2v2s mode enabled.")
-endfunction
 
 function IncreaseMaxHeat takes nothing returns nothing
     if GetPlayerState(GetEnumPlayer(), PLAYER_STATE_RESOURCE_GOLD) > 0 then
@@ -139,13 +128,8 @@ elseif s=="-no horn" and modeAllow[17]then
     set display = "Boss prizes like the mammoth horn have been disabled."
     set modeAllow[17] = false
 
-    
-elseif s=="-fs" and modeAllow[18] and TimerGetRemaining(INSTANCE_TIMER) > 5 then // MISCELLANEOUS
-    set display = "Fast Start|r has been activated."
-    call ExecuteFunc("RecallFirst")
-    //call TimerStart(INSTANCE_TIMER, 0, false, function FirstSpawnItemsAnimals)
-    set modeAllow[18] = false
-elseif s=="-no trade" and modeAllow[21] then
+
+elseif s=="-no trade" and modeAllow[21] then // MISCELLANEOUS
     set AllowTrade = false
     set display = "Trade ships and merchants have been disabled."
     set modeAllow[21] = false
@@ -178,51 +162,10 @@ elseif s=="-no exp" and modeAllow[26] then
     set udg_EXPERIENCE_MODE = false
     set display = "Experience mode has been disabled. Trolls can no longer level up."
     set modeAllow[26] = false
-elseif s=="-6v6" and modeAllow[27] then
-    call TriggerExecute(gg_trg_test_6v6)
-    set modeAllow[27] = false
 elseif s=="-no boats" and modeAllow[28] then
     set udg_DisabledBoats = true
     set display = "|c00800040Transport ships have been disabled."
     set modeAllow[28] = false
-elseif SubString(s,0,5)=="-all " and modeAllow[29] then    
-    set modeAllow[29] = false
-    call ConditionalTriggerExecute(gg_trg_init_classic)
-    if s =="-all gatherer" then
-        set udg_AllTroll=1
-    endif
-    if s =="-all hunter"then
-        set udg_AllTroll=4
-    endif
-    if s == "-all scout" then
-        set udg_AllTroll=5
-    endif
-    if s == "-all mage" then
-        set udg_AllTroll=6
-    endif
-    if s == "-all thief" then
-        set udg_AllTroll=7
-    endif
-    if s == "-all beast master" or s == "-all beastmaster" then
-        set udg_AllTroll=8
-    endif
-    if s == "-all priest" then
-        set udg_AllTroll=9
-    endif
-    if s == "-all random" then
-        set udg_AllTroll=0
-    endif
-    set i = 0
-    loop
-        exitwhen i > 11
-        set udg_started[i]=false
-        set i = i+1
-    endloop
-    if udg_AllTroll != 0 then
-        set display = "All class mode has been enabled. Each player will recieve a troll from the same class."
-    else
-        set display = "All Players will be given a random troll."
-    endif
 elseif SubString(s,0,4)=="-nt "then
     set udg_NOOB_TIME_LEFT = S2R(SubString(s,4,9))
     set color = HIGHLIGHT_COLOR
@@ -234,13 +177,6 @@ elseif SubString(s,0,4)=="-nt "then
     set display = "Team Kills are turned off!"
     set modeAllow[30] = false
 
-/*
-elseif s=="-2s" and modeAllow[30] then
-    set m2v2s = true
-    call m2v2s_Activiate()
-    set modeAllow[30] = false            
-// THIS ARRAY SPOT HAS BEEN JACKED BY QUAZZ!! it is being used by -tko
-*/
 elseif s=="-op" and modeAllow[31] then
     set BETA = true
     set modeAllow[31] = false

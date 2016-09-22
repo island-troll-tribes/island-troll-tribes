@@ -21,7 +21,7 @@
 library MapSetup initializer onInit requires TimerUtils, PublicLibrary, ClassTracking, GameMode
 
 globals
-    constant integer MODES_TIME_LIMIT = 15
+    integer MODES_TIME_LIMIT = 15
     boolean mode_enter = true
     timer INSTANCE_TIMER = CreateTimer()
     timer MODES_TIMER = CreateTimer()
@@ -146,6 +146,7 @@ function Startup_Timer takes nothing returns nothing
 
     call ReleaseTimer(GetExpiredTimer())
     call LockMammoth()
+    call prepareSpells()
 
     // debug modes
     static if DEBUG_MODE then
@@ -196,6 +197,7 @@ function Startup_Timer takes nothing returns nothing
     
     if checkHCLletter("=") then //locks hcl
         set mode_enter = false
+        set MODES_TIME_LIMIT = 0
         call DisplayTText(GENERAL_COLOR+"Mode input is locked.", 45)
     else
         call DisplayTText(COLOR_CODE[GetPlayerId(modePlayer)]+GetPlayerName(modePlayer)+"|r"+GENERAL_COLOR+" can choose game modes.|r", 40)
@@ -296,7 +298,6 @@ private function onInit takes nothing returns nothing
     set udg_jumpCache = bj_lastCreatedGameCache
     set udg_GameHash = InitHashtable()
     
-    call prepareSpells()
     call GetHost()
     call UpdateBoardsLoopInit()
     call LocustDisplayUnits()

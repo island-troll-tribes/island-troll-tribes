@@ -1,7 +1,4 @@
 library InitializeUnits initializer onInit
-	globals
-		unit array troll_totem
-	endglobals
 	private function onInit takes nothing returns nothing
 		set MAMMOTH = CreateUnit( Player( PLAYER_NEUTRAL_AGGRESSIVE ), 'n005', 1124.8, 431.4, 180.000 )
 		set MASTER_CRAFTER = CreateUnit( Player( PLAYER_NEUTRAL_PASSIVE ), 'n00N', 1216.0, -1216.0, 270.000 )
@@ -14,8 +11,5 @@ library InitializeUnits initializer onInit
 		set gg_unit_o004_0179 = CreateUnit( Player( PLAYER_NEUTRAL_PASSIVE ), 'o004', 2048.0, -10816.0, 270.000 )
 		set gg_unit_h000_0181 = CreateUnit( Player( PLAYER_NEUTRAL_PASSIVE ), 'h000', 2048.0, -11200.0, 270.000 )
 		set gg_unit_O00B_0180 = CreateUnit( Player( PLAYER_NEUTRAL_PASSIVE ), 'O00B', 2309.0, -11213.2, 172.169 )
-		set troll_totem[0] = CreateUnit( Player( PLAYER_NEUTRAL_PASSIVE ), 'o00H', -4160.0, 2496.0, 0 )
-		set troll_totem[1] = CreateUnit( Player( PLAYER_NEUTRAL_PASSIVE ), 'o00H', 4800.0, 2112.0, 280 )
-		set troll_totem[2] = CreateUnit( Player( PLAYER_NEUTRAL_PASSIVE ), 'o00H', 2048.0, -4544.0, 310 )
 	endfunction
 endlibrary

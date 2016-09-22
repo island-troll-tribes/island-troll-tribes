@@ -57,11 +57,11 @@ library MMD initializer init
         constant integer SUGGEST_TRACK = 102
         constant integer SUGGEST_LEADERBOARD = 103
 
-        public constant integer FLAG_DRAWER = 101
-        public constant integer FLAG_LOSER = 102
-        public constant integer FLAG_WINNER = 103
-        public constant integer FLAG_LEAVER = 104
-        public constant integer FLAG_PRACTICING = 105
+        constant integer FLAG_DRAWER = 101
+        constant integer FLAG_LOSER = 102
+        constant integer FLAG_WINNER = 103
+        constant integer FLAG_LEAVER = 104
+        constant integer FLAG_PRACTICING = 105
         
     endglobals
 

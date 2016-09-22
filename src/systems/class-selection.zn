@@ -54,7 +54,7 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
 		return spawns[getTribe(playerId)];
 	}
 
-	public function onGameStart() {
+	public function onSelectionTimeRunOut() {
 		integer i;
 		unit u;
 		rect spawn;
@@ -85,16 +85,13 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
 		}
 
 		TriggerExecute(gg_trg_boards);
-
-		u = null;
-		spawn = null;
-	}
-
-	public function onSelectionTimeRunOut() {
 		ReleaseTimer(GetExpiredTimer());
 		TimerDialogDisplay(selectionDialog, false);
 		DestroyTimerDialog(selectionDialog);
 		GenerateMap();
+
+		u = null;
+		spawn = null;
 	}
 
 	public function StartClassSelection() {
@@ -132,14 +129,6 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
 		trollTotem[10] = CreateUnit(Player(PLAYER_NEUTRAL_PASSIVE), 'o00H', 7040.0, 5376.0, 310);
 		trollTotem[11] = CreateUnit(Player(PLAYER_NEUTRAL_PASSIVE), 'o00H', -6848.0, 2432.0, 310);
 
-	    selectionDialog = CreateTimerDialog(selectionTimer);
-	    TimerDialogSetTitle(selectionDialog, "Select Class");
-	    TimerDialogDisplay(selectionDialog, true);
-	    TimerStart(selectionTimer, selectionTimeAllowed, false, function onSelectionTimeRunOut);
-
-	    TriggerRegisterAnyUnitEventBJ(trollSold, EVENT_PLAYER_UNIT_SELL);
-	    TriggerAddCondition(trollSold, Condition(function onTrollSold));
-
 		for (0 <= i < 12) {
 			for (0 <= j < 12) {
 				if (i != j) {
@@ -164,27 +153,38 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
 			}
 		}
 
-		TimerStart(NewTimer(), 0.1, false, function() {
-			integer i;
-			real x, y;
-			unit totem;
-			ReleaseTimer(GetExpiredTimer());
-			for (0 <= i < 12) {
-				totem = trollTotem[getTribe(i)];
-				x = GetUnitX(totem);
-				y = GetUnitY(totem);
-				if (GetLocalPlayer() == Player(i)) {
-					SelectUnitSingle(totem);
+		if (GameConfig.getInstance().isAllTrollEnabled()) {
+			selectionTimeAllowed = 0;
+		}
+		else {
+		    TriggerRegisterAnyUnitEventBJ(trollSold, EVENT_PLAYER_UNIT_SELL);
+		    TriggerAddCondition(trollSold, Condition(function onTrollSold));
+
+			TimerStart(NewTimer(), 0.1, false, function() {
+				integer i;
+				real x, y;
+				unit totem;
+				ReleaseTimer(GetExpiredTimer());
+				for (0 <= i < 12) {
+					totem = trollTotem[getTribe(i)];
+					x = GetUnitX(totem);
+					y = GetUnitY(totem);
+					if (GetLocalPlayer() == Player(i)) {
+						SelectUnitSingle(totem);
+					}
 				}
-			}
-			totem = null;
-		});
+				totem = null;
+			});
 
-		Map.onGameStart(function onGameStart);
+			DisplayTText(GENERAL_COLOR+"Choose a troll class|r", 40);
+			DisplayTText(GENERAL_COLOR+"You will be appointed a random troll if you do not pick.|r", 40);
+			DisplayTText(GENERAL_COLOR+"Type "+HIGHLIGHT_COLOR+"-repick|r"+GENERAL_COLOR+" to repick a troll.|r", 40);
+		}
 
-    	DisplayTText(GENERAL_COLOR+"Choose a troll class|r", 40);
-    	DisplayTText(GENERAL_COLOR+"You will be appointed a random troll if you do not pick.|r", 40);
-    	DisplayTText(GENERAL_COLOR+"Type "+HIGHLIGHT_COLOR+"-repick|r"+GENERAL_COLOR+" to repick a troll.|r", 40);
+	    selectionDialog = CreateTimerDialog(selectionTimer);
+	    TimerDialogSetTitle(selectionDialog, "Select Class");
+	    TimerDialogDisplay(selectionDialog, true);
+	    TimerStart(selectionTimer, selectionTimeAllowed, false, function onSelectionTimeRunOut);
 
 		totem = null;
 	}

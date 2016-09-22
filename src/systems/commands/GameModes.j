@@ -166,44 +166,6 @@ elseif s=="-no boats" and modeAllow[28] then
     set udg_DisabledBoats = true
     set display = "|c00800040Transport ships have been disabled."
     set modeAllow[28] = false
-elseif SubString(s,0,5)=="-all " and modeAllow[29] then    
-    set modeAllow[29] = false
-    call ConditionalTriggerExecute(gg_trg_init_classic)
-    if s =="-all gatherer" then
-        set udg_AllTroll=1
-    endif
-    if s =="-all hunter"then
-        set udg_AllTroll=4
-    endif
-    if s == "-all scout" then
-        set udg_AllTroll=5
-    endif
-    if s == "-all mage" then
-        set udg_AllTroll=6
-    endif
-    if s == "-all thief" then
-        set udg_AllTroll=7
-    endif
-    if s == "-all beast master" or s == "-all beastmaster" then
-        set udg_AllTroll=8
-    endif
-    if s == "-all priest" then
-        set udg_AllTroll=9
-    endif
-    if s == "-all random" then
-        set udg_AllTroll=0
-    endif
-    set i = 0
-    loop
-        exitwhen i > 11
-        set udg_started[i]=false
-        set i = i+1
-    endloop
-    if udg_AllTroll != 0 then
-        set display = "All class mode has been enabled. Each player will recieve a troll from the same class."
-    else
-        set display = "All Players will be given a random troll."
-    endif
 elseif SubString(s,0,4)=="-nt "then
     set udg_NOOB_TIME_LEFT = S2R(SubString(s,4,9))
     set color = HIGHLIGHT_COLOR

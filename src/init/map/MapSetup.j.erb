@@ -23,7 +23,6 @@ library MapSetup initializer onInit requires TimerUtils, PublicLibrary, ClassTra
 globals
     integer MODES_TIME_LIMIT = 15
     boolean mode_enter = true
-    timer INSTANCE_TIMER = CreateTimer()
     timer MODES_TIMER = CreateTimer()
     timer GAME_TIMER = CreateTimer()
     timerdialog MODES_TIMER_DIALOG
@@ -97,8 +96,11 @@ function LocustDisplayUnits takes nothing returns nothing
     call UnitAddAbility( gg_unit_O00B_0180 , 'Aloc')
 endfunction
 
+function FirstSpawnItemsAnimals takes nothing returns nothing
+    call TriggerExecute(gg_trg_spawn_call_first)
+endfunction
+
 function GenerateMap takes nothing returns nothing
-    local timer t = NewTimer()
     local timer t2
     local integer INTEGER = 0
     local group g
@@ -111,7 +113,6 @@ function GenerateMap takes nothing returns nothing
     else
         call TriggerExecute(gg_trg_ShowPlayers)
     endif
-    call DisplayTText(GENERAL_COLOR+"Generating map...|r", 5)
     
     loop
         exitwhen INTEGER > 11
@@ -119,16 +120,8 @@ function GenerateMap takes nothing returns nothing
         set INTEGER = INTEGER + 1
     endloop
 
-    call TimerStart(t , 3, false, function Start_Game)
-    set t = null
-endfunction
-
-function FirstSpawnItemsAnimals takes nothing returns nothing
-    call TriggerExecute(gg_trg_spawn_call_first)
-endfunction
-
-function RecallFirst takes nothing returns nothing
-    call TimerStart(INSTANCE_TIMER, 0, false, function FirstSpawnItemsAnimals)
+    call ExecuteFunc("Start_Game")
+    call FirstSpawnItemsAnimals()
 endfunction
 
 function ModesTimerFinished takes nothing returns nothing
@@ -201,6 +194,7 @@ function Startup_Timer takes nothing returns nothing
         call DisplayTText(GENERAL_COLOR+"Mode input is locked.", 45)
     else
         call DisplayTText(COLOR_CODE[GetPlayerId(modePlayer)]+GetPlayerName(modePlayer)+"|r"+GENERAL_COLOR+" can choose game modes.|r", 40)
+        call DisplayTimedTextToPlayer(modePlayer,0,0,10,GENERAL_COLOR+"You have 15 seconds to enter modes|r")
     endif
     
     /*
@@ -270,8 +264,6 @@ function Startup_Timer takes nothing returns nothing
     set MODES_TIMER_DIALOG = CreateTimerDialog(MODES_TIMER)
     call TimerDialogSetTitle(MODES_TIMER_DIALOG,"Select Modes")
     call TimerDialogDisplay(MODES_TIMER_DIALOG,true)
-
-    call TimerStart(INSTANCE_TIMER, 36, false, function FirstSpawnItemsAnimals)
     call MultiboardDisplay(MODE_BOARD,true)
     call MultiboardMinimize(MODE_BOARD,true)
 endfunction
@@ -332,7 +324,6 @@ private function onInit takes nothing returns nothing
     call TriggerRegisterPlayerChatEvent( gg_trg_no_herbs, modePlayer, "-no herbs", true )
     debug call DisplayTText("DEBUG MODE ACTIVE.", 999)
     call DisplayTText(COLOR_CODE[GetPlayerId(udg_Host)]+GetPlayerName(udg_Host)+"|r"+GENERAL_COLOR+" has been detected as the host.|r", 40)
-    call DisplayTimedTextToPlayer(modePlayer,0,0,10,GENERAL_COLOR+"You have 15 seconds to enter modes|r")
 
     set t = null
 endfunction

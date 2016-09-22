@@ -1,4 +1,4 @@
-library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary {
+library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtils {
 	public struct GameMode {
 		static integer numGameModes = 0;
 		public static Table modes;
@@ -104,6 +104,20 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary {
 			GameMode.find("6v6").deregister();
 			GameMode.find("ffa").deregister();
 			GameMode.message(ENERGY_COLOR + "Free for all|r enabled");
+		});
+
+		GameMode.create("all class", "all", "each player is given the same class or random (ex: \"-all random\"", function(ArgsList a) {
+			integer uid = 0;
+			if (a[0] != "random") {
+				uid = S2ID("UNIT_" + StringReplace(StringCase(a.fullMessage, true), " ", "_"));
+				if (UNIT_TROLL_ALL[uid] != TROLL_BASE_CLASS) {
+					GameMode.error("Invalid class selection");
+					return;
+				}
+			}
+			GameConfig.getInstance().setAllTrollEnabled(uid);
+			GameMode.find("all").deregister();
+			GameMode.message(ENERGY_COLOR + "All " + StringCase(a.fullMessage, false) + "|r enabled");
 		});
 
 		// GameMode.create("forced duel", "fd", "set a forced duel after an amount of seconds, defaults to 1 h, eg: \"-fd 3600\"", function(ArgsList a) {

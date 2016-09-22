@@ -1,4 +1,4 @@
-library PublicLibrary initializer initPublicLibrary requires TimerUtils, IDUtils, Constants, FilterTypeIsThing
+library PublicLibrary initializer initPublicLibrary requires TimerUtils, IDUtils, Constants, FilterTypeIsThing, String
 
 globals
 integer array TEAM_PLAYER
@@ -150,27 +150,27 @@ globals
 endglobals
 
 function getRandomTroll takes player play, real x, real y returns unit
-    local integer t = GetRandomInt( 1, 7 )
-    if udg_AllTroll != 0 then
-        // takes care of -all modes
-        set t = udg_AllTroll
+    local integer t
+    local integer uid = GameConfig.getInstance().getAllTrollUnitId()
+    if not GameConfig.getInstance().isAllTrollEnabled() or uid == 0 then
+        set t = GetRandomInt( 1, 7 )
+        if ( t == 1 ) then
+            set uid = UNIT_GATHERER
+        elseif ( t == 2 ) then
+            set uid = UNIT_HUNTER
+        elseif ( t == 3 ) then
+            set uid = UNIT_SCOUT
+        elseif ( t == 4 ) then
+            set uid = UNIT_MAGE
+        elseif ( t == 5 ) then
+            set uid = UNIT_THIEF
+        elseif ( t == 6 ) then
+            set uid = UNIT_BEAST_MASTER
+        elseif ( t == 7 ) then
+            set uid = UNIT_PRIEST
+        endif
     endif
-    if ( t == 1 ) then
-        return CreateUnit( play, UNIT_GATHERER, x, y, 0.0 )
-    elseif ( t == 2 ) then
-        return CreateUnit( play, UNIT_HUNTER, x, y, 0.0 )
-    elseif ( t == 3 ) then
-        return CreateUnit( play, UNIT_SCOUT, x, y, 0.0 )
-    elseif ( t == 4 ) then
-        return CreateUnit( play, UNIT_MAGE, x, y, 0.0 )
-    elseif ( t == 5 ) then
-        return CreateUnit( play, UNIT_THIEF, x, y, 0.0 )
-    elseif ( t == 6 ) then
-        return CreateUnit( play, UNIT_BEAST_MASTER, x, y, 0.0 )
-    elseif ( t == 7 ) then
-        return CreateUnit( play, UNIT_PRIEST, x, y, 0.0 )
-    endif
-    return null
+    return CreateUnit( play, uid, x, y, 0.0 )
 endfunction
 
 function prepareSpells takes nothing returns nothing

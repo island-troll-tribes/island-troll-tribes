@@ -1,5 +1,4 @@
 library GameConfig {
-
 	public struct GameConfig {
 		public integer numTribes = 3;
 		public integer playersPerTribe = 4;
@@ -8,6 +7,9 @@ library GameConfig {
 		public real hostileSpawnRate = 1.0;
 		public boolean allTrollEnabled = false;
 		public integer allTrollUnitId = 0;
+    public boolean forcedDuelEnabled = false;
+    public integer forcedDuelAfter = 0;
+    public integer gracePeriodDuration = 480;
 	
 		static thistype instance;
 
@@ -42,6 +44,36 @@ library GameConfig {
 		public method getNumPlayersPerTribe() -> integer {
 			return this.playersPerTribe;
 		}
+
+    public method setForcedDuel(integer numSeconds) -> boolean {
+      if (numSeconds < this.gracePeriodDuration) {
+        return false;
+      }
+      this.forcedDuelEnabled = true;
+      this.forcedDuelAfter = numSeconds;
+      return true;
+    }
+
+    public method isForcedDuelEnabled() -> boolean {
+      return this.forcedDuelEnabled;
+    }
+
+    public method getForcedDuelAfter() -> integer {
+      return this.forcedDuelAfter;
+    }
+
+    public method setGracePeriodDuration(integer numSeconds) -> boolean {
+      if (this.forcedDuelEnabled && numSeconds >= this.forcedDuelAfter) {
+        return false;
+      }
+      this.gracePeriodDuration = numSeconds;
+      udg_NOOB_TIME_LEFT = I2R(numSeconds); // TODO remove
+      return true;
+    }
+
+    public method getGracePeriodDuration() -> integer {
+      return this.gracePeriodDuration;
+    }
 
 		static method onInit() {
 			instance = thistype.create();

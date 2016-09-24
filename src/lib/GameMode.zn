@@ -1,196 +1,196 @@
 library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtils {
-	public struct GameMode {
-		static integer numGameModes = 0;
-		public static Table modes;
+  public struct GameMode {
+    static integer numGameModes = 0;
+    public static Table modes;
 
-		string description = "";
-		string name = "";
-		string abbrev = "";
-		player modesPlayer = null;
-		ArgFunc action;
+    string description = "";
+    string name = "";
+    string abbrev = "";
+    player modesPlayer = null;
+    ArgFunc action;
 
-		public static method create(string name, string abbrev, string description, ArgFunc action) -> thistype {
-			thistype self = thistype.allocate();
-			self.name = name;
-			self.description = description;
-			self.abbrev = abbrev;
-			self.action = action;
-			numGameModes += 1;
-			return self;
-		}
+    public static method create(string name, string abbrev, string description, ArgFunc action) -> thistype {
+      thistype self = thistype.allocate();
+      self.name = name;
+      self.description = description;
+      self.abbrev = abbrev;
+      self.action = action;
+      numGameModes += 1;
+      return self;
+    }
 
-		static method registerAll(player modesPlayer) {
-			integer i;
+    static method registerAll(player modesPlayer) {
+      integer i;
 
-			for (1 <= i <= numGameModes) {
-				thistype(i).register(modesPlayer);
-			}
-		}
+      for (1 <= i <= numGameModes) {
+        thistype(i).register(modesPlayer);
+      }
+    }
 
-		static method deregisterAll() {
-			integer i;
+    static method deregisterAll() {
+      integer i;
 
-			for (1 <= i <= numGameModes) {
-				thistype(i).deregister();
-			}
-		}
+      for (1 <= i <= numGameModes) {
+        thistype(i).deregister();
+      }
+    }
 
-		public method registerFor(string command) {
-			ChatCommands.registerArgFunc(this.modesPlayer, command, this.action);
-			thistype.modes.integer_s[abbrev] = this;
-		}
+    public method registerFor(string command) {
+      ChatCommands.registerArgFunc(this.modesPlayer, command, this.action);
+      thistype.modes.integer_s[abbrev] = this;
+    }
 
-		public method deregisterFor(string command) {
-			ChatCommands.deregisterArgFunc(this.modesPlayer, command);
-			thistype.modes.integer_s.remove(abbrev);
-		}
+    public method deregisterFor(string command) {
+      ChatCommands.deregisterArgFunc(this.modesPlayer, command);
+      thistype.modes.integer_s.remove(abbrev);
+    }
 
-		public method register(player modesPlayer) {
-			this.modesPlayer = modesPlayer;
-			this.registerFor(name);
-			this.registerFor(abbrev);
-		}
+    public method register(player modesPlayer) {
+      this.modesPlayer = modesPlayer;
+      this.registerFor(name);
+      this.registerFor(abbrev);
+    }
 
-		public method deregister() {
-			this.deregisterFor(name);
-			this.deregisterFor(abbrev);
-		}
+    public method deregister() {
+      this.deregisterFor(name);
+      this.deregisterFor(abbrev);
+    }
 
-		public static method message(string msg) {
-			DisplayText(msg);
-		}
+    public static method message(string msg) {
+      DisplayText(msg);
+    }
 
-		public static method error(string msg) {
-			DisplayText(RED_COLOR + msg + "|r");
-		}
+    public static method error(string msg) {
+      DisplayText(RED_COLOR + msg + "|r");
+    }
 
-		public static method find(string abbrev) -> thistype {
-			return thistype.modes.integer_s[abbrev];
-		}
-	}
+    public static method find(string abbrev) -> thistype {
+      return thistype.modes.integer_s[abbrev];
+    }
+  }
 
-	function onInit() {
-		GameMode.modes = Table.create();
+  function onInit() {
+    GameMode.modes = Table.create();
 
-		GameMode.create("players per tribe", "ppt", "set the number of players in each tribe, eg: \"-ppt 6\"", function(ArgsList a) {
-			integer ppt;
-			if (a.length() < 1) {
-				GameMode.error("Must supply # of tribes to \"ppt\"");
-				return;
-			}
-			ppt = S2I(a[0]);
-			if (ppt <= 0 || 6 < ppt || ModuloInteger(12, ppt) != 0) {
-				GameMode.error("Must have 1-6 players per tribe and all slots must belong to a team");
-				return;
-			}
-			GameConfig.getInstance().setNumPlayersPerTribe(ppt);
-			GameMode.find("ppt").deregister();
-			GameMode.find("6v6").deregister();
-			GameMode.find("ffa").deregister();
-			GameMode.message(ENERGY_COLOR + "Players per tribe|r set to " + I2S(ppt));
-		});
+    GameMode.create("players per tribe", "ppt", "set the number of players in each tribe, eg: \"-ppt 6\"", function(ArgsList a) {
+      integer ppt;
+      if (a.length() < 1) {
+        GameMode.error("Must supply # of tribes to \"ppt\"");
+        return;
+      }
+      ppt = S2I(a[0]);
+      if (ppt <= 0 || 6 < ppt || ModuloInteger(12, ppt) != 0) {
+        GameMode.error("Must have 1-6 players per tribe and all slots must belong to a team");
+        return;
+      }
+      GameConfig.getInstance().setNumPlayersPerTribe(ppt);
+      GameMode.find("ppt").deregister();
+      GameMode.find("6v6").deregister();
+      GameMode.find("ffa").deregister();
+      GameMode.message(ENERGY_COLOR + "Players per tribe|r set to " + I2S(ppt));
+    });
 
-		GameMode.create("6v6", "6s", "set the number of players in each tribe to 6", function(ArgsList a) {
-			GameConfig.getInstance().setNumPlayersPerTribe(6);
-			GameMode.find("ppt").deregister();
-			GameMode.find("6v6").deregister();
-			GameMode.find("ffa").deregister();
-			GameMode.message(ENERGY_COLOR + "6v6|r enabled");
-		});
+    GameMode.create("6v6", "6s", "set the number of players in each tribe to 6", function(ArgsList a) {
+      GameConfig.getInstance().setNumPlayersPerTribe(6);
+      GameMode.find("ppt").deregister();
+      GameMode.find("6v6").deregister();
+      GameMode.find("ffa").deregister();
+      GameMode.message(ENERGY_COLOR + "6v6|r enabled");
+    });
 
-		GameMode.create("free for all", "ffa", "each player is on their own", function(ArgsList a) {
-			GameConfig.getInstance().setNumPlayersPerTribe(1);
-			GameMode.find("ppt").deregister();
-			GameMode.find("6v6").deregister();
-			GameMode.find("ffa").deregister();
-			GameMode.message(ENERGY_COLOR + "Free for all|r enabled");
-		});
+    GameMode.create("free for all", "ffa", "each player is on their own", function(ArgsList a) {
+      GameConfig.getInstance().setNumPlayersPerTribe(1);
+      GameMode.find("ppt").deregister();
+      GameMode.find("6v6").deregister();
+      GameMode.find("ffa").deregister();
+      GameMode.message(ENERGY_COLOR + "Free for all|r enabled");
+    });
 
-		GameMode.create("all class", "all", "each player is given the same class or random (ex: \"-all random\"", function(ArgsList a) {
-			integer uid = 0;
-			if (a[0] != "random") {
-				uid = S2ID("UNIT_" + StringReplace(StringCase(a.fullMessage, true), " ", "_"));
-				if (UNIT_TROLL_ALL[uid] != TROLL_BASE_CLASS) {
-					GameMode.error("Invalid class selection");
-					return;
-				}
-			}
-			GameConfig.getInstance().setAllTrollEnabled(uid);
-			GameMode.find("all").deregister();
-			GameMode.message(ENERGY_COLOR + "All " + StringCase(a.fullMessage, false) + "|r enabled");
-		});
+    GameMode.create("all class", "all", "each player is given the same class or random (ex: \"-all random\"", function(ArgsList a) {
+      integer uid = 0;
+      if (a[0] != "random") {
+        uid = S2ID("UNIT_" + StringReplace(StringCase(a.fullMessage, true), " ", "_"));
+        if (UNIT_TROLL_ALL[uid] != TROLL_BASE_CLASS) {
+          GameMode.error("Invalid class selection");
+          return;
+        }
+      }
+      GameConfig.getInstance().setAllTrollEnabled(uid);
+      GameMode.find("all").deregister();
+      GameMode.message(ENERGY_COLOR + "All " + StringCase(a.fullMessage, false) + "|r enabled");
+    });
 
-		GameMode.create("forced duel", "fd", "set a forced duel after an amount of seconds, defaults to 1 h, eg: \"-fd 3600\"", function(ArgsList a) {
-			integer amount = 3600;
-			if (a.length() >= 1) {
-				amount = S2I(a[0]);
-			}
-			GameConfig.getInstance().forcedDuelAfter = amount;
-			GameMode.find("fd").deregister();
-			GameMode.message(ENERGY_COLOR + "Forced duel|r after " + amount + " s");
-		});
+    GameMode.create("forced duel", "fd", "set a forced duel after an amount of seconds, defaults to 1 h, eg: \"-fd 3600\"", function(ArgsList a) {
+      integer amount = 3600;
+      if (a.length() >= 1) {
+        amount = S2I(a[0]);
+      }
+      GameConfig.getInstance().forcedDuelAfter = amount;
+      GameMode.find("fd").deregister();
+      GameMode.message(ENERGY_COLOR + "Forced duel|r after " + amount + " s");
+    });
 
-		GameMode.create("forced duel", "fd", "set a forced duel after an amount of seconds, defaults to 1 h, eg: \"-fd 3600\"", function(ArgsList a) {
-			integer amount = 3600;
-			if (a.length() >= 1) {
-				amount = S2I(a[0]);
-			}
-			if (!GameConfig.getInstance().setForcedDuel(amount)) {
+    GameMode.create("forced duel", "fd", "set a forced duel after an amount of seconds, defaults to 1 h, eg: \"-fd 3600\"", function(ArgsList a) {
+      integer amount = 3600;
+      if (a.length() >= 1) {
+        amount = S2I(a[0]);
+      }
+      if (!GameConfig.getInstance().setForcedDuel(amount)) {
         GameMode.error("Force duel must be after end of the grace period");
         return;
       }
-			GameMode.find("fd").deregister();
-			GameMode.message(ENERGY_COLOR + "Forced duel|r after " + amount + " s");
-		});
+      GameMode.find("fd").deregister();
+      GameMode.message(ENERGY_COLOR + "Forced duel|r after " + amount + " s");
+    });
 
-		GameMode.create("grace period duration", "gp", "change the duration of the grace period, eg: \"-gp 480\"", function(ArgsList a) {
-			integer amount = 480;
-			if (a.length() >= 1) {
-				amount = S2I(a[0]);
-			}
-			if (!GameConfig.getInstance().setForcedDuel(amount)) {
+    GameMode.create("grace period duration", "gp", "change the duration of the grace period, eg: \"-gp 480\"", function(ArgsList a) {
+      integer amount = 480;
+      if (a.length() >= 1) {
+        amount = S2I(a[0]);
+      }
+      if (!GameConfig.getInstance().setForcedDuel(amount)) {
         GameMode.error("Grace period must end before forced duel");
         return;
       }
-			GameMode.find("gp").deregister();
-			GameMode.message(ENERGY_COLOR + "Grace period duration|r " + amount + " s");
-		});
+      GameMode.find("gp").deregister();
+      GameMode.message(ENERGY_COLOR + "Grace period duration|r " + amount + " s");
+    });
 
-		// GameMode.create("hot mode", "hm", "increase the amount of heat a fire gives per cast", function(ArgsList a) {
-		// 	integer amount = 25;
-		// 	if (a.length() >= 1) {
-		// 		amount = S2I(a[0]);
-		// 	}
-		// 	GameConfig.getInstance().heatPerCast = amount;
-		// 	GameMode.find("hm").deregister();
-		// 	GameMode.message(ENERGY_COLOR + "Hot mode|r enabled, heat per cast is now " + GOLD_COLOR + I2S(amount) + "|r");
-		// });
+    // GameMode.create("hot mode", "hm", "increase the amount of heat a fire gives per cast", function(ArgsList a) {
+    //  integer amount = 25;
+    //  if (a.length() >= 1) {
+    //    amount = S2I(a[0]);
+    //  }
+    //  GameConfig.getInstance().heatPerCast = amount;
+    //  GameMode.find("hm").deregister();
+    //  GameMode.message(ENERGY_COLOR + "Hot mode|r enabled, heat per cast is now " + GOLD_COLOR + I2S(amount) + "|r");
+    // });
 
-		// GameMode.create("no boats", "nb", "disables construction of transport boats", function(ArgsList a) {
-		// 	GameConfig.getInstance().enableTransportShips = false;
-		// 	GameMode.find("nb").deregister();
-		// 	GameMode.message(ENERGY_COLOR + "Transport ships|r disabled");
-		// });
+    // GameMode.create("no boats", "nb", "disables construction of transport boats", function(ArgsList a) {
+    //  GameConfig.getInstance().enableTransportShips = false;
+    //  GameMode.find("nb").deregister();
+    //  GameMode.message(ENERGY_COLOR + "Transport ships|r disabled");
+    // });
 
-		// GameMode.create("more hostiles", "rb", "raise hostile animal spawn rate, eg: \"-rb 300\"", function(ArgsList a) {
-		// 	real amount = 0.20;
-		// 	if (a.length() >= 1) {
-		// 		amount = S2R(a[0]) / 100;
-		// 	}
-		// 	GameConfig.getInstance().hostileSpawnRate = GameConfig.getInstance().hostileSpawnRate + amount;
-		// 
-		// 	if (GameConfig.getInstance().hostileSpawnRate >= 3) {
-		// 		GameConfig.getInstance().hostileSpawnRate = 3;
-		// 		GameMode.find("rb").deregister();
-		// 	}
-		// 
-		// 	GameMode.message(ENERGY_COLOR + "");
-		// });
+    // GameMode.create("more hostiles", "rb", "raise hostile animal spawn rate, eg: \"-rb 300\"", function(ArgsList a) {
+    //  real amount = 0.20;
+    //  if (a.length() >= 1) {
+    //    amount = S2R(a[0]) / 100;
+    //  }
+    //  GameConfig.getInstance().hostileSpawnRate = GameConfig.getInstance().hostileSpawnRate + amount;
+    //
+    //  if (GameConfig.getInstance().hostileSpawnRate >= 3) {
+    //    GameConfig.getInstance().hostileSpawnRate = 3;
+    //    GameMode.find("rb").deregister();
+    //  }
+    //
+    //  GameMode.message(ENERGY_COLOR + "");
+    // });
 
-		// GameMode.create("raise heat", "rh", "increase heat capacity from 100 to 150", function(ArgsList a) {
-		// 	GameConfig.getInstance().heatMaximum = 150;
-		// 	GameMode.find("rh").deregister();
-		// 	GameMode.message(ENERGY_COLOR + "Heat Max|r has been increased. Heat capacity is 150.");
-		// });
-	}
+    // GameMode.create("raise heat", "rh", "increase heat capacity from 100 to 150", function(ArgsList a) {
+    //  GameConfig.getInstance().heatMaximum = 150;
+    //  GameMode.find("rh").deregister();
+    //  GameMode.message(ENERGY_COLOR + "Heat Max|r has been increased. Heat capacity is 150.");
+    // });
+  }
 }

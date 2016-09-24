@@ -244,20 +244,13 @@ function Startup_Timer takes nothing returns nothing
         call Hints.add( "Use |r" + ENERGY_COLOR + "-register rendo@example.com|r" + GENERAL_COLOR + " to register your email with |r" + GOLD_COLOR + "Clan " + HOSTING_CLAN + "|r" + GENERAL_COLOR + " to recieve info about arranged games and other news|r" )
     endif
 
-    if HOSTING_CLAN == "TwGB" or HOSTING_CLAN == "DevSquad" then
-        call DisplayTText( GOLD_COLOR + "Website:|r http://www.clantwgb.com", 50 )
-        loop
-            exitwhen i == 7
-            call DisplayNewLine()
-            set i = i + 1
-        endloop
-    else
-        static if PRIVATE_MAP then
-            call ClearTextMessages()
-            call ShowInterface(false, 0)
-            call EnableUserControl(false)
-            call DisplayTText(RED_COLOR+"BETA TESTING ON TwGB BOTS ONLY",5000)
-        endif
+    static if PRIVATE_MAP then
+      if HOSTING_CLAN != "TwGB" and HOSTING_CLAN != "DevSquad" then
+        call ClearTextMessages()
+        call ShowInterface(false, 0)
+        call EnableUserControl(false)
+        call DisplayTText(RED_COLOR+"Authorized beta testing only",5000)
+      endif
     endif
 
     call TimerStart(MODES_TIMER, MODES_TIME_LIMIT, false, function ModesTimerFinished)

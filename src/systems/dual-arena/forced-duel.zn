@@ -1,0 +1,74 @@
+library ForcedDuel requires GameConfig, PublicLibrary, Map {
+  timerdialog td;
+
+  function startDuel() {
+    integer i;
+    unit u;
+
+    ReleaseTimer(GetExpiredTimer());
+    TimerDialogDisplay(td, false);
+    DestroyTimerDialog(td);
+
+    for (0 <= i < 12 ) {
+      u = GetPlayersTroll(Player(i));
+      if (IsUnitAliveBJ(u)) {
+        PauseUnit(u, false);
+      }
+    }
+  }
+
+  function moveTrollsToArena() {
+    timer t = NewTimer();
+    player p;
+    location l;
+    integer i;
+    unit u;
+
+    ReleaseTimer(GetExpiredTimer());
+    DisableTrigger(gg_trg_Dual_Arena_Killing);
+
+    for (0 <= i < 12 ) {
+      p = Player(i);
+      u = GetPlayersTroll(p);
+      if (IsUnitAliveBJ(u)) {
+        l = GetRandomLocInRect(gg_rct_Dualing_Arena);
+        SetUnitPositionLoc(l);
+        PauseUnit(u, true);
+        SetUnitLifePercentBJ(u, 100);
+        SetUnitManaPercentBJ(u, 100);
+        SetPlayerState(p, PLAYER_STATE_RESOURCE_GOLD, udg_MAX_HEAT);
+        SetCameraPositionLocForPlayer(p, l);
+      }
+    }
+
+    TimerStart(t, 3.0, false, function startDuel);
+    TimerDialogSetTitle(td, "Duel begins in");
+    DisplayTextToPlayer(GetLocalPlayer(), 0, 0, GENERAL_COLOR + "Your duel has begun!|r");
+
+    t = null;
+    p = null;
+    l = null;
+    u = null;
+  }
+
+  function startDuelCountdown(real numSeconds) {
+    timer t = NewTimer();
+    td = CreateTimerDialog(t);
+
+    TimerStart(t, numSeconds, false, function moveTrollsToArena);
+    TimerDialogSetTitle(td, "Duel in");
+    TimerDialogDisplay(td, true);
+
+    t = null;
+  }
+
+  function onGameStart() {
+    if (GameConfig.getInstance().isForcedDuelEnabled()) {
+      startDuelCountdown(I2R(GameConfig.getInstance().getForcedDuelAfter()));
+    }
+  }
+
+  function onInit() {
+    Map.onGameStart(function onGameStart);
+  }
+}

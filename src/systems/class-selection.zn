@@ -38,16 +38,7 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
 
 	function getTribe(integer playerId) -> integer {
 		integer ppt = GameConfig.getInstance().getNumPlayersPerTribe();
-
-		if (ppt < 6) {
-			return playerId / ppt;
-		} else {
-			if (playerId < 6) {
-				return 0;
-			} else {
-				return 2;
-			}
-		}
+		return playerId / ppt;
 	}
 
 	public function GetSpawn(integer playerId) -> rect {
@@ -62,7 +53,6 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
 		for (0 <= i < 12) {
 			RemoveUnit(trollTotem[i]);
 			trollTotem[i] = null;
-			TEAM[i + 1] = CreateForce();
 		}
 
 		for (0 <= i < 12) {
@@ -78,7 +68,6 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
 	            	u = udg_PUnits[i];
 	            }
 
-				ForceAddPlayer(TEAM[getTribe(i) + 1], GetOwningPlayer(u));
 				SetFogStateRect(Player(i), FOG_OF_WAR_FOGGED, spawns[getTribe(i)], true);
 	            releasePlayerTroll(u);
 			}
@@ -102,6 +91,7 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
 	    timer selectionTimer = NewTimer();
 	    integer selectionTimeAllowed = 40;
 		integer ppt = GameConfig.getInstance().getNumPlayersPerTribe();
+		integer numTribes = GameConfig.getInstance().getNumTribes();
 
 		spawns[0] = gg_rct_revive_1;
 		spawns[1] = gg_rct_revive_2;
@@ -141,6 +131,10 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
 			}
 		}
 
+		for (1 <= i <= numTribes) {
+			TEAM[i] = CreateForce();
+		}
+
 		for (0 <= i < 12) {
 			totem = trollTotem[getTribe(i)];
 			x = GetUnitX(totem);
@@ -148,6 +142,7 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
 			picker[i] = CreateUnit(Player(i), UNIT_HERO_PICKER, x + 800, y + 800, 0);
 			UnitShareVision(totem, Player(i), true);
 			SetFogStateRect(Player(i), FOG_OF_WAR_VISIBLE, spawns[getTribe(i)], true);
+			ForceAddPlayer(TEAM[getTribe(i) + 1], Player(i));
 			if (GetLocalPlayer() == Player(i)) {
 				SetCameraPosition(x, y);
 			}

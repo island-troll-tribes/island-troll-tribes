@@ -20,18 +20,16 @@ library SpiritWard requires ID, Table, PublicLibrary {
     unit d;
 
     if (CountUnitsInGroup(g) >= 1) {
-      if (GetUnitState(u, UNIT_STATE_LIFE) <= 0) {
-        RemoveUnit(u);
-      }
-
       d = FirstOfGroup(g);
       while (d != null) {
-        SetUnitOwner(GetEnumUnit(), ForcePickRandomPlayer(f), false);
+        SetUnitOwner(d, ForcePickRandomPlayer(f), false);
         GroupRemoveUnit(g, d);
+        d = FirstOfGroup(g);
       }
     }
 
     DestroyGroup(g);
+
     g = null;
     f = null;
     u = null;
@@ -91,7 +89,7 @@ library SpiritWard requires ID, Table, PublicLibrary {
     TriggerAddAction(selectWardTrigger, function onPlayerSelectWard);
     TriggerAddAction(reviveStartTrigger, function onReviveStart);
     TriggerAddAction(reviveStopTrigger, function onReviveStop);
-    TriggerAddAction(reviveStopTrigger, function onReviveFinish);
+    TriggerAddAction(reviveFinishTrigger, function onReviveFinish);
 
     leaveTrigger = null;
     selectWardTrigger = null;

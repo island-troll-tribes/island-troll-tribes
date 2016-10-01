@@ -418,6 +418,7 @@ function setUpSkillTriggers takes unit u returns nothing
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Jump, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_blink_ww_short_radius, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_master_Thief, p, EVENT_PLAYER_UNIT_ATTACKED )
+        call TriggerRegisterPlayerSelectionEventBJ( gg_trg_Bush_Selection_Thief, p, true )
 
 
 
@@ -468,6 +469,7 @@ function setUpSkillTriggers takes unit u returns nothing
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_ward_the_area, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_enemy_radar, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Chain_Reveal, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
+        call TriggerRegisterPlayerSelectionEventBJ( gg_trg_Bush_Selection_Scout, p, true )
     endif
 
 	set p=null

@@ -81,6 +81,7 @@ function Trig_upgrade_Actions takes nothing returns nothing
   local unit REPLACED_UNIT
   local unit REPLACING_UNIT
   local player PLAYER
+  local boolean SUPERSUB = false;
   
   if SKILL_UPGRADE=='S001' then
       set UNIT_ID_REPLACE = UNIT_HERB_MASTER
@@ -129,18 +130,25 @@ function Trig_upgrade_Actions takes nothing returns nothing
   // Supersub
   elseif SKILL_UPGRADE == 'S00Q' then
       set UNIT_ID_REPLACE = UNIT_SAGE
+      set SUPERSUB = true
   elseif SKILL_UPGRADE == 'S00R' then
       set UNIT_ID_REPLACE = UNIT_ASSASSIN
+      set SUPERSUB = true
   elseif SKILL_UPGRADE == 'S00S' then
       set UNIT_ID_REPLACE = UNIT_JUGGERNAUT
+      set SUPERSUB = true
   elseif SKILL_UPGRADE == 'S00U' then
-	  set UNIT_ID_REPLACE = UNIT_SPY
+      set UNIT_ID_REPLACE = UNIT_SPY
+      set SUPERSUB = true
   elseif SKILL_UPGRADE == 'S00W' then
       set UNIT_ID_REPLACE = UNIT_OMNIGATHERER
+      set SUPERSUB = true
   elseif SKILL_UPGRADE == 'S00V' then
       set UNIT_ID_REPLACE = UNIT_DEMENTIA_MASTER
+      set SUPERSUB = true
   elseif SKILL_UPGRADE == 'S00T' then
       set UNIT_ID_REPLACE = UNIT_ULTIMATE_FORM
+      set SUPERSUB = true
   endif
   
   if UNIT_ID_REPLACE != 0 then
@@ -151,14 +159,28 @@ function Trig_upgrade_Actions takes nothing returns nothing
       call GroupAddUnit(udg_trolls,REPLACING_UNIT)
       set udg_PUnits[GetPlayerId(PLAYER)]=REPLACING_UNIT
       call SetHeroLevelBJ(REPLACING_UNIT,1,false)
+
+      // Supersub from sub needs extra stats
+      if SUPERSUB == true
+          call SetHeroStr(REPLACING_UNIT, 13)
+          call SetHeroAgi(REPLACING_UNIT, 13)
+          call SetHeroInt(REPLACING_UNIT, 13)
+      endif
+
+      // Preserve or release BM pet
       if UNIT_ID_REPLACE == UNIT_CHICKEN_FORM then
           set udg_parameterUnit=REPLACING_UNIT
           call TriggerExecute(gg_trg_Release_Pets)
           call SetPlayerTechResearched(PLAYER,'Roch',1)
-      elseif UNIT_ID_REPLACE == UNIT_TRUE_FORM then
+      elseif UNIT_ID_REPLACE == UNIT_TRUE_FORM or UNIT_ID_REPLACE == UNIT_ULTIMATE_FORM then
           set udg_parameterUnit=REPLACING_UNIT
           call TriggerExecute(gg_trg_Rest_BM_SKills)
           call SetPlayerTechResearched(PLAYER,'Roch',1)
+      endif
+
+      // Assassin begins with (access to) Assassinate level 1
+      if UNIT_ID_REPLACE == UNIT_ASSASSIN then
+          call UnitModifySkillPoints(REPLACING_UNIT, 1);
       endif
       call SetPlayerHandicapXPBJ(PLAYER,300.)
       

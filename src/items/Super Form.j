@@ -50,6 +50,7 @@ if UNIT_ID_REPLACE != 0 then
     set udg_PUnits[GetPlayerId(PLAYER)]=REPLACING_UNIT
     call SetHeroLevelBJ(REPLACING_UNIT,1,false)
     if UNIT_ID_REPLACE == UNIT_ULTIMATE_FORM then
+        set udg_parameterUnit=REPLACING_UNIT
         call TriggerExecute(gg_trg_Rest_BM_SKills)
         call SetPlayerTechResearched(PLAYER,'Roch',1)
     endif

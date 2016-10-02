@@ -1,49 +1,49 @@
 library GameConfig {
-	public struct GameConfig {
-		public integer numTribes = 3;
-		public integer playersPerTribe = 4;
-		public boolean enableTransportShips = true;
-		public integer heatPerCast = 15;
-		public real hostileSpawnRate = 1.0;
-		public boolean allTrollEnabled = false;
-		public integer allTrollUnitId = 0;
+  public struct GameConfig {
+    public integer numTribes = 3;
+    public integer playersPerTribe = 4;
+    public boolean enableTransportShips = true;
+    public integer heatPerCast = 15;
+    public real hostileSpawnRate = 1.0;
+    public boolean allTrollEnabled = false;
+    public integer allTrollUnitId = 0;
     public boolean forcedDuelEnabled = false;
     public integer forcedDuelAfter = 0;
     public integer gracePeriodDuration = 480;
-	
-		static thistype instance;
+  
+    static thistype instance;
 
-		public static method getInstance() -> thistype {
-			return instance;
-		}
+    public static method getInstance() -> thistype {
+      return instance;
+    }
 
-		public method setAllTrollEnabled(integer unitId) -> thistype {
-			this.allTrollEnabled = true;
-			this.allTrollUnitId = unitId;
-			return this;
-		}
+    public method setAllTrollEnabled(integer unitId) -> thistype {
+      this.allTrollEnabled = true;
+      this.allTrollUnitId = unitId;
+      return this;
+    }
 
-		public method isAllTrollEnabled() -> boolean {
-			return this.allTrollEnabled;
-		}
+    public method isAllTrollEnabled() -> boolean {
+      return this.allTrollEnabled;
+    }
 
-		public method getAllTrollUnitId() -> integer {
-			return allTrollUnitId;
-		}
+    public method getAllTrollUnitId() -> integer {
+      return allTrollUnitId;
+    }
 
-		public method setNumPlayersPerTribe(integer n) -> thistype {
-			this.numTribes = 12 / n;
-			this.playersPerTribe = n;
-			return this;
-		}
+    public method setNumPlayersPerTribe(integer n) -> thistype {
+      this.numTribes = 12 / n;
+      this.playersPerTribe = n;
+      return this;
+    }
 
-		public method getNumTribes() -> integer {
-			return this.numTribes;
-		}
+    public method getNumTribes() -> integer {
+      return this.numTribes;
+    }
 
-		public method getNumPlayersPerTribe() -> integer {
-			return this.playersPerTribe;
-		}
+    public method getNumPlayersPerTribe() -> integer {
+      return this.playersPerTribe;
+    }
 
     public method setForcedDuel(integer numSeconds) -> boolean {
       if (numSeconds < this.gracePeriodDuration) {
@@ -63,7 +63,7 @@ library GameConfig {
     }
 
     public method setGracePeriodDuration(integer numSeconds) -> boolean {
-      if (this.forcedDuelEnabled && numSeconds >= this.forcedDuelAfter) {
+      if (this.forcedDuelEnabled && numSeconds > this.forcedDuelAfter) {
         return false;
       }
       this.gracePeriodDuration = numSeconds;
@@ -75,8 +75,8 @@ library GameConfig {
       return this.gracePeriodDuration;
     }
 
-		static method onInit() {
-			instance = thistype.create();
-		}
-	}
+    static method onInit() {
+      instance = thistype.create();
+    }
+  }
 }

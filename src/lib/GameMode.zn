@@ -125,22 +125,12 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       if (a.length() >= 1) {
         amount = S2I(a[0]);
       }
-      GameConfig.getInstance().forcedDuelAfter = amount;
-      GameMode.find("fd").deregister();
-      GameMode.message(ENERGY_COLOR + "Forced duel|r after " + amount + " s");
-    });
-
-    GameMode.create("forced duel", "fd", "set a forced duel after an amount of seconds, defaults to 1 h, eg: \"-fd 3600\"", function(ArgsList a) {
-      integer amount = 3600;
-      if (a.length() >= 1) {
-        amount = S2I(a[0]);
-      }
       if (!GameConfig.getInstance().setForcedDuel(amount)) {
         GameMode.error("Force duel must be after end of the grace period");
         return;
       }
       GameMode.find("fd").deregister();
-      GameMode.message(ENERGY_COLOR + "Forced duel|r after " + amount + " s");
+      GameMode.message(ENERGY_COLOR + "Forced duel|r after " + I2S(amount) + " s");
     });
 
     GameMode.create("grace period duration", "gp", "change the duration of the grace period, eg: \"-gp 480\"", function(ArgsList a) {
@@ -148,12 +138,12 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       if (a.length() >= 1) {
         amount = S2I(a[0]);
       }
-      if (!GameConfig.getInstance().setForcedDuel(amount)) {
+      if (!GameConfig.getInstance().setGracePeriodDuration(amount)) {
         GameMode.error("Grace period must end before forced duel");
         return;
       }
       GameMode.find("gp").deregister();
-      GameMode.message(ENERGY_COLOR + "Grace period duration|r " + amount + " s");
+      GameMode.message(ENERGY_COLOR + "Grace period duration|r " + I2S(amount) + " s");
     });
 
     // GameMode.create("hot mode", "hm", "increase the amount of heat a fire gives per cast", function(ArgsList a) {

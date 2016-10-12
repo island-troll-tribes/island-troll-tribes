@@ -1,4 +1,4 @@
-library SpiritWard requires ID, Table, PublicLibrary {
+library SpiritWard requires ID, Table, PublicLibrary, Ascii {
   Table wardTable;
 
   function isWardReviving(unit u) -> boolean {
@@ -40,37 +40,84 @@ library SpiritWard requires ID, Table, PublicLibrary {
     if (GetUnitTypeId(GetTriggerUnit()) == UNIT_SPIRIT_WARD &&
         IsUnitAlly(GetTriggerUnit(), GetTriggerPlayer()) &&
         !isWardReviving(GetTriggerUnit())) {
+      debug BJDebugMsg("Ward select will change owner!");
       SetUnitOwner(GetTriggerUnit(), GetTriggerPlayer(), false);
     }
   }
 
   function onReviveStart() {
-    if (GetUnitTypeId(GetTriggerUnit()) == UNIT_SPIRIT_WARD) {
-      setWardStartedReviving(GetTriggerUnit());
+    group selected = CreateGroup();
+    unit ward;
+
+    debug BJDebugMsg("Ward started reviving");
+
+    GroupEnumUnitsSelected(selected, GetOwningPlayer(GetTriggerUnit()), Condition(function FilterUnitIsSpiritWard));
+    ward = FirstOfGroup(selected);
+    if (ward != null) {
+      debug BJDebugMsg("Ward started reviving success!");
+      setWardStartedReviving(ward);
     }
+
+    DestroyGroup(selected);
+
+    selected = null;
+    ward = null;
   }
 
-  function onReviveStop() {
-    if (GetUnitTypeId(GetTriggerUnit()) == UNIT_SPIRIT_WARD) {
-      setWardStoppedReviving(GetTriggerUnit());
+  function onReviveCancel() {
+    group selected = CreateGroup();
+    unit ward;
+
+    debug BJDebugMsg("Ward cancelled reviving");
+
+    GroupEnumUnitsSelected(selected, GetOwningPlayer(GetTriggerUnit()), Condition(function FilterUnitIsSpiritWard));
+    ward = FirstOfGroup(selected);
+    if (ward != null) {
+      debug BJDebugMsg("Ward cancel revive success!");
+      setWardStoppedReviving(ward);
     }
+
+    DestroyGroup(selected);
+
+    selected = null;
+    ward = null;
   }
 
   function onReviveFinish() {
+    group g;
+    unit d;
+
     if (GetPlayerSlotState(GetOwningPlayer(GetRevivingUnit())) != PLAYER_SLOT_STATE_PLAYING) {
       KillUnit(GetRevivingUnit());
       return;
     }
-    if (GetUnitTypeId(GetTriggerUnit()) == UNIT_SPIRIT_WARD) {
-      SetPlayerState(GetOwningPlayer(GetRevivingUnit()), PLAYER_STATE_RESOURCE_GOLD, udg_MAX_HEAT);
+
+    SetPlayerState(GetOwningPlayer(GetTriggerUnit()), PLAYER_STATE_RESOURCE_GOLD, udg_MAX_HEAT);
+
+    g = CreateGroup();
+
+    GroupEnumUnitsInRangeOfLoc(g, GetUnitLoc(GetRevivingUnit()), 250, Condition(function FilterUnitIsSpiritWard));
+    if (CountUnitsInGroup(g) >= 1) {
+      d = FirstOfGroup(g);
+      while (d != null) {
+        debug BJDebugMsg("Ward finish revive success!");
+        setWardStoppedReviving(d);
+        GroupRemoveUnit(g, d);
+        d = FirstOfGroup(g);
+      }
     }
+
+    DestroyGroup(g);
+
+    g = null;
+    d = null;
   }
 
 	function onInit() {
 		trigger leaveTrigger = CreateTrigger();
     trigger selectWardTrigger = CreateTrigger();
     trigger reviveStartTrigger = CreateTrigger();
-    trigger reviveStopTrigger = CreateTrigger();
+    trigger reviveCancelTrigger = CreateTrigger();
     trigger reviveFinishTrigger = CreateTrigger();
 		integer i;
 
@@ -80,21 +127,20 @@ library SpiritWard requires ID, Table, PublicLibrary {
       TriggerRegisterPlayerEventLeave(leaveTrigger, Player(i));
       TriggerRegisterPlayerUnitEvent(selectWardTrigger, Player(i), EVENT_PLAYER_UNIT_SELECTED, null);
       TriggerRegisterPlayerUnitEvent(reviveStartTrigger, Player(i), EVENT_PLAYER_HERO_REVIVE_START, null);
-      TriggerRegisterPlayerUnitEvent(reviveStopTrigger, Player(i), EVENT_PLAYER_HERO_REVIVE_CANCEL, null);
-      TriggerRegisterPlayerUnitEvent(reviveStopTrigger, Player(i), EVENT_PLAYER_HERO_REVIVE_FINISH, null);
+      TriggerRegisterPlayerUnitEvent(reviveCancelTrigger, Player(i), EVENT_PLAYER_HERO_REVIVE_CANCEL, null);
       TriggerRegisterPlayerUnitEvent(reviveFinishTrigger, Player(i), EVENT_PLAYER_HERO_REVIVE_FINISH, null);
 		}
 
     TriggerAddAction(leaveTrigger, function onPlayerLeave);
     TriggerAddAction(selectWardTrigger, function onPlayerSelectWard);
     TriggerAddAction(reviveStartTrigger, function onReviveStart);
-    TriggerAddAction(reviveStopTrigger, function onReviveStop);
+    TriggerAddAction(reviveCancelTrigger, function onReviveCancel);
     TriggerAddAction(reviveFinishTrigger, function onReviveFinish);
 
     leaveTrigger = null;
     selectWardTrigger = null;
     reviveStartTrigger = null;
-    reviveStopTrigger = null;
+    reviveCancelTrigger = null;
     reviveFinishTrigger = null;
 	}
 }

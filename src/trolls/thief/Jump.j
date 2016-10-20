@@ -7,10 +7,7 @@
 //TESH.scrollpos=7
 //TESH.alwaysfold=0
 function Trig_Jump_Conditions takes nothing returns boolean
-    if ( not ( GetSpellAbilityId() == 'A04G' ) ) then
-        return false
-    endif
-    return true
+    return GetSpellAbilityId() == 'A04G'
 endfunction
 
 function jumpTimerActions takes nothing returns nothing
@@ -60,47 +57,51 @@ function Trig_Jump_Actions takes nothing returns nothing
     //local location p=GetUnitLoc(GetSpellAbilityUnit())
     //local location q=GetSpellTargetLoc()
     //New Stuff
-    if SquareRoot(dx*dx+dy*dy)>650 then
-        set qX = pX + 650*Cos(angle)
-        set qY = pY + 650*Sin(angle)
-        //set q = PolarProjectionBJ(p,650,AngleBetweenPoints(p,q))
-    endif
-    //end New Stuff
-    if not IsTerrainWalkable(qX,qY) then
-        set qX = pX
-        set qY = pY
-    endif
-    call PolledWait(0.05)
-    set dx = qX-pX
-    set dy = qY-pY
-    set d = SquareRoot(dx*dx+dy*dy)
-    
-    set movePer=d/75 //(.75 seconds)
-    set angle = Atan2(qY-pY,qX-pX)
-    call PauseUnit(u, true)
-    call SetUnitInvulnerable(u, true)
-    
-    call UnitAddAbility( u, 'AEme' )
-    call UnitRemoveAbility( u, 'AEme' )
-    
-    call SetUnitPathing( u, false )
-    
-    //call DisplayText("Real")
-    //call DisplayText(R2S(movePer))
-    //call DisplayText(R2S(angle))
-    //call DisplayText(R2S(d))
-    
-    call SaveInteger(udg_GameHash,GetHandleId(t), StringHash("steps"), 75)
-    call SaveReal(udg_GameHash,GetHandleId(t),StringHash("mp"),movePer)
-    call SaveReal(udg_GameHash,GetHandleId(t),StringHash("angle"),angle)
-    call SaveUnitHandle(udg_GameHash,GetHandleId(t),StringHash("unit"),u)
-    
-//    call StoreInteger(udg_jumpCache,"jump.w3v","steps",75)
-//    call StoreReal(udg_jumpCache,"jump.w3v","mp",movePer)
-//    call StoreReal(udg_jumpCache,"jump.w3v","angle",a)
-//    call StoreInteger(udg_jumpCache,"jump.w3v","jumper",H2I(u))
+    if IsUnitImmobilized(u) then
+        call IssueImmediateOrder(u, "stop")
+    else
+        if SquareRoot(dx*dx+dy*dy)>650 then
+            set qX = pX + 650*Cos(angle)
+            set qY = pY + 650*Sin(angle)
+            //set q = PolarProjectionBJ(p,650,AngleBetweenPoints(p,q))
+        endif
+        //end New Stuff
+        if not IsTerrainWalkable(qX,qY) then
+            set qX = pX
+            set qY = pY
+        endif
+        call PolledWait(0.05)
+        set dx = qX-pX
+        set dy = qY-pY
+        set d = SquareRoot(dx*dx+dy*dy)
+        
+        set movePer=d/75 //(.75 seconds)
+        set angle = Atan2(qY-pY,qX-pX)
+        call PauseUnit(u, true)
+        call SetUnitInvulnerable(u, true)
+        
+        call UnitAddAbility( u, 'AEme' )
+        call UnitRemoveAbility( u, 'AEme' )
+        
+        call SetUnitPathing( u, false )
+        
+        //call DisplayText("Real")
+        //call DisplayText(R2S(movePer))
+        //call DisplayText(R2S(angle))
+        //call DisplayText(R2S(d))
+        
+        call SaveInteger(udg_GameHash,GetHandleId(t), StringHash("steps"), 75)
+        call SaveReal(udg_GameHash,GetHandleId(t),StringHash("mp"),movePer)
+        call SaveReal(udg_GameHash,GetHandleId(t),StringHash("angle"),angle)
+        call SaveUnitHandle(udg_GameHash,GetHandleId(t),StringHash("unit"),u)
+        
+//      call StoreInteger(udg_jumpCache,"jump.w3v","steps",75)
+//      call StoreReal(udg_jumpCache,"jump.w3v","mp",movePer)
+//      call StoreReal(udg_jumpCache,"jump.w3v","angle",a)
+//      call StoreInteger(udg_jumpCache,"jump.w3v","jumper",H2I(u))
 
-    call TimerStart(t,0.01,true,function jumpTimerActions)
+        call TimerStart(t,0.01,true,function jumpTimerActions)
+    endif
     set u = null
     set t = null
 endfunction

@@ -15,6 +15,10 @@ function IsThereItemInSlot takes unit u, integer i returns boolean
     return false
 endfunction
 
+function IsUnitImmobilized takes unit u returns boolean
+    return GetUnitAbilityLevel(u, 'Beng') > 0 or GetUnitAbilityLevel(u, 'Bena') > 0 or GetUnitAbilityLevel(u, 'BEer') > 0
+endfunction
+
 function ReplayToNoticeObservers takes nothing returns nothing
     if IsPlayerObserver(GetEnumPlayer()) == true and obs_notices[GetPlayerId(GetEnumPlayer())] then
         call DisplayTimedTextToPlayer(GetEnumPlayer(), 0, 0, bj_cineFadeContinueTrans, bj_lastPlayedMusic)

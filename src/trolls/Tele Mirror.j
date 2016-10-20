@@ -19,7 +19,10 @@ local real ang1 = bj_RADTODEG * Atan2(GetUnitY(t) - GetUnitY(u), GetUnitX(t) - G
 local real ang2 = ModuloReal(ang1,360)
 local real nx = GetUnitX(u) + dis1 * Cos(ang2 * bj_DEGTORAD)
 local real ny = GetUnitY(u) + dis1 * Sin(ang2 * bj_DEGTORAD)
-if RectContainsCoords(gg_rct_Playable_Map, nx, ny) then
+
+if IsUnitImmobilized(t) then
+    call IssueImmediateOrder(u, "stop")
+elseif RectContainsCoords(gg_rct_Playable_Map, nx, ny) then
     if IsTerrainWalkable(nx, ny) then
         call SetUnitPosition(t, nx, ny)
         call SetUnitFacing(t,ModuloReal(GetUnitFacing(t) + 180, 360))

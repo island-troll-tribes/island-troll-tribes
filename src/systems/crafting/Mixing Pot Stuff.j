@@ -66,7 +66,7 @@ function Trig_mixing_pot_stuff_Actions takes nothing returns nothing
             call UnitAddItemByIdSwapped( ITEM_DRUNKS_POTION, u ) // Drunk
             return
         endif
-        if(specCount>2 and butsu>0) then
+        if(specCount>2 and specTypes>1 and butsu>0) then
             call removeHerbs(u)
             call UnitAddItemByIdSwapped( ITEM_FERVER_POTION, u ) // Fervor
             return

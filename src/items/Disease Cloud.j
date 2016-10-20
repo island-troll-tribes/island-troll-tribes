@@ -22,14 +22,6 @@ function DiseaseCloudActions takes nothing returns boolean
         set k = k - 1
     endloop
     if foodCount > 0 then
-        set i = CreateItem( ITEM_COOKED_MEAT, 0, 0  )
-        if foodCount >= 10 then
-            call SetItemCharges( i, 10 )
-        else
-            call SetItemCharges( i, foodCount )
-        endif
-        call UnitAddItem( q, i )
-        set foodCount = foodCount - 10
         loop
             exitwhen foodCount <= 0
             set i = CreateItem( ITEM_DISEASED_MEAT, 0, 0 )

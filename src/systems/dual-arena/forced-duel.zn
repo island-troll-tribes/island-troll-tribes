@@ -22,23 +22,27 @@ library ForcedDuel requires GameConfig, PublicLibrary, Map {
     player p;
     location l;
     integer i;
+    integer j;
     unit u;
+    integer numPlayersPerTribe = GameConfig.getInstance().getNumPlayersPerTribe();
+    integer numTribes = GameConfig.getInstance().getNumTribes();
 
     ReleaseTimer(GetExpiredTimer());
     DisableTrigger(gg_trg_Dual_Arena_Killing);
 
-    for (0 <= i < 12 ) {
-      p = Player(i);
-      u = GetPlayerTroll(p);
-      if (IsUnitAliveBJ(u)) {
-        l = GetRandomLocInRect(gg_rct_Dualing_Area);
-        SetUnitPositionLoc(u, l);
-        PauseUnit(u, true);
-        SetUnitLifePercentBJ(u, 100);
-        SetUnitManaPercentBJ(u, 100);
-        SetPlayerState(p, PLAYER_STATE_RESOURCE_GOLD, udg_MAX_HEAT);
-        SetCameraPositionLocForPlayer(p, l);
-      }
+    for (0 <= i < numTribes) {
+      l = GetRandomLocInRect(gg_rct_Dualing_Area);
+      for (0 <= j <= numPlayersPerTribe)
+        p = Player(i + i * j);
+        u = GetPlayerTroll(p);
+        if (IsUnitAliveBJ(u)) {
+          SetUnitPositionLoc(u, l);
+          PauseUnit(u, true);
+          SetUnitLifePercentBJ(u, 100);
+          SetUnitManaPercentBJ(u, 100);
+          SetPlayerState(p, PLAYER_STATE_RESOURCE_GOLD, udg_MAX_HEAT);
+          SetCameraPositionLocForPlayer(p, l);
+        }
     }
 
     TimerStart(t, 3.0, false, function startDuel);

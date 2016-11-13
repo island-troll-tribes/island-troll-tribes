@@ -6,7 +6,7 @@
 // Easy Item Stack 'n Split v2.7.4
 //  by Dangerb0y
 //=====================================================================================
-library EasyItemStacknSplit initializer onInit
+library EasyItemStacknSplit initializer onInit requires Stackables
 //=====================================================================================
 //
 // This system adds some much needed item stacking, item splitting, and full inventory
@@ -58,8 +58,6 @@ endglobals
         private integer tt = 0
         private integer st = 0
         private timer t = CreateTimer()
-
-        Table STACKABLES
     endglobals
 
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -67,7 +65,7 @@ endglobals
     //  Checks table to see if item stacks
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     function IsItemStackable takes item i returns boolean
-        return STACKABLES.has(GetItemTypeId(i))
+        return stackables.has(GetItemTypeId(i))
     endfunction
 
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -76,7 +74,7 @@ endglobals
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     function GetItemStackCount takes item i returns integer i
         if IsItemStackable(i) then
-            return STACKABLES[GetItemTypeId(i)]
+            return stackables[GetItemTypeId(i)]
         endif
         return 1
     endfunction
@@ -554,51 +552,6 @@ endglobals
         return false
     endfunction
 
-    private function initSTACKABLES takes nothing returns boolean
-        set STACKABLES = Table.create()
-        set STACKABLES[ITEM_IRON_SPEAR]              =  3             
-        set STACKABLES[ITEM_LIVING_CLAY]             =  6            
-        set STACKABLES[ITEM_MAGIC_SEED]              =  6             
-        set STACKABLES[ITEM_NETS]                    =  8                   
-        set STACKABLES[ITEM_POISON_SPEAR]            =  5           
-        set STACKABLES[ITEM_REFINED_POISON_SPEAR]    =  4   
-        set STACKABLES[ITEM_SPEAR]                   =  6                  
-        set STACKABLES[ITEM_STEEL_SPEAR]             =  2            
-        set STACKABLES[ITEM_THISTLES]                =  15              
-        set STACKABLES[ITEM_ULTRA_POISON_SPEAR]      =  2     
-        set STACKABLES[ITEM_ACORN]                   =  10                 
-        set STACKABLES[ITEM_COOKED_MEAT]             =  10           
-        set STACKABLES[ITEM_MAGIC_ACORN]             =  8            
-        set STACKABLES[ITEM_SMOKE_BOMB]              =  5             
-        set STACKABLES[ITEM_HEALING_POTION_I]        =  6       
-        set STACKABLES[ITEM_HEALING_POTION_II]       =  5      
-        set STACKABLES[ITEM_HEALING_POTION_III]      =  4     
-        set STACKABLES[ITEM_HEALING_POTION_IV]       =  4      
-        set STACKABLES[ITEM_ANABOLIC_POTION]         =  2        
-        set STACKABLES[ITEM_DRUNKS_POTION]           =  3          
-        set STACKABLES[ITEM_ELEMENTAL_SHIELD_POTION] =  3
-        set STACKABLES[ITEM_NETHER_POTION]           =  5          
-        set STACKABLES[ITEM_MANA_POTION_I]           =  6          
-        set STACKABLES[ITEM_MANA_POTION_II]          =  5         
-        set STACKABLES[ITEM_MANA_POTION_III]         =  4        
-        set STACKABLES[ITEM_MANA_POTION_IV]          =  4         
-        set STACKABLES[ITEM_FERVER_POTION]           =  2          
-        set STACKABLES[ITEM_ANTI_MAGIC_POTION]       =  4      
-        set STACKABLES[ITEM_DARK_THISTLES]           =  15         
-        set STACKABLES[ITEM_BEE_HIVE]                =  2               
-        set STACKABLES[ITEM_DISEASE_POTION]          =  2         
-        set STACKABLES[ITEM_ENSNARE_TRAP_KIT]        =  3       
-        set STACKABLES[ITEM_POTION_TWIN_ISLANDS]     =  2    
-        set STACKABLES[ITEM_DARK_SPEAR]              =  3             
-        set STACKABLES[ITEM_CURE_ALL]                =  6               
-        set STACKABLES[ITEM_DISEASED_MEAT]           =  10         
-        set STACKABLES[ITEM_FIRE_BOMB]               =  2              
-        set STACKABLES[ITEM_ACID_BOMB]               =  2              
-        set STACKABLES[ITEM_NAPALM]                  =  1                 
-        set STACKABLES[ITEM_SMOKED_MEAT]             =  10           
-        return false
-    endfunction
-
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     // TRIGGER INITIALIZER
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -618,7 +571,7 @@ endglobals
         call TriggerAddCondition( gg_trg_EasyItemStacknSplit, function ActionController )
         call TriggerAddCondition( CancelTrigger, function CancelController )
         call TriggerAddCondition( PreloadTrigger, function PreloadController )
-        call TriggerAddCondition( PreloadTrigger, function initSTACKABLES )
+        call TriggerAddCondition( PreloadTrigger, function initStackables )
     endfunction
 
 endlibrary//===========================================================================

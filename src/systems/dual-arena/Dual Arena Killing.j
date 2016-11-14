@@ -1,20 +1,9 @@
 
-function Trig_Dual_Arena_Killing_Func005Func003001 takes nothing returns boolean
-    return ( GetOwningPlayer(GetEnteringUnit()) != GetOwningPlayer(udg_DualUnit1) )
-endfunction
-
-function Trig_Dual_Arena_Killing_Func005Func003002 takes nothing returns boolean
-    return ( GetOwningPlayer(GetEnteringUnit()) != GetOwningPlayer(udg_DualUnit2) )
-endfunction
-
 function Trig_Dual_Arena_Killing_Func005C takes nothing returns boolean
     if ( ( udg_DualInProgress == false ) ) then
         return true
     endif
-    if ( ( IsUnitType(GetEnteringUnit(), UNIT_TYPE_HERO) == false ) ) then
-        return true
-    endif
-    if ( GetBooleanAnd( Trig_Dual_Arena_Killing_Func005Func003001(), Trig_Dual_Arena_Killing_Func005Func003002() ) ) then
+    if ( ( IsUnitType(GetEnteringUnit(), UNIT_TYPE_HERO) == true ) ) then
         return true
     endif
     return false

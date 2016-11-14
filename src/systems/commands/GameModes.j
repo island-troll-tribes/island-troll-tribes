@@ -166,10 +166,6 @@ elseif s=="-no boats" and modeAllow[28] then
     set udg_DisabledBoats = true
     set display = "|c00800040Transport ships have been disabled."
     set modeAllow[28] = false
-elseif SubString(s,0,4)=="-nt "then
-    set udg_NOOB_TIME_LEFT = S2R(SubString(s,4,9))
-    set color = HIGHLIGHT_COLOR
-    set display = "Noob time has been set to "+I2S(R2I(udg_NOOB_TIME_LEFT))+" seconds / "+R2SW(udg_NOOB_TIME_LEFT/60,3,1)+" minutes. Default: 480secs/8mins|r"
 
  elseif s == "-tko" and modeAllow[30] then // team kill off
     set udg_HCL_NT = true

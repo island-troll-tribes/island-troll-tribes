@@ -120,28 +120,12 @@ function Commands_Action takes nothing returns nothing
             set shr_control[PID] = true
             call DisplayTimedTextToForce(TEAM[TEAM_PLAYER[PID]],7, COLOR_CODE[PID]+GetPlayerName(p)+"|r enabled his/her shared controls.")
         endif
-    elseif SubString(s,0,3) == "-cn" and s_l > 3 and s != "-cn " then
-        if SubString(s,3,4) == " " then
-            set fpart = SubString(s2,4,IMinBJ(s_l,19))
-        else
-            set fpart = SubString(s2,3,IMinBJ(s_l,18))
-        endif
-        call SetPlayerName(p,fpart)
-        call TriggerExecute(gg_trg_update_names)
     elseif s=="-repick" and not udg_STARTED then
         call SetPlayerState(p,PLAYER_STATE_RESOURCE_LUMBER,1)
         call GroupRemoveUnit(udg_trolls,udg_PUnits[PID])
         call RemoveUnit(udg_PUnits[PID])
         set udg_started[PID] = false
         //game started commands
-    elseif s=="-rn" then
-        loop
-            exitwhen i>11
-            if udg_RealNames[i] != "" then
-                call DisplayTimedTextToPlayer(p,0,0,7,COLOR_CODE[i]+I2S(i+1)+"|r "+udg_RealNames[i]+" "+COLOR_CODE[currentcolor[i]]+"[c]|r")
-            endif
-            set i=i+1
-        endloop
     elseif SubString(s,0,3)=="-c " then
         if SubString(s,3,4) == "-" then
             set r=S2R(SubString(s,3,8))

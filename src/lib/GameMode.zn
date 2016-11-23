@@ -1,6 +1,7 @@
 library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtils {
   public struct GameMode {
     static integer numGameModes = 0;
+    static string modesString = "";
     public static Table modes;
 
     string description = "";
@@ -56,7 +57,12 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       this.deregisterFor(abbrev);
     }
 
+    public static method getEnabledModes() -> string {
+      return thistype.modesString;
+    }
+
     public static method message(string msg) {
+      thistype.modesString += msg + "\n";
       DisplayText(msg);
     }
 
@@ -66,6 +72,17 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
 
     public static method find(string abbrev) -> thistype {
       return thistype.modes.integer_s[abbrev];
+    }
+
+    public method triggerWithArgs(string args) -> thistype {
+      ArgsList a = ArgsList.processArgs("-" + this.abbrev + " " + args);
+      this.action.evaluate(a);
+      a.destroy();
+      return this;
+    }
+
+    public method trigger() -> thistype {
+      return this.triggerWithArgs("");
     }
   }
 
@@ -104,6 +121,15 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       GameMode.find("6v6").deregister();
       GameMode.find("ffa").deregister();
       GameMode.message(ENERGY_COLOR + "Free for all|r enabled");
+    });
+
+    GameMode.create("standard 1v1", "1v1", "enables all standard modes for 1v1", function(ArgsList a) {
+      GameMode.message(ENERGY_COLOR + "1v1|r enabled");
+      GameConfig.getInstance().setNumPlayersPerTribe(1);
+      GameMode.find("fd").triggerWithArgs("1800");
+      GameMode.find("nb").trigger();
+      GameMode.find("nh").trigger();
+      GameMode.find("hm").trigger();
     });
 
     GameMode.create("all class", "all", "each player is given the same class or random (ex: \"-all random\"", function(ArgsList a) {
@@ -146,21 +172,27 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       GameMode.message(ENERGY_COLOR + "Grace period duration|r " + I2S(amount) + " s");
     });
 
-    // GameMode.create("hot mode", "hm", "increase the amount of heat a fire gives per cast", function(ArgsList a) {
-    //  integer amount = 25;
-    //  if (a.length() >= 1) {
-    //    amount = S2I(a[0]);
-    //  }
-    //  GameConfig.getInstance().heatPerCast = amount;
-    //  GameMode.find("hm").deregister();
-    //  GameMode.message(ENERGY_COLOR + "Hot mode|r enabled, heat per cast is now " + GOLD_COLOR + I2S(amount) + "|r");
-    // });
+    GameMode.create("hot mode", "hm", "increase the amount of heat a fire gives per cast", function(ArgsList a) {
+      integer amount = 15;
+      if (a.length() >= 1) {
+        amount = S2I(a[0]);
+      }
+      udg_HEAT_PER_CAST = amount;
+      GameMode.find("hm").deregister();
+      GameMode.message(ENERGY_COLOR + "Hot mode|r enabled, heat per cast is now " + a[0] + ":" + GOLD_COLOR + I2S(amount) + "|r");
+    });
 
-    // GameMode.create("no boats", "nb", "disables construction of transport boats", function(ArgsList a) {
-    //  GameConfig.getInstance().enableTransportShips = false;
-    //  GameMode.find("nb").deregister();
-    //  GameMode.message(ENERGY_COLOR + "Transport ships|r disabled");
-    // });
+    GameMode.create("no boats", "nb", "disables construction of transport boats", function(ArgsList a) {
+      udg_DisabledBoats = true;
+      GameMode.find("nb").deregister();
+      GameMode.message(ENERGY_COLOR + "Transport ships|r disabled");
+    });
+
+    GameMode.create("no horn", "nh", "disables boss prizes", function(ArgsList a) {
+      udg_BOSS_PRIZE_MODE = false;
+      GameMode.find("nh").deregister();
+      GameMode.message(ENERGY_COLOR + "Boss prizes|r like the mammoth horn have been disabled.");
+    });
 
     // GameMode.create("more hostiles", "rb", "raise hostile animal spawn rate, eg: \"-rb 300\"", function(ArgsList a) {
     //  real amount = 0.20;

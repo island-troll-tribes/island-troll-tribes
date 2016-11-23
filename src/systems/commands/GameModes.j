@@ -22,10 +22,7 @@ local string color = ENERGY_COLOR
 local boolean bool = false
 
 // POSITIVE
-if s=="-hm" then
-    set udg_HEAT_PER_CAST = 15
-    set display = "Hot mode|r has been enabled. Heat per cast is 15."
-elseif s=="-rh" then
+if s=="-rh" then
     set udg_MAX_HEAT = 150
     call ForForce( bj_FORCE_ALL_PLAYERS, function IncreaseMaxHeat )
     set display = "Heat Max|r has been increased. Heat capacity is 150."
@@ -123,10 +120,6 @@ elseif s=="-lil" and modeAllow[16]then
     set udg_ITEM_MAX = 250
     set display = "Item limits have been |c00755d00decreased|r."
     set modeAllow[16] = false
-elseif s=="-no horn" and modeAllow[17]then
-    set udg_BOSS_PRIZE_MODE = false
-    set display = "Boss prizes like the mammoth horn have been disabled."
-    set modeAllow[17] = false
 
 
 elseif s=="-no trade" and modeAllow[21] then // MISCELLANEOUS
@@ -162,10 +155,6 @@ elseif s=="-no exp" and modeAllow[26] then
     set udg_EXPERIENCE_MODE = false
     set display = "Experience mode has been disabled. Trolls can no longer level up."
     set modeAllow[26] = false
-elseif s=="-no boats" and modeAllow[28] then
-    set udg_DisabledBoats = true
-    set display = "|c00800040Transport ships have been disabled."
-    set modeAllow[28] = false
 
  elseif s == "-tko" and modeAllow[30] then // team kill off
     set udg_HCL_NT = true
@@ -181,10 +170,7 @@ endif
 
 if display != "" then
     call DisplayText(color+display+"|r")
-    if currentModes == "No active modes." then
-        set currentModes = SPECIAL_COLOR+"Current Modes:|r"
-    endif
-    set currentModes = currentModes+"\n"+color+display+"|r"
+    set currentModes = currentModes+color+display+"|r\n"
 endif
 
 endfunction
@@ -210,7 +196,7 @@ endglobals
 globals
     player modePlayer
     boolean array modeAllow
-    string currentModes = "No active modes."
+    string currentModes = ""
 endglobals
 
 //call TriggerRegisterPlayerChatEvent( gg_trg_GameModes, modePlayer, "-", false )

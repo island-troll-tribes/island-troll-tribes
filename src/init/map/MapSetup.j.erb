@@ -188,6 +188,10 @@ function Startup_Timer takes nothing returns nothing
         call GameModes_Action("-tko",Player(0))
     endif
     
+    if checkHCLletter("1") then //team kill disabled
+        call GameMode.find("1v1").trigger()
+    endif
+
     if checkHCLletter("=") then //locks hcl
         set mode_enter = false
         set MODES_TIME_LIMIT = 0
@@ -198,38 +202,11 @@ function Startup_Timer takes nothing returns nothing
     endif
     
     /*
-    - Clan TdiT = 0
-    - Clan Sort = 1
-    - Clan MoSD = 2
-    - Clan EITT = 3
-    - Clan TmsT = 4
-    - Clan TwS = 5
-    - Clan BiTT = 6
-    - Clan ITTP = 7
-    - Clan TSOT = 8
     - Clan TwGB = .
     */
 
     if checkHCLletter(".") then
         set HOSTING_CLAN = "TwGB"
-    elseif checkHCLletter("0") then
-        set HOSTING_CLAN = "TdiT"
-    elseif checkHCLletter("1") then
-        set HOSTING_CLAN = "Sort"
-    elseif checkHCLletter("2") then
-        set HOSTING_CLAN = "TwA"
-    elseif checkHCLletter("3") then
-        set HOSTING_CLAN = "EITT"
-    elseif checkHCLletter("4") then
-        set HOSTING_CLAN = "TmsT"
-    elseif checkHCLletter("5") then
-        set HOSTING_CLAN = "TwS"
-    elseif checkHCLletter("6") then
-        set HOSTING_CLAN = "BiTT"
-    elseif checkHCLletter("7") then
-        set HOSTING_CLAN = "ITTP"
-    elseif checkHCLletter("8") then
-        set HOSTING_CLAN = "TSOT"
     endif
 
 <% if @opt[:env] != 'pro' %>
@@ -240,8 +217,6 @@ function Startup_Timer takes nothing returns nothing
 
     if not( HOSTING_CLAN == "" ) then
         call DisplayTText( GENERAL_COLOR + "This game is hosted by " + GREEN_COLOR + "Clan " + HOSTING_CLAN + "|r", 50 )
-        call Hints.add( "Use |r" + ENERGY_COLOR + "-bug the mammoth is flying!|r" + GENERAL_COLOR + " to report a bug with |r" + GOLD_COLOR +  "Clan " + HOSTING_CLAN + "|r" )
-        call Hints.add( "Use |r" + ENERGY_COLOR + "-register rendo@example.com|r" + GENERAL_COLOR + " to register your email with |r" + GOLD_COLOR + "Clan " + HOSTING_CLAN + "|r" + GENERAL_COLOR + " to recieve info about arranged games and other news|r" )
     endif
 
     static if PRIVATE_MAP then

@@ -81,7 +81,7 @@ function Commands_Action takes nothing returns nothing
             call ClearTextMessages()
         endif
     elseif s=="-modes" then
-        call DisplayTimedTextToPlayer(p, 0, 0, 15, currentModes)
+        call DisplayTimedTextToPlayer(p, 0, 0, 15, currentModes + GameMode.getEnabledModes() )
     elseif s=="-ms" then
         if udg_PUnits[PID] != null and GetUnitState(udg_PUnits[PID], UNIT_STATE_LIFE) > 0 then
             set fpart = "Your movement speed is:|r "

@@ -3,12 +3,23 @@ library CheckWin requires PublicLibrary, ClassSelection, MMD {
 	boolean tribeWasStillAlive[12];
 	public boolean GAME_END = false;
 
+	public function FlagTribeWinner(force tribe) {
+		ForForce(tribe, function() {
+			FlagPlayer(GetEnumPlayer(), FLAG_WINNER);
+		});
+	}
+
+	public function FlagTribeLoser(force tribe) {
+		ForForce(tribe, function() {
+			FlagPlayer(GetEnumPlayer(), FLAG_LOSER);
+		});
+	}
+
 	function notNoobTime() -> boolean {
 	    return !udg_NOOB_TIME && !udg_NOOB_MODE;
 	}
 
 	function customVictory() {
-		FlagPlayer(GetEnumPlayer(), FLAG_WINNER);
     	CVic(GetEnumPlayer(), true, true);
 	}
 
@@ -65,6 +76,7 @@ library CheckWin requires PublicLibrary, ClassSelection, MMD {
 		if (numTribesAlive > 1) {
 			for (0 <= i < nt) {
 				if (!alive[i] && tribeWasStillAlive[i]) {
+					FlagTribeLoser(TEAM[i + 1]);
 					ForForce(TEAM[i + 1], function customDefeat);
 					DisplayTText(HIGHLIGHT_COLOR + "Tribe " + I2S(i + 1) + " has been defeated.", 30);
 					tribeWasStillAlive[i] = false;
@@ -73,10 +85,13 @@ library CheckWin requires PublicLibrary, ClassSelection, MMD {
 		} else {
 			for (0 <= i < nt) {
 				if (alive[i]) {
+					FlagTribeWinner(TEAM[i + 1]);
 					DisplayTimedTextToForce(TEAM[i + 1], 60, HIGHLIGHT_COLOR + "You have won! Please play again!");
 				}
 				else if (tribeWasStillAlive[i]) {
+					FlagTribeLoser(TEAM[i + 1]);
 					DisplayTimedTextToForce(TEAM[i + 1], 60, HIGHLIGHT_COLOR + "Your tribe has been killed! Please play again.");
+					FlagPlayer(GetEnumPlayer(), FLAG_LOSER);
 					tribeWasStillAlive[i] = false;
 				}
 			}

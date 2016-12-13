@@ -10,14 +10,18 @@ function Trig_stats_degrading_Conditions takes nothing returns boolean
 endfunction
 
 function Trig_stats_degrading_Func001A takes nothing returns nothing
-    local real hD=udg_STAT_DEGRADE_AMOUNT
-    local real eD=udg_STAT_DEGRADE_AMOUNT
+    local integer hD=udg_STAT_DEGRADE_AMOUNT
+    local integer eD=udg_STAT_DEGRADE_AMOUNT
     local integer gD=udg_STAT_DEGRADE_AMOUNT
     
     if(UnitHasBuffBJ(GetEnumUnit(), 'B009') == true ) then//removes 3x degrade amount
         set hD=hD*3
         set eD=eD*3
         set gD=gD*3
+    endif
+    
+    if(UnitHasBuffBJ(GetEnumUnit(), 'B01L') == true ) then//bonfire
+        set gD=gD-2
     endif
 
     if(UnitHasBuffBJ(GetEnumUnit(), 'S000') == false) then
@@ -48,12 +52,12 @@ function Trig_stats_degrading_Func001A takes nothing returns nothing
     endif
 
     ///degrades
-    call SetUnitLifeBJ( GetEnumUnit(), ( GetUnitStateSwap(UNIT_STATE_LIFE, GetEnumUnit()) - (hD) ) )
+    call SetUnitLifeBJ( GetEnumUnit(),( GetUnitStateSwap(UNIT_STATE_LIFE, GetEnumUnit()) - (hD) ) )
     call SetUnitManaBJ( GetEnumUnit(), ( GetUnitStateSwap(UNIT_STATE_MANA, GetEnumUnit()) - (eD) ) )
     
     //If not a mirror troll, drain heat
     if (not (  GetUnitTypeId(GetEnumUnit()) == UNIT_MIRROR_TROLL_CLONE   )) then
-        call AdjustPlayerStateBJ( -(gD), GetOwningPlayer(GetEnumUnit()), PLAYER_STATE_RESOURCE_GOLD )
+        call SetPlayerStateBJ( GetOwningPlayer(GetEnumUnit()), PLAYER_STATE_RESOURCE_GOLD, IMinBJ(( GetPlayerState(GetOwningPlayer(GetEnumUnit()), PLAYER_STATE_RESOURCE_GOLD) - (gD) ), udg_MAX_HEAT) )
     endif
     
     call ConditionalTriggerExecute( gg_trg_stat_display )

@@ -51,6 +51,14 @@ library InventoryItems initializer init requires PublicLibrary
                     if bol1 and bol2 then
                         call UnitRemoveItem(u, m)
                     endif
+
+                    // ----
+                    set bol1=IsItemAnyShield(t)
+                    set bol2=IsItemAnyShield(m)
+                    if bol1 and bol2 then
+                        call UnitRemoveItem(u, m)
+                        exitwhen true
+                    endif
                     
                     // ----
                     set bol1=IsItemAxeOrShield(t)

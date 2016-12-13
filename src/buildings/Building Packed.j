@@ -22,7 +22,7 @@ scope BuildingPacking initializer onInit
 
     private function onInit takes nothing returns nothing
         local trigger t = CreateTrigger()
-        call TriggerRegisterAnyUnitEventBJ( t, EVENT_PLAYER_UNIT_SPELL_FINISH )
+        call TriggerRegisterAnyUnitEventBJ( t, EVENT_PLAYER_UNIT_SPELL_CAST )
         call TriggerAddCondition( t, Condition( function PackBuilding ) )
     endfunction
 

@@ -126,6 +126,14 @@ function Commands_Action takes nothing returns nothing
         call RemoveUnit(udg_PUnits[PID])
         set udg_started[PID] = false
         //game started commands
+    elseif s=="-rn" then
+        loop
+            exitwhen i>11
+            if udg_RealNames[i] != "" then
+                call DisplayTimedTextToPlayer(p,0,0,7,COLOR_CODE[i]+I2S(i+1)+"|r "+udg_RealNames[i]+" "+COLOR_CODE[currentcolor[i]]+"[c]|r")
+            endif
+            set i=i+1
+        endloop
     elseif SubString(s,0,3)=="-c " then
         if SubString(s,3,4) == "-" then
             set r=S2R(SubString(s,3,8))

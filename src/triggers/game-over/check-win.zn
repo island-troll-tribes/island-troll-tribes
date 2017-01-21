@@ -24,7 +24,6 @@ library CheckWin requires PublicLibrary, ClassSelection, MMD {
 	}
 
 	function customDefeat() {
-		FlagPlayer(GetEnumPlayer(), FLAG_LOSER);
     	CDef(GetEnumPlayer(), "You have been defeated.");
 	}
 
@@ -83,6 +82,8 @@ library CheckWin requires PublicLibrary, ClassSelection, MMD {
 				}
 			}
 		} else {
+			GAME_END = true;
+
 			for (0 <= i < nt) {
 				if (alive[i]) {
 					FlagTribeWinner(TEAM[i + 1]);
@@ -91,13 +92,11 @@ library CheckWin requires PublicLibrary, ClassSelection, MMD {
 				else if (tribeWasStillAlive[i]) {
 					FlagTribeLoser(TEAM[i + 1]);
 					DisplayTimedTextToForce(TEAM[i + 1], 60, HIGHLIGHT_COLOR + "Your tribe has been killed! Please play again.");
-					FlagPlayer(GetEnumPlayer(), FLAG_LOSER);
 					tribeWasStillAlive[i] = false;
 				}
 			}
 
 			displayStats();
-			GAME_END = true;
 
             t = NewTimer();
             dt = CreateTimerDialog(t);

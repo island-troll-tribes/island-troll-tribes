@@ -48,7 +48,6 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
 
     public method register(player modesPlayer) {
       this.modesPlayer = modesPlayer;
-      this.registerFor(name);
       this.registerFor(abbrev);
     }
 
@@ -127,9 +126,7 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       GameMode.message(ENERGY_COLOR + "1v1|r enabled");
       GameConfig.getInstance().setNumPlayersPerTribe(1);
       GameMode.find("fd").triggerWithArgs("2400");
-      GameMode.find("nb").trigger();
       GameMode.find("nh").trigger();
-      GameMode.find("hm").trigger();
     });
 
     GameMode.create("all class", "all", "each player is given the same class or random (ex: \"-all random\"", function(ArgsList a) {
@@ -179,19 +176,31 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       }
       udg_HEAT_PER_CAST = amount;
       GameMode.find("hm").deregister();
-      GameMode.message(ENERGY_COLOR + "Hot mode|r enabled, heat per cast is now " + a[0] + ":" + GOLD_COLOR + I2S(amount) + "|r");
+      GameMode.message(ENERGY_COLOR + "Hot mode|r enabled, heat per cast is now " + GOLD_COLOR + I2S(amount) + "|r");
     });
 
-    GameMode.create("allow boats", "ab", "enables construction of transport boats", function(ArgsList a) {
+    GameMode.create("enable boats", "eb", "enables construction of transport boats", function(ArgsList a) {
       udg_DisabledBoats = false;
-      GameMode.find("nb").deregister();
-      GameMode.message(ENERGY_COLOR + "Transport ships|r disabled");
+      GameMode.find("eb").deregister();
+      GameMode.message(ENERGY_COLOR + "Transport ships|r enabled");
     });
 
     GameMode.create("no horn", "nh", "disables boss prizes", function(ArgsList a) {
       udg_BOSS_PRIZE_MODE = false;
       GameMode.find("nh").deregister();
       GameMode.message(ENERGY_COLOR + "Boss prizes|r like the mammoth horn have been disabled.");
+    });
+
+    GameMode.create("random spawns", "rs", "randomize spawn locations", function(ArgsList a) {
+      GameMode.find("rs").deregister();
+      GameMode.message(ENERGY_COLOR + "Spawn locations|r have been randomized");
+      GameConfig.getInstance().setRandomSpawns(true);
+    });
+
+    GameMode.create("start with fire", "sf", "every troll starts with a fire", function(ArgsList a) {
+      GameMode.find("sf").deregister();
+      GameMode.message("Every troll will start with a " + ENERGY_COLOR + "fire kit");
+      GameConfig.getInstance().setStartWithFire(true);
     });
 
     // GameMode.create("more hostiles", "rb", "raise hostile animal spawn rate, eg: \"-rb 300\"", function(ArgsList a) {

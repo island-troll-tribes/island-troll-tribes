@@ -49,8 +49,8 @@ elseif s=="-rb" and modeAllow[1] then
         set modeAllow[1] = false
     endif
 elseif s=="-rfl" and modeAllow[2] then
-    set udg_ANIMAL_MAX = 240
-    set udg_FISH_MAX = 160
+    set udg_ANIMAL_MAX = 480
+    set udg_FISH_MAX = 320
     set display = "Food limits|r have been increased. More animals and fish can be on the map at the same time."
     set modeAllow[2] = false
 elseif s=="-fast" and modeAllow[3] then

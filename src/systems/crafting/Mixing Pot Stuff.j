@@ -139,7 +139,7 @@ function Trig_mixing_pot_stuff_Actions takes nothing returns nothing
             return
         endif
 //essences
-        if ((yell==2 and blu==2) or (oran==2 and purp==2) and specCount==4) then
+        if specTypes >= 2 and specCount >= 4 then
             call removeHerbs(u)
             call UnitAddItemByIdSwapped( ITEM_GEM_OF_KNOWLEDGE, u ) // GoK
             return

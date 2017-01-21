@@ -28,11 +28,10 @@ call DialogSetMessage(OBSERVER_DIALOG[0],"Controls:")
 set O_DBUTTON[0]=DialogAddButton(OBSERVER_DIALOG[0],"Exit",HK_A)
 set O_DBUTTON[1]=DialogAddButton(OBSERVER_DIALOG[0],"Zoom Out",HK_1)
 set O_DBUTTON[2]=DialogAddButton(OBSERVER_DIALOG[0],"Zoom In",HK_2)
-set O_DBUTTON[3]=DialogAddButton(OBSERVER_DIALOG[0],"Toggle Fog",HK_3)
-set O_DBUTTON[4]=DialogAddButton(OBSERVER_DIALOG[0],"Toggle Notices",HK_4)
-set O_DBUTTON[5]=DialogAddButton(OBSERVER_DIALOG[0],"-rn",HK_5)
+set O_DBUTTON[3]=DialogAddButton(OBSERVER_DIALOG[0],"Toggle Notices",HK_4)
+set O_DBUTTON[4]=DialogAddButton(OBSERVER_DIALOG[0],"-rn",HK_5)
 
-set CMD_DES[1] = "blank"
+set CMD_DES[1] = ""
 
 //
 set OBSERVER_BOARD = CreateMultiboard()

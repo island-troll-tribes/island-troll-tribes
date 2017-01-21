@@ -16,8 +16,7 @@ library StatsSubmitting
                 endif
             set i=i+1
         endloop
-            
-        call DisplayTextToForce(bj_FORCE_ALL_PLAYERS,HIGHLIGHT_COLOR+"Submitting Stats...")
+
         set mb=CreateMultiboardBJ( 4, k+1, "Player Stats" )
         call MultiboardSetItemStyleBJ( mb, 1, 1, true, false )
         call MultiboardSetItemValueBJ( mb, 1, 1, ENERGY_COLOR+"Player Name" )

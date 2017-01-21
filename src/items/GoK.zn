@@ -4,46 +4,49 @@ library GoK requires ID, Table {
     Table gokClassMultiplier;
 
     function AddBonusXP() {
-        if ( GetUnitAbilityLevel( GetEnumUnit(), BUFF_GOK ) == 0 )              return;
-        if ( !gokClassMultiplier.has( GetUnitTypeId( GetEnumUnit() ) ) )        return;
-        if ( !IsUnitEnemy( GetEnumUnit(), GetOwningPlayer( GetDyingUnit() ) ) ) return;
-
-        if ( IsUnitType( GetDyingUnit(), UNIT_TYPE_HERO ) )
-            AddHeroXP( GetEnumUnit(), gokClassMultiplier[GetUnitTypeId( GetEnumUnit() )] * GetUnitLevel( GetDyingUnit() ) * 2, true );
+        if (IsUnitType(GetDyingUnit(), UNIT_TYPE_HERO))
+            AddHeroXP(GetEnumUnit(), gokClassMultiplier[GetUnitTypeId(GetEnumUnit())] * GetUnitLevel(GetDyingUnit()) * 2, true);
         else
-            AddHeroXP( GetEnumUnit(), gokClassMultiplier[GetUnitTypeId( GetEnumUnit() )] * GetUnitLevel( GetDyingUnit() ), true );
+            AddHeroXP(GetEnumUnit(), gokClassMultiplier[GetUnitTypeId(GetEnumUnit())] * GetUnitLevel(GetDyingUnit()), true);
     }
 
-    function FindRecipients() -> boolean{
+    function Filter() -> boolean {
+        return GetUnitAbilityLevel(GetEnumUnit(), BUFF_GOK) > 0 &&
+            gokClassMultiplier.has(GetUnitTypeId(GetEnumUnit())) &&
+            IsUnitEnemy(GetEnumUnit(), GetOwningPlayer(GetDyingUnit())) &&
+            IsUnitAlly(GetKillingUnit(), GetOwningPlayer(GetEnumUnit()));
+    }
+
+    function FindRecipients() -> boolean {
         group g = CreateGroup();
-        GroupEnumUnitsInRangeOfLoc( g, GetUnitLoc( GetDyingUnit() ), 500, null );
-        ForGroup( g, function AddBonusXP );
-        DestroyGroup( g );
+        GroupEnumUnitsInRangeOfLoc(g, GetUnitLoc(GetDyingUnit()), 500, Condition(function Filter));
+        ForGroup(g, function AddBonusXP);
+        DestroyGroup(g);
         g = null;
         return false;
     }
 
     function onInit() {
-        trigger t = CreateTrigger(  );
-        TriggerRegisterAnyUnitEventBJ( t, EVENT_PLAYER_UNIT_DEATH );
-        TriggerAddCondition( t, Condition( function FindRecipients ) );
+        trigger t = CreateTrigger();
+        TriggerRegisterAnyUnitEventBJ(t, EVENT_PLAYER_UNIT_DEATH);
+        TriggerAddCondition(t, Condition(function FindRecipients));
 
         gokClassMultiplier = Table.create();
-        gokClassMultiplier[UNIT_GATHERER]        = 30;
-        gokClassMultiplier[UNIT_HERB_MASTER]     = 10;
-        gokClassMultiplier[UNIT_RADAR_GATHERER]  = 15;
-        gokClassMultiplier[UNIT_OMNIGATHERER]    = 20;
-        gokClassMultiplier[UNIT_SCOUT]           = 20;
-        gokClassMultiplier[UNIT_OBSERVER]        = 10;
-        gokClassMultiplier[UNIT_RADAR_SCOUT]     = 15;
-        gokClassMultiplier[UNIT_SPY]             = 20;
-        gokClassMultiplier[UNIT_MAGE]            = 20;
-        gokClassMultiplier[UNIT_HYPNOTIST]       = 5;
-        gokClassMultiplier[UNIT_ELEMENTALIST]    = 10;
-        gokClassMultiplier[UNIT_DEMENTIA_MASTER] = 15;
-        gokClassMultiplier[UNIT_PRIEST]          = 25;
-        gokClassMultiplier[UNIT_BOOSTER]         = 15;
-        gokClassMultiplier[UNIT_MASTER_HEALER]   = 10;
-        gokClassMultiplier[UNIT_SAGE]            = 20;
+        gokClassMultiplier[UNIT_GATHERER]        = 35;
+        gokClassMultiplier[UNIT_HERB_MASTER]     = 15;
+        gokClassMultiplier[UNIT_RADAR_GATHERER]  = 20;
+        gokClassMultiplier[UNIT_OMNIGATHERER]    = 25;
+        gokClassMultiplier[UNIT_SCOUT]           = 25;
+        gokClassMultiplier[UNIT_OBSERVER]        = 15;
+        gokClassMultiplier[UNIT_RADAR_SCOUT]     = 20;
+        gokClassMultiplier[UNIT_SPY]             = 25;
+        gokClassMultiplier[UNIT_MAGE]            = 25;
+        gokClassMultiplier[UNIT_HYPNOTIST]       = 10;
+        gokClassMultiplier[UNIT_ELEMENTALIST]    = 15;
+        gokClassMultiplier[UNIT_DEMENTIA_MASTER] = 20;
+        gokClassMultiplier[UNIT_PRIEST]          = 30;
+        gokClassMultiplier[UNIT_BOOSTER]         = 20;
+        gokClassMultiplier[UNIT_MASTER_HEALER]   = 15;
+        gokClassMultiplier[UNIT_SAGE]            = 25;
     }
 }

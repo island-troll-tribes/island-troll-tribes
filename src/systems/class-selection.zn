@@ -18,6 +18,11 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
     	UnitModifySkillPoints(u, -1);
     	SetPlayerState(p, PLAYER_STATE_RESOURCE_GOLD, udg_MAX_HEAT);
 
+    	// TODO move to own module
+    	if (GameConfig.getInstance().isStartWithFire()) {
+    		UnitAddItem(u, CreateItem(ITEM_FIRE_KIT, 0, 0));
+    	}
+
     	p = null;
 	}
 
@@ -86,12 +91,13 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
 	public function StartClassSelection() {
 		integer i, j;
 		real x, y;
-		unit totem;
 	    trigger trollSold = CreateTrigger();
 	    timer selectionTimer = NewTimer();
 	    integer selectionTimeAllowed = 40;
 		integer ppt = GameConfig.getInstance().getNumPlayersPerTribe();
 		integer numTribes = GameConfig.getInstance().getNumTribes();
+		rect tmpSpawn;
+		unit tmpTotem;
 
 		spawns[0] = gg_rct_revive_1;
 		spawns[1] = gg_rct_revive_3;
@@ -119,6 +125,18 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
 		trollTotem[10] = CreateUnit(Player(PLAYER_NEUTRAL_PASSIVE), 'o00H', 7040.0, 5376.0, 310);
 		trollTotem[11] = CreateUnit(Player(PLAYER_NEUTRAL_PASSIVE), 'o00H', -6848.0, 2432.0, 310);
 
+		if (GameConfig.getInstance().isRandomSpawns()) {
+			for (0 <= i < numTribes) {
+				j = GetRandomInt(0, numTribes - 1);
+				tmpSpawn = spawns[i];
+				spawns[i] = spawns[j];
+				spawns[j] = tmpSpawn;
+				tmpTotem = trollTotem[i];
+				trollTotem[i] = trollTotem[j];
+				trollTotem[j] = tmpTotem;
+			}
+		}
+
 		for (0 <= i < 12) {
 			for (0 <= j < 12) {
 				if (i != j) {
@@ -136,11 +154,11 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
 		}
 
 		for (0 <= i < 12) {
-			totem = trollTotem[getTribe(i)];
-			x = GetUnitX(totem);
-			y = GetUnitY(totem);
+			tmpTotem = trollTotem[getTribe(i)];
+			x = GetUnitX(tmpTotem);
+			y = GetUnitY(tmpTotem);
 			picker[i] = CreateUnit(Player(i), UNIT_HERO_PICKER, x + 800, y + 800, 0);
-			UnitShareVision(totem, Player(i), true);
+			UnitShareVision(tmpTotem, Player(i), true);
 			SetFogStateRect(Player(i), FOG_OF_WAR_VISIBLE, spawns[getTribe(i)], true);
 			ForceAddPlayer(TEAM[getTribe(i) + 1], Player(i));
 			if (GetLocalPlayer() == Player(i)) {
@@ -181,6 +199,7 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
 	    TimerDialogDisplay(selectionDialog, true);
 	    TimerStart(selectionTimer, selectionTimeAllowed, false, function onSelectionTimeRunOut);
 
-		totem = null;
+		tmpSpawn = null;
+		tmpTotem = null;
 	}
 }

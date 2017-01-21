@@ -130,8 +130,6 @@ endfunction
 function Trig_tsunami_building_damage_and_fire_Actions takes nothing returns nothing
     set udg_realParameter = AngleBetweenPoints(GetUnitLoc(GetSpellAbilityUnit()), GetSpellTargetLoc())
     call ForGroupBJ( GetUnitsInRangeOfLocMatching(150.00, PolarProjectionBJ(GetUnitLoc(GetSpellAbilityUnit()), 300.00, udg_realParameter), Condition(function Trig_tsunami_building_damage_and_fire_Func002001003)), function Trig_tsunami_building_damage_and_fire_Func002A )
-    call ForGroupBJ( GetUnitsInRangeOfLocMatching(150.00, PolarProjectionBJ(GetUnitLoc(GetSpellAbilityUnit()), 450.00, udg_realParameter), Condition(function Trig_tsunami_building_damage_and_fire_Func003001003)), function Trig_tsunami_building_damage_and_fire_Func003A )
-    call ForGroupBJ( GetUnitsInRangeOfLocMatching(150.00, PolarProjectionBJ(GetUnitLoc(GetSpellAbilityUnit()), 600.00, udg_realParameter), Condition(function Trig_tsunami_building_damage_and_fire_Func004001003)), function Trig_tsunami_building_damage_and_fire_Func004A )
 endfunction
 
 //===========================================================================

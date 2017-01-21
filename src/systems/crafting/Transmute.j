@@ -397,17 +397,6 @@ local item added
             set i[e] = GetItemTypeId(t[e])
             set e = e +1
         endloop
-        
-        if i[0] == ITEM_SPEAR and i[1] == ITEM_MUSHROOM then
-            if GetItemCharges(t[0]) > 1 then
-                call SetItemCharges(t[0], GetItemCharges(t[0]) - 1 )
-            else
-                call RemoveItem(t[0])
-            endif
-            call RemoveItem(t[1])
-            call UnitAddItemByIdSwapped( ITEM_POISON_SPEAR, GetTriggerUnit() )
-            call itemLower(2)
-        endif
         if i[0] == ITEM_CLAY_BALL and i[1] == ITEM_MANA_CRYSTAL then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
@@ -458,93 +447,73 @@ local item added
             call UnitAddItemByIdSwapped( ITEM_SPIRIT_WARD_KIT, GetTriggerUnit() )
             call itemLower(4)
         endif
-        if udg_EXTRA_MODE then
-            if i[0] == ITEM_MUSHROOM and i[1] == ITEM_MUSHROOM and i[2] == ITEM_MUSHROOM then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call RemoveItem(t[2])
-                call UnitAddItemByIdSwapped( ITEM_POISON, GetTriggerUnit() )
-                call itemLower(3)
-            endif
-            if i[0] == ITEM_POISON and i[1] == ITEM_POISON then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call UnitAddItemByIdSwapped( ITEM_ULTRA_POISON, GetTriggerUnit() )
-            endif
-            if i[0] == ITEM_SPEAR and i[1] == ITEM_POISON then
-                if GetItemCharges(t[0]) > 1 then
-                    call SetItemCharges(t[0], GetItemCharges(t[0]) - 1 )
-                else
-                    call RemoveItem(t[0])
-                endif
-                call RemoveItem(t[1])
-                call UnitAddItemByIdSwapped( ITEM_REFINED_POISON_SPEAR, GetTriggerUnit() )
-            endif
-            if i[0] == ITEM_SPEAR and i[1] == ITEM_ULTRA_POISON then
-                if GetItemCharges(t[0]) > 1 then
-                    call SetItemCharges(t[0], GetItemCharges(t[0]) - 1 )
-                else
-                    call RemoveItem(t[0])
-                endif
-                call RemoveItem(t[1])
-                call UnitAddItemByIdSwapped( ITEM_ULTRA_POISON_SPEAR, GetTriggerUnit() )
-            endif
-            if i[0] == ITEM_SPIRIT_WATER and i[1] == ITEM_MANA_CRYSTAL then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call UnitAddItemByIdSwapped( ITEM_SCROLL_TSUNAMI, GetTriggerUnit() )
-                call itemLower(1)
-            endif
-            if i[0] == ITEM_SPIRIT_WIND and i[1] == ITEM_MANA_CRYSTAL then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call UnitAddItemByIdSwapped( ITEM_SCROLL_CYCLONE, GetTriggerUnit() )
-                call itemLower(1)
-            endif
-            if i[0] == ITEM_FIRE_KIT and i[1] == ITEM_MANA_CRYSTAL then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call UnitAddItemByIdSwapped( ITEM_MAGE_FIRE_KIT, GetTriggerUnit() )
-                call itemLower(1)
-            endif
-            // CLOAK SECTION ** = Sell Rate: .65
-            // FIRE - MAGIC + BONE COAT + FLINT = 3 + 37 + 1 = 41
-            // FROST - MAGIC + BONE COAT + SPRIT OF WATER = 40 + 3 = 43
-            // HEAL - MAGIC + BONE COAT + BUTSU = 40 + 1 = 41
-            if i[0] == ITEM_MAGIC and i[1] == ITEM_BONE_COAT and i[2] == ITEM_FLINT then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call RemoveItem(t[2])
-                call UnitAddItemByIdSwapped( ITEM_CLOAK_OF_FLAMES, GetTriggerUnit() )
-                call itemLower(2) // decrease in two raw materials
-            endif
-            if i[0] == ITEM_MAGIC and i[1] == ITEM_BONE_COAT and i[2] == ITEM_SPIRIT_WATER then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call RemoveItem(t[2])
-                call UnitAddItemByIdSwapped( ITEM_CLOAK_OF_FROST, GetTriggerUnit() )
-                call itemLower(1)
-            endif
-            if i[0] == ITEM_MAGIC and i[1] == ITEM_BONE_COAT and i[2] == ITEM_BUTSU then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call RemoveItem(t[2])
-                call UnitAddItemByIdSwapped( ITEM_CLOAK_OF_HEALING, GetTriggerUnit() )
-                call itemLower(2)
-            endif
-            if i[0] == ITEM_MAGIC and i[1] == ITEM_BONE_COAT and i[2] == ITEM_DARK_ROCK then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call RemoveItem(t[2])
-                call UnitAddItemByIdSwapped( ITEM_CAMOUFLAGE_COAT, GetTriggerUnit() )
-                call itemLower(1)
-            endif
-            // END CLOAK
+        if i[0] == ITEM_MUSHROOM and i[1] == ITEM_MUSHROOM and i[2] == ITEM_MUSHROOM then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call RemoveItem(t[2])
+            call UnitAddItemByIdSwapped( ITEM_POISON, GetTriggerUnit() )
+            call itemLower(3)
         endif
+        if i[0] == ITEM_POISON and i[1] == ITEM_POISON then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call UnitAddItemByIdSwapped( ITEM_ULTRA_POISON, GetTriggerUnit() )
+        endif
+        if i[0] == ITEM_SPIRIT_WATER and i[1] == ITEM_MANA_CRYSTAL then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call UnitAddItemByIdSwapped( ITEM_SCROLL_TSUNAMI, GetTriggerUnit() )
+            call itemLower(1)
+        endif
+        if i[0] == ITEM_SPIRIT_WIND and i[1] == ITEM_MANA_CRYSTAL then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call UnitAddItemByIdSwapped( ITEM_SCROLL_CYCLONE, GetTriggerUnit() )
+            call itemLower(1)
+        endif
+        if i[0] == ITEM_FIRE_KIT and i[1] == ITEM_MANA_CRYSTAL then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call UnitAddItemByIdSwapped( ITEM_MAGE_FIRE_KIT, GetTriggerUnit() )
+            call itemLower(1)
+        endif
+        // CLOAK SECTION ** = Sell Rate: .65
+        // FIRE - MAGIC + BONE COAT + FLINT = 3 + 37 + 1 = 41
+        // FROST - MAGIC + BONE COAT + SPRIT OF WATER = 40 + 3 = 43
+        // HEAL - MAGIC + BONE COAT + BUTSU = 40 + 1 = 41
+        if i[0] == ITEM_MAGIC and i[1] == ITEM_BONE_COAT and i[2] == ITEM_FLINT then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call RemoveItem(t[2])
+            call UnitAddItemByIdSwapped( ITEM_CLOAK_OF_FLAMES, GetTriggerUnit() )
+            call itemLower(2) // decrease in two raw materials
+        endif
+        if i[0] == ITEM_MAGIC and i[1] == ITEM_BONE_COAT and i[2] == ITEM_SPIRIT_WATER then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call RemoveItem(t[2])
+            call UnitAddItemByIdSwapped( ITEM_CLOAK_OF_FROST, GetTriggerUnit() )
+            call itemLower(1)
+        endif
+        if i[0] == ITEM_MAGIC and i[1] == ITEM_BONE_COAT and i[2] == ITEM_BUTSU then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call RemoveItem(t[2])
+            call UnitAddItemByIdSwapped( ITEM_CLOAK_OF_HEALING, GetTriggerUnit() )
+            call itemLower(2)
+        endif
+        if i[0] == ITEM_MAGIC and i[1] == ITEM_BONE_COAT and i[2] == ITEM_DARK_ROCK then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call RemoveItem(t[2])
+            call UnitAddItemByIdSwapped( ITEM_CAMOUFLAGE_COAT, GetTriggerUnit() )
+            call itemLower(1)
+        endif
+        // END CLOAK
     endif
 //End of WDH Item Creation
     // workshop
-    if uid == 'o00I' and udg_EXTRA_MODE and GetUnitUserData(GetTriggerUnit()) == 0 then 
+    if uid == UNIT_WORKSHOP and GetUnitUserData(GetTriggerUnit()) == 0 then 
         loop
             exitwhen e > 5
             set t[e] = UnitItemInSlot(GetTriggerUnit(), e)
@@ -556,6 +525,34 @@ local item added
             call RemoveItem(t[0])
             call RemoveItem(t[1])
             call UnitAddItemByIdSwapped( ITEM_BLOW_GUN, GetTriggerUnit() )
+            call itemLower(2)
+        endif
+        if i[0] == ITEM_SPEAR and i[1] == ITEM_POISON then
+            if GetItemCharges(t[0]) > 1 then
+                call SetItemCharges(t[0], GetItemCharges(t[0]) - 1 )
+            else
+                call RemoveItem(t[0])
+            endif
+            call RemoveItem(t[1])
+            call UnitAddItemByIdSwapped( ITEM_REFINED_POISON_SPEAR, GetTriggerUnit() )
+        endif
+        if i[0] == ITEM_SPEAR and i[1] == ITEM_ULTRA_POISON then
+            if GetItemCharges(t[0]) > 1 then
+                call SetItemCharges(t[0], GetItemCharges(t[0]) - 1 )
+            else
+                call RemoveItem(t[0])
+            endif
+            call RemoveItem(t[1])
+            call UnitAddItemByIdSwapped( ITEM_ULTRA_POISON_SPEAR, GetTriggerUnit() )
+        endif
+        if i[0] == ITEM_SPEAR and i[1] == ITEM_MUSHROOM then
+            if GetItemCharges(t[0]) > 1 then
+                call SetItemCharges(t[0], GetItemCharges(t[0]) - 1 )
+            else
+                call RemoveItem(t[0])
+            endif
+            call RemoveItem(t[1])
+            call UnitAddItemByIdSwapped( ITEM_POISON_SPEAR, GetTriggerUnit() )
             call itemLower(2)
         endif
         //Defense WardVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV

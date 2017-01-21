@@ -67,7 +67,7 @@ function Trig_no_trees_Func003A takes nothing returns nothing
 endfunction
 
 function Trig_no_trees_Func004001002001 takes nothing returns boolean
-    return ( IsUnitType(GetFilterUnit(), UNIT_TYPE_STRUCTURE) == true )
+    return ( IsUnitType(GetFilterUnit(), UNIT_TYPE_STRUCTURE) == true ) and GetUnitTypeId( GetFilterUnit() ) != UNIT_BONFIRE
 endfunction
 
 function Trig_no_trees_Func004001002002 takes nothing returns boolean

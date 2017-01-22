@@ -96,6 +96,11 @@ function Trig_mixing_pot_stuff_Actions takes nothing returns nothing
             call UnitAddItemByIdSwapped( ITEM_ELEMENTAL_SHIELD_POTION, u ) // Elemental
             return
         endif
+		if(butsu>1 and specTypes>1) then
+			call removeHerbs(u)
+			call UnitAddItemByIdSwapped( ITEM_OMNICURE, u ) // Omnicure
+			return
+		endif
 //manas
         if(rivStem>1 and butsu>2) then
             call removeHerbs(u)

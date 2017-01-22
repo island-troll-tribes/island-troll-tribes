@@ -10,7 +10,6 @@ local item array t
 local integer array i  
 local integer e = 0
 local integer uid = GetUnitTypeId(GetTriggerUnit())
-local integer j = 0
 local item added
 //Begining of Troll Invetory Item Creation
     if bol1 then

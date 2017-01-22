@@ -1,0 +1,26 @@
+library LoadedBlowGun requires ID {
+	function el_Loadero() {
+		integer i = 0;
+		item ii;
+		if ( GetItemTypeId(GetManipulatedItem()) == ITEM_LOADED_THISTLES || GetItemTypeId(GetManipulatedItem()) == ITEM_LOADED_DARK_THISTLES || GetItemTypeId(GetManipulatedItem()) == ITEM_LOADED_BONE )
+		{
+			if ( GetItemCharges(GetManipulatedItem()) == 0)
+			{
+				for( 0 <= i <= bj_MAX_INVENTORY) {
+					ii = UnitItemInSlot ( GetManipulatingUnit(), i );
+					if ( ii != null && ii == GetManipulatedItem() )
+					{
+						RemoveItem(ii);
+						UnitAddItemToSlotById( GetManipulatingUnit(), ITEM_BLOW_GUN , i );
+					}
+				}
+			}
+		}
+	}
+
+	function onInit() {
+		trigger t = CreateTrigger();
+		TriggerRegisterAnyUnitEventBJ( t, EVENT_PLAYER_UNIT_USE_ITEM );
+		TriggerAddAction(t, function el_Loadero );
+	}
+}

@@ -363,7 +363,7 @@ endglobals
                         if GetItemTypeId(ii) == GetItemTypeId(i) then
                             if ii == i then
                                 // Split items
-                                if SPLIT then
+                                if SPLIT and IsItemStackable(i) then
                                     set full = UnitInventoryFull( u )
                                     if s > 1 and (SPLIT_DROP or not full) then
                                         if SPLIT_SIZE > 0 then

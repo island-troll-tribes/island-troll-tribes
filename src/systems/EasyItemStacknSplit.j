@@ -6,7 +6,7 @@
 // Easy Item Stack 'n Split v2.7.4
 //  by Dangerb0y
 //=====================================================================================
-library EasyItemStacknSplit initializer onInit requires Stackables
+library EasyItemStacknSplit initializer onInit requires Stackables, ID
 //=====================================================================================
 //
 // This system adds some much needed item stacking, item splitting, and full inventory
@@ -127,6 +127,9 @@ endglobals
             set is = UnitInventorySize( u )
             set il = GetItemStackCount( i )
             set it = GetItemTypeId( i )
+			if (UnitHasBuffBJ(u, 'Bapl') == true and it == ITEM_COOKED_MEAT ) then
+		        set it = ITEM_DISEASED_MEAT
+			endif
             // We can remove the item, we have all the data we need from it
             call RemoveItem( i )
             // Look for items of the same type and try stack onto them
@@ -461,7 +464,7 @@ endglobals
                         set s = 0
                         loop
                             set ii = UnitItemInSlot( u, s )
-                            if ii != i and GetItemTypeId(ii) == iis and (not USE_ITEM_STACK_TABLE or o == 0 or GetItemCharges(ii) < o) then
+                            if ii != i and ((GetItemTypeId(ii) == iis) or (iis == ITEM_COOKED_MEAT and GetItemTypeId(ii) == ITEM_DISEASED_MEAT and UnitHasBuffBJ( u, 'Bapl'))) and (not USE_ITEM_STACK_TABLE or o == 0 or GetItemCharges(ii) < o) then
                                 set s = is + 1
                             else
                                 set s = s + 1

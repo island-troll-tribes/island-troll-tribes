@@ -1,0 +1,64 @@
+library HomingBeacon requires PublicLibrary {
+	integer tracking[12];
+
+	function Ping() -> boolean {
+		integer owner;
+		unit target;
+
+	    if (GetSpellAbilityId() == 'A05N') {
+			owner = GetPlayerId(GetOwningPlayer(GetSpellAbilityUnit()));
+
+			if (tracking[owner] != -1) {
+				target = GetPlayerTroll(Player(tracking[owner]));
+
+		        if (IsUnitAliveBJ(target)) {
+		            PingMinimapLocForForceEx(GetPlayersAllies(Player(owner)), GetUnitLoc(target), 5.00, bj_MINIMAPPINGSTYLE_ATTACK, 100, 100, 100);
+	            }
+
+				target = null;
+			}
+	    }
+
+	    return false;
+	}
+
+	function Cast() -> boolean {
+		integer owner;
+		integer target;
+
+	    if (GetSpellAbilityId() == 'A05M') {
+			owner = GetPlayerId(GetOwningPlayer(GetSpellAbilityUnit()));
+			target = GetPlayerId(GetOwningPlayer(GetSpellTargetUnit()));
+
+			if (0 <= owner && owner < 12) {
+				tracking[owner] = target;
+			}
+	    }
+
+	    return false;
+	}
+
+	public function ClearHomingBeacon(integer id) {
+		integer i = 0;
+
+		for (0 <= i <= 12) {
+			if (tracking[i] == id) {
+				tracking[i] = -1;
+			}
+		}
+	}
+
+	function onInit() {
+		integer i = 0;
+
+		for (0 <= i <= 12) {
+			tracking[i] = -1;
+		}
+
+		gg_trg_Homing_Beacon_Cast = CreateTrigger();
+	    TriggerAddCondition(gg_trg_Homing_Beacon_Cast, Condition(function Cast));
+
+	    gg_trg_Homeing_Beacon_Ping = CreateTrigger();
+	    TriggerAddCondition(gg_trg_Homeing_Beacon_Ping, Condition(function Ping));
+	}
+}

@@ -11,15 +11,16 @@ library GoK requires ID, Table {
     }
 
     function Filter() -> boolean {
-        return GetUnitAbilityLevel(GetEnumUnit(), BUFF_GOK) > 0 &&
-            gokClassMultiplier.has(GetUnitTypeId(GetEnumUnit())) &&
-            IsUnitEnemy(GetEnumUnit(), GetOwningPlayer(GetDyingUnit())) &&
-            IsUnitAlly(GetKillingUnit(), GetOwningPlayer(GetEnumUnit()));
+        return GetUnitAbilityLevel(GetFilterUnit(), BUFF_GOK) > 0 &&
+            gokClassMultiplier.has(GetUnitTypeId(GetFilterUnit())) &&
+            IsUnitEnemy(GetFilterUnit(), GetOwningPlayer(GetDyingUnit())) &&
+            IsUnitAlly(GetKillingUnit(), GetOwningPlayer(GetFilterUnit()));
     }
 
     function FindRecipients() -> boolean {
         group g = CreateGroup();
         GroupEnumUnitsInRangeOfLoc(g, GetUnitLoc(GetDyingUnit()), 500, Condition(function Filter));
+        GroupAddUnit(g, GetKillingUnit());
         ForGroup(g, function AddBonusXP);
         DestroyGroup(g);
         g = null;

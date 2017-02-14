@@ -3,7 +3,7 @@ function Trig_EMP_Conditions takes nothing returns boolean
 endfunction
 
 function EMP_Filter takes nothing returns boolean
-    return GetUnitTypeId(GetFilterUnit()) == UNIT_ENSNARE_TRAP or GetUnitTypeId(GetFilterUnit()) == UNIT_OMNITOWER or GetUnitTypeId(GetFilterUnit()) == UNIT_OMNITOWER or GetUnitTypeId(GetFilterUnit()) == UNIT_MUD_HUT
+    return GetUnitTypeId(GetFilterUnit()) == UNIT_ENSNARE_TRAP or GetUnitTypeId(GetFilterUnit()) == UNIT_OMNITOWER or GetUnitTypeId(GetFilterUnit()) == UNIT_OMNITOWER
 endfunction
 
 function Trig_EMP_Actions takes nothing returns nothing

@@ -320,23 +320,21 @@ local item added
 		endif
 		if i[0] == ITEM_BLOW_GUN and i[1] == ITEM_THISTLES then
 			set e = GetItemCharges(t[1])
-			if e >= 15 then
-				call RemoveItem(t[0])
-				call RemoveItem(t[1])
-				call UnitAddItemByIdSwapped( ITEM_LOADED_THISTLES, GetTriggerUnit() )
-			endif
+			call RemoveItem(t[0])
+			call RemoveItem(t[1])
+            set added = UnitAddItemByIdSwapped(ITEM_LOADED_THISTLES, GetTriggerUnit())
+			call SetItemCharges(added, e)
 		endif
 		if i[0] == ITEM_BLOW_GUN and i[1] == ITEM_DARK_THISTLES then
 			set  e = GetItemCharges(t[1])
+            call RemoveItem(t[0])
+            set added = UnitAddItemByIdSwapped(ITEM_LOADED_THISTLES, GetTriggerUnit())
 			if e >= 12 then
-				call RemoveItem(t[0])
-				call UnitAddItemByIdSwapped( ITEM_LOADED_DARK_THISTLES, GetTriggerUnit() )
-				if e > 12 then
-					set e = e - 12
-					call SetItemCharges( t[1] , e )
-				else
-					call RemoveItem(t[1])
-				endif
+                call SetItemCharges(added, 12)
+                call SetItemCharges(t[1] , e - 12)
+            else
+                call SetItemCharges(added, e)
+				call RemoveItem(t[1])
 			endif
 		endif
         if udg_EXTRA_MODE then

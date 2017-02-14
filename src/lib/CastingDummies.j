@@ -5,6 +5,7 @@
 library DUMMYLIB requires PublicLibrary
 
 globals
+    Table SpearCastTable
     group dummyCast = CreateGroup()
     private constant real spawn_x = 2300
     private constant real spawn_y = -11300
@@ -36,6 +37,7 @@ local unit u = LoadUnitHandle(udg_GameHash, GetHandleId(GetExpiredTimer()), Stri
 call RemoveSavedHandle(udg_GameHash, GetHandleId(GetExpiredTimer()), StringHash("dumc"))
 call UnitRemoveAbility(u, LoadInteger(udg_GameHash, GetHandleId(GetExpiredTimer()), StringHash("dumcabil")))
 call RemoveSavedInteger(udg_GameHash, GetHandleId(GetExpiredTimer()), StringHash("dumcabil"))
+call SpearCastTable.remove_h(u)
 call ReleaseTimer(GetExpiredTimer())
 call SetUnitX(u, spawn_x)
 call SetUnitY(u, spawn_y)
@@ -60,7 +62,7 @@ set t = null
 endfunction
 
 // dummy caster at CASTER'S place
-function masterCastAtCaster takes unit c, unit t, real w,real h, integer order, string s returns nothing
+function masterCastAtCaster takes unit c, unit t, real w,real h, integer order, string s returns unit
     local real x = GetUnitX(c)
     local real y = GetUnitY(c)
     local real Cx = GetRandomReal(x - w*0.5, x + w*0.5)
@@ -69,7 +71,7 @@ function masterCastAtCaster takes unit c, unit t, real w,real h, integer order, 
     call UnitAddAbility( m , order)
     call IssueTargetOrder( m, s, t )
     call returnCastTimed(m, order, 4)
-    set m = null
+    return m
 endfunction
 
 // dummy caster at TARGET'S place
@@ -112,68 +114,5 @@ function masterCastAreaCaster takes unit c, real x, real y,integer order, string
     set m = null
 endfunction
 
-/*
-// dummy caster at CASTER'S place
-function masterCastAtCaster takes unit c, unit t, real w,real h, integer order, string s returns nothing
-    local real x = GetUnitX(c)
-    local real y = GetUnitY(c)
-    local real Cx = GetRandomReal(x - w*0.5, x + w*0.5)
-    local real Cy = GetRandomReal(y - h*0.5, y + h*0.5)
-    local unit m = CreateUnit(GetOwningPlayer(c),UNIT_MASTER_CASTER,Cx,Cy,0)
-    call SetUnitInvulnerable( m, true )
-    call SetUnitPathing( m, false )
-    call UnitApplyTimedLife(m, 'BTLF', 3)
-    call UnitAddAbility( m , order)
-    call IssueTargetOrder( m, s, t )
-    set m = null
-endfunction
-
-// dummy caster at TARGET'S place
-function masterCastAtTarget takes unit c, unit t, real w,real h, integer order, string s returns nothing
-    local real x = GetUnitX(t)
-    local real y = GetUnitY(t)
-    local real Cx = GetRandomReal(x - w*0.5, x + w*0.5)
-    local real Cy = GetRandomReal(y - h*0.5, y + h*0.5)
-    local unit m = CreateUnit(GetOwningPlayer(c),UNIT_MASTER_CASTER,Cx,Cy,0)
-    call SetUnitInvulnerable( m, true )
-    call SetUnitPathing( m, false )
-    call UnitApplyTimedLife(m, 'BTLF', 3)
-    call UnitAddAbility( m , order)
-    call IssueTargetOrder( m, s, t )
-    set m = null
-endfunction
-
-function masterCastNoTarget takes unit c, real x, real y ,real w,real h, integer order, string s returns nothing
-    local real Cx = GetRandomReal(x - w*0.5, x + w*0.5)
-    local real Cy = GetRandomReal(y - h*0.5, y + h*0.5)
-    local unit m = CreateUnit(GetOwningPlayer(c),UNIT_MASTER_CASTER,Cx,Cy,0)
-    call SetUnitInvulnerable( m, true )
-    call SetUnitPathing( m, false )
-    call UnitApplyTimedLife(m, 'BTLF', 3)
-    call UnitAddAbility( m , order)
-    call IssueImmediateOrder( m, s)
-    set m = null
-endfunction
-
-function masterCastAreaTarget takes unit c, real x, real y,integer order, string s returns nothing
-    local unit m = CreateUnit(GetOwningPlayer(c),UNIT_MASTER_CASTER,x,y,0)
-    call SetUnitInvulnerable( m, true )
-    call SetUnitPathing( m, false )
-    call UnitApplyTimedLife(m, 'BTLF', 3)
-    call UnitAddAbility( m , order)
-    call IssuePointOrder( m, s, x , y)
-    set m = null
-endfunction
-
-function masterCastAreaCaster takes unit c, real x, real y,integer order, string s returns unit
-    local unit m = CreateUnit(GetOwningPlayer(c),UNIT_MASTER_CASTER,GetUnitX(c),GetUnitY(c),0)
-    call SetUnitInvulnerable( m, true )
-    call SetUnitPathing( m, false )
-    call UnitApplyTimedLife(m, 'BTLF', 3)
-    call UnitAddAbility( m , order)
-    call IssuePointOrder( m, s, x , y)
-    return m
-endfunction
-*/
 
 endlibrary//===========================================================================

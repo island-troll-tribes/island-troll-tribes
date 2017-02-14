@@ -245,13 +245,8 @@ function getPlayersTroll takes player p returns unit
 endfunction
 
 function GetPlayerTroll takes player p returns unit
-    local group g = CreateGroup()
-    local unit u
-    call GroupEnumUnitsOfPlayer( g, p, Condition( function FilterUnitIsTroll ) )
-    set u = FirstOfGroup( g )
-    call DestroyGroup( g )
-    set g = null
-    return u
+    set udg_parameterUnit=udg_PUnits[GetPlayerId(p)]
+    return udg_parameterUnit
 endfunction
 
 function GetPlayerTribe takes player p returns force

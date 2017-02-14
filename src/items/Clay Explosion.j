@@ -9,10 +9,10 @@ endfunction
 
 function Trig_clay_explosion_Actions takes nothing returns nothing
     set bj_forLoopAIndex = 1
-    set bj_forLoopAIndexEnd = GetRandomInt(6, 15)
+    set bj_forLoopAIndexEnd = GetRandomInt(6, 10)
     loop
         exitwhen bj_forLoopAIndex > bj_forLoopAIndexEnd
-        call CreateNUnitsAtLoc( 1, UNIT_LIVING_CLAY, GetOwningPlayer(GetSpellAbilityUnit()), GetRandomLocInRect(RectFromCenterSizeBJ(GetUnitLoc(GetSpellAbilityUnit()), 5000.00, 5000.00)), bj_UNIT_FACING )
+        call CreateNUnitsAtLoc( 1, UNIT_LIVING_CLAY, GetOwningPlayer(GetSpellAbilityUnit()), GetRandomLocInRect(RectFromCenterSizeBJ(GetUnitLoc(GetSpellAbilityUnit()), 3000.00, 3000.00)), bj_UNIT_FACING )
         set bj_forLoopAIndex = bj_forLoopAIndex + 1
     endloop
 endfunction

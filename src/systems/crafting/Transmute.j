@@ -328,7 +328,7 @@ local item added
 		if i[0] == ITEM_BLOW_GUN and i[1] == ITEM_DARK_THISTLES then
 			set  e = GetItemCharges(t[1])
             call RemoveItem(t[0])
-            set added = UnitAddItemByIdSwapped(ITEM_LOADED_THISTLES, GetTriggerUnit())
+            set added = UnitAddItemByIdSwapped(ITEM_LOADED_DARK_THISTLES, GetTriggerUnit())
 			if e >= 12 then
                 call SetItemCharges(added, 12)
                 call SetItemCharges(t[1] , e - 12)

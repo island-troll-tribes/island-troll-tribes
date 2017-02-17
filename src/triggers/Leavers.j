@@ -7,6 +7,10 @@ library Leavers initializer onInit requires PublicLibrary, Commands, MapSetup
         set TribeHasActivePlayer_hasActivePlayer = TribeHasActivePlayer_hasActivePlayer or GetPlayerSlotState(GetEnumPlayer()) == PLAYER_SLOT_STATE_PLAYING
     endfunction
 
+    function KillPlayerTroll takes nothing returns nothing
+        call KillUnit(GetPlayerTroll(GetEnumPlayer()))
+    endfunction
+
     function TribeHasActivePlayer takes force tribe returns boolean
         set TribeHasActivePlayer_hasActivePlayer = false
         call ForForce(tribe, function CheckForActive)
@@ -15,16 +19,20 @@ library Leavers initializer onInit requires PublicLibrary, Commands, MapSetup
 
     function Trig_leavers_Actions takes nothing returns nothing
         local integer PID = GetPlayerId(GetTriggerPlayer())
+
         call DisplayText(GENERAL_COLOR+GetPlayerName(GetTriggerPlayer())+GRAY_COLOR+" ["+COLOR_CODE[PID]+udg_RealNames[PID]+GRAY_COLOR+"]"+GENERAL_COLOR+" has left the game."+GRAY_COLOR+" (Player "+I2S(PID+1)+")|r")
+
         if isobserver[PID] then
             return
         endif
+
         call ConditionalTriggerExecute( gg_trg_update_names )
+
         if not TribeHasActivePlayer(TEAM[TEAM_PLAYER[PID]]) then
-            call KillUnit(GetPlayerTroll(GetTriggerPlayer()))
-            call RemoveUnit(GetPlayerTroll(GetTriggerPlayer()))
+            call ForForce(TEAM[TEAM_PLAYER[PID]], function KillPlayerTroll)
             return
         endif
+
         set tempInt = PID
         if not adv_control[PID] then
             call ForForce(TEAM[TEAM_PLAYER[PID]], function ShareAdvControl)

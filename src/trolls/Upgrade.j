@@ -138,34 +138,36 @@ library TrollUpgrade initializer onInit requires ID, Constants, PublicLibrary
     if GetSpellAbilityId() == SPELL_SUPER_FORM_CAST and GetHeroLevel(REPLACED_UNIT)>=8 then
       set REPLACED_UNIT = GetSpellAbilityUnit()
       if(GetUnitTypeId(REPLACED_UNIT)==UNIT_BEAST_MASTER and checkItem(REPLACED_UNIT,ITEM_MED_BEAST_MASTER))then
-          set REMOVE_ITEM = ITEM_MED_BEAST_MASTER
-          set UNIT_ID_REPLACE = UNIT_ULTIMATE_FORM
+        set REMOVE_ITEM = ITEM_MED_BEAST_MASTER
+        set UNIT_ID_REPLACE = UNIT_ULTIMATE_FORM
       elseif(GetUnitTypeId(REPLACED_UNIT)==UNIT_HUNTER and checkItem(REPLACED_UNIT,ITEM_MED_HUNTER))then
-          set REMOVE_ITEM = ITEM_MED_HUNTER
-          set UNIT_ID_REPLACE = UNIT_JUGGERNAUT
-          set TRACKER_PRESENT = true
+        set REMOVE_ITEM = ITEM_MED_HUNTER
+        set UNIT_ID_REPLACE = UNIT_JUGGERNAUT
+        set TRACKER_PRESENT = true
       elseif(GetUnitTypeId(REPLACED_UNIT)==UNIT_GATHERER and checkItem(REPLACED_UNIT,ITEM_MED_GATHERER))then
-          set REMOVE_ITEM = ITEM_MED_GATHERER
-          set UNIT_ID_REPLACE = UNIT_OMNIGATHERER
+        set REMOVE_ITEM = ITEM_MED_GATHERER
+        set UNIT_ID_REPLACE = UNIT_OMNIGATHERER
       elseif(GetUnitTypeId(REPLACED_UNIT)==UNIT_THIEF and checkItem(REPLACED_UNIT,ITEM_MED_THIEF))then
-          set REMOVE_ITEM = ITEM_MED_THIEF
-          set UNIT_ID_REPLACE = UNIT_ASSASSIN
+        set REMOVE_ITEM = ITEM_MED_THIEF
+        set UNIT_ID_REPLACE = UNIT_ASSASSIN
       elseif(GetUnitTypeId(REPLACED_UNIT)==UNIT_SCOUT and checkItem(REPLACED_UNIT,ITEM_MED_SCOUT))then
-          set REMOVE_ITEM = ITEM_MED_SCOUT
-          set UNIT_ID_REPLACE = UNIT_SPY
+        set REMOVE_ITEM = ITEM_MED_SCOUT
+        set UNIT_ID_REPLACE = UNIT_SPY
       elseif(GetUnitTypeId(REPLACED_UNIT)==UNIT_MAGE and checkItem(REPLACED_UNIT,ITEM_MED_MAGE))then
-          set REMOVE_ITEM = ITEM_MED_MAGE
-          set UNIT_ID_REPLACE = UNIT_DEMENTIA_MASTER
+        set REMOVE_ITEM = ITEM_MED_MAGE
+        set UNIT_ID_REPLACE = UNIT_DEMENTIA_MASTER
       elseif(GetUnitTypeId(REPLACED_UNIT)==UNIT_PRIEST and checkItem(REPLACED_UNIT,ITEM_MED_PRIEST))then
-          set REMOVE_ITEM = ITEM_MED_PRIEST
-          set UNIT_ID_REPLACE = UNIT_SAGE
+        set REMOVE_ITEM = ITEM_MED_PRIEST
+        set UNIT_ID_REPLACE = UNIT_SAGE
       elseif(GetUnitTypeId(REPLACED_UNIT)==UNIT_HEAD_HUNTER and checkItem(REPLACED_UNIT,ITEM_MED_HEAD_HUNER))then
-          set REMOVE_ITEM = ITEM_MED_HEAD_HUNER
-          set UNIT_ID_REPLACE = UNIT_ARCHER_INTREPIDE    
+        set REMOVE_ITEM = ITEM_MED_HEAD_HUNER
+        set UNIT_ID_REPLACE = UNIT_ARCHER_INTREPIDE    
       endif
 
-      call removeItem(REPLACED_UNIT, REMOVE_ITEM)
-      call TrollUpgrade(REPLACED_UNIT, UNIT_ID_REPLACE, true, true)
+      if UNIT_ID_REPLACE != 0 then
+        call removeItem(REPLACED_UNIT, REMOVE_ITEM)
+        call TrollUpgrade(REPLACED_UNIT, UNIT_ID_REPLACE, true, true)
+      endif
 
       set REPLACED_UNIT = null
     endif

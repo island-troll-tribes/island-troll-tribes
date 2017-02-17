@@ -2,6 +2,8 @@
 function DiseaseCloudActions takes nothing returns boolean
     local integer k
     local integer charges = 0
+    local real x
+    local real y
     local unit q
     local unit u
     local item i
@@ -12,6 +14,8 @@ function DiseaseCloudActions takes nothing returns boolean
 
     set q = GetSpellTargetUnit()
     set k = UnitInventorySize( q ) - 1
+    set x = GetUnitX( q )
+    set y = GetUnitY( q )
 
     loop
         exitwhen k < 0
@@ -19,9 +23,9 @@ function DiseaseCloudActions takes nothing returns boolean
         if GetItemTypeId( i ) == ITEM_COOKED_MEAT then
             set charges = GetItemCharges( i )
             call RemoveItem( i )
-            call UnitAddItemToSlotById( q, ITEM_DISEASED_MEAT, k )
-            set i = UnitItemInSlot( q, k )
+            set i = CreateItem( ITEM_DISEASED_MEAT, x, y )
             call SetItemCharges( i, charges ) 
+            call UnitStackItem( q, i )
         endif
         set k = k - 1
     endloop
@@ -33,6 +37,7 @@ function DiseaseCloudActions takes nothing returns boolean
     set u = null
     set q = null
     set i = null
+
     return false
 endfunction
 

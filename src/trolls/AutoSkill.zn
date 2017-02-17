@@ -2,10 +2,20 @@ library AutoSkill {
 	Table skillMap;
 
 	function Skill() -> boolean {
-		integer id = GetUnitTypeId(GetTriggerUnit());
+		unit u = GetTriggerUnit();
+		integer id = GetUnitTypeId(u);
+		integer k = GetHeroSkillPoints(u);
+		integer i = 0;
+
+		// Skill K times in case of multi-level
 		if (skillMap.has(id)) {
-			SelectHeroSkill(GetTriggerUnit(), skillMap[id]);
+			for (0 <= i < k) {
+				SelectHeroSkill(u, skillMap[id]);
+			}
 		}
+
+		u = null;
+
 		return false;
 	}
 

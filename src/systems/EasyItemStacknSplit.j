@@ -574,7 +574,7 @@ endglobals
         call TriggerAddCondition( gg_trg_EasyItemStacknSplit, function ActionController )
         call TriggerAddCondition( CancelTrigger, function CancelController )
         call TriggerAddCondition( PreloadTrigger, function PreloadController )
-        call TriggerAddCondition( PreloadTrigger, function initStackables )
+        call TriggerAddCondition( PreloadTrigger, function InitStackables )
     endfunction
 
 endlibrary//===========================================================================

@@ -10,20 +10,31 @@ library GoK requires ID, Table {
             AddHeroXP(GetEnumUnit(), gokClassMultiplier[GetUnitTypeId(GetEnumUnit())] * GetUnitLevel(GetDyingUnit()), true);
     }
 
+    function Test(unit u) -> boolean {
+        return GetUnitAbilityLevel(u, BUFF_GOK) > 0 &&
+            gokClassMultiplier.has(GetUnitTypeId(u)) &&
+            IsUnitEnemy(u, GetOwningPlayer(GetDyingUnit())) &&
+            IsUnitAlly(GetKillingUnit(), GetOwningPlayer(u));
+    }
+
     function Filter() -> boolean {
-        return GetUnitAbilityLevel(GetFilterUnit(), BUFF_GOK) > 0 &&
-            gokClassMultiplier.has(GetUnitTypeId(GetFilterUnit())) &&
-            IsUnitEnemy(GetFilterUnit(), GetOwningPlayer(GetDyingUnit())) &&
-            IsUnitAlly(GetKillingUnit(), GetOwningPlayer(GetFilterUnit()));
+        return Test(GetFilterUnit());
     }
 
     function FindRecipients() -> boolean {
         group g = CreateGroup();
+        unit killer = GetKillingUnit();
+
+        if (Test(killer)) {
+            GroupAddUnit(g, killer);
+        }
         GroupEnumUnitsInRangeOfLoc(g, GetUnitLoc(GetDyingUnit()), 500, Condition(function Filter));
-        GroupAddUnit(g, GetKillingUnit());
         ForGroup(g, function AddBonusXP);
         DestroyGroup(g);
+
         g = null;
+        killer = null;
+
         return false;
     }
 

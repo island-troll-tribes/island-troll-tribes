@@ -14,8 +14,6 @@ COMPILER_PATH   = File.join %W[scripts compile]
 JASSHELPER_PATH = File.join %W[tools jasshelper clijasshelper.exe]
 OPTIMIZER_DIR   = File.join %W[tools wc3mapoptimizer]
 OPTIMIZER_PATH  = File.join %W[#{OPTIMIZER_DIR} VXJWTSOPT.exe]
-WIDGETIZER_DIR  = File.join %W[tools widgetizer]
-WIDGETIZER_PATH = File.join %W[#{WIDGETIZER_DIR} BatWidgetizer.exe]
 BLIZZARD_J_PATH = File.join %W[tools blizzard.j]
 COMMON_J_PATH   = File.join %W[tools common.j]
 
@@ -33,12 +31,6 @@ end
 
 def do_optimizer
   cmd = "#{"sh -c \"" if WIN_OS}#{'wine ' if MAC_OS}'#{OPTIMIZER_PATH}' '#{$opt[:map_unpro_path]}' --do '#{$opt[:map_output_path]}' --checkall --tweak '#{File.join(%W[#{OPTIMIZER_DIR} settings.vxtweak])}' --exit#{"\"" if WIN_OS}"
-  puts cmd if $opt[:debug_script]
-  `#{cmd}`
-end
-
-def do_widgetizer
-  cmd = "#{"sh -c \"" if WIN_OS}#{'wine ' if MAC_OS}'#{WIDGETIZER_PATH}' '#{$opt[:map_unpro_path]}' '#{File.join(%W[#{WIDGETIZER_DIR} Widgetizer.ini])}'#{"\"" if WIN_OS}"
   puts cmd if $opt[:debug_script]
   `#{cmd}`
 end
@@ -72,16 +64,6 @@ def do_build
       puts out
       do_exit "jasshelper error: #{$?}"
     elsif !($opt[:do_optimizer] || $opt[:do_widgetizer])
-      FileUtils.mv $opt[:map_unpro_path], $opt[:map_output_path]
-    end
-    puts "done"
-  end
-  if $opt[:do_widgetizer]
-    print "Widgetizing............"
-    do_widgetizer
-    if $?.to_i != 0
-      do_exit "widgetizer error: #{$?}"
-    elsif !$opt[:do_optimizer]
       FileUtils.mv $opt[:map_unpro_path], $opt[:map_output_path]
     end
     puts "done"
@@ -126,7 +108,6 @@ def main
     :do_jasshelper   => $opt[:do_jasshelper]   ? eval($opt[:do_jasshelper]) : true,
     :do_compile      => $opt[:do_compile]      ? eval($opt[:do_compile])    : {:do_jasshelper => false},
     :do_optimizer    => $opt[:do_optimizer]    ? eval($opt[:do_optimizer])  : false,
-    :do_widgetizer   => $opt[:do_widgetizer]   ? eval($opt[:do_widgetizer]) : false,
     :debug           => $opt[:debug]           ? eval($opt[:debug])         : false,
     :launchwc3       => $opt[:launchwc3]       ? eval($opt[:launchwc3])     : false,
     :map_unpro_path  => $opt[:map_unpro_path]  ? File.expand_path($opt[:map_unpro_path])  : Dir.glob(File.join(%W[base-maps *.w3x])).sort.reverse.first,
@@ -137,7 +118,6 @@ def main
   if $opt[:env] == 'beta'
     $opt.merge!({
       :debug => true,
-      :do_widgetizer => true,
       :do_optimizer => true,
     })
   elsif $opt[:env] == 'test'
@@ -148,10 +128,6 @@ def main
   elsif $opt[:env] == 'optimized'
     $opt.merge!({
       :do_optimizer => true,
-    })
-  elsif $opt[:env] == 'widgetized'
-    $opt.merge!({
-      :do_widgetizer => true,
     })
   elsif $opt[:env] == 'pro'
     $opt.merge!({

@@ -1,4 +1,4 @@
-library PublicLibrary initializer initPublicLibrary requires TimerUtils, IDUtils, Constants, FilterTypeIsThing, String
+library PublicLibrary initializer initPublicLibrary requires TimerUtils, IDUtils, Constants, FilterTypeIsThing, String, GameConfig
 
 globals
 integer array TEAM_PLAYER
@@ -218,6 +218,7 @@ function prepareSpells takes nothing returns nothing
     set udg_spellStrings[12]="shadowstrike"
     set udg_spellStrings[13]="frostnova"
     set udg_spellStrings[14]="chainlightning"
+
     set udg_spellStrings[15]="heal"
     set udg_spellStrings[16]="healingwave"
     set udg_spellStrings[17]="bloodlust"
@@ -251,6 +252,10 @@ endfunction
 
 function GetPlayerTribe takes player p returns force
     return TEAM[TEAM_PLAYER[GetPlayerId(p)]]
+endfunction
+
+function GetPlayerTribeId takes player p returns integer
+    return TEAM_PLAYER[GetPlayerId(p)] - 1
 endfunction
 
 function cleanInventory takes unit u returns nothing

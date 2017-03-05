@@ -31,7 +31,6 @@ function DiseaseCloudActions takes nothing returns boolean
     endloop
 
     set u = CreateUnit( GetOwningPlayer( GetSpellAbilityUnit() ), UNIT_DISEASE_CLOUD, GetUnitX( q ), GetUnitY( q ), 0 )
-    call SetUnitAbilityLevel( u, 'A043', GetRandomInt( 1, 2 ) )
     call UnitApplyTimedLife( u, 'BTLF', 3 )
 
     set u = null

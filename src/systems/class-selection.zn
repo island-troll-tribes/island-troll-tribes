@@ -96,6 +96,7 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
 	    integer selectionTimeAllowed = 40;
 		integer ppt = GameConfig.getInstance().getNumPlayersPerTribe();
 		integer numTribes = GameConfig.getInstance().getNumTribes();
+		integer maxOccupiedTribe = numTribes;
 		rect tmpSpawn;
 		unit tmpTotem;
 
@@ -127,7 +128,14 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
 
 		if (GameConfig.getInstance().isRandomSpawns()) {
 			for (0 <= i < numTribes) {
-				j = GetRandomInt(0, numTribes - 1);
+				if (!isobserver[i] &&
+					GetPlayerSlotState(Player(i)) == PLAYER_SLOT_STATE_PLAYING) {
+					maxOccupiedTribe = i;
+				}
+			}
+
+			for (0 <= i < maxOccupiedTribe) {
+				j = GetRandomInt(0, maxOccupiedTribe - 1);
 				tmpSpawn = spawns[i];
 				spawns[i] = spawns[j];
 				spawns[j] = tmpSpawn;
@@ -154,15 +162,26 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
 		}
 
 		for (0 <= i < 12) {
-			tmpTotem = trollTotem[getTribe(i)];
-			x = GetUnitX(tmpTotem);
-			y = GetUnitY(tmpTotem);
-			picker[i] = CreateUnit(Player(i), UNIT_HERO_PICKER, x + 800, y + 800, 0);
-			UnitShareVision(tmpTotem, Player(i), true);
-			SetFogStateRect(Player(i), FOG_OF_WAR_VISIBLE, spawns[getTribe(i)], true);
-			ForceAddPlayer(TEAM[getTribe(i) + 1], Player(i));
-			if (GetLocalPlayer() == Player(i)) {
-				SetCameraPosition(x, y);
+			if (GetPlayerSlotState(Player(i)) == PLAYER_SLOT_STATE_PLAYING) {
+				if (isobserver[i]) {
+					tmpTotem = trollTotem[getTribe(0)];
+					x = GetUnitX(tmpTotem);
+					y = GetUnitY(tmpTotem);
+					if (GetLocalPlayer() == Player(i)) {
+						SetCameraPosition(x, y);
+					}
+				} else {
+					tmpTotem = trollTotem[getTribe(i)];
+					x = GetUnitX(tmpTotem);
+					y = GetUnitY(tmpTotem);
+					picker[i] = CreateUnit(Player(i), UNIT_HERO_PICKER, x + 800, y + 800, 0);
+					UnitShareVision(tmpTotem, Player(i), true);
+					SetFogStateRect(Player(i), FOG_OF_WAR_VISIBLE, spawns[getTribe(i)], true);
+					ForceAddPlayer(TEAM[getTribe(i) + 1], Player(i));
+					if (GetLocalPlayer() == Player(i)) {
+						SetCameraPosition(x, y);
+					}
+				}
 			}
 		}
 

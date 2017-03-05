@@ -1,6 +1,45 @@
 library TrollUpgrade initializer onInit requires ID, Constants, PublicLibrary
-  function TrollUpgrade takes unit REPLACED_UNIT, integer UNIT_ID_REPLACE, boolean SUPERSUB, boolean medallion returns nothing
-    local unit REPLACING_UNIT = ReplaceUnitBJ(REPLACED_UNIT, UNIT_ID_REPLACE, 1)
+  private function ReplaceUnitEx takes unit whichUnit, integer newUnitId, integer unitStateMethod returns unit
+    local unit    oldUnit = whichUnit
+    local unit    newUnit
+    local integer index
+    local item    indexItem
+
+    // If we have bogus data, don't attempt the replace.
+    if (oldUnit == null) then
+      return oldUnit
+    endif
+
+    // Hide the original unit.
+    call ShowUnit(oldUnit, false)
+
+    set newUnit = CreateUnit(GetOwningPlayer(oldUnit), newUnitId, GetUnitX(oldUnit), GetUnitY(oldUnit), GetUnitFacing(oldUnit))
+
+    call SetUnitState(newUnit, UNIT_STATE_LIFE, GetUnitState(oldUnit, UNIT_STATE_LIFE))
+    call SetUnitState(newUnit, UNIT_STATE_MANA, GetUnitState(oldUnit, UNIT_STATE_MANA))
+
+    // Mirror properties of the old unit onto the new unit.
+    call SetResourceAmount(newUnit, GetResourceAmount(oldUnit))
+
+    set index = 0
+    loop
+      set indexItem = UnitItemInSlot(oldUnit, index)
+      if (indexItem != null) then
+        call UnitRemoveItem(oldUnit, indexItem)
+        call UnitAddItem(newUnit, indexItem)
+      endif
+
+      set index = index + 1
+      exitwhen index >= bj_MAX_INVENTORY
+    endloop
+
+    call RemoveUnit(oldUnit)
+
+    return newUnit
+  endfunction
+
+  private function TrollUpgrade takes unit REPLACED_UNIT, integer UNIT_ID_REPLACE, boolean SUPERSUB, boolean medallion returns nothing
+    local unit REPLACING_UNIT = ReplaceUnitEx(REPLACED_UNIT, UNIT_ID_REPLACE, 1)
     local player PLAYER = GetOwningPlayer(REPLACED_UNIT)
 
     call GroupRemoveUnit(udg_trolls, REPLACED_UNIT)
@@ -49,7 +88,7 @@ library TrollUpgrade initializer onInit requires ID, Constants, PublicLibrary
     set PLAYER = null
   endfunction
 
-  function Trig_upgrade_Actions takes nothing returns boolean
+  private function Trig_upgrade_Actions takes nothing returns boolean
     local integer UNIT_ID_REPLACE = 0
     local boolean SUPERSUB = false
     local integer SKILL_UPGRADE = GetLearnedSkill()
@@ -130,7 +169,7 @@ library TrollUpgrade initializer onInit requires ID, Constants, PublicLibrary
     return false
   endfunction
 
-  function MedallionCastCheck takes nothing returns boolean
+  private function MedallionCastCheck takes nothing returns boolean
     local unit REPLACED_UNIT = GetSpellAbilityUnit()
     local integer UNIT_ID_REPLACE = 0
     local integer REMOVE_ITEM = 0
@@ -177,13 +216,13 @@ library TrollUpgrade initializer onInit requires ID, Constants, PublicLibrary
 
 
   private function onInit takes nothing returns nothing
-      local trigger learnedTrigger = CreateTrigger()
-      local trigger itemTrigger = CreateTrigger()
+    local trigger learnedTrigger = CreateTrigger()
+    local trigger itemTrigger = CreateTrigger()
 
-      call TriggerRegisterAnyUnitEventBJ(learnedTrigger, EVENT_PLAYER_HERO_SKILL)
-      call TriggerAddCondition(learnedTrigger, Condition(function Trig_upgrade_Actions))
+    call TriggerRegisterAnyUnitEventBJ(learnedTrigger, EVENT_PLAYER_HERO_SKILL)
+    call TriggerAddCondition(learnedTrigger, Condition(function Trig_upgrade_Actions))
 
-      call TriggerRegisterAnyUnitEventBJ(itemTrigger, EVENT_PLAYER_UNIT_SPELL_CAST)
-      call TriggerAddCondition(itemTrigger, Condition(function MedallionCastCheck))
+    call TriggerRegisterAnyUnitEventBJ(itemTrigger, EVENT_PLAYER_UNIT_SPELL_CAST)
+    call TriggerAddCondition(itemTrigger, Condition(function MedallionCastCheck))
   endfunction
 endlibrary

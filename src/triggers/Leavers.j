@@ -12,22 +12,6 @@ library Leavers initializer onInit requires PublicLibrary, Commands, MapSetup, G
             return
         endif
 
-        loop
-            exitwhen i > ppt
-            set hasActivePlayer = hasActivePlayer or (GetPlayerSlotState(Player(i + tribe * ppt)) == PLAYER_SLOT_STATE_PLAYING)
-        endloop
-
-        if not hasActivePlayer then
-            loop
-                exitwhen i > ppt
-                call KillUnit(GetPlayerTroll(Player(i + tribe * ppt)))
-                call RemoveUnit(GetPlayerTroll(Player(i + tribe * ppt)))
-            endloop
-        endif
-
-        call ConditionalTriggerExecute( gg_trg_update_names )
-        call ConditionalTriggerExecute( gg_trg_check_win )
-
         set tempInt = PID
         if not adv_control[PID] then
             call ForForce(TEAM[TEAM_PLAYER[PID]], function ShareAdvControl)
@@ -43,6 +27,25 @@ library Leavers initializer onInit requires PublicLibrary, Commands, MapSetup, G
             call ForForce(TEAM[TEAM_PLAYER[PID]], function PublicVision)
             set vision_pub[PID] = true
         endif
+
+        loop
+            exitwhen i >= ppt or hasActivePlayer
+            set hasActivePlayer = hasActivePlayer or (PID != i + tribe * ppt and GetPlayerController(Player(i + tribe * ppt)) == MAP_CONTROL_USER and GetPlayerSlotState(Player(i + tribe * ppt)) == PLAYER_SLOT_STATE_PLAYING)
+            set i = i + 1
+        endloop
+
+        if not hasActivePlayer then
+            set i = 0
+            loop
+                exitwhen i >= ppt
+                call KillUnit(GetPlayerTroll(Player(i + tribe * ppt)))
+                call RemoveUnit(GetPlayerTroll(Player(i + tribe * ppt)))
+
+                set i = i + 1
+            endloop
+        endif
+
+        call ConditionalTriggerExecute( gg_trg_update_names )
     endfunction
 
     //===========================================================================

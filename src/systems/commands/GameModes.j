@@ -41,13 +41,6 @@ elseif s=="-lavish" and modeAllow[0] then
     set udg_Lavish = true
     set display = "Reverse Famine|r has been enabled. More animals spawn and they give more food."
     set modeAllow[0] = false
-elseif s=="-rb" and modeAllow[1] then
-    set udg_BADDIE_BASE = udg_BADDIE_BASE + 0.20
-    set display = "Hostile Animal Spawn Rate|r has been increased to "+R2S(udg_BADDIE_BASE*100)+"% of normal."
-    set udg_MORE_BADDIES = true
-    if udg_BADDIE_BASE >= 3 then
-        set modeAllow[1] = false
-    endif
 elseif s=="-rfl" and modeAllow[2] then
     set udg_ANIMAL_MAX = 480
     set udg_FISH_MAX = 320

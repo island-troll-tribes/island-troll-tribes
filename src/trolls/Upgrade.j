@@ -46,6 +46,7 @@ library TrollUpgrade initializer onInit requires ID, Constants, PublicLibrary
     call GroupAddUnit(udg_trolls, REPLACING_UNIT)
     set udg_PUnits[GetPlayerId(PLAYER)] = REPLACING_UNIT
     call SetHeroLevelBJ(REPLACING_UNIT, 1, false)
+    call UnitModifySkillPoints(REPLACING_UNIT, 0)
 
     // Supersub from sub needs extra stats
     if not medallion and SUPERSUB then

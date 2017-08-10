@@ -32,17 +32,6 @@ globals
     boolean obs_present = false
 endglobals
 
-function GetHost takes nothing returns nothing
-    local gamecache g = InitGameCache("ITT.w3v")
-    call StoreInteger(g, "Map", "Host", GetPlayerId(GetLocalPlayer ()))
-    call TriggerSyncStart()
-    call SyncStoredInteger(g, "Map", "Host" )
-    call TriggerSyncReady()
-    set udg_Host = Player( GetStoredInteger(g, "Map", "Host" ))
-    call FlushGameCache(g )
-    set g = null
-endfunction
-
 function ItemRecipeVision takes nothing returns nothing
     call CreateFogModifierRectBJ( true, GetEnumPlayer(), FOG_OF_WAR_VISIBLE, gg_rct_vision )
 endfunction
@@ -253,8 +242,7 @@ private function onInit takes nothing returns nothing
     call InitGameCacheBJ( "ITT.w3v" )
     set udg_jumpCache = bj_lastCreatedGameCache
     set udg_GameHash = InitHashtable()
-    
-    call GetHost()
+
     call UpdateBoardsLoopInit()
     call LocustDisplayUnits()
     call TimerStart(t,0,false,function Startup_Timer)
@@ -286,8 +274,7 @@ private function onInit takes nothing returns nothing
     call TriggerRegisterPlayerChatEvent( gg_trg_GameModes, modePlayer, "-", false )
     call TriggerRegisterPlayerChatEvent( gg_trg_no_trees, modePlayer, "-no trees", true )
     call TriggerRegisterPlayerChatEvent( gg_trg_no_herbs, modePlayer, "-no herbs", true )
-    debug call DisplayTText("DEBUG MODE ACTIVE.", 999)
-    call DisplayTText(COLOR_CODE[GetPlayerId(udg_Host)]+GetPlayerName(udg_Host)+"|r"+GENERAL_COLOR+" has been detected as the host.|r", 40)
+    debug call BJDebugMsg("DEBUG MODE ACTIVE.")
 
     set t = null
 endfunction

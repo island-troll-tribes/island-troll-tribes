@@ -48,6 +48,7 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
 
     public method register(player modesPlayer) {
       this.modesPlayer = modesPlayer;
+      this.registerFor(name);
       this.registerFor(abbrev);
     }
 
@@ -88,7 +89,7 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
   function onInit() {
     GameMode.modes = Table.create();
 
-    GameMode.create("players per tribe", "ppt", "set the number of players in each tribe, eg: \"-ppt 6\"", function(ArgsList a) {
+    GameMode.create("players-per-tribe", "ppt", "set the number of players in each tribe, eg: \"-ppt 6\"", function(ArgsList a) {
       integer ppt;
       if (a.length() < 1) {
         GameMode.error("Must supply # of tribes to \"ppt\"");
@@ -114,7 +115,7 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       GameMode.message(ENERGY_COLOR + "6v6|r enabled");
     });
 
-    GameMode.create("free for all", "ffa", "each player is on their own", function(ArgsList a) {
+    GameMode.create("free-for-all", "ffa", "each player is on their own", function(ArgsList a) {
       GameConfig.getInstance().setNumPlayersPerTribe(1);
       GameMode.find("ppt").deregister();
       GameMode.find("6v6").deregister();
@@ -122,7 +123,7 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       GameMode.message(ENERGY_COLOR + "Free for all|r enabled");
     });
 
-    GameMode.create("standard 1v1", "1v1", "enables all standard modes for 1v1", function(ArgsList a) {
+    GameMode.create("standard-1v1", "1v1", "enables all standard modes for 1v1", function(ArgsList a) {
       GameMode.message(ENERGY_COLOR + "1v1|r enabled");
       GameConfig.getInstance().setNumPlayersPerTribe(1);
       GameMode.find("fd").triggerWithArgs("2100");
@@ -130,7 +131,7 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       GameMode.find("rs").trigger();
     });
 
-    GameMode.create("all class", "all", "each player is given the same class or random (ex: \"-all random\"", function(ArgsList a) {
+    GameMode.create("all-class", "all", "each player is given the same class or random (ex: \"-all random\"", function(ArgsList a) {
       integer uid = 0;
       if (a[0] != "random") {
         uid = S2ID("UNIT_" + StringReplace(StringCase(a.fullMessage, true), " ", "_"));
@@ -144,7 +145,7 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       GameMode.message(ENERGY_COLOR + "All " + StringCase(a.fullMessage, false) + "|r enabled");
     });
 
-    GameMode.create("forced duel", "fd", "set a forced duel after an amount of seconds, defaults to 1 h, eg: \"-fd 3600\"", function(ArgsList a) {
+    GameMode.create("forced-duel", "fd", "set a forced duel after an amount of seconds, defaults to 1 h, eg: \"-fd 3600\"", function(ArgsList a) {
       integer amount = 3600;
       if (a.length() >= 1) {
         amount = S2I(a[0]);
@@ -153,11 +154,10 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
         GameMode.error("Force duel must be after end of the grace period");
         return;
       }
-      GameMode.find("fd").deregister();
       GameMode.message(ENERGY_COLOR + "Forced duel|r after " + I2S(amount) + " s");
     });
 
-    GameMode.create("grace period duration", "gp", "change the duration of the grace period, eg: \"-gp 480\"", function(ArgsList a) {
+    GameMode.create("grace-period-duration", "gp", "change the duration of the grace period, eg: \"-gp 480\"", function(ArgsList a) {
       integer amount = 480;
       if (a.length() >= 1) {
         amount = S2I(a[0]);
@@ -166,58 +166,60 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
         GameMode.error("Grace period must end before forced duel");
         return;
       }
-      GameMode.find("gp").deregister();
       GameMode.message(ENERGY_COLOR + "Grace period duration|r " + I2S(amount) + " s");
     });
 
-    GameMode.create("hot mode", "hm", "increase the amount of heat a fire gives per cast", function(ArgsList a) {
+    GameMode.create("hot-mode", "hm", "increase the amount of heat a fire gives per cast", function(ArgsList a) {
       integer amount = 22;
       if (a.length() >= 1) {
         amount = S2I(a[0]);
       }
       udg_HEAT_PER_CAST = amount;
-      GameMode.find("hm").deregister();
       GameMode.message(ENERGY_COLOR + "Hot mode|r enabled, heat per cast is now " + GOLD_COLOR + I2S(amount) + "|r");
     });
 
-    GameMode.create("enable boats", "eb", "enables construction of transport boats", function(ArgsList a) {
+    GameMode.create("enable-boats", "eb", "enables construction of transport boats", function(ArgsList a) {
       udg_DisabledBoats = false;
       GameMode.find("eb").deregister();
       GameMode.message(ENERGY_COLOR + "Transport ships|r enabled");
     });
 
-    GameMode.create("no horn", "nh", "disables boss prizes", function(ArgsList a) {
+    GameMode.create("no-horn", "nh", "disables boss prizes", function(ArgsList a) {
       udg_BOSS_PRIZE_MODE = false;
       GameMode.find("nh").deregister();
       GameMode.message(ENERGY_COLOR + "Boss prizes|r like the mammoth horn have been disabled.");
     });
 
-    GameMode.create("random spawns", "rs", "randomize spawn locations", function(ArgsList a) {
+    GameMode.create("random-spawns", "rs", "randomize spawn locations", function(ArgsList a) {
       GameMode.find("rs").deregister();
       GameMode.message(ENERGY_COLOR + "Spawn locations|r have been randomized");
       GameConfig.getInstance().setRandomSpawns(true);
     });
 
-    GameMode.create("start with fire", "sf", "every troll starts with a fire", function(ArgsList a) {
+    GameMode.create("start-with-fire", "sf", "every troll starts with a fire", function(ArgsList a) {
       GameMode.find("sf").deregister();
       GameMode.message("Every troll will start with a " + ENERGY_COLOR + "fire kit");
       GameConfig.getInstance().setStartWithFire(true);
     });
 
-    // GameMode.create("more hostiles", "rb", "raise hostile animal spawn rate, eg: \"-rb 300\"", function(ArgsList a) {
-    //  real amount = 0.20;
-    //  if (a.length() >= 1) {
-    //    amount = S2R(a[0]) / 100;
-    //  }
-    //  GameConfig.getInstance().hostileSpawnRate = GameConfig.getInstance().hostileSpawnRate + amount;
-    //
-    //  if (GameConfig.getInstance().hostileSpawnRate >= 3) {
-    //    GameConfig.getInstance().hostileSpawnRate = 3;
-    //    GameMode.find("rb").deregister();
-    //  }
-    //
-    //  GameMode.message(ENERGY_COLOR + "");
-    // });
+    GameMode.create("more-hostiles", "rb", "raise hostile animal spawn rate, eg: \"-rb 300\"", function(ArgsList a) {
+      real next;
+      if (a.length() >= 1) {
+        next = S2R(a[0]) / 100;
+      } else {
+        next = GameConfig.getInstance().getHostileSpawnRate() + 0.20;
+      }
+      next = RealMin(next, 3.0);
+      GameConfig.getInstance().setHostileSpawnRate(next);
+
+      GameMode.message(ENERGY_COLOR + "Hostile Animal Spawn Rate|r has been increased to "+R2S(next*100)+"% of normal.");
+    });
+
+    GameMode.create("old-random", "or", "use the old style of randoming where you can random any class", function(ArgsList a) {
+      GameMode.find("or").deregister();
+      GameMode.message("Old random enabled, you can now random any class");
+      GameMode.getInstance().setOldRandomEnabled(true);
+    });
 
     // GameMode.create("raise heat", "rh", "increase heat capacity from 100 to 150", function(ArgsList a) {
     //  GameConfig.getInstance().heatMaximum = 150;

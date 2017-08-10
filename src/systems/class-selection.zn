@@ -1,14 +1,111 @@
-library ClassSelection requires ID, MapSetup, TimerUtils {
+library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 
-	public force TEAM[12];
+	public force TEAM[13];
 	unit trollTotem[12];
 	unit picker[12];
 	rect spawns[12];
 	timerdialog selectionDialog;
 
+	function getTribe(integer playerId) -> integer {
+		integer ppt = GameConfig.getInstance().getNumPlayersPerTribe();
+		return playerId / ppt;
+	}
+
+	struct Tribe {
+		static TableArray tribeAvailableClasses;
+
+		integer id;
+		unit totem;
+		rect spawn;
+
+		public static method create(integer id, unit totem, rect spawn) -> thistype {
+			thistype this = thistype.allocate();
+			this.id = id;
+			this.totem = totem;
+			this.spawn = spawn;
+			this.initializeTotem();
+			TEAM[id + 1] = CreateForce();
+			return this;
+		}
+
+		method initializeTotem() {
+    		AddUnitToStock(totem, UNIT_HUNTER, 0, 1);
+    		AddUnitToStock(totem, UNIT_BEAST_MASTER, 0, 1);
+    		AddUnitToStock(totem, UNIT_MAGE, 0, 1);
+    		AddUnitToStock(totem, UNIT_PRIEST, 0, 1);
+    		AddUnitToStock(totem, UNIT_THIEF, 0, 1);
+    		AddUnitToStock(totem, UNIT_SCOUT, 0, 1);
+    		AddUnitToStock(totem, UNIT_GATHERER, 0, 1);
+    		AddUnitToStock(totem, UNIT_REPICK_TROLL, 4, 4);
+		}
+
+		public static method find(integer id) -> thistype {
+			return thistype(id + 1);
+		}
+
+		public static method ofPlayerId(integer pid) -> thistype {
+			return thistype(getTribe(pid) + 1);
+		}
+
+		public method getForce() -> force {
+			return TEAM[id + 1];
+		}
+
+		public method isClassAvailable(integer id) -> boolean {
+			Table t = this.getAvailableClasses();
+			return !t.has(id);
+		}
+
+		public method setClassAvailable(integer id) {
+			Table t = this.getAvailableClasses();
+			t.remove(id);
+		}
+
+		public method setClassUnavailable(integer id) {
+			Table t = this.getAvailableClasses();
+			t[id] = 1;
+		}
+
+		public method removeTotem() {
+			RemoveUnit(totem);
+		}
+
+		public method getRandomAvailableClass() -> integer {
+			integer i;
+			integer uid = GameConfig.getInstance().getAllTrollUnitId();
+			integer classId = GetRandomInt(0, 6);
+			boolean anyRandomEnabled = GameConfig.getInstance().setOldRandomEnabled()
+			Table availableClasses = this.getAvailableClasses();
+
+			if (GameConfig.getInstance().isAllTrollEnabled() || uid == 0) {
+				for (0 <= i < 7) {
+					uid = GetClassFromId(classId);
+					if (anyRandomEnabled || this.isClassAvailable(uid)) {
+						break;
+					}
+					classId = ModuloInteger(classId + 1, 7); 
+				}
+			}
+
+			return uid;
+		}
+
+		method getAvailableClasses() -> Table {
+			return tribeAvailableClasses[this.id];
+		}
+
+		static method onInit() {
+			tribeAvailableClasses = TableArray[12];
+		}
+	}
+
+	public Tribe tribes[12];
+
 	function initializePlayerTroll(unit u) {
 		player p = GetOwningPlayer(u);
 		integer i = GetPlayerId(p);
+
+		Tribe.ofPlayerId(i).setClassUnavailable(GetUnitTypeId(u));
 
 		udg_PUnits[i] = u;
 		udg_started[i] = true;
@@ -24,6 +121,11 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
     	}
 
     	p = null;
+    	u = null;
+	}
+
+	public function GetSpawn(integer playerId) -> rect {
+		return spawns[getTribe(playerId)];
 	}
 
 	function releasePlayerTroll(unit u) {
@@ -33,31 +135,55 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
     	SetPlayerHandicapXP(GetOwningPlayer(u), 4);
 	}
 
+	function onPick() {
+    	RemoveUnitFromStock(GetSellingUnit(), GetUnitTypeId(GetSoldUnit()));
+    	initializePlayerTroll(GetSoldUnit());
+	}
+
+	function onRepick() {
+		player p = GetOwningPlayer(GetSoldUnit());
+		integer pid = GetPlayerId(p);
+		unit troll = udg_PUnits[pid];
+		integer trollId = GetUnitTypeId(troll);
+
+		Tribe.ofPlayerId(pid).setClassAvailable(trollId);
+
+		RemoveUnit(GetSoldUnit());
+
+		if (troll != null) {
+			udg_PUnits[pid] = null;
+	    	AddUnitToStock(GetSellingUnit(), trollId, 0, 1);
+	        GroupRemoveUnit(udg_trolls, troll);
+	        RemoveUnit(troll);
+	        udg_started[pid] = false;
+	        SetPlayerState(p, PLAYER_STATE_RESOURCE_LUMBER, 1);
+    		SetPlayerState(p, PLAYER_STATE_RESOURCE_GOLD, 0);
+	    }
+
+		troll = null;
+        p = null;
+	}
+
 	function onTrollSold() -> boolean {
 	    if (GetUnitTypeId(GetSellingUnit()) == UNIT_TROLL_TOTEM) {
-	    	initializePlayerTroll(GetSoldUnit());
+	    	if (GetUnitTypeId(GetSoldUnit()) == UNIT_REPICK_TROLL) {
+	    		onRepick();
+	    	} else {
+	    		onPick();
+	    	}
 	    }
 
 	    return false;
 	}
 
-	function getTribe(integer playerId) -> integer {
-		integer ppt = GameConfig.getInstance().getNumPlayersPerTribe();
-		return playerId / ppt;
-	}
-
-	public function GetSpawn(integer playerId) -> rect {
-		return spawns[getTribe(playerId)];
-	}
-
 	public function onSelectionTimeRunOut() {
 		integer i;
+		integer uid;
 		unit u;
 		rect spawn;
 
 		for (0 <= i < 12) {
-			RemoveUnit(trollTotem[i]);
-			trollTotem[i] = null;
+			Tribe.find(i).removeTotem();
 		}
 
 		for (0 <= i < 12) {
@@ -66,7 +192,8 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
 			if (GetPlayerSlotState(Player(i)) == PLAYER_SLOT_STATE_PLAYING && !isobserver[i]) {
 				if (!udg_started[i]) {
 					spawn = GetSpawn(i);
-					u = getRandomTroll(Player(i), GetRandomX(spawn), GetRandomY(spawn));
+					uid = Tribe.ofPlayerId(i).getRandomAvailableClass();
+					u = CreateUnit(Player(i), uid, GetRandomX(spawn), GetRandomY(spawn), 0.0);
 					initializePlayerTroll(u);
 	            }
 	            else {
@@ -127,8 +254,8 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
 		trollTotem[11] = CreateUnit(Player(PLAYER_NEUTRAL_PASSIVE), 'o00H', -6848.0, 2432.0, 310);
 
 		if (GameConfig.getInstance().isRandomSpawns()) {
-			for (0 <= i < numTribes) {
-				if (!isobserver[i] &&
+			for (0 <= i < 12) {
+				if (GetPlayerController(Player(i)) == MAP_CONTROL_USER &&
 					GetPlayerSlotState(Player(i)) == PLAYER_SLOT_STATE_PLAYING) {
 					maxOccupiedTribe = getTribe(i);
 				}
@@ -146,6 +273,10 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
 		}
 
 		for (0 <= i < 12) {
+			tribes[i] = Tribe.create(i, trollTotem[i], spawns[i]);
+		}
+
+		for (0 <= i < 12) {
 			for (0 <= j < 12) {
 				if (i != j) {
 					if (getTribe(i) == getTribe(j)) {
@@ -155,10 +286,6 @@ library ClassSelection requires ID, MapSetup, TimerUtils {
 					}
 				}
 			}
-		}
-
-		for (1 <= i <= numTribes) {
-			TEAM[i] = CreateForce();
 		}
 
 		for (0 <= i < 12) {

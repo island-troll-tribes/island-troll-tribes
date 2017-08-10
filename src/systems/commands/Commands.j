@@ -120,12 +120,6 @@ library Commands initializer onInit requires PublicLibrary
                 set shr_control[PID] = true
                 call DisplayTimedTextToForce(TEAM[TEAM_PLAYER[PID]],7, COLOR_CODE[PID]+GetPlayerName(p)+"|r enabled his/her shared controls.")
             endif
-        elseif s=="-repick" and not udg_STARTED then
-            call SetPlayerState(p,PLAYER_STATE_RESOURCE_LUMBER,1)
-            call GroupRemoveUnit(udg_trolls,udg_PUnits[PID])
-            call RemoveUnit(udg_PUnits[PID])
-            set udg_started[PID] = false
-            //game started commands
         elseif s=="-rn" then
             loop
                 exitwhen i>11

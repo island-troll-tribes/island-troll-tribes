@@ -153,28 +153,23 @@ globals
     boolean real_random = false
 endglobals
 
-function getRandomTroll takes player play, real x, real y returns unit
-    local integer t
-    local integer uid = GameConfig.getInstance().getAllTrollUnitId()
-    if not GameConfig.getInstance().isAllTrollEnabled() or uid == 0 then
-        set t = GetRandomInt( 1, 7 )
-        if ( t == 1 ) then
-            set uid = UNIT_GATHERER
-        elseif ( t == 2 ) then
-            set uid = UNIT_HUNTER
-        elseif ( t == 3 ) then
-            set uid = UNIT_SCOUT
-        elseif ( t == 4 ) then
-            set uid = UNIT_MAGE
-        elseif ( t == 5 ) then
-            set uid = UNIT_THIEF
-        elseif ( t == 6 ) then
-            set uid = UNIT_BEAST_MASTER
-        elseif ( t == 7 ) then
-            set uid = UNIT_PRIEST
-        endif
+function GetClassFromId takes integer id returns integer
+    if id == 0 then
+        return UNIT_PRIEST
+    elseif id == 1 then
+        return UNIT_GATHERER
+    elseif id == 2 then
+        return UNIT_HUNTER
+    elseif id == 3 then
+        return UNIT_SCOUT
+    elseif id == 4 then
+        return UNIT_MAGE
+    elseif id == 5 then
+        return UNIT_THIEF
+    elseif id == 6 then
+        return UNIT_BEAST_MASTER
     endif
-    return CreateUnit( play, uid, x, y, 0.0 )
+    return 0
 endfunction
 
 function prepareSpells takes nothing returns nothing

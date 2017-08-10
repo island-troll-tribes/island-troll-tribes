@@ -5,6 +5,8 @@ library Leavers initializer onInit requires PublicLibrary, Commands, MapSetup, G
         local integer ppt = GameConfig.getInstance().getNumPlayersPerTribe()
         local integer i = 0
         local boolean hasActivePlayer = false
+        local integer tmpPid
+        local unit troll
 
         call DisplayText(GENERAL_COLOR+GetPlayerName(GetTriggerPlayer())+GRAY_COLOR+" ["+COLOR_CODE[PID]+udg_RealNames[PID]+GRAY_COLOR+"]"+GENERAL_COLOR+" has left the game."+GRAY_COLOR+" (Player "+I2S(PID+1)+")|r")
 
@@ -30,7 +32,8 @@ library Leavers initializer onInit requires PublicLibrary, Commands, MapSetup, G
 
         loop
             exitwhen i >= ppt or hasActivePlayer
-            set hasActivePlayer = hasActivePlayer or (PID != i + tribe * ppt and GetPlayerController(Player(i + tribe * ppt)) == MAP_CONTROL_USER and GetPlayerSlotState(Player(i + tribe * ppt)) == PLAYER_SLOT_STATE_PLAYING)
+            set tmpPid = ppt * tribe + i
+            set hasActivePlayer = (PID != tmpPid) and GetPlayerController(Player(tmpPid)) == MAP_CONTROL_USER and GetPlayerSlotState(Player(tmpPid)) == PLAYER_SLOT_STATE_PLAYING
             set i = i + 1
         endloop
 
@@ -38,14 +41,17 @@ library Leavers initializer onInit requires PublicLibrary, Commands, MapSetup, G
             set i = 0
             loop
                 exitwhen i >= ppt
-                call KillUnit(GetPlayerTroll(Player(i + tribe * ppt)))
-                call RemoveUnit(GetPlayerTroll(Player(i + tribe * ppt)))
-
+                set troll = GetPlayerTroll(Player(i + tribe * ppt))
+                if troll != null and IsUnitAliveBJ(troll) then
+                    call KillUnit(troll)
+                endif
                 set i = i + 1
             endloop
         endif
 
-        call ConditionalTriggerExecute( gg_trg_update_names )
+        call ConditionalTriggerExecute(gg_trg_update_names)
+
+        set troll = null
     endfunction
 
     //===========================================================================

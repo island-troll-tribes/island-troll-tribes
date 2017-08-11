@@ -223,7 +223,8 @@ library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 	    integer selectionTimeAllowed = 40;
 		integer ppt = GameConfig.getInstance().getNumPlayersPerTribe();
 		integer numTribes = GameConfig.getInstance().getNumTribes();
-		integer maxOccupiedTribe = numTribes;
+		integer maxOccupiedSlot = 0;
+		integer maxOccupiedTribe = 0;
 		rect tmpSpawn;
 		unit tmpTotem;
 
@@ -257,12 +258,14 @@ library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 			for (0 <= i < 12) {
 				if (GetPlayerController(Player(i)) == MAP_CONTROL_USER &&
 					GetPlayerSlotState(Player(i)) == PLAYER_SLOT_STATE_PLAYING) {
-					maxOccupiedTribe = getTribe(i);
+					maxOccupiedSlot = i;
 				}
 			}
 
-			for (0 <= i < maxOccupiedTribe) {
-				j = GetRandomInt(0, maxOccupiedTribe - 1);
+			maxOccupiedTribe = getTribe(maxOccupiedSlot);
+
+			for (0 <= i <= maxOccupiedTribe) {
+				j = GetRandomInt(0, maxOccupiedTribe);
 				tmpSpawn = spawns[i];
 				spawns[i] = spawns[j];
 				spawns[j] = tmpSpawn;

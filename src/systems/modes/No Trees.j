@@ -92,7 +92,6 @@ endfunction
 
 //===========================================================================
 function InitTrig_no_trees takes nothing returns nothing
-    set gg_trg_no_trees = CreateTrigger(  )
     //call TriggerRegisterPlayerChatEvent( gg_trg_no_trees, Player(0), "-no trees", true )
     call TriggerAddCondition( gg_trg_no_trees, Condition( function Trig_no_trees_Conditions ) )
     call TriggerAddAction( gg_trg_no_trees, function Trig_no_trees_Actions )

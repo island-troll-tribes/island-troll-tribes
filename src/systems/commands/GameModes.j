@@ -201,7 +201,6 @@ function InitTrig_GameModes takes nothing returns nothing
         set modeAllow[i] = true
         set i = i + 1
     endloop
-    set gg_trg_GameModes = CreateTrigger(  )
     call TriggerAddCondition( gg_trg_GameModes, Condition( function GameModes_Conditions ) )
     call TriggerAddAction( gg_trg_GameModes, function GameModes_Relay )
 endfunction

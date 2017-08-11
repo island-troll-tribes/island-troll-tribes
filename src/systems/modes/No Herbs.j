@@ -47,7 +47,6 @@ endfunction
 
 //===========================================================================
 function InitTrig_no_herbs takes nothing returns nothing
-    set gg_trg_no_herbs = CreateTrigger(  )
     //call TriggerRegisterPlayerChatEvent( gg_trg_no_herbs, Player(0), "-no herbs", true )
     call TriggerAddCondition( gg_trg_no_herbs, Condition( function Trig_no_herbs_Conditions ) )
     call TriggerAddAction( gg_trg_no_herbs, function Trig_no_herbs_Actions )

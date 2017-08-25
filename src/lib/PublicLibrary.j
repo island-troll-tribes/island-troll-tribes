@@ -718,8 +718,11 @@ function makeAnimal takes rect loc returns nothing
     local real x
     local real y
     if udg_ANIMAL_CURRENT<udg_ANIMAL_MAX or udg_ITEM_LIMIT_MODE==false then
-        set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
-        set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
+        loop
+            set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
+            set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
+            exitwhen IsTerrainLand(x, y) and IsTerrainWalkable(x, y)
+        endloop
         if t<=udg_PANTHER_RATE then
             call CreateUnit(Player(12), UNIT_PANTHER, x, y, 270 )
         elseif t<=udg_BEAR_RATE+udg_PANTHER_RATE then

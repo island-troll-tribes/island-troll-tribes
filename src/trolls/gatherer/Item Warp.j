@@ -14,6 +14,7 @@ private struct data
     unit it
     item i
     integer ticks
+    integer ticksMax
     real x
     real y
     timer t
@@ -38,7 +39,7 @@ private function PullItem takes nothing returns nothing
     set d.x = d.speed*Cos(ang)
     set d.y = d.speed*Sin(ang)
     
-    if d.ticks <= 4 or d.ticks >= 90 or d.valid == false then
+    if d.ticks <= 4 or d.ticks >= d.ticksMax or d.valid == false then
         call PauseTimer(d.t)
         call DestroyTimer(d.t)
         call RemoveUnit(d.it)
@@ -69,7 +70,7 @@ private function PullItemsSetup takes nothing returns nothing
     local real dx = y - yloc
     local real dy = x - xloc
     local real dist = SquareRoot(dx * dx + dy * dy) //DistanceBetweenPoints(loc, iloc)
-    local real speed = 10
+    local real speed = 15
     //6 * GetUnitAbilityLevelSwapped('A06W', u)
     set d.speed = speed
     set d.t = CreateTimer()
@@ -77,6 +78,7 @@ private function PullItemsSetup takes nothing returns nothing
     set d.x = speed*Cos(ang)
     set d.y = speed*Sin(ang)
     set d.ticks = R2I(dist/speed)
+    set d.ticksMax = GetUnitAbilityLevel(u,'A06W') * 60
     set d.it = it
     set d.i = i
     

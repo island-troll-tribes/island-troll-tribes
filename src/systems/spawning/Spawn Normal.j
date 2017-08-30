@@ -9,7 +9,7 @@ library Spawns initializer onInit requires PublicLibrary
 
 	private function onInit takes nothing returns nothing
 	    set gg_trg_spawn_normal = CreateTrigger(  )
-	    call TriggerRegisterTimerEventPeriodic( gg_trg_spawn_normal, 180.00 )
+	    call TriggerRegisterTimerEventPeriodic( gg_trg_spawn_normal, 300.00 )
 	    call TriggerAddAction( gg_trg_spawn_normal, function Trig_spawn_normal_Actions )
 	endfunction
 endlibrary

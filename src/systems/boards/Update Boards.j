@@ -70,7 +70,9 @@ loop
     set PID = 0
     set BOARD = BOARD + 1
 endloop
-
+if OBSERVER_BOARD != null then
+    call MultiboardSetTitleText(OBSERVER_BOARD, gameTimeStr)
+endif
 endfunction
 
 //===========================================================================

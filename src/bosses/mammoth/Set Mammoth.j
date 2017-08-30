@@ -3,7 +3,7 @@
 //TESH.scrollpos=0
 //TESH.alwaysfold=0
 function Trig_set_mammoth_Actions takes nothing returns nothing
-    call SetDestructableInvulnerableBJ( gg_dest_ZTsx_3140, true )
+    call SetDestructableInvulnerableBJ( mammothGate, true )
     set Mammoth = MAMMOTH
     call SetUnitOwner( Mammoth, Player(12), true )
 endfunction

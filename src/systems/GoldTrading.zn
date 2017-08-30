@@ -1,0 +1,45 @@
+library GoldTrading requires ChatCommands, PublicLibrary {
+	function onInit() {
+		ChatCommands.registerArgFunc(null, "gold", function(ArgsList a) {
+			integer playerId = S2I(a[0]) - 1;
+			integer amount = S2I(a[1]);
+			integer currentGold;
+			integer theirGold;
+
+			if (!udg_STARTED) {
+				return;
+			}
+
+			if (playerId < 0 || playerId > 11) {
+				DisplayTextToPlayer(a.triggerPlayer, 0, 0, RED_COLOR + "Player IDs range from 1-12|r");
+				return;
+			}
+
+			if (playerId == GetPlayerId(a.triggerPlayer)) {
+				DisplayTextToPlayer(a.triggerPlayer, 0, 0, RED_COLOR + "You cannot trade with yourself|r");
+				return;
+			}
+
+			if (GetPidTribeId(playerId) != GetPlayerTribeId(a.triggerPlayer)) {
+				DisplayTextToPlayer(a.triggerPlayer, 0, 0, RED_COLOR + "You cannot trade with that player|r");
+				return;
+			}
+
+			if (amount < 0) {
+				DisplayTextToPlayer(a.triggerPlayer, 0, 0, RED_COLOR + "Amount must be greater than zero|r");
+				return;
+			}
+
+			currentGold = GetPlayerState(a.triggerPlayer, PLAYER_STATE_RESOURCE_LUMBER);
+			if (amount > currentGold) {
+				DisplayTextToPlayer(a.triggerPlayer, 0, 0, RED_COLOR + "You don't have that much gold!|r");
+				return;
+			}
+
+			SetPlayerState(a.triggerPlayer, PLAYER_STATE_RESOURCE_LUMBER, currentGold - amount);
+
+			theirGold = GetPlayerState(Player(playerId), PLAYER_STATE_RESOURCE_LUMBER);
+			SetPlayerState(Player(playerId), PLAYER_STATE_RESOURCE_LUMBER, theirGold + amount);
+		});
+	}
+}

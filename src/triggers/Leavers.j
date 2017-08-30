@@ -10,7 +10,7 @@ library Leavers initializer onInit requires PublicLibrary, Commands, MapSetup, G
 
         call DisplayText(GENERAL_COLOR+GetPlayerName(GetTriggerPlayer())+GRAY_COLOR+" ["+COLOR_CODE[PID]+udg_RealNames[PID]+GRAY_COLOR+"]"+GENERAL_COLOR+" has left the game."+GRAY_COLOR+" (Player "+I2S(PID+1)+")|r")
 
-        if isobserver[PID] then
+        if isobserver[PID] or not udg_STARTED then
             return
         endif
 

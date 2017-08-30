@@ -547,7 +547,7 @@ function spawnIslandOne takes itempool p returns nothing
     if((udg_ITEM_CURRENT<udg_ITEM_MAX) or (udg_ITEM_LIMIT_MODE==false)) then
         set udg_ITEM_CURRENT=udg_ITEM_CURRENT+1
         call PolledWait( udg_DELAY_TIME )
-        set temp=GetRandomInt(1,udg_ISLAND1_3+udg_ISLAND1_2+udg_ISLAND1_1)
+        set temp=GetRandomInt(1,udg_ISLAND1_1+udg_ISLAND1_2+udg_ISLAND1_3)
         if ( temp<=udg_ISLAND1_3 ) then
             set loc=gg_rct_spawn_area_1_3
         elseif (temp<=udg_ISLAND1_2+udg_ISLAND1_3) then
@@ -555,12 +555,14 @@ function spawnIslandOne takes itempool p returns nothing
         elseif (temp<=udg_ISLAND1_1+udg_ISLAND1_2+udg_ISLAND1_3) then
             set loc=gg_rct_spawn_area_1_1
         endif
-        loop
-            set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
-            set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
-            exitwhen IsTerrainLand(x, y) and IsTerrainWalkable(x, y)
-        endloop
-        set q=PlaceRandomItem(p,x,y)
+        if loc != null then
+            loop
+                set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
+                set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
+                exitwhen IsTerrainLand(x, y) and IsTerrainWalkable(x, y)
+            endloop
+            set q=PlaceRandomItem(p,x,y)
+        endif
     endif
     set q=null
     set loc=null
@@ -575,7 +577,7 @@ function spawnIslandTwo takes itempool p returns nothing
     if((udg_ITEM_CURRENT<udg_ITEM_MAX) or (udg_ITEM_LIMIT_MODE==false)) then
         set udg_ITEM_CURRENT=udg_ITEM_CURRENT+1
         call PolledWait( udg_DELAY_TIME )
-        set temp=GetRandomInt(1,udg_ISLAND1_3+udg_ISLAND1_2+udg_ISLAND1_1)
+        set temp=GetRandomInt(1,udg_ISLAND2_1+udg_ISLAND2_2+udg_ISLAND2_3)
         if ( temp<=udg_ISLAND2_3 ) then
             set loc=gg_rct_spawn_area_2_3
         elseif (temp<=udg_ISLAND2_3+udg_ISLAND2_2) then
@@ -583,12 +585,14 @@ function spawnIslandTwo takes itempool p returns nothing
         elseif (temp<=udg_ISLAND2_1+udg_ISLAND2_2+udg_ISLAND2_3) then
             set loc=gg_rct_spawn_area_2_1
         endif
-        loop
-            set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
-            set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
-            exitwhen IsTerrainLand(x, y) and IsTerrainWalkable(x, y)
-        endloop
-        set q=PlaceRandomItem(p,x,y)
+        if loc != null then
+            loop
+                set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
+                set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
+                exitwhen IsTerrainLand(x, y) and IsTerrainWalkable(x, y)
+            endloop
+            set q=PlaceRandomItem(p,x,y)
+        endif
     endif
     set loc=null
     set q=null
@@ -603,7 +607,7 @@ function spawnIslandThree takes itempool p returns nothing
     if((udg_ITEM_CURRENT<udg_ITEM_MAX) or (udg_ITEM_LIMIT_MODE==false)) then
         set udg_ITEM_CURRENT=udg_ITEM_CURRENT+1
         call PolledWait( udg_DELAY_TIME )
-        set temp=GetRandomInt(1,udg_ISLAND1_3+udg_ISLAND1_2+udg_ISLAND1_1)
+        set temp=GetRandomInt(1,udg_ISLAND3_1+udg_ISLAND3_2+udg_ISLAND3_3)
         if ( temp<=udg_ISLAND3_2 ) then
             set loc=gg_rct_spawn_area_3_2
         elseif (temp<=udg_ISLAND3_2+udg_ISLAND3_3) then
@@ -611,12 +615,14 @@ function spawnIslandThree takes itempool p returns nothing
         elseif (temp<=udg_ISLAND3_1+udg_ISLAND3_2+udg_ISLAND3_3) then
             set loc=gg_rct_spawn_area_3_1
         endif
-        loop
-            set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
-            set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
-            exitwhen IsTerrainLand(x, y) and IsTerrainWalkable(x, y)
-        endloop
-        set q=PlaceRandomItem(p,x,y)
+        if loc != null then
+            loop
+                set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
+                set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
+                exitwhen IsTerrainLand(x, y) and IsTerrainWalkable(x, y)
+            endloop
+            set q=PlaceRandomItem(p,x,y)
+        endif
     endif
     set loc=null
     set q=null
@@ -631,7 +637,7 @@ function spawnIslandFour takes itempool p returns nothing
     if((udg_ITEM_CURRENT<udg_ITEM_MAX) or (udg_ITEM_LIMIT_MODE==false)) then
         set udg_ITEM_CURRENT=udg_ITEM_CURRENT+1
         call PolledWait( udg_DELAY_TIME )
-        set temp=GetRandomInt(1,udg_ISLAND1_3+udg_ISLAND1_2+udg_ISLAND1_1)
+        set temp=GetRandomInt(1,udg_ISLAND4_1+udg_ISLAND4_2+udg_ISLAND4_3)
         if ( temp<=udg_ISLAND4_2 ) then
             set loc=gg_rct_spawn_area_4_2
         elseif (temp<=udg_ISLAND4_2+udg_ISLAND4_3) then
@@ -639,12 +645,14 @@ function spawnIslandFour takes itempool p returns nothing
         elseif (temp<=udg_ISLAND4_3+udg_ISLAND4_2+udg_ISLAND4_1) then
             set loc=gg_rct_spawn_area_4_1
         endif
-        loop
-            set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
-            set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
-            exitwhen IsTerrainLand(x, y) and IsTerrainWalkable(x, y)
-        endloop
-        set q=PlaceRandomItem(p,x,y)
+        if loc != null then
+            loop
+                set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
+                set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
+                exitwhen IsTerrainLand(x, y) and IsTerrainWalkable(x, y)
+            endloop
+            set q=PlaceRandomItem(p,x,y)
+        endif
     endif
     set loc=null
     set q=null

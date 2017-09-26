@@ -12,13 +12,26 @@ Dir.chdir(File.join(["..","src","changelogs"]))
 
 md << "# Island Troll Tribes Change Log\n\n\n"
 
-Dir.glob("*.{zn,j}").reverse.each do |f|
+def get_version(file)
+  basename = File.basename(file, '.zn')
+  match = basename.match(/v(\d)(\d+)([a-z])/)
+  match[1].to_i * 1e6  + match[2].to_i * 1e3 + match[3][0].ord
+end
+
+Dir.glob("*.{zn,j}").sort do |a, b|
+  version_a = get_version(a)
+  version_b = get_version(b)
+
+  version_a <=> version_b
+end.reverse.each do |f|
   change_log = File.open(f).read
 
   version = change_log.scan(/ChangeLog.create\ ?\( ?(.*) ?\, ?(.*) ?\, ?\'(.*)\' ?\) ?;/).first
   changes = change_log.scan(/.(push|add) ?\( ?\"(.*)\" ?\) ?;/)
 
-  md << "## v#{version[0]}.#{version[1]}#{version[2]}\n\n"
+  full_version = "#{version[0]}.#{version[1]}#{version[2]}"
+
+  md << "## [v#{full_version}](/maps/#{full_version}/download)\n\n"
 
   changes.each do |change|
     md << " - #{change[1].gsub('\"','"')}\n"

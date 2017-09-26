@@ -399,6 +399,7 @@ local item added
                     call RemoveItem(t[5])
                     set added = CreateItem(ITEM_BONE_SHIELD, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
                     call UnitAddItem(GetTriggerUnit(), added)
+                    call itemLower(5)
                 endif
 
                 set bol1 = IsItemBasicShield(t[0])

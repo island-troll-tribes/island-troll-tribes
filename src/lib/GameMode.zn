@@ -131,7 +131,7 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       GameMode.find("rs").trigger();
     });
 
-    GameMode.create("all-class", "all", "each player is given the same class or random (ex: \"-all random\"", function(ArgsList a) {
+    GameMode.create("all", "ar", "each player is given the same class or random (ex: \"-all random\"", function(ArgsList a) {
       integer uid = 0;
       if (a[0] != "random") {
         uid = S2ID("UNIT_" + StringReplace(StringCase(a.fullMessage, true), " ", "_"));
@@ -219,6 +219,20 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       GameMode.find("or").deregister();
       GameMode.message("Old random enabled, you can now random any class");
       GameConfig.getInstance().setOldRandomEnabled(true);
+    });
+
+    GameMode.create("start", "st", "start the game", function(ArgsList a) {
+      PauseTimer(MODES_TIMER);
+      ExecuteFunc("ModesTimerFinished");
+    });
+
+    GameMode.create("quick-pick", "qp", "start the game", function(ArgsList a) {
+      integer timeAllowed = 5;
+      if (a.length() >= 1) {
+        timeAllowed = S2I(a[0]);
+      }
+      GameMode.message(ENERGY_COLOR + "Selection time|r set to " + I2S(timeAllowed) + "s");
+      GameConfig.getInstance().setSelectionTimeAllowed(timeAllowed);
     });
 
     // GameMode.create("raise heat", "rh", "increase heat capacity from 100 to 150", function(ArgsList a) {

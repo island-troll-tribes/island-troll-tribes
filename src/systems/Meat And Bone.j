@@ -97,7 +97,7 @@ local player p = GetOwningPlayer(dying)
     if uid == UNIT_ELK then
         call RemoveUnit(dying)
         loop
-            exitwhen i > R2I(( 5.00 * udg_FOOD_FOR_KILL_PROPORTION ))
+            exitwhen i > R2I(( 3.00 * udg_FOOD_FOR_KILL_PROPORTION ))
             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
@@ -480,7 +480,7 @@ local player p = GetOwningPlayer(dying)
     set udg_booleanParameter = IsUnitHawk(dying)
     if udg_booleanParameter then
         loop
-            exitwhen i > R2I(( 2.00 * udg_FOOD_FOR_KILL_PROPORTION ))
+            exitwhen i > R2I(( 1.00 * udg_FOOD_FOR_KILL_PROPORTION ))
              call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop

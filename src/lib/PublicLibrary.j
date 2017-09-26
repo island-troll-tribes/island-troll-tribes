@@ -1,4 +1,4 @@
-library PublicLibrary initializer initPublicLibrary requires TimerUtils, IDUtils, Constants, FilterTypeIsThing, String, GameConfig
+library PublicLibrary initializer initPublicLibrary requires TimerUtils, IDUtils, Constants, FilterTypeIsThing, String, GameConfig, InitializeUnits
 
 globals
 integer array TEAM_PLAYER
@@ -251,6 +251,10 @@ endfunction
 
 function GetPlayerTribeId takes player p returns integer
     return TEAM_PLAYER[GetPlayerId(p)] - 1
+endfunction
+
+function GetPidTribeId takes integer pid returns integer
+    return TEAM_PLAYER[pid] - 1
 endfunction
 
 function cleanInventory takes unit u returns nothing
@@ -537,104 +541,120 @@ endfunction
 function spawnIslandOne takes itempool p returns nothing
     local integer temp=1
     local item q
-    local real rndX=1
-    local real rndY=1
+    local real x=1
+    local real y=1
+    local rect loc
     if((udg_ITEM_CURRENT<udg_ITEM_MAX) or (udg_ITEM_LIMIT_MODE==false)) then
         set udg_ITEM_CURRENT=udg_ITEM_CURRENT+1
         call PolledWait( udg_DELAY_TIME )
-        set temp=GetRandomInt(1,udg_ISLAND1_3+udg_ISLAND1_2+udg_ISLAND1_1)
+        set temp=GetRandomInt(1,udg_ISLAND1_1+udg_ISLAND1_2+udg_ISLAND1_3)
         if ( temp<=udg_ISLAND1_3 ) then
-            set rndX=GetRandomReal(GetRectMinX(gg_rct_spawn_area_1_3),GetRectMaxX(gg_rct_spawn_area_1_3))
-            set rndY=GetRandomReal(GetRectMinY(gg_rct_spawn_area_1_3),GetRectMaxY(gg_rct_spawn_area_1_3))
-            set q=PlaceRandomItem(p,rndX,rndY)
+            set loc=gg_rct_spawn_area_1_3
         elseif (temp<=udg_ISLAND1_2+udg_ISLAND1_3) then
-            set rndX=GetRandomReal(GetRectMinX(gg_rct_spawn_area_1_2),GetRectMaxX(gg_rct_spawn_area_1_2))
-            set rndY=GetRandomReal(GetRectMinY(gg_rct_spawn_area_1_2),GetRectMaxY(gg_rct_spawn_area_1_2))
-            set q=PlaceRandomItem(p,rndX,rndY)
+            set loc=gg_rct_spawn_area_1_2
         elseif (temp<=udg_ISLAND1_1+udg_ISLAND1_2+udg_ISLAND1_3) then
-            set rndX=GetRandomReal(GetRectMinX(gg_rct_spawn_area_1_1),GetRectMaxX(gg_rct_spawn_area_1_1))
-            set rndY=GetRandomReal(GetRectMinY(gg_rct_spawn_area_1_1),GetRectMaxY(gg_rct_spawn_area_1_1))
-            set q=PlaceRandomItem(p,rndX,rndY)
+            set loc=gg_rct_spawn_area_1_1
+        endif
+        if loc != null then
+            loop
+                set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
+                set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
+                exitwhen IsTerrainLand(x, y) and IsTerrainWalkable(x, y)
+            endloop
+            set q=PlaceRandomItem(p,x,y)
         endif
     endif
     set q=null
+    set loc=null
 endfunction
 
 function spawnIslandTwo takes itempool p returns nothing
     local integer temp=1
     local item q
-    local real rndX=1
-    local real rndY=1
+    local real x=1
+    local real y=1
+    local rect loc
     if((udg_ITEM_CURRENT<udg_ITEM_MAX) or (udg_ITEM_LIMIT_MODE==false)) then
         set udg_ITEM_CURRENT=udg_ITEM_CURRENT+1
         call PolledWait( udg_DELAY_TIME )
         set temp=GetRandomInt(1,udg_ISLAND2_1+udg_ISLAND2_2+udg_ISLAND2_3)
         if ( temp<=udg_ISLAND2_3 ) then
-            set rndX=GetRandomReal(GetRectMinX(gg_rct_spawn_area_2_3),GetRectMaxX(gg_rct_spawn_area_2_3))
-            set rndY=GetRandomReal(GetRectMinY(gg_rct_spawn_area_2_3),GetRectMaxY(gg_rct_spawn_area_2_3))
-            set q=PlaceRandomItem(p,rndX,rndY)
+            set loc=gg_rct_spawn_area_2_3
         elseif (temp<=udg_ISLAND2_3+udg_ISLAND2_2) then
-            set rndX=GetRandomReal(GetRectMinX(gg_rct_spawn_area_2_2),GetRectMaxX(gg_rct_spawn_area_2_2))
-            set rndY=GetRandomReal(GetRectMinY(gg_rct_spawn_area_2_2),GetRectMaxY(gg_rct_spawn_area_2_2))
-            set q=PlaceRandomItem(p,rndX,rndY)
+            set loc=gg_rct_spawn_area_2_2
         elseif (temp<=udg_ISLAND2_1+udg_ISLAND2_2+udg_ISLAND2_3) then
-            set rndX=GetRandomReal(GetRectMinX(gg_rct_spawn_area_2_1),GetRectMaxX(gg_rct_spawn_area_2_1))
-            set rndY=GetRandomReal(GetRectMinY(gg_rct_spawn_area_2_1),GetRectMaxY(gg_rct_spawn_area_2_1))
-            set q=PlaceRandomItem(p,rndX,rndY)
+            set loc=gg_rct_spawn_area_2_1
+        endif
+        if loc != null then
+            loop
+                set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
+                set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
+                exitwhen IsTerrainLand(x, y) and IsTerrainWalkable(x, y)
+            endloop
+            set q=PlaceRandomItem(p,x,y)
         endif
     endif
+    set loc=null
     set q=null
 endfunction
 
 function spawnIslandThree takes itempool p returns nothing
     local integer temp=1
     local item q
-    local real rndX=1
-    local real rndY=1
+    local real x=1
+    local real y=1
+    local rect loc
     if((udg_ITEM_CURRENT<udg_ITEM_MAX) or (udg_ITEM_LIMIT_MODE==false)) then
         set udg_ITEM_CURRENT=udg_ITEM_CURRENT+1
         call PolledWait( udg_DELAY_TIME )
         set temp=GetRandomInt(1,udg_ISLAND3_1+udg_ISLAND3_2+udg_ISLAND3_3)
         if ( temp<=udg_ISLAND3_2 ) then
-            set rndX=GetRandomReal(GetRectMinX(gg_rct_spawn_area_3_2),GetRectMaxX(gg_rct_spawn_area_3_2))
-            set rndY=GetRandomReal(GetRectMinY(gg_rct_spawn_area_3_2),GetRectMaxY(gg_rct_spawn_area_3_2))
-            set q=PlaceRandomItem(p,rndX,rndY)
+            set loc=gg_rct_spawn_area_3_2
         elseif (temp<=udg_ISLAND3_2+udg_ISLAND3_3) then
-            set rndX=GetRandomReal(GetRectMinX(gg_rct_spawn_area_3_3),GetRectMaxX(gg_rct_spawn_area_3_3))
-            set rndY=GetRandomReal(GetRectMinY(gg_rct_spawn_area_3_3),GetRectMaxY(gg_rct_spawn_area_3_3))
-            set q=PlaceRandomItem(p,rndX,rndY)
+            set loc=gg_rct_spawn_area_3_3
         elseif (temp<=udg_ISLAND3_1+udg_ISLAND3_2+udg_ISLAND3_3) then
-            set rndX=GetRandomReal(GetRectMinX(gg_rct_spawn_area_3_1),GetRectMaxX(gg_rct_spawn_area_3_1))
-            set rndY=GetRandomReal(GetRectMinY(gg_rct_spawn_area_3_1),GetRectMaxY(gg_rct_spawn_area_3_1))
-            set q=PlaceRandomItem(p,rndX,rndY)
+            set loc=gg_rct_spawn_area_3_1
+        endif
+        if loc != null then
+            loop
+                set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
+                set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
+                exitwhen IsTerrainLand(x, y) and IsTerrainWalkable(x, y)
+            endloop
+            set q=PlaceRandomItem(p,x,y)
         endif
     endif
+    set loc=null
     set q=null
 endfunction
 
 function spawnIslandFour takes itempool p returns nothing
     local integer temp=1
     local item q
-    local real rndX=1
-    local real rndY=1
+    local real x=1
+    local real y=1
+    local rect loc
     if((udg_ITEM_CURRENT<udg_ITEM_MAX) or (udg_ITEM_LIMIT_MODE==false)) then
         set udg_ITEM_CURRENT=udg_ITEM_CURRENT+1
         call PolledWait( udg_DELAY_TIME )
         set temp=GetRandomInt(1,udg_ISLAND4_1+udg_ISLAND4_2+udg_ISLAND4_3)
         if ( temp<=udg_ISLAND4_2 ) then
-            set rndX=GetRandomReal(GetRectMinX(gg_rct_spawn_area_4_2),GetRectMaxX(gg_rct_spawn_area_4_2))
-            set rndY=GetRandomReal(GetRectMinY(gg_rct_spawn_area_4_2),GetRectMaxY(gg_rct_spawn_area_4_2))
-            set q=PlaceRandomItem(p,rndX,rndY)
+            set loc=gg_rct_spawn_area_4_2
         elseif (temp<=udg_ISLAND4_2+udg_ISLAND4_3) then
-            set rndX=GetRandomReal(GetRectMinX(gg_rct_spawn_area_4_3),GetRectMaxX(gg_rct_spawn_area_4_3))
-            set rndY=GetRandomReal(GetRectMinY(gg_rct_spawn_area_4_3),GetRectMaxY(gg_rct_spawn_area_4_3))
-            set q=PlaceRandomItem(p,rndX,rndY)
+            set loc=gg_rct_spawn_area_4_3
         elseif (temp<=udg_ISLAND4_3+udg_ISLAND4_2+udg_ISLAND4_1) then
-            set rndX=GetRandomReal(GetRectMinX(gg_rct_spawn_area_4_1),GetRectMaxX(gg_rct_spawn_area_4_1))
-            set rndY=GetRandomReal(GetRectMinY(gg_rct_spawn_area_4_1),GetRectMaxY(gg_rct_spawn_area_4_1))
-            set q=PlaceRandomItem(p,rndX,rndY)
+            set loc=gg_rct_spawn_area_4_1
+        endif
+        if loc != null then
+            loop
+                set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
+                set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
+                exitwhen IsTerrainLand(x, y) and IsTerrainWalkable(x, y)
+            endloop
+            set q=PlaceRandomItem(p,x,y)
         endif
     endif
+    set loc=null
     set q=null
 endfunction
 
@@ -646,7 +666,7 @@ function spawnItems takes nothing returns nothing
     local integer loopStop
     local integer temp=1
     local real rndX=1
-    local real rndY=1
+    local real y=1
     local integer spawnCount=0
     local integer curIsland
     local item q
@@ -718,8 +738,11 @@ function makeAnimal takes rect loc returns nothing
     local real x
     local real y
     if udg_ANIMAL_CURRENT<udg_ANIMAL_MAX or udg_ITEM_LIMIT_MODE==false then
-        set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
-        set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
+        loop
+            set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
+            set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
+            exitwhen IsTerrainLand(x, y) and IsTerrainWalkable(x, y)
+        endloop
         if t<=udg_PANTHER_RATE then
             call CreateUnit(Player(12), UNIT_PANTHER, x, y, 270 )
         elseif t<=udg_BEAR_RATE+udg_PANTHER_RATE then
@@ -1082,7 +1105,7 @@ function GetPlayerIdByRealName takes string name returns integer
 endfunction
 
 function LockMammoth takes nothing returns nothing
-    call SetDestructableInvulnerable( gg_dest_ZTsx_3140, true )
+    call SetDestructableInvulnerable( mammothGate, true )
     set Mammoth = MAMMOTH
     call SetUnitOwner( Mammoth, Player(12), true )
 endfunction

@@ -1,0 +1,65 @@
+library ThiefBush requires PublicLibrary, TimerUtils, Jump {
+	Table bushEntranceExitMapping;
+
+	region thiefBushEntrance_NW_A;
+	region thiefBushEntrance_NE_A;
+	region thiefBushEntrance_SE_A;
+	region thiefBushEntrance_SW_A;
+	region thiefBushEntrance_SW_B;
+	region thiefBushEntrance_SW_C;
+
+	function ThiefBushEntered() {
+		unit enteringUnit = GetEnteringUnit();
+		region entrance = GetTriggeringRegion();
+		rect exit = bushEntranceExitMapping.rect_h[entrance];
+		real destX = GetRandomX(exit);
+		real destY = GetRandomY(exit);
+
+		Jump.start(enteringUnit, destX, destY, 20, 1, 50);
+
+		enteringUnit = null;
+		entrance = null;
+		exit = null;
+	}
+
+	function Initialize() {
+		trigger t = CreateTrigger();
+		bushEntranceExitMapping = Table.create();
+
+		ReleaseTimer(GetExpiredTimer());
+
+		thiefBushEntrance_NW_A = CreateRegion();
+		thiefBushEntrance_NE_A = CreateRegion();
+		thiefBushEntrance_SE_A = CreateRegion();
+		thiefBushEntrance_SW_A = CreateRegion();
+		thiefBushEntrance_SW_B = CreateRegion();
+		thiefBushEntrance_SW_C = CreateRegion();
+
+		RegionAddRect(thiefBushEntrance_NW_A, gg_rct_Thief_Bush_NW_A_In);
+		RegionAddRect(thiefBushEntrance_NE_A, gg_rct_Thief_Bush_NE_A_In);
+		RegionAddRect(thiefBushEntrance_SE_A, gg_rct_Thief_Bush_SE_A_In);
+		RegionAddRect(thiefBushEntrance_SW_A, gg_rct_Thief_Bush_SW_A_In);
+		RegionAddRect(thiefBushEntrance_SW_B, gg_rct_Thief_Bush_SW_B_In);
+		RegionAddRect(thiefBushEntrance_SW_C, gg_rct_Thief_Bush_SW_C_In);
+
+		bushEntranceExitMapping.rect_h[thiefBushEntrance_NW_A] = gg_rct_Thief_Bush_NW_A_Out;
+		bushEntranceExitMapping.rect_h[thiefBushEntrance_NE_A] = gg_rct_Thief_Bush_NE_A_Out;
+		bushEntranceExitMapping.rect_h[thiefBushEntrance_SE_A] = gg_rct_Thief_Bush_SE_A_Out;
+		bushEntranceExitMapping.rect_h[thiefBushEntrance_SW_A] = gg_rct_Thief_Bush_SW_A_Out;
+		bushEntranceExitMapping.rect_h[thiefBushEntrance_SW_B] = gg_rct_Thief_Bush_SW_B_Out;
+		bushEntranceExitMapping.rect_h[thiefBushEntrance_SW_C] = gg_rct_Thief_Bush_SW_C_Out;
+
+		TriggerRegisterEnterRegion(t, thiefBushEntrance_NW_A, null);
+		TriggerRegisterEnterRegion(t, thiefBushEntrance_NE_A, null);
+		TriggerRegisterEnterRegion(t, thiefBushEntrance_SE_A, null);
+		TriggerRegisterEnterRegion(t, thiefBushEntrance_SW_A, null);
+		TriggerRegisterEnterRegion(t, thiefBushEntrance_SW_B, null);
+		TriggerRegisterEnterRegion(t, thiefBushEntrance_SW_C, null);
+
+		TriggerAddAction(t, function ThiefBushEntered);
+	}
+
+	function onInit() {
+		TimerStart(NewTimer(), 1.0, false, function Initialize);
+	}
+}

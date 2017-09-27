@@ -4,6 +4,27 @@ library ChatCommands requires ArgsUtils {
   public {
     type ArgFunc extends function(ArgsList);
   }
+
+  public function ParsePlayerId(string str) -> integer {
+    string low = StringCase(str, false);
+    integer length = StringLength(str);
+    integer matches = 0;
+    integer id;
+    integer i;
+
+    for (0 <= i < 12) {
+      if (StringCase(SubString(GetPlayerName(Player(i)), 0, length), false) == str) {
+        id = i;
+        matches += 1;
+      }
+    }
+
+    if (matches == 1) {
+      return id;
+    } else {
+      return -1;
+    }
+  }
   
   public struct ChatCommands[] {
     private static trigger chatEvent;

@@ -65,14 +65,15 @@ local item added
             call UnitAddItem(GetTriggerUnit(), added)
             call itemLower(4)
         endif
-        if i[0] == ITEM_STICK and i[1] == ITEM_STICK and i[2] == ITEM_STONE and i[3] == ITEM_STONE then
+        if i[0] == ITEM_STICK and i[1] == ITEM_STICK and i[2] == ITEM_STONE and i[3] == ITEM_STONE and i[3] == ITEM_CLAY_BALL then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
             call RemoveItem(t[2])
             call RemoveItem(t[3])
+            call RemoveItem(t[4])
             set added = CreateItem(ITEM_TANNERY_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
             call UnitAddItem(GetTriggerUnit(), added)
-            call itemLower(4)
+            call itemLower(5)
         endif
         if i[0] == ITEM_STICK and i[1] == ITEM_MANA_CRYSTAL and i[2] == ITEM_STICK and i[3] == ITEM_MANA_CRYSTAL and i[4] == ITEM_STICK and i[5] == ITEM_MANA_CRYSTAL then
             call RemoveItem(t[0])

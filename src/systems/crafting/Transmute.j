@@ -65,7 +65,7 @@ local item added
             call UnitAddItem(GetTriggerUnit(), added)
             call itemLower(4)
         endif
-        if i[0] == ITEM_STICK and i[1] == ITEM_STICK and i[2] == ITEM_STONE and i[3] == ITEM_STONE and i[3] == ITEM_CLAY_BALL then
+        if i[0] == ITEM_STICK and i[1] == ITEM_STICK and i[2] == ITEM_STONE and i[3] == ITEM_STONE and i[4] == ITEM_CLAY_BALL then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
             call RemoveItem(t[2])

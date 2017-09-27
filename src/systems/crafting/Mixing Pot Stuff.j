@@ -58,7 +58,8 @@ function Trig_mixing_pot_stuff_Actions takes nothing returns nothing
         endif
         if(spec and rivStem>1 and butsu>1) then
             call removeHerbs(u)
-            call UnitAddItemByIdSwapped( ITEM_NETHER_POTION, u ) // Nether
+            set i = UnitAddItemByIdSwapped( ITEM_NETHER_POTION, u ) // Nether
+            call SetItemCharges( i, 2 )
             return
         endif
         if(spec and rivRoot>1 and butsu>1) then

@@ -97,11 +97,11 @@ endglobals
     endfunction
     
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-    // PUBLIC FUNCTION : UnitStackItem( unit, item )
+    // PUBLIC FUNCTION : UnitStackItemEx( unit, item, dropExcess )
     //  Works like UnitAddItem() with full inventory functionality.
     //  Returns true if excess items are dropped. Otherwise false.
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-    function UnitStackItem takes unit u, item i returns boolean
+    function UnitStackItemEx takes unit u, item i, boolean dropExcess returns boolean
         local integer ic = GetItemCharges( i )
         local integer is
         local integer il
@@ -112,16 +112,24 @@ endglobals
         local real px
         local real py
         local real ua
+        local boolean inventoryFull
         // Check if the item is a powerup
-        if IsItemPowerup(i) or not IsItemStackable(i) then
+        if IsItemPowerup( i ) then
             return false
         endif
         // Make sure the item has charges
-        if ic <= 0 then
+        if ic <= 0 or not IsItemStackable( i ) then
+            set inventoryFull = UnitInventoryFull( u )
             // If not we just give it to the unit
-            call DisableTrigger( gg_trg_EasyItemStacknSplit )
-            call UnitAddItem( u, i )
-            call EnableTrigger( gg_trg_EasyItemStacknSplit )
+            if dropExcess or not inventoryFull then
+                call DisableTrigger( gg_trg_EasyItemStacknSplit )
+                call UnitAddItem( u, i )
+                call EnableTrigger( gg_trg_EasyItemStacknSplit )
+                return not inventoryFull
+            else
+                call RemoveItem( i )
+                return false
+            endif
         else
             // Set vars
             set is = UnitInventorySize( u )
@@ -172,7 +180,7 @@ endglobals
                     exitwhen ic <= 0 or s >= is
                 endloop
                 // If there are still charges left over, drop them on the ground
-                if ic > 0 then
+                if ic > 0 and dropExcess then
                     set ua = GetUnitFacing( u )
                     set px = GetUnitX( u ) + 100 * Cos( ua * bj_DEGTORAD )
                     set py = GetUnitY( u ) + 100 * Sin( ua * bj_DEGTORAD )
@@ -194,6 +202,15 @@ endglobals
         endif
         // Nothing dropped
         return false
+    endfunction
+    
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+    // PUBLIC FUNCTION : UnitStackItem( unit, item )
+    //  Works like UnitAddItem() with full inventory functionality.
+    //  Returns true if excess items are dropped. Otherwise false.
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+    function UnitStackItem takes unit u, item i returns boolean
+        return UnitStackItemEx(u, i, true)
     endfunction
     
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

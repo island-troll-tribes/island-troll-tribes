@@ -61,7 +61,7 @@ function Trig_mixing_pot_stuff_Actions takes nothing returns nothing
             call UnitAddItemByIdSwapped( ITEM_NETHER_POTION, u ) // Nether
             return
         endif
-        if(spec and rivRoot>2 and butsu>0) then
+        if(spec and rivRoot>1 and butsu>1) then
             call removeHerbs(u)
             call UnitAddItemByIdSwapped( ITEM_DRUNKS_POTION, u ) // Drunk
             return

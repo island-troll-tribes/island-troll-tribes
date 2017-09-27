@@ -416,7 +416,6 @@ function setUpSkillTriggers takes unit u returns nothing
     elseif(GetUnitTypeId(u)==UNIT_THIEF) then//thief
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_blur, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_TeleThief_Cast, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
-        call TriggerRegisterPlayerUnitEventSimple( gg_trg_Smoke_Stream, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Nether_Fade, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Jump, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_blink_ww_short_radius, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )

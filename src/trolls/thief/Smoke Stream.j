@@ -29,7 +29,7 @@ endfunction
 //===========================================================================
 function InitTrig_Smoke_Stream takes nothing returns nothing
     set gg_trg_Smoke_Stream = CreateTrigger(  )
-  //  call TriggerRegisterAnyUnitEventBJ( gg_trg_Smoke_Stream, EVENT_PLAYER_UNIT_SPELL_CHANNEL )
+    call TriggerRegisterAnyUnitEventBJ( gg_trg_Smoke_Stream, EVENT_PLAYER_UNIT_SPELL_CHANNEL )
     call TriggerAddCondition( gg_trg_Smoke_Stream, Condition( function Trig_Smoke_Stream_Conditions ) )
     call TriggerAddAction( gg_trg_Smoke_Stream, function Trig_Smoke_Stream_Actions )
 endfunction

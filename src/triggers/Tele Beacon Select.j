@@ -30,10 +30,8 @@ if GetUnitTypeId(u) == UNIT_TELEPORTATION_BEACON and IsUnitAlly(u, p) and not tp
     set i = GetUnitAbilityLevel(u, 'A042')
     //set modelPath = rangeCheckModFirst+I2S(GetRandomInt(0,8))+".mdl"
     set modelPath = rangeCheckModFirst+"2.mdl"
-    set s[1] = 500
-    set s[2] = 700
-    set s[3] = 900
-    set s[4] = 1100
+    set s[1] = 700
+    set s[2] = 1100
     //call GroupEnumUnitsInRange(
     loop
         exitwhen a > 360

@@ -69,7 +69,7 @@ library MMD initializer init
     /// Private variables and constants
     ///////////////////////////////////////////////////////////////
     globals
-        private constant boolean SHOW_DEBUG_MESSAGES = true
+        private constant boolean SHOW_DEBUG_MESSAGES = false
         
         private constant string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-+= \\!@#$%^&*()/?>.<,;:'\"{}[]|`~"
         private constant integer num_chars = StringLength(chars)

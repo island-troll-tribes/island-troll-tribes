@@ -55,6 +55,7 @@ function Start_Game takes nothing returns nothing
     call TimerDialogSetTitle(NOOB_TIME_DIALOG, "Grace Period")
     call TimerDialogDisplay(NOOB_TIME_DIALOG, true)
     call TimerStart(udg_noobTimer, udg_NOOB_TIME_LEFT , false , null)
+    call TimerStart(GAME_TIMER, 99999999, false, null)
 
     call RegisterPlayersTrollClasses()
     
@@ -130,12 +131,6 @@ function Startup_Timer takes nothing returns nothing
     call LockMammoth()
     call prepareSpells()
 
-    // debug modes
-    static if DEBUG_MODE then
-        set HOSTING_CLAN = "DevSquad"
-        //call GameModes_Action("-test mode",Player(0))
-    endif
-
     //HCL Modes
     if checkHCLletter("b") then //elimination
         call GameModes_Action("-elimination",Player(0))
@@ -204,15 +199,6 @@ function Startup_Timer takes nothing returns nothing
         call DisplayTText( GENERAL_COLOR + "This game is hosted by " + GREEN_COLOR + "Clan " + HOSTING_CLAN + "|r", 50 )
     endif
 
-    static if PRIVATE_MAP then
-      if HOSTING_CLAN != "TwGB" and HOSTING_CLAN != "DevSquad" then
-        call ClearTextMessages()
-        call ShowInterface(false, 0)
-        call EnableUserControl(false)
-        call DisplayTText(RED_COLOR+"Authorized beta testing only",5000)
-      endif
-    endif
-
     call TimerStart(MODES_TIMER, MODES_TIME_LIMIT, false, function ModesTimerFinished)
     set MODES_TIMER_DIALOG = CreateTimerDialog(MODES_TIMER)
     call TimerDialogSetTitle(MODES_TIMER_DIALOG,"Select Modes")
@@ -246,7 +232,6 @@ private function onInit takes nothing returns nothing
     call UpdateBoardsLoopInit()
     call LocustDisplayUnits()
     call TimerStart(t,0,false,function Startup_Timer)
-    call TimerStart(GAME_TIMER, 99999999, false, null)
     
     loop
         exitwhen i > 11

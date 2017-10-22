@@ -1,4 +1,8 @@
-library ThiefBush requires PublicLibrary, TimerUtils, Jump {
+library ThiefBush requires PublicLibrary, TimerUtils, Jump, ChatCommands {
+	real HEIGHT = 140;
+	real DURATION = 1;
+	real GRAVITY = 50;
+
 	Table bushEntranceExitMapping;
 
 	region thiefBushEntrance_NW_A;
@@ -8,25 +12,33 @@ library ThiefBush requires PublicLibrary, TimerUtils, Jump {
 	region thiefBushEntrance_SW_B;
 	region thiefBushEntrance_SW_C;
 
-	function ThiefBushEntered() {
+	function ThiefBushEntered() -> boolean {
 		unit enteringUnit = GetEnteringUnit();
 		region entrance = GetTriggeringRegion();
 		rect exit = bushEntranceExitMapping.rect_h[entrance];
 		real destX = GetRandomX(exit);
 		real destY = GetRandomY(exit);
 
-		Jump.start(enteringUnit, destX, destY, 20, 1, 50);
+		if (IsUnitType(enteringUnit, UNIT_TYPE_GROUND)) {
+			PauseUnit(enteringUnit, true);
+			Jump.start(enteringUnit, destX, destY, HEIGHT, DURATION, GRAVITY);
+		}
 
 		enteringUnit = null;
 		entrance = null;
 		exit = null;
+
+		return false;
 	}
 
-	function Initialize() {
+	function ThiefBushExited() -> boolean {
+		PauseUnit(EVENT_JUMP_UNIT, false);
+		return false;
+	}
+
+	function onInit() {
 		trigger t = CreateTrigger();
 		bushEntranceExitMapping = Table.create();
-
-		ReleaseTimer(GetExpiredTimer());
 
 		thiefBushEntrance_NW_A = CreateRegion();
 		thiefBushEntrance_NE_A = CreateRegion();
@@ -55,11 +67,29 @@ library ThiefBush requires PublicLibrary, TimerUtils, Jump {
 		TriggerRegisterEnterRegion(t, thiefBushEntrance_SW_A, null);
 		TriggerRegisterEnterRegion(t, thiefBushEntrance_SW_B, null);
 		TriggerRegisterEnterRegion(t, thiefBushEntrance_SW_C, null);
+		TriggerAddCondition(t, function ThiefBushEntered);
 
-		TriggerAddAction(t, function ThiefBushEntered);
-	}
+		t = CreateTrigger();
+	    TriggerRegisterVariableEvent(t, "EVENT_JUMP_FINISH", EQUAL, 1);
+	    TriggerAddCondition(t, function ThiefBushExited);
 
-	function onInit() {
-		TimerStart(NewTimer(), 1.0, false, function Initialize);
+	    debug {
+	    	ChatCommands.registerArgFunc(null, "thief-bush", function (ArgsList a) {
+	    		if (a[0] == "") {
+	    			BJDebugMsg("-thief-bush [GRAVITY|HEIGHT|DURATION|PAUSE] value");
+	    		} else if (a[0] == "GRAVITY") {
+	    			GRAVITY = S2R(a[1]);
+	    			BJDebugMsg("GRAVITY = " + R2S(GRAVITY));
+	    		}
+	    		else if (a[0] == "HEIGHT") {
+	    			HEIGHT = S2R(a[1]);
+	    			BJDebugMsg("HEIGHT = " + R2S(HEIGHT));
+	    		}
+	    		else if (a[0] == "DURATION")  {
+	    			DURATION = S2R(a[1]);
+	    			BJDebugMsg("DURATION = " + R2S(DURATION));
+	    		}
+	    	});
+	    }
 	}
 }

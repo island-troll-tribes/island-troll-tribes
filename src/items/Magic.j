@@ -12,14 +12,16 @@ endfunction
 function Trig_Magic_Actions takes nothing returns nothing
     local unit u = GetManipulatingUnit()
     local integer i = GetRandomInt(1,10)
-    local location loc
+    local real x
+    local real y
 
     call itemLower(1)
 
     if Mammoth_Dead and DiscoDuck == null then
         call HornSound()
-        set loc = GetRectCenter(gg_rct_discoduck)
-        set DiscoDuck = CreateUnit( Player(12), UNIT_DISCO_DUCK, 999, 413, 270)
+        set x = GetRectCenterX(gg_rct_discoduck)
+        set y = GetRectCenterY(gg_rct_discoduck)
+        set DiscoDuck = CreateUnit(Player(12), UNIT_DISCO_DUCK, x, y, 315)
         call DestroyEffect(AddSpecialEffectTarget(teleportModel, DiscoDuck, "overhead"))
     elseif i == 1 then
         call SetUnitLifePercentBJ( u, 30 )
@@ -39,12 +41,11 @@ function Trig_Magic_Actions takes nothing returns nothing
         call SetUnitLifePercentBJ( u, 100 )
         call SetUnitManaPercentBJ( u, 100 )
     elseif i == 10 then
-        call CreateItem( ITEM_MANA_CRYSTAL, GetUnitX(u), GetUnitY(u))
-        call CreateItem( ITEM_MANA_CRYSTAL, GetUnitX(u), GetUnitY(u))
+        call CreateItem( ITEM_MANA_CRYSTAL, GetUnitX(u), GetUnitY(u) )
+        call CreateItem( ITEM_MANA_CRYSTAL, GetUnitX(u), GetUnitY(u) )
     endif
 
     set u = null
-    set loc = null
 endfunction
 
 //===========================================================================

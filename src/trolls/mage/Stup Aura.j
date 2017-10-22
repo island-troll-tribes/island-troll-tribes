@@ -11,7 +11,6 @@ function Trig_Stup_Aura_Conditions takes nothing returns boolean
 endfunction
 
 function Trig_Stup_Aura_Actions takes nothing returns nothing
-    call masterCastAtTarget(GetSpellAbilityUnit(),GetSpellAbilityUnit(),0,0,'A05Z',"antimagicshell")
     call UnitAddAbilityBJ( 'A05V', GetSpellAbilityUnit() )
 endfunction
 

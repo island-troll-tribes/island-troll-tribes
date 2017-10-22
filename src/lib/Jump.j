@@ -51,7 +51,7 @@ library Jump requires CTL, TerrainPathability optional GetUnitCollision, Table
         // Moves the unit to nearest pathable point when landing
         private constant    boolean     PATHING_LAND        = true 
         // Is the turn speed locked when jumping
-        private constant    boolean     LOCK_FACING         = true
+        private constant    boolean     LOCK_FACING         = false
         
         private             rect        rct                 = Rect(0,0,0,0)
         private             group       enu                 = CreateGroup()

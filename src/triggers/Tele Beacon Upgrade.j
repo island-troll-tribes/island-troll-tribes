@@ -6,10 +6,10 @@ function Trig_tele_tower_upgrade_Conditions takes nothing returns boolean
     if ( not ( GetUnitTypeId(GetManipulatingUnit()) == UNIT_TELEPORTATION_BEACON ) ) then
         return false
     endif
-    if ( not ( GetItemTypeId(GetManipulatedItem()) == ITEM_MANA_CRYSTAL ) ) then
+    if ( not ( GetItemTypeId(GetManipulatedItem()) == ITEM_MAGIC ) ) then
         return false
     endif
-    if ( not ( GetUnitAbilityLevelSwapped('A042', GetManipulatingUnit()) < 4 ) ) then
+    if ( not ( GetUnitAbilityLevelSwapped('A042', GetManipulatingUnit()) < 2 ) ) then
         return false
     endif
     return true

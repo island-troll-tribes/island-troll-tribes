@@ -134,14 +134,15 @@ local item added
                 call UnitAddItem(GetTriggerUnit(), added)
                 call itemLower(6)
             endif
-            if i[0] == ITEM_STONE and i[1] == ITEM_STONE and i[2] == ITEM_MANA_CRYSTAL and i[3] == ITEM_MANA_CRYSTAL then
+            if i[0] == ITEM_STONE and i[1] == ITEM_STONE and i[2] == ITEM_MANA_CRYSTAL and i[3] == ITEM_STICK and i[4] == ITEM_TINDER then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
                 call RemoveItem(t[2])
                 call RemoveItem(t[3])
+                call RemoveItem(t[4])
                 set added = CreateItem(ITEM_TELEPORT_BEACON_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
                 call UnitAddItem(GetTriggerUnit(), added)
-                call itemLower(4)
+                call itemLower(5)
             endif
             if i[0] == ITEM_STONE and i[1] == ITEM_STICK and i[2] == ITEM_STICK and i[3] == ITEM_STICK then
                 call RemoveItem(t[0])

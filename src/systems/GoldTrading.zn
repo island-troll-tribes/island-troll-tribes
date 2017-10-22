@@ -1,7 +1,10 @@
-library GoldTrading requires ChatCommands, PublicLibrary {
+library GoldTrading requires ChatCommands, PublicLibrary, Utils {
 	function GiveGold(ArgsList a) {
 		integer playerId = S2I(a[0]) - 1;
 		integer amount = S2I(a[1]);
+		integer tribeId = GetPidTribeId(playerId);
+		integer minTribeId = GetMinPlayerIdForTribe(tribeId);
+		integer maxTribeId = GetMaxPlayerIdForTribe(tribeId);
 		integer currentGold;
 		integer theirGold;
 		player target;
@@ -11,11 +14,11 @@ library GoldTrading requires ChatCommands, PublicLibrary {
 		}
 
 		if (playerId < 0 || playerId > 11) {
-			playerId = ParsePlayerId(a[0]);
+			playerId = ParsePlayerIdWithMinAndMax(a[0], minTribeId, maxTribeId);
 		}
 
 		if (playerId < 0 || playerId > 11) {
-			DisplayTextToPlayer(a.triggerPlayer, 0, 0, RED_COLOR + "Player IDs range from 1-12|r");
+			DisplayTextToPlayer(a.triggerPlayer, 0, 0, RED_COLOR + "Command is '-g (player name or id) (amount)'|r");
 			return;
 		}
 
@@ -55,7 +58,6 @@ library GoldTrading requires ChatCommands, PublicLibrary {
 
 	function onInit() {
 		ChatCommands.registerArgFunc(null, "gold", GiveGold);
-		ChatCommands.registerArgFunc(null, "give", GiveGold);
 		ChatCommands.registerArgFunc(null, "g", GiveGold);
 	}
 }

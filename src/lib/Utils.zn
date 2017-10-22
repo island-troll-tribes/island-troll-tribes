@@ -1,2 +1,35 @@
-library Utils requires Ascii {
+library Utils requires Ascii, GameConfig, PublicLibrary {
+	public function GetMinPlayerIdForTribe(integer tribeId) -> integer {
+		integer numPlayersPerTribe = GameConfig.getInstance().getNumPlayersPerTribe();
+		return numPlayersPerTribe * tribeId;
+	}
+
+	public function GetMaxPlayerIdForTribe(integer tribeId) -> integer {
+		integer numPlayersPerTribe = GameConfig.getInstance().getNumPlayersPerTribe();
+		return numPlayersPerTribe * tribeId + numPlayersPerTribe - 1;
+	}
+
+	public function ParsePlayerIdWithMinAndMax(string str, integer min, integer max) -> integer {
+		string low = StringCase(str, false);
+		integer length = StringLength(str);
+		integer matches = 0;
+		integer id;
+		integer i;
+
+		for (min <= i <= max) {
+			if (StringCase(SubString(GetPlayerName(Player(i)), 0, length), false) == str) {
+				id = i;
+				matches += 1;
+			}
+		}
+
+		if (matches == 1) {
+			return id;
+		}
+		return -1;
+	}
+
+	public function ParsePlayerId(string str) -> integer {
+		return ParsePlayerIdWithMinAndMax(str, 0, 11);
+	}
 }

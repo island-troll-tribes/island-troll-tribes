@@ -25,7 +25,7 @@ endfunction
 function Trig_enemy_radar_Func001A takes nothing returns nothing
     if Trig_enemy_radar_Func001Func001C() then
         if EnumUnitIsElk() then
-            call PingMinimapLocForForceEx( GetPlayersAllies(GetOwningPlayer(GetSpellAbilityUnit())), GetUnitLoc(GetEnumUnit()), 3.00, bj_MINIMAPPINGSTYLE_FLASHY, 0.00, 0.00, 100 )
+            call PingMinimapLocForForceEx( GetPlayersAllies(GetOwningPlayer(GetSpellAbilityUnit())), GetUnitLoc(GetEnumUnit()), 3.00, bj_MINIMAPPINGSTYLE_SIMPLE, 20.00, 20.00, 100 )
         else
             call PingMinimapLocForForceEx( GetPlayersAllies(GetOwningPlayer(GetSpellAbilityUnit())), GetUnitLoc(GetEnumUnit()), 5.00, bj_MINIMAPPINGSTYLE_ATTACK, 0.00, 0.00, 100 )
         endif

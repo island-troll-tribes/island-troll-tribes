@@ -39,7 +39,7 @@ function Trig_enemy_radar_uber_Func001A takes nothing returns nothing
     else
     endif
     if ( Trig_enemy_radar_uber_Func001Func002C() ) then
-        call PingMinimapLocForForceEx( GetPlayersAllies(GetOwningPlayer(GetSpellAbilityUnit())), GetUnitLoc(GetEnumUnit()), 5.00, bj_MINIMAPPINGSTYLE_FLASHY, 0.00, 0.00, 100 )
+        call PingMinimapLocForForceEx( GetPlayersAllies(GetOwningPlayer(GetSpellAbilityUnit())), GetUnitLoc(GetEnumUnit()), 5.00, bj_MINIMAPPINGSTYLE_SIMPLE, 20.00, 20.00, 100 )
     else
     endif
 endfunction

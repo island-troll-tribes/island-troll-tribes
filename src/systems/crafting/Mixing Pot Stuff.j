@@ -59,7 +59,7 @@ function Trig_mixing_pot_stuff_Actions takes nothing returns nothing
         if(spec and rivStem>1 and butsu>1) then
             call removeHerbs(u)
             set i = UnitAddItemByIdSwapped( ITEM_NETHER_POTION, u ) // Nether
-            call SetItemCharges( i, 2 )
+            set i = UnitAddItemByIdSwapped( ITEM_NETHER_POTION, u )
             return
         endif
         if(spec and rivRoot>1 and butsu>1) then
@@ -87,7 +87,7 @@ function Trig_mixing_pot_stuff_Actions takes nothing returns nothing
             call UnitAddItemByIdSwapped( ITEM_DARK_ROCK, u ) // Dark Rock
             return
         endif
-        if(rivStem>5) then
+        if(rivStem>3) then
             call removeHerbs(u)
             call UnitAddItemByIdSwapped( ITEM_ANABOLIC_POTION, u ) // Anabolic
             return
@@ -169,9 +169,7 @@ function Trig_mixing_pot_stuff_Actions takes nothing returns nothing
             call removeHerbs(u)
             set i = UnitAddItemByIdSwapped( ITEM_CURE_ALL, u ) // CureAll
             if (butsu>5) then
-                call SetItemCharges( i, 2 )
-            else
-                call SetItemCharges( i, 1 )
+                set i = UnitAddItemByIdSwapped( ITEM_CURE_ALL, u )
             endif
             set i = null
             return
@@ -184,4 +182,3 @@ function InitTrig_mixing_pot_stuff takes nothing returns nothing
     call TriggerRegisterAnyUnitEventBJ( gg_trg_mixing_pot_stuff, EVENT_PLAYER_UNIT_SPELL_CAST )
     call TriggerAddAction( gg_trg_mixing_pot_stuff, function Trig_mixing_pot_stuff_Actions )
 endfunction
-

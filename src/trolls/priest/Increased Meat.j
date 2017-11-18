@@ -7,6 +7,9 @@ function Trig_Increased_Meat_Func003C takes nothing returns boolean
     if ( ( GetSpellAbilityId() == 'A047' ) ) then
         return true
     endif
+    if ( ( GetSpellAbilityId() == 'A0C9' ) ) then
+        return true
+    endif
     return false
 endfunction
 

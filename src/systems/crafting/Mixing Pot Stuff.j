@@ -92,7 +92,7 @@ function Trig_mixing_pot_stuff_Actions takes nothing returns nothing
             call UnitAddItemByIdSwapped( ITEM_ANABOLIC_POTION, u ) // Anabolic
             return
         endif
-        if(rivStem>2 and spec and rivRoot>0) then
+        if(rivStem>0 and spec and butsu>0) then
             call removeHerbs(u)
             call UnitAddItemByIdSwapped( ITEM_ELEMENTAL_SHIELD_POTION, u ) // Elemental
             return

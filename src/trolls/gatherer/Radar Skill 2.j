@@ -29,7 +29,7 @@ endfunction
 
 function Trig_radar_skill_2_Func001A takes nothing returns nothing
     if ( Trig_radar_skill_2_Func001Func001C() ) then
-        call PingMinimapLocForForceEx( GetPlayersAllies(GetOwningPlayer(GetSpellAbilityUnit())), GetItemLoc(GetEnumItem()), 4.00, bj_MINIMAPPINGSTYLE_FLASHY, 100.00, 74.00, 52.00 )
+        call PingMinimapLocForForceEx( GetPlayersAllies(GetOwningPlayer(GetSpellAbilityUnit())), GetItemLoc(GetEnumItem()), 4.00, bj_MINIMAPPINGSTYLE_SIMPLE, 100.00, 74.00, 52.00 )
     else
     endif
 endfunction

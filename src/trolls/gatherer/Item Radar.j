@@ -72,7 +72,7 @@ function Trig_item_radar_Func001A takes nothing returns nothing
             set b=0
         endif
     endif
-        call PingMinimapLocForForceEx( GetPlayersAllies(GetOwningPlayer(GetSpellAbilityUnit())), GetItemLoc(GetEnumItem()), 4.00, bj_MINIMAPPINGSTYLE_FLASHY, r, g, b )
+        call PingMinimapLocForForceEx( GetPlayersAllies(GetOwningPlayer(GetSpellAbilityUnit())), GetItemLoc(GetEnumItem()), 4.00, bj_MINIMAPPINGSTYLE_SIMPLE, r, g, b )
 
 endfunction
 

@@ -94,6 +94,7 @@ library TrollUpgrade initializer onInit requires ID, Constants, PublicLibrary
     local boolean SUPERSUB = false
     local integer SKILL_UPGRADE = GetLearnedSkill()
     local unit OLD_UNIT = GetLearningUnit()
+
     local boolean medallion = false
 
     if SKILL_UPGRADE=='S001' then
@@ -144,14 +145,14 @@ library TrollUpgrade initializer onInit requires ID, Constants, PublicLibrary
     elseif SKILL_UPGRADE == 'S00Q' then
         set UNIT_ID_REPLACE = UNIT_SAGE
         set SUPERSUB = true
-        if OLD_UNIT == UNIT_PRIEST then
-          medallion = true
+        if GetUnitTypeId(OLD_UNIT) == UNIT_PRIEST then
+          set medallion = true
         endif
     elseif SKILL_UPGRADE == 'S00R' then
         set UNIT_ID_REPLACE = UNIT_ASSASSIN
         set SUPERSUB = true
-        if OLD_UNIT == UNIT_THIEF then
-          medallion = true
+        if GetUnitTypeId(OLD_UNIT) == UNIT_THIEF then
+          set medallion = true
         endif
     elseif SKILL_UPGRADE == 'S00S' then
         set TRACKER_PRESENT = true
@@ -160,20 +161,20 @@ library TrollUpgrade initializer onInit requires ID, Constants, PublicLibrary
     elseif SKILL_UPGRADE == 'S00U' then
         set UNIT_ID_REPLACE = UNIT_SPY
         set SUPERSUB = true
-        if OLD_UNIT == UNIT_SCOUT then
-          medallion = true
+        if GetUnitTypeId(OLD_UNIT) == UNIT_SCOUT then
+          set medallion = true
         endif
     elseif SKILL_UPGRADE == 'S00W' then
         set UNIT_ID_REPLACE = UNIT_OMNIGATHERER
         set SUPERSUB = true
-        if OLD_UNIT == UNIT_GATHERER then
-          medallion = true
+        if GetUnitTypeId(OLD_UNIT) == UNIT_GATHERER then
+          set medallion = true
         endif
     elseif SKILL_UPGRADE == 'S00V' then
         set UNIT_ID_REPLACE = UNIT_DEMENTIA_MASTER
         set SUPERSUB = true
-        if OLD_UNIT == UNIT_MAGE then
-          medallion = true
+        if GetUnitTypeId(OLD_UNIT) == UNIT_MAGE then
+          set medallion = true
         endif
     elseif SKILL_UPGRADE == 'S00T' then
         set UNIT_ID_REPLACE = UNIT_ULTIMATE_FORM
@@ -184,7 +185,7 @@ library TrollUpgrade initializer onInit requires ID, Constants, PublicLibrary
       call TrollUpgrade(OLD_UNIT, UNIT_ID_REPLACE, SUPERSUB, medallion)
     endif
 
-    OLD_UNIT = null
+    set OLD_UNIT = null
     return false
   endfunction
 

@@ -250,11 +250,11 @@ function GetPlayerTribe takes player p returns force
 endfunction
 
 function GetPlayerTribeId takes player p returns integer
-    return TEAM_PLAYER[GetPlayerId(p)] - 1
+    return TEAM_PLAYER[GetPlayerId(p)]
 endfunction
 
 function GetPidTribeId takes integer pid returns integer
-    return TEAM_PLAYER[pid] - 1
+    return TEAM_PLAYER[pid]
 endfunction
 
 function cleanInventory takes unit u returns nothing

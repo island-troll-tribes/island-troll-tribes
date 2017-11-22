@@ -17,21 +17,21 @@
 
 globals
     trigger                 gg_trg_template            = null
-    trigger                 gg_trg_v288b               = null
-    trigger                 gg_trg_v288a               = null
-    trigger                 gg_trg_v287c               = null
-    trigger                 gg_trg_v287b               = null
-    trigger                 gg_trg_v287a               = null
-    trigger                 gg_trg_v286b               = null
-    trigger                 gg_trg_v286a               = null
-    trigger                 gg_trg_v285c               = null
-    trigger                 gg_trg_v285b               = null
-    trigger                 gg_trg_v285a               = null
-    trigger                 gg_trg_v284c               = null
-    trigger                 gg_trg_v284b               = null
-    trigger                 gg_trg_v283c               = null
-    trigger                 gg_trg_v283b               = null
-    trigger                 gg_trg_v283a               = null
+    trigger                 gg_trg_v0288b               = null
+    trigger                 gg_trg_v0288a               = null
+    trigger                 gg_trg_v0287c               = null
+    trigger                 gg_trg_v0287b               = null
+    trigger                 gg_trg_v0287a               = null
+    trigger                 gg_trg_v0286b               = null
+    trigger                 gg_trg_v0286a               = null
+    trigger                 gg_trg_v0285c               = null
+    trigger                 gg_trg_v0285b               = null
+    trigger                 gg_trg_v0285a               = null
+    trigger                 gg_trg_v0284c               = null
+    trigger                 gg_trg_v0284b               = null
+    trigger                 gg_trg_v0283c               = null
+    trigger                 gg_trg_v0283b               = null
+    trigger                 gg_trg_v0283a               = null
     trigger                 gg_trg_asdf_uid            = null
     trigger                 gg_trg_ArrayLists          = null
     trigger                 gg_trg_GlobalsInit         = null

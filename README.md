@@ -23,7 +23,7 @@ ___To build:___
 
 ## build
 
-Script which takes an unportected ITT map and applies any build settings passed via argv
+Script which takes an unprotected ITT map and applies any build settings passed via argv
 upon on it then turns it into a working wc3 map file.
 
 Options         | Default                 | Description

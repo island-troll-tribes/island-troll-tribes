@@ -55,6 +55,11 @@ function Trig_mixing_pot_stuff_Actions takes nothing returns nothing
             call removeHerbs(u)
             call UnitAddItemByIdSwapped( ITEM_POTION_TWIN_ISLANDS, u ) // Twin Islands
             return
+	endif
+        if(spec and rivStem>1) then
+            call removeHerbs(u)
+            call UnitAddItemByIdSwapped( ITEM_BEE_HIVE, u ) // Bee Hive
+            return
         endif
         if(spec and rivStem>1 and butsu>1) then
             call removeHerbs(u)

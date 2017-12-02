@@ -106,10 +106,10 @@ library SpearThrowsAndAbilities initializer onInit requires PublicLibrary, DUMMY
         local unit dummy
         local SpearData data = GetTimerData(GetExpiredTimer())
         call ReleaseTimer(GetExpiredTimer())
-        if GetUnitAbilityLevel(data.target, BUFF_SPEAR_INCOMING) == 0 then
-            // they blocked the spell
-            return
-        endif
+        // if GetUnitAbilityLevel(data.target, BUFF_SPEAR_INCOMING) == 0 then
+        //    // they blocked the spell
+        //    return
+        // endif
         call UnitRemoveAbility(data.target, BUFF_SPEAR_INCOMING)
         set id = mapAbility(data.abilityId)
         set dummy = masterCastAtCaster(data.caster, data.target, 0, 0, id, mapOrder(id))

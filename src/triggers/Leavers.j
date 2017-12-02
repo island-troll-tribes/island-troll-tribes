@@ -1,7 +1,7 @@
 library Leavers initializer onInit requires PublicLibrary, Commands, MapSetup, GameConfig
     function Trig_leavers_Actions takes nothing returns nothing
         local integer PID = GetPlayerId(GetTriggerPlayer())
-        local integer tribe = GetPlayerTribeId(GetTriggerPlayer())
+        local integer tribe = GetPidTribeId(PID)
         local integer ppt = GameConfig.getInstance().getNumPlayersPerTribe()
         local integer i = 0
         local boolean hasActivePlayer = false

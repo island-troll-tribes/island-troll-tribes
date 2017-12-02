@@ -8,12 +8,13 @@ library GameConfig {
     public boolean allTrollEnabled = false;
     public integer allTrollUnitId = 0;
     public boolean forcedDuelEnabled = false;
-    public integer forcedDuelAfter = 0;
-    public integer gracePeriodDuration = 480;
+    public real forcedDuelAfter = 0;
+    public real gracePeriodDuration = 8.0;
     public boolean randomizeSpawns = false;
     public boolean startWithFire = false;
     public boolean oldRandomEnabled = false;
     public integer selectionTimeAllowed = 40;
+    public boolean eliminationMode = false;
   
     static thistype instance;
 
@@ -49,12 +50,12 @@ library GameConfig {
       return this.playersPerTribe;
     }
 
-    public method setForcedDuel(integer numSeconds) -> boolean {
-      if (numSeconds < this.gracePeriodDuration) {
+    public method setForcedDuel(real numMinutes) -> boolean {
+      if (numMinutes < this.gracePeriodDuration) {
         return false;
       }
       this.forcedDuelEnabled = true;
-      this.forcedDuelAfter = numSeconds;
+      this.forcedDuelAfter = numMinutes;
       return true;
     }
 
@@ -62,20 +63,20 @@ library GameConfig {
       return this.forcedDuelEnabled;
     }
 
-    public method getForcedDuelAfter() -> integer {
+    public method getForcedDuelAfter() -> real {
       return this.forcedDuelAfter;
     }
 
-    public method setGracePeriodDuration(integer numSeconds) -> boolean {
-      if (this.forcedDuelEnabled && numSeconds > this.forcedDuelAfter) {
+    public method setGracePeriodDuration(real numMinutes) -> boolean {
+      if (this.forcedDuelEnabled && numMinutes > this.forcedDuelAfter) {
         return false;
       }
-      this.gracePeriodDuration = numSeconds;
-      udg_NOOB_TIME_LEFT = I2R(numSeconds); // TODO remove
+      this.gracePeriodDuration = numMinutes;
+      udg_NOOB_TIME_LEFT = numMinutes * 60; // TODO remove
       return true;
     }
 
-    public method getGracePeriodDuration() -> integer {
+    public method getGracePeriodDuration() -> real {
       return this.gracePeriodDuration;
     }
 
@@ -117,6 +118,15 @@ library GameConfig {
 
     public method getSelectionTimeAllowed() -> integer {
       return this.selectionTimeAllowed;
+    }
+
+    public method setEliminationEnabled(boolean value) {
+      this.eliminationMode = true;
+      udg_ELIMINATION = true;
+    }
+
+    public method getEliminationEnabled() -> boolean {
+      return this.eliminationMode;
     }
 
     static method onInit() {

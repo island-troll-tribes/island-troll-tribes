@@ -131,6 +131,15 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       GameMode.find("rs").trigger();
     });
 
+    GameMode.create("tournament", "to", "Tournament Modes (-sf, -el, -fd, -rs)", function(ArgsList a) {
+      GameMode.message(HIGHLIGHT_COLOR + "Tournament mode enabled:");
+      GameMode.find("sf").trigger();
+      GameMode.find("rs").trigger();
+      GameMode.find("fd").trigger();
+      GameMode.find("el").trigger();
+      GameMode.find("tournament").deregister();
+    });
+
     GameMode.create("all", "ar", "each player is given the same class or random (ex: \"-all random\"", function(ArgsList a) {
       integer uid = 0;
       if (a[0] != "random") {
@@ -145,28 +154,28 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       GameMode.message(ENERGY_COLOR + "All " + StringCase(a.fullMessage, false) + "|r enabled");
     });
 
-    GameMode.create("forced-duel", "fd", "set a forced duel after an amount of seconds, defaults to 1 h, eg: \"-fd 3600\"", function(ArgsList a) {
-      integer amount = 3600;
+    GameMode.create("forced-duel", "fd", "set a forced duel after an amount of minutes, defaults to 1 h, eg: \"-fd 60\"", function(ArgsList a) {
+      real amount = 60.0;
       if (a.length() >= 1) {
-        amount = S2I(a[0]);
+        amount = S2R(a[0]);
       }
       if (!GameConfig.getInstance().setForcedDuel(amount)) {
         GameMode.error("Force duel must be after end of the grace period");
         return;
       }
-      GameMode.message(ENERGY_COLOR + "Forced duel|r after " + I2S(amount) + " s");
+      GameMode.message(ENERGY_COLOR + "Forced duel|r after " + R2S(amount) + " min");
     });
 
-    GameMode.create("grace-period-duration", "gp", "change the duration of the grace period, eg: \"-gp 480\"", function(ArgsList a) {
-      integer amount = 480;
+    GameMode.create("grace-period-duration", "gp", "change the duration of the grace period, eg: \"-gp 8\"", function(ArgsList a) {
+      real amount = 8.0;
       if (a.length() >= 1) {
-        amount = S2I(a[0]);
+        amount = S2R(a[0]);
       }
       if (!GameConfig.getInstance().setGracePeriodDuration(amount)) {
         GameMode.error("Grace period must end before forced duel");
         return;
       }
-      GameMode.message(ENERGY_COLOR + "Grace period duration|r " + I2S(amount) + " s");
+      GameMode.message(ENERGY_COLOR + "Grace period duration|r " + R2S(amount) + " min");
     });
 
     GameMode.create("hot-mode", "hm", "increase the amount of heat a fire gives per cast", function(ArgsList a) {
@@ -233,6 +242,11 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       }
       GameMode.message(ENERGY_COLOR + "Selection time|r set to " + I2S(timeAllowed) + "s");
       GameConfig.getInstance().setSelectionTimeAllowed(timeAllowed);
+    });
+
+    GameMode.create("elimination", "el", "Elimination mode (no spirit wards)", function(ArgsList a) {
+      GameMode.message(HIGHLIGHT_COLOR + "Elimination Mode|r has been enabled. Teams can not build spirit wards now!");
+      GameConfig.getInstance().setEliminationEnabled(true);
     });
 
     // GameMode.create("raise heat", "rh", "increase heat capacity from 100 to 150", function(ArgsList a) {

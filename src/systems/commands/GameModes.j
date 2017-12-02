@@ -140,10 +140,6 @@ elseif s=="-test mode" and modeAllow[24] then
         set udg_NOOB_MODE = true
         call CreateItem( ITEM_SPIRIT_WARD_KIT, GetRectCenterX(gg_rct_revive_1), GetRectCenterY(gg_rct_revive_1) )
     endif
-elseif s=="-elimination" and modeAllow[25] then
-    set udg_ELIMINATION = true
-    set display = "|c0028d8e3Elimination Mode|r has been enabled. Teams can not build spirit wards now!"
-    set modeAllow[25] = false
 elseif s=="-no exp" and modeAllow[26] then
     set udg_EXPERIENCE_MODE = false
     set display = "Experience mode has been disabled. Trolls can no longer level up."
@@ -154,11 +150,6 @@ elseif s=="-no exp" and modeAllow[26] then
     set color = HIGHLIGHT_COLOR
     set display = "Team Kills are turned off!"
     set modeAllow[30] = false
-
-elseif s=="-op" and modeAllow[31] then
-    set BETA = true
-    set modeAllow[31] = false
-    set display = "OverPowered Mode|r has been activated. Items listed as OP are now buildable."
 endif
 
 if display != "" then

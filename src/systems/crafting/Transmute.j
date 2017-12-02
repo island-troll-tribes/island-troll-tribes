@@ -733,6 +733,16 @@ local item added
             call UnitAddItemByIdSwapped( ITEM_FIRE_BOMB, GetTriggerUnit() )
             call itemLower(2)
         endif
+//      if i[0] == ITEM_SPEAR and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_STEEL_INGOT and i[3] == ITEM_MANA_CRYSTAL and i[4] == ITEM_SPIRIT_WIND and i[5] == ITEM_SPIRIT_WATER then
+//          call RemoveItem(t[0])
+//          call RemoveItem(t[1])
+//          call RemoveItem(t[2])
+//          call RemoveItem(t[3])
+//          call RemoveItem(t[4])
+//          call RemoveItem(t[5])
+//          call UnitAddItemByIdSwapped( ITEM_BATTLE_SPEAR, GetTriggerUnit() )
+//          call itemLower(1)
+//      endif
     endif
     set t[0] = null
     set t[1] = null

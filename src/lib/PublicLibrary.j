@@ -903,7 +903,7 @@ function placeMedallion takes real x, real y returns nothing
     set q = LoadItemPoolHandle(udg_GameHash,StringHash("medals"),StringHash("medals"))
     if(q==null) then
         set q=CreateItemPool()
-        call ItemPoolAddItemType(q,ITEM_MEDALLION_COURAGE,7)
+        call ItemPoolAddItemType(q,ITEM_MEDALLION_COURAGE,4)
         call ItemPoolAddItemType(q,ITEM_STEEL_INGOT,1)
         //call SetHandleHandle(udg_jumpCache,"medals",q)
         call SaveItemPoolHandle(udg_GameHash,StringHash("medals"),StringHash("medals"),q)

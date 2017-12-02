@@ -10,7 +10,7 @@ function Shield_Bash_Actions takes nothing returns nothing
     local unit u = GetSpellAbilityUnit()
     local unit t = GetSpellTargetUnit()
     call masterCastAtCaster(u,t,0,0,'A064',"soulburn")
-    call UnitDamageTarget(u, t, 20, true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_UNKNOWN, WEAPON_TYPE_WHOKNOWS)
+    call UnitDamageTarget(u, t, 25, true, false, ATTACK_TYPE_HERO, DAMAGE_TYPE_UNKNOWN, WEAPON_TYPE_WHOKNOWS)
     set u = null
     set t = null
 endfunction

@@ -25,15 +25,15 @@ function Trig_metronome_Actions takes nothing returns nothing
     local unit u=GetSpellTargetUnit()
     local unit q=GetSpellAbilityUnit()
     local unit temp
-    local integer i=GetRandomInt(1,2)
+    local integer i=GetRandomInt(1,3)
     local integer start=1
     local integer end
     local integer index
 
 
 
-    if(i==1) then
-        set end=5
+    if(i<3) then
+        set end=GetRandomInt(3,5)
         set index=GetRandomInt(1,9)
         call masterCastAtTarget(q,u,200,200,udg_spells[index],udg_spellStrings[index])
         call PolledWait( 0.50 )
@@ -49,7 +49,7 @@ function Trig_metronome_Actions takes nothing returns nothing
             call masterCastAtTarget(q,u,800,800,udg_spells[index],udg_spellStrings[index])
             set start=start+1
         endloop
-    elseif(i==2) then
+    elseif(i==3) then
         call masterCastAtTarget(q,u,200,200,'A02B',"frostnova")
     endif
 endfunction

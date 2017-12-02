@@ -35,16 +35,6 @@ function checkmashertroll takes nothing returns boolean
     return false
 endfunction
 
-function mashManaBurn takes nothing returns boolean
-    if ( not ( GetRandomPercentageBJ() <= 29.00 ) ) then
-        return false
-    endif
-    if ( not(checkmashertroll()) ) then
-        return false
-    endif
-    return true
-endfunction
-
 function mashhit takes nothing returns nothing
     local unit attack = GetEventDamageSource()
     local unit defend = GetTriggerUnit()
@@ -56,12 +46,12 @@ function mashhit takes nothing returns nothing
             call StoreInteger(udg_attackerCache,"attacker.w3v","Player "+I2S(GetPlayerId(GetOwningPlayer(attack))),0)
             call StoreInteger(udg_attackedCache,"attacked.w3v","Player "+I2S(GetPlayerId(GetOwningPlayer(defend))),0)
             if ( mashSilence() ) then
-                call masterCastAtCaster(attack,defend,0,0,'A064',"soulburn") 
+                call masterCastAtCaster(attack,defend,0,0,'A064',"soulburn")
             endif
-            if ( mashManaBurn() ) then
+            if ( checkmashertroll() ) then
                 call masterCastAtCaster(attack,defend,0,0,'A065',"manaburn")
             endif
-        
+
         endif
     endif
     call DestroyTrigger(GetTriggeringTrigger())
@@ -82,9 +72,9 @@ function Trig_MageMasher_Actions takes nothing returns nothing
         set udg_attackerCache = InitGameCacheBJ( "attacker.w3v" )
         set udg_attackedCache = InitGameCacheBJ( "attacked.w3v" )
     endif
-    
+
     call StoreInteger(udg_attackerCache,"attacker.w3v",I2S(GetPlayerId(GetOwningPlayer(attacker))),1)
-    
+
     if  (GetStoredInteger(udg_attackedCache,"attacked.w3v",I2S(GetPlayerId(GetOwningPlayer(attacked))))==0) then
 
         call StoreInteger(udg_attackedCache,"attacked.w3v",I2S(GetPlayerId(GetOwningPlayer(attacked))),1)
@@ -100,7 +90,7 @@ function Trig_MageMasher_Actions takes nothing returns nothing
     set detecthit = null
     call DisableTrigger(detecthit)
     call DestroyTrigger(detecthit)
-    
+
 endfunction
 
 //===========================================================================

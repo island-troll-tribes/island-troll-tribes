@@ -7,7 +7,7 @@ function Trig_transmute_Actions takes nothing returns nothing
 local boolean bol1 = IsUnitTroll(GetTriggerUnit())
 local boolean bol2 = false
 local item array t
-local integer array i  
+local integer array i
 local integer e = 0
 local integer uid = GetUnitTypeId(GetTriggerUnit())
 local item added
@@ -102,7 +102,7 @@ local item added
             call UnitAddItem(GetTriggerUnit(), added)
             call itemLower(4)
         endif
-        
+
         if udg_EXTRA_MODE then
             if i[0] == ITEM_STICK and i[1] == ITEM_IRON_INGOT and i[2] == ITEM_IRON_INGOT then
                 call RemoveItem(t[0])
@@ -154,7 +154,7 @@ local item added
         endif
     endif
 //End of Troll Inventory Item Creation
-//Begging of Armory Item Creation    
+//Begging of Armory Item Creation
     if uid == UNIT_ARMORY and GetUnitUserData(GetTriggerUnit()) == 0 then
         loop
             exitwhen e > 5
@@ -379,7 +379,7 @@ local item added
                     call UnitAddItem(GetTriggerUnit(), added)
                     call itemLower(3)
                 endif
-        
+
                 set bol1 = IsItemBasicShield(t[0])
                 if bol1 and i[1] == ITEM_IRON_INGOT and i[2] == ITEM_IRON_INGOT then
                     call RemoveItem(t[0])
@@ -410,12 +410,12 @@ local item added
                     set added = CreateItem(ITEM_STEEL_SHIELD, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
                     call UnitAddItem(GetTriggerUnit(), added)
                 endif
-                
+
             endif
         endif
     endif
 //End of Armory Item Creation
-//Begging of Witch Doctors Hut Item Creation    
+//Begging of Witch Doctors Hut Item Creation
     if uid == UNIT_WITCH_DOCTORS_HIT and GetUnitUserData(GetTriggerUnit()) == 0 then
         loop
             exitwhen e > 5
@@ -539,14 +539,14 @@ local item added
     endif
 //End of WDH Item Creation
     // workshop
-    if uid == UNIT_WORKSHOP and GetUnitUserData(GetTriggerUnit()) == 0 then 
+    if uid == UNIT_WORKSHOP and GetUnitUserData(GetTriggerUnit()) == 0 then
         loop
             exitwhen e > 5
             set t[e] = UnitItemInSlot(GetTriggerUnit(), e)
             set i[e] = GetItemTypeId(t[e])
             set e = e +1
         endloop
-        
+
         if i[0] == ITEM_STICK and i[1] == ITEM_CLAY_BALL then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
@@ -603,7 +603,7 @@ local item added
             call UnitAddItemByIdSwapped( ITEM_BATTLE_AXE, GetTriggerUnit() )
             call itemLower(1)
         endif
-        
+
         //Battle Suit
         if i[0] == ITEM_BATTLE_AXE and i[1] == ITEM_BATTLE_ARMOR and i[2] == ITEM_BATTLE_GLOVES and i[3] == ITEM_BATTLE_SHIELD and i[4] == ITEM_SPIRIT_WIND and i[5] == ITEM_SPIRIT_WATER and BETA then
             call RemoveItem(t[0])
@@ -641,13 +641,6 @@ local item added
             call RemoveItem(t[0])
             call RemoveItem(t[1])
             call UnitAddItemByIdSwapped( ITEM_SMOKE_BOMB, GetTriggerUnit() )
-        endif
-        if i[0] == ITEM_STICK and i[1] == ITEM_STICK and i[2] == ITEM_SPIRIT_WIND then
-            call RemoveItem(t[0])
-            call RemoveItem(t[1])
-            call RemoveItem(t[2])
-            call UnitAddItemByIdSwapped( ITEM_BEE_HIVE, GetTriggerUnit() )
-            call itemLower(2)
         endif
         if i[0] == ITEM_THISTLES and i[1] == ITEM_DARK_ROCK then
             set e = GetItemCharges(t[0])

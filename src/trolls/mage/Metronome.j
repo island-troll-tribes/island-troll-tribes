@@ -33,8 +33,8 @@ function Trig_metronome_Actions takes nothing returns nothing
 
 
     if(i==1) then
-        set end=9
-        set index=GetRandomInt(0,9)
+        set end=5
+        set index=GetRandomInt(1,9)
         call masterCastAtTarget(q,u,200,200,udg_spells[index],udg_spellStrings[index])
         call PolledWait( 0.50 )
         set temp=u
@@ -44,7 +44,7 @@ function Trig_metronome_Actions takes nothing returns nothing
 
             set temp=GroupPickRandomUnit(GetUnitsInRangeOfLocMatching(3000,GetUnitLoc(temp),Condition(function checkTarget)))
             set udg_parameterUnit=temp
-            call PolledWait( 0.50 )
+            call PolledWait( 1.00 )
             set index=GetRandomInt(0,9)
             call masterCastAtTarget(q,u,800,800,udg_spells[index],udg_spellStrings[index])
             set start=start+1

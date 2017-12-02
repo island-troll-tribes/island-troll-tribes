@@ -82,6 +82,12 @@ function Trig_mixing_pot_stuff_Actions takes nothing returns nothing
             call UnitAddItemByIdSwapped( ITEM_ACID_BOMB, u ) //acid bomb
             return
         endif
+        if(spec and rivStem>1) then
+            call removeHerbs(u)
+            call UnitAddItemByIdSwapped( ITEM_BEE_HIVE, u ) // Bee Hive
+            call UnitAddItemByIdSwapped( ITEM_BEE_HIVE, u )
+            return
+        endif
         if(rivStem>0 and rivRoot>0 and butsu==2) then
             call removeHerbs(u)
             call UnitAddItemByIdSwapped( ITEM_DARK_ROCK, u ) // Dark Rock

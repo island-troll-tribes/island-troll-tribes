@@ -6,7 +6,7 @@ library Utils requires Ascii, GameConfig, PublicLibrary {
 
 	public function GetMaxPlayerIdForTribe(integer tribeId) -> integer {
 		integer numPlayersPerTribe = GameConfig.getInstance().getNumPlayersPerTribe();
-		return (numPlayersPerTribe + 1) * tribeId + numPlayersPerTribe - 1;
+		return numPlayersPerTribe * (tribeId + 1) - 1;
 	}
 
 	public function ParsePlayerIdWithMinAndMax(string str, integer min, integer max) -> integer {
@@ -31,5 +31,15 @@ library Utils requires Ascii, GameConfig, PublicLibrary {
 
 	public function ParsePlayerId(string str) -> integer {
 		return ParsePlayerIdWithMinAndMax(str, 0, 11);
+	}
+
+	public function ParsePlayerIdOnTribe(string str, integer tribeId) -> integer {
+		integer minTribeId = GetMinPlayerIdForTribe(tribeId);
+		integer maxTribeId = GetMaxPlayerIdForTribe(tribeId);
+		return ParsePlayerIdWithMinAndMax(str, minTribeId, maxTribeId);
+	}
+
+	public function IsPlayerPlaying(player p) -> boolean {
+		return GetPlayerController(p) == MAP_CONTROL_USER && GetPlayerSlotState(p) == PLAYER_SLOT_STATE_PLAYING;
 	}
 }

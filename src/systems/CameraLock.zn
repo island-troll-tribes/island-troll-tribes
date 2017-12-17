@@ -1,0 +1,30 @@
+library CameraLock requires ChatCommands, PublicLibrary, Map {
+	function CameraLock(ArgsList a) {
+		integer pid = GetPlayerId(a.triggerPlayer);
+
+		if (GetLocalPlayer() == a.triggerPlayer) {
+			DisplayTimedTextToPlayer(a.triggerPlayer, 0, 0, 5, GOLD_COLOR + "Camera Locked|r");
+			SetCameraTargetController(GetPidTroll(pid), 0, 0, false);
+		}
+	}
+
+	function CameraUnlock(ArgsList a) {
+		integer pid = GetPlayerId(a.triggerPlayer);
+
+		if (GetLocalPlayer() == a.triggerPlayer) {
+			DisplayTimedTextToPlayer(a.triggerPlayer, 0, 0, 5, GOLD_COLOR + "Camera Unlocked|r");
+			ResetToGameCamera(0);
+			SetCameraField(CAMERA_FIELD_ZOFFSET, ZOOM_DISTANCE[pid], 0);
+			SetCameraField(CAMERA_FIELD_FARZ, ZOOM_FOGZ[GetPidTroll], 0);
+		}
+	}
+
+	function onInit() {
+		Map.onGameStart(function() {
+			ChatCommands.registerArgFunc(null, "lock", CameraLock);
+			ChatCommands.registerArgFunc(null, "l", CameraLock);
+			ChatCommands.registerArgFunc(null, "unlock", CameraUnlock);
+			ChatCommands.registerArgFunc(null, "u", CameraUnlock);
+		});
+	}
+}

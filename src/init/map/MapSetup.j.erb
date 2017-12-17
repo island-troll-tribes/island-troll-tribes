@@ -130,67 +130,97 @@ function Startup_Timer takes nothing returns nothing
     call ReleaseTimer(GetExpiredTimer())
     call LockMammoth()
     call prepareSpells()
+    debug call BJDebugMsg("DEBUG MODE ACTIVE.")
 
     //HCL Modes
-    if checkHCLletter("b") then //elimination
-        call GameModes_Action("-elimination",Player(0))
-    endif
-    
-    if checkHCLletter("c") then //all random
-        call GameMode.find("fd").triggerWithArgs("random")
-    endif
-    
-    if checkHCLletter("d") then //no horn
-        call GameModes_Action("-no horn",Player(0))
-    endif
-    
-    if checkHCLletter("e") then //6v6
-        call GameMode.find("6s").trigger()
-    endif
-    
-    if checkHCLletter("f") then //fixed random
-        call GameModes_Action("-equal random",Player(0))
-    endif
-    
-    if checkHCLletter("h") then //-hm
-        call GameMode.find("hm").trigger()
-    endif
     
     if checkHCLletter("i") then //no trade
         call GameModes_Action("-no trade",Player(0))
     endif
-    
-    if checkHCLletter("j") then //op
-        call GameModes_Action("-op",Player(0))
-    endif
-    
-    if checkHCLletter("p") then //team kill disabled
-        call GameModes_Action("-tko",Player(0))
+
+    if checkHCLletter("0") then
+        call GameMode.find("ffa").trigger()
     endif
     
     if checkHCLletter("1") then
         call GameMode.find("1v1").trigger()
     endif
+    
+    if checkHCLletter("2") then
+        call GameMode.find("2s").trigger()
+    endif
+    
+    if checkHCLletter("3") then
+        call GameMode.find("3s").trigger()
+    endif
+    
+    if checkHCLletter("4") then
+        call GameMode.find("4s").trigger()
+    endif
+    
+    if checkHCLletter("6") then
+        call GameMode.find("6s").trigger()
+    endif
+    
+    if checkHCLletter("a") then //all random
+        call GameMode.find("all").triggerWithArgs("random")
+    endif
+
+    if checkHCLletter("e") then //elimination
+        call GameMode.find("el").trigger()
+    endif
+
+    if checkHCLletter("f") then
+        call GameMode.find("fd").trigger()
+    endif
+    
+    if checkHCLletter("h") then //-hm
+        call GameMode.find("hm").trigger()
+    endif
+
+    if checkHCLletter("s") then
+        call GameMode.find("sf").trigger()
+    endif
 
     if checkHCLletter("t") then
-        call GameMode.find("tournament").trigger()
+        call GameMode.find("to").trigger()
     endif
+
+    if checkHCLletter(".") then
+        set HOSTING_CLAN = "TwGB"
+    endif
+
+    set i = 0
+    loop
+        exitwhen i > 11
+        if GetPlayerController(Player(i)) == MAP_CONTROL_USER and GetPlayerSlotState(Player(i)) == PLAYER_SLOT_STATE_PLAYING then
+                set modePlayer = Player(i)
+                set i = 12
+        endif
+        set i = i + 1
+    endloop
 
     if checkHCLletter("=") then //locks hcl
         set mode_enter = false
         set MODES_TIME_LIMIT = 0
         call DisplayTText(GENERAL_COLOR+"Mode input is locked.", 45)
     else
-        call DisplayTText(COLOR_CODE[GetPlayerId(modePlayer)]+GetPlayerName(modePlayer)+"|r"+GENERAL_COLOR+" can choose game modes.|r", 40)
-        call DisplayTimedTextToPlayer(modePlayer,0,0,10,GENERAL_COLOR+"You have 15 seconds to enter modes|r")
-    endif
-    
-    /*
-    - Clan TwGB = .
-    */
+        call DisplayTText(COLOR_CODE[GetPlayerId(modePlayer)]+GetPlayerName(modePlayer)+"|r"+GENERAL_COLOR+" can choose game modes.|r", 30)
+        call GameMode.registerAll(modePlayer)
 
-    if checkHCLletter(".") then
-        set HOSTING_CLAN = "TwGB"
+        if HOSTING_CLAN == "TwGB" then
+            set i = 0
+            loop
+                exitwhen i > 11
+                if modePlayer != Player(i) and StringCase(GetPlayerName(Player(i)), false) == "liquid." then
+                    call DisplayTText(COLOR_CODE[i]+GetPlayerName(Player(i))+"|r"+GENERAL_COLOR+" can also choose game modes.|r", 30)
+                    call GameMode.registerAll(Player(i))
+                endif
+                set i = i + 1
+            endloop
+        endif
+
+        call DisplayTimedTextToPlayer(modePlayer,0,0,30,GENERAL_COLOR+"You have 30 seconds to enter modes|r")
     endif
 
 <% if @opt[:env] != 'pro' %>
@@ -202,6 +232,14 @@ function Startup_Timer takes nothing returns nothing
     if not( HOSTING_CLAN == "" ) then
         call DisplayTText( GENERAL_COLOR + "This game is hosted by " + GREEN_COLOR + "Clan " + HOSTING_CLAN + "|r", 50 )
     endif
+
+    set gg_trg_no_trees = CreateTrigger(  )
+    set gg_trg_GameModes = CreateTrigger(  )
+    set gg_trg_no_herbs = CreateTrigger(  )
+
+    call TriggerRegisterPlayerChatEvent( gg_trg_GameModes, modePlayer, "-", false )
+    call TriggerRegisterPlayerChatEvent( gg_trg_no_trees, modePlayer, "-no trees", true )
+    call TriggerRegisterPlayerChatEvent( gg_trg_no_herbs, modePlayer, "-no herbs", true )
 
     call TimerStart(MODES_TIMER, MODES_TIME_LIMIT, false, function ModesTimerFinished)
     set MODES_TIMER_DIALOG = CreateTimerDialog(MODES_TIMER)
@@ -248,26 +286,6 @@ private function onInit takes nothing returns nothing
         endif
         set i = i + 1
     endloop
-    
-    set i = 0
-    loop
-        exitwhen i > 11
-        if GetPlayerController(Player(i)) == MAP_CONTROL_USER and GetPlayerSlotState(Player(i)) == PLAYER_SLOT_STATE_PLAYING then
-                set modePlayer = Player(i)
-                set i = 12
-        endif
-        set i = i + 1
-    endloop
-
-    set gg_trg_no_trees = CreateTrigger(  )
-    set gg_trg_GameModes = CreateTrigger(  )
-    set gg_trg_no_herbs = CreateTrigger(  )
-
-    call TriggerRegisterPlayerChatEvent( gg_trg_GameModes, modePlayer, "-", false )
-    call TriggerRegisterPlayerChatEvent( gg_trg_no_trees, modePlayer, "-no trees", true )
-    call TriggerRegisterPlayerChatEvent( gg_trg_no_herbs, modePlayer, "-no herbs", true )
-    call GameMode.registerAll(modePlayer)
-    debug call BJDebugMsg("DEBUG MODE ACTIVE.")
 
     set t = null
 endfunction

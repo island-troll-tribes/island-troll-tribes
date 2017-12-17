@@ -2,9 +2,7 @@ library GoldTrading requires ChatCommands, PublicLibrary, Utils {
 	function GiveGold(ArgsList a) {
 		integer playerId = S2I(a[0]) - 1;
 		integer amount = S2I(a[1]);
-		integer tribeId = GetPidTribeId(playerId);
-		integer minTribeId = GetMinPlayerIdForTribe(tribeId);
-		integer maxTribeId = GetMaxPlayerIdForTribe(tribeId);
+		integer tribeId = GetPlayerTribeId(a.triggerPlayer);
 		integer currentGold;
 		integer theirGold;
 		player target;
@@ -14,7 +12,7 @@ library GoldTrading requires ChatCommands, PublicLibrary, Utils {
 		}
 
 		if (playerId < 0 || playerId > 11) {
-			playerId = ParsePlayerIdWithMinAndMax(a[0], minTribeId, maxTribeId);
+			playerId = ParsePlayerIdOnTribe(a[0], tribeId);
 		}
 
 		if (playerId < 0 || playerId > 11) {
@@ -27,7 +25,7 @@ library GoldTrading requires ChatCommands, PublicLibrary, Utils {
 			return;
 		}
 
-		if (GetPidTribeId(playerId) != GetPlayerTribeId(a.triggerPlayer)) {
+		if (GetPidTribeId(playerId) != tribeId) {
 			DisplayTextToPlayer(a.triggerPlayer, 0, 0, RED_COLOR + "You cannot trade with that player|r");
 			return;
 		}

@@ -22,11 +22,7 @@ local string color = ENERGY_COLOR
 local boolean bool = false
 
 // POSITIVE
-if s=="-rh" then
-    set udg_MAX_HEAT = 150
-    call ForForce( bj_FORCE_ALL_PLAYERS, function IncreaseMaxHeat )
-    set display = "Heat Max|r has been increased. Heat capacity is 150."
-elseif s=="-safe" then
+if s=="-safe" then
     set udg_STAT_LOWER_INTERVAL = 4.50 //normal 3
     set display = "Safe mode|r has been enabled. Stats degrade slower. 4.5 sec/decay."
 elseif s=="-increase pets" then
@@ -115,10 +111,6 @@ elseif s=="-lil" and modeAllow[16]then
     set modeAllow[16] = false
 
 
-elseif s=="-no trade" and modeAllow[21] then // MISCELLANEOUS
-    set AllowTrade = false
-    set display = "Trade ships and merchants have been disabled."
-    set modeAllow[21] = false
 elseif s=="-no shields" and modeAllow[22] then
     set allow_Shields = false
     set display = "Shield type items have been disabled from creation."
@@ -140,16 +132,6 @@ elseif s=="-test mode" and modeAllow[24] then
         set udg_NOOB_MODE = true
         call CreateItem( ITEM_SPIRIT_WARD_KIT, GetRectCenterX(gg_rct_revive_1), GetRectCenterY(gg_rct_revive_1) )
     endif
-elseif s=="-no exp" and modeAllow[26] then
-    set udg_EXPERIENCE_MODE = false
-    set display = "Experience mode has been disabled. Trolls can no longer level up."
-    set modeAllow[26] = false
-
- elseif s == "-tko" and modeAllow[30] then // team kill off
-    set udg_HCL_NT = true
-    set color = HIGHLIGHT_COLOR
-    set display = "Team Kills are turned off!"
-    set modeAllow[30] = false
 endif
 
 if display != "" then

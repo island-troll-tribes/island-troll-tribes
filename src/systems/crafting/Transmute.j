@@ -75,14 +75,15 @@ local item added
             call UnitAddItem(GetTriggerUnit(), added)
             call itemLower(5)
         endif
-        if i[0] == ITEM_STICK and i[1] == ITEM_MANA_CRYSTAL and i[2] == ITEM_STICK and i[3] == ITEM_MANA_CRYSTAL then
+        if i[0] == ITEM_STICK and i[1] == ITEM_MANA_CRYSTAL and i[2] == ITEM_STICK and i[3] == ITEM_MANA_CRYSTAL and i[4] == ITEM_STICK then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
             call RemoveItem(t[2])
             call RemoveItem(t[3])
+            call RemoveItem(t[4])
             set added = CreateItem(ITEM_WITCH_DOCTORS_HUT_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
             call UnitAddItem(GetTriggerUnit(), added)
-            call itemLower(4)
+            call itemLower(5)
         endif
         if i[0] == ITEM_STICK and IsItemHide( t[1] ) and i[2] == ITEM_CLAY_BALL then
             call RemoveItem(t[0])
@@ -709,12 +710,13 @@ local item added
             call UnitAddItemByIdSwapped( ITEM_BATTLE_GLOVES, GetTriggerUnit() )
             call itemLower(1)
         endif
-        if i[0] == ITEM_SPIRIT_WATER and i[1] == ITEM_SPIRIT_WIND and i[2] == ITEM_MANA_CRYSTAL then
+        if i[0] == ITEM_MANA_CRYSTAL and i[1] == ITEM_MANA_CRYSTAL and i[2] == ITEM_SPIRIT_WIND and i[3] == ITEM_SPIRIT_WATER then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
             call RemoveItem(t[2])
+            call RemoveItem(t[3])
             call UnitAddItemByIdSwapped( ITEM_EMP, GetTriggerUnit() )
-            call itemLower(1)
+            call itemLower(2)
         endif
         if i[0] == ITEM_BONE_SHIELD and i[1] == ITEM_ELK_HIDE and i[2] == ITEM_STEEL_INGOT and i[3] == ITEM_SPIRIT_WIND and i[4] == ITEM_SPIRIT_WATER and i[5] == ITEM_MANA_CRYSTAL then
             call RemoveItem(t[0])

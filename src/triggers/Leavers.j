@@ -1,10 +1,12 @@
-library Leavers initializer onInit requires PublicLibrary, Commands, MapSetup, GameConfig
+library Leavers initializer onInit requires PublicLibrary, Commands, MapSetup, GameConfig, Utils
     function Trig_leavers_Actions takes nothing returns nothing
         local integer PID = GetPlayerId(GetTriggerPlayer())
         local integer tribe = GetPidTribeId(PID)
         local integer ppt = GameConfig.getInstance().getNumPlayersPerTribe()
         local integer i = 0
-        local boolean hasActivePlayer = false
+        local integer gold
+        local integer newGold
+        local integer numActivePlayers = 0
         local integer tmpPid
         local unit troll
 
@@ -31,19 +33,33 @@ library Leavers initializer onInit requires PublicLibrary, Commands, MapSetup, G
         endif
 
         loop
-            exitwhen i >= ppt or hasActivePlayer
+            exitwhen i >= ppt
             set tmpPid = ppt * tribe + i
-            set hasActivePlayer = (PID != tmpPid) and GetPlayerController(Player(tmpPid)) == MAP_CONTROL_USER and GetPlayerSlotState(Player(tmpPid)) == PLAYER_SLOT_STATE_PLAYING
+            if (PID != tmpPid) and IsPlayerPlaying(Player(tmpPid)) then
+                set numActivePlayers = numActivePlayers + 1
+            endif
             set i = i + 1
         endloop
 
-        if not hasActivePlayer then
+        if numActivePlayers == 0 then
             set i = 0
             loop
                 exitwhen i >= ppt
                 set troll = GetPlayerTroll(Player(i + tribe * ppt))
                 if troll != null and IsUnitAliveBJ(troll) then
                     call KillUnit(troll)
+                endif
+                set i = i + 1
+            endloop
+        else
+            set gold = GetPlayerState(GetTriggerPlayer(), PLAYER_STATE_RESOURCE_LUMBER) / numActivePlayers
+            set i = 0
+            loop
+                exitwhen i >= ppt
+                set tmpPid = ppt * tribe + i
+                if (PID != tmpPid) and IsPlayerPlaying(Player(tmpPid)) then
+                    set newGold = GetPlayerState(Player(tmpPid), PLAYER_STATE_RESOURCE_LUMBER) + gold
+                    call SetPlayerState(Player(tmpPid), PLAYER_STATE_RESOURCE_LUMBER, newGold)
                 endif
                 set i = i + 1
             endloop

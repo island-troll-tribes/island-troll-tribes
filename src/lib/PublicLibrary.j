@@ -245,16 +245,20 @@ function GetPlayerTroll takes player p returns unit
     return udg_parameterUnit
 endfunction
 
+function GetPidTroll takes integer pid returns unit
+    return udg_PUnits[pid]
+endfunction
+
 function GetPlayerTribe takes player p returns force
     return TEAM[TEAM_PLAYER[GetPlayerId(p)]]
 endfunction
 
 function GetPlayerTribeId takes player p returns integer
-    return TEAM_PLAYER[GetPlayerId(p)]
+    return TEAM_PLAYER[GetPlayerId(p)] - 1
 endfunction
 
 function GetPidTribeId takes integer pid returns integer
-    return TEAM_PLAYER[pid]
+    return TEAM_PLAYER[pid] - 1
 endfunction
 
 function cleanInventory takes unit u returns nothing

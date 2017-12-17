@@ -101,43 +101,45 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
         return;
       }
       GameConfig.getInstance().setNumPlayersPerTribe(ppt);
-      GameMode.find("ppt").deregister();
-      GameMode.find("6v6").deregister();
-      GameMode.find("ffa").deregister();
       GameMode.message(ENERGY_COLOR + "Players per tribe|r set to " + I2S(ppt));
     });
 
     GameMode.create("6v6", "6s", "set the number of players in each tribe to 6", function(ArgsList a) {
       GameConfig.getInstance().setNumPlayersPerTribe(6);
-      GameMode.find("ppt").deregister();
-      GameMode.find("6v6").deregister();
-      GameMode.find("ffa").deregister();
       GameMode.message(ENERGY_COLOR + "6v6|r enabled");
+    });
+
+    GameMode.create("4v4v4", "4s", "set the number of players in each tribe to 4", function(ArgsList a) {
+      GameConfig.getInstance().setNumPlayersPerTribe(4);
+      GameMode.message(ENERGY_COLOR + "4v4v4|r enabled");
+    });
+
+    GameMode.create("3v3v3v3", "3s", "set the number of players in each tribe to 3", function(ArgsList a) {
+      GameConfig.getInstance().setNumPlayersPerTribe(3);
+      GameMode.message(ENERGY_COLOR + "3v3v3v3|r enabled");
+    });
+
+    GameMode.create("2v2v2v2v2v2", "2s", "set the number of players in each tribe to 6", function(ArgsList a) {
+      GameConfig.getInstance().setNumPlayersPerTribe(2);
+      GameMode.message(ENERGY_COLOR + "2v2v2v2v2v2|r enabled");
     });
 
     GameMode.create("free-for-all", "ffa", "each player is on their own", function(ArgsList a) {
       GameConfig.getInstance().setNumPlayersPerTribe(1);
-      GameMode.find("ppt").deregister();
-      GameMode.find("6v6").deregister();
-      GameMode.find("ffa").deregister();
       GameMode.message(ENERGY_COLOR + "Free for all|r enabled");
     });
 
     GameMode.create("standard-1v1", "1v1", "enables all standard modes for 1v1", function(ArgsList a) {
       GameMode.message(ENERGY_COLOR + "1v1|r enabled");
       GameConfig.getInstance().setNumPlayersPerTribe(1);
-      GameMode.find("fd").triggerWithArgs("2100");
-      GameMode.find("sf").trigger();
-      GameMode.find("rs").trigger();
+      GameMode.find("fd").triggerWithArgs("35");
     });
 
-    GameMode.create("tournament", "to", "Tournament Modes (-sf, -el, -fd, -rs)", function(ArgsList a) {
-      GameMode.message(HIGHLIGHT_COLOR + "Tournament mode enabled:");
+    GameMode.create("tournament", "to", "Tournament Modes (-sf, -el, -fd)", function(ArgsList a) {
+      GameMode.message(HIGHLIGHT_COLOR + "Tournament mode|r enabled:");
       GameMode.find("sf").trigger();
-      GameMode.find("rs").trigger();
       GameMode.find("fd").trigger();
       GameMode.find("el").trigger();
-      GameMode.find("tournament").deregister();
     });
 
     GameMode.create("all", "ar", "each player is given the same class or random (ex: \"-all random\"", function(ArgsList a) {
@@ -249,10 +251,18 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       GameConfig.getInstance().setEliminationEnabled(true);
     });
 
-    // GameMode.create("raise heat", "rh", "increase heat capacity from 100 to 150", function(ArgsList a) {
-    //  GameConfig.getInstance().heatMaximum = 150;
-    //  GameMode.find("rh").deregister();
-    //  GameMode.message(ENERGY_COLOR + "Heat Max|r has been increased. Heat capacity is 150.");
-    // });
+    GameMode.create("raise heat", "rh", "increase heat capacity from 100 to 150", function(ArgsList a) {
+      integer amount = 150;
+      if (a.length() >= 1) {
+        amount = S2I(a[0]);
+      }
+      GameConfig.getInstance().setHeatMaximum(amount);
+      GameMode.message(ENERGY_COLOR + "Heat Max|r has been increased. Heat capacity is " + I2S(amount));
+    });
+
+    GameMode.create("no trade", "nt", "Disable trade ships and merchants", function(ArgsList a) {
+      GameConfig.getInstance().setTradeEnabled(false);
+      GameMode.message("Trade ships and merchants have been disabled.");
+    });
   }
 }

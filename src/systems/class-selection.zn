@@ -12,19 +12,33 @@ library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 	}
 
 	struct Tribe {
-		static TableArray tribeAvailableClasses;
-
 		integer id;
 		unit totem;
 		rect spawn;
+		unitpool selectionPool;
 
 		public static method create(integer id, unit totem, rect spawn) -> thistype {
+			integer uid = GameConfig.getInstance().getAllTrollUnitId();
 			thistype this = thistype.allocate();
 			this.id = id;
 			this.totem = totem;
 			this.spawn = spawn;
+			this.selectionPool = CreateUnitPool();
 			this.initializeTotem();
 			TEAM[id + 1] = CreateForce();
+
+			if (!GameConfig.getInstance().isAllTrollEnabled() || uid == 0) {
+				UnitPoolAddUnitType(this.selectionPool, UNIT_HUNTER, 1.0);
+				UnitPoolAddUnitType(this.selectionPool, UNIT_MAGE, 1.0);
+				UnitPoolAddUnitType(this.selectionPool, UNIT_BEAST_MASTER, 1.0);
+				UnitPoolAddUnitType(this.selectionPool, UNIT_PRIEST, 1.0);
+				UnitPoolAddUnitType(this.selectionPool, UNIT_THIEF, 1.0);
+				UnitPoolAddUnitType(this.selectionPool, UNIT_SCOUT, 1.0);
+				UnitPoolAddUnitType(this.selectionPool, UNIT_GATHERER, 1.0);
+			} else {
+				UnitPoolAddUnitType(this.selectionPool, uid, 1.0);
+			}
+
 			return this;
 		}
 
@@ -51,51 +65,22 @@ library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 			return TEAM[id + 1];
 		}
 
-		public method isClassAvailable(integer id) -> boolean {
-			Table t = this.getAvailableClasses();
-			return !t.has(id);
-		}
-
 		public method setClassAvailable(integer id) {
-			Table t = this.getAvailableClasses();
-			t.remove(id);
+			UnitPoolAddUnitType(this.selectionPool, id, 1.0);
 		}
 
 		public method setClassUnavailable(integer id) {
-			Table t = this.getAvailableClasses();
-			t[id] = 1;
+			if (!GameConfig.getInstance().isOldRandomEnabled() && !!GameConfig.getInstance().isAllTrollEnabled()) {
+				UnitPoolRemoveUnitType(this.selectionPool, id);
+			}
 		}
 
 		public method removeTotem() {
 			RemoveUnit(totem);
 		}
 
-		public method getRandomAvailableClass() -> integer {
-			integer i;
-			integer uid = GameConfig.getInstance().getAllTrollUnitId();
-			integer classId = GetRandomInt(0, 6);
-			boolean anyRandomEnabled = GameConfig.getInstance().isOldRandomEnabled();
-			Table availableClasses = this.getAvailableClasses();
-
-			if (!GameConfig.getInstance().isAllTrollEnabled() || uid == 0) {
-				for (0 <= i < 7) {
-					uid = GetClassFromId(classId);
-					if (anyRandomEnabled || this.isClassAvailable(uid)) {
-						break;
-					}
-					classId = ModuloInteger(classId + 1, 7); 
-				}
-			}
-
-			return uid;
-		}
-
-		method getAvailableClasses() -> Table {
-			return tribeAvailableClasses[this.id];
-		}
-
-		static method onInit() {
-			tribeAvailableClasses = TableArray[12];
+		public method getRandomAvailableClass(player p, rect spawn) -> unit {
+			return PlaceRandomUnit(this.selectionPool, p, GetRandomX(spawn), GetRandomY(spawn), 0.0);
 		}
 	}
 
@@ -178,7 +163,6 @@ library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 
 	public function onSelectionTimeRunOut() {
 		integer i;
-		integer uid;
 		unit u;
 		rect spawn;
 
@@ -192,8 +176,7 @@ library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 			if (GetPlayerSlotState(Player(i)) == PLAYER_SLOT_STATE_PLAYING && !isobserver[i]) {
 				if (!udg_started[i]) {
 					spawn = GetSpawn(i);
-					uid = Tribe.ofPlayerId(i).getRandomAvailableClass();
-					u = CreateUnit(Player(i), uid, GetRandomX(spawn), GetRandomY(spawn), 0.0);
+					u = Tribe.ofPlayerId(i).getRandomAvailableClass(Player(i), spawn);
 					initializePlayerTroll(u);
 	            }
 	            else {

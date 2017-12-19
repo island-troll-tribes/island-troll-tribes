@@ -141,12 +141,30 @@ function AddTimedEffectUnit takes string STRINGPATH, string UNITHEADER, unit WHI
 endfunction
 
 //Other functions
+function hasPets takes nothing returns boolean
+    return ( GetUnitTypeId(GetFilterUnit()) == UNIT_BEAST_MASTER or GetUnitTypeId(GetFilterUnit()) == UNIT_TRUE_FORM or GetUnitTypeId(GetFilterUnit()) == UNIT_ULTIMATE_FORM )
+endfunction
+
 function getAnimalGreenLight takes unit u returns nothing
-    if(GetUnitTypeId(u) == UNIT_BEAST_MASTER or GetUnitTypeId(u) == UNIT_TRUE_FORM or GetUnitTypeId(u) == UNIT_ULTIMATE_FORM) then
-        set udg_booleanParameter=( GetRandomReal(0, 1) <= udg_PET_CHANCE+(GetHeroLevel(u)*0.05) )
+    local group bms
+    local unit bm
+    local integer maxLevel = 0
+    set bms = GetUnitsInRangeMatching(400, GetUnitX(u), GetUnitY(u), Condition(function hasPets) )
+    if(bms != null) then
+      loop
+        if(FirstOfGroup(bms) != null) then
+          set bm = FirstOfGroup(bms)
+          set maxLevel = IMaxBJ(maxLevel, GetHeroLevel(bm))
+          call GroupRemoveUnit(bms, bm)
+        endif
+        exitwhen FirstOfGroup(bms) == null
+      endloop
+    set udg_booleanParameter=( GetRandomReal(0, 1) <= udg_PET_CHANCE+(maxLevel*0.05) )
     else
-        set udg_booleanParameter=( GetRandomReal(0, 1) <= udg_PET_CHANCE )
+    set udg_booleanParameter=( GetRandomReal(0, 1) <= udg_PET_CHANCE )
     endif
+    set bms = null
+    set bm = null
 endfunction
 
 globals

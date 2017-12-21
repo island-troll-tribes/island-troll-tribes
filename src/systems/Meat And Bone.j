@@ -5,12 +5,12 @@ globals
     boolean FirstDuckDead = false
     //boolean Turtle_Dead = false
     boolean Hydra_Dead = false
-    
+
     unit Mammoth = null
     unit DiscoDuck = null
     //unit Turtle = null
     unit Hydra = null
-    
+
     constant string teleportModel = "Abilities\\Spells\\Human\\MassTeleport\\MassTeleportCaster.mdl"
 endglobals
 
@@ -42,7 +42,7 @@ set t = null
 endfunction
 */
 function SetBackToBMTame takes player p returns nothing
-    call PolledWait( 1.50 )    
+    call PolledWait( 1.50 )
     call SetPlayerAbilityAvailable( p, SPELL_PET_TAME, true )//tame
     call SetPlayerAbilityAvailable( p, SPELL_PET_RELEASE, false )//release
     call SetPlayerAbilityAvailable( p, SPELL_PET_FOLLOW, false )//Follow
@@ -63,7 +63,7 @@ endfunction
         call TriggerExecute( gg_trg_back_to_tame )
         set udg_parameterUnit=q
         call DisplayTextToForce( GetPlayersAllies(GetOwningPlayer(udg_parameterUnit)), "TRIGSTR_3430" )
-     
+
 function ResetBMPets takes nothing returns nothing
 local unit d = GetDyingUnit()
 local player p = GetOwningPlayer(d)
@@ -104,7 +104,7 @@ local player p = GetOwningPlayer(dying)
         call CreateItem( ITEM_BONE, x, y )
         call CreateItem( ITEM_ELK_HIDE, x, y )
         set udg_ANIMAL_CURRENT = ( udg_ANIMAL_CURRENT - 1 )
-        call getAnimalGreenLight(killing)
+        call getAnimalGreenLight(dying)
         if udg_booleanParameter then
             call CreateUnit( Player(15), UNIT_FAWN, x, y, 270.00 )
         endif
@@ -119,7 +119,7 @@ local player p = GetOwningPlayer(dying)
         call CreateItem( ITEM_BONE, x, y )
         call CreateItem( ITEM_JUNGLE_WOLF_HIDE, x, y )
         set udg_ANIMAL_CURRENT = ( udg_ANIMAL_CURRENT - 1 )
-        call getAnimalGreenLight(killing)
+        call getAnimalGreenLight(dying)
         if udg_booleanParameter then
             call CreateUnit( Player(15), UNIT_WOLF_PUP, x, y, 270.00 )
         endif
@@ -134,7 +134,7 @@ local player p = GetOwningPlayer(dying)
         call CreateItem( ITEM_BONE, x, y )
         call CreateItem( ITEM_JUNGLE_BEAR_HIDE, x, y )
         set udg_ANIMAL_CURRENT = ( udg_ANIMAL_CURRENT - 1 )
-        call getAnimalGreenLight(killing)
+        call getAnimalGreenLight(dying)
         if udg_booleanParameter then
             call CreateUnit( Player(15), UNIT_BEAR_CUB, x, y, 270.00 )
         endif
@@ -176,7 +176,7 @@ local player p = GetOwningPlayer(dying)
             call CreateItem( ITEM_HORN_MAMMOTH, x, y )
             call CreateItem( ITEM_HORN_MAMMOTH, x, y )
         endif
-        call getAnimalGreenLight(killing)
+        call getAnimalGreenLight(dying)
         if udg_booleanParameter then
             set u = CreateUnit( Player(15), UNIT_MAMMOTH_BABY, x, y, 270.00 )
             call SetUnitExploded( u, true )
@@ -487,7 +487,7 @@ local player p = GetOwningPlayer(dying)
         endloop
         call CreateItem( ITEM_BONE, x, y )
         call RemoveUnit( dying )
-        call getAnimalGreenLight(killing)
+        call getAnimalGreenLight(dying)
         if udg_booleanParameter then
             call CreateItem( ITEM_HAWK_EGG, x, y )
         endif

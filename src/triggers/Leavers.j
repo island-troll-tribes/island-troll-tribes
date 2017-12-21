@@ -59,6 +59,7 @@ library Leavers initializer onInit requires PublicLibrary, Commands, MapSetup, G
                 set tmpPid = ppt * tribe + i
                 if (PID != tmpPid) and IsPlayerPlaying(Player(tmpPid)) then
                     set newGold = GetPlayerState(Player(tmpPid), PLAYER_STATE_RESOURCE_LUMBER) + gold
+                    call DisplayTextToPlayer(Player(tmpPid), 0, 0, GENERAL_COLOR+"They left you " + I2S(gold) + " gold|r")
                     call SetPlayerState(Player(tmpPid), PLAYER_STATE_RESOURCE_LUMBER, newGold)
                 endif
                 set i = i + 1

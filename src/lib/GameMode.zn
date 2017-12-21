@@ -168,6 +168,19 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       GameMode.message(ENERGY_COLOR + "Forced duel|r after " + R2S(amount) + " min");
     });
 
+    GameMode.create("shrinking-map", "sm", "starts a forest fire on the outskirts of the map which creeps inwards after an amount of minutes, defaults to 1 h, eg: \"-sm 60\"", function(ArgsList a) {
+      real amount = 60.0;
+      if (a.length() >= 1) {
+        amount = S2R(a[0]);
+      }
+      if (amount < 0) {
+        GameMode.error("Shrinking map timeout must be greater than 0!");
+        return;
+      }
+      GameConfig.getInstance().setForestFire(amount);
+      GameMode.message(RED_COLOR + "Forest fire|r after " + R2S(amount) + " min");
+    });
+
     GameMode.create("grace-period-duration", "gp", "change the duration of the grace period, eg: \"-gp 8\"", function(ArgsList a) {
       real amount = 8.0;
       if (a.length() >= 1) {

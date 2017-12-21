@@ -202,6 +202,7 @@ local player p = GetOwningPlayer(dying)
             call placeMedallion(x, y)
             call placeMedallion(x, y)
             call placePinion(x, y)
+            call CreateItem(ITEM_CANDY_CANE, x, y)
         endif
     endif
     /*

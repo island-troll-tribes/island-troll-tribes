@@ -103,6 +103,13 @@ local item added
             call UnitAddItem(GetTriggerUnit(), added)
             call itemLower(4)
         endif
+        if i[0] == ITEM_BLOW_GUN and i[1] == ITEM_THISTLES then
+            set e = GetItemCharges(t[1])
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            set added = UnitAddItemByIdSwapped(ITEM_LOADED_THISTLES, GetTriggerUnit())
+            call SetItemCharges(added, e)
+        endif
 
         if udg_EXTRA_MODE then
             if i[0] == ITEM_STICK and i[1] == ITEM_IRON_INGOT and i[2] == ITEM_IRON_INGOT then

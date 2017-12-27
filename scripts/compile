@@ -17,13 +17,6 @@ class String
   end
 end
 
-def load_all_helpers
-  Dir.glob('helpers/*.rb') do |h|
-    load h
-    include Object.const_get File.basename(h, '.rb')
-  end
-end
-
 class Assembler
 
   CLIJASSHELPER_EXE = "#{"wine " if MAC_OS}tools/jasshelper/clijasshelper.exe --scriptonly --debug tools/common.j tools/blizzard.j "
@@ -199,7 +192,6 @@ default_file_order = [
   'items',
   'buildings',
   'init/objects',
-  'init/Custom Objects.j.erb',
   'init/InitTriggers.j',
   'init/main.j',
   'test'
@@ -240,11 +232,10 @@ end
 
 itt_builder = Assembler.new(opt)
 
-puts 'loading helpers...' if opt[:debug]
-load_all_helpers
-puts 'loaded helpers...' if opt[:debug]
 
 itt_builder.extract_globals 'src/lib/ID'
+
+puts opt[:build_order]
 
 opt[:build_order].each do |f|
   itt_builder.add "src/#{f}"

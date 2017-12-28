@@ -223,11 +223,7 @@ function Startup_Timer takes nothing returns nothing
         call DisplayTimedTextToPlayer(modePlayer,0,0,30,GENERAL_COLOR+"You have 30 seconds to enter modes|r")
     endif
 
-<% if @opt[:env] != 'pro' %>
-    call DisplayTText( RED_COLOR + "Please remember, this is a BETA map!", 50 )
-<% else %>
     call DisplayNewLine()
-<% end %>
 
     if not( HOSTING_CLAN == "" ) then
         call DisplayTText( GENERAL_COLOR + "This game is hosted by " + GREEN_COLOR + "Clan " + HOSTING_CLAN + "|r", 50 )

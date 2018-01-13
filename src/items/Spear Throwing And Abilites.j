@@ -8,25 +8,6 @@ library SpearThrowsAndAbilities initializer onInit requires PublicLibrary, DUMMY
         Table dupPreventionTable
     endglobals
 
-    struct SpearData
-        unit target
-        unit caster
-        integer abilityId
-
-        public static method create takes integer abilityId, unit target, unit caster returns thistype
-            local thistype this = thistype.allocate()
-            set this.abilityId = abilityId
-            set this.target = target
-            set this.caster = caster
-            return this
-        endmethod
-
-        private method onDestroy takes nothing returns nothing
-            set this.target = null
-            set this.caster = null
-        endmethod
-    endstruct
-
     function mapAbility takes integer id returns integer
         if id == SPELL_DARK_SPEAR_CAST then
             return SPELL_DARK_SPEAR
@@ -104,36 +85,24 @@ library SpearThrowsAndAbilities initializer onInit requires PublicLibrary, DUMMY
     private function bindDamageListener takes nothing returns nothing
         local integer id
         local unit dummy
-        local SpearData data = GetTimerData(GetExpiredTimer())
-        call ReleaseTimer(GetExpiredTimer())
-        // if GetUnitAbilityLevel(data.target, BUFF_SPEAR_INCOMING) == 0 then
-        //    // they blocked the spell
-        //    return
-        // endif
-        call UnitRemoveAbility(data.target, BUFF_SPEAR_INCOMING)
-        set id = mapAbility(data.abilityId)
-        set dummy = masterCastAtCaster(data.caster, data.target, 0, 0, id, mapOrder(id))
+        call UnitRemoveAbility(GetSpellTargetUnit(), BUFF_SPEAR_INCOMING)
+        set id = mapAbility(GetSpellAbilityId())
+        set dummy = masterCastAtCaster(GetSpellAbilityUnit(), GetSpellTargetUnit(), 0, 0, id, mapOrder(id))
         set SpearCastTable.integer_h[dummy] = id
-        if not dupPreventionTable.has_h(data.target) then
-            call TriggerRegisterUnitEvent(theTrigger, data.target, EVENT_UNIT_DAMAGED)
-            set dupPreventionTable.boolean_h[data.target] = true
+        if not dupPreventionTable.has_h(GetSpellTargetUnit()) then
+            call TriggerRegisterUnitEvent(theTrigger, GetSpellTargetUnit(), EVENT_UNIT_DAMAGED)
+            set dupPreventionTable.boolean_h[GetSpellTargetUnit()] = true
         endif
         set dummy = null
-        call data.destroy()
     endfunction
 
-    private function onTimeoutBindDamageListener takes nothing returns nothing
-        local SpearData data = SpearData.create(GetSpellAbilityId(), GetSpellTargetUnit(), GetSpellAbilityUnit())
-        call TimerStart(NewTimerEx(data), 0.01, false, function bindDamageListener)
-    endfunction
-
-//===========================================================================
+    //===========================================================================
     private function onInit takes nothing returns nothing
         local trigger t = CreateTrigger()
 
         call TriggerRegisterAnyUnitEventBJ( t, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerAddCondition( t, Condition( function tCond ) )
-        call TriggerAddAction( t, function onTimeoutBindDamageListener )
+        call TriggerAddAction( t, function bindDamageListener )
         call TriggerAddAction( theTrigger, function onDamage )
 
         set SpearCastTable = Table.create()

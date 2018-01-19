@@ -61,21 +61,21 @@ library SpearThrowsAndAbilities initializer onInit requires PublicLibrary, DUMMY
 
     private function spearResist takes unit u returns nothing
         call SetPlayerAbilityAvailableBJ( false, ABILITY_SPEAR_RESIST, GetOwningPlayer(u) )
-        call DisplayTextToForce( GetPlayersAll(), GetUnitName(u) )
+        debug call DisplayTextToForce( GetPlayersAll(), GetUnitName(u) )
         if(GetUnitAbilityLevelSwapped(ABILITY_SPEAR_RESIST, u) == 0) then
             call UnitAddAbilityBJ(ABILITY_SPEAR_RESIST, u)
-            call DisplayTextToForce( GetPlayersAll(), "Spear resistance added " + I2S(GetUnitAbilityLevelSwapped(ABILITY_SPEAR_RESIST, u)))
+            debug call DisplayTextToForce( GetPlayersAll(), "Spear resistance added " + I2S(GetUnitAbilityLevelSwapped(ABILITY_SPEAR_RESIST, u)))
         elseif(GetUnitAbilityLevelSwapped(ABILITY_SPEAR_RESIST, u) < 6 and GetUnitAbilityLevelSwapped(ABILITY_SPEAR_RESIST, u) != 0) then
             call IncUnitAbilityLevelSwapped(ABILITY_SPEAR_RESIST, u)
-            call DisplayTextToForce( GetPlayersAll(), "Spear resistance upgraded to " + I2S(GetUnitAbilityLevelSwapped(ABILITY_SPEAR_RESIST, u)))
+            debug call DisplayTextToForce( GetPlayersAll(), "Spear resistance upgraded to " + I2S(GetUnitAbilityLevelSwapped(ABILITY_SPEAR_RESIST, u)))
         endif
         call PolledWait(1.00)
         if(GetUnitAbilityLevelSwapped(ABILITY_SPEAR_RESIST, u) > 1) then
             call DecUnitAbilityLevelSwapped(ABILITY_SPEAR_RESIST, u)
-            call DisplayTextToForce( GetPlayersAll(), "Spear resistance degraded to " + I2S(GetUnitAbilityLevelSwapped(ABILITY_SPEAR_RESIST, u)) + " for " + GetUnitName(u))
+            debug call DisplayTextToForce( GetPlayersAll(), "Spear resistance degraded to " + I2S(GetUnitAbilityLevelSwapped(ABILITY_SPEAR_RESIST, u)) + " for " + GetUnitName(u))
         else
             call UnitRemoveAbilityBJ(ABILITY_SPEAR_RESIST, u)
-            call DisplayTextToForce( GetPlayersAll(), "Spear resistance removed for " + GetUnitName(u))
+            debug call DisplayTextToForce( GetPlayersAll(), "Spear resistance removed for " + GetUnitName(u))
         endif
     endfunction
 
@@ -118,7 +118,6 @@ library SpearThrowsAndAbilities initializer onInit requires PublicLibrary, DUMMY
             set i = CreateItem(ITEM_ULTRA_POISON_SPEAR, x, y)
         endif
 
-        call DisplayTextToForce( GetPlayersAll(), GetUnitName(GetTriggerUnit()) )
         if(IsUnitType(GetTriggerUnit(), UNIT_TYPE_HERO) == true) then
           call spearResist(GetTriggerUnit())
         endif
@@ -149,7 +148,7 @@ library SpearThrowsAndAbilities initializer onInit requires PublicLibrary, DUMMY
 
     private function onTimeoutBindDamageListener takes nothing returns nothing
         local SpearData data = SpearData.create(GetSpellAbilityId(), GetSpellTargetUnit(), GetSpellAbilityUnit())
-        call TimerStart(NewTimerEx(data), 0.01, false, function bindDamageListener)
+        call TimerStart(NewTimerEx(data), 0.0, false, function bindDamageListener)
     endfunction
 
 //===========================================================================

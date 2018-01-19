@@ -306,12 +306,12 @@ function modStats takes nothing returns nothing
     if(udg_MORE_BADDIES==false) then
         set udg_PANTHER_RATE = 1
         set udg_BEAR_RATE = 1
-        set udg_SNAKE_RATE = 3
+        set udg_SNAKE_RATE = 1
         set udg_WOLF_RATE = 2
     else
         set udg_PANTHER_RATE = R2I(1*udg_BADDIE_BASE)
         set udg_BEAR_RATE = R2I(1*udg_BADDIE_BASE)
-        set udg_SNAKE_RATE = R2I(3*udg_BADDIE_BASE)
+        set udg_SNAKE_RATE = R2I(1*udg_BADDIE_BASE)
         set udg_WOLF_RATE = R2I(2*udg_BADDIE_BASE)
     endif
     set udg_FLINT_RATE = RMaxBJ(2.0,udg_FLINT_RATE-0.4)

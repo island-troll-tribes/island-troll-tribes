@@ -27,36 +27,9 @@ library SpearThrowsAndAbilities initializer onInit requires PublicLibrary, DUMMY
         endmethod
     endstruct
 
-    function mapAbility takes integer id returns integer
-        if id == SPELL_DARK_SPEAR_CAST then
-            return SPELL_DARK_SPEAR
-        elseif id == SPELL_RPOISON_SPEAR_CAST then
-            return SPELL_RPOISON_SPEAR
-        elseif id == SPELL_POISON_SPEAR_CAST then
-            return SPELL_POISON_SPEAR
-        elseif id == SPELL_IRON_SPEAR_CAST then
-            return SPELL_IRON_SPEAR
-        elseif id == SPELL_UPOISON_SPEAR_CAST then
-            return SPELL_UPOISON_SPEAR
-        elseif id == SPELL_STEEL_SPEAR_CAST then
-            return SPELL_STEEL_SPEAR
-        elseif id == SPELL_SPEAR_CAST then
-            return SPELL_SPEAR
-        else
-            return 0
-        endif
-    endfunction
-
-    function mapOrder takes integer id returns string
-        if id == SPELL_POISON_SPEAR or id == SPELL_RPOISON_SPEAR or id == SPELL_UPOISON_SPEAR then
-            return "shadowstrike"
-        else
-            return "creepthunderbolt"
-        endif
-    endfunction
-
     private function tCond takes nothing returns boolean
-        return mapAbility(GetSpellAbilityId()) != 0
+        local integer id = GetSpellAbilityId()
+        return id == SPELL_DARK_SPEAR or id == SPELL_RPOISON_SPEAR or id == SPELL_POISON_SPEAR or id == SPELL_IRON_SPEAR or id == SPELL_UPOISON_SPEAR or id == SPELL_STEEL_SPEAR or id == SPELL_SPEAR
     endfunction
 
     private function spearResist takes unit u returns nothing
@@ -84,12 +57,14 @@ library SpearThrowsAndAbilities initializer onInit requires PublicLibrary, DUMMY
         local integer id
         local real x
         local real y
+        local SpearData data
 
         if not SpearCastTable.has_h(GetEventDamageSource()) then
             return
         endif
 
-        set id = SpearCastTable.integer_h[GetEventDamageSource()]
+        set data = SpearData(SpearCastTable.integer_h[GetEventDamageSource()])
+        set id = data.abilityId
         set x = GetUnitX(GetTriggerUnit())
         set y = GetUnitY(GetTriggerUnit())
 
@@ -122,33 +97,23 @@ library SpearThrowsAndAbilities initializer onInit requires PublicLibrary, DUMMY
           call spearResist(GetTriggerUnit())
         endif
 
+        call data.destroy()
+
         set i = null
     endfunction
 
     private function bindDamageListener takes nothing returns nothing
         local integer id
         local unit dummy
-        local SpearData data = GetTimerData(GetExpiredTimer())
+        local SpearData data = SpearData.create(GetSpellAbilityId(), GetSpellTargetUnit(), GetSpellAbilityUnit())
         call ReleaseTimer(GetExpiredTimer())
-        // if GetUnitAbilityLevel(data.target, BUFF_SPEAR_INCOMING) == 0 then
-        //    // they blocked the spell
-        //    return
-        // endif
-        call UnitRemoveAbility(data.target, BUFF_SPEAR_INCOMING)
-        set id = mapAbility(data.abilityId)
-        set dummy = masterCastAtCaster(data.caster, data.target, 0, 0, id, mapOrder(id))
-        set SpearCastTable.integer_h[dummy] = id
+        set dummy = masterCastAtCaster(data.caster, data.target, 0, 0, 'A0EH', "creepthunderbolt")
+        set SpearCastTable.integer_h[dummy] = data
         if not dupPreventionTable.has_h(data.target) then
             call TriggerRegisterUnitEvent(theTrigger, data.target, EVENT_UNIT_DAMAGED)
             set dupPreventionTable.boolean_h[data.target] = true
         endif
         set dummy = null
-        call data.destroy()
-    endfunction
-
-    private function onTimeoutBindDamageListener takes nothing returns nothing
-        local SpearData data = SpearData.create(GetSpellAbilityId(), GetSpellTargetUnit(), GetSpellAbilityUnit())
-        call TimerStart(NewTimerEx(data), 0.0, false, function bindDamageListener)
     endfunction
 
 //===========================================================================
@@ -157,7 +122,7 @@ library SpearThrowsAndAbilities initializer onInit requires PublicLibrary, DUMMY
 
         call TriggerRegisterAnyUnitEventBJ( t, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerAddCondition( t, Condition( function tCond ) )
-        call TriggerAddAction( t, function onTimeoutBindDamageListener )
+        call TriggerAddAction( t, function bindDamageListener )
         call TriggerAddAction( theTrigger, function onDamage )
 
         set SpearCastTable = Table.create()

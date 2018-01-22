@@ -105,7 +105,7 @@ library SpearThrowsAndAbilities initializer onInit requires PublicLibrary, DUMMY
     private function bindDamageListener takes nothing returns nothing
         local integer id
         local unit dummy
-        local SpearData data = SpearData.create(GetSpellAbilityId(), GetSpellTargetUnit(), GetSpellAbilityUnit())
+        local SpearData data = GetTimerData(GetExpiredTimer())
         call ReleaseTimer(GetExpiredTimer())
         set dummy = masterCastAtCaster(data.caster, data.target, 0, 0, 'A0EH', "creepthunderbolt")
         set SpearCastTable.integer_h[dummy] = data
@@ -116,13 +116,18 @@ library SpearThrowsAndAbilities initializer onInit requires PublicLibrary, DUMMY
         set dummy = null
     endfunction
 
+    private function onTimeoutBindDamageListener takes nothing returns nothing
+        local SpearData data = SpearData.create(GetSpellAbilityId(), GetSpellTargetUnit(), GetSpellAbilityUnit())
+        call TimerStart(NewTimerEx(data), 0.001, false, function bindDamageListener)
+    endfunction
+
 //===========================================================================
     private function onInit takes nothing returns nothing
         local trigger t = CreateTrigger()
 
         call TriggerRegisterAnyUnitEventBJ( t, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerAddCondition( t, Condition( function tCond ) )
-        call TriggerAddAction( t, function bindDamageListener )
+        call TriggerAddAction( t, function onTimeoutBindDamageListener )
         call TriggerAddAction( theTrigger, function onDamage )
 
         set SpearCastTable = Table.create()

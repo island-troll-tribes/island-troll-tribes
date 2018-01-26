@@ -271,6 +271,7 @@ function InitCustomTriggers takes nothing returns nothing
     call InitTrig_Cast_Defensive_Spells(  )
     call InitTrig_Effect_Add(  )
     call InitTrig_Effect_Remove(  )
+    call InitTrig_Shapeshift(  )
 endfunction
 
 //===========================================================================

@@ -8,7 +8,7 @@ library EMP initializer onInit requires EnumTypeIsThing, PublicLibrary, ID, Util
     endfunction
 
     function EMP_Filter takes nothing returns boolean
-        return FilterUnitIsEnsnareTrap() or FilterUnitIsOmnitower()
+        return FilterUnitIsEnsnareTrap() or FilterUnitIsOmnitower() and not IsUnitAlly(GetFilterUnit(), GetOwningPlayer(GetSpellAbilityUnit()))
     endfunction
 
     function EMP_WardFilter takes nothing returns boolean

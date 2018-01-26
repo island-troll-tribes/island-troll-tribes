@@ -125,7 +125,11 @@ library TrollUpgrade initializer onInit requires ID, Constants, PublicLibrary
     elseif SKILL_UPGRADE == 'S00I' then
         set UNIT_ID_REPLACE = UNIT_CHICKEN_FORM
     elseif SKILL_UPGRADE == 'S00H' then
-        set UNIT_ID_REPLACE = UNIT_TRUE_FORM
+        set UNIT_ID_REPLACE = UNIT_SHAPESHIFTER_WOLF
+        call SetPlayerAbilityAvailableBJ( false, 'A0ES', GetOwningPlayer(OLD_UNIT) )
+        call SetPlayerAbilityAvailableBJ( false, 'A0ET', GetOwningPlayer(OLD_UNIT) )
+        call SetPlayerAbilityAvailableBJ( false, 'A0EU', GetOwningPlayer(OLD_UNIT) )
+        call SetPlayerAbilityAvailableBJ( false, 'A0EV', GetOwningPlayer(OLD_UNIT) )
     elseif SKILL_UPGRADE == 'S00J' then
         set UNIT_ID_REPLACE = UNIT_MIRROR_TROLL
     elseif SKILL_UPGRADE == 'S00L' then

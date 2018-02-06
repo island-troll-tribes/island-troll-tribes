@@ -2,7 +2,7 @@
 
 require 'fileutils'
 
-WIN_OS = RbConfig::CONFIG['host_os'] =~ /mswin|mingw|cygwin/
+WIN_OS = true # RbConfig::CONFIG['host_os'] =~ /mswin|mingw|cygwin/
 MAC_OS = RbConfig::CONFIG['host_os'] =~ /darwin/ ? true : false
 puts "Detected mac OS........prefixing exe calls with wine" if MAC_OS
 puts "Detected windows os....prefixing system calls with sh -c" if WIN_OS
@@ -24,7 +24,7 @@ def do_compile
 end
 
 def do_jasshelper
-  cmd = "#{"sh -c \"" if WIN_OS}#{'wine ' if MAC_OS}'#{JASSHELPER_PATH}' #{"--debug" if $opt[:debug]} '#{COMMON_J_PATH}' '#{BLIZZARD_J_PATH}' '#{$opt[:map_script_path]}' '#{$opt[:map_unpro_path]}'#{"\"" if WIN_OS}"
+  cmd = "#{"sh -c \"" if WIN_OS}#{'wine ' if MAC_OS}'#{JASSHELPER_PATH}' #{"--debug" if $opt[:debug]} '#{COMMON_J_PATH}' '#{BLIZZARD_J_PATH}' '#{$opt[:map_script_path]}' '#{$opt[:map_unpro_path].gsub('/mnt/c', '')}'#{"\"" if WIN_OS}"
   puts cmd if $opt[:debug_script]
   `#{cmd}`
 end
@@ -80,11 +80,12 @@ def do_build
   puts "Finished building map!"
   if $opt[:launchwc3]
     if WIN_OS
-      cmd = "\"C:\\Program Files (x86)\\Warcraft III\\Warcraft III.exe\" #{"-window" if $opt[:launchwc3][:windowed]} -loadfile #{File.expand_path($opt[:map_output_path]).gsub("/","\\").gsub(/\Ac/,"C")}"
+      cmd = "'/mnt/c/Program Files (x86)/Warcraft III/Warcraft III.exe' #{"-window" if $opt[:launchwc3][:windowed]} -loadfile #{File.expand_path($opt[:map_output_path]).gsub(" /mnt/c/"," /")}"
     elsif MAC_OS
       cmd = "'/Applications/Frozen Throne' #{"-window" if $opt[:launchwc3].is_a?(Hash) && $opt[:launchwc3][:windowed]} -loadfile i:/#{$opt[:map_output_path]}"
     end
     puts cmd if $opt[:debug_script]
+    sleep 1
     `#{cmd}`
   end
   do_exit
@@ -118,7 +119,7 @@ def main
   if $opt[:env] == 'beta'
     $opt.merge!({
       :debug => true,
-      :do_optimizer => true,
+      :do_optimizer => false,
     })
   elsif $opt[:env] == 'test'
     $opt.merge!({
@@ -131,7 +132,7 @@ def main
     })
   elsif $opt[:env] == 'pro'
     $opt.merge!({
-      :do_optimizer => true,
+      :do_optimizer => false,
     })
   elsif $opt[:env] == 'WEC' # World Editor Compatible
     $opt.merge!({

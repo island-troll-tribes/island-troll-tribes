@@ -2,27 +2,24 @@
 library TradeShipStop requires PublicLibrary {
 
   public struct TradeShipStop {
-    private TradeShipRoute route;
     private rect stopAt;
     private thistype nextStop;
     private thistype forkTo;
 
-    static method create( TradeShipRoute r, rect s ) -> thistype {
+    static method create( rect s ) -> thistype {
       thistype self = thistype.allocate();
-      self.route = r;
       self.stopAt = s;
       self.nextStop = -1;
       self.forkTo = -1;
-      r.addRect( s );
       return self;
     }
 
-    method containsShip() -> boolean {
-      return IsWidgetInRect( stopAt, route.getShip() );
+    method containsShip(unit ship) -> boolean {
+      return IsWidgetInRect( stopAt, ship );
     }
 
     method operator next() -> thistype {
-      if ( forkTo < 0 || GetRandomInt( 0, 1 ) == 0 ) {
+      if ( forkTo < 0 || GetRandomInt( 0, 1 ) == 1 ) {
         return nextStop;
       } else {
         return forkTo;
@@ -33,21 +30,34 @@ library TradeShipStop requires PublicLibrary {
       if ( nextStop >= 0 ) {
         return nextStop.addStop( r );
       } else {
-        nextStop = thistype.create( route, r );
+        nextStop = thistype.create( r );
         return nextStop;
+      }
+    }
+
+    method addTradeShipStop( thistype next ) -> thistype {
+      nextStop = next;
+      return this;
+    }
+
+    method tail() -> thistype {
+      if ( nextStop >= 0 ) {
+        return nextStop.tail();
+      } else {
+        return this;
       }
     }
 
     /*
       we can only add one fork
     */
-    method addFork( rect r ) -> thistype {
+    method addFork( thistype fork ) -> thistype {
       if ( forkTo < 0 ) {
-        forkTo = thistype.create( route, r );
-        return forkTo;
+        forkTo = fork;
+      } else {
+        debug BJDebugMsg( "Attempting to add multiple forks to " + I2S( this ) );
       }
-      debug BJDebugMsg( "Attempting to add multiple forks to " + I2S( this ) );
-      return -1;
+      return this;
     }
 
     method isEndOfRoute() -> boolean {
@@ -62,6 +72,28 @@ library TradeShipStop requires PublicLibrary {
       return GetRectCenterY( stopAt );
     }
 
+    method clone() -> thistype {
+      thistype copy = thistype.create(stopAt);
+      copy.nextStop = nextStop;
+      copy.forkTo = forkTo;
+      return copy;
+    }
+
+    method reverse() -> thistype {
+      thistype head = this;
+      thistype next;
+
+      if (nextStop >= 0) {
+        next = nextStop.clone();
+        head = next.reverse();
+        next.nextStop = this;
+      }
+
+      nextStop = -1;
+      forkTo = -1;
+
+      return head;
+    }
   }
 }
 

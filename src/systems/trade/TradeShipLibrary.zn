@@ -1,57 +1,183 @@
-
 library TradeShip requires IDUtils, TradeShipRoute {
-  public ArrayListInteger TradeShipIds;
-  TradeShipRoute westToEastRoute;
-  TradeShipRoute southToNorthRoute;
+  TradeShipRoute bottom;
+  TradeShipRoute left;
+  TradeShipRoute top;
+  TradeShipRoute right;
 
   function onInit() {
-    TradeShipStop branch1;
-    TradeShipStop fork1;
-    TradeShipStop fork2;
+    TradeShipStop leftBranchE = TradeShipStop.create(gg_rct_ship_LO);
+    TradeShipStop bottomBranchN = TradeShipStop.create(gg_rct_ship_BO);
+    TradeShipStop topBranchS = TradeShipStop.create(gg_rct_ship_TO);
+    TradeShipStop rightBranchW = TradeShipStop.create(gg_rct_ship_RO);
+    TradeShipStop leftBranchW;
+    TradeShipStop bottomBranchS;
+    TradeShipStop topBranchN;
+    TradeShipStop rightBranchE;
+    TradeShipStop tlBranchNE = TradeShipStop.create(gg_rct_ship_TL_1);
+    TradeShipStop trBranchSE = TradeShipStop.create(gg_rct_ship_TR_1);
+    TradeShipStop brBranchSW = TradeShipStop.create(gg_rct_ship_BR_1);
+    TradeShipStop blBranchNW = TradeShipStop.create(gg_rct_ship_BL_1);
+    TradeShipStop tlBranchSW;
+    TradeShipStop trBranchNW;
+    TradeShipStop brBranchNE;
+    TradeShipStop blBranchSE;
 
-    TradeShipIds = ArrayListInteger.create();
+    leftBranchE
+      .addStop(gg_rct_ship_L_1)
+      .addStop(gg_rct_ship_L_2)
+      .addStop(gg_rct_ship_L_3);
+    leftBranchW = leftBranchE.clone().reverse();
 
-    TradeShipIds.push( UNIT_TRADE_SHIP_1 );
-    TradeShipIds.push( UNIT_TRADE_SHIP_2 );
-    TradeShipIds.push( UNIT_TRADE_SHIP_3 );
+    bottomBranchN
+      .addStop(gg_rct_ship_B_1);
+    bottomBranchS = bottomBranchN.clone().reverse();
 
-    southToNorthRoute = TradeShipRoute.create();
+    topBranchS
+      .addStop(gg_rct_ship_T_1)
+      .addStop(gg_rct_ship_T_2)
+      .addStop(gg_rct_ship_T_3);
+    topBranchN = topBranchS.clone().reverse();
 
-    branch1 = southToNorthRoute.createFirstStop( gg_rct_ship_make );
-    branch1.addStop( gg_rct_ship_stop_1 );
-    branch1.addStop( gg_rct_ship_stop_2 );
-    branch1.addStop( gg_rct_ship_stop_3 );
-    fork1 = branch1.addStop( gg_rct_ship_fork_1 ).addFork( gg_rct_ship_stop_1_1 );
-    branch1.addStop( gg_rct_fork_1_stop );
-    branch1.addStop( gg_rct_fork_1_gone ); // end of path
-    fork2 = fork1.addStop( gg_rct_ship_stop_1_2 ).addFork( gg_rct_ship_stop_3_1 );
-    fork1.addStop( gg_rct_fork_2_stop );
-    fork1.addStop( gg_rct_fork_2_gone ); // end of path
-    fork2.addStop( gg_rct_ship_stop_3_2 );
-    fork2.addStop( gg_rct_ship_stop_3_3 );
-    fork2.addStop( gg_rct_ship_gone ); // end of path
+    rightBranchW
+      .addStop(gg_rct_ship_R_1)
+      .addStop(gg_rct_ship_R_2);
+    rightBranchE = rightBranchW.clone().reverse();
 
-    westToEastRoute = TradeShipRoute.create();
+    tlBranchNE
+      .addStop(gg_rct_ship_TL_2)
+      .addStop(gg_rct_ship_TL_3);
+    tlBranchSW = tlBranchNE.clone().reverse();
 
-    branch1 = westToEastRoute.createFirstStop( gg_rct_ship_gone );
-    branch1.addStop( gg_rct_ship_stop_3_3 );
-    branch1.addStop( gg_rct_ship_stop_3_2 );
-    branch1.addStop( gg_rct_ship_stop_3_1 );
-    fork1 = branch1.addStop( gg_rct_ship_fork_2 ).addFork( gg_rct_ship_stop_1_2 );
-    branch1.addStop( gg_rct_fork_2_stop );
-    branch1.addStop( gg_rct_fork_2_gone ); // end of path
-    fork1.addStop( gg_rct_ship_stop_1_1 );
-    fork2 = fork1.addStop( gg_rct_ship_fork_1 ).addFork( gg_rct_ship_stop_3 );
-    fork1.addStop( gg_rct_fork_1_stop );
-    fork1.addStop( gg_rct_fork_1_gone ); // end of path
-    fork2.addStop( gg_rct_ship_stop_2 );
-    fork2.addStop( gg_rct_ship_stop_1 );
-    fork2.addStop( gg_rct_ship_make ); // end of path
+    trBranchSE
+      .addStop(gg_rct_ship_TR_2)
+      .addStop(gg_rct_ship_TR_3);
+    trBranchNW = trBranchSE.clone().reverse();
+
+    brBranchSW
+      .addStop(gg_rct_ship_BR_2);
+    brBranchNE = brBranchSW.clone().reverse();
+
+    blBranchNW
+      .addStop(gg_rct_ship_BL_2)
+      .addStop(gg_rct_ship_BL_3)
+      .addStop(gg_rct_ship_BL_4)
+      .addStop(gg_rct_ship_BL_5);
+    blBranchSE = blBranchNW.clone().reverse();
+
+    leftBranchE
+      .tail()
+      .addTradeShipStop(tlBranchNE)
+      .addFork(blBranchSE);
+    
+    topBranchS
+      .tail()
+      .addTradeShipStop(trBranchSE)
+      .addFork(tlBranchSW);
+
+    rightBranchW
+      .tail()
+      .addTradeShipStop(brBranchSW)
+      .addTradeShipStop(trBranchNW);
+
+    bottomBranchN
+      .tail()
+      .addTradeShipStop(blBranchNW)
+      .addFork(brBranchNE);
+
+    tlBranchNE
+      .tail()
+      .addTradeShipStop(trBranchSE)
+      .addFork(topBranchN);
+
+    tlBranchSW
+      .tail()
+      .addTradeShipStop(blBranchSE)
+      .addFork(leftBranchW);
+
+    trBranchSE
+      .tail()
+      .addTradeShipStop(brBranchSW)
+      .addFork(rightBranchE);
+
+    trBranchNW
+      .tail()
+      .addTradeShipStop(tlBranchSW)
+      .addFork(topBranchN);
+
+    brBranchSW
+      .tail()
+      .addTradeShipStop(blBranchNW)
+      .addFork(bottomBranchS);
+
+    brBranchNE
+      .tail()
+      .addTradeShipStop(trBranchNW)
+      .addFork(rightBranchE);
+
+    blBranchNW
+      .tail()
+      .addTradeShipStop(tlBranchNE)
+      .addFork(leftBranchW);
+
+    blBranchSE
+      .tail()
+      .addTradeShipStop(brBranchNE)
+      .addFork(bottomBranchS);
+
+    TradeShipRoute.addRect(gg_rct_ship_LO);
+    TradeShipRoute.addRect(gg_rct_ship_BO);
+    TradeShipRoute.addRect(gg_rct_ship_TO);
+    TradeShipRoute.addRect(gg_rct_ship_RO);
+    TradeShipRoute.addRect(gg_rct_ship_TL_1);
+    TradeShipRoute.addRect(gg_rct_ship_TR_1);
+    TradeShipRoute.addRect(gg_rct_ship_BR_1);
+    TradeShipRoute.addRect(gg_rct_ship_BL_1);
+    TradeShipRoute.addRect(gg_rct_ship_L_1);
+    TradeShipRoute.addRect(gg_rct_ship_L_2);
+    TradeShipRoute.addRect(gg_rct_ship_L_3);
+    TradeShipRoute.addRect(gg_rct_ship_B_1);
+    TradeShipRoute.addRect(gg_rct_ship_T_1);
+    TradeShipRoute.addRect(gg_rct_ship_T_2);
+    TradeShipRoute.addRect(gg_rct_ship_T_3);
+    TradeShipRoute.addRect(gg_rct_ship_R_1);
+    TradeShipRoute.addRect(gg_rct_ship_R_2);
+    TradeShipRoute.addRect(gg_rct_ship_TL_2);
+    TradeShipRoute.addRect(gg_rct_ship_TL_3);
+    TradeShipRoute.addRect(gg_rct_ship_TR_2);
+    TradeShipRoute.addRect(gg_rct_ship_TR_3);
+    TradeShipRoute.addRect(gg_rct_ship_BR_2);
+    TradeShipRoute.addRect(gg_rct_ship_BL_2);
+    TradeShipRoute.addRect(gg_rct_ship_BL_3);
+    TradeShipRoute.addRect(gg_rct_ship_BL_4);
+    TradeShipRoute.addRect(gg_rct_ship_BL_5);
+    
+    bottom = TradeShipRoute.create();
+    left = TradeShipRoute.create();
+    top = TradeShipRoute.create();
+    right = TradeShipRoute.create();
+
+    bottom.setFirstStop(bottomBranchN);
+    left.setFirstStop(leftBranchE);
+    top.setFirstStop(topBranchS);
+    right.setFirstStop(rightBranchW);
 
     Map.onGameStart( function() {
       if ( AllowTrade ) {
-        westToEastRoute.createNextShip().moveToNextStop();
-        southToNorthRoute.createNextShip().moveToNextStop();
+        bottom
+          .createNextShip()
+          .moveToNextStop();
+
+        left
+          .createNextShip()
+          .moveToNextStop();
+
+        top
+          .createNextShip()
+          .moveToNextStop();
+
+        right
+          .createNextShip()
+          .moveToNextStop();
       }
     });
   }

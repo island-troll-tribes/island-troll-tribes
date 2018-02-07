@@ -1,7 +1,7 @@
 library TradeShipRoute requires TradeShipStop, TradeShipSpawnOrder, IDUtils {
 
-  constant real    TRADE_SHIP_PAUSE_TIME_DEST = 15.0;
-  constant real    TRADE_SHIP_PAUSE_TIME_SELL = 2.5;
+  constant real    TRADE_SHIP_PAUSE_TIME_DEST = 0;
+  constant real    TRADE_SHIP_PAUSE_TIME_SELL = 0;
 
   constant integer STATE_MOVING = 1;
   constant integer STATE_STOPPED = 2;
@@ -45,6 +45,10 @@ library TradeShipRoute requires TradeShipStop, TradeShipSpawnOrder, IDUtils {
       return thistype( i );
     }
 
+    static method addRect( rect r ) {
+      RegionAddRect( stopsAtRegions, r );
+    }
+
     static method create() -> thistype {
       thistype self = thistype.allocate();
       thistype.length += 1;
@@ -60,18 +64,9 @@ library TradeShipRoute requires TradeShipStop, TradeShipSpawnOrder, IDUtils {
       stopsAtRegions = null;
     }
 
-    method createFirstStop( rect r ) -> TradeShipStop {
-      firstStop = TradeShipStop.create( this, r );
-      return firstStop;
-    }
-
-    method addRect( rect r ) -> thistype {
-      RegionAddRect( stopsAtRegions, r );
+    method setFirstStop( TradeShipStop stop ) -> thistype {
+      firstStop = stop;
       return this;
-    }
-
-    method getShip() -> unit {
-      return tradeShip;
     }
 
     method createNextShip() -> thistype {
@@ -90,10 +85,16 @@ library TradeShipRoute requires TradeShipStop, TradeShipSpawnOrder, IDUtils {
       return this;
     }
 
+    method getShip() -> unit {
+      return tradeShip;
+    }
+
     method moveToNextStop() -> thistype {
       if ( state != STATE_MOVING ) {
         PauseTimer( myTimer );
         state = STATE_MOVING;
+
+        IssuePointOrder( tradeShip, "move", nextStop.x, nextStop.y );
 
         TimerStart( myTimer, 1.0, true, function() {
           TradeShipRoute this = TradeShipRoute( GetTimerData( GetExpiredTimer() ) );
@@ -119,7 +120,7 @@ library TradeShipRoute requires TradeShipStop, TradeShipSpawnOrder, IDUtils {
     }
 
     private method processEnterRegion() {
-      if ( nextStop.containsShip() ) {
+      if ( nextStop.containsShip(tradeShip) ) {
         PauseTimer( myTimer );
 
         if ( nextStop.isEndOfRoute() ) {

@@ -64,8 +64,8 @@ function HydraBoatEncircle takes nothing returns nothing
 local real x = GetUnitX(Hydra)
 local real y = GetUnitY(Hydra)
 local integer step = LoadInteger(udg_GameHash, StringHash("hyd"), StringHash("step"))
-local real tx = hydraB_X[step]
-local real ty = hydraB_Y[step]
+local real tx = GetRectCenterX(gg_rct_discoduck)
+local real ty = GetRectCenterY(gg_rct_discoduck)
 local real dx
 local real dy
 local timer t
@@ -85,25 +85,7 @@ if not Hydra_Dead then
         call TimerStart(hydraSpellTimer, 10, false, function TriggerResetSpell)
         set hydraTarget = null
     else
-        set dx = x - tx
-        set dy = y - ty
-        if SquareRoot(dx * dx + dy * dy) >= 100 then
-            call IssuePointOrder(Hydra, "attack", tx, ty)
-        else
-            if step == 7 then // south middle
-                set hydraBackwards = 1
-            elseif step == 0 then // north west
-                set hydraBackwards = 0
-            endif
-            if hydraBackwards == 0 then
-                set step = step + 1
-            elseif hydraBackwards == 1 then
-                set step = step - 1
-            endif
-            call SaveInteger(udg_GameHash, StringHash("hyd"), StringHash("step"), step)
-            call IssuePointOrder(Hydra, "attack", hydraB_X[step], hydraB_Y[step])
-            //call DisplayTimedTextToPlayer(GetLocalPlayer(),0,0,999,"Hydra Diagnostic: Approaching Step => "+I2S(step))
-        endif
+        call IssuePointOrder(Hydra, "attack", tx, ty)
     endif
     call TimerStart(hydraTimer, 4, false, function HydraBoatEncircle)
 endif

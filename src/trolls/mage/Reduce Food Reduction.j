@@ -28,7 +28,7 @@ function Trig_Reduce_Food_reduction_Actions takes nothing returns nothing
     loop
         exitwhen bj_forLoopAIndex > bj_forLoopAIndexEnd
         if ( Trig_Reduce_Food_reduction_Func001Func001C() ) then
-            call SetItemCharges( UnitItemInSlotBJ(GetSpellTargetUnit(), GetForLoopIndexA()), IMaxBJ(1, ( GetItemCharges(UnitItemInSlotBJ(GetSpellTargetUnit(), GetForLoopIndexA())) - GetRandomInt(0, 2) )) )
+            call SetItemCharges( UnitItemInSlotBJ(GetSpellTargetUnit(), GetForLoopIndexA()), IMaxBJ(1, ( GetItemCharges(UnitItemInSlotBJ(GetSpellTargetUnit(), GetForLoopIndexA())) - GetRandomInt(0, 1) )) )
             return
         else
         endif

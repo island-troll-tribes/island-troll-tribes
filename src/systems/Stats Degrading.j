@@ -24,10 +24,7 @@ function Trig_stats_degrading_Func001A takes nothing returns nothing
         set gD=gD-2
     endif
 
-    if(UnitHasBuffBJ(GetEnumUnit(), 'S000') == false) then
-        if(UnitHasBuffBJ(GetEnumUnit(), DEST_SUPER_TREE) == true and UnitHasBuffBJ(GetEnumUnit(), 'B00E') == true and UnitHasBuffBJ(GetEnumUnit(), 'B00F') == true) then//all 3
-            set eD=eD+GetRandomInt(1,9)
-        endif
+    if(UnitHasBuffBJ(GetEnumUnit(), 'Bcyc') == false) then
         if(UnitHasBuffBJ(GetEnumUnit(), 'B00F') == true and UnitHasBuffBJ(GetEnumUnit(), 'B00E') == true ) then//aurad and arrowed
             set eD=eD+GetRandomInt(1,6)
         endif

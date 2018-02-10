@@ -24,13 +24,13 @@ def do_compile
 end
 
 def do_jasshelper
-  cmd = "#{"sh -c \"" if WIN_OS}#{'wine ' if MAC_OS}'#{JASSHELPER_PATH}' #{"--debug" if $opt[:debug]} '#{COMMON_J_PATH}' '#{BLIZZARD_J_PATH}' '#{$opt[:map_script_path]}' '#{$opt[:map_unpro_path].gsub('/mnt/c', '')}'#{"\"" if WIN_OS}"
+  cmd = "#{"sh -c \"" if WIN_OS}#{'wine ' if MAC_OS}'#{JASSHELPER_PATH}' #{"--debug" if $opt[:debug]} '#{COMMON_J_PATH}' '#{BLIZZARD_J_PATH}' '#{$opt[:map_script_path].gsub("/mnt/c","C:")}' '#{$opt[:map_unpro_path].gsub('/mnt/c', '')}'#{"\"" if WIN_OS}"
   puts cmd if $opt[:debug_script]
   `#{cmd}`
 end
 
 def do_optimizer
-  cmd = "#{"sh -c \"" if WIN_OS}#{'wine ' if MAC_OS}'#{OPTIMIZER_PATH}' '#{$opt[:map_unpro_path]}' --do '#{$opt[:map_output_path]}' --checkall --tweak '#{File.join(%W[#{OPTIMIZER_DIR} settings.vxtweak])}' --exit#{"\"" if WIN_OS}"
+  cmd = "#{"sh -c \"" if WIN_OS}#{'wine ' if MAC_OS}'#{OPTIMIZER_PATH}' '#{$opt[:map_unpro_path].gsub("/mnt/c","C:")}' --do '#{$opt[:map_output_path].gsub("/mnt/c","C:")}' --checkall --tweak '#{File.join(%W[#{OPTIMIZER_DIR} settings.vxtweak])}' --exit#{"\"" if WIN_OS}"
   puts cmd if $opt[:debug_script]
   `#{cmd}`
 end
@@ -80,7 +80,7 @@ def do_build
   puts "Finished building map!"
   if $opt[:launchwc3]
     if WIN_OS
-      cmd = "'/mnt/c/Program Files (x86)/Warcraft III/Warcraft III.exe' #{"-window" if $opt[:launchwc3][:windowed]} -loadfile #{File.expand_path($opt[:map_output_path]).gsub(" /mnt/c/"," /")}"
+      cmd = "'/mnt/c/Program Files (x86)/Warcraft III/Warcraft III.exe' #{"-window" if $opt[:launchwc3][:windowed]} -loadfile #{File.expand_path($opt[:map_output_path]).gsub("/mnt/c","C:")}"
     elsif MAC_OS
       cmd = "'/Applications/Frozen Throne' #{"-window" if $opt[:launchwc3].is_a?(Hash) && $opt[:launchwc3][:windowed]} -loadfile i:/#{$opt[:map_output_path]}"
     end

@@ -2,16 +2,29 @@
 library TradeShipStop requires PublicLibrary {
 
   public struct TradeShipStop {
+    private static region tradeStops;
+
     private rect stopAt;
     private thistype nextStop;
     private thistype forkTo;
+    private real forkProbability;
 
     static method create( rect s ) -> thistype {
       thistype self = thistype.allocate();
       self.stopAt = s;
       self.nextStop = -1;
       self.forkTo = -1;
+      self.forkProbability = 0;
+      RegionAddRect(tradeStops, s);
       return self;
+    }
+
+    public static method onInit() {
+      tradeStops = CreateRegion();
+    }
+
+    public static method getTradeRegion() -> region {
+      return tradeStops;
     }
 
     method containsShip(unit ship) -> boolean {
@@ -19,7 +32,7 @@ library TradeShipStop requires PublicLibrary {
     }
 
     method operator next() -> thistype {
-      if ( forkTo < 0 || GetRandomInt( 0, 1 ) == 1 ) {
+      if ( forkTo < 0 || GetRandomReal(0, 1) > forkProbability ) {
         return nextStop;
       } else {
         return forkTo;
@@ -51,9 +64,10 @@ library TradeShipStop requires PublicLibrary {
     /*
       we can only add one fork
     */
-    method addFork( thistype fork ) -> thistype {
+    method addFork( thistype fork, real probability ) -> thistype {
       if ( forkTo < 0 ) {
         forkTo = fork;
+        forkProbability = probability;
       } else {
         debug BJDebugMsg( "Attempting to add multiple forks to " + I2S( this ) );
       }

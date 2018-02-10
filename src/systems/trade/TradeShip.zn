@@ -1,4 +1,4 @@
-library TradeShipRoute requires TradeShipStop, TradeShipSpawnOrder, IDUtils {
+library TradeShip requires TradeShipStop, TradeShipSpawnOrder, IDUtils {
 
   constant real    TRADE_SHIP_PAUSE_TIME_DEST = 0;
   constant real    TRADE_SHIP_PAUSE_TIME_SELL = 0;
@@ -6,12 +6,15 @@ library TradeShipRoute requires TradeShipStop, TradeShipSpawnOrder, IDUtils {
   constant integer STATE_MOVING = 1;
   constant integer STATE_STOPPED = 2;
 
-  public struct TradeShipRoute {
+  public type TradeShipEventListener extends function(TradeShip, integer);
+
+  public struct TradeShip {
+    public static integer EXITED = 101;
+
     static integer length = 0;
     private static trigger whenEnterRegion;
     private static trigger whenSellItem;
-    private static Table   routes;
-    private static region  stopsAtRegions;
+    private static Table   ships;
 
     private unit          tradeShip;
     private TradeShipStop nextStop;
@@ -19,67 +22,63 @@ library TradeShipRoute requires TradeShipStop, TradeShipSpawnOrder, IDUtils {
     private timer         myTimer;
     private integer       state = STATE_STOPPED;
     private TradeShipIdListNode nextShip;
+    private TradeShipEventListener observer = -1;
 
     private static method onInit() {
-      stopsAtRegions = CreateRegion();
       whenEnterRegion = CreateTrigger();
-      TriggerRegisterEnterRegion( whenEnterRegion, stopsAtRegions, null );
-      TriggerAddAction( whenEnterRegion, static method TradeShipRoute.relayEnterRegionToRoute );
+      TriggerRegisterEnterRegion( whenEnterRegion, TradeShipStop.getTradeRegion(), null );
+      TriggerAddAction( whenEnterRegion, static method TradeShip.relayEnterRegionToShip );
 
       whenSellItem = CreateTrigger();
       TriggerRegisterPlayerUnitEvent( whenSellItem, Player( 15 ), EVENT_PLAYER_UNIT_SELL_ITEM, null );
-      TriggerAddAction( whenSellItem, static method TradeShipRoute.relaySellItemToRoute );
+      TriggerAddAction( whenSellItem, static method TradeShip.relaySellItemToShip );
 
-      routes = Table.create();
+      ships = Table.create();
     }
 
     static method existsForUnit( unit u ) -> boolean {
-      return routes.has_h( u );
+      return ships.has_h( u );
     }
 
     static method findByShip( unit u ) -> thistype {
-      return thistype( routes.integer_h[u] );
+      return thistype( ships.integer_h[u] );
     }
 
     static method operator[] (integer i) -> thistype {
       return thistype( i );
     }
 
-    static method addRect( rect r ) {
-      RegionAddRect( stopsAtRegions, r );
-    }
-
-    static method create() -> thistype {
+    static method create( TradeShipStop stop ) -> thistype {
       thistype self = thistype.allocate();
       thistype.length += 1;
       self.nextShip = GetTradeShipSpawnOrder();
       self.tradeShip = null;
-      self.firstStop = -1;
       self.myTimer = NewTimerEx( self );
+      self.firstStop = stop;
       return self;
+    }
+
+    method addEventListener(TradeShipEventListener func) -> thistype {
+      observer = func;
+      return this;
     }
 
     private method onDestroy() {
       thistype.length -= 1;
-      stopsAtRegions = null;
-    }
-
-    method setFirstStop( TradeShipStop stop ) -> thistype {
-      firstStop = stop;
-      return this;
     }
 
     method createNextShip() -> thistype {
       tradeShip = CreateUnit( Player( 15 ), nextShip.getId(), firstStop.x, firstStop.y, 0 );
       nextShip = nextShip.getNext();
-      routes.integer_h[tradeShip] = this;
+      ships.integer_h[tradeShip] = this;
       nextStop = firstStop.next;
       state = STATE_STOPPED;
+      moveToNextStop();
       return this;
     }
 
     method removeShip() -> thistype {
-      routes.remove_h( tradeShip );
+      ships.remove_h( tradeShip );
       RemoveUnit( tradeShip );
       tradeShip = null;
       return this;
@@ -97,7 +96,7 @@ library TradeShipRoute requires TradeShipStop, TradeShipSpawnOrder, IDUtils {
         IssuePointOrder( tradeShip, "move", nextStop.x, nextStop.y );
 
         TimerStart( myTimer, 1.0, true, function() {
-          TradeShipRoute this = TradeShipRoute( GetTimerData( GetExpiredTimer() ) );
+          TradeShip this = TradeShip( GetTimerData( GetExpiredTimer() ) );
           IssuePointOrder( tradeShip, "move", nextStop.x, nextStop.y );
         });
       }
@@ -112,7 +111,7 @@ library TradeShipRoute requires TradeShipStop, TradeShipSpawnOrder, IDUtils {
         IssueImmediateOrder( tradeShip, "holdposition" );
 
         TimerStart( myTimer, duration, false, function() {
-          TradeShipRoute( GetTimerData( GetExpiredTimer() ) ).moveToNextStop();
+          TradeShip( GetTimerData( GetExpiredTimer() ) ).moveToNextStop();
         });
       }
 
@@ -124,7 +123,10 @@ library TradeShipRoute requires TradeShipStop, TradeShipSpawnOrder, IDUtils {
         PauseTimer( myTimer );
 
         if ( nextStop.isEndOfRoute() ) {
-          removeShip().createNextShip().moveToNextStop();
+          removeShip();
+          if (observer >= 1) {
+            observer.execute(this, EXITED);
+          }
         } else {
           nextStop = nextStop.next;
           pause( TRADE_SHIP_PAUSE_TIME_DEST );
@@ -132,21 +134,20 @@ library TradeShipRoute requires TradeShipStop, TradeShipSpawnOrder, IDUtils {
       }
     }
 
-    static method relaySellItemToRoute() {
+    static method relaySellItemToShip() {
       unit u = GetTriggerUnit();
       if ( existsForUnit( u ) ) {
-        TradeShipRoute.findByShip( u ).pause( TRADE_SHIP_PAUSE_TIME_SELL );
+        TradeShip.findByShip( u ).pause( TRADE_SHIP_PAUSE_TIME_SELL );
       }
       u = null;
     }
 
-    static method relayEnterRegionToRoute() {
+    static method relayEnterRegionToShip() {
       unit u = GetEnteringUnit();
       if ( existsForUnit( u ) ) {
-        TradeShipRoute.findByShip( u ).processEnterRegion();
+        TradeShip.findByShip( u ).processEnterRegion();
       }
       u = null;
     }
-
   }
 }

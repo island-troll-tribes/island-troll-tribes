@@ -1,4 +1,4 @@
-library TradeShipSupervisor requires IDUtils, TradeShipStop {
+library TradeShipSupervisor requires IDUtils, TradeShipSpawnOrder, TradeShipStop {
     public {
         TradeShipStop leftBranchE;
         TradeShipStop bottomBranchN;
@@ -29,6 +29,8 @@ library TradeShipSupervisor requires IDUtils, TradeShipStop {
             static TradeShip nwPrev;
             static TradeShip se;
             static TradeShip sePrev;
+
+            static TradeShipIdListNode nextShip;
         }
 
         static method swap() {
@@ -42,9 +44,11 @@ library TradeShipSupervisor requires IDUtils, TradeShipStop {
         }
 
         static method spawn() {
+            integer tradeShipId = nextShip.getId();
+            nextShip = nextShip.getNext();
             swap();
-            nw.createNextShip();
-            se.createNextShip();
+            nw.createNextShip(tradeShipId);
+            se.createNextShip(tradeShipId);
         }
 
         static method handleEvent(TradeShip ship, integer eventType) {
@@ -190,6 +194,8 @@ library TradeShipSupervisor requires IDUtils, TradeShipStop {
                 se = right;
                 sePrev = bottom;
             }
+
+            nextShip = GetTradeShipSpawnOrder();
 
             Map.onGameStart(function() {
                 if (AllowTrade) {

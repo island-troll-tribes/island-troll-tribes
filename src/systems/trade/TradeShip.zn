@@ -1,4 +1,4 @@
-library TradeShip requires TradeShipStop, TradeShipSpawnOrder, IDUtils {
+library TradeShip requires TradeShipStop, IDUtils {
 
   constant real    TRADE_SHIP_PAUSE_TIME_DEST = 0;
   constant real    TRADE_SHIP_PAUSE_TIME_SELL = 0;
@@ -21,7 +21,6 @@ library TradeShip requires TradeShipStop, TradeShipSpawnOrder, IDUtils {
     private TradeShipStop firstStop;
     private timer         myTimer;
     private integer       state = STATE_STOPPED;
-    private TradeShipIdListNode nextShip;
     private TradeShipEventListener observer = -1;
 
     private static method onInit() {
@@ -51,7 +50,6 @@ library TradeShip requires TradeShipStop, TradeShipSpawnOrder, IDUtils {
     static method create( TradeShipStop stop ) -> thistype {
       thistype self = thistype.allocate();
       thistype.length += 1;
-      self.nextShip = GetTradeShipSpawnOrder();
       self.tradeShip = null;
       self.myTimer = NewTimerEx( self );
       self.firstStop = stop;
@@ -67,9 +65,8 @@ library TradeShip requires TradeShipStop, TradeShipSpawnOrder, IDUtils {
       thistype.length -= 1;
     }
 
-    method createNextShip() -> thistype {
-      tradeShip = CreateUnit( Player( 15 ), nextShip.getId(), firstStop.x, firstStop.y, 0 );
-      nextShip = nextShip.getNext();
+    method createNextShip(integer tradeShipId) -> thistype {
+      tradeShip = CreateUnit( Player( 15 ), tradeShipId, firstStop.x, firstStop.y, 0 );
       ships.integer_h[tradeShip] = this;
       nextStop = firstStop.next;
       state = STATE_STOPPED;
@@ -125,7 +122,7 @@ library TradeShip requires TradeShipStop, TradeShipSpawnOrder, IDUtils {
         if ( nextStop.isEndOfRoute() ) {
           removeShip();
           if (observer >= 1) {
-            observer.execute(this, EXITED);
+            observer.execute(this, thistype.EXITED);
           }
         } else {
           nextStop = nextStop.next;

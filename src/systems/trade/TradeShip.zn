@@ -22,6 +22,7 @@ library TradeShip requires TradeShipStop, IDUtils {
     private timer         myTimer;
     private integer       state = STATE_STOPPED;
     private TradeShipEventListener observer = -1;
+    private integer numForksReached = 0;
 
     private static method onInit() {
       whenEnterRegion = CreateTrigger();
@@ -68,8 +69,9 @@ library TradeShip requires TradeShipStop, IDUtils {
     method createNextShip(integer tradeShipId) -> thistype {
       tradeShip = CreateUnit( Player( 15 ), tradeShipId, firstStop.x, firstStop.y, 0 );
       ships.integer_h[tradeShip] = this;
-      nextStop = firstStop.next;
+      nextStop = firstStop.randomNext();
       state = STATE_STOPPED;
+      numForksReached = 0;
       moveToNextStop();
       return this;
     }
@@ -105,7 +107,6 @@ library TradeShip requires TradeShipStop, IDUtils {
       if ( state != STATE_STOPPED ) {
         PauseTimer( myTimer );
         state = STATE_STOPPED;
-        IssueImmediateOrder( tradeShip, "holdposition" );
 
         TimerStart( myTimer, duration, false, function() {
           TradeShip( GetTimerData( GetExpiredTimer() ) ).moveToNextStop();
@@ -125,8 +126,16 @@ library TradeShip requires TradeShipStop, IDUtils {
             observer.execute(this, thistype.EXITED);
           }
         } else {
-          nextStop = nextStop.next;
-          pause( TRADE_SHIP_PAUSE_TIME_DEST );
+          pause( nextStop.getPauseTime() );
+
+          if (nextStop.hasFork() && numForksReached > 3) {
+            nextStop = nextStop.getFork();
+          } else {
+            if (nextStop.hasFork()) {
+              numForksReached += 1;
+            }
+            nextStop = nextStop.getNext();
+          }
         }
       }
     }

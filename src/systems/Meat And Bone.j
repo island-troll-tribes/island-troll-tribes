@@ -14,33 +14,6 @@ globals
     constant string teleportModel = "Abilities\\Spells\\Human\\MassTeleport\\MassTeleportCaster.mdl"
 endglobals
 
-/*
-function SpawnTurtle takes nothing returns nothing
-local timer t = GetExpiredTimer()
-local real rX = 0
-local real rY = 0
-loop
-    set rX = GetRandomReal(GetRectMinX(gg_rct_play_area), GetRectMaxX(gg_rct_play_area))
-    set rY = GetRandomReal(GetRectMinY(gg_rct_play_area), GetRectMaxY(gg_rct_play_area))
-    exitwhen GetTerrainCliffLevel(rX, rY) <= 0
-endloop
-call KillSoundWhenDone(gg_snd_TheHornOfCenarius)
-set Turtle = CreateUnit(Player(12), UNIT_RAPID_TURTLE, rX, rY, GetRandomReal(0,360))
-call DestroyEffect(AddSpecialEffectTarget(teleportModel, Turtle, "overhead"))
-call ReleaseTimer(t)
-call StartTurtleRoutine()
-set t = null
-endfunction
-
-function Start_Boss_Turtle takes nothing returns nothing
-local timer t
-if FirstDuckDead then
-    set t = NewTimer()
-    call TimerStart(t, GetRandomReal(300,900), false, function SpawnTurtle) // Spawns between 5 - 15 minutes
-endif
-set t = null
-endfunction
-*/
 function SetBackToBMTame takes player p returns nothing
     call PolledWait( 1.50 )
     call SetPlayerAbilityAvailable( p, SPELL_PET_TAME, true )//tame

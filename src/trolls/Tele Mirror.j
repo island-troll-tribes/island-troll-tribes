@@ -22,7 +22,7 @@ local real ny = GetUnitY(u) + dis1 * Sin(ang2 * bj_DEGTORAD)
 
 if IsUnitImmobilized(t) then
     call IssueImmediateOrder(u, "stop")
-elseif RectContainsCoords(gg_rct_Playable_Map, nx, ny) then
+elseif RectContainsCoords(GetWorldBounds(), nx, ny) then
     if IsTerrainWalkable(nx, ny) then
         call SetUnitPosition(t, nx, ny)
         call SetUnitFacing(t,ModuloReal(GetUnitFacing(t) + 180, 360))

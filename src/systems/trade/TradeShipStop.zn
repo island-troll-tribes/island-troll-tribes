@@ -8,13 +8,15 @@ library TradeShipStop requires PublicLibrary {
     private thistype nextStop;
     private thistype forkTo;
     private real forkProbability;
+    private real pauseTime;
 
-    static method create( rect s ) -> thistype {
+    static method create( rect s, real pauseTime ) -> thistype {
       thistype self = thistype.allocate();
       self.stopAt = s;
       self.nextStop = -1;
       self.forkTo = -1;
       self.forkProbability = 0;
+      self.pauseTime = pauseTime;
       RegionAddRect(tradeStops, s);
       return self;
     }
@@ -31,7 +33,7 @@ library TradeShipStop requires PublicLibrary {
       return IsWidgetInRect( stopAt, ship );
     }
 
-    method operator next() -> thistype {
+    method randomNext() -> thistype {
       if ( forkTo < 0 || GetRandomReal(0, 1) > forkProbability ) {
         return nextStop;
       } else {
@@ -39,11 +41,23 @@ library TradeShipStop requires PublicLibrary {
       }
     }
 
-    method addStop( rect r ) -> thistype {
+    method getNext() -> thistype {
+      return nextStop;
+    }
+
+    method getFork() -> thistype {
+      return forkTo;
+    }
+
+    method hasFork() -> boolean {
+      return forkTo > 0;
+    }
+
+    method addStop( rect r, real pauseTime ) -> thistype {
       if ( nextStop >= 0 ) {
-        return nextStop.addStop( r );
+        return nextStop.addStop( r, pauseTime );
       } else {
-        nextStop = thistype.create( r );
+        nextStop = thistype.create( r, pauseTime );
         return nextStop;
       }
     }
@@ -65,17 +79,20 @@ library TradeShipStop requires PublicLibrary {
       we can only add one fork
     */
     method addFork( thistype fork, real probability ) -> thistype {
-      if ( forkTo < 0 ) {
-        forkTo = fork;
-        forkProbability = probability;
-      } else {
+      if (forkTo > 0) {
         debug BJDebugMsg( "Attempting to add multiple forks to " + I2S( this ) );
       }
+      forkTo = fork;
+      forkProbability = probability;
       return this;
     }
 
     method isEndOfRoute() -> boolean {
       return nextStop == -1;
+    }
+
+    method getPauseTime() -> real {
+      return pauseTime;
     }
 
     method operator x() -> real {
@@ -87,20 +104,22 @@ library TradeShipStop requires PublicLibrary {
     }
 
     method clone() -> thistype {
-      thistype copy = thistype.create(stopAt);
-      copy.nextStop = nextStop;
+      thistype copy = thistype.create(stopAt, pauseTime);
+      if (nextStop > 0) {
+        copy.nextStop = nextStop.clone();
+      } else {
+        copy.nextStop = -1;
+      }
       copy.forkTo = forkTo;
       return copy;
     }
 
     method reverse() -> thistype {
       thistype head = this;
-      thistype next;
 
-      if (nextStop >= 0) {
-        next = nextStop.clone();
-        head = next.reverse();
-        next.nextStop = this;
+      if (nextStop > 0) {
+        head = nextStop.reverse();
+        nextStop.nextStop = this;
       }
 
       nextStop = -1;

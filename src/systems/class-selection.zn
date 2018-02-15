@@ -17,11 +17,11 @@ library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 		rect spawn;
 		unitpool selectionPool;
 
-		public static method create(integer id, unit totem, rect spawn) -> thistype {
+		public static method create(integer id, rect spawn) -> thistype {
 			integer uid = GameConfig.getInstance().getAllTrollUnitId();
 			thistype this = thistype.allocate();
 			this.id = id;
-			this.totem = totem;
+			this.totem = CreateUnit(Player(PLAYER_NEUTRAL_PASSIVE), 'o00H', GetRectCenterX(spawn), GetRectCenterY(spawn), 0);
 			this.spawn = spawn;
 			this.selectionPool = CreateUnitPool();
 			this.initializeTotem();
@@ -63,6 +63,10 @@ library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 
 		public method getForce() -> force {
 			return TEAM[id + 1];
+		}
+
+		public method getTotem() -> unit {
+			return totem;
 		}
 
 		public method setClassAvailable(integer id) {
@@ -212,8 +216,8 @@ library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 		unit tmpTotem;
 
 		spawns[0] = gg_rct_revive_1;
-		spawns[1] = gg_rct_revive_3;
-		spawns[2] = gg_rct_revive_2;
+		spawns[1] = gg_rct_revive_2;
+		spawns[2] = gg_rct_revive_3;
 		spawns[3] = gg_rct_revive_4;
 		spawns[4] = gg_rct_revive_5;
 		spawns[5] = gg_rct_revive_6;
@@ -223,19 +227,6 @@ library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 		spawns[9] = gg_rct_revive_10;
 		spawns[10] = gg_rct_revive_11;
 		spawns[11] = gg_rct_revive_12;
-
-		trollTotem[0] = CreateUnit(Player(PLAYER_NEUTRAL_PASSIVE), 'o00H', -4160.0, 2496.0, 0);
-		trollTotem[1] = CreateUnit(Player(PLAYER_NEUTRAL_PASSIVE), 'o00H', 2048.0, -4544.0, 310);
-		trollTotem[2] = CreateUnit(Player(PLAYER_NEUTRAL_PASSIVE), 'o00H', 4800.0, 2112.0, 280);
-		trollTotem[3] = CreateUnit(Player(PLAYER_NEUTRAL_PASSIVE), 'o00H', -4736.0, -896.0, 310);
-		trollTotem[4] = CreateUnit(Player(PLAYER_NEUTRAL_PASSIVE), 'o00H', 64.0, -1920.0, 310);
-		trollTotem[5] = CreateUnit(Player(PLAYER_NEUTRAL_PASSIVE), 'o00H', 832.0, 4672.0, 310);
-		trollTotem[6] = CreateUnit(Player(PLAYER_NEUTRAL_PASSIVE), 'o00H', -1472.0, 960.0, 310);
-		trollTotem[7] = CreateUnit(Player(PLAYER_NEUTRAL_PASSIVE), 'o00H', -1856.0, -5184.0, 310);
-		trollTotem[8] = CreateUnit(Player(PLAYER_NEUTRAL_PASSIVE), 'o00H', -5440.0, -5952.0, 310);
-		trollTotem[9] = CreateUnit(Player(PLAYER_NEUTRAL_PASSIVE), 'o00H', 6976.0, -1728.0, 310);
-		trollTotem[10] = CreateUnit(Player(PLAYER_NEUTRAL_PASSIVE), 'o00H', 7040.0, 5376.0, 310);
-		trollTotem[11] = CreateUnit(Player(PLAYER_NEUTRAL_PASSIVE), 'o00H', -6848.0, 2432.0, 310);
 
 		if (GameConfig.getInstance().isRandomSpawns()) {
 			for (0 <= i < 12) {
@@ -252,14 +243,11 @@ library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 				tmpSpawn = spawns[i];
 				spawns[i] = spawns[j];
 				spawns[j] = tmpSpawn;
-				tmpTotem = trollTotem[i];
-				trollTotem[i] = trollTotem[j];
-				trollTotem[j] = tmpTotem;
 			}
 		}
 
 		for (0 <= i < 12) {
-			tribes[i] = Tribe.create(i, trollTotem[i], spawns[i]);
+			tribes[i] = Tribe.create(i, spawns[i]);
 		}
 
 		for (0 <= i < 12) {
@@ -277,14 +265,14 @@ library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 		for (0 <= i < 12) {
 			if (GetPlayerSlotState(Player(i)) == PLAYER_SLOT_STATE_PLAYING) {
 				if (isobserver[i]) {
-					tmpTotem = trollTotem[getTribe(0)];
+					tmpTotem = Tribe.ofPlayerId(0).getTotem();
 					x = GetUnitX(tmpTotem);
 					y = GetUnitY(tmpTotem);
 					if (GetLocalPlayer() == Player(i)) {
 						SetCameraPosition(x, y);
 					}
 				} else {
-					tmpTotem = trollTotem[getTribe(i)];
+					tmpTotem = Tribe.ofPlayerId(i).getTotem();
 					x = GetUnitX(tmpTotem);
 					y = GetUnitY(tmpTotem);
 					picker[i] = CreateUnit(Player(i), UNIT_HERO_PICKER, x + 800, y + 800, 0);
@@ -311,7 +299,7 @@ library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 				unit totem;
 				ReleaseTimer(GetExpiredTimer());
 				for (0 <= i < 12) {
-					totem = trollTotem[getTribe(i)];
+					totem = Tribe.ofPlayerId(i).getTotem();
 					x = GetUnitX(totem);
 					y = GetUnitY(totem);
 					if (GetLocalPlayer() == Player(i)) {

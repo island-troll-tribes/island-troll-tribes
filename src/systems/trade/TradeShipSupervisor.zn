@@ -1,5 +1,7 @@
 library TradeShipSupervisor requires IDUtils, TradeShipSpawnOrder, TradeShipStop {
     public {
+        constant real TRADE_SHIP_PAUSE_TIME = 3.0;
+
         TradeShipStop leftBranchE;
         TradeShipStop bottomBranchN;
         TradeShipStop topBranchS;
@@ -58,55 +60,58 @@ library TradeShipSupervisor requires IDUtils, TradeShipSpawnOrder, TradeShipStop
         }
 
         static method onInit() {
-            bottomBranchN = TradeShipStop.create(gg_rct_ship_BO);
-            rightBranchW = TradeShipStop.create(gg_rct_ship_RO);
-            leftBranchE = TradeShipStop.create(gg_rct_ship_LO);
-            topBranchS = TradeShipStop.create(gg_rct_ship_TO);
-            tlBranchNE = TradeShipStop.create(gg_rct_ship_TL_1);
-            trBranchSE = TradeShipStop.create(gg_rct_ship_TR_1);
-            brBranchSW = TradeShipStop.create(gg_rct_ship_BR_1);
-            blBranchNW = TradeShipStop.create(gg_rct_ship_BL_1);
+            bottomBranchN = TradeShipStop.create(gg_rct_ship_BO, 0.0);
+            rightBranchW = TradeShipStop.create(gg_rct_ship_RO, 0.0);
+            leftBranchE = TradeShipStop.create(gg_rct_ship_LO, 0.0);
+            topBranchS = TradeShipStop.create(gg_rct_ship_TO, 0.0);
+            tlBranchNE = TradeShipStop.create(gg_rct_ship_TL_1, TRADE_SHIP_PAUSE_TIME);
+            trBranchSE = TradeShipStop.create(gg_rct_ship_TR_1, 0.0);
+            brBranchSW = TradeShipStop.create(gg_rct_ship_BR_1, TRADE_SHIP_PAUSE_TIME);
+            blBranchNW = TradeShipStop.create(gg_rct_ship_BL_1, 0.0);
 
             leftBranchE
-                .addStop(gg_rct_ship_L_1)
-                .addStop(gg_rct_ship_L_2)
-                .addStop(gg_rct_ship_L_3);
+                .addStop(gg_rct_ship_L_1, 0.0)
+                .addStop(gg_rct_ship_L_2, 0.0)
+                .addStop(gg_rct_ship_L_3, 0.0);
             leftBranchW = leftBranchE.clone().reverse();
 
             bottomBranchN
-                .addStop(gg_rct_ship_B_1);
+                .addStop(gg_rct_ship_B_1, 0.0);
             bottomBranchS = bottomBranchN.clone().reverse();
 
             topBranchS
-                .addStop(gg_rct_ship_T_1)
-                .addStop(gg_rct_ship_T_2)
-                .addStop(gg_rct_ship_T_3);
+                .addStop(gg_rct_ship_T_1, 0.0)
+                .addStop(gg_rct_ship_T_2, 0.0)
+                .addStop(gg_rct_ship_T_3, 0.0);
             topBranchN = topBranchS.clone().reverse();
 
             rightBranchW
-                .addStop(gg_rct_ship_R_1)
-                .addStop(gg_rct_ship_R_2);
+                .addStop(gg_rct_ship_R_1, 0.0)
+                .addStop(gg_rct_ship_R_2, 0.0);
             rightBranchE = rightBranchW.clone().reverse();
 
             tlBranchNE
-                .addStop(gg_rct_ship_TL_2)
-                .addStop(gg_rct_ship_TL_3);
+                .addStop(gg_rct_ship_TL_2, 0.0)
+                .addStop(gg_rct_ship_TL_3, 0.0)
+                .addStop(gg_rct_ship_TL_4, TRADE_SHIP_PAUSE_TIME);
             tlBranchSW = tlBranchNE.clone().reverse();
 
             trBranchSE
-                .addStop(gg_rct_ship_TR_2)
-                .addStop(gg_rct_ship_TR_3);
+                .addStop(gg_rct_ship_TR_2, 0.0)
+                .addStop(gg_rct_ship_TR_3, TRADE_SHIP_PAUSE_TIME);
             trBranchNW = trBranchSE.clone().reverse();
 
             brBranchSW
-                .addStop(gg_rct_ship_BR_2);
+                .addStop(gg_rct_ship_BR_2, 0.0)
+                .addStop(gg_rct_ship_BR_3, TRADE_SHIP_PAUSE_TIME);
             brBranchNE = brBranchSW.clone().reverse();
 
             blBranchNW
-                .addStop(gg_rct_ship_BL_2)
-                .addStop(gg_rct_ship_BL_3)
-                .addStop(gg_rct_ship_BL_4)
-                .addStop(gg_rct_ship_BL_5);
+                .addStop(gg_rct_ship_BL_2, 0.0)
+                .addStop(gg_rct_ship_BL_3, TRADE_SHIP_PAUSE_TIME)
+                .addStop(gg_rct_ship_BL_4, 0.0)
+                .addStop(gg_rct_ship_BL_5, 0.0)
+                .addStop(gg_rct_ship_BL_6, 0.0);
             blBranchSE = blBranchNW.clone().reverse();
 
             leftBranchE
@@ -116,8 +121,8 @@ library TradeShipSupervisor requires IDUtils, TradeShipSpawnOrder, TradeShipStop
             
             topBranchS
                 .tail()
-                .addTradeShipStop(trBranchSE)
-                .addFork(tlBranchSW, 0.5);
+                .addTradeShipStop(tlBranchSW)
+                .addFork(trBranchSE, 0.5);
 
             rightBranchW
                 .tail()
@@ -126,8 +131,8 @@ library TradeShipSupervisor requires IDUtils, TradeShipSpawnOrder, TradeShipStop
 
             bottomBranchN
                 .tail()
-                .addTradeShipStop(blBranchNW)
-                .addFork(brBranchNE, 0.5);
+                .addTradeShipStop(brBranchNE)
+                .addFork(blBranchNW, 0.5);
 
             tlBranchNE
                 .tail()
@@ -182,17 +187,13 @@ library TradeShipSupervisor requires IDUtils, TradeShipSpawnOrder, TradeShipStop
             if (GetRandomReal(0, 1) < 0.5) {
                 nw = top;
                 nwPrev = left;
+                se = right;
+                sePrev = bottom;
             } else {
                 nw = left;
                 nwPrev = top;
-            }
-
-            if (GetRandomReal(0, 1) < 0.5) {
                 se = bottom;
                 sePrev = right;
-            } else {
-                se = right;
-                sePrev = bottom;
             }
 
             nextShip = GetTradeShipSpawnOrder();

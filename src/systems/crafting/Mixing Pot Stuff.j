@@ -85,7 +85,6 @@ function Trig_mixing_pot_stuff_Actions takes nothing returns nothing
         if(spec and rivStem>1) then
             call removeHerbs(u)
             call UnitAddItemByIdSwapped( ITEM_BEE_HIVE, u ) // Bee Hive
-            call UnitAddItemByIdSwapped( ITEM_BEE_HIVE, u )
             return
         endif
         if(rivStem>0 and rivRoot>0 and butsu==2) then

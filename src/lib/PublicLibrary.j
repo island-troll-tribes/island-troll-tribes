@@ -1119,7 +1119,6 @@ endfunction
 function LockMammoth takes nothing returns nothing
     call SetDestructableInvulnerable( mammothGate, true )
     set Mammoth = MAMMOTH
-    call SetUnitOwner( Mammoth, Player(12), true )
 endfunction
 
 function ConvertEnumCorpseToCookedMeat takes nothing returns nothing
@@ -1288,19 +1287,19 @@ endfunction
 
 // http://www.thehelper.net/threads/jass-return-item-cost.53645/
 function GetItemGoldCostById takes integer uid returns integer
-    local integer Val = GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_GOLD)
-    local integer ValB = GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_LUMBER)
+    local integer Val = GetPlayerState(Player(27),PLAYER_STATE_RESOURCE_GOLD)
+    local integer ValB = GetPlayerState(Player(27),PLAYER_STATE_RESOURCE_LUMBER)
     local integer Diff
-    local unit U = CreateUnitAtLoc(Player(15),'nshe',GetRectCenter(GetPlayableMapRect()),bj_UNIT_FACING)
-    call AdjustPlayerStateBJ(50000,Player(15),PLAYER_STATE_RESOURCE_GOLD)
-    call AdjustPlayerStateBJ(50000,Player(15),PLAYER_STATE_RESOURCE_LUMBER)
+    local unit U = CreateUnitAtLoc(Player(27),'nshe',GetRectCenter(GetPlayableMapRect()),bj_UNIT_FACING)
+    call AdjustPlayerStateBJ(50000,Player(27),PLAYER_STATE_RESOURCE_GOLD)
+    call AdjustPlayerStateBJ(50000,Player(27),PLAYER_STATE_RESOURCE_LUMBER)
     call UnitAddAbilityBJ('Asid',U)
-    set Diff = GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_GOLD)
+    set Diff = GetPlayerState(Player(27),PLAYER_STATE_RESOURCE_GOLD)
     call AddItemToStockBJ(uid,U,1,1)
     call IssueTrainOrderByIdBJ(U,uid)
-    set Diff = Diff - GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_GOLD)
-    call SetPlayerState(Player(15),PLAYER_STATE_RESOURCE_GOLD,Val)
-    call SetPlayerState(Player(15),PLAYER_STATE_RESOURCE_LUMBER,ValB)
+    set Diff = Diff - GetPlayerState(Player(27),PLAYER_STATE_RESOURCE_GOLD)
+    call SetPlayerState(Player(27),PLAYER_STATE_RESOURCE_GOLD,Val)
+    call SetPlayerState(Player(27),PLAYER_STATE_RESOURCE_LUMBER,ValB)
     call RemoveItem(FindNextItem(GetUnitLoc(U)))
     call RemoveUnit(U)
     set U = null
@@ -1308,19 +1307,19 @@ function GetItemGoldCostById takes integer uid returns integer
 endfunction
 
 function GetItemLumberCostById takes integer uid returns integer
-    local integer Val = GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_GOLD)
-    local integer ValB = GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_LUMBER)
+    local integer Val = GetPlayerState(Player(27),PLAYER_STATE_RESOURCE_GOLD)
+    local integer ValB = GetPlayerState(Player(27),PLAYER_STATE_RESOURCE_LUMBER)
     local integer Diff
-    local unit U = CreateUnitAtLoc(Player(15),'nshe',GetRectCenter(GetPlayableMapRect()),bj_UNIT_FACING)
-    call AdjustPlayerStateBJ(50000,Player(15),PLAYER_STATE_RESOURCE_GOLD)
-    call AdjustPlayerStateBJ(50000,Player(15),PLAYER_STATE_RESOURCE_LUMBER)
+    local unit U = CreateUnitAtLoc(Player(27),'nshe',GetRectCenter(GetPlayableMapRect()),bj_UNIT_FACING)
+    call AdjustPlayerStateBJ(50000,Player(27),PLAYER_STATE_RESOURCE_GOLD)
+    call AdjustPlayerStateBJ(50000,Player(27),PLAYER_STATE_RESOURCE_LUMBER)
     call UnitAddAbilityBJ('Asid',U)
-    set Diff = GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_LUMBER)
+    set Diff = GetPlayerState(Player(27),PLAYER_STATE_RESOURCE_LUMBER)
     call AddItemToStockBJ(uid,U,1,1)
     call IssueTrainOrderByIdBJ(U,uid)
-    set Diff = Diff - GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_LUMBER)
-    call SetPlayerState(Player(15),PLAYER_STATE_RESOURCE_GOLD,Val)
-    call SetPlayerState(Player(15),PLAYER_STATE_RESOURCE_LUMBER,ValB)
+    set Diff = Diff - GetPlayerState(Player(27),PLAYER_STATE_RESOURCE_LUMBER)
+    call SetPlayerState(Player(27),PLAYER_STATE_RESOURCE_GOLD,Val)
+    call SetPlayerState(Player(27),PLAYER_STATE_RESOURCE_LUMBER,ValB)
     call RemoveItem(FindNextItem(GetUnitLoc(U)))
     call RemoveUnit(U)
     set U = null

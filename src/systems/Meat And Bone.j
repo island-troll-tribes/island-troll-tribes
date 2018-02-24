@@ -71,7 +71,7 @@ local player p = GetOwningPlayer(dying)
         call RemoveUnit(dying)
         loop
             exitwhen i > R2I(( 3.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-            call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+            call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         call CreateItem( ITEM_BONE, x, y )
@@ -79,14 +79,14 @@ local player p = GetOwningPlayer(dying)
         set udg_ANIMAL_CURRENT = ( udg_ANIMAL_CURRENT - 1 )
         call getAnimalGreenLight(dying)
         if udg_booleanParameter then
-            call CreateUnit( Player(15), UNIT_FAWN, x, y, 270.00 )
+            call CreateUnit( Player(27), UNIT_FAWN, x, y, 270.00 )
         endif
     endif
     if uid == UNIT_JUNGLE_WOLF then
         call RemoveUnit( dying )
         loop
             exitwhen i > R2I(( 4.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         call CreateItem( ITEM_BONE, x, y )
@@ -94,14 +94,14 @@ local player p = GetOwningPlayer(dying)
         set udg_ANIMAL_CURRENT = ( udg_ANIMAL_CURRENT - 1 )
         call getAnimalGreenLight(dying)
         if udg_booleanParameter then
-            call CreateUnit( Player(15), UNIT_WOLF_PUP, x, y, 270.00 )
+            call CreateUnit( Player(27), UNIT_WOLF_PUP, x, y, 270.00 )
         endif
     endif
     if uid == UNIT_JUNGLE_BEAR then
         call RemoveUnit( dying )
         loop
             exitwhen i > R2I(( 7.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         call CreateItem( ITEM_BONE, x, y )
@@ -109,7 +109,7 @@ local player p = GetOwningPlayer(dying)
         set udg_ANIMAL_CURRENT = ( udg_ANIMAL_CURRENT - 1 )
         call getAnimalGreenLight(dying)
         if udg_booleanParameter then
-            call CreateUnit( Player(15), UNIT_BEAR_CUB, x, y, 270.00 )
+            call CreateUnit( Player(27), UNIT_BEAR_CUB, x, y, 270.00 )
         endif
     endif
     if uid == UNIT_MAMMOTH and GetUnitAbilityLevel(dying, 'BIil') == 0 then
@@ -117,7 +117,7 @@ local player p = GetOwningPlayer(dying)
         call RemoveUnit( dying )
         loop
             exitwhen i > R2I(( 16.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         call CreateItem( ITEM_BONE, x, y )
@@ -151,7 +151,7 @@ local player p = GetOwningPlayer(dying)
         endif
         call getAnimalGreenLight(dying)
         if udg_booleanParameter then
-            set u = CreateUnit( Player(15), UNIT_MAMMOTH_BABY, x, y, 270.00 )
+            set u = CreateUnit( Player(27), UNIT_MAMMOTH_BABY, x, y, 270.00 )
             call SetUnitExploded( u, true )
             call UnitApplyTimedLife( u, 'BTLF', 10 )
             set u = null
@@ -166,7 +166,7 @@ local player p = GetOwningPlayer(dying)
         call RemoveUnit( dying )
         loop
             exitwhen i > R2I(( 13.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         call CreateItem( ITEM_BONE, x, y )
@@ -184,7 +184,7 @@ local player p = GetOwningPlayer(dying)
         call RemoveUnit( dying )
         loop
             exitwhen i > R2I(( 20.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         call CreateItem( ITEM_BONE, x, y )
@@ -213,19 +213,19 @@ local player p = GetOwningPlayer(dying)
         call RemoveUnit( dying )
         loop
             exitwhen i > R2I(( 8.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         set pastTime = false
         call TimerStart(hydraDespawnTimer, 60, false, function HydraDespawn)
         set lesserCount = lesserCount + 1
-        set u = CreateUnit(Player(12), UNIT_LESSER_HYDRA, x, y, GetRandomReal(0, 360))
+        set u = CreateUnit(Player(24), UNIT_LESSER_HYDRA, x, y, GetRandomReal(0, 360))
         call DestroyEffect(AddSpecialEffectTarget(hydraSpawnModel, u, "head"))
         call SetUnitUserData(u, lesserCount)
         set spawn_X[lesserCount] = 0
         set spawn_Y[lesserCount] = 0
         set lesserCount = lesserCount + 1
-        set u = CreateUnit(Player(12), UNIT_LESSER_HYDRA, x, y, GetRandomReal(0, 360))
+        set u = CreateUnit(Player(24), UNIT_LESSER_HYDRA, x, y, GetRandomReal(0, 360))
         call DestroyEffect(AddSpecialEffectTarget(hydraSpawnModel, u, "head"))
         call SetUnitUserData(u, lesserCount)
         set spawn_X[lesserCount] = 0
@@ -239,7 +239,7 @@ local player p = GetOwningPlayer(dying)
         set trueCount = trueCount - 1
         loop
             exitwhen i > R2I(( 4.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         set v = GetUnitUserData(dying)
@@ -282,7 +282,7 @@ local player p = GetOwningPlayer(dying)
     if udg_booleanParameter and GetUnitAbilityLevel(dying, 'BIil') == 0 then
         loop
             exitwhen i > R2I(( 3.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         call CreateItem( ITEM_BONE, x, y )
@@ -290,7 +290,7 @@ local player p = GetOwningPlayer(dying)
     if uid == UNIT_FISH then
         loop
             exitwhen i > R2I(( 1.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         set udg_FISH_CURRENT = ( udg_FISH_CURRENT - 1 )
@@ -302,7 +302,7 @@ local player p = GetOwningPlayer(dying)
         endif
         loop
             exitwhen i > R2I(( 9.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         call CreateItem(ITEM_STICK, x, y)
@@ -314,7 +314,7 @@ local player p = GetOwningPlayer(dying)
     if uid == UNIT_GREEN_FISH then
         loop
             exitwhen i > R2I(( 3.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         set udg_FISH_CURRENT = ( udg_FISH_CURRENT - 1 )
@@ -323,7 +323,7 @@ local player p = GetOwningPlayer(dying)
     if uid == UNIT_ADULT_ELK then
         loop
             exitwhen i > R2I(( 7.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         call CreateItem( ITEM_BONE, x, y )
@@ -333,7 +333,7 @@ local player p = GetOwningPlayer(dying)
     if uid == UNIT_ELK_ADOLESCENT then
         loop
             exitwhen i > R2I(( 6.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         call CreateItem( ITEM_BONE, x, y )
@@ -343,7 +343,7 @@ local player p = GetOwningPlayer(dying)
     if uid == UNIT_ADULT_JUNGLE_BEAR then
         loop
             exitwhen i > R2I(( 9.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         call CreateItem( ITEM_BONE, x, y )
@@ -353,7 +353,7 @@ local player p = GetOwningPlayer(dying)
     if uid == UNIT_ADULT_JUNGLE_WOLF then
         loop
             exitwhen i > R2I(( 8.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         call CreateItem( ITEM_BONE, x, y )
@@ -363,7 +363,7 @@ local player p = GetOwningPlayer(dying)
     if uid == UNIT_BEAR_CUB then
         loop
             exitwhen i > R2I(( 3.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         call CreateItem( ITEM_BONE, x, y )
@@ -372,7 +372,7 @@ local player p = GetOwningPlayer(dying)
     if uid == UNIT_WOLF_PUP then
         loop
             exitwhen i > R2I(( 2.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         call CreateItem( ITEM_BONE, x, y )
@@ -381,7 +381,7 @@ local player p = GetOwningPlayer(dying)
     if uid == UNIT_FAWN then
         loop
             exitwhen i > R2I(( 1.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         call CreateItem( ITEM_BONE, x, y )
@@ -390,7 +390,7 @@ local player p = GetOwningPlayer(dying)
     if uid == UNIT_SNAKE then
         loop
             exitwhen i > R2I(( 1.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         call PolledWait( 0.50 )
@@ -399,7 +399,7 @@ local player p = GetOwningPlayer(dying)
     if uid == UNIT_PANTHER or uid == UNIT_ELDER_PANTHER then
         loop
             exitwhen i > R2I(( 8.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         call CreateItem( ITEM_BONE, x, y )
@@ -409,7 +409,7 @@ local player p = GetOwningPlayer(dying)
     if uid == UNIT_ALIGATOR_MAN then
         loop
             exitwhen i > R2I(( 10.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         call CreateItem( ITEM_BONE, x, y )
@@ -433,7 +433,7 @@ local player p = GetOwningPlayer(dying)
     if uid == UNIT_ONE then
         loop
             exitwhen i > R2I(( 3.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         call CreateItem( ITEM_BONE, x, y )
@@ -455,7 +455,7 @@ local player p = GetOwningPlayer(dying)
     if udg_booleanParameter then
         loop
             exitwhen i > R2I(( 1.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(12), UNIT_MEAT, x, y, GetRandomReal(0,360) )
+             call CreateCorpse(Player(24), UNIT_MEAT, x, y, GetRandomReal(0,360) )
             set i = i + 1
         endloop
         call CreateItem( ITEM_BONE, x, y )

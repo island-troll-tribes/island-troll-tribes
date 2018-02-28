@@ -337,7 +337,7 @@ local item added
 			set  e = GetItemCharges(t[1])
             call RemoveItem(t[0])
             set added = UnitAddItemByIdSwapped(ITEM_LOADED_DARK_THISTLES, GetTriggerUnit())
-			if e >= 12 then
+			if e > 12 then
                 call SetItemCharges(added, 12)
                 call SetItemCharges(t[1] , e - 12)
             else

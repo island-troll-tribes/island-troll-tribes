@@ -1084,7 +1084,7 @@ function SetRealNames takes nothing returns nothing
     local integer INTEGER = 0
     call ReleaseTimer( GetExpiredTimer() )
     loop
-        exitwhen INTEGER > 11
+        exitwhen INTEGER >= bj_MAX_PLAYERS
         if GetPlayerSlotState(Player(INTEGER)) == PLAYER_SLOT_STATE_PLAYING then
             set udg_RealNames[INTEGER] = GetPlayerName(Player(INTEGER))
         endif
@@ -1103,7 +1103,7 @@ endfunction
 function GetPlayerByRealName takes string name returns player
     local integer i=0
     loop
-        exitwhen i>11
+        exitwhen i>bj_MAX_PLAYERS
         if (StringCase(udg_RealNames[i],false)==StringCase(name,false)) then
             return Player(i)
         endif

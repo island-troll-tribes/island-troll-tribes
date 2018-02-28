@@ -119,7 +119,7 @@ elseif s=="-test mode" and modeAllow[24] then
     set modeAllow[24] = false
     set i = 4
     loop
-        exitwhen i > 11
+        exitwhen i >= bj_MAX_PLAYERS
         if GetPlayerSlotState(Player(i)) == PLAYER_SLOT_STATE_PLAYING and GetPlayerController(Player(i)) == MAP_CONTROL_USER then
             call DisplayTimedTextToPlayer(p,0,0,7,"You can not enable this mode. It only works with no players in slots 5-12" )
             set bool = true

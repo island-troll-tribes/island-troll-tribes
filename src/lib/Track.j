@@ -198,7 +198,7 @@ endglobals
         private static method createTrack takes string modelPath, real x, real y, real z, real facing, player j returns thistype
             local destructable dest = null
             local thistype     this = ir
-            local integer      i    = 11
+            local integer      i    = bj_MAX_PLAYERS - 1
             local trackable tr 
             local player p
             local string s

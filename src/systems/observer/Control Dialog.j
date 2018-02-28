@@ -52,7 +52,7 @@ elseif GetClickedButton() == O_DBUTTON[4] then
 elseif GetClickedButton() == O_DBUTTON[5] then
     // "-rn"
     loop
-        exitwhen i > 11
+        exitwhen i >= bj_MAX_PLAYERS
         if udg_RealNames[i] != "" then
             call DisplayTimedTextToPlayer(p,0,0,7,COLOR_CODE[i]+I2S(i+1)+"|r "+udg_RealNames[i]+" "+COLOR_CODE[currentcolor[i]]+"[c]|r")
         endif

@@ -9,7 +9,7 @@ library StatsSubmitting
         local multiboard mb
         call PolledWait(.5)
         loop
-            exitwhen i>11
+            exitwhen i>11 // TODO bj_MAX_PLAYERS
                 if ((GetPlayerController(Player(i)) == MAP_CONTROL_USER) and (GetPlayerSlotState(Player(i)) == PLAYER_SLOT_STATE_PLAYING or GetPlayerSlotState(Player(i)) == PLAYER_SLOT_STATE_LEFT)) then
                     set players[k]=Player(i)
                     set k=k+1

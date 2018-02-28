@@ -14,7 +14,7 @@ local integer numTribes = GameConfig.getInstance().getNumTribes()
 loop
     exitwhen BOARD > numTribes
     loop
-        exitwhen PID > 11
+        exitwhen PID >= bj_MAX_PLAYERS
         if IsPlayerInForce(Player(PID),TEAM[BOARD]) then
             if GetPlayerSlotState(Player(PID))==PLAYER_SLOT_STATE_PLAYING then
                 call MultiboardSetItemValueBJ(BOARD_TEAM[BOARD], 1, PLAYER_INT_BOARD[PID], HIGHLIGHT_COLOR+GetPlayerName(Player(PID))+"|r" )

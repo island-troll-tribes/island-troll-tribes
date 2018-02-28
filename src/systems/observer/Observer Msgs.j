@@ -13,7 +13,7 @@ function RelayObserverEvents__Show takes nothing returns nothing
     local unit u = GetTriggerUnit()
     if e == EVENT_PLAYER_HERO_SKILL then
         call DisplayTimedTextToNoticeObservers(ob_TextTime, udg_RealNames[id]+"["+GetUnitName(u)+"] has learned: "+GetObjectName(GetLearnedSkill())+" - Level "+I2S(GetLearnedSkillLevel()))
-    elseif e == EVENT_PLAYER_HERO_LEVEL and id < 12 then
+    elseif e == EVENT_PLAYER_HERO_LEVEL and id < bj_MAX_PLAYERS then
         call DisplayTimedTextToNoticeObservers(ob_TextTime, udg_RealNames[id]+"["+GetUnitName(u)+"] has leveled to: Level "+I2S(GetUnitLevel(u)))
     elseif e == EVENT_PLAYER_UNIT_PAWN_ITEM then
         // u => seller (troll)

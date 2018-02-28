@@ -5,7 +5,7 @@
 function Trig_set_mammoth_Actions takes nothing returns nothing
     call SetDestructableInvulnerableBJ( mammothGate, true )
     set Mammoth = MAMMOTH
-    call SetUnitOwner( Mammoth, Player(12), true )
+    call SetUnitOwner( Mammoth, Player(PLAYER_NEUTRAL_AGGRESSIVE), true )
 endfunction
 
 //===========================================================================

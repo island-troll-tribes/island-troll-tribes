@@ -11,7 +11,7 @@ endfunction
 
 
 function checkChainReveal takes nothing returns boolean
-    return ((GetFilterUnit() != udg_parameterUnit) and (IsUnitEnemy(GetFilterUnit(), GetOwningPlayer(udg_parameterUnit2))) and GetConvertedPlayerId(GetFilterPlayer()) <= 11)
+    return ((GetFilterUnit() != udg_parameterUnit) and (IsUnitEnemy(GetFilterUnit(), GetOwningPlayer(udg_parameterUnit2))) and GetConvertedPlayerId(GetFilterPlayer()) < bj_MAX_PLAYERS)
 endfunction
 
 function Trig_Chain_Reveal_Func001A takes nothing returns nothing

@@ -54,7 +54,7 @@ library HCL initializer init
         //Extract hcl_command string from player handicaps
         set i = 0
         loop
-            exitwhen i >= 12
+            exitwhen i >= bj_MAX_PLAYERS
             set h = R2I(100*GetPlayerHandicap(Player(i)) + 0.5)
             if not blocked[h] then
                 set h = map[h]

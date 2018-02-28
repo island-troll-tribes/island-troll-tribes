@@ -14,7 +14,7 @@ library antiSleepTk initializer init requires Hints
 	//
 	globals
 		private constant integer SLEEP = 'A007'
-		private boolean array sleepOn [12]
+		private boolean array sleepOn [bj_MAX_PLAYERS]
 	endglobals
 	
 	//	ACTION:
@@ -67,7 +67,7 @@ library antiSleepTk initializer init requires Hints
 		local integer i=0
 		
 		loop
-			exitwhen i>11
+			exitwhen i>=bj_MAX_PLAYERS
 				if GetPlayerSlotState( Player(i) ) == PLAYER_SLOT_STATE_PLAYING then
 					call TriggerRegisterPlayerChatEvent( sleepSwitch, Player(i), "-sleep ", false )
 					call TriggerRegisterPlayerUnitEvent( t, Player(i), EVENT_PLAYER_UNIT_SPELL_CAST, null )

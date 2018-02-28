@@ -59,7 +59,7 @@ loop
     exitwhen BOARD > numTribes
     call MultiboardSetTitleText(BOARD_TEAM[BOARD], "Team Stats - "+gameTimeStr)
     loop
-        exitwhen PID > 11
+        exitwhen PID >= bj_MAX_PLAYERS
         if IsPlayerInForce(Player(PID),TEAM[BOARD]) then
             call MultiboardSetItemValueBJ( BOARD_TEAM[BOARD], 2, PLAYER_INT_BOARD[PID], HEALTH_COLOR+I2S(R2I(GetUnitState(udg_PUnits[PID], UNIT_STATE_LIFE)))+"|r")
             call MultiboardSetItemValueBJ( BOARD_TEAM[BOARD], 3, PLAYER_INT_BOARD[PID], ENERGY_COLOR+I2S(R2I(GetUnitState(udg_PUnits[PID], UNIT_STATE_MANA)))+"|r")

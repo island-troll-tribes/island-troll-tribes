@@ -122,7 +122,7 @@ library Commands initializer onInit requires PublicLibrary
             endif
         elseif s=="-rn" then
             loop
-                exitwhen i>11
+                exitwhen i>=bj_MAX_PLAYERS
                 if udg_RealNames[i] != "" then
                     call DisplayTimedTextToPlayer(p,0,0,7,COLOR_CODE[i]+I2S(i+1)+"|r "+udg_RealNames[i]+" "+COLOR_CODE[currentcolor[i]]+"[c]|r")
                 endif
@@ -192,7 +192,7 @@ library Commands initializer onInit requires PublicLibrary
         local integer i = 0
         set gg_trg_Commands = CreateTrigger(  )
         loop
-            exitwhen i > 11
+            exitwhen i >= bj_MAX_PLAYERS
             call TriggerRegisterPlayerChatEvent( gg_trg_Commands, Player(i), "-", false )
             set adv_control[i] = false
             set shr_control[i] = false

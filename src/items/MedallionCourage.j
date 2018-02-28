@@ -44,22 +44,16 @@ endfunction
 //===========================================================================
 private function onInit takes nothing returns nothing
     local trigger T = CreateTrigger()
+    local integer i = 0
     call TriggerRegisterAnyUnitEventBJ(T, EVENT_PLAYER_UNIT_SPELL_CAST)
     call TriggerAddCondition( T, Condition(function Trig_Medallion_Courage_Conditions ) )
     call TriggerAddAction( T, function Trig_Medallion_Courage_Actions )
 
-    call SetPlayerAbilityAvailableBJ(false, ABILITY_MEU_DUMMY, Player(0))
-    call SetPlayerAbilityAvailableBJ(false, ABILITY_MEU_DUMMY, Player(1))
-    call SetPlayerAbilityAvailableBJ(false, ABILITY_MEU_DUMMY, Player(2))
-    call SetPlayerAbilityAvailableBJ(false, ABILITY_MEU_DUMMY, Player(3))
-    call SetPlayerAbilityAvailableBJ(false, ABILITY_MEU_DUMMY, Player(4))
-    call SetPlayerAbilityAvailableBJ(false, ABILITY_MEU_DUMMY, Player(5))
-    call SetPlayerAbilityAvailableBJ(false, ABILITY_MEU_DUMMY, Player(6))
-    call SetPlayerAbilityAvailableBJ(false, ABILITY_MEU_DUMMY, Player(7))
-    call SetPlayerAbilityAvailableBJ(false, ABILITY_MEU_DUMMY, Player(8))
-    call SetPlayerAbilityAvailableBJ(false, ABILITY_MEU_DUMMY, Player(9))
-    call SetPlayerAbilityAvailableBJ(false, ABILITY_MEU_DUMMY, Player(10))
-    call SetPlayerAbilityAvailableBJ(false, ABILITY_MEU_DUMMY, Player(11))
+    loop
+      exitwhen i >= bj_MAX_PLAYERS
+      call SetPlayerAbilityAvailableBJ(false, ABILITY_MEU_DUMMY, Player(0))
+      set i = i + 1
+    endloop
 endfunction
 
 endlibrary

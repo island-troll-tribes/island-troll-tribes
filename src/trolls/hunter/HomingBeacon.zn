@@ -1,5 +1,5 @@
 library HomingBeacon requires PublicLibrary {
-	integer tracking[12];
+	integer tracking[bj_MAX_PLAYERS];
 
 	function Ping() -> boolean {
 		integer owner;
@@ -30,7 +30,7 @@ library HomingBeacon requires PublicLibrary {
 			owner = GetPlayerId(GetOwningPlayer(GetSpellAbilityUnit()));
 			target = GetPlayerId(GetOwningPlayer(GetSpellTargetUnit()));
 
-			if (0 <= owner && owner < 12) {
+			if (0 <= owner && owner < bj_MAX_PLAYERS) {
 				tracking[owner] = target;
 			}
 	    }
@@ -41,7 +41,7 @@ library HomingBeacon requires PublicLibrary {
 	public function ClearHomingBeacon(integer id) {
 		integer i = 0;
 
-		for (0 <= i <= 12) {
+		for (0 <= i <= bj_MAX_PLAYERS) {
 			if (tracking[i] == id) {
 				tracking[i] = -1;
 			}
@@ -51,7 +51,7 @@ library HomingBeacon requires PublicLibrary {
 	function onInit() {
 		integer i = 0;
 
-		for (0 <= i <= 12) {
+		for (0 <= i <= bj_MAX_PLAYERS) {
 			tracking[i] = -1;
 		}
 

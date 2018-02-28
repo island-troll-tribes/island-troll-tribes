@@ -1,9 +1,9 @@
 library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 
-	public force TEAM[13];
-	unit trollTotem[12];
-	unit picker[12];
-	rect spawns[12];
+	public force TEAM[];
+	unit trollTotem[];
+	unit picker[];
+	rect spawns[];
 	timerdialog selectionDialog;
 
 	function getTribe(integer playerId) -> integer {
@@ -88,7 +88,7 @@ library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 		}
 	}
 
-	public Tribe tribes[12];
+	public Tribe tribes[];
 
 	function initializePlayerTroll(unit u) {
 		player p = GetOwningPlayer(u);
@@ -170,11 +170,11 @@ library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 		unit u;
 		rect spawn;
 
-		for (0 <= i < 12) {
+		for (0 <= i < bj_MAX_PLAYERS) {
 			Tribe.find(i).removeTotem();
 		}
 
-		for (0 <= i < 12) {
+		for (0 <= i < bj_MAX_PLAYERS) {
 			RemoveUnit(picker[i]);
 
 			if (GetPlayerSlotState(Player(i)) == PLAYER_SLOT_STATE_PLAYING && !isobserver[i]) {
@@ -241,7 +241,7 @@ library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 		spawns[23] = gg_rct_revive_24;
 
 		if (GameConfig.getInstance().isRandomSpawns()) {
-			for (0 <= i < 12) {
+			for (0 <= i < bj_MAX_PLAYERS) {
 				if (GetPlayerController(Player(i)) == MAP_CONTROL_USER &&
 					GetPlayerSlotState(Player(i)) == PLAYER_SLOT_STATE_PLAYING) {
 					maxOccupiedSlot = i;
@@ -258,12 +258,12 @@ library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 			}
 		}
 
-		for (0 <= i < 12) {
+		for (0 <= i < bj_MAX_PLAYERS) {
 			tribes[i] = Tribe.create(i, spawns[i]);
 		}
 
-		for (0 <= i < 12) {
-			for (0 <= j < 12) {
+		for (0 <= i < bj_MAX_PLAYERS) {
+			for (0 <= j < bj_MAX_PLAYERS) {
 				if (i != j) {
 					if (getTribe(i) == getTribe(j)) {
 						SetPlayerAllianceStateBJ(Player(i), Player(j), bj_ALLIANCE_ALLIED_VISION);
@@ -274,7 +274,7 @@ library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 			}
 		}
 
-		for (0 <= i < 12) {
+		for (0 <= i < bj_MAX_PLAYERS) {
 			if (GetPlayerSlotState(Player(i)) == PLAYER_SLOT_STATE_PLAYING) {
 				if (isobserver[i]) {
 					tmpTotem = Tribe.ofPlayerId(0).getTotem();
@@ -310,7 +310,7 @@ library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 				real x, y;
 				unit totem;
 				ReleaseTimer(GetExpiredTimer());
-				for (0 <= i < 12) {
+				for (0 <= i < bj_MAX_PLAYERS) {
 					totem = Tribe.ofPlayerId(i).getTotem();
 					x = GetUnitX(totem);
 					y = GetUnitY(totem);

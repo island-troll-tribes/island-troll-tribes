@@ -208,7 +208,7 @@ library MMD initializer init
         local integer array picks
         local boolean array pick_flags
         loop
-            exitwhen i >= 12
+            exitwhen i >= 12 // TODO bj_MAX_PLAYERS
             if GetPlayerController(Player(i)) == MAP_CONTROL_USER and GetPlayerSlotState(Player(i)) == PLAYER_SLOT_STATE_PLAYING then
                 if n < num_senders then //initializing picks
                     set picks[n] = i
@@ -321,7 +321,7 @@ library MMD initializer init
     ///Updates the value of a defined variable for a given player
     private function update_value takes string name, player p, string op, string value, integer val_type returns nothing
         local integer id = GetPlayerId(p)
-//        if p == null or id < 0 or id >= 12 then
+//        if p == null or id < 0 or id >= 12 then  // TODO bj_MAX_PLAYERS
 //            call BJDebugMsg("MMD Set Error: Invalid player. Must be P1 to P12. Line 345 in W3MMD")
         if val_type != GetStoredInteger(gc, "types", name) then
             call BJDebugMsg("MMD Set Error: Updated value of undefined variable or used value of incorrect type.")
@@ -363,7 +363,7 @@ library MMD initializer init
     function FlagPlayer takes player p, integer flag_type returns nothing
         local string flag = flags[flag_type]
         local integer id = GetPlayerId(p)
-        if p == null or id < 0 or id >= 12 then
+        if p == null or id < 0 or id >= 12 then // TODO bj_MAX_PLAYERS
             call BJDebugMsg("MMD Flag Error: Invalid player. Must be P1 to P12.")
         elseif StringLength(flag) == 0 then
             call BJDebugMsg("MMD Flag Error: Unrecognized flag type.")
@@ -458,7 +458,7 @@ library MMD initializer init
 
         set i = 0
         loop
-            exitwhen i >= 12
+            exitwhen i >= 12 // TODO bj_MAX_PLAYERS
             if GetPlayerController(Player(i)) == MAP_CONTROL_USER and GetPlayerSlotState(Player(i)) == PLAYER_SLOT_STATE_PLAYING then
                 call emit("init pid " + I2S(i) + " " + pack(GetPlayerName(Player(i))))
             endif

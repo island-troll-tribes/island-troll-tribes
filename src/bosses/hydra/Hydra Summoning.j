@@ -27,7 +27,7 @@ local integer e = 0
 local integer array i
 local item array t
 local integer s
-if not hydraStarted then
+if not hydraStarted and Mammoth_Dead then
     loop
         set t[e] = UnitItemInSlot(gg_unit_n019_0145, e)
         exitwhen t[e] == null or e > 5

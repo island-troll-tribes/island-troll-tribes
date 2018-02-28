@@ -15,7 +15,7 @@ endglobals
 function getCast takes player p, real x, real y returns unit
 local unit u = FirstOfGroup(dummyCast)
 if u == null then
-    set u = CreateUnit(Player(15), UNIT_MASTER_CASTER, spawn_x, spawn_y, 0)
+    set u = CreateUnit(Player(PLAYER_NEUTRAL_PASSIVE), UNIT_MASTER_CASTER, spawn_x, spawn_y, 0)
     call SetUnitInvulnerable(u, true)
     call SetUnitPathing(u, false)
     // debug call DisplayText("DUMMY: Create")

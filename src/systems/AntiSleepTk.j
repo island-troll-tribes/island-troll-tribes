@@ -14,7 +14,7 @@ library antiSleepTk initializer init requires Hints
 	//
 	globals
 		private constant integer SLEEP = 'A007'
-		private boolean array sleepOn [bj_MAX_PLAYERS]
+		private boolean array sleepOn
 	endglobals
 	
 	//	ACTION:

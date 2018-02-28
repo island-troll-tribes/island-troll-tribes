@@ -51,7 +51,7 @@ private function onInit takes nothing returns nothing
 
     loop
       exitwhen i >= PLAYER_NEUTRAL_AGGRESSIVE
-      call SetPlayerAbilityAvailableBJ(false, ABILITY_MEU_DUMMY, Player(0))
+      call SetPlayerAbilityAvailableBJ(false, ABILITY_MEU_DUMMY, Player(i))
       set i = i + 1
     endloop
 endfunction

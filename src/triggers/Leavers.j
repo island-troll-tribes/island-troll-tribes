@@ -76,7 +76,7 @@ library Leavers initializer onInit requires PublicLibrary, Commands, MapSetup, G
         local integer i = 0
         set gg_trg_leavers = CreateTrigger(  )
         loop
-            exitwhen i >= bj_MAX_PLAYERS
+            exitwhen i >= PLAYER_NEUTRAL_AGGRESSIVE
             call TriggerRegisterPlayerEvent(gg_trg_leavers, Player(i), EVENT_PLAYER_LEAVE)
             set i = i + 1
         endloop

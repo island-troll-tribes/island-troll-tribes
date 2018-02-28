@@ -105,7 +105,7 @@ function GenerateMap takes nothing returns nothing
     endif
     
     loop
-        exitwhen INTEGER >= bj_MAX_PLAYERS
+        exitwhen INTEGER >= PLAYER_NEUTRAL_AGGRESSIVE
         set udg_orders[INTEGER] = "stay"
         set INTEGER = INTEGER + 1
     endloop
@@ -192,10 +192,10 @@ function Startup_Timer takes nothing returns nothing
 
     set i = 0
     loop
-        exitwhen i >= bj_MAX_PLAYERS
+        exitwhen i >= PLAYER_NEUTRAL_AGGRESSIVE
         if GetPlayerController(Player(i)) == MAP_CONTROL_USER and GetPlayerSlotState(Player(i)) == PLAYER_SLOT_STATE_PLAYING then
                 set modePlayer = Player(i)
-                set i = bj_MAX_PLAYERS
+                set i = PLAYER_NEUTRAL_AGGRESSIVE
         endif
         set i = i + 1
     endloop
@@ -211,7 +211,7 @@ function Startup_Timer takes nothing returns nothing
         if HOSTING_CLAN == "TwGB" then
             set i = 0
             loop
-                exitwhen i >= bj_MAX_PLAYERS
+                exitwhen i >= PLAYER_NEUTRAL_AGGRESSIVE
                 if modePlayer != Player(i) and StringCase(GetPlayerName(Player(i)), false) == "liquid." then
                     call DisplayTText(COLOR_CODE[i]+GetPlayerName(Player(i))+"|r"+GENERAL_COLOR+" can also choose game modes.|r", 30)
                     call GameMode.registerAll(Player(i))
@@ -276,7 +276,7 @@ private function onInit takes nothing returns nothing
     call TimerStart(t,0,false,function Startup_Timer)
     
     loop
-        exitwhen i >= bj_MAX_PLAYERS
+        exitwhen i >= PLAYER_NEUTRAL_AGGRESSIVE
         if IsPlayerObserver(Player(i)) then
             set isobserver[i] = true
             set obs_present = true

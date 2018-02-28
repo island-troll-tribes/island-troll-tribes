@@ -11,7 +11,7 @@ local integer numTribes = GameConfig.getInstance().getNumTribes()
 loop
     exitwhen BOARD_INT2 > numTribes
     loop
-        exitwhen PLAYER_INT >= bj_MAX_PLAYERS 
+        exitwhen PLAYER_INT >= PLAYER_NEUTRAL_AGGRESSIVE 
         if IsPlayerInForce(Player(PLAYER_INT),TEAM[BOARD_INT2]) then
 //           call DisplayTimedTextToPlayer(GetLocalPlayer(),0,0,40,"Player;"+I2S(PLAYER_INT))
             if GetLocalPlayer() == Player(PLAYER_INT) then
@@ -27,7 +27,7 @@ endloop
 //show observers
 set PLAYER_INT = 0
 loop
-    exitwhen PLAYER_INT>=bj_MAX_PLAYERS
+    exitwhen PLAYER_INT>=PLAYER_NEUTRAL_AGGRESSIVE
         if IsPlayerObserver(GetLocalPlayer()) then
             call MultiboardDisplay(OBSERVER_BOARD, true)
         endif

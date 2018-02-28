@@ -56,7 +56,7 @@ function InitTrig_tele_beacon_select takes nothing returns nothing
 local integer i = 0
 set gg_trg_tele_beacon_select = CreateTrigger(  )
 loop
-    exitwhen i >= bj_MAX_PLAYERS
+    exitwhen i >= PLAYER_NEUTRAL_AGGRESSIVE
     call TriggerRegisterPlayerSelectionEventBJ( gg_trg_tele_beacon_select, Player(i), true )
     set i = i + 1
 endloop

@@ -40,10 +40,10 @@ globals
 
     // Game constants
     constant integer   bj_MAX_INVENTORY                 =   6
-    constant integer   bj_MAX_PLAYERS                   =  12
-    constant integer   bj_PLAYER_NEUTRAL_VICTIM         =  13
-    constant integer   bj_PLAYER_NEUTRAL_EXTRA          =  14
-    constant integer   bj_MAX_PLAYER_SLOTS              =  16
+    constant integer   bj_MAX_PLAYERS                   =  24
+    constant integer   bj_PLAYER_NEUTRAL_VICTIM         =  25
+    constant integer   bj_PLAYER_NEUTRAL_EXTRA          =  26
+    constant integer   bj_MAX_PLAYER_SLOTS              =  28
     constant integer   bj_MAX_SKELETONS                 =  25
     constant integer   bj_MAX_STOCK_ITEM_SLOTS          =  11
     constant integer   bj_MAX_STOCK_UNIT_SLOTS          =  11

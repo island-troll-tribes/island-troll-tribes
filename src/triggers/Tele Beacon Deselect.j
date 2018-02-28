@@ -29,7 +29,7 @@ function InitTrig_tele_beacon_deselect takes nothing returns nothing
 local integer i = 0
 set gg_trg_tele_beacon_deselect = CreateTrigger(  )
 loop
-    exitwhen i >= bj_MAX_PLAYERS
+    exitwhen i >= PLAYER_NEUTRAL_AGGRESSIVE
     call TriggerRegisterPlayerUnitEvent(gg_trg_tele_beacon_deselect, Player(i), EVENT_PLAYER_UNIT_DESELECTED, null)
     set i = i + 1
 endloop

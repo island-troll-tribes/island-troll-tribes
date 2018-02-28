@@ -66,7 +66,7 @@ local integer numTribes = GameConfig.getInstance().getNumTribes()
         call MultiboardSetTitleText(BOARD_TEAM[INTEGER], "Team Stats")
     
         loop
-            exitwhen PLAYER_INT >= bj_MAX_PLAYERS
+            exitwhen PLAYER_INT >= PLAYER_NEUTRAL_AGGRESSIVE
             // LOOP PER PLAYER
             
             if IsPlayerInForce(Player(PLAYER_INT),TEAM[INTEGER]) then

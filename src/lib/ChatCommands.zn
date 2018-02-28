@@ -12,7 +12,7 @@ library ChatCommands requires ArgsUtils {
     static method registerArgFunc(player forWho, string command, ArgFunc fn) {
       integer i;
       if (forWho == null) {
-        for (0 <= i < bj_MAX_PLAYERS) {
+        for (0 <= i < PLAYER_NEUTRAL_AGGRESSIVE) {
           cmdFns[i][StringHash(command)] = fn;
         } 
       } else
@@ -22,7 +22,7 @@ library ChatCommands requires ArgsUtils {
     static method deregisterArgFunc(player forWho, string command) {
       integer i;
       if (forWho == null) {
-        for (0 <= i < bj_MAX_PLAYERS) {
+        for (0 <= i < PLAYER_NEUTRAL_AGGRESSIVE) {
           cmdFns[i].remove(StringHash(command));
         } 
       } else
@@ -47,10 +47,10 @@ library ChatCommands requires ArgsUtils {
     static method onInit() {
       integer i = 0;
 
-      cmdFns = TableArray[bj_MAX_PLAYERS];
+      cmdFns = TableArray[PLAYER_NEUTRAL_AGGRESSIVE];
       chatEvent = CreateTrigger();
     
-      for (0 <= i < bj_MAX_PLAYERS) {
+      for (0 <= i < PLAYER_NEUTRAL_AGGRESSIVE) {
         if (GetPlayerSlotState(Player(i)) == PLAYER_SLOT_STATE_PLAYING) {
           TriggerRegisterPlayerChatEvent(chatEvent, Player(i), "-", false);
         }

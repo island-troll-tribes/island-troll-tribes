@@ -164,8 +164,8 @@ globals
     constant boolean            TRUE                            = true
     constant integer            JASS_MAX_ARRAY_SIZE             = 8192
 
-    constant integer            PLAYER_NEUTRAL_PASSIVE          = 15
-    constant integer            PLAYER_NEUTRAL_AGGRESSIVE       = 12
+    constant integer            PLAYER_NEUTRAL_PASSIVE          = 27
+    constant integer            PLAYER_NEUTRAL_AGGRESSIVE       = 24
 
     constant playercolor        PLAYER_COLOR_RED                = ConvertPlayerColor(0)
     constant playercolor        PLAYER_COLOR_BLUE               = ConvertPlayerColor(1)

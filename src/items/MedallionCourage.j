@@ -50,7 +50,7 @@ private function onInit takes nothing returns nothing
     call TriggerAddAction( T, function Trig_Medallion_Courage_Actions )
 
     loop
-      exitwhen i >= bj_MAX_PLAYERS
+      exitwhen i >= PLAYER_NEUTRAL_AGGRESSIVE
       call SetPlayerAbilityAvailableBJ(false, ABILITY_MEU_DUMMY, Player(0))
       set i = i + 1
     endloop

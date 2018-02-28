@@ -26,7 +26,7 @@ function InitTrig_pet_selected takes nothing returns nothing
 local integer i = 0
 set gg_trg_pet_selected = CreateTrigger(  )
 loop
-    exitwhen i >= bj_MAX_PLAYERS
+    exitwhen i >= PLAYER_NEUTRAL_AGGRESSIVE
     call TriggerRegisterPlayerSelectionEventBJ( gg_trg_pet_selected, Player(i), true )
     set i = i + 1
 endloop

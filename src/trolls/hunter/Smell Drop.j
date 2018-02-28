@@ -51,7 +51,7 @@ function InitTrig_Smell_Drop takes nothing returns nothing
     local integer i = 0
     set gg_trg_Smell_Drop = CreateTrigger(  )
     loop
-        exitwhen i >= bj_MAX_PLAYERS
+        exitwhen i >= PLAYER_NEUTRAL_AGGRESSIVE
         call TriggerRegisterPlayerUnitEvent(gg_trg_Smell_Drop, Player(i), EVENT_PLAYER_UNIT_PICKUP_ITEM, null)
         call TriggerRegisterPlayerUnitEvent(gg_trg_Smell_Drop, Player(i), EVENT_PLAYER_UNIT_DROP_ITEM, null)
         call TriggerAddCondition(gg_trg_Smell_Drop, function Smell_Condition)

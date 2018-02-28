@@ -517,15 +517,15 @@ function makeAFish takes rect loc returns nothing
                 set i = GetRandomInt(0,1000)
                 if i == 0 then
                     set fishytrigger = true
-                    call CreateUnit(Player(12), UNIT_MAGENTA_FISH, x, y, 270 )
+                    call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MAGENTA_FISH, x, y, 270 )
                 endif
             endif
         elseif t <= 4 then
-            set u = CreateUnit(Player(12), UNIT_HAWK, x, y, 270 )
+            set u = CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_HAWK, x, y, 270 )
         elseif t <= 6 then
-            set u = CreateUnit(Player(12), UNIT_GREEN_FISH, x, y, 270 )
+            set u = CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_GREEN_FISH, x, y, 270 )
         else
-            set u = CreateUnit(Player(12), UNIT_FISH, x, y, 270 )
+            set u = CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_FISH, x, y, 270 )
         endif
     endif
     set u = null
@@ -765,15 +765,15 @@ function makeAnimal takes rect loc returns nothing
             exitwhen IsTerrainLand(x, y) and IsTerrainWalkable(x, y)
         endloop
         if t<=udg_PANTHER_RATE then
-            call CreateUnit(Player(12), UNIT_PANTHER, x, y, 270 )
+            call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_PANTHER, x, y, 270 )
         elseif t<=udg_BEAR_RATE+udg_PANTHER_RATE then
-            call CreateUnit(Player(12), UNIT_SNAKE, x, y, 270 )
+            call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_SNAKE, x, y, 270 )
         elseif t<=udg_BEAR_RATE+udg_PANTHER_RATE+udg_SNAKE_RATE then
-            call CreateUnit(Player(12), UNIT_JUNGLE_BEAR, x, y, 270 )
+            call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_JUNGLE_BEAR, x, y, 270 )
         elseif t<=udg_BEAR_RATE+udg_WOLF_RATE+udg_PANTHER_RATE+udg_SNAKE_RATE then
-            call CreateUnit(Player(12), UNIT_JUNGLE_WOLF, x, y, 270 )
+            call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_JUNGLE_WOLF, x, y, 270 )
         else
-            call CreateUnit(Player(12), UNIT_ELK, x, y, 270 )
+            call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_ELK, x, y, 270 )
         endif
         set udg_ANIMAL_CURRENT = udg_ANIMAL_CURRENT + 1
     endif
@@ -1084,7 +1084,7 @@ function SetRealNames takes nothing returns nothing
     local integer INTEGER = 0
     call ReleaseTimer( GetExpiredTimer() )
     loop
-        exitwhen INTEGER >= bj_MAX_PLAYERS
+        exitwhen INTEGER >= PLAYER_NEUTRAL_AGGRESSIVE
         if GetPlayerSlotState(Player(INTEGER)) == PLAYER_SLOT_STATE_PLAYING then
             set udg_RealNames[INTEGER] = GetPlayerName(Player(INTEGER))
         endif
@@ -1103,13 +1103,13 @@ endfunction
 function GetPlayerByRealName takes string name returns player
     local integer i=0
     loop
-        exitwhen i>bj_MAX_PLAYERS
+        exitwhen i>PLAYER_NEUTRAL_AGGRESSIVE
         if (StringCase(udg_RealNames[i],false)==StringCase(name,false)) then
             return Player(i)
         endif
         set i=i+1
     endloop
-    return Player(12)
+    return Player(24)
 endfunction
 
 function GetPlayerIdByRealName takes string name returns integer
@@ -1244,7 +1244,7 @@ endfunction
 function ControlCameraZoom takes nothing returns nothing
     local integer i = 0
     loop
-        exitwhen i == 12
+        exitwhen i == PLAYER_NEUTRAL_AGGRESSIVE
         call ZoomSetCamera( i )
         set i = i + 1
     endloop

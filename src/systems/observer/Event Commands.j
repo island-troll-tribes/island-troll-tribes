@@ -8,7 +8,7 @@ endglobals
 function EncodeObserverEvent takes nothing returns nothing
 local integer i = 0
     loop
-        exitwhen i >= bj_MAX_PLAYERS
+        exitwhen i >= PLAYER_NEUTRAL_AGGRESSIVE
             if GetLocalPlayer() == Player(i) and IsPlayerObserver(Player(i)) then
                 if IsMultiboardDisplayed(OBSERVER_BOARD) and IsMultiboardMinimized(OBSERVER_BOARD) then
                     call MultiboardMinimize(OBSERVER_BOARD, false)

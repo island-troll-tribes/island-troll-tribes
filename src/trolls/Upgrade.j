@@ -126,6 +126,8 @@ library TrollUpgrade initializer onInit requires ID, Constants, PublicLibrary
         set UNIT_ID_REPLACE = UNIT_CHICKEN_FORM
     elseif SKILL_UPGRADE == 'S00H' then
         set UNIT_ID_REPLACE = UNIT_SHAPESHIFTER_WOLF
+        set udg_parameterUnit=REPLACING_UNIT
+        call TriggerExecute(gg_trg_Release_Pets)
         call SetPlayerAbilityAvailableBJ( false, 'A0ES', GetOwningPlayer(OLD_UNIT) )
         call SetPlayerAbilityAvailableBJ( false, 'A0ET', GetOwningPlayer(OLD_UNIT) )
         call SetPlayerAbilityAvailableBJ( false, 'A0EU', GetOwningPlayer(OLD_UNIT) )

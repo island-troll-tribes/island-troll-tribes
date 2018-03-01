@@ -40,7 +40,7 @@ function jelousyFunc takes nothing returns nothing
 
     set udg_jelUnit=GetSpellTargetUnit()
     call PolledWait(.5)
-    call TimerStart(t,0.2,true,function jelTimer)
+    call TimerStart(t,0.5,true,function jelTimer)
     call PolledWait(10)
     call UnitRemoveBuffBJ( 'BHav', udg_jelUnit )
 

@@ -1,0 +1,26 @@
+library ReplenishHealth requires PublicLibrary {
+    integer CAST;
+    integer ENDCAST;
+
+    function ReplenishHealthCast() -> boolean {
+        if (GetIssuedOrderId() == CAST) {
+            UnitAddAbility(GetOrderedUnit(), 'A0F2');
+        }
+        else if (GetIssuedOrderId() == ENDCAST) {
+            UnitRemoveAbility(GetOrderedUnit(), 'A0F2');
+        }
+
+        return false;
+    }
+
+
+    function onInit() {
+        trigger cast = CreateTrigger();
+
+        TriggerRegisterAnyUnitEventBJ(cast, EVENT_PLAYER_UNIT_ISSUED_ORDER);
+        TriggerAddCondition(cast, Condition(function ReplenishHealthCast));
+
+        CAST = OrderId("immolation");
+        ENDCAST = OrderId("unimmolation");
+    }
+}

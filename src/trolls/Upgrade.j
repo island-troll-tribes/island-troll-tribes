@@ -72,12 +72,6 @@ library TrollUpgrade initializer onInit requires ID, Constants, PublicLibrary
         call SelectHeroSkill(REPLACING_UNIT, ABILITY_ASSASINATE)
     endif
 
-    if SUPERSUB then
-      call SetPlayerHandicapXPBJ(PLAYER,200.)
-    else
-      call SetPlayerHandicapXPBJ(PLAYER,300.)
-    endif
-
     if (GetLocalPlayer() == PLAYER) then
         // Use only local code (no net traffic) within this block to avoid desyncs.
         call SelectUnit(REPLACING_UNIT, true)

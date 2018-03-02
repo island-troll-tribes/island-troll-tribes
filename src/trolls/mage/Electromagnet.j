@@ -43,7 +43,7 @@ local real dist
 local real x
 local real y
 set tick = tick + 1
-if u == null or tick > 100 then
+if u == null or tick > 50 then
     call DestroyGroup(g)
     call FlushChildHashtable(udg_GameHash,GetHandleId(t))
     call ReleaseTimer(t)

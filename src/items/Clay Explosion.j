@@ -8,13 +8,22 @@ function Trig_clay_explosion_Conditions takes nothing returns boolean
 endfunction
 
 function Trig_clay_explosion_Actions takes nothing returns nothing
-    set bj_forLoopAIndex = 1
-    set bj_forLoopAIndexEnd = GetRandomInt(6, 10)
+    local rect area = RectFromCenterSizeBJ(GetUnitLoc(GetSpellAbilityUnit()), 3000.00, 3000.00)
+    local real x
+    local real y
+    local integer i = 0
+    local integer numWards = GetRandomInt(8, 12)
     loop
-        exitwhen bj_forLoopAIndex > bj_forLoopAIndexEnd
-        call CreateNUnitsAtLoc( 1, UNIT_LIVING_CLAY, GetOwningPlayer(GetSpellAbilityUnit()), GetRandomLocInRect(RectFromCenterSizeBJ(GetUnitLoc(GetSpellAbilityUnit()), 3000.00, 3000.00)), bj_UNIT_FACING )
-        set bj_forLoopAIndex = bj_forLoopAIndex + 1
+        exitwhen i >= numWards
+        set x = GetRandomX(area)
+        set y = GetRandomY(area)
+        if IsTerrainWalkable(x, y) then
+            call CreateUnit(GetOwningPlayer(GetSpellAbilityUnit()), UNIT_LIVING_CLAY, x, y, 0)
+            set i = i + 1
+        endif
     endloop
+    call RemoveRect(area)
+    set area = null
 endfunction
 
 //===========================================================================

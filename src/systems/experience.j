@@ -5,6 +5,10 @@ library Experience initializer onInit requires ID, Constants, PublicLibrary
   integer array xpHero
   endglobals
 
+function antiTK takes nothing returns boolean
+    return( not ( IsPlayerAlly(GetOwningPlayer(GetDyingUnit()), GetOwningPlayer(GetKillingUnit()) ) ) )
+endfunction
+
 function takesXP takes nothing returns boolean
     return IsUnitType(GetFilterUnit(), UNIT_TYPE_HERO) == true and IsPlayerAlly(GetOwningPlayer(GetFilterUnit()), GetOwningPlayer(GetKillingUnit()) )
 endfunction
@@ -44,10 +48,10 @@ function Trig_experience_Actions takes nothing returns nothing
       endif
 
       if (isDyingHero) then
-        set xpGain = R2I(xpHero[dyingLevel] * xpMult * xpReduction / split)
+        set xpGain = R2I(R2I(xpHero[dyingLevel] * xpMult / split) * xpReduction)
         call AddHeroXPSwapped( xpGain, u, TRUE )
       else
-        set xpGain = R2I(xpCreep[dyingLevel] * xpMult * xpReduction / split)
+        set xpGain = R2I(R2I(xpCreep[dyingLevel] * xpMult / split) * xpReduction)
         call AddHeroXPSwapped( xpGain, u, TRUE )
       endif
       call GroupRemoveUnit(heroes, u)
@@ -59,13 +63,14 @@ endfunction
 
 //===========================================================================
 private function onInit takes nothing returns nothing
-    local integer i = 2
-
+    local integer i
     local trigger t = CreateTrigger(  )
     call TriggerRegisterAnyUnitEventBJ( t, EVENT_PLAYER_UNIT_DEATH )
+    call TriggerAddCondition( t, Condition( function antiTK ) )
     call TriggerAddAction( t, function Trig_experience_Actions )
 
     set xpCreep[1] = 25
+    set i = 2
     loop
       exitwhen i > 30
       set xpCreep[i] = xpCreep[i-1] + (1 + i) * 5

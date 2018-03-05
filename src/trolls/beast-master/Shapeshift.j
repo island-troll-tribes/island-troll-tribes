@@ -3,7 +3,6 @@ function keepSpellbook takes unit u returns nothing
     call UnitMakeAbilityPermanent(u, true, 'A0EI')
     call UnitMakeAbilityPermanent(u, true, 'A0EN')
     call UnitMakeAbilityPermanent(u, true, 'A0EO')
-    call UnitMakeAbilityPermanent(u, true, 'A000')
 endfunction
 
 function Trig_Shapeshift_Actions takes nothing returns nothing

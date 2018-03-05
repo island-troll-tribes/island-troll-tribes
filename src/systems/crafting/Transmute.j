@@ -160,6 +160,50 @@ local item added
                 call itemLower(4)
             endif
         endif
+        //Beginning of Gatherer Salve Creation
+        set bol1 = (uid==UNIT_GATHERER or uid==UNIT_HERB_MASTER or uid==UNIT_RADAR_GATHERER or uid==UNIT_OMNIGATHERER)
+        if bol1 then
+            if i[0] == ITEM_MUSHROOM and i[1] == ITEM_STONE then
+                call RemoveItem(t[0])
+                call RemoveItem(t[1])
+                set added = CreateItem(ITEM_SALVE_ARMOR, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+                call UnitAddItem(GetTriggerUnit(), added)
+                call itemLower(2)
+            endif
+            if i[0] == ITEM_MUSHROOM and i[1] == ITEM_TINDER and i[2] == ITEM_RIVER_ROOT then
+                call RemoveItem(t[0])
+                call RemoveItem(t[1])
+                call RemoveItem(t[2])
+                set added = CreateItem(ITEM_SALVE_HEALING, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+                call UnitAddItem(GetTriggerUnit(), added)
+                call itemLower(3)
+            endif
+            if i[0] == ITEM_MUSHROOM and i[1] == ITEM_BUTSU and i[2] == ITEM_BUTSU then
+                call RemoveItem(t[0])
+                call RemoveItem(t[1])
+                call RemoveItem(t[2])
+                set added = CreateItem(ITEM_SALVE_HYPNOSIS, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+                call UnitAddItem(GetTriggerUnit(), added)
+                call itemLower(3)
+            endif
+            if i[0] == ITEM_MUSHROOM and i[1] == ITEM_THISTLES then
+                set e = GetItemCharges(t[1])
+                call RemoveItem(t[0])
+                call RemoveItem(t[1])
+                set added = CreateItem(ITEM_SALVE_POISON, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+                call SetItemCharges(added, e)
+                call UnitAddItem(GetTriggerUnit(), added)
+                call itemLower(2)
+            endif
+            if i[0] == ITEM_MUSHROOM and i[1] == ITEM_TINDER and i[2] == ITEM_RIVER_STEM then
+                call RemoveItem(t[0])
+                call RemoveItem(t[1])
+                call RemoveItem(t[2])
+                set added = CreateItem(ITEM_SALVE_SPEED, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+                call UnitAddItem(GetTriggerUnit(), added)
+                call itemLower(3)
+            endif
+        endif
     endif
 //End of Troll Inventory Item Creation
 //Begging of Armory Item Creation
@@ -330,7 +374,7 @@ local item added
 			set e = GetItemCharges(t[1])
 			call RemoveItem(t[0])
 			call RemoveItem(t[1])
-            set added = UnitAddItemByIdSwapped(ITEM_LOADED_THISTLES, GetTriggerUnit())
+      set added = UnitAddItemByIdSwapped(ITEM_LOADED_THISTLES, GetTriggerUnit())
 			call SetItemCharges(added, e)
 		endif
 		if i[0] == ITEM_BLOW_GUN and i[1] == ITEM_DARK_THISTLES then

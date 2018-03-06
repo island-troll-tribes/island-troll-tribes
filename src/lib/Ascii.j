@@ -275,10 +275,8 @@ library Ascii /* v1.1.0.0         Nestharus/Bribe
             set y[203] = 103
             set y[246] = 115
 
-            set c[8]="\b"
             set c[9]="\t"
             set c[10]="\n"
-            set c[12]="\f"
             set c[13]="\r"
             set c[32]=" "
             set c[33]="!"

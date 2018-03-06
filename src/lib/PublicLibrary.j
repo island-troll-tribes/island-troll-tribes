@@ -533,9 +533,9 @@ function makeAFish takes rect loc returns nothing
 endfunction
 
 function makeFish takes nothing returns nothing
-    local integer int=0
+    local integer i=0
     loop
-        exitwhen int > udg_FISH_PER_AREA
+        exitwhen i > udg_FISH_PER_AREA
         call PolledWait( udg_DELAY_TIME )
         call makeAFish(gg_rct_out_1_1)
         call makeAFish(gg_rct_out_3_2)
@@ -555,7 +555,7 @@ function makeFish takes nothing returns nothing
         call makeAFish(gg_rct_fish_new_5)
         call makeAFish(gg_rct_fish_new_7)
         call makeAFish(gg_rct_fish_new_8)
-        set int=int+1
+        set i=i+1
     endloop
 endfunction
 

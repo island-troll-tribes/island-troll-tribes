@@ -11,10 +11,10 @@ function IsHydraAndPoints takes nothing returns boolean
     return GetOrderedUnit() == Hydra and GetOrderPointX() == hydraSpawnX and GetOrderPointY() == hydraSpawnY
 endfunction
 
-function React_Stop takes nothing returns nothing 
-local integer step = LoadInteger(udg_GameHash, StringHash("hyd"), StringHash("step"))
+function React_Stop takes nothing returns nothing
+local integer theStep = LoadInteger(udg_GameHash, StringHash("hyd"), StringHash("step"))
 call ReleaseTimer(GetExpiredTimer())
-call IssuePointOrder(Hydra, "attack", hydraB_X[step], hydraB_Y[step])
+call IssuePointOrder(Hydra, "attack", hydraB_X[theStep], hydraB_Y[theStep])
 //call IssueImmediateOrder(Hydra, "stop")
 endfunction
 

@@ -1,10 +1,10 @@
 
 function SelectedEnemyBuilding takes nothing returns boolean
-return((IsUnitEnemy(GetTriggerUnit(),GetTriggerPlayer()))and(IsUnitType(GetTriggerUnit(),UNIT_TYPE_STRUCTURE)))!=null
+return((IsUnitEnemy(GetTriggerUnit(),GetTriggerPlayer()))and(IsUnitType(GetTriggerUnit(),UNIT_TYPE_STRUCTURE)))
 endfunction
 
 function Trig_pet_selected_Func001Func002Func002Func001C takes nothing returns boolean
-return((GetUnitTypeId(GetTriggerUnit())==UNIT_ADULT_ELK)or(GetUnitTypeId(GetTriggerUnit())==UNIT_ELK_ADOLESCENT)or(GetUnitTypeId(GetTriggerUnit())==UNIT_ADULT_JUNGLE_BEAR)or(GetUnitTypeId(GetTriggerUnit())==UNIT_JUNGLE_BEAR)or(GetUnitTypeId(GetTriggerUnit())==UNIT_ADULT_JUNGLE_WOLF)or(GetUnitTypeId(GetTriggerUnit())==UNIT_JUNGLE_WOLF)or(GetUnitTypeId(GetTriggerUnit())==UNIT_BEAR_CUB)or(GetUnitTypeId(GetTriggerUnit())==UNIT_FAWN)or(GetUnitTypeId(GetTriggerUnit())==UNIT_WOLF_PUP)or(IsUnitType(GetTriggerUnit(),UNIT_TYPE_FLYING)))!=null
+return((GetUnitTypeId(GetTriggerUnit())==UNIT_ADULT_ELK)or(GetUnitTypeId(GetTriggerUnit())==UNIT_ELK_ADOLESCENT)or(GetUnitTypeId(GetTriggerUnit())==UNIT_ADULT_JUNGLE_BEAR)or(GetUnitTypeId(GetTriggerUnit())==UNIT_JUNGLE_BEAR)or(GetUnitTypeId(GetTriggerUnit())==UNIT_ADULT_JUNGLE_WOLF)or(GetUnitTypeId(GetTriggerUnit())==UNIT_JUNGLE_WOLF)or(GetUnitTypeId(GetTriggerUnit())==UNIT_BEAR_CUB)or(GetUnitTypeId(GetTriggerUnit())==UNIT_FAWN)or(GetUnitTypeId(GetTriggerUnit())==UNIT_WOLF_PUP)or(IsUnitType(GetTriggerUnit(),UNIT_TYPE_FLYING)))
 endfunction
 
 function Trig_pet_selected_Func001Func002Func002C takes nothing returns boolean

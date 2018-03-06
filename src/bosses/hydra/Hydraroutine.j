@@ -63,7 +63,6 @@ endfunction
 function HydraBoatEncircle takes nothing returns nothing
 local real x = GetUnitX(Hydra)
 local real y = GetUnitY(Hydra)
-local integer step = LoadInteger(udg_GameHash, StringHash("hyd"), StringHash("step"))
 local real tx = GetRectCenterX(gg_rct_discoduck)
 local real ty = GetRectCenterY(gg_rct_discoduck)
 local real dx

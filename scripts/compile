@@ -17,13 +17,6 @@ class String
   end
 end
 
-def load_all_helpers
-  Dir.glob('helpers/*.rb') do |h|
-    load h
-    include Object.const_get File.basename(h, '.rb')
-  end
-end
-
 class Assembler
 
   CLIJASSHELPER_EXE = "#{"wine " if MAC_OS}tools/jasshelper/clijasshelper.exe --scriptonly --debug tools/common.j tools/blizzard.j "
@@ -44,7 +37,7 @@ class Assembler
     end
   end
 
-  def initialize(options = {:output => "tmp.j", })
+  def initialize(options)
     @root = Dir.getwd
     @tmp_path = "tmp_#{Time.now.strftime("%s")}.j"
     @output = File.open(@tmp_path, 'w')
@@ -119,6 +112,7 @@ class Assembler
     close_output
     if @jasshelper
       call_jasshelper
+      `mv #{@root}/logs/output_war3map.j #{@output_path}`
     else
       `mv #{@tmp_path} #{@output_path}`
     end
@@ -199,7 +193,6 @@ default_file_order = [
   'items',
   'buildings',
   'init/objects',
-  'init/Custom Objects.j.erb',
   'init/InitTriggers.j',
   'init/main.j',
   'test'
@@ -208,7 +201,7 @@ default_file_order = [
 opt = extract_options(ARGV)
 opt = {
   :env           => opt[:env] || "test",
-  :output        => opt[:out] || "out.j",
+  :output        => opt[:out] || "wurst/war3map.j",
   :owner         => opt[:owner] || `whoami`.chomp.split("\\").last,
   :do_jasshelper => opt[:do_jasshelper] ? opt[:do_jasshelper].to_boolean : true,
   :build_order   => opt[:build_order] ? (File.exists?(opt[:build_order]) && !File.directory?(opt[:build_order]) ? File.read(opt[:build_order]) : opt[:build_order]).split(/,|\n/).map{|i|i.strip}.reject{|i|i.empty?} : default_file_order,
@@ -239,10 +232,6 @@ end
 
 
 itt_builder = Assembler.new(opt)
-
-puts 'loading helpers...' if opt[:debug]
-load_all_helpers
-puts 'loaded helpers...' if opt[:debug]
 
 itt_builder.extract_globals 'src/lib/ID'
 

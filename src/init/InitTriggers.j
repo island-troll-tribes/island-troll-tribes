@@ -272,7 +272,6 @@ function InitCustomTriggers takes nothing returns nothing
     call InitTrig_Effect_Add(  )
     call InitTrig_Effect_Remove(  )
     call InitTrig_Shapeshift(  )
-    call InitTrig_ShapeshiftLevel(  )
 endfunction
 
 //===========================================================================

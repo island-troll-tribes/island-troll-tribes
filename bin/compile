@@ -5,9 +5,6 @@ require 'erb'
 Dir.chdir File.dirname(__FILE__)
 Dir.chdir '..'
 
-MAC_OS = RbConfig::CONFIG['host_os'] =~ /darwin/ ? true : false
-puts "Detected mac OS... prefixing exe calls with wine" if MAC_OS
-
 class String
   def camelize
     self.downcase.split('_').to_a.map{|i|i.capitalize}.join
@@ -19,7 +16,7 @@ end
 
 class Assembler
 
-  CLIJASSHELPER_EXE = "#{"wine " if MAC_OS}tools/jasshelper/clijasshelper.exe --scriptonly --debug tools/common.j tools/blizzard.j "
+  CLIJASSHELPER_EXE = "bin/jasshelper/clijasshelper.exe --scriptonly --debug _build/common.j _build/blizzard.j "
 
   @root
   @output
@@ -180,23 +177,6 @@ def extract_options(a)
   r
 end
 
-default_file_order = [
-  'init/MapOut.j',
-  'init/units.zn',
-  'lib',
-  'init/map',
-  'changelogs',
-  'systems',
-  'triggers',
-  'bosses',
-  'trolls',
-  'items',
-  'buildings',
-  'init/objects',
-  'init/InitTriggers.j',
-  'init/main.j',
-  'test'
-]
 
 opt = extract_options(ARGV)
 opt = {
@@ -204,7 +184,6 @@ opt = {
   :output        => opt[:out] || "wurst/war3map.j",
   :owner         => opt[:owner] || `whoami`.chomp.split("\\").last,
   :do_jasshelper => opt[:do_jasshelper] ? opt[:do_jasshelper].to_boolean : true,
-  :build_order   => opt[:build_order] ? (File.exists?(opt[:build_order]) && !File.directory?(opt[:build_order]) ? File.read(opt[:build_order]) : opt[:build_order]).split(/,|\n/).map{|i|i.strip}.reject{|i|i.empty?} : default_file_order,
   :debug         => opt[:debug] ? opt[:debug].to_boolean : false
 }
 p opt if opt[:debug]
@@ -232,11 +211,6 @@ end
 
 
 itt_builder = Assembler.new(opt)
-
-itt_builder.extract_globals 'src/lib/ID'
-
-opt[:build_order].each do |f|
-  itt_builder.add "src/#{f}"
-end
-
+itt_builder.extract_globals 'jass/lib/ID'
+itt_builder.add "jass/"
 itt_builder.compile

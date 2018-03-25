@@ -3,29 +3,41 @@ import LinkedList
 import HashMap
 import StringUtils
 
+let maxPlayers = PLAYER_NEUTRAL_AGGRESSIVE - 1
+
 interface CommandHandler
-    function run(LinkedList<string> arguments)
+    function run(player triggerPlayer, LinkedList<string> arguments)
 
-HashMap<string, CommandHandler> commands = new HashMap<string, CommandHandler>()
+let commands = new HashMap<player, HashMap<string, CommandHandler>>()
 
-function registerCommand(string command, CommandHandler handler)
-    commands.put(command, handler)
+function registerCommand(player thePlayer, string command, CommandHandler handler)
+    commands.get(thePlayer).put(command, handler)
 
-function onEvent()
-    let tokens = GetEventPlayerChatString().substring(1).split(" ")
-    let command = tokens.get(0)
-    if commands.has(command)
-        commands.get(command).run(tokens)
+function registerCommandAll(string command, CommandHandler handler)
+    for i = 0 to maxPlayers
+        registerCommand(players[i], command, handler)
+
+function deregisterCommand(player thePlayer, string command)
+    commands.get(thePlayer).remove(command)
+
+function deregisterCommandAll(string command)
+    for i = 0 to maxPlayers
+        deregisterCommand(players[i], command)
 
 init
     let t = CreateTrigger()
 
-    for i = 0 to 11
-        t.registerPlayerChatEvent(Player(i), "-", false)
+    for i = 0 to maxPlayers
+        commands.put(players[i], new HashMap<string, CommandHandler>())
+        t.registerPlayerChatEvent(players[i], "-", false)
 
-    t.addAction(function onEvent)
+    t.addAction() ->
+        let triggerPlayer = GetTriggerPlayer()
+        let playerCommands = commands.get(triggerPlayer)
+        let tokens = GetEventPlayerChatString().substring(1).split(" ")
+        let command = tokens.get(0)
+        if playerCommands.has(command)
+            playerCommands.get(command).run(triggerPlayer, tokens)
 
-    registerCommand("test", (LinkedList<string> args) -> begin
-        for i in args
-            print(i)
-    end)
+    registerCommandAll("test") (triggerPlayer, args) ->
+        args.forEach(i -> print(i))

@@ -1,0 +1,31 @@
+package ChatCommands
+import LinkedList
+import HashMap
+import StringUtils
+
+interface CommandHandler
+    function run(LinkedList<string> arguments)
+
+HashMap<string, CommandHandler> commands = new HashMap<string, CommandHandler>()
+
+function registerCommand(string command, CommandHandler handler)
+    commands.put(command, handler)
+
+function onEvent()
+    let tokens = GetEventPlayerChatString().substring(1).split(" ")
+    let command = tokens.get(0)
+    if commands.has(command)
+        commands.get(command).run(tokens)
+
+init
+    let t = CreateTrigger()
+
+    for i = 0 to 11
+        t.registerPlayerChatEvent(Player(i), "-", false)
+
+    t.addAction(function onEvent)
+
+    registerCommand("test", (LinkedList<string> args) -> begin
+        for i in args
+            print(i)
+    end)

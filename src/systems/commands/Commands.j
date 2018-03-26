@@ -80,6 +80,28 @@ library Commands initializer onInit requires PublicLibrary
             if GetLocalPlayer() == p then
                 call ClearTextMessages()
             endif
+        elseif s=="-listmods" then
+            call DisplayTimedTextToPlayer(p, 0, 0, 18, "-safe. Stats degrade |cff00FF40slower|r. 4.5 sec/decay.")
+            call DisplayTimedTextToPlayer(p, 0, 0, 18, "-increase pets. Pets will appear |cff00FF40more frequently|r. 23%.")
+            call DisplayTimedTextToPlayer(p, 0, 0, 18, "-rpg. |cff00FF40Increases|r Pet Growth Chance to 30%.")
+            call DisplayTimedTextToPlayer(p, 0, 0, 18, "-lavish. |cff00FF40More animals spawn|r and they give more food.")
+            call DisplayTimedTextToPlayer(p, 0, 0, 18, "-rfl. |cff00FF40More animals and fish|r can be on the map at the same time.")
+            call DisplayTimedTextToPlayer(p, 0, 0, 18, "-fast. |cff00FF40More items|r spawn at once.")
+            call DisplayTimedTextToPlayer(p, 0, 0, 18, "-ril. |cff00FF40Increases Item limit|r.")
+            call DisplayTimedTextToPlayer(p, 0, 0, 18, "-nil. Trolls can now carry any number of axes/spells/armor.")
+            call DisplayTimedTextToPlayer(p, 0, 0, 18, "-cm. Fires heat people up slower now. Heat per cast is 5.")
+            call DisplayTimedTextToPlayer(p, 0, 0, 18, "-dh. Heat capacity is 75.")
+            call DisplayTimedTextToPlayer(p, 0, 0, 18, "-survival. This mode combines famine, cold, and slow mode.")
+            call DisplayTimedTextToPlayer(p, 0, 0, 18, "-panic. Stats degrade faster now.")
+            call DisplayTimedTextToPlayer(p, 0, 0, 18, "-double. Stats lower by twice as much.")
+            call DisplayTimedTextToPlayer(p, 0, 0, 18, "-famine. |c00755d00Decreases|r animals spawn rate.")
+            call DisplayTimedTextToPlayer(p, 0, 0, 18, "-famine2x. |c00755d00Decreases|r animals spawn even more.")
+            call DisplayTimedTextToPlayer(p, 0, 0, 18, "-slow. |c00755d00Decreases|r items spawn.")
+            call DisplayTimedTextToPlayer(p, 0, 0, 18, "-decrease pets. |c00755d00Decreases|r Pets spawn chance.")
+            call DisplayTimedTextToPlayer(p, 0, 0, 18, "-lfl. |c00755d00Decreases|r food limit.")
+            call DisplayTimedTextToPlayer(p, 0, 0, 18, "-lil. |c00755d00Decreases|r item limit.")
+            call DisplayTimedTextToPlayer(p, 0, 0, 18, "-no shields. disables Shield type items from creation.")
+            call DisplayTimedTextToPlayer(p, 0, 0, 18, "-test mode. No win conditions: the game will not end. You will also be given a spirit ward to start with..")
         elseif s=="-modes" then
             call DisplayTimedTextToPlayer(p, 0, 0, 15, currentModes + GameMode.getEnabledModes() )
         elseif s=="-ms" then

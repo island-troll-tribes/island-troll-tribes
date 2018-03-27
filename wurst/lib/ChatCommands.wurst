@@ -3,31 +3,32 @@ import LinkedList
 import HashMap
 import StringUtils
 
-let maxPlayers = PLAYER_NEUTRAL_AGGRESSIVE - 1
+let MAX_PLAYERS = PLAYER_NEUTRAL_AGGRESSIVE - 1
 
 interface CommandHandler
     function run(player triggerPlayer, LinkedList<string> arguments)
 
 let commands = new HashMap<player, HashMap<string, CommandHandler>>()
 
-function registerCommand(player thePlayer, string command, CommandHandler handler)
+public function registerCommand(player thePlayer, string command, CommandHandler handler)
     commands.get(thePlayer).put(command, handler)
 
-function registerCommandAll(string command, CommandHandler handler)
-    for i = 0 to maxPlayers
+public function registerCommandAll(string command, CommandHandler handler)
+    for i = 0 to MAX_PLAYERS
         registerCommand(players[i], command, handler)
 
-function deregisterCommand(player thePlayer, string command)
+public function deregisterCommand(player thePlayer, string command)
+    destroy commands.get(thePlayer).get(command)
     commands.get(thePlayer).remove(command)
 
-function deregisterCommandAll(string command)
-    for i = 0 to maxPlayers
+public function deregisterCommandAll(string command)
+    for i = 0 to MAX_PLAYERS
         deregisterCommand(players[i], command)
 
 init
     let t = CreateTrigger()
 
-    for i = 0 to maxPlayers
+    for i = 0 to MAX_PLAYERS
         commands.put(players[i], new HashMap<string, CommandHandler>())
         t.registerPlayerChatEvent(players[i], "-", false)
 
@@ -39,5 +40,6 @@ init
         if playerCommands.has(command)
             playerCommands.get(command).run(triggerPlayer, tokens)
 
-    registerCommandAll("test") (triggerPlayer, args) ->
+    registerCommandAll("test-wurst-commands") (triggerPlayer, args) ->
+        print("player " + triggerPlayer.getId().toString())
         args.forEach(i -> print(i))

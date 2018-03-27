@@ -1,0 +1,86 @@
+package Skins
+import OnUnitEnterLeave
+import ChatCommands
+import ClosureTimers
+import PlayerFeature
+import StringExtensions
+import HashMap
+
+let TIMEOUT = 10.0
+
+class CustomSkin
+    static let customSkinList = new HashMap<integer, thistype>()
+
+    integer newUnitTypeId
+    string featureName
+    boolean isSub
+
+    construct(integer unitTypeId, integer newUnitTypeId, string featureName, boolean isSub)
+        this.newUnitTypeId = newUnitTypeId
+        this.featureName = featureName
+        this.isSub = isSub
+        customSkinList.put(unitTypeId, this)
+
+    static function setupTrigger()
+        onEnter() ->
+            let enteringUnit = getEnterLeaveUnit()
+            if customSkinList.has(enteringUnit.getTypeId())
+                let skin = customSkinList.get(enteringUnit.getTypeId())
+                let owner = enteringUnit.getOwner()
+                let playerName = owner.getName()
+                if PlayerFeature.isPlayerEnabled(playerName, skin.featureName)
+                    print(
+                        "Congratulations ".color(GENERAL_COLOR) +
+                        owner.getNameColored() +
+                        " on unlocking a skin for this class! Type ".color(GENERAL_COLOR) +
+                        ("-" + skin.featureName).color(ENERGY_COLOR) +
+                        " within the next ".color(GENERAL_COLOR) +
+                        TIMEOUT.toInt().toString().color(HIGHLIGHT_COLOR) +
+                        " seconds to use.".color(GENERAL_COLOR)
+                    )
+
+                    registerCommand(enteringUnit.getOwner(), skin.featureName) (triggerPlayer, args) ->
+                        print("Activating skin!".color(GENERAL_COLOR))
+
+                        let wasPaused = enteringUnit.isPaused()
+                        let newUnit = ReplaceUnitBJ(enteringUnit, skin.newUnitTypeId, bj_UNIT_STATE_METHOD_ABSOLUTE)
+                        if wasPaused
+                            newUnit.pause()
+
+                        // TODO probably don't hack this stuff in
+                        udg_PUnits[owner.getId()] = newUnit
+                        udg_trolls.removeUnit(enteringUnit)
+                        udg_trolls.addUnit(newUnit)
+                        if not skin.isSub
+                            setUpSkillTriggers(newUnit)
+
+                    doAfter(TIMEOUT) ->
+                        deregisterCommand(enteringUnit.getOwner(), skin.featureName)
+
+
+init
+    CustomSkin.setupTrigger()
+
+    new CustomSkin(UNIT_BEAST_MASTER, UNIT_BEAST_MASTER_1, "skin-bm-1", false)
+    new CustomSkin(UNIT_HUNTER, UNIT_HUNTER_1, "skin-hunter-1", false)
+    new CustomSkin(UNIT_MAGE, UNIT_MAGE_1, "skin-mage-1", false)
+    new CustomSkin(UNIT_PRIEST, UNIT_PRIEST_1, "skin-priest-1", false)
+    new CustomSkin(UNIT_OBSERVER, UNIT_OBSERVER_1, "skin-obs-1", false)
+    new CustomSkin(UNIT_ELEMENTALIST, UNIT_ELEMENTALIST_1, "skin-ele-1", false)
+
+    PlayerFeature.get("WorldEdit")
+        ..enableFeature("skin-bm-1")
+        ..enableFeature("skin-hunter-1")
+        ..enableFeature("skin-mage-1")
+        ..enableFeature("skin-priest-1")
+        ..enableFeature("skin-obs-1")
+        ..enableFeature("skin-ele-1")
+
+
+    PlayerFeature.get("Quantum")
+        ..enableFeature("skin-bm-1")
+        ..enableFeature("skin-hunter-1")
+        ..enableFeature("skin-mage-1")
+        ..enableFeature("skin-priest-1")
+        ..enableFeature("skin-obs-1")
+        ..enableFeature("skin-ele-1")

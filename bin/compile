@@ -16,13 +16,15 @@ end
 
 class Assembler
 
-  CLIJASSHELPER_EXE = "bin/jasshelper/clijasshelper.exe --scriptonly --debug _build/common.j _build/blizzard.j "
-
   @root
   @output
   @tmp_path
   @output_path
   @errors
+
+  def jasshelper(debug)
+    "bin/jasshelper/clijasshelper.exe --scriptonly #{"--debug" if debug} _build/common.j _build/blizzard.j"
+  end
 
   def extract_globals(path)
     if !File.exists?(path)
@@ -71,7 +73,7 @@ class Assembler
   end
 
   def call_jasshelper
-    jasshelper_out = `#{CLIJASSHELPER_EXE} #{@tmp_path} #{File.absolute_path(@output_path)}`
+    jasshelper_out = `#{jasshelper(@opt[:env] != 'pro')} #{@tmp_path} #{File.absolute_path(@output_path)}`
     if $? == 0
       File.unlink @tmp_path
     else

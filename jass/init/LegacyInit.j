@@ -162,7 +162,6 @@ library LegacyInit initializer onInit
         call ExecuteFunc("InitTrig_no_trees")
         call ExecuteFunc("InitTrig_HCLNT")
         call ExecuteFunc("InitTrig_find_nearest_hatchery")
-        call ExecuteFunc("InitTrig_pet_selected")
         call ExecuteFunc("InitTrig_eggza_CUTE_orders")
         call ExecuteFunc("InitTrig_grow_up")
         call ExecuteFunc("InitTrig_pet_abilites")

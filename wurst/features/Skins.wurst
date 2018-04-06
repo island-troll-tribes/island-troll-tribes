@@ -5,6 +5,8 @@ import ClosureTimers
 import PlayerFeature
 import StringExtensions
 import HashMap
+import UnitExtensions
+import Feature
 
 let TIMEOUT = 10.0
 
@@ -29,7 +31,7 @@ class CustomSkin
                 let owner = enteringUnit.getOwner()
                 let playerName = owner.getName()
                 if PlayerFeature.isPlayerEnabled(playerName, skin.featureName)
-                    print(
+                    let msg = (
                         "Congratulations ".color(GENERAL_COLOR) +
                         owner.getNameColored() +
                         " on unlocking a skin for this class! Type ".color(GENERAL_COLOR) +
@@ -38,12 +40,16 @@ class CustomSkin
                         TIMEOUT.toInt().toString().color(HIGHLIGHT_COLOR) +
                         " seconds to use.".color(GENERAL_COLOR)
                     )
+                    printTimedToPlayer(msg, TIMEOUT, owner)
 
                     registerCommand(enteringUnit.getOwner(), skin.featureName) (triggerPlayer, args) ->
-                        print("Activating skin!".color(GENERAL_COLOR))
+                        printTimedToPlayer("Activating skin!".color(GENERAL_COLOR), 5.0, owner)
+                        deregisterCommand(enteringUnit.getOwner(), skin.featureName)
 
                         let wasPaused = enteringUnit.isPaused()
+                        let numSkillPoints = enteringUnit.getHeroSkillPoints()
                         let newUnit = ReplaceUnitBJ(enteringUnit, skin.newUnitTypeId, bj_UNIT_STATE_METHOD_ABSOLUTE)
+                        newUnit.setSkillPoints(numSkillPoints)
                         if wasPaused
                             newUnit.pause()
 
@@ -64,50 +70,76 @@ init
     new CustomSkin(UNIT_BEAST_MASTER, UNIT_BEAST_MASTER_1, "skin-bm-1", false)
     new CustomSkin(UNIT_HUNTER, UNIT_HUNTER_1, "skin-hunter-1", false)
     new CustomSkin(UNIT_MAGE, UNIT_MAGE_1, "skin-mage-1", false)
-    new CustomSkin(UNIT_PRIEST, UNIT_PRIEST_1, "skin-priest-1", false)
+    new CustomSkin(UNIT_MASTER_HEALER, UNIT_MASTER_HEALER_1, "skin-mh-1", false)
     new CustomSkin(UNIT_BOOSTER, UNIT_BOOSTER_1, "skin-booster-1", false)
     new CustomSkin(UNIT_ELEMENTALIST, UNIT_ELEMENTALIST_1, "skin-ele-1", false)
 
-    PlayerFeature.get("WorldEdit")
+    PlayerFeature
+        .get("WorldEdit")
         ..enableFeature("skin-bm-1")
         ..enableFeature("skin-hunter-1")
         ..enableFeature("skin-mage-1")
-        ..enableFeature("skin-priest-1")
+        ..enableFeature("skin-mh-1")
         ..enableFeature("skin-booster-1")
         ..enableFeature("skin-ele-1")
 
+    Feature
+        .get("skin-booster-1")
+        ..addPlayer("Quantum")
+        ..addPlayer("Mambo")
+        ..addPlayer("Davee3")
+        ..addPlayer("Bananbuske")
+        ..addPlayer("Oh_snap")
+        ..addPlayer("Bliss-darkeyes")
+        ..addPlayer("Liquid.")
+        ..addPlayer("Srup")
+        ..addPlayer("Lasvegass")
+        ..addPlayer("Kicuch")
+        ..addPlayer("Albinoblackbat")
+        ..addPlayer("Mephisto.")
+        ..addPlayer("Master-Troll")
+        ..addPlayer("Scatman33")
+        ..addPlayer("Tahsis")
+        ..addPlayer("PIC")
+        ..addPlayer("Rukhal")
+        ..addPlayer("Quazz")
+        ..addPlayer("Xan_Xriegor")
+        ..addPlayer("Viking.")
 
-    PlayerFeature.get("Quantum")
+    Feature
+        .get("skin-hunter-1")
+        ..addPlayer("Quantum")
+        ..addPlayer("Mambo")
+        ..addPlayer("Davee3")
+        ..addPlayer("Bananbuske")
+        ..addPlayer("Oh_snap")
+        ..addPlayer("Bliss-darkeyes")
+        ..addPlayer("Liquid.")
+        ..addPlayer("Srup")
+        ..addPlayer("Lasvegass")
+        ..addPlayer("Kicuch")
+        ..addPlayer("Albinoblackbat")
+        ..addPlayer("Mephisto.")
+        ..addPlayer("bmxsesh")
+        ..addPlayer("Tahsis")
+        ..addPlayer("Quazz")
+        ..addPlayer("Xan_Xriegor")
+        ..addPlayer("Nik")
+
+    Feature
+        .get("skin-mh-1")
+        ..addPlayer("Quantum")
+        ..addPlayer("Bananbuske")
+        ..addPlayer("Oh_snap")
+
+    Feature
+        .get("skin-mage-1")
+        ..addPlayer("Quantum")
+        ..addPlayer("Mambo")
+        ..addPlayer("Davee3")
+
+
+    PlayerFeature
+        .get("Quantum")
         ..enableFeature("skin-bm-1")
-        ..enableFeature("skin-hunter-1")
-        ..enableFeature("skin-mage-1")
-        ..enableFeature("skin-priest-1")
-        ..enableFeature("skin-booster-1")
-        ..enableFeature("skin-ele-1")
-
-
-    PlayerFeature.get("Quazz")
-        ..enableFeature("skin-bm-1")
-        ..enableFeature("skin-hunter-1")
-        ..enableFeature("skin-mage-1")
-        ..enableFeature("skin-priest-1")
-        ..enableFeature("skin-booster-1")
-        ..enableFeature("skin-ele-1")
-
-
-    PlayerFeature.get("XanKriegor")
-        ..enableFeature("skin-bm-1")
-        ..enableFeature("skin-hunter-1")
-        ..enableFeature("skin-mage-1")
-        ..enableFeature("skin-priest-1")
-        ..enableFeature("skin-booster-1")
-        ..enableFeature("skin-ele-1")
-
-
-    PlayerFeature.get("Bliss-Darkeyes")
-        ..enableFeature("skin-bm-1")
-        ..enableFeature("skin-hunter-1")
-        ..enableFeature("skin-mage-1")
-        ..enableFeature("skin-priest-1")
-        ..enableFeature("skin-booster-1")
         ..enableFeature("skin-ele-1")

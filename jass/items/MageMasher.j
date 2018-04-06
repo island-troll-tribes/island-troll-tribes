@@ -11,7 +11,13 @@ function checkmashertroll takes nothing returns boolean
     if ( ( GetUnitTypeId(GetAttackedUnitBJ()) == UNIT_MAGE ) ) then
         return true
     endif
+    if ( ( GetUnitTypeId(GetAttackedUnitBJ()) == UNIT_MAGE_1 ) ) then
+        return true
+    endif
     if ( ( GetUnitTypeId(GetAttackedUnitBJ()) == UNIT_ELEMENTALIST ) ) then
+        return true
+    endif
+    if ( ( GetUnitTypeId(GetAttackedUnitBJ()) == UNIT_ELEMENTALIST_1 ) ) then
         return true
     endif
     if ( ( GetUnitTypeId(GetAttackedUnitBJ()) == UNIT_HYPNOTIST ) ) then
@@ -26,7 +32,13 @@ function checkmashertroll takes nothing returns boolean
     if ( ( GetUnitTypeId(GetAttackedUnitBJ()) == UNIT_BOOSTER ) ) then
         return true
     endif
+    if ( ( GetUnitTypeId(GetAttackedUnitBJ()) == UNIT_BOOSTER_1 ) ) then
+        return true
+    endif
     if ( ( GetUnitTypeId(GetAttackedUnitBJ()) == UNIT_MASTER_HEALER ) ) then
+        return true
+    endif
+    if ( ( GetUnitTypeId(GetAttackedUnitBJ()) == UNIT_MASTER_HEALER_1 ) ) then
         return true
     endif
     if ( ( GetUnitTypeId(GetAttackedUnitBJ()) == UNIT_SAGE ) ) then

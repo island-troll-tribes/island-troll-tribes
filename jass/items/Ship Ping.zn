@@ -1,0 +1,16 @@
+library SonarCompass requires TradeShip {
+    function shipPing() {
+        integer i;
+        if( GetSpellAbilityId() == SPELL_SONAR_COMPASS ) {
+            for (1 <= i <= TradeShip.length ) {
+                PingMinimapLocForForceEx( GetPlayersAllies(GetOwningPlayer(GetSpellAbilityUnit())), GetUnitLoc(TradeShip[i].getShip()), 7.00, IntegerTertiaryOp(true, bj_MINIMAPPINGSTYLE_FLASHY, bj_MINIMAPPINGSTYLE_ATTACK), 100.00, 100.00, 100.00 );
+            }
+        }
+    }
+
+    function onInit() {
+        trigger t = CreateTrigger();
+        TriggerRegisterAnyUnitEventBJ( t, EVENT_PLAYER_UNIT_SPELL_EFFECT );
+        TriggerAddAction( t, function shipPing);
+    }
+}

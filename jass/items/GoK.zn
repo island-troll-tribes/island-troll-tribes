@@ -1,0 +1,76 @@
+
+library GoK requires ID, Table {
+
+    Table gokClassMultiplier;
+
+    function AddBonusXP() {
+        if (IsUnitType(GetDyingUnit(), UNIT_TYPE_HERO))
+            AddHeroXP(GetEnumUnit(), gokClassMultiplier[GetUnitTypeId(GetEnumUnit())] * GetUnitLevel(GetDyingUnit()) * 2, true);
+        else
+            AddHeroXP(GetEnumUnit(), gokClassMultiplier[GetUnitTypeId(GetEnumUnit())] * GetUnitLevel(GetDyingUnit()), true);
+    }
+
+    function Test(unit u) -> boolean {
+        return GetUnitAbilityLevel(u, BUFF_GOK) > 0 &&
+            gokClassMultiplier.has(GetUnitTypeId(u)) &&
+            IsUnitEnemy(u, GetOwningPlayer(GetDyingUnit())) &&
+            IsUnitAlly(GetKillingUnit(), GetOwningPlayer(u));
+    }
+
+    function Filter() -> boolean {
+        return Test(GetFilterUnit());
+    }
+
+    function FindRecipients() -> boolean {
+        group g = CreateGroup();
+        unit killer = GetKillingUnit();
+
+        if (Test(killer)) {
+            GroupAddUnit(g, killer);
+        }
+        GroupEnumUnitsInRangeOfLoc(g, GetUnitLoc(GetDyingUnit()), 500, Condition(function Filter));
+        ForGroup(g, function AddBonusXP);
+        DestroyGroup(g);
+
+        g = null;
+        killer = null;
+
+        return false;
+    }
+
+    function onInit() {
+        trigger t = CreateTrigger();
+        TriggerRegisterAnyUnitEventBJ(t, EVENT_PLAYER_UNIT_DEATH);
+        TriggerAddCondition(t, Condition(function FindRecipients));
+
+        // applies to mage, priest, thief, scout, gatherer and all their subclasses
+        // unsubbed
+        gokClassMultiplier = Table.create();
+        gokClassMultiplier[UNIT_MAGE]            = 25;
+        gokClassMultiplier[UNIT_MAGE_1]          = 25;
+        gokClassMultiplier[UNIT_PRIEST]          = 25;
+        gokClassMultiplier[UNIT_THIEF]           = 25;
+        gokClassMultiplier[UNIT_SCOUT]           = 25;
+        gokClassMultiplier[UNIT_GATHERER]        = 25;
+        // subbed
+        gokClassMultiplier[UNIT_ELEMENTALIST]    = 15;
+        gokClassMultiplier[UNIT_ELEMENTALIST_1]  = 15;
+        gokClassMultiplier[UNIT_HYPNOTIST]       = 15;
+        gokClassMultiplier[UNIT_BOOSTER]         = 15;
+        gokClassMultiplier[UNIT_BOOSTER_1]       = 15;
+        gokClassMultiplier[UNIT_MASTER_HEALER]   = 15;
+        gokClassMultiplier[UNIT_MASTER_HEALER_1] = 15;
+        gokClassMultiplier[UNIT_ESCAPE_ARTIST]   = 15;
+        gokClassMultiplier[UNIT_CONTORTIONIST]   = 15;
+        gokClassMultiplier[UNIT_OBSERVER]        = 15;
+        gokClassMultiplier[UNIT_RADAR_SCOUT]     = 15;
+        gokClassMultiplier[UNIT_RADAR_GATHERER]  = 15;
+        gokClassMultiplier[UNIT_HERB_MASTER]     = 15;
+        // supersubbed
+        gokClassMultiplier[UNIT_DEMENTIA_MASTER] = 10;
+        gokClassMultiplier[UNIT_SAGE]            = 10;
+        gokClassMultiplier[UNIT_ASSASSIN]        = 10;
+        gokClassMultiplier[UNIT_SPY]             = 10;
+        gokClassMultiplier[UNIT_OMNIGATHERER]    = 10;
+    }
+}

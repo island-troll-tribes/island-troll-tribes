@@ -1,0 +1,159 @@
+library TradeShip requires TradeShipStop, IDUtils {
+
+  constant real    TRADE_SHIP_PAUSE_TIME_DEST = 0;
+  constant real    TRADE_SHIP_PAUSE_TIME_SELL = 0;
+
+  constant integer STATE_MOVING = 1;
+  constant integer STATE_STOPPED = 2;
+
+  public type TradeShipEventListener extends function(TradeShip, integer);
+
+  public struct TradeShip {
+    public static integer EXITED = 101;
+
+    static integer length = 0;
+    private static trigger whenEnterRegion;
+    private static trigger whenSellItem;
+    private static Table   ships;
+
+    private unit          tradeShip;
+    private TradeShipStop nextStop;
+    private TradeShipStop firstStop;
+    private timer         myTimer;
+    private integer       state = STATE_STOPPED;
+    private TradeShipEventListener observer = -1;
+    private integer numForksReached = 0;
+
+    private static method onInit() {
+      whenEnterRegion = CreateTrigger();
+      TriggerRegisterEnterRegion( whenEnterRegion, TradeShipStop.getTradeRegion(), null );
+      TriggerAddAction( whenEnterRegion, static method TradeShip.relayEnterRegionToShip );
+
+      whenSellItem = CreateTrigger();
+      TriggerRegisterPlayerUnitEvent( whenSellItem, Player( 15 ), EVENT_PLAYER_UNIT_SELL_ITEM, null );
+      TriggerAddAction( whenSellItem, static method TradeShip.relaySellItemToShip );
+
+      ships = Table.create();
+    }
+
+    static method existsForUnit( unit u ) -> boolean {
+      return ships.has_h( u );
+    }
+
+    static method findByShip( unit u ) -> thistype {
+      return thistype( ships.integer_h[u] );
+    }
+
+    static method operator[] (integer i) -> thistype {
+      return thistype( i );
+    }
+
+    static method create( TradeShipStop stop ) -> thistype {
+      thistype self = thistype.allocate();
+      thistype.length += 1;
+      self.tradeShip = null;
+      self.myTimer = NewTimerEx( self );
+      self.firstStop = stop;
+      return self;
+    }
+
+    method addEventListener(TradeShipEventListener func) -> thistype {
+      observer = func;
+      return this;
+    }
+
+    private method onDestroy() {
+      thistype.length -= 1;
+    }
+
+    method createNextShip(integer tradeShipId) -> thistype {
+      tradeShip = CreateUnit( Player( 15 ), tradeShipId, firstStop.x, firstStop.y, 0 );
+      ships.integer_h[tradeShip] = this;
+      nextStop = firstStop.randomNext();
+      state = STATE_STOPPED;
+      numForksReached = 0;
+      moveToNextStop();
+      return this;
+    }
+
+    method removeShip() -> thistype {
+      ships.remove_h( tradeShip );
+      RemoveUnit( tradeShip );
+      tradeShip = null;
+      return this;
+    }
+
+    method getShip() -> unit {
+      return tradeShip;
+    }
+
+    method moveToNextStop() -> thistype {
+      if ( state != STATE_MOVING ) {
+        PauseTimer( myTimer );
+        state = STATE_MOVING;
+
+        IssuePointOrder( tradeShip, "move", nextStop.x, nextStop.y );
+
+        TimerStart( myTimer, 1.0, true, function() {
+          TradeShip this = TradeShip( GetTimerData( GetExpiredTimer() ) );
+          IssuePointOrder( tradeShip, "move", nextStop.x, nextStop.y );
+        });
+      }
+
+      return this;
+    }
+
+    method pause( real duration ) -> thistype {
+      if ( state != STATE_STOPPED ) {
+        PauseTimer( myTimer );
+        state = STATE_STOPPED;
+
+        TimerStart( myTimer, duration, false, function() {
+          TradeShip( GetTimerData( GetExpiredTimer() ) ).moveToNextStop();
+        });
+      }
+
+      return this;
+    }
+
+    private method processEnterRegion() {
+      if ( nextStop.containsShip(tradeShip) ) {
+        PauseTimer( myTimer );
+
+        if ( nextStop.isEndOfRoute() ) {
+          removeShip();
+          if (observer >= 1) {
+            observer.execute(this, thistype.EXITED);
+          }
+        } else {
+          pause( nextStop.getPauseTime() );
+
+          if (nextStop.hasFork() && numForksReached > 3) {
+            nextStop = nextStop.getFork();
+          } else {
+            if (nextStop.hasFork()) {
+              numForksReached += 1;
+            }
+            nextStop = nextStop.getNext();
+          }
+        }
+      }
+    }
+
+    static method relaySellItemToShip() {
+      unit u = GetTriggerUnit();
+      if ( existsForUnit( u ) ) {
+        TradeShip.findByShip( u ).pause( TRADE_SHIP_PAUSE_TIME_SELL );
+      }
+      u = null;
+    }
+
+    static method relayEnterRegionToShip() {
+      unit u = GetEnteringUnit();
+      if ( existsForUnit( u ) ) {
+        TradeShip.findByShip( u ).processEnterRegion();
+      }
+      u = null;
+    }
+  }
+}

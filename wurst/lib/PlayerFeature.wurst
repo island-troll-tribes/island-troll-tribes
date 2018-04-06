@@ -1,0 +1,38 @@
+package PlayerFeature
+import HashMap
+
+public class PlayerFeature
+    static let playerFeatures = new HashMap<string, thistype>()
+
+    let features = new HashMap<string, boolean>()
+    string name
+
+    construct(string name)
+        let lname = name.toLowerCase()
+        playerFeatures.put(lname, this)
+        this.name = lname
+
+    static function get(string name) returns thistype
+        let lname = name.toLowerCase()
+        if not playerFeatures.has(lname)
+            playerFeatures.put(lname, new PlayerFeature(name))
+        return playerFeatures.get(lname)
+
+    static function isPlayerEnabled(string name, string feature) returns boolean
+        if playerFeatures.has(name)
+            return playerFeatures.get(name).isEnabled(feature)
+        return false
+
+    function isEnabled(string feature) returns boolean
+        if features.has(feature)
+            return features.get(feature)
+        return false
+
+    function toggleFeature(string feature, boolean value)
+        this.features.put(feature, value)
+
+    function enableFeature(string feature)
+        this.toggleFeature(feature, true)
+
+    function disableFeature(string feature)
+        this.toggleFeature(feature, false)

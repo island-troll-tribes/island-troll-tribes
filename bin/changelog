@@ -1,0 +1,39 @@
+#!/usr/bin/env ruby
+
+# general idea:
+# take a changelog file (zn or j) and turn it into a web-formatted (markdown) file
+# use regex for version number
+# use regex for changes
+
+Dir.chdir(File.dirname(__FILE__))
+Dir.chdir(File.join(["..","src","changelogs"]))
+
+puts "# Island Troll Tribes Change Log\n\n\n"
+
+def get_version(file)
+  basename = File.basename(file, '.zn')
+  match = basename.match(/v(\d+).(\d+)([a-z])/)
+  match[1].to_i * 1e6  + match[2].to_i * 1e3 + match[3][0].ord
+end
+
+Dir.glob("*.{zn,j}").sort do |a, b|
+  version_a = get_version(a)
+  version_b = get_version(b)
+
+  version_a <=> version_b
+end.reverse.each do |f|
+  change_log = File.open(f).read
+
+  version = change_log.scan(/ChangeLog.create\ ?\( ?(.*) ?\, ?(.*) ?\, ?\'(.*)\' ?\) ?;/).first
+  changes = change_log.scan(/.(push|add) ?\( ?\"(.*)\" ?\) ?;/)
+
+  full_version = "#{version[0]}.#{version[1]}#{version[2]}"
+
+  puts "## [v#{full_version}](/maps/#{full_version}/download)\n\n"
+
+  changes.each do |change|
+    puts " - #{change[1].gsub('\"','"')}\n"
+  end
+
+  puts "\n"
+end

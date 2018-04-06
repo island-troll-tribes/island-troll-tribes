@@ -7,7 +7,6 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
     string description = "";
     string name = "";
     string abbrev = "";
-    player modesPlayer = null;
     ArgFunc action;
 
     public static method create(string name, string abbrev, string description, ArgFunc action) -> thistype {
@@ -17,6 +16,8 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       self.abbrev = abbrev;
       self.action = action;
       numGameModes += 1;
+      thistype.modes.integer_s[name] = self;
+      thistype.modes.integer_s[abbrev] = self;
       return self;
     }
 
@@ -36,20 +37,17 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       }
     }
 
-    public method registerFor(string command) {
-      ChatCommands.registerArgFunc(this.modesPlayer, command, this.action);
-      thistype.modes.integer_s[abbrev] = this;
+    public method registerFor(player modesPlayer, string command) {
+      ChatCommands.registerArgFunc(modesPlayer, command, this.action);
     }
 
     public method deregisterFor(string command) {
-      ChatCommands.deregisterArgFunc(this.modesPlayer, command);
-      thistype.modes.integer_s.remove(abbrev);
+      ChatCommands.deregisterArgFunc(null, command);
     }
 
     public method register(player modesPlayer) {
-      this.modesPlayer = modesPlayer;
-      this.registerFor(name);
-      this.registerFor(abbrev);
+      this.registerFor(modesPlayer, name);
+      this.registerFor(modesPlayer, abbrev);
     }
 
     public method deregister() {

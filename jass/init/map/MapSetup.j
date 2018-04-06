@@ -58,7 +58,7 @@ function Start_Game takes nothing returns nothing
     call TimerStart(GAME_TIMER, 99999999, false, null)
 
     call RegisterPlayersTrollClasses()
-    
+
     call TriggerRegisterTimerEvent( gg_trg_stats_degrading, udg_STAT_LOWER_INTERVAL, true)
     call TriggerRegisterTimerEvent( gg_trg_warmth, udg_CLOTHS_HEATUP_INTERVAL, true )
 endfunction
@@ -94,7 +94,7 @@ function GenerateMap takes nothing returns nothing
     local timer t2
     local integer INTEGER = 0
     local group g
-    
+
     set udg_STARTED = true
     if BOARD_TEAM[1] == null then
         set t2 = NewTimer()
@@ -103,7 +103,7 @@ function GenerateMap takes nothing returns nothing
     else
         call TriggerExecute(gg_trg_ShowPlayers)
     endif
-    
+
     loop
         exitwhen INTEGER > 11
         set udg_orders[INTEGER] = "stay"
@@ -133,7 +133,7 @@ function Startup_Timer takes nothing returns nothing
     debug call BJDebugMsg("DEBUG MODE ACTIVE.")
 
     //HCL Modes
-    
+
     if checkHCLletter("i") then //no trade
         call GameModes_Action("-no trade",Player(0))
     endif
@@ -141,27 +141,27 @@ function Startup_Timer takes nothing returns nothing
     if checkHCLletter("0") then
         call GameMode.find("ffa").trigger()
     endif
-    
+
     if checkHCLletter("1") then
         call GameMode.find("1v1").trigger()
     endif
-    
+
     if checkHCLletter("2") then
         call GameMode.find("2s").trigger()
     endif
-    
+
     if checkHCLletter("3") then
         call GameMode.find("3s").trigger()
     endif
-    
+
     if checkHCLletter("4") then
         call GameMode.find("4s").trigger()
     endif
-    
+
     if checkHCLletter("6") then
         call GameMode.find("6s").trigger()
     endif
-    
+
     if checkHCLletter("a") then //all random
         call GameMode.find("all").triggerWithArgs("random")
     endif
@@ -173,7 +173,7 @@ function Startup_Timer takes nothing returns nothing
     if checkHCLletter("f") then
         call GameMode.find("fd").trigger()
     endif
-    
+
     if checkHCLletter("h") then //-hm
         call GameMode.find("hm").trigger()
     endif

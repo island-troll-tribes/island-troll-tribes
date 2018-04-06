@@ -229,10 +229,6 @@ function Startup_Timer takes nothing returns nothing
         call DisplayTText( GENERAL_COLOR + "This game is hosted by " + GREEN_COLOR + "Clan " + HOSTING_CLAN + "|r", 50 )
     endif
 
-    set gg_trg_no_trees = CreateTrigger(  )
-    set gg_trg_GameModes = CreateTrigger(  )
-    set gg_trg_no_herbs = CreateTrigger(  )
-
     call TriggerRegisterPlayerChatEvent( gg_trg_GameModes, modePlayer, "-", false )
     call TriggerRegisterPlayerChatEvent( gg_trg_no_trees, modePlayer, "-no trees", true )
     call TriggerRegisterPlayerChatEvent( gg_trg_no_herbs, modePlayer, "-no herbs", true )
@@ -248,29 +244,33 @@ endfunction
 private function onInit takes nothing returns nothing
     local integer i = 0
     local timer t = NewTimer()
-    
+
     call SetTimeOfDayScale(130 * 0.01)
     call SetFloatGameState(GAME_STATE_TIME_OF_DAY, 3)
     call SetMapFlag( MAP_USE_HANDICAPS, false )
     call EnableMinimapFilterButtons( true, false )
     call SetCreepCampFilterState( false )
-    
+
     static if LIBRARY_HydrAROUTINE then
         call AddItemToStockBJ( ITEM_HYDRA_HINT, gg_unit_n019_0145, 1, 1 )
     endif
-    
+
     call ForForce(bj_FORCE_ALL_PLAYERS, function ItemRecipeVision )
     call ForForce(bj_FORCE_ALL_PLAYERS, function ResetBMSkills )
     call ForForce(bj_FORCE_ALL_PLAYERS, function StartupGold )
-    
+
     call InitGameCacheBJ( "ITT.w3v" )
     set udg_jumpCache = bj_lastCreatedGameCache
     set udg_GameHash = InitHashtable()
 
+    set gg_trg_no_trees = CreateTrigger(  )
+    set gg_trg_GameModes = CreateTrigger(  )
+    set gg_trg_no_herbs = CreateTrigger(  )
+
     call UpdateBoardsLoopInit()
     call LocustDisplayUnits()
     call TimerStart(t,0,false,function Startup_Timer)
-    
+
     loop
         exitwhen i > 11
         if IsPlayerObserver(Player(i)) then

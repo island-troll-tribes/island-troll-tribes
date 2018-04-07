@@ -4,4 +4,4 @@ This is the map source to the Warcraft III custom map Island Troll Tribes.
 
 ## Setting Up
 
-This application requires Ruby, WurstScript, and VSCode is recommended
+This application requires WurstScript, and VSCode is recommended

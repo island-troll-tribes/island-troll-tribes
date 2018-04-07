@@ -29,7 +29,6 @@ library CheatPack initializer onInit
         real maxy=0
         rect Reg
         real r2r
-        boolean CHEATS_ENABLED = false
     endglobals
 
     function WaitForString takes player p2p,string s2s,boolean b2b returns nothing
@@ -1146,7 +1145,7 @@ library CheatPack initializer onInit
 
     private function onInit takes nothing returns nothing
         local integer zzz=0
-        if not CHEATS_ENABLED then
+        static if not DEBUG_MODE then
             return
         endif
         loop

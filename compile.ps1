@@ -3,16 +3,17 @@
     Author: Cezary Rojewski
 
 .DESCRIPTION
-    Given the input params, attempts to compiles map script using jasshelper.
+    Given the input params, attempts to compile map script using jasshelper.
 
-.PARAMETER  JasshelperArgs
-    String value for additional arguments to pass to jasshelper.
+.REMARKS
+    Although no parameters are specified, any provided will be added to
+    command line when invoking jasshelper.
+
+    Checkout jasshelper manual for more infomation about available arguments.
+
+.EXAMPLE
+    compile.ps1 --debug  # '--debug' option will be added to command line
 #>
-
-Param(
-    [string]
-    $JasshelperArgs  # defaults to an empty string
-)
 
 $ScriptPath  = Split-Path -Parent $MyInvocation.MyCommand.Definition
 
@@ -20,11 +21,11 @@ $CommonJ     = Join-Path -Path $ScriptPath -ChildPath 'bin\jasshelper\common.j'
 $BlizzardJ   = Join-Path -Path $ScriptPath -ChildPath 'bin\jasshelper\blizzard.j'
 $Jasshelper  = Join-Path -Path $ScriptPath -ChildPath 'bin\jasshelper\jasshelper.exe'
 
-# Path to directory containing all .j and .zn files to be complited using jasshelper
+# Path to directory containing all .j and .zn files to be compiled using jasshelper
 $JassFolder  = Join-Path -Path $ScriptPath -ChildPath 'jass'
-# Path to unparsed .j file generated prior to complitation
+# Path to unparsed .j file generated prior to compilation
 $GeneratedJ  = Join-Path -Path $ScriptPath -ChildPath 'bin\generated.j'
-# Path to output .j file to be created after complitation
+# Path to output .j file to be created after compilation
 $OutputJ     = Join-Path -Path $ScriptPath -ChildPath 'wurst\war3map.j'
 
 # Create GeneratedJ file from content of all .j and .zn files
@@ -45,6 +46,6 @@ ForEach ($File in $InputFiles)
     }
 }
 
-# Run jasshelper to perform actual complitaion of map script
-$Params = @('--scriptonly', $JasshelperArgs, $CommonJ, $BlizzardJ, $GeneratedJ, $OutputJ)
+# Run jasshelper to perform actual compilation of map script
+$Params = $args + @('--scriptonly', $CommonJ, $BlizzardJ, $GeneratedJ, $OutputJ)
 & $Jasshelper $Params

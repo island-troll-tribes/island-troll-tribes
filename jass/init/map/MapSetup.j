@@ -119,7 +119,7 @@ function ModesTimerFinished takes nothing returns nothing
     call GameMode.deregisterAll()
     call TimerDialogDisplay(MODES_TIMER_DIALOG,false)
     call DestroyTimerDialog(MODES_TIMER_DIALOG)
-    call MultiboardDisplay(MODE_BOARD,false)
+    call MultiboardDisplay(GameMode.modeboard,false)
     call ExecuteFunc("StartClassSelection")
 endfunction
 
@@ -237,8 +237,8 @@ function Startup_Timer takes nothing returns nothing
     set MODES_TIMER_DIALOG = CreateTimerDialog(MODES_TIMER)
     call TimerDialogSetTitle(MODES_TIMER_DIALOG,"Select Modes")
     call TimerDialogDisplay(MODES_TIMER_DIALOG,true)
-    call MultiboardDisplay(MODE_BOARD,true)
-    call MultiboardMinimize(MODE_BOARD,true)
+    call MultiboardDisplay(GameMode.modeboard,true)
+    call MultiboardMinimize(GameMode.modeboard,true)
 endfunction
 
 private function onInit takes nothing returns nothing

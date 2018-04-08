@@ -58,7 +58,7 @@ function Start_Game takes nothing returns nothing
     call TimerStart(GAME_TIMER, 99999999, false, null)
 
     call RegisterPlayersTrollClasses()
-    
+
     call TriggerRegisterTimerEvent( gg_trg_stats_degrading, udg_STAT_LOWER_INTERVAL, true)
     call TriggerRegisterTimerEvent( gg_trg_warmth, udg_CLOTHS_HEATUP_INTERVAL, true )
 endfunction
@@ -94,7 +94,7 @@ function GenerateMap takes nothing returns nothing
     local timer t2
     local integer INTEGER = 0
     local group g
-    
+
     set udg_STARTED = true
     if BOARD_TEAM[1] == null then
         set t2 = NewTimer()
@@ -103,7 +103,7 @@ function GenerateMap takes nothing returns nothing
     else
         call TriggerExecute(gg_trg_ShowPlayers)
     endif
-    
+
     loop
         exitwhen INTEGER > 11
         set udg_orders[INTEGER] = "stay"
@@ -119,7 +119,7 @@ function ModesTimerFinished takes nothing returns nothing
     call GameMode.deregisterAll()
     call TimerDialogDisplay(MODES_TIMER_DIALOG,false)
     call DestroyTimerDialog(MODES_TIMER_DIALOG)
-    call MultiboardDisplay(MODE_BOARD,false)
+    call MultiboardDisplay(GameMode.modeboard,false)
     call ExecuteFunc("StartClassSelection")
 endfunction
 
@@ -133,7 +133,7 @@ function Startup_Timer takes nothing returns nothing
     debug call BJDebugMsg("DEBUG MODE ACTIVE.")
 
     //HCL Modes
-    
+
     if checkHCLletter("i") then //no trade
         call GameModes_Action("-no trade",Player(0))
     endif
@@ -141,27 +141,27 @@ function Startup_Timer takes nothing returns nothing
     if checkHCLletter("0") then
         call GameMode.find("ffa").trigger()
     endif
-    
+
     if checkHCLletter("1") then
         call GameMode.find("1v1").trigger()
     endif
-    
+
     if checkHCLletter("2") then
         call GameMode.find("2s").trigger()
     endif
-    
+
     if checkHCLletter("3") then
         call GameMode.find("3s").trigger()
     endif
-    
+
     if checkHCLletter("4") then
         call GameMode.find("4s").trigger()
     endif
-    
+
     if checkHCLletter("6") then
         call GameMode.find("6s").trigger()
     endif
-    
+
     if checkHCLletter("a") then //all random
         call GameMode.find("all").triggerWithArgs("random")
     endif
@@ -173,7 +173,7 @@ function Startup_Timer takes nothing returns nothing
     if checkHCLletter("f") then
         call GameMode.find("fd").trigger()
     endif
-    
+
     if checkHCLletter("h") then //-hm
         call GameMode.find("hm").trigger()
     endif
@@ -229,10 +229,6 @@ function Startup_Timer takes nothing returns nothing
         call DisplayTText( GENERAL_COLOR + "This game is hosted by " + GREEN_COLOR + "Clan " + HOSTING_CLAN + "|r", 50 )
     endif
 
-    set gg_trg_no_trees = CreateTrigger(  )
-    set gg_trg_GameModes = CreateTrigger(  )
-    set gg_trg_no_herbs = CreateTrigger(  )
-
     call TriggerRegisterPlayerChatEvent( gg_trg_GameModes, modePlayer, "-", false )
     call TriggerRegisterPlayerChatEvent( gg_trg_no_trees, modePlayer, "-no trees", true )
     call TriggerRegisterPlayerChatEvent( gg_trg_no_herbs, modePlayer, "-no herbs", true )
@@ -241,36 +237,40 @@ function Startup_Timer takes nothing returns nothing
     set MODES_TIMER_DIALOG = CreateTimerDialog(MODES_TIMER)
     call TimerDialogSetTitle(MODES_TIMER_DIALOG,"Select Modes")
     call TimerDialogDisplay(MODES_TIMER_DIALOG,true)
-    call MultiboardDisplay(MODE_BOARD,true)
-    call MultiboardMinimize(MODE_BOARD,true)
+    call MultiboardDisplay(GameMode.modeboard,true)
+    call MultiboardMinimize(GameMode.modeboard,true)
 endfunction
 
 private function onInit takes nothing returns nothing
     local integer i = 0
     local timer t = NewTimer()
-    
+
     call SetTimeOfDayScale(130 * 0.01)
     call SetFloatGameState(GAME_STATE_TIME_OF_DAY, 3)
     call SetMapFlag( MAP_USE_HANDICAPS, false )
     call EnableMinimapFilterButtons( true, false )
     call SetCreepCampFilterState( false )
-    
+
     static if LIBRARY_HydrAROUTINE then
         call AddItemToStockBJ( ITEM_HYDRA_HINT, gg_unit_n019_0145, 1, 1 )
     endif
-    
+
     call ForForce(bj_FORCE_ALL_PLAYERS, function ItemRecipeVision )
     call ForForce(bj_FORCE_ALL_PLAYERS, function ResetBMSkills )
     call ForForce(bj_FORCE_ALL_PLAYERS, function StartupGold )
-    
+
     call InitGameCacheBJ( "ITT.w3v" )
     set udg_jumpCache = bj_lastCreatedGameCache
     set udg_GameHash = InitHashtable()
 
+    set gg_trg_no_trees = CreateTrigger(  )
+    set gg_trg_GameModes = CreateTrigger(  )
+    set gg_trg_no_herbs = CreateTrigger(  )
+
     call UpdateBoardsLoopInit()
     call LocustDisplayUnits()
     call TimerStart(t,0,false,function Startup_Timer)
-    
+
     loop
         exitwhen i > 11
         if IsPlayerObserver(Player(i)) then

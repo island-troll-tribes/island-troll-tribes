@@ -152,7 +152,6 @@ library LegacyInit initializer onInit
         call ExecuteFunc("InitTrig_Omnitower_cancelled")
         call ExecuteFunc("InitTrig_Hatchery_cancelled")
         call ExecuteFunc("InitTrig_TPBEACOn_cancelled")
-        call ExecuteFunc("InitTrig_modeboard")
         call ExecuteFunc("InitTrig_boards")
         call ExecuteFunc("InitTrig_update_names")
         call ExecuteFunc("InitTrig_update_boards")

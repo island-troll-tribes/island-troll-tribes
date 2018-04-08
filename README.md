@@ -6,4 +6,4 @@ Visit our [homepage](http://twgb.islandtrolltribes.com/) for more information on
 
 ## Setting Up
 
-This application requires [WurstScript](https://wurstlang.org/), and [Visual Studio Code](https://code.visualstudio.com/) is recommended.
+This application requires [WurstScript](https://wurstlang.org/) and [Visual Studio Code](https://code.visualstudio.com/) is recommended.

@@ -1,0 +1,26 @@
+package PlayerUtils
+import TribeUtils
+
+public function findPlayerIdByNameWithMinAndMax(string str, int minId, int maxId) returns int
+    let partialName = str.toLowerCase()
+    let partialNameLen = partialName.length()
+    var matches = 0
+    var id = -1
+
+    for i = minId to maxId
+        if partialName == Player(i).getName().toLowerCase().substring(0, partialNameLen)
+            id = i
+            matches += 1
+
+    if matches == 1
+        return id
+    else
+        return -1
+
+public function findPlayerIdByName(string str) returns int
+    return findPlayerIdByNameWithMinAndMax(str, 0, 11)
+
+public function findPlayerIdByNameOnTribe(string str, int tribeId) returns int
+    let minId = getMinPlayerIdForTribe(tribeId)
+    let maxId = getMaxPlayerIdForTribe(tribeId)
+    return findPlayerIdByNameWithMinAndMax(str, minId, maxId)

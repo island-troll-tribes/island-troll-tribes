@@ -1,5 +1,8 @@
 package PlayerUtils
+import HashMap
 import TribeUtils
+
+let colorCodeToPlayerIdMap = new HashMap<string, int>()
 
 public function findPlayerIdByNameWithMinAndMax(string str, int minId, int maxId) returns int
     let partialName = str.toLowerCase()
@@ -24,3 +27,38 @@ public function findPlayerIdByNameOnTribe(string str, int tribeId) returns int
     let minId = getMinPlayerIdForTribe(tribeId)
     let maxId = getMaxPlayerIdForTribe(tribeId)
     return findPlayerIdByNameWithMinAndMax(str, minId, maxId)
+
+public function findPlayerIdByStringMatchingTribe(string str, int tribeId) returns int
+    let playerId = str.toInt() - 1
+
+    if playerId >= 0 and playerId <= 11
+        return playerId
+    else if colorCodeToPlayerIdMap.has(str.toUpperCase())
+        return colorCodeToPlayerIdMap.get(str.toUpperCase())
+    else
+        return findPlayerIdByNameOnTribe(str, tribeId)
+
+public function findPlayerIdByString(string str) returns int
+    let playerId = str.toInt() - 1
+
+    if playerId >= 0 and playerId <= 11
+        return playerId
+    else if colorCodeToPlayerIdMap.has(str.toUpperCase())
+        return colorCodeToPlayerIdMap.get(str.toUpperCase())
+    else
+        return findPlayerIdByName(str)
+
+init
+    colorCodeToPlayerIdMap
+        ..put("RED", 0)
+        ..put("BLUE", 1)
+        ..put("CYAN", 2)
+        ..put("PURPLE", 3)
+        ..put("YELLOW", 4)
+        ..put("ORANGE", 5)
+        ..put("GREEN", 6)
+        ..put("PINK", 7)
+        ..put("LIGHT_GRAY", 8)
+        ..put("LIGHT_BLUE", 9)
+        ..put("AQUA", 10)
+        ..put("BROWN", 11)

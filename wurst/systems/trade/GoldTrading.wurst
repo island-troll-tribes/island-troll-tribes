@@ -1,49 +1,50 @@
 package GoldTrading
+import LinkedList
 import ChatCommands
 import SimError
 import PlayerExtensions
 import StringExtensions
 import PlayerUtils
 
+CommandHandler giveGold = (player giver, LinkedList<string> args) -> begin
+    let tribeId = giver.getTribeId()
+    let playerId = findPlayerIdByStringMatchingTribe(args.get(1), tribeId)
+    let amount = args.get(2).toInt()
+    let currentGold = giver.getLumber()
+    let target = players[playerId]
+
+    if playerId < 0 or playerId > 11
+        simError(giver, "Command: -g player amount")
+    else if amount <= 0
+        simError(giver, "Amount must be greater than zero")
+    else if amount > currentGold
+        simError(giver, "Not enough gold")
+    else if playerId == giver.getId()
+        simError(giver, "You cannot trade with yourself")
+    else if target.getTribeId() != tribeId
+        simError(giver, "You cannot trade with that player")
+    else
+        giver.subLumber(amount)
+        target.addLumber(amount)
+
+        let targetMessage = (
+            "You received ".color(GENERAL_COLOR) +
+            (args.get(2) + "gold").color(GOLD_COLOR) +
+            " from ".color(GENERAL_COLOR) +
+            giver.getNameColored()
+        )
+        printTimedToPlayer(targetMessage, 10, target)
+
+        let giverMessage = (
+            "Sent ".color(GENERAL_COLOR) +
+            (args.get(2) + " gold").color(GOLD_COLOR) +
+            " to ".color(GENERAL_COLOR) +
+            target.getNameColored()
+        )
+        printTimedToPlayer(giverMessage, 10, giver)
+end
+
 init
-    registerCommandAll("g") (giver, args) ->
-        var playerId = args.get(1).toInt() - 1
-        let amount = args.get(2).toInt()
-        let tribeId = giver.getTribeId()
-        let currentGold = giver.getLumber()
-
-        if udg_STARTED
-            if playerId < 0 or playerId > 11
-                playerId = findPlayerIdByNameOnTribe(args.get(1), tribeId)
-
-            let target = players[playerId]
-
-            if playerId < 0 or playerId > 11
-                simError(giver, "Command is '-g (player name or id) (amount)'")
-            else if amount <= 0
-                simError(giver, "Amount must be greater than zero")
-            else if amount > currentGold
-                simError(giver, "Not enough gold")
-            else if playerId == giver.getId()
-                simError(giver, "You cannot trade with yourself")
-            else if target.getTribeId() != tribeId
-                simError(giver, "You cannot trade with that player")
-            else
-                giver.subLumber(amount)
-                target.addLumber(amount)
-
-                let targetMessage = (
-                    "You received ".color(GENERAL_COLOR) +
-                    (args.get(2) + "gold").color(GOLD_COLOR) +
-                    " from ".color(GENERAL_COLOR) +
-                    giver.getNameColored()
-                )
-                printTimedToPlayer(targetMessage, 10, target)
-
-                let giverMessage = (
-                    "Sent ".color(GENERAL_COLOR) +
-                    (args.get(2) + " gold").color(GOLD_COLOR) +
-                    " to ".color(GENERAL_COLOR) +
-                    target.getNameColored()
-                )
-                printTimedToPlayer(giverMessage, 10, giver)
+    s__Map_onGameStart() () ->
+        registerCommandAll("g", giveGold)
+        registerCommandAll("gold", giveGold)

@@ -21,7 +21,7 @@ function Trig_Magic_Actions takes nothing returns nothing
         call HornSound()
         set x = GetRectCenterX(gg_rct_discoduck)
         set y = GetRectCenterY(gg_rct_discoduck)
-        set DiscoDuck = CreateUnit(Player(12), UNIT_DISCO_DUCK, x, y, 315)
+        set DiscoDuck = CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_DISCO_DUCK, x, y, 315)
         call DestroyEffect(AddSpecialEffectTarget(teleportModel, DiscoDuck, "overhead"))
     elseif i == 1 then
         call SetUnitLifePercentBJ( u, 30 )

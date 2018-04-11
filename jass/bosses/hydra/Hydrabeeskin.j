@@ -7,7 +7,7 @@ function HydraBeeConnection takes nothing returns boolean
 endfunction
 
 function TurnBeeHostile takes nothing returns nothing
-    call SetUnitOwner(GetAttacker(), Player(12), false)
+    call SetUnitOwner(GetAttacker(), Player(PLAYER_NEUTRAL_AGGRESSIVE), false)
 endfunction
 
 //===========================================================================

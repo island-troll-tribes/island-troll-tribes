@@ -6,7 +6,7 @@
 //TESH.scrollpos=120
 //TESH.alwaysfold=0
 function PetOrdersFilterFunction1 takes nothing returns boolean
-  return GetFilterPlayer()==Player(15) and GetUnitTypeId(GetFilterUnit())!='h01G' and IsUnitType(GetFilterUnit(),UNIT_TYPE_ANCIENT)
+  return GetFilterPlayer()==Player(PLAYER_NEUTRAL_PASSIVE) and GetUnitTypeId(GetFilterUnit())!='h01G' and IsUnitType(GetFilterUnit(),UNIT_TYPE_ANCIENT)
 endfunction
 
 function PetOrderFilterFunction2 takes nothing returns nothing

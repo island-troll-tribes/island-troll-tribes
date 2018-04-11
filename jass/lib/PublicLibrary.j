@@ -517,15 +517,15 @@ function makeAFish takes rect loc returns nothing
                 set i = GetRandomInt(0,1000)
                 if i == 0 then
                     set fishytrigger = true
-                    call CreateUnit(Player(12), UNIT_MAGENTA_FISH, x, y, 270 )
+                    call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MAGENTA_FISH, x, y, 270 )
                 endif
             endif
         elseif t <= 4 then
-            set u = CreateUnit(Player(12), UNIT_HAWK, x, y, 270 )
+            set u = CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_HAWK, x, y, 270 )
         elseif t <= 6 then
-            set u = CreateUnit(Player(12), UNIT_GREEN_FISH, x, y, 270 )
+            set u = CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_GREEN_FISH, x, y, 270 )
         else
-            set u = CreateUnit(Player(12), UNIT_FISH, x, y, 270 )
+            set u = CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_FISH, x, y, 270 )
         endif
     endif
     set u = null
@@ -765,15 +765,15 @@ function makeAnimal takes rect loc returns nothing
             exitwhen IsTerrainLand(x, y) and IsTerrainWalkable(x, y)
         endloop
         if t<=udg_PANTHER_RATE then
-            call CreateUnit(Player(12), UNIT_PANTHER, x, y, 270 )
+            call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_PANTHER, x, y, 270 )
         elseif t<=udg_BEAR_RATE+udg_PANTHER_RATE then
-            call CreateUnit(Player(12), UNIT_SNAKE, x, y, 270 )
+            call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_SNAKE, x, y, 270 )
         elseif t<=udg_BEAR_RATE+udg_PANTHER_RATE+udg_SNAKE_RATE then
-            call CreateUnit(Player(12), UNIT_JUNGLE_BEAR, x, y, 270 )
+            call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_JUNGLE_BEAR, x, y, 270 )
         elseif t<=udg_BEAR_RATE+udg_WOLF_RATE+udg_PANTHER_RATE+udg_SNAKE_RATE then
-            call CreateUnit(Player(12), UNIT_JUNGLE_WOLF, x, y, 270 )
+            call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_JUNGLE_WOLF, x, y, 270 )
         else
-            call CreateUnit(Player(12), UNIT_ELK, x, y, 270 )
+            call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_ELK, x, y, 270 )
         endif
         set udg_ANIMAL_CURRENT = udg_ANIMAL_CURRENT + 1
     endif
@@ -1109,7 +1109,7 @@ function GetPlayerByRealName takes string name returns player
         endif
         set i=i+1
     endloop
-    return Player(12)
+    return Player(PLAYER_NEUTRAL_AGGRESSIVE)
 endfunction
 
 function GetPlayerIdByRealName takes string name returns integer
@@ -1119,7 +1119,7 @@ endfunction
 function LockMammoth takes nothing returns nothing
     call SetDestructableInvulnerable( mammothGate, true )
     set Mammoth = MAMMOTH
-    call SetUnitOwner( Mammoth, Player(12), true )
+    call SetUnitOwner( Mammoth, Player(PLAYER_NEUTRAL_AGGRESSIVE), true )
 endfunction
 
 function ConvertEnumCorpseToCookedMeat takes nothing returns nothing
@@ -1288,19 +1288,19 @@ endfunction
 
 // http://www.thehelper.net/threads/jass-return-item-cost.53645/
 function GetItemGoldCostById takes integer uid returns integer
-    local integer Val = GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_GOLD)
-    local integer ValB = GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_LUMBER)
+    local integer Val = GetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_GOLD)
+    local integer ValB = GetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_LUMBER)
     local integer Diff
-    local unit U = CreateUnitAtLoc(Player(15),'nshe',GetRectCenter(GetPlayableMapRect()),bj_UNIT_FACING)
-    call AdjustPlayerStateBJ(50000,Player(15),PLAYER_STATE_RESOURCE_GOLD)
-    call AdjustPlayerStateBJ(50000,Player(15),PLAYER_STATE_RESOURCE_LUMBER)
+    local unit U = CreateUnitAtLoc(Player(PLAYER_NEUTRAL_PASSIVE),'nshe',GetRectCenter(GetPlayableMapRect()),bj_UNIT_FACING)
+    call AdjustPlayerStateBJ(50000,Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_GOLD)
+    call AdjustPlayerStateBJ(50000,Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_LUMBER)
     call UnitAddAbilityBJ('Asid',U)
-    set Diff = GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_GOLD)
+    set Diff = GetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_GOLD)
     call AddItemToStockBJ(uid,U,1,1)
     call IssueTrainOrderByIdBJ(U,uid)
-    set Diff = Diff - GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_GOLD)
-    call SetPlayerState(Player(15),PLAYER_STATE_RESOURCE_GOLD,Val)
-    call SetPlayerState(Player(15),PLAYER_STATE_RESOURCE_LUMBER,ValB)
+    set Diff = Diff - GetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_GOLD)
+    call SetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_GOLD,Val)
+    call SetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_LUMBER,ValB)
     call RemoveItem(FindNextItem(GetUnitLoc(U)))
     call RemoveUnit(U)
     set U = null
@@ -1308,19 +1308,19 @@ function GetItemGoldCostById takes integer uid returns integer
 endfunction
 
 function GetItemLumberCostById takes integer uid returns integer
-    local integer Val = GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_GOLD)
-    local integer ValB = GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_LUMBER)
+    local integer Val = GetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_GOLD)
+    local integer ValB = GetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_LUMBER)
     local integer Diff
-    local unit U = CreateUnitAtLoc(Player(15),'nshe',GetRectCenter(GetPlayableMapRect()),bj_UNIT_FACING)
-    call AdjustPlayerStateBJ(50000,Player(15),PLAYER_STATE_RESOURCE_GOLD)
-    call AdjustPlayerStateBJ(50000,Player(15),PLAYER_STATE_RESOURCE_LUMBER)
+    local unit U = CreateUnitAtLoc(Player(PLAYER_NEUTRAL_PASSIVE),'nshe',GetRectCenter(GetPlayableMapRect()),bj_UNIT_FACING)
+    call AdjustPlayerStateBJ(50000,Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_GOLD)
+    call AdjustPlayerStateBJ(50000,Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_LUMBER)
     call UnitAddAbilityBJ('Asid',U)
-    set Diff = GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_LUMBER)
+    set Diff = GetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_LUMBER)
     call AddItemToStockBJ(uid,U,1,1)
     call IssueTrainOrderByIdBJ(U,uid)
-    set Diff = Diff - GetPlayerState(Player(15),PLAYER_STATE_RESOURCE_LUMBER)
-    call SetPlayerState(Player(15),PLAYER_STATE_RESOURCE_GOLD,Val)
-    call SetPlayerState(Player(15),PLAYER_STATE_RESOURCE_LUMBER,ValB)
+    set Diff = Diff - GetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_LUMBER)
+    call SetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_GOLD,Val)
+    call SetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_LUMBER,ValB)
     call RemoveItem(FindNextItem(GetUnitLoc(U)))
     call RemoveUnit(U)
     set U = null

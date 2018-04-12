@@ -43,7 +43,7 @@ set BY=null
 endfunction
 
 function NaturalEnemies takes nothing returns boolean
-    return IsUnitEnemy(GetFilterUnit(), Player(12))
+    return IsUnitEnemy(GetFilterUnit(), Player(PLAYER_NEUTRAL_AGGRESSIVE))
 endfunction
 
 function TriggerResetSpell takes nothing returns nothing
@@ -94,7 +94,7 @@ endfunction
 function SpawnHydra takes real x, real y returns nothing
 local real angle = bj_RADTODEG * Atan2(y, x)
 call HornSound()
-set Hydra = CreateUnit(Player(12), UNIT_ANCIENT_HYDRA, x+1, y+1, angle)
+set Hydra = CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_ANCIENT_HYDRA, x+1, y+1, angle)
 set hydraSpawnX = x+1
 set hydraSpawnY = y+1
 set Hydra_Dead = false
@@ -153,13 +153,13 @@ loop
     exitwhen i > lesserCount
     if spawn_Y[i] != 0 then
         set lesserCount = lesserCount + 1
-        set u = CreateUnit(Player(12), UNIT_LESSER_HYDRA, spawn_X[i], spawn_Y[i], GetRandomReal(0, 360))
+        set u = CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_LESSER_HYDRA, spawn_X[i], spawn_Y[i], GetRandomReal(0, 360))
         call DestroyEffect(AddSpecialEffectTarget(hydraSpawnModel, u, "head"))
         call SetUnitUserData(u, lesserCount)
         set spawn_X[lesserCount] = 0
         set spawn_Y[lesserCount] = 0
         set lesserCount = lesserCount + 1
-        set u = CreateUnit(Player(12), UNIT_LESSER_HYDRA, spawn_X[i], spawn_Y[i], GetRandomReal(0, 360))
+        set u = CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_LESSER_HYDRA, spawn_X[i], spawn_Y[i], GetRandomReal(0, 360))
         call DestroyEffect(AddSpecialEffectTarget(hydraSpawnModel, u, "head"))
         call SetUnitUserData(u, lesserCount)
         set spawn_X[lesserCount] = 0

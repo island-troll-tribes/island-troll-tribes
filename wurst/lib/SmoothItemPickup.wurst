@@ -1,0 +1,141 @@
+/*
+*  SmoothItemPickup v1.0.0.0
+*     by Bannar
+*
+*  Allows for item pickup during certain conditions even when unit inventory is full.
+*/
+package SmoothItemPickup
+import LinkedList
+import LinkedListModule
+import HashMap
+import RegisterEvents
+import ClosureTimers
+
+/** Default pickup range degined in gameplay constants. */
+@configurable int PICK_UP_RANGE = 150
+
+HashMap<int, PeriodicData> map = new HashMap<int, PeriodicData>()
+LinkedList<trigger> conditions = new LinkedList<trigger>()
+timer periodic = CreateTimer()
+
+class PeriodicData
+    use LinkedListModule
+    unit u
+    item itm
+    real range
+
+    construct()
+        map.put(u.getHandleId(), this)
+
+    ondestroy
+        map.remove(u.getHandleId())
+
+unit eventUnit = null
+item eventItem = null
+trigger eventTrigger = CreateTrigger()
+
+public function getSmoothItemPickupUnit() returns unit
+    return eventUnit
+
+public function getSmoothItemPickupItem() returns item
+    return eventItem
+
+public function registerSmoothItemPickupEvent(code cb)
+    eventTrigger.addCondition(Condition(cb))
+
+public function addSmoothPickupCondition(code predicate) returns trigger
+    let t = CreateTrigger()
+    conditions.add(t)
+    t.addCondition(Condition(predicate))
+    return t
+
+public function removeSmoothPickupCondition(trigger t)
+    conditions.remove(t)
+
+function fireEvent(unit u, item itm)
+    let prevUnit = eventUnit
+    let prevItem = eventItem
+    eventUnit = u
+    eventItem = itm
+
+    eventTrigger.evaluate()
+
+    eventUnit = prevUnit
+    eventItem = prevItem
+
+function test(unit u, item itm, real range) returns boolean
+    if UnitHasItem(u, itm)
+        return true
+    if IsItemOwned(itm)
+        return false
+
+    let dx = itm.getX() - u.getX()
+    let dy = itm.getY() - u.getY()
+    // Ignore SquareRoot by providing multiplied range
+    return (dx * dx +  dy * dy) <= range
+
+function onCallback()
+    var iter = PeriodicData.iterator()
+    while iter.hasNext()
+        var data = iter.next()
+        if not data.u.isAlive() or data.u.getCurrentOrder() != 851986
+            or data.itm == null or IsItemOwned(data.itm)
+
+            destroy data
+            if PeriodicData.size == 0
+                periodic.pause()
+        else
+            if test(data.u, data.itm, data.range)
+                fireEvent(data.u, data.itm)
+
+                destroy data
+                if PeriodicData.size == 0
+                    periodic.pause()
+    iter.close()
+
+function onTargetOrder()
+    item itm = GetOrderTargetItem()
+    PeriodicData data
+    bool proceed = false
+
+    if itm == null or GetIssuedOrderId() != 851971
+        return
+
+    for condition in conditions
+        if condition.evaluate()
+            proceed = true
+            break    
+    if not proceed
+        return
+
+    let u = GetTriggerUnit()
+    let collision = u.getCollisionSize()
+    
+    let range = (PICK_UP_RANGE + collision) * (PICK_UP_RANGE + collision)
+    if test(u, itm, range)
+        // Pprevent picking up item before the order 'finishes'.
+        // Fixes the issue with unit moving towards the item location, rather than stopping
+        nullTimer() ->
+            fireEvent(u, itm)
+    else
+        if not map.has(u.getHandleId())
+            if PeriodicData.size == 0
+                periodic.startPeriodic(0.031250000, () -> onCallback())
+            data = new PeriodicData()
+            data.u = u
+            
+            data.range = range
+        else
+            data = map.get(u.getHandleId())
+        data.itm = itm
+
+        let t = getPlayerUnitEventTrigger(EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER)
+        t.disable()
+        var angle = bj_RADTODEG * Atan2(u.getY() - itm.getY(), u.getX() - itm.getX())
+        var x = itm.getX() + PICK_UP_RANGE * Cos(angle * bj_DEGTORAD)
+        var y = itm.getY() + PICK_UP_RANGE * Sin(angle * bj_DEGTORAD)
+        u.issuePointOrderById(851986, vec2(x, y))
+        t.enable()        
+
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, () -> onTargetOrder())

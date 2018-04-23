@@ -22,13 +22,16 @@ HashMap<int, LinkedList<ItemRestriction>> restrictionsMap
     return "This item requires " + value.toString() + " " + statistic + "."
 
 @configurable function getLimitErrorMessage(int limit) returns string
-    return "This unit can not hold more than " + limit.toString() + " items of this item type."
+    return "This unit can not hold more than " + limit.toString() + " item(s) of this item type."
 
 @configurable function getExclusiveErrorMessage(string type1, string type2) returns string
     return "This unit cannot hold items of type \"" + type1 + "\" and \"" + type2 + "\" at the same time."
 
 @configurable function getForbiddenErrorMessage() returns string
     return "This item can not be picked up by this unit."
+
+public interface UnitRequirementPredicate
+    function isMet(unit u) returns string
 
 /** Set of unit-specific requirements. */ 
 public class UnitRequirement
@@ -44,6 +47,7 @@ public class UnitRequirement
     int intelligence
     /** Whether to include bonuses when checking unit statistics. */
     bool includeBonuses
+    private LinkedList<UnitRequirementPredicate> conditions
 
     construct(int lvl, int str, int agi, int intel, bool includeBonuses)
         typeIds = new LinkedList<int>()
@@ -52,6 +56,7 @@ public class UnitRequirement
         agility = agi
         intelligence = intel
         this.includeBonuses = includeBonuses
+        conditions = new LinkedList<UnitRequirementPredicate>()
     
     construct()
         typeIds = new LinkedList<int>()
@@ -60,9 +65,11 @@ public class UnitRequirement
         agility = 0
         intelligence = 0
         includeBonuses = false
+        conditions = new LinkedList<UnitRequirementPredicate>()
     
     ondestroy
         destroy typeIds
+        destroy conditions
 
     /** Whether specified item type is a part of restriction. */
     function has(int unitTypeId) returns boolean
@@ -74,9 +81,20 @@ public class UnitRequirement
         agility = agi
         intelligence = intel
 
+    function addCondition(UnitRequirementPredicate predicate)
+        if predicate == null
+            return
+        conditions.add(predicate)
+
+    function removeCondition(UnitRequirementPredicate predicate)
+        if predicate == null
+            return
+        conditions.remove(predicate)
+
     /** Validates whether specified unit meets this unit requirements. */
     function test(unit u) returns string
-        let unitTypeId = u.getTypeId()
+        int unitTypeId = u.getTypeId()
+        string errorMessage
 
         if not typeIds.isEmpty() and not has(unitTypeId)
             return getUnitTypeErrorMessage(unitTypeId)
@@ -88,7 +106,12 @@ public class UnitRequirement
             return getStatisticErrorMessage(agility, "Agility")
         if intelligence > 0 and u.getInt(includeBonuses) < intelligence
             return getStatisticErrorMessage(intelligence, "Intelligence")
-        
+
+        for condition in conditions
+            errorMessage = condition.isMet(u)
+            if errorMessage != null
+                return errorMessage
+
         return null
 
     /** Returns value indicating whether specified unit successfully passed requirement test. */

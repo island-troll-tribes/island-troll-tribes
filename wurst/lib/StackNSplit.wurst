@@ -49,7 +49,7 @@ public function getItemStackingEventTrigger(int whichEvent) returns trigger
 public function unit.isInventoryFull() returns boolean
     let size = this.inventorySize()
 
-    for i = 0 to size-1
+    for i = 0 to size - 1
         if this.itemInSlot(i) == null
             return false
     return true
@@ -61,7 +61,7 @@ public function unit.isItemFullyStacked(int itemTypeId) returns boolean
 
     if max > 0
         let size = this.inventorySize()
-        for i = 0 to size-1
+        for i = 0 to size - 1
             itm = this.itemInSlot(i)
             if itm.getTypeId() == itemTypeId and GetItemCharges(itm) < max
                 return false
@@ -127,7 +127,7 @@ public function stackItem(unit u, item itm) returns boolean
         return false
 
     int max = getItemMaxStacks(itemTypeId)
-    for i = 0 to size-1
+    for i = 0 to size - 1
         with = u.itemInSlot(i)
 
         if with != itm and with.getTypeId() == itemTypeId
@@ -185,7 +185,7 @@ function onMoved()
         fireEvent(eventRemoveTrigger, u, itm, toSplit)
 
         // Redistribute the splitted stacks if possible
-        for i = 0 to size-1
+        for i = 0 to size - 1
             if i != slotFrom
                 with = u.itemInSlot(i)
                 if with.getTypeId() == itemTypeId
@@ -226,16 +226,17 @@ function onMoved()
 function onSmoothPickup()
     stackItem(getSmoothItemPickupUnit(), getSmoothItemPickupItem())
 
-function predicate() returns boolean
-    let itemTypeId = GetOrderTargetItem().getTypeId()
-    if not isItemStackable(itemTypeId)
-        return false
+class StackSmoothPickupPredicate implements SmoothPickupPredicate
 
-    let u = GetTriggerUnit()
-    return u.isInventoryFull() and not u.isItemFullyStacked(itemTypeId)
+    function canPickup(unit u, item itm) returns boolean
+        int itemTypeId = itm.getTypeId()
+        if not isItemStackable(itemTypeId)
+            return false
+
+        return u.isInventoryFull() and not u.isItemFullyStacked(itemTypeId)
 
 init
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM, () -> onPickUp())
     registerInventoryEvent(EVENT_INVENTORY_MOVED, () -> onMoved())
     registerSmoothItemPickupEvent(() -> onSmoothPickup())
-    addSmoothPickupCondition(() -> predicate())
+    addSmoothPickupCondition(new StackSmoothPickupPredicate())

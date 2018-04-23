@@ -32,10 +32,23 @@ public function getInventorySlotTo() returns int
 public function getInventorySwappedItem() returns item
     return UnitItemInSlot(eventUnit, eventSlotTo)
 
+public function registerInventoryEvent(int whichEvent, code cb)
+    if whichEvent == EVENT_INVENTORY_MOVED
+        eventMovedTrigger.addCondition(Condition(cb))
+    else if whichEvent == EVENT_INVENTORY_USED
+        eventUsedTrigger.addCondition(Condition(cb))
+
+public function getInventoryEventTrigger(int whichEvent) returns trigger
+    if whichEvent == EVENT_INVENTORY_MOVED
+        return eventMovedTrigger
+    else if whichEvent == EVENT_INVENTORY_USED
+        return eventUsedTrigger
+    return null
+
 public function unit.getItemSlot(item itm) returns int
     if this.hasItem(itm)
         let size = this.inventorySize()
-        for i = 0 to size-1
+        for i = 0 to size - 1
             if this.itemInSlot(i) == itm
                 return i
     return -1
@@ -79,17 +92,6 @@ function onAnyOrder()
     let order = GetIssuedOrderId()
     if order >= 852002 and order <= 852013
         onItemOrder()
-
-public function registerInventoryEvent(int ev, code c)
-    if ev == EVENT_INVENTORY_MOVED
-        eventMovedTrigger.addCondition(Condition(c))
-    else
-        eventUsedTrigger.addCondition(Condition(c))
-
-public function getInventoryEventTrigger(int whichEvent) returns trigger
-    if whichEvent == EVENT_INVENTORY_MOVED
-        return eventMovedTrigger
-    return eventUsedTrigger
 
 init
     // MOVED is order of type TARGET_ORDER yet USED can be anyone of them

@@ -14,8 +14,12 @@ import ClosureTimers
 /** Default pickup range degined in gameplay constants. */
 @configurable int PICK_UP_RANGE = 150
 
-HashMap<int, PeriodicData> map = new HashMap<int, PeriodicData>()
-LinkedList<trigger> conditions = new LinkedList<trigger>()
+let conditions = new LinkedList<SmoothPickupPredicate>()
+
+public interface SmoothPickupPredicate
+    function canPickup(unit u, item itm) returns boolean
+
+let map = new HashMap<int, PeriodicData>()
 timer periodic = CreateTimer()
 
 class PeriodicData
@@ -43,14 +47,15 @@ public function getSmoothItemPickupItem() returns item
 public function registerSmoothItemPickupEvent(code cb)
     eventTrigger.addCondition(Condition(cb))
 
-public function addSmoothPickupCondition(code predicate) returns trigger
-    let t = CreateTrigger()
-    conditions.add(t)
-    t.addCondition(Condition(predicate))
-    return t
+public function addSmoothPickupCondition(SmoothPickupPredicate predicate)
+    if predicate == null
+        return
+    conditions.add(predicate)
 
-public function removeSmoothPickupCondition(trigger t)
-    conditions.remove(t)
+public function removeSmoothPickupCondition(SmoothPickupPredicate predicate)
+    if predicate == null
+        return
+    conditions.remove(predicate)
 
 function fireEvent(unit u, item itm)
     let prevUnit = eventUnit
@@ -94,6 +99,7 @@ function onCallback()
     iter.close()
 
 function onTargetOrder()
+    unit u = GetTriggerUnit()
     item itm = GetOrderTargetItem()
     PeriodicData data
     bool proceed = false
@@ -102,16 +108,15 @@ function onTargetOrder()
         return
 
     for condition in conditions
-        if condition.evaluate()
+        if condition.canPickup(u, itm)
             proceed = true
             break    
     if not proceed
         return
 
-    let u = GetTriggerUnit()
-    let collision = u.getCollisionSize()
-    
-    let range = (PICK_UP_RANGE + collision) * (PICK_UP_RANGE + collision)
+    real collision = u.getCollisionSize()
+    real range = (PICK_UP_RANGE + collision) * (PICK_UP_RANGE + collision)
+
     if test(u, itm, range)
         // Pprevent picking up item before the order 'finishes'.
         // Fixes the issue with unit moving towards the item location, rather than stopping
@@ -129,7 +134,7 @@ function onTargetOrder()
             data = map.get(u.getHandleId())
         data.itm = itm
 
-        let t = getPlayerUnitEventTrigger(EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER)
+        trigger t = getPlayerUnitEventTrigger(EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER)
         t.disable()
         var angle = bj_RADTODEG * Atan2(u.getY() - itm.getY(), u.getX() - itm.getX())
         var x = itm.getX() + PICK_UP_RANGE * Cos(angle * bj_DEGTORAD)

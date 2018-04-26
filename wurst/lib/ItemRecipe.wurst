@@ -11,7 +11,6 @@ import RegisterEvents
 import ItemRestriction
 import InventoryEvent
 import SmoothItemPickup
-import StackNSplit
 
 // Global containers for associated recipe list retrieval
 let recipeMap = new HashMap<int, LinkedList<ItemRecipe>>()
@@ -297,7 +296,7 @@ public class ItemRecipe
         let iter = ingredients.iterator()..next()
         while iter.current != iter.dummy // Match() validated count > size already
             itm = items.get(slot)
-            charges = GetItemCharges(itm)
+            charges = itm.getCharges()
             data = iter.current.elem
             idx = data.index
 
@@ -349,7 +348,7 @@ public class ItemRecipe
                     if not recipeData.has(slot)
                         itm = items.get(slot)
                         itemTypeId = itm.getTypeId()
-                        charges = GetItemCharges(itm)
+                        charges = itm.getCharges()
 
                         if itemTypeId == data.itemTypeId and charges >= data.charges
                             recipeData.put(slot, new ItemData(data))
@@ -390,9 +389,9 @@ public class ItemRecipe
     function test(unit u) returns HashMap<int, ItemData>
         int size = u.inventorySize()
         let items = new LinkedList<item>()
-        for i = 0 to size - 1
-            items.push(u.itemInSlot(i))
 
+        for slot = 0 to size - 1
+            items.push(u.itemInSlot(slot))
         return test(u, items)
 
     /** Attempts to assembly recipe for specified unit given the ingredients list. */
@@ -418,9 +417,9 @@ public class ItemRecipe
                 data = recipeData.get(i)
                 itm = items.get(i)
                 if data.charges > 0
-                    chrgs = GetItemCharges(itm)
+                    chrgs = itm.getCharges()
                     if chrgs > data.charges and not data.remove
-                        SetItemCharges(itm, chrgs - data.charges)
+                        itm.setCharges(chrgs - data.charges)
                     else
                         itm.remove()
                 else if data.remove
@@ -428,8 +427,8 @@ public class ItemRecipe
 
         itm = CreateItem(reward, u.getX(), u.getY())
         if charges > 0
-            SetItemCharges(itm, charges)
-        UnitAddItem(u, itm)
+            itm.setCharges(charges)
+        u.addItemHandle(itm)
 
         eventHandled = prevHandled
         fireEvent(eventAssembledTrigger, this, u, itm, recipeData)
@@ -453,8 +452,8 @@ public class ItemRecipe
         if permanent
             return false
 
-        for i = 0 to size - 1
-            itm = u.itemInSlot(i)
+        for slot = 0 to size - 1
+            itm = u.itemInSlot(slot)
             if itm.getTypeId() == reward
                 found = true
                 break
@@ -466,8 +465,8 @@ public class ItemRecipe
             if data.remove
                 itm = CreateItem(data.itemTypeId, u.getX(), u.getY())
                 if data.charges > 0
-                    SetItemCharges(itm, data.charges)
-                UnitAddItem(u, itm)
+                    itm.setCharges(data.charges)
+                u.addItemHandle(itm)
         return true
 
 /** Attempts to assemble specified item type for provided unit. */
@@ -565,6 +564,7 @@ init
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM, () -> onPickUp())
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_EFFECT, () -> onCast())
     registerInventoryEvent(EVENT_INVENTORY_MOVED, () -> onMoved())
+
     // Allow for smooth pickup for pickup-type unordered recipes
     registerSmoothItemPickupEvent(() -> onSmoothPickup())
     addSmoothPickupCondition(new RecipeSmoothPickupPredicate())

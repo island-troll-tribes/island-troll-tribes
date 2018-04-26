@@ -69,9 +69,9 @@ function fireEvent(unit u, item itm)
     eventItem = prevItem
 
 function test(unit u, item itm, real range) returns boolean
-    if UnitHasItem(u, itm)
+    if u.hasItem(itm)
         return true
-    if IsItemOwned(itm)
+    if itm.isOwned()
         return false
 
     let dx = itm.getX() - u.getX()
@@ -84,7 +84,7 @@ function onCallback()
     while iter.hasNext()
         var data = iter.next()
         if not data.u.isAlive() or data.u.getCurrentOrder() != 851986
-            or data.itm == null or IsItemOwned(data.itm)
+            or data.itm == null or data.itm.isOwned()
 
             destroy data
             if PeriodicData.size == 0
@@ -104,7 +104,7 @@ function onTargetOrder()
     PeriodicData data
     bool proceed = false
 
-    if itm == null or GetIssuedOrderId() != 851971
+    if itm == null or itm.isPowerup() or GetIssuedOrderId() != 851971
         return
 
     for condition in conditions
@@ -134,11 +134,11 @@ function onTargetOrder()
             data = map.get(u.getHandleId())
         data.itm = itm
 
-        trigger t = getPlayerUnitEventTrigger(EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER)
-        t.disable()
         var angle = bj_RADTODEG * Atan2(u.getY() - itm.getY(), u.getX() - itm.getX())
         var x = itm.getX() + PICK_UP_RANGE * Cos(angle * bj_DEGTORAD)
         var y = itm.getY() + PICK_UP_RANGE * Sin(angle * bj_DEGTORAD)
+        trigger t = getPlayerUnitEventTrigger(EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER)
+        t.disable()
         u.issuePointOrderById(851986, vec2(x, y))
         t.enable()        
 

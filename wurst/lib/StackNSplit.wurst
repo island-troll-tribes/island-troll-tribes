@@ -45,27 +45,20 @@ public function getItemStackingEventTrigger(int whichEvent) returns trigger
         return eventRemoveTrigger
     return null
 
-/** Checks if unit inventory is full. */
-public function unit.isInventoryFull() returns boolean
-    let size = this.inventorySize()
-
-    for i = 0 to size - 1
-        if this.itemInSlot(i) == null
-            return false
-    return true
-
 /** Checks if unit inventory is fully stacked and no charges can be added. */
 public function unit.isItemFullyStacked(int itemTypeId) returns boolean
-    let max = getItemMaxStacks(itemTypeId)
+    boolean result = true
+    int max = getItemMaxStacks(itemTypeId)
     item itm
 
     if max > 0
-        let size = this.inventorySize()
-        for i = 0 to size - 1
-            itm = this.itemInSlot(i)
+        int size = this.inventorySize()
+        for slot = 0 to size - 1
+            itm = this.itemInSlot(slot)
             if itm.getTypeId() == itemTypeId and GetItemCharges(itm) < max
-                return false
-    return true
+                result = false
+                break
+    return result
 
 function fireEvent(trigger evt, unit u, item itm, int charges)
     unit prevUnit = eventUnit
@@ -116,7 +109,7 @@ public function getItemSplitCount(int itemTypeId) returns int
 
 /** Attempts to stack provided item for specified unit. */
 public function stackItem(unit u, item itm) returns boolean
-    int charges = GetItemCharges(itm)
+    int charges = itm.getCharges()
     int itemTypeId = itm.getTypeId()
     int curr
     int diff
@@ -127,19 +120,19 @@ public function stackItem(unit u, item itm) returns boolean
         return false
 
     int max = getItemMaxStacks(itemTypeId)
-    for i = 0 to size - 1
-        with = u.itemInSlot(i)
+    for slot = 0 to size - 1
+        with = u.itemInSlot(slot)
 
         if with != itm and with.getTypeId() == itemTypeId
-            curr = GetItemCharges(with)
+            curr = with.getCharges()
 
             if curr < max
                 diff = max - curr
                 if diff > charges
-                    SetItemCharges(with, curr + charges)
+                    with.setCharges(curr + charges)
                     fireEvent(eventAddedTrigger, u, with, charges)
                 else
-                    SetItemCharges(with, max)
+                    with.setCharges(max)
                     fireEvent(eventAddedTrigger, u, with, diff)
                 charges -= diff
         if charges <= 0
@@ -147,8 +140,8 @@ public function stackItem(unit u, item itm) returns boolean
 
     if charges <= 0
         itm.remove()
-    else if charges != GetItemCharges(itm)
-        SetItemCharges(itm, charges)
+    else if charges != itm.getCharges()
+        itm.setCharges(charges)
     return true
 
 function onPickUp()
@@ -164,7 +157,7 @@ function onMoved()
     item with = getInventorySwappedItem()
     int curr
     int diff
-    int charges = GetItemCharges(itm)
+    int charges = itm.getCharges()
     int itemTypeId = itm.getTypeId()
     int size = u.inventorySize()
     int max
@@ -185,41 +178,41 @@ function onMoved()
         fireEvent(eventRemoveTrigger, u, itm, toSplit)
 
         // Redistribute the splitted stacks if possible
-        for i = 0 to size - 1
-            if i != slotFrom
-                with = u.itemInSlot(i)
+        for slot = 0 to size - 1
+            if slot != slotFrom
+                with = u.itemInSlot(slot)
                 if with.getTypeId() == itemTypeId
-                    curr = GetItemCharges(with)
+                    curr = with.getCharges()
                     diff = max - curr
                     if diff > toSplit
-                        SetItemCharges(with, curr + toSplit)
+                        with.setCharges(curr + toSplit)
                         fireEvent(eventAddedTrigger, u, with, toSplit)
                     else
-                        SetItemCharges(with, max)
+                        with.setCharges(max)
                         fireEvent(eventAddedTrigger, u, with, diff)
                     toSplit -= diff
             if toSplit <= 0
                 break
         if toSplit > 0 // something is left
             with = CreateItem(itemTypeId, u.getX(), u.getY())
-            SetItemCharges(with, toSplit)
+            with.setCharges(toSplit)
             trigger t = getPlayerUnitEventTrigger(EVENT_PLAYER_UNIT_PICKUP_ITEM)
             t.disable()
-            UnitAddItem(u, with)
+            u.addItemHandle(with)
             t.enable()
     else if with.getTypeId() == itemTypeId
-        curr = GetItemCharges(with)
+        curr = with.getCharges()
         toSplit = charges + curr
 
         if toSplit > max
             if curr != max
                 diff = max - charges
-                SetItemCharges(itm, max)
+                itm.setCharges(max)
                 fireEvent(eventAddedTrigger, u, itm, diff)
-                SetItemCharges(with, toSplit - max)
+                with.setCharges(toSplit - max)
                 fireEvent(eventRemoveTrigger, u, with, diff)
         else
-            SetItemCharges(with, toSplit)
+            with.setCharges(toSplit)
             fireEvent(eventAddedTrigger, u, with, charges)
             itm.remove()
 

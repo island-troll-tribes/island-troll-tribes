@@ -315,12 +315,16 @@ local integer numCorpses = 0
         call RemoveUnit( dying )
     elseif uid == UNIT_SNAKE then
         set numCorpses = 1
+        set udg_ANIMAL_CURRENT = ( udg_ANIMAL_CURRENT - 1 )
         call PolledWait( 0.50 )
         call RemoveUnit( dying )
     elseif uid == UNIT_PANTHER or uid == UNIT_ELDER_PANTHER then
         set numCorpses = 8
         call CreateItem( ITEM_BONE, x, y )
         call CreateItem( ITEM_BONE, x, y )
+        if uid == UNIT_PANTHER then
+            set udg_ANIMAL_CURRENT = ( udg_ANIMAL_CURRENT - 1 )
+        endif
         call RemoveUnit( dying )
     elseif uid == UNIT_ALIGATOR_MAN then
         set numCorpses = 10

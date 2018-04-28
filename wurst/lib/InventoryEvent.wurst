@@ -6,6 +6,7 @@
 */
 package InventoryEvent
 import RegisterEvents
+import Orders
 
 unit eventUnit = null
 item eventItem = null
@@ -70,19 +71,19 @@ function onItemOrder()
     int slotFrom
     int slotTo
 
-    if order >= 852002 and order <= 852007
+    if order >= SpecialOrders.itemdrag00 and order <= SpecialOrders.itemdrag05
         itm = GetOrderTargetItem()
         slotFrom = u.getItemSlot(itm)
-        slotTo = order - 852002
+        slotTo = order - SpecialOrders.itemdrag00
         fireEvent(eventMovedTrigger, u, itm, slotFrom, slotTo)
     else
-        slotFrom = order - 852008
+        slotFrom = order - SpecialOrders.itemuse00
         itm = u.itemInSlot(slotFrom)
         fireEvent(eventUsedTrigger, u, itm, slotFrom, -1)
 
 function onAnyOrder()
     let order = GetIssuedOrderId()
-    if order >= 852002 and order <= 852013
+    if order >= SpecialOrders.itemdrag00 and order <= SpecialOrders.itemuse05
         onItemOrder()
 
 init

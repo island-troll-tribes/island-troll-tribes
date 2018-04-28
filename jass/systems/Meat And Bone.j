@@ -66,14 +66,11 @@ local integer i = 1
 local integer v = 0
 local unit u
 local player p = GetOwningPlayer(dying)
+local integer numCorpses = 0
     // Stuff
     if uid == UNIT_ELK then
         call RemoveUnit(dying)
-        loop
-            exitwhen i > R2I(( 3.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-            call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
-            set i = i + 1
-        endloop
+        set numCorpses = 3
         call CreateItem( ITEM_BONE, x, y )
         call CreateItem( ITEM_ELK_HIDE, x, y )
         set udg_ANIMAL_CURRENT = ( udg_ANIMAL_CURRENT - 1 )
@@ -81,14 +78,9 @@ local player p = GetOwningPlayer(dying)
         if udg_booleanParameter then
             call CreateUnit( Player(PLAYER_NEUTRAL_PASSIVE), UNIT_FAWN, x, y, 270.00 )
         endif
-    endif
-    if uid == UNIT_JUNGLE_WOLF then
+    elseif uid == UNIT_JUNGLE_WOLF then
         call RemoveUnit( dying )
-        loop
-            exitwhen i > R2I(( 4.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
-            set i = i + 1
-        endloop
+        set numCorpses = 4
         call CreateItem( ITEM_BONE, x, y )
         call CreateItem( ITEM_JUNGLE_WOLF_HIDE, x, y )
         set udg_ANIMAL_CURRENT = ( udg_ANIMAL_CURRENT - 1 )
@@ -96,14 +88,9 @@ local player p = GetOwningPlayer(dying)
         if udg_booleanParameter then
             call CreateUnit( Player(PLAYER_NEUTRAL_PASSIVE), UNIT_WOLF_PUP, x, y, 270.00 )
         endif
-    endif
-    if uid == UNIT_JUNGLE_BEAR then
+    elseif uid == UNIT_JUNGLE_BEAR then
         call RemoveUnit( dying )
-        loop
-            exitwhen i > R2I(( 7.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
-            set i = i + 1
-        endloop
+        set numCorpses = 7
         call CreateItem( ITEM_BONE, x, y )
         call CreateItem( ITEM_JUNGLE_BEAR_HIDE, x, y )
         set udg_ANIMAL_CURRENT = ( udg_ANIMAL_CURRENT - 1 )
@@ -111,15 +98,10 @@ local player p = GetOwningPlayer(dying)
         if udg_booleanParameter then
             call CreateUnit( Player(PLAYER_NEUTRAL_PASSIVE), UNIT_BEAR_CUB, x, y, 270.00 )
         endif
-    endif
-    if uid == UNIT_MAMMOTH and GetUnitAbilityLevel(dying, 'BIil') == 0 then
+    elseif uid == UNIT_MAMMOTH and GetUnitAbilityLevel(dying, 'BIil') == 0 then
         set Mammoth_Dead = true
         call RemoveUnit( dying )
-        loop
-            exitwhen i > R2I(( 16.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
-            set i = i + 1
-        endloop
+        set numCorpses = 16
         call CreateItem( ITEM_BONE, x, y )
         call CreateItem( ITEM_BONE, x, y )
         call CreateItem( ITEM_BONE, x, y )
@@ -156,19 +138,14 @@ local player p = GetOwningPlayer(dying)
             call UnitApplyTimedLife( u, 'BTLF', 10 )
             set u = null
         endif
-    endif
-    if uid == UNIT_DISCO_DUCK and GetUnitAbilityLevel(dying, 'BIil') == 0 then
+    elseif uid == UNIT_DISCO_DUCK and GetUnitAbilityLevel(dying, 'BIil') == 0 then
         //if not FirstDuckDead then
           //  set FirstDuckDead = true
             //call Start_Boss_Turtle()
         //endif
         set DD_Dead = true
         call RemoveUnit( dying )
-        loop
-            exitwhen i > R2I(( 13.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
-            set i = i + 1
-        endloop
+        set numCorpses = 13
         call CreateItem( ITEM_BONE, x, y )
         call CreateItem( ITEM_BONE, x, y )
         if udg_BOSS_PRIZE_MODE then
@@ -280,38 +257,23 @@ local player p = GetOwningPlayer(dying)
     endif
     set udg_booleanParameter = IsUnitTroll(dying)
     if udg_booleanParameter and GetUnitAbilityLevel(dying, 'BIil') == 0 then
-        loop
-            exitwhen i > R2I(( 3.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
-            set i = i + 1
-        endloop
+        set numCorpses = 1
         call CreateItem( ITEM_BONE, x, y )
-    endif
-    if uid == UNIT_FISH then
-        loop
-            exitwhen i > R2I(( 1.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
-            set i = i + 1
-        endloop
+    elseif uid == UNIT_FISH then
+        set numCorpses = 1
         set udg_FISH_CURRENT = ( udg_FISH_CURRENT - 1 )
         call RemoveUnit( dying )
-    endif
-    if uid == UNIT_MAGENTA_FISH then
+    elseif uid == UNIT_MAGENTA_FISH then
         if not fishytrigger then
             call AdjustPlayerStateBJ(5, Player(-GetPlayerId(p)), PLAYER_STATE_RESOURCE_GOLD)
         endif
-        loop
-            exitwhen i > R2I(( 9.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
-            set i = i + 1
-        endloop
+        set numCorpses = 9
         call CreateItem(ITEM_STICK, x, y)
         call CreateItem(ITEM_MUSHROOM, x, y)
         set udg_ITEM_CURRENT = udg_ITEM_CURRENT + 2
         set udg_FISH_CURRENT = ( udg_FISH_CURRENT - 1 )
         call RemoveUnit( dying )
-    endif
-    if uid == UNIT_GREEN_FISH then
+    elseif uid == UNIT_GREEN_FISH then
         loop
             exitwhen i > R2I(( 3.00 * udg_FOOD_FOR_KILL_PROPORTION ))
              call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
@@ -319,99 +281,49 @@ local player p = GetOwningPlayer(dying)
         endloop
         set udg_FISH_CURRENT = ( udg_FISH_CURRENT - 1 )
         call RemoveUnit( dying )
-    endif
-    if uid == UNIT_ADULT_ELK then
-        loop
-            exitwhen i > R2I(( 7.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
-            set i = i + 1
-        endloop
+    elseif uid == UNIT_ADULT_ELK then
+        set numCorpses = 7
         call CreateItem( ITEM_BONE, x, y )
         call CreateItem( ITEM_ELK_HIDE, x, y )
         call RemoveUnit( dying )
-    endif
-    if uid == UNIT_ELK_ADOLESCENT then
-        loop
-            exitwhen i > R2I(( 6.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
-            set i = i + 1
-        endloop
+    elseif uid == UNIT_ELK_ADOLESCENT then
+        set numCorpses = 6
         call CreateItem( ITEM_BONE, x, y )
         call CreateItem( ITEM_ELK_HIDE, x, y )
         call RemoveUnit( dying )
-    endif
-    if uid == UNIT_ADULT_JUNGLE_BEAR then
-        loop
-            exitwhen i > R2I(( 9.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
-            set i = i + 1
-        endloop
+    elseif uid == UNIT_ADULT_JUNGLE_BEAR then
+        set numCorpses = 9
         call CreateItem( ITEM_BONE, x, y )
         call CreateItem( ITEM_JUNGLE_BEAR_HIDE, x, y )
         call RemoveUnit( dying )
-    endif
-    if uid == UNIT_ADULT_JUNGLE_WOLF then
-        loop
-            exitwhen i > R2I(( 8.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
-            set i = i + 1
-        endloop
+    elseif uid == UNIT_ADULT_JUNGLE_WOLF then
+        set numCorpses = 8
         call CreateItem( ITEM_BONE, x, y )
         call CreateItem( ITEM_JUNGLE_WOLF_HIDE, x, y )
         call RemoveUnit( dying )
-    endif
-    if uid == UNIT_BEAR_CUB then
-        loop
-            exitwhen i > R2I(( 3.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
-            set i = i + 1
-        endloop
+    elseif uid == UNIT_BEAR_CUB then
+        set numCorpses = 3
         call CreateItem( ITEM_BONE, x, y )
         call RemoveUnit( dying )
-    endif
-    if uid == UNIT_WOLF_PUP then
-        loop
-            exitwhen i > R2I(( 2.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
-            set i = i + 1
-        endloop
+    elseif uid == UNIT_WOLF_PUP then
+        set numCorpses = 2
         call CreateItem( ITEM_BONE, x, y )
         call RemoveUnit( dying )
-    endif
-    if uid == UNIT_FAWN then
-        loop
-            exitwhen i > R2I(( 1.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
-            set i = i + 1
-        endloop
+    elseif uid == UNIT_FAWN then
+        set numCorpses = 1
         call CreateItem( ITEM_BONE, x, y )
         call RemoveUnit( dying )
-    endif
-    if uid == UNIT_SNAKE then
-        loop
-            exitwhen i > R2I(( 1.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
-            set i = i + 1
-        endloop
+    elseif uid == UNIT_SNAKE then
+        set numCorpses = 1
         call PolledWait( 0.50 )
         call RemoveUnit( dying )
-    endif
-    if uid == UNIT_PANTHER or uid == UNIT_ELDER_PANTHER then
-        loop
-            exitwhen i > R2I(( 8.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
-            set i = i + 1
-        endloop
+    elseif uid == UNIT_PANTHER or uid == UNIT_ELDER_PANTHER then
+        set numCorpses = 8
         call CreateItem( ITEM_BONE, x, y )
         call CreateItem( ITEM_BONE, x, y )
         call RemoveUnit( dying )
-    endif
-    if uid == UNIT_ALIGATOR_MAN then
-        loop
-            exitwhen i > R2I(( 10.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
-            set i = i + 1
-        endloop
+    elseif uid == UNIT_ALIGATOR_MAN then
+        set numCorpses = 10
         call CreateItem( ITEM_BONE, x, y )
         call CreateItem( ITEM_BONE, x, y )
         if udg_BOSS_PRIZE_MODE then
@@ -429,13 +341,8 @@ local player p = GetOwningPlayer(dying)
             endif
         endif
         call RemoveUnit( dying )
-    endif
-    if uid == UNIT_ONE then
-        loop
-            exitwhen i > R2I(( 3.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
-            set i = i + 1
-        endloop
+    elseif uid == UNIT_ONE then
+        set numCorpses = 3
         call CreateItem( ITEM_BONE, x, y )
         if udg_BOSS_PRIZE_MODE then
             if GetRandomReal(0, 100) <= 20 then
@@ -450,14 +357,8 @@ local player p = GetOwningPlayer(dying)
             endif
         endif
         call RemoveUnit( dying )
-    endif
-    set udg_booleanParameter = IsUnitHawk(dying)
-    if udg_booleanParameter then
-        loop
-            exitwhen i > R2I(( 1.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
-            set i = i + 1
-        endloop
+    elseif IsUnitHawk(dying) then
+        set numCorpses = 1
         call CreateItem( ITEM_BONE, x, y )
         call RemoveUnit( dying )
         call getAnimalGreenLight(dying)
@@ -466,23 +367,28 @@ local player p = GetOwningPlayer(dying)
         endif
     endif
     // check for dead pet
-        if IsUnitInGroup(dying, udg_babyPets) then
-            call GroupRemoveUnit( udg_babyPets , dying)
-            set b = true
-        elseif IsUnitInGroup(dying, udg_midPets) then
-            call GroupRemoveUnit( udg_midPets , dying)
-            set b = true
-        elseif IsUnitInGroup(dying, udg_pets) then
-            call GroupRemoveUnit( udg_pets , dying)
-            set b = true
-        endif
-        if b then
-            call DisplayTimedTextToForce(GetPlayersAllies(p), 7, "A pet has died!" )
-            call SetBackToBMTame( p )
-        endif
+    if IsUnitInGroup(dying, udg_babyPets) then
+        call GroupRemoveUnit( udg_babyPets , dying)
+        set b = true
+    elseif IsUnitInGroup(dying, udg_midPets) then
+        call GroupRemoveUnit( udg_midPets , dying)
+        set b = true
+    elseif IsUnitInGroup(dying, udg_pets) then
+        call GroupRemoveUnit( udg_pets , dying)
+        set b = true
+    endif
+    if b then
+        call DisplayTimedTextToForce(GetPlayersAllies(p), 7, "A pet has died!" )
+        call SetBackToBMTame( p )
+    endif
     //call ForGroup( udg_babyPets, function ResetBMPets )
     //call ForGroup( udg_midPets, function ResetBMPets )
     //call ForGroup( udg_pets, function ResetBMPets )
+    loop
+        exitwhen i > R2I(( I2R(numCorpses) * udg_FOOD_FOR_KILL_PROPORTION ))
+        call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x + GetRandomReal(0, 100), y + GetRandomReal(1, 100), GetRandomReal(0,360) )
+        set i = i + 1
+    endloop
     set dying = null
     set killing = null
 endfunction

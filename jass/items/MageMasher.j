@@ -1,7 +1,7 @@
 //TESH.scrollpos=40
 //TESH.alwaysfold=0
 function mashSilence takes nothing returns boolean
-    if ( not ( GetRandomPercentageBJ() <= 21.00 ) ) then
+    if ( not ( GetRandomPercentageBJ() <= 16.00 ) ) then
         return false
     endif
     return true

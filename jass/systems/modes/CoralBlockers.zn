@@ -1,0 +1,13 @@
+library CoralBlockers requires GameConfig, Map, ID {
+    function onInit() {
+        Map.onGameStart(function () {
+            if (!GameConfig.getInstance().isCoralBlockersEnabled()) {
+                EnumDestructablesInRect(GetWorldBounds(), Condition(function() -> boolean {
+                    return GetDestructableTypeId(GetFilterDestructable()) == DEST_CORAL;
+                }), function() {
+                    RemoveDestructable(GetEnumDestructable());
+                });
+            }
+        });
+    }
+}

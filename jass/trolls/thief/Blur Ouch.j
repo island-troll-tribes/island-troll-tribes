@@ -25,7 +25,7 @@ endfunction
 
 function Trig_blur_ouch_Actions takes nothing returns nothing
     call PolledWait( 0.25 )
-    call ForGroupBJ( GetUnitsInRangeOfLocMatching(150.00, GetUnitLoc(GetEnteringUnit()), Condition(function Trig_blur_ouch_Func002001003)), function Trig_blur_ouch_Func002A )
+    call ForGroupBJ( GetUnitsInRangeOfLocMatching(400.00, GetUnitLoc(GetEnteringUnit()), Condition(function Trig_blur_ouch_Func002001003)), function Trig_blur_ouch_Func002A )
 endfunction
 
 //===========================================================================

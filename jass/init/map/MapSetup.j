@@ -237,8 +237,6 @@ function Startup_Timer takes nothing returns nothing
     set MODES_TIMER_DIALOG = CreateTimerDialog(MODES_TIMER)
     call TimerDialogSetTitle(MODES_TIMER_DIALOG,"Select Modes")
     call TimerDialogDisplay(MODES_TIMER_DIALOG,true)
-    call MultiboardDisplay(GameMode.modeboard,true)
-    call MultiboardMinimize(GameMode.modeboard,true)
 endfunction
 
 private function onInit takes nothing returns nothing

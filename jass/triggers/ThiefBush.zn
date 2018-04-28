@@ -20,7 +20,7 @@ library ThiefBush requires PublicLibrary, TimerUtils, Jump, ChatCommands {
 		real destY = GetRandomY(exit);
 
 		if (IsUnitType(enteringUnit, UNIT_TYPE_GROUND)) {
-			PauseUnit(enteringUnit, false); // TODO ... wurst ...
+			PauseUnit(enteringUnit, true);
 			Jump.start(enteringUnit, destX, destY, HEIGHT, DURATION, GRAVITY);
 		}
 
@@ -69,9 +69,7 @@ library ThiefBush requires PublicLibrary, TimerUtils, Jump, ChatCommands {
 		TriggerRegisterEnterRegion(t, thiefBushEntrance_SW_C, null);
 		TriggerAddCondition(t, function ThiefBushEntered);
 
-		t = CreateTrigger();
-	    // TODO TriggerRegisterVariableEvent(t, "EVENT_JUMP_FINISH", EQUAL, 1);
-	    TriggerAddCondition(t, function ThiefBushExited);
+	    OnJumpFinish(function ThiefBushExited);
 
 	    debug {
 	    	ChatCommands.registerArgFunc(null, "thief-bush", function (ArgsList a) {

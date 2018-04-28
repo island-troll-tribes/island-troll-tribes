@@ -2,15 +2,15 @@ library SpiritWard requires ID, Table, PublicLibrary, Ascii {
   Table wardTable;
 
   function isWardReviving(unit u) -> boolean {
-    return wardTable.boolean.has(GetHandleId(u));
+    return wardTable.has(GetHandleId(u));
   }
 
   function setWardStartedReviving(unit u) {
-    wardTable.boolean[GetHandleId(u)] = true;
+    wardTable.unit[GetHandleId(u)] = u;
   }
 
   function setWardStoppedReviving(unit u) {
-    wardTable.boolean.remove(GetHandleId(u));
+    wardTable.remove(GetHandleId(u));
   }
 
 	function onPlayerLeave() {
@@ -86,6 +86,7 @@ library SpiritWard requires ID, Table, PublicLibrary, Ascii {
   function onReviveFinish() {
     group g;
     unit d;
+    integer handleId;
 
     SetPlayerState(GetOwningPlayer(GetTriggerUnit()), PLAYER_STATE_RESOURCE_GOLD, udg_MAX_HEAT);
 
@@ -93,11 +94,16 @@ library SpiritWard requires ID, Table, PublicLibrary, Ascii {
 
     GroupEnumUnitsInRangeOfLoc(g, GetUnitLoc(GetRevivingUnit()), 250, Condition(function FilterUnitIsSpiritWard));
     d = FirstOfGroup(g);
-    while (d != null) {
+    if (d != null) {
       // debug BJDebugMsg("Ward finish revive success!");
       setWardStoppedReviving(d);
-      GroupRemoveUnit(g, d);
-      d = FirstOfGroup(g);
+      handleId = GetHandleId(d);
+      wardTable.unit[handleId] = d;
+      TimerStart(NewTimerEx(handleId), 0, false, function() {
+        integer handleId = GetTimerData(GetExpiredTimer());
+        ReleaseTimer(GetExpiredTimer());
+        SetWidgetLife(wardTable.unit[handleId], 0);
+      });
     }
 
     DestroyGroup(g);

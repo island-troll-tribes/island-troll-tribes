@@ -25,8 +25,6 @@ globals
     boolean mode_enter = true
     timer MODES_TIMER = CreateTimer()
     timer GAME_TIMER = CreateTimer()
-    timerdialog MODES_TIMER_DIALOG
-    timerdialog NOOB_TIME_DIALOG
     integer array pnamePresent
     boolean array isobserver
     boolean obs_present = false
@@ -51,9 +49,6 @@ function Start_Game takes nothing returns nothing
 
     call DisplayTText(GENERAL_COLOR+"Game has begun.|r", 10)
 
-    set NOOB_TIME_DIALOG = CreateTimerDialog(udg_noobTimer)
-    call TimerDialogSetTitle(NOOB_TIME_DIALOG, "Grace Period")
-    call TimerDialogDisplay(NOOB_TIME_DIALOG, true)
     call TimerStart(udg_noobTimer, udg_NOOB_TIME_LEFT , false , null)
     call TimerStart(GAME_TIMER, 99999999, false, null)
 
@@ -117,9 +112,6 @@ endfunction
 function ModesTimerFinished takes nothing returns nothing
     set mode_enter = false
     call GameMode.deregisterAll()
-    call TimerDialogDisplay(MODES_TIMER_DIALOG,false)
-    call DestroyTimerDialog(MODES_TIMER_DIALOG)
-    call MultiboardDisplay(GameMode.modeboard,false)
     call ExecuteFunc("StartClassSelection")
 endfunction
 
@@ -234,11 +226,6 @@ function Startup_Timer takes nothing returns nothing
     call TriggerRegisterPlayerChatEvent( gg_trg_no_herbs, modePlayer, "-no herbs", true )
 
     call TimerStart(MODES_TIMER, MODES_TIME_LIMIT, false, function ModesTimerFinished)
-    set MODES_TIMER_DIALOG = CreateTimerDialog(MODES_TIMER)
-    call TimerDialogSetTitle(MODES_TIMER_DIALOG,"Select Modes")
-    call TimerDialogDisplay(MODES_TIMER_DIALOG,true)
-    call MultiboardDisplay(GameMode.modeboard,true)
-    call MultiboardMinimize(GameMode.modeboard,true)
 endfunction
 
 private function onInit takes nothing returns nothing

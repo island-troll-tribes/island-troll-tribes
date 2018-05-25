@@ -84,6 +84,11 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       return this.triggerWithArgs("");
     }
 
+    static method removeModeBoard() {
+      MultiboardDisplay(modeboard, false);
+      DestroyMultiboard(modeboard);
+    }
+
     static method createModeBoard() {
       thistype self;
       integer i;
@@ -93,17 +98,33 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       modeboard = CreateMultiboard();
       MultiboardSetColumnCount(modeboard, 2);
       MultiboardSetRowCount(modeboard, numGameModes);
-      MultiboardSetTitleText(modeboard, "Modes");
+      MultiboardSetTitleText(modeboard, "Modes - 00:30");
       MultiboardSetItemsStyle(modeboard, true, false);
+      MultiboardDisplay(modeboard, true);
+      MultiboardMinimize(modeboard, true);
 
       for (1 <= i <= numGameModes) {
         self = thistype(i);
         MultiboardSetItemValueBJ(modeboard, 2, self, self.description);
         MultiboardSetItemValueBJ(modeboard, 1, self, GOLD_COLOR + "-" + self.name + "|r " + GRAY_COLOR + "(|r" + SPECIAL_COLOR + "-" + self.abbrev + "|r" + GRAY_COLOR + ")|r");
         MultiboardSetItemValueBJ(modeboard, 2, self, self.description);
-        MultiboardSetItemWidthBJ(modeboard, 1, self, 15);
-        MultiboardSetItemWidthBJ(modeboard, 2, self, 45);
+        MultiboardSetItemWidthBJ(modeboard, 1, self, 20);
+        MultiboardSetItemWidthBJ(modeboard, 2, self, 60);
       }
+
+      TimerStart(NewTimer(), 1.0, true, function() {
+        real remaining = TimerGetRemaining(MODES_TIMER);
+        string time = I2S(R2I(remaining));
+        if (remaining < 10) {
+          time = "0" + time;
+        }
+        if (remaining <= 0) {
+          ReleaseTimer(GetExpiredTimer());
+          GameMode.removeModeBoard();
+        } else {
+          MultiboardSetTitleText(modeboard, "Modes - 00:" + time);
+        }
+      });
     }
   }
 
@@ -123,6 +144,11 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       }
       GameConfig.getInstance().setNumPlayersPerTribe(ppt);
       GameMode.message(ENERGY_COLOR + "Players per tribe|r set to " + I2S(ppt));
+    });
+
+    GameMode.create("6v6", "6s", "Set the number of players in each tribe to 6", function(ArgsList a) {
+      GameConfig.getInstance().setNumPlayersPerTribe(6);
+      GameMode.message(ENERGY_COLOR + "6v6|r enabled");
     });
 
     GameMode.create("4v4v4", "4s", "Set the number of players in each tribe to 4", function(ArgsList a) {
@@ -306,6 +332,7 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
 
     GameMode.create("start", "st", "Start the game", function(ArgsList a) {
       PauseTimer(MODES_TIMER);
+      GameMode.removeModeBoard();
       ExecuteFunc("ModesTimerFinished");
     });
 

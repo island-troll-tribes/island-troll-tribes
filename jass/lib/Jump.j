@@ -176,7 +176,7 @@ library Jump requires CTL, TerrainPathability optional GetUnitCollision, Table
                 call SetUnitPropWindow(u[this], pw[this])
                 call SetUnitFlyHeight(u[this], dfh[this], 0)
                 set EVENT_JUMP_UNIT = u[this]
-                call TriggerEvaluate(jumpFinish)
+                call TriggerExecute(jumpFinish)
                 set u[this] = null
                 call destroy()
             endif

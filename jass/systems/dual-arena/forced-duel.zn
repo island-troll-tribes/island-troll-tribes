@@ -1,13 +1,13 @@
 library ForcedDuel requires GameConfig, PublicLibrary, Map {
-  timerdialog td;
+  public {
+    timer DUEL_TIMER;
+  }
 
   function startDuel() {
     integer i;
     unit u;
 
     ReleaseTimer(GetExpiredTimer());
-    TimerDialogDisplay(td, false);
-    DestroyTimerDialog(td);
 
     for (0 <= i < 12 ) {
       u = GetPlayerTroll(Player(i));
@@ -47,7 +47,6 @@ library ForcedDuel requires GameConfig, PublicLibrary, Map {
     }
 
     TimerStart(t, 3.0, false, function startDuel);
-    TimerDialogSetTitle(td, "Duel begins in");
     DisplayTextToPlayer(GetLocalPlayer(), 0, 0, GENERAL_COLOR + "Your duel has begun!|r");
 
     t = null;
@@ -57,14 +56,8 @@ library ForcedDuel requires GameConfig, PublicLibrary, Map {
   }
 
   function startDuelCountdown(real numSeconds) {
-    timer t = NewTimer();
-    td = CreateTimerDialog(t);
-
-    TimerStart(t, numSeconds, false, function moveTrollsToArena);
-    TimerDialogSetTitle(td, "Duel in");
-    TimerDialogDisplay(td, true);
-
-    t = null;
+    DUEL_TIMER = NewTimer();
+    TimerStart(DUEL_TIMER, numSeconds, false, function moveTrollsToArena);
   }
 
   public function onGameStart() {

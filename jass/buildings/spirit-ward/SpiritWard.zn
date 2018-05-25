@@ -2,7 +2,7 @@ library SpiritWard requires ID, Table, PublicLibrary, Ascii {
   Table wardTable;
 
   function isWardReviving(unit u) -> boolean {
-    return wardTable.has(GetHandleId(u));
+    return wardTable.unit[GetHandleId(u)] != null;
   }
 
   function setWardStartedReviving(unit u) {
@@ -40,7 +40,7 @@ library SpiritWard requires ID, Table, PublicLibrary, Ascii {
     if (GetUnitTypeId(GetTriggerUnit()) == UNIT_SPIRIT_WARD &&
         IsUnitAlly(GetTriggerUnit(), GetTriggerPlayer()) &&
         !isWardReviving(GetTriggerUnit())) {
-      // debug BJDebugMsg("Ward select will change owner!");
+      debug BJDebugMsg("Ward select will change owner!");
       SetUnitOwner(GetTriggerUnit(), GetTriggerPlayer(), false);
     }
   }
@@ -54,7 +54,7 @@ library SpiritWard requires ID, Table, PublicLibrary, Ascii {
     GroupEnumUnitsSelected(selected, GetOwningPlayer(GetTriggerUnit()), Condition(function FilterUnitIsSpiritWard));
     ward = FirstOfGroup(selected);
     if (ward != null) {
-      // debug BJDebugMsg("Ward started reviving success!");
+      debug BJDebugMsg("Ward started reviving success!");
       setWardStartedReviving(ward);
     }
 

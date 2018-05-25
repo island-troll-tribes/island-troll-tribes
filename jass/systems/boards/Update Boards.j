@@ -10,14 +10,23 @@ endfunction
 
 globals
     string gameTimeStr = ""
+    string forcedDuelStr = ""
+    string gracePeriodStr = ""
+    string forestFireStr = ""
 endglobals
 
 function measureTime takes nothing returns nothing
 local integer mt_hours = 0
 local integer mt_mins = 0
-local real mt_secs = 0
-local real mt_time = TimerGetElapsed(GAME_TIMER)
+local integer mt_secs = 0
+local integer mt_time = R2I(TimerGetElapsed(GAME_TIMER))
 local string array s
+local integer gracePeriodRemaining = R2I(TimerGetRemaining(udg_noobTimer))
+local integer forcedDuelRemaining = R2I(TimerGetRemaining(DUEL_TIMER))
+local integer forestFireRemaining = R2I(TimerGetRemaining(FOREST_FIRE_TIMER))
+set forcedDuelStr = ""
+set gracePeriodStr = ""
+set forestFireStr = ""
 if mt_time >= 3600 then
     loop
         exitwhen mt_time < 3600
@@ -33,7 +42,7 @@ if mt_time >= 60 then
     endloop
 endif
 set mt_secs = mt_time
-set s[0] = I2S(R2I(mt_secs))
+set s[0] = I2S(mt_secs)
 set s[1] = I2S(mt_mins)
 set s[2] = I2S(mt_hours)
 if StringLength(s[0]) == 1 then
@@ -45,8 +54,72 @@ endif
 if StringLength(s[2]) == 1 then
     set s[2] = "0"+s[2]
 endif
+if gracePeriodRemaining > 0 then
+    set mt_hours = gracePeriodRemaining / 3600
+    set mt_mins = ModuloInteger(gracePeriodRemaining, 3600) / 60
+    set mt_secs = ModuloInteger(gracePeriodRemaining, 60)
+    set gracePeriodStr = " - Revive " + COLOR_GREEN
+    if mt_hours > 0 then
+        if mt_hours < 10 then
+            set gracePeriodStr = gracePeriodStr + "0"
+        endif
+        set gracePeriodStr = gracePeriodStr + I2S(mt_hours) + ":"
+    endif
+    if mt_mins < 10 then
+        set gracePeriodStr = gracePeriodStr + "0"
+    endif
+    set gracePeriodStr = gracePeriodStr + I2S(mt_mins) + ":"
+    if mt_secs < 10 then
+        set gracePeriodStr = gracePeriodStr + "0"
+    endif
+    set gracePeriodStr = gracePeriodStr + I2S(mt_secs) + "|r"
+endif
+if forcedDuelRemaining > 0 then
+    set mt_hours = forcedDuelRemaining / 3600
+    set mt_mins = ModuloInteger(forcedDuelRemaining, 3600) / 60
+    set mt_secs = ModuloInteger(forcedDuelRemaining, 60)
+    set forcedDuelStr = " - Duel " + ENERGY_COLOR
+    if mt_hours > 0 then
+        if mt_hours < 10 then
+            set forcedDuelStr = forcedDuelStr + "0"
+        endif
+        set forcedDuelStr = forcedDuelStr + I2S(mt_hours) + ":"
+    endif
+    if mt_mins < 10 then
+        set forcedDuelStr = forcedDuelStr + "0"
+    endif
+    set forcedDuelStr = forcedDuelStr + I2S(mt_mins) + ":"
+    if mt_secs < 10 then
+        set forcedDuelStr = forcedDuelStr + "0"
+    endif
+    set forcedDuelStr = forcedDuelStr + I2S(mt_secs) + "|r"
+endif
+if forestFireRemaining > 0 then
+    set mt_hours = forestFireRemaining / 3600
+    set mt_mins = ModuloInteger(forestFireRemaining, 3600) / 60
+    set mt_secs = ModuloInteger(forestFireRemaining, 60)
+    set forestFireStr = " - Fire " + RED_COLOR
+    if mt_hours > 0 then
+        if mt_hours < 10 then
+            set forestFireStr = forestFireStr + "0"
+        endif
+        set forestFireStr = forestFireStr + I2S(mt_hours) + ":"
+    endif
+    if mt_mins < 10 then
+        set forestFireStr = forestFireStr + "0"
+    endif
+    set forestFireStr = forestFireStr + I2S(mt_mins) + ":"
+    if mt_secs < 10 then
+        set forestFireStr = forestFireStr + "0"
+    endif
+    set forestFireStr = forestFireStr + I2S(mt_secs) + "|r"
+endif
 //set gameTimeStr = I2S(mt_hours)+":"+I2S(mt_mins)+":"+I2S(R2I(mt_secs))
-set gameTimeStr = s[2]+":"+s[1]+":"+s[0]
+if s[2] == "00" then
+    set gameTimeStr = GENERAL_COLOR+s[1]+":"+s[0]+"|r"
+else
+    set gameTimeStr = GENERAL_COLOR+s[2]+":"+s[1]+":"+s[0]+"|r"
+endif
 //call PauseTimer(GAME_TIMER)
 endfunction
 
@@ -57,7 +130,7 @@ local integer numTribes = GameConfig.getInstance().getNumTribes()
 call measureTime()
 loop
     exitwhen BOARD > numTribes
-    call MultiboardSetTitleText(BOARD_TEAM[BOARD], "Team Stats - "+gameTimeStr)
+    call MultiboardSetTitleText(BOARD_TEAM[BOARD], "Stats - " + gameTimeStr + gracePeriodStr + forcedDuelStr + forestFireStr)
     loop
         exitwhen PID > 11
         if IsPlayerInForce(Player(PID),TEAM[BOARD]) then
@@ -71,7 +144,7 @@ loop
     set BOARD = BOARD + 1
 endloop
 if OBSERVER_BOARD != null then
-    call MultiboardSetTitleText(OBSERVER_BOARD, gameTimeStr)
+    call MultiboardSetTitleText(OBSERVER_BOARD, gameTimeStr + gracePeriodStr + forcedDuelStr + forestFireStr)
 endif
 endfunction
 

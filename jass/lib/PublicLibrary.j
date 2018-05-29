@@ -786,7 +786,7 @@ function spawnAnimals takes nothing returns nothing
     local integer temp=1
     loop
         exitwhen loopStart > loopStop
-        call PolledWait( udg_DELAY_TIME )
+        call PolledWait( udg_DELAY_TIME / 1000 )
         set temp=GetRandomInt(1,udg_ISLAND1_3+udg_ISLAND1_2+udg_ISLAND1_1)
         if ( temp<=udg_ISLAND1_3 ) then
             call makeAnimal(gg_rct_spawn_area_1_3)

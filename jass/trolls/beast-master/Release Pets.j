@@ -3,6 +3,7 @@
 //TESH.scrollpos=0
 //TESH.alwaysfold=0
 function ReleasePets_Back takes nothing returns nothing
+    debug call BJDebugMsg(GetUnitName(udg_parameterUnit))
     if GetOwningPlayer(GetEnumUnit()) == GetOwningPlayer(udg_parameterUnit) then
         if IsUnitInGroup(GetEnumUnit(), udg_babyPets) then
             call GroupRemoveUnit(udg_babyPets, GetEnumUnit())

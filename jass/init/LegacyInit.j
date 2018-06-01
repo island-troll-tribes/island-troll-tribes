@@ -164,7 +164,6 @@ library LegacyInit initializer onInit
         call ExecuteFunc("InitTrig_eggza_CUTE_orders")
         call ExecuteFunc("InitTrig_grow_up")
         call ExecuteFunc("InitTrig_pet_abilites")
-        call ExecuteFunc("InitTrig_Baby_Mammoth_Dies_TONIGHT")
         call ExecuteFunc("InitTrig_Poison")
         call ExecuteFunc("InitTrig_UPoison")
         call ExecuteFunc("InitTrig_ScrollDead")

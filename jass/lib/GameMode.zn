@@ -2,6 +2,7 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
   public struct GameMode {
     public static multiboard modeboard;
     static integer numGameModes = 0;
+    static integer numDisplayedModes = 0;
     static string modesString = "";
     public static Table modes;
 
@@ -9,6 +10,7 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
     string name = "";
     string abbrev = "";
     ArgFunc action;
+    boolean display = true;
 
     public static method create(string name, string abbrev, string description, ArgFunc action) -> thistype {
       thistype self = thistype.allocate();
@@ -17,6 +19,7 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       self.abbrev = abbrev;
       self.action = action;
       numGameModes += 1;
+      numDisplayedModes += 1;
       thistype.modes.integer_s[name] = self;
       thistype.modes.integer_s[abbrev] = self;
       return self;
@@ -84,6 +87,17 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       return this.triggerWithArgs("");
     }
 
+    public method setDisplay(boolean value) -> thistype {
+      if (!this.display && value) {
+        numDisplayedModes += 1;
+        this.display = true;
+      } else if (this.display && !value) {
+        numDisplayedModes -= 1;
+        this.display = false;
+      }
+      return this;
+    }
+
     static method removeModeBoard() {
       MultiboardDisplay(modeboard, false);
       DestroyMultiboard(modeboard);
@@ -92,12 +106,13 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
     static method createModeBoard() {
       thistype self;
       integer i;
+      integer row = 1;
 
       ReleaseTimer(GetExpiredTimer());
 
       modeboard = CreateMultiboard();
       MultiboardSetColumnCount(modeboard, 2);
-      MultiboardSetRowCount(modeboard, numGameModes);
+      MultiboardSetRowCount(modeboard, numDisplayedModes);
       MultiboardSetTitleText(modeboard, "Modes - 00:30");
       MultiboardSetItemsStyle(modeboard, true, false);
       MultiboardDisplay(modeboard, true);
@@ -105,11 +120,14 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
 
       for (1 <= i <= numGameModes) {
         self = thistype(i);
-        MultiboardSetItemValueBJ(modeboard, 2, self, self.description);
-        MultiboardSetItemValueBJ(modeboard, 1, self, GOLD_COLOR + "-" + self.name + "|r " + GRAY_COLOR + "(|r" + SPECIAL_COLOR + "-" + self.abbrev + "|r" + GRAY_COLOR + ")|r");
-        MultiboardSetItemValueBJ(modeboard, 2, self, self.description);
-        MultiboardSetItemWidthBJ(modeboard, 1, self, 20);
-        MultiboardSetItemWidthBJ(modeboard, 2, self, 60);
+        if (self.display) {
+          MultiboardSetItemValueBJ(modeboard, 2, row, self.description);
+          MultiboardSetItemValueBJ(modeboard, 1, row, GOLD_COLOR + "-" + self.name + "|r " + GRAY_COLOR + "(|r" + SPECIAL_COLOR + "-" + self.abbrev + "|r" + GRAY_COLOR + ")|r");
+          MultiboardSetItemValueBJ(modeboard, 2, row, self.description);
+          MultiboardSetItemWidthBJ(modeboard, 1, row, 20);
+          MultiboardSetItemWidthBJ(modeboard, 2, row, 60);
+          row += 1;
+        }
       }
 
       TimerStart(NewTimer(), 1.0, true, function() {
@@ -154,17 +172,20 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
     GameMode.create("4v4v4", "4s", "Set the number of players in each tribe to 4", function(ArgsList a) {
       GameConfig.getInstance().setNumPlayersPerTribe(4);
       GameMode.message(ENERGY_COLOR + "4v4v4|r enabled");
-    });
+    })
+    .setDisplay(false);
 
     GameMode.create("3v3v3v3", "3s", "Set the number of players in each tribe to 3", function(ArgsList a) {
       GameConfig.getInstance().setNumPlayersPerTribe(3);
       GameMode.message(ENERGY_COLOR + "3v3v3v3|r enabled");
-    });
+    })
+    .setDisplay(false);
 
     GameMode.create("2v2v2v2v2v2", "2s", "Set the number of players in each tribe to 2", function(ArgsList a) {
       GameConfig.getInstance().setNumPlayersPerTribe(2);
       GameMode.message(ENERGY_COLOR + "2v2v2v2v2v2|r enabled");
-    });
+    })
+    .setDisplay(false);
 
     GameMode.create("free-for-all", "ffa", "Each player is on their own", function(ArgsList a) {
       GameConfig.getInstance().setNumPlayersPerTribe(1);
@@ -330,7 +351,12 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       GameConfig.getInstance().setSelectionTimeAllowed(timeAllowed);
     });
 
-    GameMode.create("start", "st", "Start the game", function(ArgsList a) {
+    GameMode.create("test-mode", "tm", "No one can lose, enables test commands", function(ArgsList a) {
+      GameMode.message("Test mode enabled");
+      GameConfig.getInstance().setTestMode(true);
+    });
+
+    GameMode.create("start", "st", "Start the game by entering class selection", function(ArgsList a) {
       PauseTimer(MODES_TIMER);
       GameMode.removeModeBoard();
       ExecuteFunc("ModesTimerFinished");

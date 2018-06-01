@@ -1,5 +1,5 @@
 
-library FriendlyIdCreate requires ChatCommands {
+library FriendlyIdCreate requires ChatCommands, Map, GameConfig {
 
   struct data {
     real x;
@@ -17,83 +17,12 @@ library FriendlyIdCreate requires ChatCommands {
     BJDebugMsg( " " );
     BJDebugMsg( GENERAL_COLOR + "Syntax:" );
     BJDebugMsg( " " );
-    BJDebugMsg( GENERAL_COLOR + "-create UNIT_MAMMOTH [player id, 0 = red [x y]]" );
+    BJDebugMsg( GENERAL_COLOR + "-create UNIT_MAMMOTH [player id [x y]]" );
     BJDebugMsg( GENERAL_COLOR + "default x, y => next to your hero" );
     BJDebugMsg( GENERAL_COLOR + "default player => you" );
     BJDebugMsg( " " );
     BJDebugMsg( GENERAL_COLOR + "-create ITEM_BATTLE_GLOVES [x y]" );
     BJDebugMsg( GENERAL_COLOR + "default x, y => next to your hero" );
-    BJDebugMsg( " " );
-    BJDebugMsg( GENERAL_COLOR + "-create all (units|items) [x y [time between]]" );
-    BJDebugMsg( GENERAL_COLOR + "default x, y => next to your hero" );
-    BJDebugMsg( GENERAL_COLOR + "default time between => 1s, only relevant for all units" );
-  }
-
-  function SpawnAllItems() {
-    data d = GetTimerData( GetExpiredTimer() );
-
-    if ( d.next < ITEM_ALL.length() ) {
-      CreateItem( ITEM_ALL[d.next], d.x, d.y );
-      d.next += 1;
-    } else {
-      ReleaseTimer( GetExpiredTimer() );
-      d.destroy();
-    }
-  }
-
-  function SpawnAllUnits() {
-    data d = GetTimerData( GetExpiredTimer() );
-
-    if ( d.next < UNIT_ALL.length() ) {
-
-      debug BJDebugMsg( ENERGY_COLOR + "Creating " + ID2S( UNIT_ALL[d.next] ));
-      d.u = Unit.new( CreateUnit( Player(0), UNIT_ALL[d.next], d.x, d.y, 270 ));
-
-      TimerStart( NewTimerEx( d ), d.t - 0.01, false, function() {
-        data d = GetTimerData( GetExpiredTimer() );
-        RemoveUnit( Unit( d.u ).unit );
-        Unit( d.u ).destroy();
-        d.next += 1;
-        ReleaseTimer( GetExpiredTimer() );
-      });
-
-    } else {
-      ReleaseTimer( GetExpiredTimer() );
-      Unit( d.u ).destroy();
-      d.destroy();
-    }
-  }
-
-  function SpawnAll(ArgsList a) {
-    data d = data.create();
-    unit u;
-
-    if ( a[2] == "" ) {
-      u = GetPlayerTroll( a.triggerPlayer );
-      d.x = GetUnitX( u ) + 500 * Cos( Deg2Rad( GetUnitFacing( u )));
-      d.y = GetUnitY( u ) + 500 * Sin( Deg2Rad( GetUnitFacing( u )));
-      d.t = 1.;
-      u = null;
-    }
-    else {
-      d.x = S2R( a[2] );
-      d.y = S2R( a[3] );
-      if ( a[4] != "" )
-        d.t = S2R( a[4] );
-      else
-        d.t = 1.;
-    }
-
-    if ( a[1] == "items" ) {
-      TimerStart( NewTimerEx( d ), d.t, true, function SpawnAllItems );
-    }
-    else if ( a[1] == "units" ) {
-      TimerStart( NewTimerEx( d ), d.t, true, function SpawnAllUnits );
-    }
-    else {
-      BJDebugMsg( COLOR_CODE[0] + "Couldn't figure out what you want me to do!" );
-      DisplayHelp();
-    }
   }
 
   function FriendlyIdSpawn(ArgsList a) {
@@ -102,13 +31,6 @@ library FriendlyIdCreate requires ChatCommands {
 
     if ( a[0] == "" ) {
       DisplayHelp();
-      return;
-    }
-
-    // we have an argument
-
-    if ( a[0] == "all" ) {
-      SpawnAll( a );
       return;
     }
 
@@ -159,12 +81,13 @@ library FriendlyIdCreate requires ChatCommands {
     }
 
     debug BJDebugMsg( HIGHLIGHT_COLOR + "Creating " + SubString( a[0], 5, 99) + "|r" );
-    return;
   }
-        
+
   function onInit() {
-    debug {
-      ChatCommands.registerArgFunc(null, "create", FriendlyIdSpawn);
-    }
+    Map.onGameStart(function() {
+      if (GameConfig.getInstance().getTestMode()) {
+        ChatCommands.registerArgFunc(null, "create", FriendlyIdSpawn);
+      }
+    });
   }
 }

@@ -1,43 +1,15 @@
-
 library Map {
-
   public struct Map {
-    static integer ENV_PRO  = 101;
-    static integer ENV_BETA = 102;
-    static integer ENV_TEST = 103;
-
-    private static integer currentEnv = 1; //ENV_<%= @opt[:env].upcase %>;
-
-    static method getEnv() -> integer {
-      return currentEnv;
-    }
-
-    private static trigger       allInitFuncs = CreateTrigger();
-    private static triggeraction initFuncs[];
-    private static integer       numInitFuncs = -1;
+    private static trigger allInitFuncs = CreateTrigger();
 
     static method onGameStart( code f ) {
-      numInitFuncs += 1;
-      debug {
-        if ( numInitFuncs == JASS_MAX_ARRAY_SIZE ) {
-          BJDebugMsg( "No more onStartGame slots..." );
-          return;
-        }
-      }
-      initFuncs[numInitFuncs] = TriggerAddAction( allInitFuncs, f );
+      TriggerAddAction( allInitFuncs, f );
     }
 
     static method fireStartGameEvents() {
       TriggerExecute( allInitFuncs );
-      while ( numInitFuncs >= 0 ) {
-        TriggerRemoveAction( allInitFuncs, initFuncs[numInitFuncs] );
-        initFuncs[numInitFuncs] = null;
-        numInitFuncs -= 1;
-      }
       DestroyTrigger( allInitFuncs );
       allInitFuncs = null;
     }
-
   }
 }
-

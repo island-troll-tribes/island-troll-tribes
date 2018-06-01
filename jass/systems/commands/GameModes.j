@@ -6,13 +6,6 @@
 //TESH.alwaysfold=0
 library GAMEMODULES requires PublicLibrary
 
-
-function IncreaseMaxHeat takes nothing returns nothing
-    if GetPlayerState(GetEnumPlayer(), PLAYER_STATE_RESOURCE_GOLD) > 0 then
-        call SetPlayerStateBJ( GetEnumPlayer(), PLAYER_STATE_RESOURCE_GOLD, udg_MAX_HEAT )
-    endif
-endfunction
-
 function GameModes_Action takes string conStr, player p returns nothing
 local integer pid = GetPlayerId(p)
 local string s = StringCase(conStr,false)
@@ -55,15 +48,6 @@ elseif s=="-nil" and modeAllow[5]then
     set udg_ITEM_LIMIT_MODE = false
     set display = "Inventory Limits|r have been taken off. Trolls can now carry any number of axes/spells/armor."
     set modeAllow[5] = false
- 
- 
-elseif s=="-cm" then // NEGATIVE
-    set udg_HEAT_PER_CAST = 5
-    set display = "|c00007bffCold mode|r has been enabled. Fires heat people up slower now. Heat per cast is 5."
-elseif s=="-dh" then
-    set udg_MAX_HEAT = 75
-    call ForForce( bj_FORCE_ALL_PLAYERS, function IncreaseMaxHeat )
-    set display = "|c00ff0000Heat Max|r has been |c00755d00decreased|r. Heat capacity is 75."
 elseif s=="-survival" and modeAllow[8]then
     set udg_FOOD_BASE = 0.40
     set udg_FOOD_FOR_KILL_PROPORTION = 0.80
@@ -109,29 +93,6 @@ elseif s=="-lil" and modeAllow[16]then
     set udg_ITEM_MAX = 250
     set display = "Item limits have been |c00755d00decreased|r."
     set modeAllow[16] = false
-
-
-elseif s=="-no shields" and modeAllow[22] then
-    set allow_Shields = false
-    set display = "Shield type items have been disabled from creation."
-    set modeAllow[22] = false
-elseif s=="-test mode" and modeAllow[24] then
-    set modeAllow[24] = false
-    set i = 4
-    loop
-        exitwhen i > 11
-        if GetPlayerSlotState(Player(i)) == PLAYER_SLOT_STATE_PLAYING and GetPlayerController(Player(i)) == MAP_CONTROL_USER then
-            call DisplayTimedTextToPlayer(p,0,0,7,"You can not enable this mode. It only works with no players in slots 5-12" )
-            set bool = true
-        endif
-        set i = i + 1
-    endloop
-    if not bool then
-        set display = "Test Mode has been enabled. There are now no win conditions: the game will not end. You will also be given a spirit ward to start with."
-        set modeAllow[27] = false // disables 6v6
-        set udg_NOOB_MODE = true
-        call CreateItem( ITEM_SPIRIT_WARD_KIT, GetRectCenterX(gg_rct_revive_1), GetRectCenterY(gg_rct_revive_1) )
-    endif
 endif
 
 if display != "" then
@@ -146,18 +107,12 @@ endlibrary
 function GameModes_Conditions takes nothing returns boolean
     return not udg_STARTED and mode_enter
 endfunction
-    
+
 function GameModes_Relay takes nothing returns nothing
     local player p = GetTriggerPlayer()
     local string str = GetEventPlayerChatString()
     call GameModes_Action(str, p)
 endfunction
-
-globals
-    boolean AllowTrade = true
-    boolean allow_Shields = true
-    boolean BETA = false
-endglobals
 
 globals
     player modePlayer

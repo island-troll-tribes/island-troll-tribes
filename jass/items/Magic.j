@@ -32,7 +32,7 @@ function Trig_Magic_Actions takes nothing returns nothing
     elseif i == 3 then
         call SetTimeOfDay( 24.00 )
     elseif i == 4 then
-        call KillUnit( u )
+        call UnitStripHeroLevel(u, 1)
     elseif i >= 5 and i <= 6  then
         call masterCastAtTarget(u,u,0,0,'ANfs',"flamestrike")
     elseif i == 7 then

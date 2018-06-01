@@ -110,55 +110,52 @@ local item added
             set added = UnitAddItemByIdSwapped(ITEM_LOADED_THISTLES, GetTriggerUnit())
             call SetItemCharges(added, e)
         endif
-
-        if udg_EXTRA_MODE then
-            if i[0] == ITEM_STICK and i[1] == ITEM_IRON_INGOT and i[2] == ITEM_IRON_INGOT then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call RemoveItem(t[2])
-                set added = CreateItem(ITEM_WORKSHOP_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
-                call UnitAddItem(GetTriggerUnit(), added)
-                call itemLower(1)
-            endif
-            if i[0] == ITEM_STICK and i[1] == ITEM_CLAY_BALL and i[2] == ITEM_CLAY_BALL and i[3] == ITEM_CLAY_BALL then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call RemoveItem(t[2])
-                call RemoveItem(t[3])
-                set added = CreateItem(ITEM_POT_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
-                call UnitAddItem(GetTriggerUnit(), added)
-                call itemLower(4)
-            endif
-            if i[0] == ITEM_STONE and i[1] == ITEM_STONE and i[2] == ITEM_STONE and i[3] == ITEM_STICK and i[4] == ITEM_STICK and i[5] == ITEM_STICK then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call RemoveItem(t[2])
-                call RemoveItem(t[3])
-                call RemoveItem(t[4])
-                call RemoveItem(t[5])
-                set added = CreateItem(ITEM_HATCHERY_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
-                call UnitAddItem(GetTriggerUnit(), added)
-                call itemLower(6)
-            endif
-            if i[0] == ITEM_STONE and i[1] == ITEM_STONE and i[2] == ITEM_MANA_CRYSTAL and i[3] == ITEM_STICK and i[4] == ITEM_TINDER then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call RemoveItem(t[2])
-                call RemoveItem(t[3])
-                call RemoveItem(t[4])
-                set added = CreateItem(ITEM_TELEPORT_BEACON_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
-                call UnitAddItem(GetTriggerUnit(), added)
-                call itemLower(5)
-            endif
-            if i[0] == ITEM_STONE and i[1] == ITEM_STICK and i[2] == ITEM_STICK and i[3] == ITEM_STICK then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call RemoveItem(t[2])
-                call RemoveItem(t[3])
-                set added = CreateItem(ITEM_OMNIDEFENDER_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
-                call UnitAddItem(GetTriggerUnit(), added)
-                call itemLower(4)
-            endif
+        if i[0] == ITEM_STICK and i[1] == ITEM_IRON_INGOT and i[2] == ITEM_IRON_INGOT then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call RemoveItem(t[2])
+            set added = CreateItem(ITEM_WORKSHOP_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+            call UnitAddItem(GetTriggerUnit(), added)
+            call itemLower(1)
+        endif
+        if i[0] == ITEM_STICK and i[1] == ITEM_CLAY_BALL and i[2] == ITEM_CLAY_BALL and i[3] == ITEM_CLAY_BALL then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call RemoveItem(t[2])
+            call RemoveItem(t[3])
+            set added = CreateItem(ITEM_POT_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+            call UnitAddItem(GetTriggerUnit(), added)
+            call itemLower(4)
+        endif
+        if i[0] == ITEM_STONE and i[1] == ITEM_STONE and i[2] == ITEM_STONE and i[3] == ITEM_STICK and i[4] == ITEM_STICK and i[5] == ITEM_STICK then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call RemoveItem(t[2])
+            call RemoveItem(t[3])
+            call RemoveItem(t[4])
+            call RemoveItem(t[5])
+            set added = CreateItem(ITEM_HATCHERY_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+            call UnitAddItem(GetTriggerUnit(), added)
+            call itemLower(6)
+        endif
+        if i[0] == ITEM_STONE and i[1] == ITEM_STONE and i[2] == ITEM_MANA_CRYSTAL and i[3] == ITEM_STICK and i[4] == ITEM_TINDER then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call RemoveItem(t[2])
+            call RemoveItem(t[3])
+            call RemoveItem(t[4])
+            set added = CreateItem(ITEM_TELEPORT_BEACON_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+            call UnitAddItem(GetTriggerUnit(), added)
+            call itemLower(5)
+        endif
+        if i[0] == ITEM_STONE and i[1] == ITEM_STICK and i[2] == ITEM_STICK and i[3] == ITEM_STICK then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call RemoveItem(t[2])
+            call RemoveItem(t[3])
+            set added = CreateItem(ITEM_OMNIDEFENDER_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+            call UnitAddItem(GetTriggerUnit(), added)
+            call itemLower(4)
         endif
         //Beginning of Gatherer Salve Creation
         set bol1 = (uid==UNIT_GATHERER or uid==UNIT_HERB_MASTER or uid==UNIT_RADAR_GATHERER or uid==UNIT_OMNIGATHERER)
@@ -389,81 +386,76 @@ local item added
 				call RemoveItem(t[1])
 			endif
 		endif
-        if udg_EXTRA_MODE then
-            set bol1 = IsItemPole(t[1])
-            if i[0] == ITEM_IRON_INGOT and bol1 then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call UnitAddItemByIdSwapped( ITEM_IRON_SPEAR, GetTriggerUnit() )
-                call itemLower(1)
-            endif
-            set bol1 = IsItemPole(t[1])
-            if i[0] == ITEM_STEEL_INGOT and bol1 then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call UnitAddItemByIdSwapped( ITEM_STEEL_SPEAR, GetTriggerUnit() )
-                call itemLower(1)
-            endif
-            set bol1 = IsItemPole(t[1])
-            if i[0] == ITEM_DARK_ROCK and bol1 then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call UnitAddItemByIdSwapped( ITEM_DARK_SPEAR, GetTriggerUnit() )
-                call itemLower(1)
-            endif
-            set bol1 = IsItemPole(t[0])
-            if bol1 and i[1] == ITEM_SPIRIT_WIND and i[2] == ITEM_SPIRIT_WATER and i[3] == ITEM_MANA_CRYSTAL then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call RemoveItem(t[2])
-                call RemoveItem(t[3])
-                call UnitAddItemByIdSwapped( ITEM_MAGE_MASHER, GetTriggerUnit() )
-                call itemLower(2)
-            endif
-            //Regular Shield VVVVVVVVVVVVVVVV any hide/stick/stick
-            if allow_Shields then
-                set bol1 = IsItemHide(t[0])
-                if bol1 and i[1] == ITEM_STICK and i[2] == ITEM_STICK then
-                    call RemoveItem(t[0])
-                    call RemoveItem(t[1])
-                    call RemoveItem(t[2])
-                    set added = CreateItem(ITEM_SHIELD, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
-                    call UnitAddItem(GetTriggerUnit(), added)
-                    call itemLower(3)
-                endif
+        set bol1 = IsItemPole(t[1])
+        if i[0] == ITEM_IRON_INGOT and bol1 then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call UnitAddItemByIdSwapped( ITEM_IRON_SPEAR, GetTriggerUnit() )
+            call itemLower(1)
+        endif
+        set bol1 = IsItemPole(t[1])
+        if i[0] == ITEM_STEEL_INGOT and bol1 then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call UnitAddItemByIdSwapped( ITEM_STEEL_SPEAR, GetTriggerUnit() )
+            call itemLower(1)
+        endif
+        set bol1 = IsItemPole(t[1])
+        if i[0] == ITEM_DARK_ROCK and bol1 then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call UnitAddItemByIdSwapped( ITEM_DARK_SPEAR, GetTriggerUnit() )
+            call itemLower(1)
+        endif
+        set bol1 = IsItemPole(t[0])
+        if bol1 and i[1] == ITEM_SPIRIT_WIND and i[2] == ITEM_SPIRIT_WATER and i[3] == ITEM_MANA_CRYSTAL then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call RemoveItem(t[2])
+            call RemoveItem(t[3])
+            call UnitAddItemByIdSwapped( ITEM_MAGE_MASHER, GetTriggerUnit() )
+            call itemLower(2)
+        endif
+        //Regular Shield VVVVVVVVVVVVVVVV any hide/stick/stick
+        set bol1 = IsItemHide(t[0])
+        if bol1 and i[1] == ITEM_STICK and i[2] == ITEM_STICK then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call RemoveItem(t[2])
+            set added = CreateItem(ITEM_SHIELD, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+            call UnitAddItem(GetTriggerUnit(), added)
+            call itemLower(3)
+        endif
 
-                set bol1 = IsItemBasicShield(t[0])
-                if bol1 and i[1] == ITEM_IRON_INGOT and i[2] == ITEM_IRON_INGOT then
-                    call RemoveItem(t[0])
-                    call RemoveItem(t[1])
-                    call RemoveItem(t[2])
-                    set added = CreateItem(ITEM_IRON_SHIELD, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
-                    call UnitAddItem(GetTriggerUnit(), added)
-                endif
+        set bol1 = IsItemBasicShield(t[0])
+        if bol1 and i[1] == ITEM_IRON_INGOT and i[2] == ITEM_IRON_INGOT then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call RemoveItem(t[2])
+            set added = CreateItem(ITEM_IRON_SHIELD, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+            call UnitAddItem(GetTriggerUnit(), added)
+        endif
 
-                set bol1 = IsItemBasicShield(t[0])
-                if bol1 and i[1] == ITEM_BONE and i[2] == ITEM_BONE and i[3] == ITEM_BONE and i[4] == ITEM_BONE and i[5] == ITEM_BONE then
-                    call RemoveItem(t[0])
-                    call RemoveItem(t[1])
-                    call RemoveItem(t[2])
-                    call RemoveItem(t[3])
-                    call RemoveItem(t[4])
-                    call RemoveItem(t[5])
-                    set added = CreateItem(ITEM_BONE_SHIELD, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
-                    call UnitAddItem(GetTriggerUnit(), added)
-                    call itemLower(5)
-                endif
+        set bol1 = IsItemBasicShield(t[0])
+        if bol1 and i[1] == ITEM_BONE and i[2] == ITEM_BONE and i[3] == ITEM_BONE and i[4] == ITEM_BONE and i[5] == ITEM_BONE then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call RemoveItem(t[2])
+            call RemoveItem(t[3])
+            call RemoveItem(t[4])
+            call RemoveItem(t[5])
+            set added = CreateItem(ITEM_BONE_SHIELD, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+            call UnitAddItem(GetTriggerUnit(), added)
+            call itemLower(5)
+        endif
 
-                set bol1 = IsItemBasicShield(t[0])
-                if bol1 and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_STEEL_INGOT then
-                    call RemoveItem(t[0])
-                    call RemoveItem(t[1])
-                    call RemoveItem(t[2])
-                    set added = CreateItem(ITEM_STEEL_SHIELD, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
-                    call UnitAddItem(GetTriggerUnit(), added)
-                endif
-
-            endif
+        set bol1 = IsItemBasicShield(t[0])
+        if bol1 and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_STEEL_INGOT then
+            call RemoveItem(t[0])
+            call RemoveItem(t[1])
+            call RemoveItem(t[2])
+            set added = CreateItem(ITEM_STEEL_SHIELD, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+            call UnitAddItem(GetTriggerUnit(), added)
         endif
     endif
 //End of Armory Item Creation
@@ -633,16 +625,6 @@ local item added
             call UnitAddItemByIdSwapped( ITEM_POISON_SPEAR, GetTriggerUnit() )
             call itemLower(2)
         endif
-        //Defense WardVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-        if i[0] == ITEM_STONE and i[1] == ITEM_STONE and i[2] == ITEM_MANA_CRYSTAL and i[3] == ITEM_IRON_INGOT and BETA then
-            call RemoveItem(t[0])
-            call RemoveItem(t[1])
-            call RemoveItem(t[2])
-            call RemoveItem(t[3])
-            call UnitAddItemByIdSwapped( ITEM_DEFENSIVE_WARD_KIT, GetTriggerUnit() )
-            call UnitAddItemByIdSwapped( ITEM_IRON_INGOT, GetTriggerUnit() )
-            call itemLower(1)
-        endif
         //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         //Battle AxeVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
         if i[0] ==  ITEM_STICK and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_STEEL_INGOT and i[3] == ITEM_SPIRIT_WIND and i[4] == ITEM_SPIRIT_WATER and i[5] == ITEM_MANA_CRYSTAL then
@@ -653,27 +635,6 @@ local item added
             call RemoveItem(t[4])
             call RemoveItem(t[5])
             call UnitAddItemByIdSwapped( ITEM_BATTLE_AXE, GetTriggerUnit() )
-            call itemLower(1)
-        endif
-
-        //Battle Suit
-        if i[0] == ITEM_BATTLE_AXE and i[1] == ITEM_BATTLE_ARMOR and i[2] == ITEM_BATTLE_GLOVES and i[3] == ITEM_BATTLE_SHIELD and i[4] == ITEM_SPIRIT_WIND and i[5] == ITEM_SPIRIT_WATER and BETA then
-            call RemoveItem(t[0])
-            call RemoveItem(t[1])
-            call RemoveItem(t[2])
-            call RemoveItem(t[3])
-            call RemoveItem(t[4])
-            call RemoveItem(t[5])
-            call UnitAddItemByIdSwapped( ITEM_BATTLE_SUIT, GetTriggerUnit() )
-            call itemLower(1)
-        endif
-        //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        //NapalmVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-        if i[0] == ITEM_FIRE_BOMB and i[1] == ITEM_FIRE_BOMB and i[2] == ITEM_FLINT and BETA then
-            call RemoveItem(t[0])
-            call RemoveItem(t[1])
-            call RemoveItem(t[2])
-            call UnitAddItemByIdSwapped( ITEM_NAPALM, GetTriggerUnit() )
             call itemLower(1)
         endif
         //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

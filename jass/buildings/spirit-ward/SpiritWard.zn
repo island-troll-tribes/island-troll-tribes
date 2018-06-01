@@ -5,12 +5,16 @@ library SpiritWard requires ID, Table, PublicLibrary, Ascii {
     return wardTable.unit[GetHandleId(u)] != null;
   }
 
-  function setWardStartedReviving(unit u) {
-    wardTable.unit[GetHandleId(u)] = u;
+  function setWardStartedReviving(unit u, unit h) {
+    wardTable.unit[GetHandleId(u)] = h;
+    wardTable.unit[GetHandleId(h)] = u;
   }
 
   function setWardStoppedReviving(unit u) {
-    wardTable.remove(GetHandleId(u));
+    integer wardId = GetHandleId(u);
+    integer heroId = GetHandleId(wardTable.unit[wardId]);
+    wardTable.remove(heroId);
+    wardTable.remove(wardId);
   }
 
 	function onPlayerLeave() {
@@ -48,68 +52,51 @@ library SpiritWard requires ID, Table, PublicLibrary, Ascii {
   function onReviveStart() {
     group selected = CreateGroup();
     unit ward;
+    unit hero = GetTriggerUnit();
 
     // debug BJDebugMsg("Ward started reviving");
 
-    GroupEnumUnitsSelected(selected, GetOwningPlayer(GetTriggerUnit()), Condition(function FilterUnitIsSpiritWard));
+    GroupEnumUnitsSelected(selected, GetOwningPlayer(hero), Condition(function FilterUnitIsSpiritWard));
     ward = FirstOfGroup(selected);
     if (ward != null) {
       debug BJDebugMsg("Ward started reviving success!");
-      setWardStartedReviving(ward);
+      setWardStartedReviving(ward, hero);
     }
 
     DestroyGroup(selected);
 
     selected = null;
     ward = null;
+    hero = null;
   }
 
   function onReviveCancel() {
-    group selected = CreateGroup();
-    unit ward;
-
-    // debug BJDebugMsg("Ward cancelled reviving");
-
-    GroupEnumUnitsSelected(selected, GetOwningPlayer(GetTriggerUnit()), Condition(function FilterUnitIsSpiritWard));
-    ward = FirstOfGroup(selected);
-    if (ward != null) {
-      // debug BJDebugMsg("Ward cancel revive success!");
-      setWardStoppedReviving(ward);
-    }
-
-    DestroyGroup(selected);
-
-    selected = null;
+    unit ward = wardTable.unit[GetHandleId(GetTriggerUnit())];
+    debug BJDebugMsg("Ward cancelled reviving");
+    setWardStoppedReviving(ward);
     ward = null;
   }
 
   function onReviveFinish() {
-    group g;
-    unit d;
-    integer handleId;
+    unit hero = GetTriggerUnit();
+    unit ward = wardTable.unit[GetHandleId(hero)];
+    integer handleId = GetHandleId(ward);
 
-    SetPlayerState(GetOwningPlayer(GetTriggerUnit()), PLAYER_STATE_RESOURCE_GOLD, udg_MAX_HEAT);
+    SetPlayerState(GetOwningPlayer(hero), PLAYER_STATE_RESOURCE_GOLD, udg_MAX_HEAT);
 
-    g = CreateGroup();
-
-    GroupEnumUnitsInRangeOfLoc(g, GetUnitLoc(GetRevivingUnit()), 250, Condition(function FilterUnitIsSpiritWard));
-    d = FirstOfGroup(g);
-    if (d != null) {
-      // debug BJDebugMsg("Ward finish revive success!");
-      setWardStoppedReviving(d);
-      handleId = GetHandleId(d);
-      wardTable.unit[handleId] = d;
+    if (ward != null) {
       TimerStart(NewTimerEx(handleId), 0, false, function() {
         integer handleId = GetTimerData(GetExpiredTimer());
+        unit ward = wardTable.unit[handleId];
         ReleaseTimer(GetExpiredTimer());
-        SetWidgetLife(wardTable.unit[handleId], 0);
+        SetWidgetLife(ward, 0);
+        setWardStoppedReviving(ward);
+        ward = null;
       });
     }
 
-    DestroyGroup(g);
-
-    g = null;
-    d = null;
+    hero = null;
+    ward = null;
   }
 
 	function onInit() {

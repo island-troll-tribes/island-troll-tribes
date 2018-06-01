@@ -897,27 +897,6 @@ function getBossItem takes nothing returns integer
     endif
 endfunction
 
-function getTurtleItem takes nothing returns integer
-    local integer t = GetRandomInt(1,8)
-    if t == 1 then
-        return ITEM_STEEL_BOOTS
-    elseif t == 2 then
-        return ITEM_STEEL_COAT
-    elseif t == 3 then
-        return ITEM_STEEL_GLOVES
-    elseif t == 4 then
-        return ITEM_STEEL_SHIELD
-    elseif t == 5 then
-        return ITEM_ANABOLIC_BOOTS
-    elseif t == 6 then
-        return ITEM_BATTLE_ARMOR
-    elseif t == 7 then
-        return ITEM_BATTLE_GLOVES
-    else
-        return ITEM_BATTLE_SHIELD
-    endif
-endfunction
-
 function placeMedallion takes real x, real y returns nothing
     local itempool q
     local item u

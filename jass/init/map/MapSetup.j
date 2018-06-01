@@ -21,7 +21,7 @@
 library MapSetup initializer onInit requires TimerUtils, PublicLibrary, ClassTracking, GameMode
 
 globals
-    integer MODES_TIME_LIMIT = 30
+    integer MODES_TIME_LIMIT = 60
     boolean mode_enter = true
     timer MODES_TIMER = CreateTimer()
     timer GAME_TIMER = CreateTimer()

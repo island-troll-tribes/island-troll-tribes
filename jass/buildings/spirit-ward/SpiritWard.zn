@@ -87,11 +87,13 @@ library SpiritWard requires ID, Table, PublicLibrary, Ascii {
     if (ward != null) {
       TimerStart(NewTimerEx(handleId), 0, false, function() {
         integer handleId = GetTimerData(GetExpiredTimer());
-        unit ward = wardTable.unit[handleId];
+        unit hero = wardTable.unit[handleId];
+        unit ward = wardTable.unit[GetHandleId(hero)];
         ReleaseTimer(GetExpiredTimer());
         SetWidgetLife(ward, 0);
         setWardStoppedReviving(ward);
         ward = null;
+        hero = null;
       });
     }
 

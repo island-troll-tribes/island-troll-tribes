@@ -1,10 +1,22 @@
 library SonarCompass requires TradeShip {
     function shipPing() {
         integer i;
+        group g;
+        unit u;
+        force f;
         if( GetSpellAbilityId() == SPELL_SONAR_COMPASS ) {
-            for (1 <= i <= TradeShip.length ) {
-                PingMinimapLocForForceEx( GetPlayersAllies(GetOwningPlayer(GetSpellAbilityUnit())), GetUnitLoc(TradeShip[i].getShip()), 7.00, IntegerTertiaryOp(true, bj_MINIMAPPINGSTYLE_FLASHY, bj_MINIMAPPINGSTYLE_ATTACK), 100.00, 100.00, 100.00 );
+            f = GetPlayersAllies(GetOwningPlayer(GetSpellAbilityUnit()));
+            g = CreateGroup();
+            GroupEnumUnitsInRect(g, GetWorldBounds(), Filter(function FilterUnitIsTradeShip));
+            u = FirstOfGroup(g);
+            while (u != null) {
+                PingMinimapLocForForceEx(f, GetUnitLoc(u), 7.00, bj_MINIMAPPINGSTYLE_SIMPLE, 100.00, 100.00, 100.00 );
+                u = FirstOfGroup(g);
             }
+            DestroyGroup(g);
+            u = null;
+            g = null;
+            f = null;
         }
     }
 

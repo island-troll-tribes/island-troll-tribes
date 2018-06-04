@@ -370,22 +370,4 @@ globals
     trigger                 gg_trg_TrollInterface      = null
     trigger                 gg_trg_SpiritLibrary       = null
     trigger                 gg_trg_SpiritDOC           = null
-    trigger                 gg_trg_Effect_Add          = null
-    trigger                 gg_trg_Effect_Remove       = null
-    unit                    MAMMOTH                    = null
-    unit                    gg_unit_O00J_0027          = null
-    unit                    gg_unit_O00J_0026          = null
-    unit                    gg_unit_O00J_0025          = null
-    unit                    gg_unit_O00J_0024          = null
-    unit                    gg_unit_o00I_0173          = null
-    unit                    gg_unit_o00H_0032          = null
-    unit                    MASTER_CRAFTER             = null
-    unit                    gg_unit_o005_0176          = null
-    unit                    gg_unit_h000_0181          = null
-    unit                    gg_unit_n019_0145          = null
-    unit                    gg_unit_O00B_0180          = null
-    unit                    gg_unit_o004_0179          = null
-    unit                    gg_unit_o003_0157          = null
-    unit                    gg_unit_o00K_0174          = null
-    destructable            gg_dest_ZTsx_3140          = null
 endglobals

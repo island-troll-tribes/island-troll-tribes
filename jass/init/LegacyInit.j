@@ -176,8 +176,6 @@ library LegacyInit initializer onInit
         call ExecuteFunc("InitTrig_Building_Creation")
         call ExecuteFunc("InitTrig_Building_Death")
         call ExecuteFunc("InitTrig_Cast_Defensive_Spells")
-        call ExecuteFunc("InitTrig_Effect_Add")
-        call ExecuteFunc("InitTrig_Effect_Remove")
         call ExecuteFunc("InitTrig_Shapeshift")
 
         call ConditionalTriggerExecute(gg_trg_MapSetup)

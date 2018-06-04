@@ -460,7 +460,7 @@ local item added
     endif
 //End of Armory Item Creation
 //Begging of Witch Doctors Hut Item Creation
-    if uid == UNIT_WITCH_DOCTORS_HIT and GetUnitUserData(GetTriggerUnit()) == 0 then
+    if uid == UNIT_WITCH_DOCTORS_HUT and GetUnitUserData(GetTriggerUnit()) == 0 then
         loop
             exitwhen e > 5
             set t[e] = UnitItemInSlot(GetTriggerUnit(), e)

@@ -18,7 +18,7 @@
 // 7 =  ittp
 // 8 = tsot
 
-library MapSetup initializer onInit requires TimerUtils, PublicLibrary, ClassTracking, GameMode
+library MapSetup initializer onInit requires TimerUtils, PublicLibrary, ClassTracking, GameMode, InitializeUnits
 
 globals
     integer MODES_TIME_LIMIT = 60
@@ -72,13 +72,13 @@ function SlowDisplayea takes nothing returns nothing
 endfunction
 
 function LocustDisplayUnits takes nothing returns nothing
-    call UnitAddAbility( gg_unit_h000_0181 , 'Aloc')
-    call UnitAddAbility( gg_unit_o00I_0173 , 'Aloc')
-    call UnitAddAbility( gg_unit_o005_0176 , 'Aloc')
-    call UnitAddAbility( gg_unit_o00K_0174 , 'Aloc')
-    call UnitAddAbility( gg_unit_o003_0157 , 'Aloc')
-    call UnitAddAbility( gg_unit_o004_0179 , 'Aloc')
-    call UnitAddAbility( gg_unit_O00B_0180 , 'Aloc')
+    call UnitAddAbility(RECIPE_ARMORY, 'Aloc')
+    call UnitAddAbility(RECIPE_WORKSHOP, 'Aloc')
+    call UnitAddAbility(RECIPE_POT, 'Aloc')
+    call UnitAddAbility(RECIPE_WITCH_DOCTORS_HUT, 'Aloc')
+    call UnitAddAbility(RECIPE_TANNERY, 'Aloc')
+    call UnitAddAbility(RECIPE_FIRE, 'Aloc')
+    call UnitAddAbility(RECIPE_GATHERER, 'Aloc')
 endfunction
 
 function FirstSpawnItemsAnimals takes nothing returns nothing
@@ -239,7 +239,7 @@ private function onInit takes nothing returns nothing
     call SetCreepCampFilterState( false )
 
     static if LIBRARY_HydrAROUTINE then
-        call AddItemToStockBJ( ITEM_HYDRA_HINT, gg_unit_n019_0145, 1, 1 )
+        call AddItemToStockBJ( ITEM_HYDRA_HINT, OMINOUS_ALTAR, 1, 1 )
     endif
 
     call ForForce(bj_FORCE_ALL_PLAYERS, function ItemRecipeVision )

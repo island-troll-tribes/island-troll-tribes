@@ -2,10 +2,18 @@ package ItemRecipes
 import ItemRecipe
 import ItemRestriction
 
+class TrollPredicate implements UnitRequirementPredicate
+    function isMet(unit whichUnit) returns string
+        string result = null
+        if not whichUnit.isType(UNIT_TYPE_HERO)
+            result = "Only trolls can assemble this item."
+        return result
+ 
 /** Recipes that require Troll-type unit in order to be assembled. */
 function initTrollRecipes()
     ItemRecipe recipe
-    UnitRequirement requirement = new UnitRequirement("")
+    UnitRequirement requirement = new UnitRequirement("trolls only")
+    requirement.addCondition(new TrollPredicate())
 
     recipe = new ItemRecipe(ITEM_FIRE_KIT, 1, true, true, true)
         ..addItem(ITEM_TINDER)
@@ -163,7 +171,7 @@ function initTrollRecipes()
 /** Recipes that require Armory in order to be assembled. */
 function initArmoryRecipes()
     ItemRecipe recipe
-    UnitRequirement requirement = new UnitRequirement("")
+    UnitRequirement requirement = new UnitRequirement("armory only")
     requirement.units.add('o003')
 
     recipe = new ItemRecipe(ITEM_ENSNARE_TRAP_KIT, 1, true, true, true)
@@ -414,7 +422,7 @@ function initArmoryRecipes()
 /** Recipes that require Witch Doctor Hut in order to be assembled. */
 function initWitchDoctorHutRecipes()
     ItemRecipe recipe
-    UnitRequirement requirement = new UnitRequirement("")
+    UnitRequirement requirement = new UnitRequirement("witch doctor hut only")
     requirement.units.add('o005')
 
     recipe = new ItemRecipe(ITEM_LIVING_CLAY, 3, true, false, true)
@@ -515,7 +523,7 @@ function initWitchDoctorHutRecipes()
 
 function initWorkshopRecipes()
     ItemRecipe recipe
-    UnitRequirement requirement = new UnitRequirement("")
+    UnitRequirement requirement = new UnitRequirement("workshop only")
     requirement.units.add('o00I')
 
     recipe = new ItemRecipe(ITEM_POISON_SPEAR, 1, true, false, true)
@@ -639,7 +647,7 @@ function initWorkshopRecipes()
 
 function initTanneryRecipes()
     ItemRecipe recipe
-    UnitRequirement requirement = new UnitRequirement("")
+    UnitRequirement requirement = new UnitRequirement("tannery only")
     requirement.units.add('o004')
 
     recipe = new ItemRecipe(ITEM_ELK_SKIN_BOOTS, 0, true, false, false)
@@ -702,7 +710,7 @@ function initTanneryRecipes()
 function initMixingPotRecipes()
     var mixAbility = 'A05A'
     ItemRecipe recipe
-    UnitRequirement requirement = new UnitRequirement("")
+    UnitRequirement requirement = new UnitRequirement("mixing pot only")
     requirement.units.add('o00K')
 
     recipe = new ItemRecipe(ITEM_ESSENCE_BEES, 1, false, true, false)

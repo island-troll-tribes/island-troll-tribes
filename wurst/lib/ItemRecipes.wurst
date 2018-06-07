@@ -132,29 +132,29 @@ function initTrollRecipes()
         ..addItem(ITEM_THISTLES)
     recipe.requirement = requirement
 
-    recipe = new ItemRecipe(ITEM_SALVE_ARMOR, 1, true, false, true)
+    recipe = new ItemRecipe(ITEM_SALVE_ARMOR, 1, true, true, true)
         ..addItem(ITEM_MUSHROOM)
         ..addItem(ITEM_STONE)
     recipe.requirement = requirement
 
-    recipe = new ItemRecipe(ITEM_SALVE_HEALING, 2, true, false, true)
+    recipe = new ItemRecipe(ITEM_SALVE_HEALING, 2, true, true, true)
         ..addItem(ITEM_MUSHROOM)
         ..addItem(ITEM_TINDER)
         ..addItem(ITEM_RIVER_ROOT)
     recipe.requirement = requirement
 
-    recipe = new ItemRecipe(ITEM_SALVE_HYPNOSIS, 1, true, false, true)
+    recipe = new ItemRecipe(ITEM_SALVE_HYPNOSIS, 1, true, true, true)
         ..addItem(ITEM_MUSHROOM)
         ..addItem(ITEM_BUTSU)
         ..addItem(ITEM_BUTSU)
     recipe.requirement = requirement
 
-    recipe = new ItemRecipe(ITEM_SALVE_POISON, 3, true, false, true)
+    recipe = new ItemRecipe(ITEM_SALVE_POISON, 3, true, true, true)
         ..addItem(ITEM_MUSHROOM)
         ..addItem(ITEM_THISTLES)
     recipe.requirement = requirement
 
-    recipe = new ItemRecipe(ITEM_SALVE_SPEED, 2, true, false, true)
+    recipe = new ItemRecipe(ITEM_SALVE_SPEED, 2, true, true, true)
         ..addItem(ITEM_MUSHROOM)
         ..addItem(ITEM_TINDER)
         ..addItem(ITEM_RIVER_STEM)
@@ -343,7 +343,7 @@ function initArmoryRecipes()
 
     recipe = new ItemRecipe(ITEM_LOADED_DARK_THISTLES, 12, true, true, true)
         ..addItem(ITEM_BLOW_GUN)
-        ..addItem(ITEM_DARK_THISTLES)
+        ..addItem(ITEM_DARK_THISTLES, false, 12)
     recipe.requirement = requirement
 
     recipe = new ItemRecipe(ITEM_IRON_SPEAR, 1, true, false, true)
@@ -538,13 +538,6 @@ function initWorkshopRecipes()
         ..addItem(ITEM_CLAY_BALL)
     recipe.requirement = requirement
 
-    recipe = new ItemRecipe(ITEM_DEFENSIVE_WARD_KIT, 1, true, true, true)
-        ..addItem(ITEM_STONE)
-        ..addItem(ITEM_STONE)
-        ..addItem(ITEM_MANA_CRYSTAL)
-        ..addItem(ITEM_IRON_INGOT, false, 0)
-    recipe.requirement = requirement
-
     recipe = new ItemRecipe(ITEM_BATTLE_AXE, 0, true, false, true)
         ..addItem(ITEM_STICK)
         ..addItem(ITEM_STEEL_INGOT)
@@ -552,21 +545,6 @@ function initWorkshopRecipes()
         ..addItem(ITEM_SPIRIT_WIND)
         ..addItem(ITEM_SPIRIT_WATER)
         ..addItem(ITEM_MANA_CRYSTAL)
-    recipe.requirement = requirement
-
-    recipe = new ItemRecipe(ITEM_BATTLE_SUIT, 0, true, false, true)
-        ..addItem(ITEM_BATTLE_AXE)
-        ..addItem(ITEM_BATTLE_ARMOR)
-        ..addItem(ITEM_BATTLE_GLOVES)
-        ..addItem(ITEM_BATTLE_SHIELD)
-        ..addItem(ITEM_SPIRIT_WIND)
-        ..addItem(ITEM_SPIRIT_WATER)
-    recipe.requirement = requirement
-
-    recipe = new ItemRecipe(ITEM_NAPALM, 1, true, false, true)
-        ..addItem(ITEM_FIRE_BOMB)
-        ..addItem(ITEM_FIRE_BOMB)
-        ..addItem(ITEM_FLINT)
     recipe.requirement = requirement
 
     recipe = new ItemRecipe(ITEM_SONAR_COMPASS, 0, true, false, true)
@@ -1429,3 +1407,25 @@ function initMixingPotRecipes()
         ..addItem(ITEM_BUTSU)
         ..setAbility(mixAbility)
     recipe.requirement = requirement
+
+function onAssemble()
+    var itm = getEventItemRecipeItem()
+    var ingredients = getEventItemRecipeIngredients()
+
+    if itm.getTypeId() == ITEM_DARK_THISTLES
+        for ingredient in ingredients
+            if ingredient.getTypeId() == ITEM_THISTLES
+                itm.setCharges(ingredient.getCharges())
+                break
+
+    else if itm.getTypeId() == ITEM_LOADED_DARK_THISTLES
+        for ingredient in ingredients
+            if ingredient.getTypeId() == ITEM_DARK_THISTLES
+                var charges = ingredient.getCharges()
+                if charges > 12
+                    charges = 12
+                itm.setCharges(charges)
+                break
+
+init
+    registerItemRecipeEvent(() -> onAssemble())

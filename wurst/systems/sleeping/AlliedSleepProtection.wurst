@@ -1,0 +1,23 @@
+package AlliedSleepProtection
+import RegisterEvents
+import HashMap
+import ChatCommands
+import ChatUtils
+import StringExtensions
+import Sleeping
+
+let protectionEnabled = new HashMap<player, boolean>()
+
+init
+    registerSpellEffectEvent(SPELL_SLEEP_OUTSIDE) ->
+        let caster = GetSpellAbilityUnit()
+        let target = GetSpellTargetUnit()
+        if caster != target and protectionEnabled.get(target.getOwner())
+            caster.issueImmediateOrder("stop")
+
+    registerCommandAll("sleep") (triggerPlayer, args) ->
+        let currentValue = protectionEnabled.get(triggerPlayer)
+        let newValue = args.size() == 1 ? not currentValue : args.get(0).isConfirmation()
+        let msg = "{0}Sleep protection turned|r {1}".format(GENERAL_COLOR, newValue.toSwitch().color(GOLD_COLOR))
+        printTimedToPlayer(msg, 5, triggerPlayer)
+        protectionEnabled.put(triggerPlayer, newValue)

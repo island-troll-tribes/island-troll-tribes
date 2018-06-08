@@ -1,0 +1,19 @@
+package PreventNet
+import RegisterEvents
+import TrollExtensions
+
+public constant SPELL_WEB = 'Aweb'
+public constant SPELL_ENSNARE = 'Aens'
+public constant BUFF_WEB = 'Beng'
+public constant BUFF_ANTI_MAGIC_SHIELD = 'Bam2'
+
+init
+    registerSpellEffectEvent(SPELL_ENSNARE) ->
+        let t = GetSpellTargetUnit()
+        if t.isTroll() and t.getAbilityLevel(BUFF_WEB) > 0
+            GetSpellAbilityUnit().issueImmediateOrder("stop")
+
+    registerSpellEffectEvent(SPELL_WEB) ->
+        let t = GetSpellTargetUnit()
+        if t.isTroll() and (t.getAbilityLevel(BUFF_ANTI_MAGIC_SHIELD) > 0 or t.getAbilityLevel(BUFF_WEB) > 0)
+            GetSpellAbilityUnit().issueImmediateOrder("stop")

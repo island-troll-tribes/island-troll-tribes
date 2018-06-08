@@ -1,6 +1,8 @@
 package BushSelection
 import HashMap
 import RegisterEvents
+import InventoryUtils
+import Classes
 
 let MAX_DIST = 300
 let MAX_DIST_SQ = compiletime(MAX_DIST * MAX_DIST)
@@ -15,9 +17,5 @@ init
         let hero = getPlayersTroll(GetTriggerPlayer())
         let id = bush.getTypeId()
 
-        if map.has(id) and map.get(id) == hero.getTypeId() and hero.getPos().distanceToSq(bush.getPos()) < MAX_DIST_SQ
-            let slotsAvailable = hero.inventorySize() - hero.itemCount()
-            for i = 0 to slotsAvailable - 1
-                let slot = bush.itemInSlot(i)
-                if slot != null
-                    hero.addItemHandle(slot)
+        if map.has(id) and map.get(id) == getTrollBaseClass(hero) and hero.getPos().distanceToSq(bush.getPos()) < MAX_DIST_SQ
+            bush.transferItems(hero)

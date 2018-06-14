@@ -8,14 +8,13 @@ class TrollPredicate implements UnitRequirementPredicate
         if not whichUnit.isType(UNIT_TYPE_HERO)
             result = "Only trolls can assemble this item."
         return result
- 
+
 /** Recipes that require Troll-type unit in order to be assembled. */
 function initTrollRecipes()
-    ItemRecipe recipe
     UnitRequirement requirement = new UnitRequirement("trolls only")
     requirement.addCondition(new TrollPredicate())
 
-    recipe = new ItemRecipe(ITEM_FIRE_KIT, 1, true, true, true)
+    var recipe = new ItemRecipe(ITEM_FIRE_KIT, 1, true, true, true)
         ..addItem(ITEM_TINDER)
         ..addItem(ITEM_FLINT, false, 0)
         ..addItem(ITEM_STICK)
@@ -140,45 +139,45 @@ function initTrollRecipes()
         ..addItem(ITEM_THISTLES)
     recipe.requirement = requirement
 
-    var gathererReq = new UnitRequirement("gatherer")
-    gathererReq.units.push(UNIT_GATHERER)
-    gathererReq.units.push(UNIT_RADAR_GATHERER)
-    gathererReq.units.push(UNIT_HERB_MASTER)
-    gathererReq.units.push(UNIT_OMNIGATHERER)
+    var gathererOnly = new UnitRequirement("gatherer")
+    gathererOnly.addUnit(UNIT_GATHERER)
+    gathererOnly.addUnit(UNIT_RADAR_GATHERER)
+    gathererOnly.addUnit(UNIT_HERB_MASTER)
+    gathererOnly.addUnit(UNIT_OMNIGATHERER)
 
     recipe = new ItemRecipe(ITEM_SALVE_ARMOR, 1, true, true, true)
         ..addItem(ITEM_MUSHROOM)
         ..addItem(ITEM_STONE)
-    recipe.requirement = gathererReq
+    recipe.requirement = gathererOnly
 
     recipe = new ItemRecipe(ITEM_SALVE_HEALING, 2, true, true, true)
         ..addItem(ITEM_MUSHROOM)
         ..addItem(ITEM_TINDER)
         ..addItem(ITEM_RIVER_ROOT)
-    recipe.requirement = gathererReq
+    recipe.requirement = gathererOnly
 
     recipe = new ItemRecipe(ITEM_SALVE_HYPNOSIS, 1, true, true, true)
         ..addItem(ITEM_MUSHROOM)
         ..addItem(ITEM_BUTSU)
         ..addItem(ITEM_BUTSU)
-    recipe.requirement = gathererReq
+    recipe.requirement = gathererOnly
 
     recipe = new ItemRecipe(ITEM_SALVE_POISON, 3, true, true, true)
         ..addItem(ITEM_MUSHROOM)
         ..addItem(ITEM_THISTLES)
-    recipe.requirement = gathererReq
+    recipe.requirement = gathererOnly
 
     recipe = new ItemRecipe(ITEM_SALVE_SPEED, 2, true, true, true)
         ..addItem(ITEM_MUSHROOM)
         ..addItem(ITEM_TINDER)
         ..addItem(ITEM_RIVER_STEM)
-    recipe.requirement = gathererReq
+    recipe.requirement = gathererOnly
 
-/** Recipes that require Armory in order to be assembled. */
+/** Recipes that can be assembled using Armory. */
 function initArmoryRecipes()
     ItemRecipe recipe
     UnitRequirement requirement = new UnitRequirement("armory only")
-    requirement.units.add('o003')
+    requirement.addUnit('o003')
 
     recipe = new ItemRecipe(ITEM_ENSNARE_TRAP_KIT, 1, true, true, true)
         ..addItem(ITEM_TINDER)
@@ -425,13 +424,12 @@ function initArmoryRecipes()
         ..addItem(ITEM_STEEL_INGOT)
     recipe.requirement = requirement
 
-/** Recipes that require Witch Doctor Hut in order to be assembled. */
+/** Recipes that can be assembled using Witch Doctor Hut. */
 function initWitchDoctorHutRecipes()
-    ItemRecipe recipe
     UnitRequirement requirement = new UnitRequirement("witch doctor hut only")
-    requirement.units.add('o005')
+    requirement.addUnit('o005')
 
-    recipe = new ItemRecipe(ITEM_LIVING_CLAY, 3, true, false, true)
+    var recipe = new ItemRecipe(ITEM_LIVING_CLAY, 3, true, false, true)
         ..addItem(ITEM_CLAY_BALL)
         ..addItem(ITEM_MANA_CRYSTAL)
     recipe.requirement = requirement
@@ -527,12 +525,12 @@ function initWitchDoctorHutRecipes()
         ..addItem(ITEM_DARK_ROCK)
     recipe.requirement = requirement
 
+/** Recipes that can be assembled using Workshop. */
 function initWorkshopRecipes()
-    ItemRecipe recipe
     UnitRequirement requirement = new UnitRequirement("workshop only")
-    requirement.units.add('o00I')
+    requirement.addUnit('o00I')
 
-    recipe = new ItemRecipe(ITEM_POISON_SPEAR, 1, true, false, true)
+    var recipe = new ItemRecipe(ITEM_POISON_SPEAR, 1, true, false, true)
         ..addItem(ITEM_SPEAR, true, 1)
         ..addItem(ITEM_MUSHROOM)
     recipe.requirement = requirement
@@ -651,12 +649,12 @@ function initWorkshopRecipes()
         ..addItem(ITEM_MANA_CRYSTAL)
     recipe.requirement = requirement
 
+/** Recipes that can be assembled using Tannery. */
 function initTanneryRecipes()
-    ItemRecipe recipe
     UnitRequirement requirement = new UnitRequirement("tannery only")
-    requirement.units.add('o004')
+    requirement.addUnit('o004')
 
-    recipe = new ItemRecipe(ITEM_ELK_SKIN_BOOTS, 0, true, false, false)
+    var recipe = new ItemRecipe(ITEM_ELK_SKIN_BOOTS, 0, true, false, false)
         ..addItem(ITEM_ELK_HIDE)
         ..addItem(ITEM_ELK_HIDE)
         ..setAbility('A00C')
@@ -713,13 +711,13 @@ function initTanneryRecipes()
         ..setAbility('A00D')
     recipe.requirement = requirement
 
+/** Recipes that can be assembled using Mixing Pot. */
 function initMixingPotRecipes()
     var mixAbility = 'A05A'
-    ItemRecipe recipe
     UnitRequirement requirement = new UnitRequirement("mixing pot only")
-    requirement.units.add('o00K')
+    requirement.addUnit('o00K')
 
-    recipe = new ItemRecipe(ITEM_ESSENCE_BEES, 1, false, true, false)
+    var recipe = new ItemRecipe(ITEM_ESSENCE_BEES, 1, false, true, false)
         ..addItem(ITEM_BLUE_HERB)
         ..addItem(ITEM_ORANGE_HERB)
         ..addItem(ITEM_YELLOW_HERB)
@@ -1435,10 +1433,7 @@ function onAssemble()
     else if itm.getTypeId() == ITEM_LOADED_DARK_THISTLES
         for ingredient in ingredients
             if ingredient.getTypeId() == ITEM_DARK_THISTLES
-                var charges = ingredient.getCharges()
-                if charges > 12
-                    charges = 12
-                itm.setCharges(charges)
+                itm.setCharges(min(ingredient.getCharges(), 12))
                 break
 
 init

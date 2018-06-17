@@ -35,7 +35,7 @@ function InitTrig_depress_mana_drain takes nothing returns nothing
     set gg_trg_depress_mana_drain = CreateTrigger(  )
   //  call TriggerRegisterAnyUnitEventBJ( gg_trg_depress_mana_drain, EVENT_PLAYER_UNIT_SPELL_CAST )
     call TriggerAddCondition( gg_trg_depress_mana_drain, Condition( function Trig_depress_mana_drain_Conditions ) )
-    call TriggerAddAction( gg_trg_depress_mana_drain, function Trig_depress_mana_drain_Actions )
+    //call TriggerAddAction( gg_trg_depress_mana_drain, function Trig_depress_mana_drain_Actions )
 endfunction
 
 //===========================================================================

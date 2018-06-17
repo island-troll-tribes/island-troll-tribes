@@ -21,7 +21,7 @@ function InitTrig_Stup_Aura_Remove takes nothing returns nothing
     set gg_trg_Stup_Aura_Remove = CreateTrigger(  )
     call TriggerRegisterAnyUnitEventBJ( gg_trg_Stup_Aura_Remove, EVENT_PLAYER_UNIT_SPELL_FINISH )
     call TriggerAddCondition( gg_trg_Stup_Aura_Remove, Condition( function Trig_Stup_Aura_Remove_Conditions ) )
-    call TriggerAddAction( gg_trg_Stup_Aura_Remove, function Trig_Stup_Aura_Remove_Actions )
+    //call TriggerAddAction( gg_trg_Stup_Aura_Remove, function Trig_Stup_Aura_Remove_Actions )
 endfunction
 
 //===========================================================================

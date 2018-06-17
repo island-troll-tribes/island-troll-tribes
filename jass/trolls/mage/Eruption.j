@@ -33,7 +33,7 @@ endfunction
 function InitTrig_Eruption takes nothing returns nothing
     set gg_trg_Eruption = CreateTrigger(  )
     call TriggerAddCondition( gg_trg_Eruption, Condition( function Trig_Eruption_Conditions ) )
-    call TriggerAddAction( gg_trg_Eruption, function Trig_Eruption_Actions )
+    //call TriggerAddAction( gg_trg_Eruption, function Trig_Eruption_Actions )
 endfunction
 
 //===========================================================================

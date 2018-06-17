@@ -1,0 +1,139 @@
+package ActivateRunes
+import RuneRing
+import DarkGate
+import RegisterEvents
+import Orders
+import Table
+import LinkedList
+import ClosureTimers
+import InstantDummyCaster
+
+@configurable constant int ABILITY_ID = 'A07B'
+@configurable constant int REQ_ABILITY_ID = 'A07D'
+@configurable constant real PORTAL_OFFSET = 150
+@configurable constant real RADIUS = 300
+
+constant OFFSET = PORTAL_OFFSET * PORTAL_OFFSET // avoid square root
+constant table = new Table()
+
+function initSpellTable()
+    table.saveInt('A07C', Orders.creepthunderbolt)
+    table.saveInt('A02A', Orders.frostnova)
+    table.saveInt('A01Y', Orders.cripple)
+    table.saveInt('A064', Orders.soulburn)
+    table.saveInt('A03E', Orders.drunkenhaze)
+
+tuple summonInfo(int unitId, string name, int orderId, real cooldown, LinkedList<int> runeOrder)
+constant NULL_SUMMON = summonInfo(0, null, 0, -1, null)
+
+summonInfo kalezkaNelka = summonInfo(UNIT_LOCUST_FIRE_LORD, "|c00ff0000Kalezka Nelka|r", Orders.acidbomb, 1, new LinkedList<int>())
+summonInfo leznelLezlezka = summonInfo(UNIT_LOCUST_WATER_LORD, "|c00005a95Leznel Lezlezka|r", Orders.thunderbolt, 1, new LinkedList<int>())
+summonInfo nelnelkaNellez = summonInfo(UNIT_LOCUST_GHOST, "|c0075f041Nelnelka Nellez|r", Orders.soulburn, 1.5, new LinkedList<int>())
+
+function initSummonCombinations()
+    kalezkaNelka.runeOrder.add(UNIT_LOCUST_KA, UNIT_LOCUST_LEZ, UNIT_LOCUST_KA, UNIT_LOCUST_NEL, UNIT_LOCUST_KA)
+    leznelLezlezka.runeOrder.add(UNIT_LOCUST_LEZ, UNIT_LOCUST_NEL, UNIT_LOCUST_LEZ, UNIT_LOCUST_LEZ, UNIT_LOCUST_KA)
+    nelnelkaNellez.runeOrder.add(UNIT_LOCUST_NEL, UNIT_LOCUST_NEL, UNIT_LOCUST_KA, UNIT_LOCUST_NEL, UNIT_LOCUST_LEZ)
+
+function LinkedList<int>.equals(LinkedList<int> other) returns boolean
+    if other == null or this.size() != other.size()
+        return false
+    var iter = other.staticItr()
+    for elem in this
+        if elem != iter.next()
+            return false
+    return true
+
+function getSummonInfo(LinkedList<int> runeOrder) returns summonInfo
+    summonInfo result = NULL_SUMMON
+    if runeOrder.equals(kalezkaNelka.runeOrder)
+        result = kalezkaNelka
+    else if runeOrder.equals(leznelLezlezka.runeOrder)
+        result = leznelLezlezka
+    else if runeOrder.equals(nelnelkaNellez.runeOrder)
+        result = nelnelkaNellez
+    return result
+
+function unit.getRuneSpell() returns int
+    var result = 'A07C' // defaults to UNIT_LOCUST_KA
+    var unitId = this.getTypeId()
+
+    if unitId == UNIT_LOCUST_LEZ
+        result = (GetRandomInt(0, 1) == 1) ? 'A02A' : 'A01Y'
+    else if unitId == UNIT_LOCUST_NEL
+        result = (GetRandomInt(0, 1) == 1) ? 'A064' : 'A03E'
+    return result
+
+player filterPlayer = null
+function filterAnyTarget(unit u) returns boolean
+    return u.isAlive() and not u.isType(UNIT_TYPE_STRUCTURE)
+
+function filterEnemyTarget(unit u) returns boolean
+    return filterAnyTarget(u) and u.getOwner().isEnemyOf(filterPlayer)
+
+function getNearbyActiveGate(unit u) returns DarkGate
+    DarkGate result = null
+    var gates = getActiveDarkGates()
+    var pos = u.getPos()
+
+    for gate in gates
+        if gate.caster == u and (result == null or gate.remaining > result.remaining)
+            var dvec = pos - gate.pos
+            if dvec.dot(dvec) <= OFFSET
+                result = gate
+    return result
+
+function onCast()
+    var caster = GetSpellAbilityUnit()
+    var runes = caster.getRuneList()
+    if runes == null or runes.isEmpty()
+        return
+
+    var gate = getNearbyActiveGate(caster)
+    var summonData = NULL_SUMMON
+    if gate != null and caster.hasAbility(REQ_ABILITY_ID)
+        if runes != null
+            var runeOrder = new LinkedList<int>()
+            runes.forEach(e -> runeOrder.push(e.getTypeId()))
+            summonData = getSummonInfo(runeOrder)
+
+    var owner = caster.getOwner()
+    if summonData != NULL_SUMMON
+        var pos = gate.pos
+        var summon = createUnit(owner, summonData.unitId, pos, (270).fromDeg())
+        gate.summons.push(summon)
+        printTimedToPlayer(GENERAL_COLOR + "You have summoned " + summonData.name + GENERAL_COLOR + "!|r", 7, owner)
+
+        doPeriodically(summonData.cooldown) cb ->
+            if summon.isAlive()
+                filterPlayer = owner
+                ENUM_GROUP.enumUnitsInRange(pos, RADIUS, Filter(() -> filterEnemyTarget(GetFilterUnit())))
+                var target = ENUM_GROUP.getRandomUnit()
+
+                if target == null
+                    ENUM_GROUP.enumUnitsInRange(pos, RADIUS, Filter(() -> filterAnyTarget(GetFilterUnit())))
+                    target = ENUM_GROUP.getRandomUnit()
+                if target != null
+                    summon.issueTargetOrderById(summonData.orderId, target)
+            else
+                destroy cb
+    else
+        var pos = caster.getPos()
+        for rune in runes
+            filterPlayer = owner
+            ENUM_GROUP.enumUnitsInRange(pos, RADIUS, Filter(() -> filterEnemyTarget(GetFilterUnit())))
+            var target = ENUM_GROUP.getRandomUnit()
+
+            if target != null
+                rune.issuePointOrderById(Orders.move, target.getPos())
+                var abilityId = rune.getRuneSpell()
+                InstantDummyCaster.castTarget(owner, abilityId, 1, table.loadInt(abilityId), target, target.getPos())
+                rune.setTimedLife(1)
+            else
+                rune.kill()
+        runes.clear()
+
+init
+    initSpellTable()
+    initSummonCombinations()
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())

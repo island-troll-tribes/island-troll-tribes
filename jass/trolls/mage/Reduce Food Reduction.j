@@ -40,7 +40,7 @@ endfunction
 function InitTrig_Reduce_Food_reduction takes nothing returns nothing
     set gg_trg_Reduce_Food_reduction = CreateTrigger(  )
     call TriggerAddCondition( gg_trg_Reduce_Food_reduction, Condition( function Trig_Reduce_Food_reduction_Conditions ) )
-    call TriggerAddAction( gg_trg_Reduce_Food_reduction, function Trig_Reduce_Food_reduction_Actions )
+    //call TriggerAddAction( gg_trg_Reduce_Food_reduction, function Trig_Reduce_Food_reduction_Actions )
 endfunction
 
 //===========================================================================

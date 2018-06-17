@@ -51,7 +51,7 @@ function InitTrig_jeoulusy takes nothing returns nothing
     set gg_trg_jeoulusy = CreateTrigger(  )
  //   call TriggerRegisterAnyUnitEventBJ( gg_trg_jeoulusy, EVENT_PLAYER_UNIT_SPELL_CAST )
     call TriggerAddCondition( gg_trg_jeoulusy, Condition( function Trig_jeoulusy_Conditions ) )
-    call TriggerAddAction( gg_trg_jeoulusy, function jelousyFunc )
+    //call TriggerAddAction( gg_trg_jeoulusy, function jelousyFunc )
 endfunction
 
 //===========================================================================

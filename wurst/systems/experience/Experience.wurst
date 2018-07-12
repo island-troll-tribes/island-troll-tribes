@@ -38,13 +38,13 @@ init
             end))
             let count = heroes.size()
             let deadUnitLevel = dead.getLevel()
-
-            let expReduction = dead.getOwner().getId() >= PLAYER_NEUTRAL_PASSIVE ?
-                max(0.4, 0.9 - 0.1 * deadUnitLevel) :
-                1.0
-
+            let baseExp = dead.isType(UNIT_TYPE_HERO) ? heroExp[deadUnitLevel] : creepExp[deadUnitLevel]
+            
             for hero from heroes
                 let multiplier = getMultiplier(hero)
-                let baseExp = dead.isType(UNIT_TYPE_HERO) ? heroExp[deadUnitLevel] : creepExp[deadUnitLevel]
+                let killerUnitLevel = hero.getLevel()
+                let expReduction = dead.getOwner().getId() >= PLAYER_NEUTRAL_PASSIVE ?
+                    max(0.4, 0.9 - 0.1 * killerUnitLevel) :
+                    1.0
                 let experience = floor(baseExp * multiplier / count) * expReduction
                 hero.addXp(experience.toInt(), true)

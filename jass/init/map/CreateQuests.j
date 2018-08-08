@@ -32,8 +32,6 @@ Checkout our github: https://github.com/theQuazz/island-troll-tribes
 call CreateQuestBJ( bj_QUESTTYPE_REQ_DISCOVERED, "Clans", "For a more updated offical list, go to http://islandtrolltribes.wikia.com/wiki/Clans
 "+GOLD_COLOR+"US East (Azeroth):|r
 - Clan TwGB
-"+GOLD_COLOR+"Europe (Northrend):|r
-- Clan ITTP
 
 If you want your clan to show up on the list get in touch with Quazz or Mephisto.!
 

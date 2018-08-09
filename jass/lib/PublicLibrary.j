@@ -448,7 +448,6 @@ function setUpSkillTriggers takes unit u returns nothing
     elseif(GetUnitTypeId(u)==UNIT_PRIEST) then//priest
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_cloud_cast, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Angelic_Orb, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
-        call TriggerRegisterPlayerUnitEventSimple( gg_trg_omnicure, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Mix_Mana, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Mix_Health, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Mix_Heat, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
@@ -1095,8 +1094,7 @@ endfunction
 
 function LockMammoth takes nothing returns nothing
     call SetDestructableInvulnerable( mammothGate, true )
-    set Mammoth = MAMMOTH
-    call SetUnitOwner( Mammoth, Player(PLAYER_NEUTRAL_AGGRESSIVE), true )
+    call SetUnitOwner( MAMMOTH, Player(PLAYER_NEUTRAL_AGGRESSIVE), true )
 endfunction
 
 function ConvertEnumCorpseToCookedMeat takes nothing returns nothing

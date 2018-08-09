@@ -1,8 +1,12 @@
-package BuildingCancellation
-import HashMap
+package Packing
 import RegisterEvents
+import HashMap
 
 let map = new HashMap<int, int>()
+..put(UNIT_TENT, ITEM_TENT_KIT)
+..put(UNIT_FIRE, ITEM_FIRE_KIT)
+..put(UNIT_MAGE_FIRE, ITEM_MAGE_FIRE_KIT)
+..put(UNIT_MAGE_FIRE_SUMMONED, 0)
 ..put(UNIT_ARMORY, ITEM_ARMORY_KIT)
 ..put(UNIT_ENSNARE_TRAP, ITEM_ENSNARE_TRAP_KIT)
 ..put(UNIT_HATCHERY, ITEM_HATCHERY_KIT)
@@ -19,9 +23,18 @@ let map = new HashMap<int, int>()
 ..put(UNIT_WITCH_DOCTORS_HUT, ITEM_WITCH_DOCTORS_HUT_KIT)
 ..put(UNIT_WORKSHOP, ITEM_WORKSHOP_KIT)
 
+function replaceBuildingWithKit(unit structure)
+    let structureId = structure.getTypeId()
+    if map.has(structureId)
+        let kit = map.get(structureId)
+        if kit != 0
+            createItem(kit, structure.getPos())
+
 init
-    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_CONSTRUCT_CANCEL) ->
-        let structure = GetCancelledStructure()
-        let unitId = structure.getTypeId()
-        if map.has(unitId)
-            CreateItem(map.get(unitId), structure.getX(), structure.getY())
+    registerSpellEffectEvent(SPELL_PACK_BUILDING) ->
+        let structure = GetTriggerUnit()
+        replaceBuildingWithKit(structure)
+        structure.remove()
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
+        replaceBuildingWithKit(GetDyingUnit())

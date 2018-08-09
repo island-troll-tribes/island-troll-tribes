@@ -64,7 +64,6 @@ globals
     trigger                 gg_trg_Light_Gate          = null
     trigger                 gg_trg_cloud_cast          = null
     trigger                 gg_trg_Angelic_Orb         = null
-    trigger                 gg_trg_omnicure            = null
     trigger                 gg_trg_Mix_Mana            = null
     trigger                 gg_trg_Mix_Health          = null
     trigger                 gg_trg_Mix_Heat            = null

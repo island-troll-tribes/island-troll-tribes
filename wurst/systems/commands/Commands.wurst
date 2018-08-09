@@ -17,6 +17,7 @@ class PlayerAllianceSetting
         this.name = name
         this.setting = setting
         this.values = new HashMap<player, bool>()
+        this.invertSetting = false
 
     construct(string name, alliancetype setting, bool invertSetting)
         this.name = name
@@ -48,9 +49,6 @@ init
         if GetLocalPlayer() == triggerPlayer
             ClearTextMessages()
 
-    registerCommandAll("modes") (triggerPlayer, args) ->
-        printTimedToPlayer(currentModes + s__GameMode_getEnabledModes(), 15, triggerPlayer)
-
     registerCommandAll("c") (triggerPlayer, args) ->
         let id = triggerPlayer.getId()
         let zoom = args.get(1).toReal()
@@ -81,3 +79,6 @@ init
             let msg = "Adjusted player color to {0}Player {1}|r".format(COLOR_CODE[id], (id + 1).toString())
             printTimedToPlayer(msg, 5, triggerPlayer)
             triggerPlayer.setColor(ConvertPlayerColor(id), true)
+
+        registerCommandAll("modes") (triggerPlayer, args) ->
+            printTimedToPlayer(currentModes + s__GameMode_getEnabledModes(), 15, triggerPlayer)

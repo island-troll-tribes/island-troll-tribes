@@ -1,0 +1,41 @@
+package HatcheryHatch
+import RegisterEvents
+import UnitExtensions
+
+public constant SPELL_HATCH = 'A03Q'
+public constant SPELL_HAWK_GATHER = 'A03T'
+public constant SPELL_HAWK_HEALTH = 'A03V'
+public constant SPELL_HAWK_INVENTORY = 'A03W'
+public constant SPELL_HAWK_MOVE = 'A03U'
+public constant SPELL_HAWK_SPEED = 'A03S'
+
+init
+    registerSpellEffectEvent(SPELL_HATCH) ->
+        let hatchery = GetSpellAbilityUnit()
+        let items = hatchery.getInventoryItemCountMap()
+        if items.get(ITEM_HAWK_EGG) == 1
+            let dark = items.get(ITEM_DARK_ROCK)
+            let speed = dark + items.get(ITEM_HAWK_EGG) + items.get(ITEM_STICK)
+            let move = dark + items.get(ITEM_CLAY_BALL) + items.get(ITEM_SPIRIT_WIND)
+            let gather = dark + items.get(ITEM_BLUE_HERB) + items.get(ITEM_ORANGE_HERB)
+            let health = dark + items.get(ITEM_JUNGLE_BEAR_HIDE) + items.get(ITEM_ELK_HIDE)
+            let inventory = dark + items.get(ITEM_THISTLES) + items.get(ITEM_MUSHROOM)
+            let extra = items.get(ITEM_MANA_CRYSTAL) + items.get(ITEM_SPIRIT_WATER) + items.get(ITEM_ACORN) + items.get(ITEM_TINDER)
+
+            if speed + move + gather + health + inventory + extra > 4
+                var id = UNIT_HAWK_HATCHLING
+                if dark > 4
+                    id = UNIT_NETHER_DRAGON_HATCHLING
+                else if inventory > 2
+                    id = UNIT_FOREST_DRAGON_HATCHLING
+                else if move > 2
+                    id = UNIT_RED_DRAGON_HATCHLING
+                else if health > 2
+                    id = UNIT_BRONZE_DRAGON_HATCHLING
+
+                let hawk = createUnit(Player(PLAYER_NEUTRAL_PASSIVE), UNIT_NETHER_DRAGON_HATCHLING, hatchery.getPos(), angle(0))
+                hawk.setAbilityLevel(SPELL_HAWK_GATHER, min(max(1, gather), 6))
+                hawk.setAbilityLevel(SPELL_HAWK_HEALTH, min(max(1, health), 6))
+                hawk.setAbilityLevel(SPELL_HAWK_INVENTORY, min(max(1, inventory), 6))
+                hawk.setAbilityLevel(SPELL_HAWK_MOVE, min(max(1, move), 6))
+                hawk.setAbilityLevel(SPELL_HAWK_SPEED, min(max(1, speed), 6))

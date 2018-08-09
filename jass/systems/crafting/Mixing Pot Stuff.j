@@ -155,7 +155,7 @@ function Trig_mixing_pot_stuff_Actions takes nothing returns nothing
             call UnitAddItemByIdSwapped( ITEM_GEM_OF_KNOWLEDGE, u ) // GoK
             return
         endif
-        if (specCount>1) then
+        if (specCount>0 and butsu > 0) then
             call removeHerbs(u)
             call UnitAddItemByIdSwapped( ITEM_ANTI_MAGIC_POTION, u ) // Anit Magic
             return

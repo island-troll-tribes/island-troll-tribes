@@ -6,7 +6,7 @@ globals
     //boolean Turtle_Dead = false
     boolean Hydra_Dead = false
 
-    unit Mammoth = null
+    unit MAMMOTH = null
     unit DiscoDuck = null
     //unit Turtle = null
     unit Hydra = null

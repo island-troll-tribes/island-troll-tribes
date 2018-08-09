@@ -1,0 +1,20 @@
+package Ensnare
+import HashSet
+import RegisterEvents
+
+public constant SPELL_ENSNARE = 'Aens'
+public constant SPELL_WEB = 'Aweb'
+
+let targets = new HashSet<int>()
+..add(UNIT_FISH)
+..add(UNIT_GREEN_FISH)
+
+function moveTarget()
+    let caster = GetSpellAbilityUnit()
+    let target = GetSpellTargetUnit()
+    if target.isType(UNIT_TYPE_FLYING) or targets.has(target.getTypeId())
+        target.setPos(caster.getPos())
+
+init
+    registerSpellEffectEvent(SPELL_ENSNARE, function moveTarget)
+    registerSpellEffectEvent(SPELL_WEB, function moveTarget)

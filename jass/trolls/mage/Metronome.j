@@ -59,7 +59,7 @@ function InitTrig_metronome takes nothing returns nothing
     set gg_trg_metronome = CreateTrigger(  )
   //  call TriggerRegisterAnyUnitEventBJ( gg_trg_metronome, EVENT_PLAYER_UNIT_SPELL_CAST )
     call TriggerAddCondition( gg_trg_metronome, Condition( function Trig_metronome_Conditions ) )
-    call TriggerAddAction( gg_trg_metronome, function Trig_metronome_Actions )
+    //call TriggerAddAction( gg_trg_metronome, function Trig_metronome_Actions )
 endfunction
 
 //===========================================================================

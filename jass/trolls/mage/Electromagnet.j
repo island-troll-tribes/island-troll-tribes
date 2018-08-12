@@ -96,7 +96,7 @@ function InitTrig_electromagnet takes nothing returns nothing
     set gg_trg_electromagnet = CreateTrigger(  )
   //  call TriggerRegisterAnyUnitEventBJ( gg_trg_electromagnet, EVENT_PLAYER_UNIT_SPELL_CAST )
     call TriggerAddCondition( gg_trg_electromagnet, Condition( function Trig_electromagnet_Conditions ) )
-    call TriggerAddAction( gg_trg_electromagnet, function Trig_electromagnet_Actions )
+    //call TriggerAddAction( gg_trg_electromagnet, function Trig_electromagnet_Actions )
 endfunction
 
 //===========================================================================

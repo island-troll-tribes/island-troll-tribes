@@ -1,0 +1,28 @@
+package DreamEater
+import RegisterEvents
+import SimError
+
+@configurable constant int ABILITY_ID = 'A04Z'
+@configurable constant int BUFF_ID = 'BOvd'
+@configurable constant string EFFECT_PATH = "Abilities\\Spells\\Items\\AIso\\AIsoTarget.mdl"
+
+function onStartCast()
+    if GetSpellAbilityId() == ABILITY_ID and not GetSpellTargetUnit().hasAbility(BUFF_ID)
+        GetSpellAbilityUnit().abortOrder()
+        simError(GetTriggerPlayer(), "Target is not dreaming.")
+
+function onCast()
+    var target = GetSpellTargetUnit()
+    target.addEffect(EFFECT_PATH, "overhead").destr()
+    target.subHP(20)
+
+    var value = target.getMana() - 50
+    target.setMana(max(value, 10))
+
+    var caster = GetSpellAbilityUnit()
+    caster.addHP(50)
+    caster.addMana(50)
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_CAST, () -> onStartCast())

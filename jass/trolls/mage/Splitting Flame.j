@@ -42,7 +42,7 @@ endfunction
 function InitTrig_Splitting_Flame takes nothing returns nothing
     set gg_trg_Splitting_Flame = CreateTrigger(  )
     call TriggerAddCondition( gg_trg_Splitting_Flame, Condition( function Trig_Splitting_Flame_Conditions ) )
-    call TriggerAddAction( gg_trg_Splitting_Flame, function Trig_Splitting_Flame_Actions )
+    //call TriggerAddAction( gg_trg_Splitting_Flame, function Trig_Splitting_Flame_Actions )
 endfunction
 
 //===========================================================================

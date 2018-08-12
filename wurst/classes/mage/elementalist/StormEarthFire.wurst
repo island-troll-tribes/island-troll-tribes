@@ -1,0 +1,25 @@
+package StormEarthFire
+import RegisterEvents
+import ClosureForGroups
+import Orders
+import InstantDummyCaster
+
+@configurable constant int ABILITY_ID = 'A02G'
+@configurable constant int STORM_ABILITY_ID = 'ACfl'
+@configurable constant int EARTH_ABILITY_ID = 'A017'
+@configurable constant int FIRE_ABILITY_ID = 'ACtb'
+@configurable constant real RADIUS = 512
+
+function onCast()
+    var caster = GetSpellAbilityUnit()
+    var owner = caster.getOwner()
+    var pos = caster.getPos()
+
+    forUnitsInRange(pos, RADIUS) u ->
+        if u.isAlive() and u.isType(UNIT_TYPE_HERO) and u.getOwner().isEnemyOf(owner)
+            InstantDummyCaster.castTarget(owner, EARTH_ABILITY_ID, 1, Orders.entanglingroots, u, pos)
+            InstantDummyCaster.castTarget(owner, FIRE_ABILITY_ID, 1, Orders.creepthunderbolt, u, pos)
+            InstantDummyCaster.castTarget(owner, STORM_ABILITY_ID, 1, Orders.forkedlightning, u, pos)
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())

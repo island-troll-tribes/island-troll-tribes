@@ -55,7 +55,7 @@ function InitTrig_seizures takes nothing returns nothing
     set gg_trg_seizures = CreateTrigger(  )
   //  call TriggerRegisterAnyUnitEventBJ( gg_trg_seizures, EVENT_PLAYER_UNIT_SPELL_CAST )
     call TriggerAddCondition( gg_trg_seizures, Condition( function Trig_seizures_Conditions ) )
-    call TriggerAddAction( gg_trg_seizures, function seizureFunc )
+    //call TriggerAddAction( gg_trg_seizures, function seizureFunc )
 endfunction
 
 //===========================================================================

@@ -32,7 +32,7 @@ function InitTrig_Depression_Orb takes nothing returns nothing
     set gg_trg_Depression_Orb = CreateTrigger(  )
  //   call TriggerRegisterAnyUnitEventBJ( gg_trg_Depression_Orb, EVENT_PLAYER_UNIT_SPELL_CAST )
     call TriggerAddCondition( gg_trg_Depression_Orb, Condition( function Trig_DOrb_Conditions ) )
-    call TriggerAddAction( gg_trg_Depression_Orb, function Trig_DOrb_Actions )
+    //call TriggerAddAction( gg_trg_Depression_Orb, function Trig_DOrb_Actions )
 endfunction
 
 //===========================================================================

@@ -219,7 +219,7 @@ endfunction
 function InitTrig_Dark_Gate takes nothing returns nothing
     set gg_trg_Dark_Gate = CreateTrigger(  )
     call TriggerAddCondition( gg_trg_Dark_Gate, Condition( function Trig_Dark_Gate_Conditions ) )
-    call TriggerAddAction( gg_trg_Dark_Gate, function Trig_Dark_Gate_Actions )
+    //call TriggerAddAction( gg_trg_Dark_Gate, function Trig_Dark_Gate_Actions )
 endfunction
 
 //===========================================================================

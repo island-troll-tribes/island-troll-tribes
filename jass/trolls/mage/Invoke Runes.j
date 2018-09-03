@@ -110,7 +110,7 @@ endfunction
 function InitTrig_Invoke_Runes takes nothing returns nothing
     set gg_trg_Invoke_Runes = CreateTrigger(  )
     call TriggerAddCondition( gg_trg_Invoke_Runes, Condition( function Trig_Invoke_Runes_Conditions ) )
-    call TriggerAddAction( gg_trg_Invoke_Runes, function Trig_Invoke_Runes_Actions )
+    //call TriggerAddAction( gg_trg_Invoke_Runes, function Trig_Invoke_Runes_Actions )
 endfunction
 
 //===========================================================================

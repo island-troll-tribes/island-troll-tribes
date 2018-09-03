@@ -1,0 +1,45 @@
+package DepressionOrb
+import RegisterEvents
+import Orders
+import InstantDummyCaster
+import ClosureTimers
+import ClosureForGroups
+import EventHelper
+
+@configurable constant int ABILITY_ID = 'A04R'
+@configurable constant int DUMMY_ABILITY_ID = 'A025'
+@configurable constant int DUMMY_ID = UNIT_LOCUST
+@configurable constant int BUFF_ID = DEST_SUPER_TREE
+@configurable constant real INTERVAL = 0.05
+@configurable constant real DURATION = 3
+@configurable constant real TURN_SPEED = 360
+@configurable constant real MOVE_SPEED = 275
+@configurable constant real START_DISTANCE = 50
+@configurable constant real TURN_DISTANCE = 100
+@configurable constant real RADIUS = 400
+
+constant INTERVAL_TURN_SPEED = INTERVAL * TURN_SPEED
+constant INTERVAL_MOVE_SPEED = INTERVAL * MOVE_SPEED
+
+function onCast()
+    var caster = GetSpellAbilityUnit()
+    var owner = caster.getOwner()
+    var pos = caster.getPos()
+    var angle = pos.angleTo(getSpellTargetPos())
+    var dummyAngle = angle(0)
+    var dummy = createUnit(owner, DUMMY_ID, pos.polarOffset(angle, START_DISTANCE), dummyAngle)
+
+    doPeriodicallyTimed(INTERVAL, DURATION) cb ->
+        dummyAngle += (INTERVAL_TURN_SPEED).fromDeg()
+        pos = pos.polarOffset(angle, INTERVAL_MOVE_SPEED)
+        var dpos = pos.polarOffset(dummyAngle, TURN_DISTANCE)
+        dummy.setXY(dpos)
+
+        forUnitsInRange(dummy.getPos(), RADIUS) u ->
+            if not u.hasAbility(BUFF_ID)
+                InstantDummyCaster.castTarget(owner, DUMMY_ABILITY_ID, 1, Orders.acidbomb, u, dpos)
+        if cb.isLast()
+            dummy.kill()
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())

@@ -17,7 +17,7 @@ function InitTrig_hypnosis takes nothing returns nothing
     set gg_trg_hypnosis = CreateTrigger(  )
     call TriggerRegisterAnyUnitEventBJ( gg_trg_hypnosis, EVENT_PLAYER_UNIT_SPELL_EFFECT )
     call TriggerAddCondition( gg_trg_hypnosis, Condition( function Trig_sleeping_2_Conditions ) )
-    call TriggerAddAction( gg_trg_hypnosis, function Trig_sleeping_2_Actions )
+    //call TriggerAddAction( gg_trg_hypnosis, function Trig_sleeping_2_Actions )
 endfunction
 
 //===========================================================================

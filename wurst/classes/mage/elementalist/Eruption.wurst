@@ -1,0 +1,25 @@
+package Eruption
+import RegisterEvents
+import ClosureTimers
+import ClosureForGroups
+
+@configurable constant int ABILITY_ID = 'A04Q'
+@configurable constant real RADIUS = 315
+@configurable constant real DAMAGE_AMOUNT = 40
+@configurable constant string EFFECT_PATH = "Abilities\\Spells\\Human\\FlameStrike\\FlameStrike1.mdl"
+
+function onCast()
+    var caster = GetSpellAbilityUnit()
+    var owner = caster.getOwner()
+    var pos = caster.getPos()
+
+    var efx = addEffect(EFFECT_PATH, pos)
+    doAfter(3, () -> efx.destr())
+
+    doAfter(0.5) ->
+        forUnitsInRange(pos, RADIUS) u ->
+            if u.isAlive() and u.getOwner().isEnemyOf(owner) and not u.isType(UNIT_TYPE_STRUCTURE)
+                caster.damageTarget(u, DAMAGE_AMOUNT, ATTACK_TYPE_NORMAL)
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())

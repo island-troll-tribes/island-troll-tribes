@@ -41,7 +41,7 @@ function InitTrig_Storm_Earth_Fire takes nothing returns nothing
     set gg_trg_Storm_Earth_Fire = CreateTrigger(  )
   //  call TriggerRegisterAnyUnitEventBJ( gg_trg_Storm_Earth_Fire, EVENT_PLAYER_UNIT_SPELL_CAST )
     call TriggerAddCondition( gg_trg_Storm_Earth_Fire, Condition( function Trig_Storm_Earth_Fire_Conditions ) )
-    call TriggerAddAction( gg_trg_Storm_Earth_Fire, function Trig_Storm_Earth_Fire_Actions )
+    //call TriggerAddAction( gg_trg_Storm_Earth_Fire, function Trig_Storm_Earth_Fire_Actions )
 endfunction
 
 //===========================================================================

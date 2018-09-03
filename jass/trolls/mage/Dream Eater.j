@@ -35,7 +35,7 @@ endfunction
 function InitTrig_Dream_Eater takes nothing returns nothing
     set gg_trg_Dream_Eater = CreateTrigger(  )
     call TriggerAddCondition( gg_trg_Dream_Eater, Condition( function Trig_Dream_Eater_Conditions ) )
-    call TriggerAddAction( gg_trg_Dream_Eater, function Trig_Dream_Eater_Actions )
+    //call TriggerAddAction( gg_trg_Dream_Eater, function Trig_Dream_Eater_Actions )
 endfunction
 
 //===========================================================================

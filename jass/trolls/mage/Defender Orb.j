@@ -32,7 +32,7 @@ function InitTrig_Defender_Orb takes nothing returns nothing
     set gg_trg_Defender_Orb = CreateTrigger(  )
   //  call TriggerRegisterAnyUnitEventBJ( gg_trg_Defender_Orb, EVENT_PLAYER_UNIT_SPELL_CAST )
     call TriggerAddCondition( gg_trg_Defender_Orb, Condition( function Trig_Orb_Conditions ) )
-    call TriggerAddAction( gg_trg_Defender_Orb, function Trig_Orb_Actions )
+    //call TriggerAddAction( gg_trg_Defender_Orb, function Trig_Orb_Actions )
 endfunction
 
 //===========================================================================

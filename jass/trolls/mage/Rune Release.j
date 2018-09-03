@@ -248,7 +248,7 @@ library RuneRelease initializer onInit requires DUMMYLIB, PublicLibrary
   function onInit takes nothing returns nothing
       set gg_trg_Rune_Release = CreateTrigger(  )
       call TriggerAddCondition( gg_trg_Rune_Release, Condition( function Trig_Rune_Release_Conditions ) )
-      call TriggerAddAction( gg_trg_Rune_Release, function Trig_Rune_Release_Actions )
+      //call TriggerAddAction( gg_trg_Rune_Release, function Trig_Rune_Release_Actions )
   endfunction
 
 endlibrary

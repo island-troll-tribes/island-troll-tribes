@@ -1,0 +1,15 @@
+package Depress
+import RegisterEvents
+import ClosureTimers
+
+@configurable constant int ABILITY_ID = 'A025'
+
+function onCast()
+    var target = GetSpellTargetUnit()
+    if target.getMana() < 40
+        return
+    target.subMana(10)
+    doPeriodicallyCounted(2.00, 4, (cb) -> target.subMana(5))
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())

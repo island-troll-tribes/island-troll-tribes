@@ -1,0 +1,24 @@
+package Seizures
+import RegisterEvents
+import ClosureTimers
+import InstantDummyCaster
+import Orders
+
+@configurable constant int ABILITY_ID = 'A05T'
+@configurable constant int DUMMY_ABILITY_ID = 'A05U'
+
+function startPeriodicAction(player owner, unit target, real timeout, int chance)
+    doPeriodicallyTimed(0.1, timeout) cb ->
+        if GetRandomInt(1, 100) <= chance
+            InstantDummyCaster.castTarget(owner, DUMMY_ABILITY_ID, 1, Orders.thunderbolt, target)
+
+function onCast()
+    var target = GetSpellTargetUnit()
+    var owner = GetSpellAbilityUnit().getOwner()
+
+    startPeriodicAction(owner, target, 3, 18)
+    doAfter(3, () -> startPeriodicAction(owner, target, 3, 15))
+    doAfter(6, () -> startPeriodicAction(owner, target, 2, 8))
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())

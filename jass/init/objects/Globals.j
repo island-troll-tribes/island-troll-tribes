@@ -79,7 +79,6 @@ globals
     trigger                 gg_trg_Rune_Release        = null
     trigger                 gg_trg_hypnosis            = null
     trigger                 gg_trg_Invoke_Runes        = null
-    trigger                 gg_trg_Dark_Gate           = null
     trigger                 gg_trg_jeoulusy            = null
     trigger                 gg_trg_electromagnet       = null
     trigger                 gg_trg_Dream_Eater         = null

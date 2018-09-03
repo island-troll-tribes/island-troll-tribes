@@ -458,26 +458,6 @@ function setUpSkillTriggers takes unit u returns nothing
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Multiwave, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_Light_Gate, p, EVENT_PLAYER_UNIT_SPELL_CHANNEL )
 
-
-    elseif(GetUnitTypeId(u)==UNIT_MAGE) then//mage
-        call TriggerRegisterPlayerUnitEventSimple( gg_trg_jeoulusy, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
-        call TriggerRegisterPlayerUnitEventSimple( gg_trg_seizures, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
-        call TriggerRegisterPlayerUnitEventSimple( gg_trg_electromagnet, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
-        call TriggerRegisterPlayerUnitEventSimple( gg_trg_Splitting_Flame, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
-        call TriggerRegisterPlayerUnitEventSimple( gg_trg_Dream_Eater, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
-        call TriggerRegisterPlayerUnitEventSimple( gg_trg_Eruption, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
-        call TriggerRegisterPlayerUnitEventSimple( gg_trg_Defender_Orb, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
-        call TriggerRegisterPlayerUnitEventSimple( gg_trg_Depression_Orb, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
-        call TriggerRegisterPlayerUnitEventSimple( gg_trg_Reduce_Food_reduction, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
-        call TriggerRegisterPlayerUnitEventSimple( gg_trg_Stup_Aura, p, EVENT_PLAYER_UNIT_SPELL_CAST )
-        call TriggerRegisterPlayerUnitEventSimple( gg_trg_Stup_Aura_Remove, p, EVENT_PLAYER_UNIT_SPELL_ENDCAST )
-        call TriggerRegisterPlayerUnitEventSimple( gg_trg_metronome, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
-        call TriggerRegisterPlayerUnitEventSimple( gg_trg_depress_mana_drain, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
-        call TriggerRegisterPlayerUnitEventSimple( gg_trg_Storm_Earth_Fire, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
-        call TriggerRegisterPlayerUnitEventSimple( gg_trg_Invoke_Runes, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
-        call TriggerRegisterPlayerUnitEventSimple( gg_trg_Rune_Release, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
-        call TriggerRegisterPlayerUnitEventSimple( gg_trg_Dark_Gate, p, EVENT_PLAYER_UNIT_SPELL_CHANNEL )
-
     elseif(GetUnitTypeId(u)==UNIT_BEAST_MASTER) then//beast master
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_TeleHawk_Cast, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )
         call TriggerRegisterPlayerUnitEventSimple( gg_trg_tamed_abilities, p, EVENT_PLAYER_UNIT_SPELL_EFFECT )

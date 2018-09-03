@@ -6,7 +6,6 @@ globals
     //boolean Turtle_Dead = false
     boolean Hydra_Dead = false
 
-    unit MAMMOTH = null
     unit DiscoDuck = null
     //unit Turtle = null
     unit Hydra = null
@@ -112,15 +111,6 @@ local integer numCorpses = 0
             call CreateItem( ITEM_MEDALLION_COURAGE, x, y )
             // horns
             call CreateItem( ITEM_HORN_MAMMOTH, x, y )
-            call CreateItem( ITEM_HORN_MAMMOTH, x, y )
-            // steel ingot
-            if GetRandomReal(0, 100) <= 25 then
-                call CreateItem( ITEM_STEEL_INGOT, x, y )
-            endif
-            // bow insert,,, temp
-            if GetRandomReal(0, 100) <= 25 then
-                set leg_bow = CreateItem(ITEM_ANCIENT_BOW, x, y)
-            endif
         endif
     elseif uid == UNIT_DISCO_DUCK and GetUnitAbilityLevel(dying, 'BIil') == 0 then
         //if not FirstDuckDead then
@@ -305,18 +295,10 @@ local integer numCorpses = 0
         set numCorpses = 3
         call CreateItem( ITEM_BONE, x, y )
         if udg_BOSS_PRIZE_MODE then
-            if GetRandomReal(0, 100) <= 20 then
-                call placeMedallion(x, y)
-            else
-                set i = 1
-                loop
-                    exitwhen i > GetRandomInt(3, 5)
-                        call CreateItem( getTrollBossItem(), x, y )
-                    set i = i + 1
-                endloop
-            endif
+            call CreateItem(ITEM_STEEL_INGOT, x, y)
+            call CreateItem(ITEM_ESSENCE_BEES, x, y)
+            call CreateItem(ITEM_DARK_ROCK, x, y)
         endif
-        call RemoveUnit( dying )
     elseif IsUnitHawk(dying) then
         set numCorpses = 1
         call CreateItem( ITEM_BONE, x, y )

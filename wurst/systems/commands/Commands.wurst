@@ -63,9 +63,12 @@ init
                 let msg = "{0} {1}".format((i + 1).toString().color(COLOR_CODE[i]), players[i].getName())
                 printTimedToPlayer(msg, 10, triggerPlayer)
 
+    registerCommandAll("modes") (triggerPlayer, args) ->
+        printTimedToPlayer(currentModes + s__GameMode_getEnabledModes(), 15, triggerPlayer)
+
     s__Map_onGameStart() ->
+        // registerCommandAll("ac", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))
         registerCommandAll("sc", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))
-        registerCommandAll("ac", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))
         registerCommandAll("p", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))
 
         registerCommandAll("ms") (triggerPlayer, args) ->
@@ -75,10 +78,7 @@ init
                 printTimedToPlayer(msg, 5, triggerPlayer)
 
         registerCommandAll("cc") (triggerPlayer, args) ->
-            let id = args.get(1).toInt()
+            let id = args.get(1).toInt() mod 24
             let msg = "Adjusted player color to {0}Player {1}|r".format(COLOR_CODE[id], (id + 1).toString())
             printTimedToPlayer(msg, 5, triggerPlayer)
             triggerPlayer.setColor(ConvertPlayerColor(id), true)
-
-        registerCommandAll("modes") (triggerPlayer, args) ->
-            printTimedToPlayer(currentModes + s__GameMode_getEnabledModes(), 15, triggerPlayer)

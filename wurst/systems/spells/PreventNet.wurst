@@ -10,10 +10,12 @@ public constant BUFF_ANTI_MAGIC_SHIELD = 'Bam2'
 init
     registerSpellEffectEvent(SPELL_ENSNARE) ->
         let t = GetSpellTargetUnit()
-        if t.isTroll() and t.getAbilityLevel(BUFF_WEB) > 0
-            GetSpellAbilityUnit().issueImmediateOrder("stop")
+        let c = GetSpellAbilityUnit()
+        if t.isTroll() and t.getAbilityLevel(BUFF_ANTI_MAGIC_SHIELD) > 0 and c.getTypeId() != UNIT_DISCO_DUCK
+            c.issueImmediateOrder("stop")
 
     registerSpellEffectEvent(SPELL_WEB) ->
         let t = GetSpellTargetUnit()
-        if t.isTroll() and (t.getAbilityLevel(BUFF_ANTI_MAGIC_SHIELD) > 0 or t.getAbilityLevel(BUFF_WEB) > 0)
-            GetSpellAbilityUnit().issueImmediateOrder("stop")
+        let c = GetSpellAbilityUnit()
+        if t.isTroll() and (t.getAbilityLevel(BUFF_ANTI_MAGIC_SHIELD) > 0 or t.getAbilityLevel(BUFF_WEB) > 0) and c.getTypeId() != UNIT_DISCO_DUCK
+            c.issueImmediateOrder("stop")

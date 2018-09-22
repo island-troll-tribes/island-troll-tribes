@@ -8,17 +8,14 @@ public constant BUFF_FROZEN_TO_BONE = 'BCbf'
 @configurable let FIRE_RANGE = 380.0
 
 function heat()
-    let heat = GetSpellAbilityId() == SPELL_HEAT ? udg_HEAT_PER_CAST : udg_HEAT_PER_CAST * 2
-    let targetOwner = GetSpellTargetUnit().getOwner()
     let heroes = CreateGroup()..enumUnitsInRange(GetSpellAbilityUnit().getPos(), FIRE_RANGE, Condition(() -> begin
         return IsUnitTroll(GetFilterUnit())
     end))
     for hero from heroes
         let owner = hero.getOwner()
-        if owner.isAllyOf(targetOwner)
-            owner.addGold(heat)
-            if hero.hasAbility(BUFF_FROZEN_TO_BONE)
-                hero.removeAbility(BUFF_FROZEN_TO_BONE)
+        owner.addGold(udg_HEAT_PER_CAST)
+        if hero.hasAbility(BUFF_FROZEN_TO_BONE)
+            hero.removeAbility(BUFF_FROZEN_TO_BONE)
 
 init
     registerSpellEffectEvent(SPELL_HEAT, function heat)

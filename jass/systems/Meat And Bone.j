@@ -328,7 +328,7 @@ local integer numCorpses = 0
     //call ForGroup( udg_pets, function ResetBMPets )
     loop
         exitwhen i > R2I(( I2R(numCorpses) * udg_FOOD_FOR_KILL_PROPORTION ))
-        call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x + GetRandomReal(0, 100), y + GetRandomReal(1, 100), GetRandomReal(0,360) )
+        call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360))
         set i = i + 1
     endloop
     set dying = null

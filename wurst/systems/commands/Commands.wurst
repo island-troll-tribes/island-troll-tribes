@@ -66,8 +66,13 @@ init
     registerCommandAll("modes") (triggerPlayer, args) ->
         printTimedToPlayer(currentModes + s__GameMode_getEnabledModes(), 15, triggerPlayer)
 
+    registerCommandAll("obs") (triggerPlayer, args) ->
+        SetPlayerState(triggerPlayer, PLAYER_STATE_OBSERVER, 1)
+
     s__Map_onGameStart() ->
-        // registerCommandAll("ac", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))
+        deregisterCommandAll("obs")
+
+        registerCommandAll("ac", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))
         registerCommandAll("sc", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))
         registerCommandAll("p", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))
 

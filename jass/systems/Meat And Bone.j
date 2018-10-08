@@ -187,6 +187,7 @@ local integer numCorpses = 0
                     if spawn_Y[i] != 0 then
                         call CreateItem( ITEM_HYDRA_SCALE, spawn_X[i], spawn_Y[i])
                         call CreateItem( ITEM_HYDRA_SCALE, spawn_X[i], spawn_Y[i])
+                        call CreateItem( ITEM_HYDRA_SCALE, spawn_X[i], spawn_Y[i])
                         set spawn_Y[i] = 0
                     endif
                     set i = i + 1
@@ -277,27 +278,15 @@ local integer numCorpses = 0
         call CreateItem( ITEM_BONE, x, y )
         call CreateItem( ITEM_BONE, x, y )
         if udg_BOSS_PRIZE_MODE then
-            set i = 1
-            loop
-                exitwhen i > GetRandomInt(3, 7)
-                    call CreateItem( getBossItem(), x, y )
-                set i = i + 1
-            endloop
-            if GetRandomReal(0, 100) <= 20 then
-                call placeMedallion(x, y)
-            endif
-            if GetRandomReal(0, 100) <= 15 then
-                call placeMedallion(x, y)
-            endif
+            call CreateItem( ITEM_ALIGATOR_GOLD, x, y )
         endif
         call RemoveUnit( dying )
     elseif uid == UNIT_ONE then
         set numCorpses = 3
         call CreateItem( ITEM_BONE, x, y )
         if udg_BOSS_PRIZE_MODE then
-            call CreateItem(ITEM_STEEL_INGOT, x, y)
             call CreateItem(ITEM_ESSENCE_BEES, x, y)
-            call CreateItem(ITEM_DARK_ROCK, x, y)
+            call CreateItem(ITEM_STEEL_AXE, x, y)
         endif
     elseif IsUnitHawk(dying) then
         set numCorpses = 1

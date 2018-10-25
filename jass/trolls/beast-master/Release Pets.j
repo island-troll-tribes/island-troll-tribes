@@ -3,6 +3,7 @@
 //TESH.scrollpos=0
 //TESH.alwaysfold=0
 function ReleasePets_Back takes nothing returns nothing
+    debug call BJDebugMsg(GetUnitName(udg_parameterUnit))
     if GetOwningPlayer(GetEnumUnit()) == GetOwningPlayer(udg_parameterUnit) then
         if IsUnitInGroup(GetEnumUnit(), udg_babyPets) then
             call GroupRemoveUnit(udg_babyPets, GetEnumUnit())
@@ -12,7 +13,6 @@ function ReleasePets_Back takes nothing returns nothing
             call GroupRemoveUnit(udg_pets, GetEnumUnit())
         endif
         call SetUnitOwner( GetEnumUnit(), Player(PLAYER_NEUTRAL_AGGRESSIVE), true )
-        call getPlayersTroll(GetOwningPlayer(GetSpellAbilityUnit()))
         call TriggerExecute( gg_trg_back_to_tame )
         call DisplayTextToForce( GetPlayersAllies(GetOwningPlayer(udg_parameterUnit)), "A pet was released" )
     endif

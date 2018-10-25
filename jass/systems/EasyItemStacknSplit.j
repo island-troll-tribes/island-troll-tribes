@@ -27,22 +27,24 @@ library EasyItemStacknSplit initializer onInit requires Stackables, ID
 globals
     // Allow item splitting with double right-click?
     private boolean SPLIT = true
-    
+
     // Amount to split from stack... (0 = half)
     private integer SPLIT_SIZE = 1
-    
+
     // Allow consecutively split items to stack together?
     private boolean SPLIT_STACK = true
     private real SPLIT_STACK_DELAY = 2.00
-    
+
     // Allow split items to be dropped if no inventory slots are open?
     private boolean SPLIT_DROP = true
-    
+
     // Use item stack array to determine stack limit? (false = unlimited stacks)
     private boolean USE_ITEM_STACK_TABLE = true
-    
+
     // Full inventory error sound filename... (null = disabled)
     private string ERROR_SOUND = null
+
+    private trigger StacknSplitTrigger = CreateTrigger()
 endglobals
 //=====================================================================================
 // DO NOT EDIT BELOW THIS LINE
@@ -78,7 +80,7 @@ endglobals
         endif
         return 1
     endfunction
-    
+
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     // PUBLIC FUNCTION : UnitInventoryFull( unit )
     //  Checks if all the inventory slots of a unit are occupied.
@@ -95,7 +97,7 @@ endglobals
         endloop
         return true
     endfunction
-    
+
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     // PUBLIC FUNCTION : UnitStackItemEx( unit, item, dropExcess )
     //  Works like UnitAddItem() with full inventory functionality.
@@ -122,9 +124,9 @@ endglobals
             set inventoryFull = UnitInventoryFull( u )
             // If not we just give it to the unit
             if dropExcess or not inventoryFull then
-                call DisableTrigger( gg_trg_EasyItemStacknSplit )
+                call DisableTrigger( StacknSplitTrigger )
                 call UnitAddItem( u, i )
-                call EnableTrigger( gg_trg_EasyItemStacknSplit )
+                call EnableTrigger( StacknSplitTrigger )
                 return not inventoryFull
             else
                 call RemoveItem( i )
@@ -172,9 +174,9 @@ endglobals
                             call SetItemCharges( ii, ic )
                             set ic = 0
                         endif
-                        call DisableTrigger( gg_trg_EasyItemStacknSplit )
+                        call DisableTrigger( StacknSplitTrigger )
                         call UnitAddItem( u, ii )
-                        call EnableTrigger( gg_trg_EasyItemStacknSplit )
+                        call EnableTrigger( StacknSplitTrigger )
                     endif
                     set s = s + 1
                     exitwhen ic <= 0 or s >= is
@@ -203,7 +205,7 @@ endglobals
         // Nothing dropped
         return false
     endfunction
-    
+
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     // PUBLIC FUNCTION : UnitStackItem( unit, item )
     //  Works like UnitAddItem() with full inventory functionality.
@@ -212,7 +214,7 @@ endglobals
     function UnitStackItem takes unit u, item i returns boolean
         return UnitStackItemEx(u, i, true)
     endfunction
-    
+
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     // TEXTMACRO : EasyItemStacknSplit_PLAYITEMSOUND( soundname, unitvar )
     //  Plays item sound for player if the triggering unit is nearby.
@@ -420,9 +422,9 @@ endglobals
                                             set ii = CreateItem( GetItemTypeId(i), GetUnitX(u) + 100 * Cos(ua * bj_DEGTORAD), GetUnitY(u) + 100 * Sin(ua * bj_DEGTORAD) )
                                             call SetItemCharges( ii, ss )
                                             if not full then
-                                                call DisableTrigger( gg_trg_EasyItemStacknSplit )
+                                                call DisableTrigger( StacknSplitTrigger )
                                                 call UnitAddItem( u, ii )
-                                                call EnableTrigger( gg_trg_EasyItemStacknSplit )
+                                                call EnableTrigger( StacknSplitTrigger )
                                                 if SPLIT_STACK then
                                                     set o = 0
                                                     if st > 0 then
@@ -452,7 +454,7 @@ endglobals
                                             else
                                                 // Play the "Item Drop" sound
                                                 set p = GetOwningPlayer( u )
-                                                //! runtextmacro EasyItemStacknSplit_PLAYITEMSOUND( "HeroDropItem1" )                                          
+                                                //! runtextmacro EasyItemStacknSplit_PLAYITEMSOUND( "HeroDropItem1" )
                                             endif
                                         endif
                                     endif
@@ -579,16 +581,15 @@ endglobals
         local trigger CancelTrigger = CreateTrigger()
         local trigger PreloadTrigger = CreateTrigger()
         local integer x = 0
-        set gg_trg_EasyItemStacknSplit = CreateTrigger()
         loop
-            call TriggerRegisterPlayerUnitEvent( gg_trg_EasyItemStacknSplit, Player(x), EVENT_PLAYER_UNIT_PICKUP_ITEM, null )
-            call TriggerRegisterPlayerUnitEvent( gg_trg_EasyItemStacknSplit, Player(x), EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, null )
+            call TriggerRegisterPlayerUnitEvent( StacknSplitTrigger, Player(x), EVENT_PLAYER_UNIT_PICKUP_ITEM, null )
+            call TriggerRegisterPlayerUnitEvent( StacknSplitTrigger, Player(x), EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, null )
             call TriggerRegisterPlayerUnitEvent( CancelTrigger, Player(x), EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER, null )
             set x = x + 1
             exitwhen x >= bj_MAX_PLAYER_SLOTS
         endloop
         call TriggerRegisterTimerEvent( PreloadTrigger, 0.00, false )
-        call TriggerAddCondition( gg_trg_EasyItemStacknSplit, function ActionController )
+        call TriggerAddCondition( StacknSplitTrigger, function ActionController )
         call TriggerAddCondition( CancelTrigger, function CancelController )
         call TriggerAddCondition( PreloadTrigger, function PreloadController )
         call TriggerAddCondition( PreloadTrigger, function InitStackables )

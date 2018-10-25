@@ -27,8 +27,6 @@ function Trig_fervor_potion_Func006A takes nothing returns nothing
     local integer r=GetRandomInt(1,2)
     if(r==1) then
        call masterCastAtCaster(p,m,0,0,'A01K',"shadowstrike")
-    else
-       call masterCastAtCaster(p,m,0,0,'A017',"entanglingroots")
     endif
 endfunction
 
@@ -38,7 +36,6 @@ function Trig_fervor_potion_Actions takes nothing returns nothing
     set u=GetSpellAbilityUnit()
     if(GetSpellAbilityId() == 'A03Z') then
        call masterCastAtCaster(u,u,0,0,'A01U',"bloodlust")
-       call masterCastNoTarget(u,GetUnitX(u),GetUnitY(u),0,0,'A035',"stomp")
        call masterCastAtCaster(u,u,0,0,'A07H',"innerfire")
     else
        call masterCastNoTarget(u,GetUnitX(u),GetUnitY(u),0,0,'A035',"stomp")

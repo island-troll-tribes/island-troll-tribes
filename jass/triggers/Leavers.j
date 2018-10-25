@@ -1,4 +1,36 @@
-library Leavers initializer onInit requires PublicLibrary, Commands, MapSetup, GameConfig, Utils
+library Leavers initializer onInit requires PublicLibrary, MapSetup, GameConfig, Utils
+    globals
+        private integer tempInt
+    endglobals
+
+    function PublicVision takes nothing returns nothing
+        local player p = GetEnumPlayer()
+        local integer id = GetPlayerId(p)
+        if tempInt != id then
+            call SetPlayerAlliance(Player(tempInt), p, ALLIANCE_SHARED_VISION, true)
+        endif
+        set p = null
+    endfunction
+
+    function ShareControl takes nothing returns nothing
+        local player p = GetEnumPlayer()
+        local integer id = GetPlayerId(p)
+        if tempInt != id then
+            call SetPlayerAlliance(Player(tempInt), p, ALLIANCE_SHARED_CONTROL, true)
+        endif
+        set p = null
+    endfunction
+
+    function ShareAdvControl takes nothing returns nothing
+        local player p = GetEnumPlayer()
+        local integer id = GetPlayerId(p)
+        if tempInt != id then
+            call SetPlayerAlliance(Player(tempInt), p, ALLIANCE_SHARED_ADVANCED_CONTROL, true)
+            call TriggerExecute(gg_trg_ShowPlayers)
+        endif
+        set p = null
+    endfunction
+
     function Trig_leavers_Actions takes nothing returns nothing
         local integer PID = GetPlayerId(GetTriggerPlayer())
         local integer tribe = GetPidTribeId(PID)
@@ -17,20 +49,9 @@ library Leavers initializer onInit requires PublicLibrary, Commands, MapSetup, G
         endif
 
         set tempInt = PID
-        if not adv_control[PID] then
-            call ForForce(TEAM[TEAM_PLAYER[PID]], function ShareAdvControl)
-            set adv_control[PID] = true
-        endif
-        set tempInt = PID
-        if not shr_control[PID] then
-            call ForForce(TEAM[TEAM_PLAYER[PID]], function ShareControl)
-            set shr_control[PID] = true
-        endif
-        set tempInt = PID
-        if not vision_pub[PID] then
-            call ForForce(TEAM[TEAM_PLAYER[PID]], function PublicVision)
-            set vision_pub[PID] = true
-        endif
+        call ForForce(TEAM[TEAM_PLAYER[PID]], function PublicVision)
+        call ForForce(TEAM[TEAM_PLAYER[PID]], function ShareControl)
+        call ForForce(TEAM[TEAM_PLAYER[PID]], function ShareAdvControl)
 
         loop
             exitwhen i >= ppt

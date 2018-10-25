@@ -1,5 +1,5 @@
 
-library CheatPack initializer onInit
+library CheatPack initializer onInit requires Map, GameConfig
     globals
         gamecache CACHE=InitGameCache("KeyBindings.w3v")
         trigger CreateUnity=CreateTrigger()
@@ -1143,9 +1143,9 @@ library CheatPack initializer onInit
         set p2p=null
     endfunction
 
-    private function onInit takes nothing returns nothing
+    private function initializeCheats takes nothing returns nothing
         local integer zzz=0
-        static if not DEBUG_MODE then
+        if not GameConfig.getInstance().getTestMode() then
             return
         endif
         loop
@@ -1158,6 +1158,10 @@ library CheatPack initializer onInit
         call TriggerAddAction(CHEATS,function DirectCheat)
         call UnitId2Stringz()
         call InitS2RAW()
+    endfunction
+
+    private function onInit takes nothing returns nothing
+        call Map.onGameStart(function initializeCheats)
     endfunction
 
 endlibrary

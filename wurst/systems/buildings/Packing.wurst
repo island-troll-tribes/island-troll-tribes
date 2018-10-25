@@ -1,0 +1,50 @@
+package Packing
+import RegisterEvents
+import HashMap
+
+let cancelOnlyMap = new HashMap<int, int>()
+..put(UNIT_ARMORY, ITEM_ARMORY_KIT)
+..put(UNIT_ENSNARE_TRAP, ITEM_ENSNARE_TRAP_KIT)
+..put(UNIT_HATCHERY, ITEM_HATCHERY_KIT)
+..put(UNIT_MUD_HUT, ITEM_MUD_HUT_KIT)
+..put(UNIT_OMNITOWER, ITEM_OMNIDEFENDER_KIT)
+..put(UNIT_POT, ITEM_POT_KIT)
+..put(UNIT_SMOKE_HOUSE, ITEM_SMOKE_HOUSE_KIT)
+..put(UNIT_SPIRIT_WARD, ITEM_SPIRIT_WARD_KIT)
+..put(UNIT_STORAGE_HUT, ITEM_STORAGE_HUT_KIT)
+..put(UNIT_TANNERY, ITEM_TANNERY_KIT)
+..put(UNIT_TELEPORTATION_BEACON, ITEM_TELEPORT_BEACON_KIT)
+..put(UNIT_TROLL_HUT, ITEM_TROLL_HUT_KIT)
+..put(UNIT_WITCH_DOCTORS_HUT, ITEM_WITCH_DOCTORS_HUT_KIT)
+..put(UNIT_WORKSHOP, ITEM_WORKSHOP_KIT)
+
+let cancelAndDeathMap = new HashMap<int, int>()
+..put(UNIT_TENT, ITEM_TENT_KIT)
+..put(UNIT_FIRE, ITEM_FIRE_KIT)
+..put(UNIT_MAGE_FIRE, ITEM_MAGE_FIRE_KIT)
+..put(UNIT_MAGE_FIRE_SUMMONED, 0)
+
+function replaceBuildingWithKit(int structureId, vec2 pos)
+    if cancelAndDeathMap.has(structureId)
+        let kit = cancelAndDeathMap.get(structureId)
+        if kit != 0
+            createItem(kit, pos)
+
+init
+    registerSpellEffectEvent(SPELL_PACK_BUILDING) ->
+        let structure = GetTriggerUnit()
+        let structureId = structure.getTypeId()
+        let pos = structure.getPos()
+        structure.remove()
+        replaceBuildingWithKit(structureId, pos)
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
+        let structure = GetDyingUnit()
+        replaceBuildingWithKit(structure.getTypeId(), structure.getPos())
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_CONSTRUCT_CANCEL) ->
+        let structure = GetCancelledStructure()
+        let structureId = structure.getTypeId()
+        if cancelOnlyMap.has(structureId)
+            let kit = cancelOnlyMap.get(structureId)
+            createItem(kit, structure.getPos())

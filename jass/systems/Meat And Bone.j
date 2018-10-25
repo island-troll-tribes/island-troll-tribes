@@ -6,7 +6,6 @@ globals
     //boolean Turtle_Dead = false
     boolean Hydra_Dead = false
 
-    unit Mammoth = null
     unit DiscoDuck = null
     //unit Turtle = null
     unit Hydra = null
@@ -108,35 +107,10 @@ local integer numCorpses = 0
         call CreateItem( ITEM_BONE, x, y )
         call CreateItem( ITEM_BONE, x, y )
         if udg_BOSS_PRIZE_MODE then
-            if GetRandomReal(0, 100) <= 25 then
-                call placeMedallion(x, y)
-            endif
-            if GetRandomReal(0, 100) <= 25 then
-                call placeMedallion(x, y)
-            endif
-            if GetRandomReal(0, 100) <= 20 then
-                call placeMedallion(x, y)
-            endif
-            if GetRandomReal(0, 100) <= 15 then
-                call placeMedallion(x, y)
-            endif
-            if GetRandomReal(0, 100) <= 15 then
-                call placeMedallion(x, y)
-            endif
-            // bow insert,,, temp
-            if GetRandomReal(0, 100) <= 25 then
-                set leg_bow = CreateItem(ITEM_ANCIENT_BOW, x, y)
-            endif
-            // end
+            // medallion
+            call CreateItem( ITEM_MEDALLION_COURAGE, x, y )
+            // horns
             call CreateItem( ITEM_HORN_MAMMOTH, x, y )
-            call CreateItem( ITEM_HORN_MAMMOTH, x, y )
-        endif
-        call getAnimalGreenLight(dying)
-        if udg_booleanParameter then
-            set u = CreateUnit( Player(PLAYER_NEUTRAL_PASSIVE), UNIT_MAMMOTH_BABY, x, y, 270.00 )
-            call SetUnitExploded( u, true )
-            call UnitApplyTimedLife( u, 'BTLF', 10 )
-            set u = null
         endif
     elseif uid == UNIT_DISCO_DUCK and GetUnitAbilityLevel(dying, 'BIil') == 0 then
         //if not FirstDuckDead then
@@ -149,40 +123,12 @@ local integer numCorpses = 0
         call CreateItem( ITEM_BONE, x, y )
         call CreateItem( ITEM_BONE, x, y )
         if udg_BOSS_PRIZE_MODE then
-            call placeMedallion(x, y)
-            call placeMedallion(x, y)
+            call CreateItem( ITEM_MEDALLION_COURAGE, x, y )
+            call CreateItem( ITEM_STEEL_INGOT, x, y )
+            call CreateItem( ITEM_STEEL_INGOT, x, y )
             call placePinion(x, y)
-            call CreateItem(ITEM_CANDY_CANE, x, y)
         endif
     endif
-    /*
-    if uid == UNIT_RAPID_TURTLE and GetUnitAbilityLevel(dying, 'BIil') == 0 then
-        set Turtle_Dead = true
-        call RemoveUnit( dying )
-        loop
-            exitwhen i > R2I(( 20.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
-            set i = i + 1
-        endloop
-        call CreateItem( ITEM_BONE, x, y )
-        call CreateItem( ITEM_BONE, x, y )
-        call CreateItem( ITEM_BONE, x, y )
-        call CreateItem( ITEM_BONE, x, y )
-        call CreateItem( ITEM_BONE, x, y )
-        if udg_BOSS_PRIZE_MODE then
-            call placeMedallion(x, y)
-            call placeMedallion(x, y)
-            call placeMedallion(x, y)
-            call placeMedallion(x, y)
-            set i = 1
-            loop
-                exitwhen i > GetRandomInt(0, 3)
-                    call CreateItem( getTurtleItem(), x, y )
-                set i = i + 1
-            endloop
-        endif
-    endif
-    */
     // TEH HYDRA ~
     static if LIBRARY_HydrAROUTINE then
     if uid == UNIT_ANCIENT_HYDRA and GetUnitAbilityLevel(dying, 'BIil') == 0 then
@@ -239,6 +185,7 @@ local integer numCorpses = 0
                 loop
                     exitwhen i > lesserCount
                     if spawn_Y[i] != 0 then
+                        call CreateItem( ITEM_HYDRA_SCALE, spawn_X[i], spawn_Y[i])
                         call CreateItem( ITEM_HYDRA_SCALE, spawn_X[i], spawn_Y[i])
                         call CreateItem( ITEM_HYDRA_SCALE, spawn_X[i], spawn_Y[i])
                         set spawn_Y[i] = 0
@@ -331,36 +278,16 @@ local integer numCorpses = 0
         call CreateItem( ITEM_BONE, x, y )
         call CreateItem( ITEM_BONE, x, y )
         if udg_BOSS_PRIZE_MODE then
-            set i = 1
-            loop
-                exitwhen i > GetRandomInt(3, 7)
-                    call CreateItem( getBossItem(), x, y )
-                set i = i + 1
-            endloop
-            if GetRandomReal(0, 100) <= 20 then
-                call placeMedallion(x, y)
-            endif
-            if GetRandomReal(0, 100) <= 15 then
-                call placeMedallion(x, y)
-            endif
+            call CreateItem( ITEM_ALIGATOR_GOLD, x, y )
         endif
         call RemoveUnit( dying )
     elseif uid == UNIT_ONE then
         set numCorpses = 3
         call CreateItem( ITEM_BONE, x, y )
         if udg_BOSS_PRIZE_MODE then
-            if GetRandomReal(0, 100) <= 20 then
-                call placeMedallion(x, y)
-            else
-                set i = 1
-                loop
-                    exitwhen i > GetRandomInt(3, 5)
-                        call CreateItem( getTrollBossItem(), x, y )
-                    set i = i + 1
-                endloop
-            endif
+            call CreateItem(ITEM_ESSENCE_BEES, x, y)
+            call CreateItem(ITEM_STEEL_AXE, x, y)
         endif
-        call RemoveUnit( dying )
     elseif IsUnitHawk(dying) then
         set numCorpses = 1
         call CreateItem( ITEM_BONE, x, y )
@@ -390,7 +317,7 @@ local integer numCorpses = 0
     //call ForGroup( udg_pets, function ResetBMPets )
     loop
         exitwhen i > R2I(( I2R(numCorpses) * udg_FOOD_FOR_KILL_PROPORTION ))
-        call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x + GetRandomReal(0, 100), y + GetRandomReal(1, 100), GetRandomReal(0,360) )
+        call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360))
         set i = i + 1
     endloop
     set dying = null

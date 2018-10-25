@@ -1,0 +1,26 @@
+package SmokeMeat
+import RegisterEvents
+import MathUtils
+
+init
+    registerSpellEffectEvent(SPELL_SMOKE_MEAT) ->
+        let smoker = GetSpellAbilityUnit()
+        if smoker.hasItemById(ITEM_FLINT) and smoker.hasItemById(ITEM_TINDER)
+            smoker
+            ..removeItemById(ITEM_FLINT)
+            ..removeItemById(ITEM_TINDER)
+
+            var charges = 0
+            for i = 0 to smoker.inventorySize() - 1
+                let maybeMeat = smoker.itemInSlot(i)
+                let itemId = maybeMeat.getTypeId()
+                switch itemId
+                    case ITEM_COOKED_MEAT
+                        charges += maybeMeat.getCharges()
+                    case ITEM_DISEASED_MEAT
+                        charges += floor(maybeMeat.getCharges() / 2)
+
+            if charges > 0
+                let meat = createItem(ITEM_SMOKED_MEAT, smoker.getPos())
+                ..setCharges(charges)
+                UnitStackItem(smoker, meat)

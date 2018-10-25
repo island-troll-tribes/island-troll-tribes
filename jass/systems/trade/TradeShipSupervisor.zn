@@ -20,6 +20,71 @@ library TradeShipSupervisor requires IDUtils, TradeShipSpawnOrder, TradeShipStop
         TradeShipStop blBranchSE;
     }
 
+    public struct TradeShipRoutePing {
+        TradeShipStop stop;
+        force pingForce;
+        integer numForksReached;
+        integer r;
+        integer g;
+        integer b;
+
+        public static method create(TradeShipStop s, player p, integer r, integer g, integer b) -> thistype {
+            thistype this = thistype.allocate();
+            this.stop = s;
+            this.pingForce = CreateForce();
+            this.numForksReached = 0;
+            this.r = r;
+            this.b = b;
+            this.g = g;
+            ForceAddPlayer(this.pingForce, p);
+            return this;
+        }
+
+        public method ping() {
+            TimerStart(NewTimerEx(this), 0.5, true, function() {
+                timer expired = GetExpiredTimer();
+                TradeShipRoutePing this = GetTimerData(expired);
+                TradeShipStop el = this.stop;
+                integer r = this.r;
+                integer g = this.g;
+                integer b = this.b;
+
+                if (el.getPauseTime() > 0) {
+                    r = 0;
+                    g = 0;
+                    b = 255;
+                }
+
+                PingMinimapForForceEx(this.pingForce, el.x, el.y, 0.4, bj_MINIMAPPINGSTYLE_SIMPLE, r, g, b);
+
+                if (el.hasFork()) {
+                    this.numForksReached += 1;
+                }
+
+                if (el.hasFork() && this.numForksReached > 4) {
+                    el = el.getFork();
+                } else {
+                    el = el.getNext();
+                }
+
+                if (el > 0) {
+                    this.stop = el;
+                } else {
+                    PauseTimer(expired);
+                    ReleaseTimer(expired);
+                    this.destroy();
+                }
+
+                expired = null;
+            });
+        }
+
+        private method onDestroy() {
+            DestroyForce(this.pingForce);
+            this.pingForce = null;
+        }
+    }
+
     public struct TradeShipSupervisor[] {
         private {
             static TradeShip top;
@@ -187,21 +252,41 @@ library TradeShipSupervisor requires IDUtils, TradeShipSpawnOrder, TradeShipStop
             if (GetRandomReal(0, 1) < 0.5) {
                 nw = top;
                 nwPrev = left;
-                se = right;
-                sePrev = bottom;
+                se = bottom;
+                sePrev = right;
             } else {
                 nw = left;
                 nwPrev = top;
-                se = bottom;
-                sePrev = right;
+                se = right;
+                sePrev = bottom;
             }
 
             nextShip = GetTradeShipSpawnOrder();
 
             Map.onGameStart(function() {
-                if (AllowTrade) {
+                if (GameConfig.getInstance().getTradeEnabled()) {
                     TradeShipSupervisor.spawn();
                 }
+            });
+
+            ChatCommands.registerArgFunc(null, "trade-routes", function (ArgsList a) {
+                DisplayTimedTextToPlayer(a.triggerPlayer, 0, 0, 10, GENERAL_COLOR + "At the start of the game, two boats will spawn from opposite sides of the map");
+                DisplayTimedTextToPlayer(a.triggerPlayer, 0, 0, 10, GENERAL_COLOR + "The first boats will randomly spawn at either N & S or E & W");
+                DisplayTimedTextToPlayer(a.triggerPlayer, 0, 0, 10, GENERAL_COLOR + "The east/west route will follow these paths, making stops at the blue pings");
+
+                TradeShipRoutePing.create(rightBranchW, a.triggerPlayer, 255, 255, 0).ping();
+                TradeShipRoutePing.create(leftBranchE, a.triggerPlayer, 0, 255, 0).ping();
+
+                TimerStart(NewTimerEx(GetPlayerId(a.triggerPlayer)), 12, false, function() {
+                    timer expired = GetExpiredTimer();
+                    player triggerPlayer = Player(GetTimerData(expired));
+                    DisplayTimedTextToPlayer(triggerPlayer, 0, 0, 10, GENERAL_COLOR + "The north/south route will follow these paths, making stops at the blue pings");
+                    ReleaseTimer(expired);
+                    TradeShipRoutePing.create(topBranchS, triggerPlayer, 255, 255, 0).ping();
+                    TradeShipRoutePing.create(bottomBranchN, triggerPlayer, 0, 255, 0).ping();
+                    expired = null;
+                    triggerPlayer = null;
+                });
             });
         }
     }

@@ -18,15 +18,13 @@
 // 7 =  ittp
 // 8 = tsot
 
-library MapSetup initializer onInit requires TimerUtils, PublicLibrary, ClassTracking, GameMode
+library MapSetup initializer onInit requires TimerUtils, PublicLibrary, ClassTracking, GameMode, InitializeUnits
 
 globals
-    integer MODES_TIME_LIMIT = 30
+    integer MODES_TIME_LIMIT = 60
     boolean mode_enter = true
     timer MODES_TIMER = CreateTimer()
     timer GAME_TIMER = CreateTimer()
-    timerdialog MODES_TIMER_DIALOG
-    timerdialog NOOB_TIME_DIALOG
     integer array pnamePresent
     boolean array isobserver
     boolean obs_present = false
@@ -51,9 +49,6 @@ function Start_Game takes nothing returns nothing
 
     call DisplayTText(GENERAL_COLOR+"Game has begun.|r", 10)
 
-    set NOOB_TIME_DIALOG = CreateTimerDialog(udg_noobTimer)
-    call TimerDialogSetTitle(NOOB_TIME_DIALOG, "Grace Period")
-    call TimerDialogDisplay(NOOB_TIME_DIALOG, true)
     call TimerStart(udg_noobTimer, udg_NOOB_TIME_LEFT , false , null)
     call TimerStart(GAME_TIMER, 99999999, false, null)
 
@@ -77,13 +72,13 @@ function SlowDisplayea takes nothing returns nothing
 endfunction
 
 function LocustDisplayUnits takes nothing returns nothing
-    call UnitAddAbility( gg_unit_h000_0181 , 'Aloc')
-    call UnitAddAbility( gg_unit_o00I_0173 , 'Aloc')
-    call UnitAddAbility( gg_unit_o005_0176 , 'Aloc')
-    call UnitAddAbility( gg_unit_o00K_0174 , 'Aloc')
-    call UnitAddAbility( gg_unit_o003_0157 , 'Aloc')
-    call UnitAddAbility( gg_unit_o004_0179 , 'Aloc')
-    call UnitAddAbility( gg_unit_O00B_0180 , 'Aloc')
+    call UnitAddAbility(RECIPE_ARMORY, 'Aloc')
+    call UnitAddAbility(RECIPE_WORKSHOP, 'Aloc')
+    call UnitAddAbility(RECIPE_POT, 'Aloc')
+    call UnitAddAbility(RECIPE_WITCH_DOCTORS_HUT, 'Aloc')
+    call UnitAddAbility(RECIPE_TANNERY, 'Aloc')
+    call UnitAddAbility(RECIPE_FIRE, 'Aloc')
+    call UnitAddAbility(RECIPE_GATHERER, 'Aloc')
 endfunction
 
 function FirstSpawnItemsAnimals takes nothing returns nothing
@@ -117,9 +112,6 @@ endfunction
 function ModesTimerFinished takes nothing returns nothing
     set mode_enter = false
     call GameMode.deregisterAll()
-    call TimerDialogDisplay(MODES_TIMER_DIALOG,false)
-    call DestroyTimerDialog(MODES_TIMER_DIALOG)
-    call MultiboardDisplay(GameMode.modeboard,false)
     call ExecuteFunc("StartClassSelection")
 endfunction
 
@@ -234,11 +226,6 @@ function Startup_Timer takes nothing returns nothing
     call TriggerRegisterPlayerChatEvent( gg_trg_no_herbs, modePlayer, "-no herbs", true )
 
     call TimerStart(MODES_TIMER, MODES_TIME_LIMIT, false, function ModesTimerFinished)
-    set MODES_TIMER_DIALOG = CreateTimerDialog(MODES_TIMER)
-    call TimerDialogSetTitle(MODES_TIMER_DIALOG,"Select Modes")
-    call TimerDialogDisplay(MODES_TIMER_DIALOG,true)
-    call MultiboardDisplay(GameMode.modeboard,true)
-    call MultiboardMinimize(GameMode.modeboard,true)
 endfunction
 
 private function onInit takes nothing returns nothing
@@ -252,7 +239,7 @@ private function onInit takes nothing returns nothing
     call SetCreepCampFilterState( false )
 
     static if LIBRARY_HydrAROUTINE then
-        call AddItemToStockBJ( ITEM_HYDRA_HINT, gg_unit_n019_0145, 1, 1 )
+        call AddItemToStockBJ( ITEM_HYDRA_HINT, OMINOUS_ALTAR, 1, 1 )
     endif
 
     call ForForce(bj_FORCE_ALL_PLAYERS, function ItemRecipeVision )

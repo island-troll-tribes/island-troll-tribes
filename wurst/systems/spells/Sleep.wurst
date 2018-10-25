@@ -1,0 +1,18 @@
+package Sleep
+import RegisterEvents
+
+public constant SPELL_SLEEP_INSIDE = 'A004'
+public constant SPELL_SLEEP_OUTSIDE = 'A007'
+
+init
+    registerSpellEffectEvent(SPELL_SLEEP_INSIDE) ->
+        let building = GetSpellAbilityUnit()
+        let hero = GetSpellTargetUnit()
+        var energy = building.getTypeId() == UNIT_TENT ? 80.0 : 200.0
+        hero.addMana(energy)
+
+    registerSpellEffectEvent(SPELL_SLEEP_OUTSIDE) ->
+        let hero = GetSpellTargetUnit()
+        hero.addMana(80)
+        hero.subHP(20)
+        hero.getOwner().subGold(20)

@@ -1,0 +1,12 @@
+package SonarCompass
+import PlayerExtensions
+import RegisterEvents
+
+init
+    registerSpellEffectEvent(SPELL_SONAR_COMPASS) ->
+        let allies = GetSpellAbilityUnit().getOwner().getAllies()
+        let ships = CreateGroup()
+        GroupEnumUnitsInRect(ships, GetWorldBounds(), Filter(function FilterUnitIsTradeShip))
+        for ship in ships
+            PingMinimapForForceEx(allies, ship.getX(), ship.getY(), 7, bj_MINIMAPPINGSTYLE_SIMPLE, 100, 100, 100)
+        ships.destr()

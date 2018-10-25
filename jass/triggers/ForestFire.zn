@@ -1,6 +1,6 @@
 library ForestFire requires ID, PublicLibrary, IsTypeThing, Math, TimerUtils, GameConfig, Map {
 	constant real MAX_DISTANCE_FROM_CENTER = 13000;
-	constant real MIN_DISTANCE_FROM_CENTER = 2500;
+	constant real MIN_DISTANCE_FROM_CENTER = 5000;
 	constant real DISTANCE_INCREMENT = 100;
 	constant real DISTANCE_BETWEEN_SMOKE = 2000;
 	constant real FIRE_APPROACH_PERIOD = 3;
@@ -8,8 +8,8 @@ library ForestFire requires ID, PublicLibrary, IsTypeThing, Math, TimerUtils, Ga
 	constant real LIFE_DRAIN_PERCENT_PER_SECOND = 0.05;
 	constant string GUST_MODEL_PATH	= "Doodads\\Cinematic\\FirePillarMedium\\FirePillarMedium.mdl";
 
+	public timer FOREST_FIRE_TIMER;
 	real distanceFromCenter = MAX_DISTANCE_FROM_CENTER;
-	timerdialog td;
 
 	function BurnTrees() {
 		real theta = 0;
@@ -104,7 +104,6 @@ library ForestFire requires ID, PublicLibrary, IsTypeThing, Math, TimerUtils, Ga
 
 	function BurnThings() {
 		ReleaseTimer(GetExpiredTimer());
-		DestroyTimerDialog(td);
 
 		TimerStart(NewTimer(), FIRE_APPROACH_PERIOD, true, function BurnTrees);
 		TimerStart(NewTimer(), LIFE_DRAIN_PERIOD, true, function BurnUnits);
@@ -112,14 +111,9 @@ library ForestFire requires ID, PublicLibrary, IsTypeThing, Math, TimerUtils, Ga
 
 	function StartBurnThingsCountdown() {
 		real numSeconds = GameConfig.getInstance().getForestFireAfter() * 60.0;
-	    timer t = NewTimer();
-	    td = CreateTimerDialog(t);
+	    FOREST_FIRE_TIMER = NewTimer();
 
-	    TimerStart(t, numSeconds, false, function BurnThings);
-	    TimerDialogSetTitle(td, "Forest Fire");
-	    TimerDialogDisplay(td, true);
-
-	    t = null;
+	    TimerStart(FOREST_FIRE_TIMER, numSeconds, false, function BurnThings);
 	}
 
 	function onInit() {

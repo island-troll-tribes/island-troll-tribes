@@ -2,7 +2,6 @@
 function Trig_GUI_REcipes_Actions takes nothing returns nothing
 
 call CreateQuestBJ( bj_QUESTTYPE_REQ_DISCOVERED,HIGHLIGHT_COLOR+"Cool Commands", HIGHLIGHT_COLOR+"-i am noob:|r pings the recipes again for those who cant find them
-"+HIGHLIGHT_COLOR+"-cn [new name]:|r changes your name
 "+HIGHLIGHT_COLOR+"-cc [number]:|r changes your units color to the color of that number
 "+HIGHLIGHT_COLOR+"-p:|r toggles private/public vision for your team
 "+HIGHLIGHT_COLOR+"-h:|r toggles hints
@@ -33,19 +32,17 @@ Checkout our github: https://github.com/theQuazz/island-troll-tribes
 call CreateQuestBJ( bj_QUESTTYPE_REQ_DISCOVERED, "Clans", "For a more updated offical list, go to http://islandtrolltribes.wikia.com/wiki/Clans
 "+GOLD_COLOR+"US East (Azeroth):|r
 - Clan TwGB
-"+GOLD_COLOR+"Europe (Northrend):|r
-- Clan ITTP
 
 If you want your clan to show up on the list get in touch with Quazz or Mephisto.!
 
-Last updated: Mephisto., March, 2016
+Last updated: Quazz, June 2018
 ", "ReplaceableTextures\\CommandButtons\\BTNBansheeMaster.blp" )
 //_//_//_//
 
 
 ////
 call CreateQuestBJ( bj_QUESTTYPE_OPT_DISCOVERED, "Noob Guide", "The Basic Survival:
-In order to stay alive, you must keep all 3 of your stats above 0. 
+In order to stay alive, you must keep all 3 of your stats above 0.
 "+HEALTH_COLOR+"Health:
 Eating food is a way to keep your health up.  To get food you must kill an animal and pick up its raw meat. Drop the raw meat by a fire and use the fire's cook ability.
 "+ENERGY_COLOR+"Energy:
@@ -53,7 +50,7 @@ Use the Sleep ability on your troll or a tent/hut and target your troll to regai
 "+GOLD_COLOR+"Heat:
 Stand near a fire that has it's heat ability on auto-cast to regain heat. You can manually cast it on your troll for faster performance.
 ", "ReplaceableTextures\\PassiveButtons\\PASBTNStatUp.blp" )
-    
+
 // Class Tips
 
 call CreateQuestBJ( bj_QUESTTYPE_OPT_DISCOVERED, "Hunter Tips", "Hunter has the highest base damage and fast attack speed.

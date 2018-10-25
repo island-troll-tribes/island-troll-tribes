@@ -1,0 +1,89 @@
+package Commands
+import HashMap
+import LinkedList
+import ChatCommands
+import StringExtensions
+import TribeUtils
+import ChatUtils
+import PlayerExtensions
+
+class PlayerAllianceSetting
+    string name
+    alliancetype setting
+    bool invertSetting
+    HashMap<player, bool> values
+
+    construct(string name, alliancetype setting)
+        this.name = name
+        this.setting = setting
+        this.values = new HashMap<player, bool>()
+        this.invertSetting = false
+
+    construct(string name, alliancetype setting, bool invertSetting)
+        this.name = name
+        this.setting = setting
+        this.values = new HashMap<player, bool>()
+        this.invertSetting = invertSetting
+
+let settings = new HashMap<string, PlayerAllianceSetting>()
+
+function handlePlayerAllianceSettingToggle(player triggerPlayer, LinkedList<string> args)
+    let setting = settings.get(args.get(0))
+    let id = triggerPlayer.getId()
+    let range = getTribePlayerIdRangeForPlayerId(id)
+    let newValue = args.size() > 1 ? args.get(1).isConfirmation() : not setting.values.get(triggerPlayer)
+    let msg = "{0} has turned {1} {2}".format(triggerPlayer.getNameColored(), setting.name.color(SPECIAL_COLOR), newValue.toSwitch().color(ENERGY_COLOR))
+    DisplayTimedTextToForce(triggerPlayer.getAllies(), 5, msg)
+    setting.values.put(triggerPlayer, newValue)
+    for i = range.min to range.max
+        if i != id
+            players[id].setPlayerAlliance(players[i], setting.setting, setting.invertSetting ? not newValue : newValue)
+
+init
+    settings
+    ..put("ac", new PlayerAllianceSetting("advanced control", ALLIANCE_SHARED_ADVANCED_CONTROL))
+    ..put("sc", new PlayerAllianceSetting("share control", ALLIANCE_SHARED_CONTROL))
+    ..put("p", new PlayerAllianceSetting("private mode", ALLIANCE_SHARED_VISION, true))
+
+    registerCommandAll("clear") (triggerPlayer, args) ->
+        if GetLocalPlayer() == triggerPlayer
+            ClearTextMessages()
+
+    registerCommandAll("c") (triggerPlayer, args) ->
+        let id = triggerPlayer.getId()
+        let zoom = args.get(1).toReal()
+        let msg = "Current zoom is {0} (default 0)".format(zoom.toString(0).color(ENERGY_COLOR))
+        ZOOM_DISTANCE[id] = zoom
+        ZoomSetCamera(id)
+        printTimedToPlayer(msg, 5, triggerPlayer)
+
+    registerCommandAll("rn") (triggerPlayer, args) ->
+        for i = 0 to PLAYER_NEUTRAL_PASSIVE - 1
+            if udg_RealNames[i] != ""
+                let msg = "{0} {1}".format((i + 1).toString().color(COLOR_CODE[i]), players[i].getName())
+                printTimedToPlayer(msg, 10, triggerPlayer)
+
+    registerCommandAll("modes") (triggerPlayer, args) ->
+        printTimedToPlayer(currentModes + s__GameMode_getEnabledModes(), 15, triggerPlayer)
+
+    // registerCommandAll("obs") (triggerPlayer, args) ->
+    //    SetPlayerState(triggerPlayer, PLAYER_STATE_OBSERVER, 1)
+
+    s__Map_onGameStart() ->
+        // deregisterCommandAll("obs")
+
+        registerCommandAll("ac", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))
+        registerCommandAll("sc", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))
+        registerCommandAll("p", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))
+
+        registerCommandAll("ms") (triggerPlayer, args) ->
+            let hero = udg_PUnits[triggerPlayer.getId()]
+            if hero.isAlive()
+                let msg = "Your movement speed is {0}".format(hero.getMoveSpeed().toString().color(ENERGY_COLOR))
+                printTimedToPlayer(msg, 5, triggerPlayer)
+
+        registerCommandAll("cc") (triggerPlayer, args) ->
+            let id = args.get(1).toInt() mod 24
+            let msg = "Adjusted player color to {0}Player {1}|r".format(COLOR_CODE[id], (id + 1).toString())
+            printTimedToPlayer(msg, 5, triggerPlayer)
+            triggerPlayer.setColor(ConvertPlayerColor(id), true)

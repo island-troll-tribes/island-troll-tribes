@@ -54,7 +54,7 @@ elseif GetClickedButton() == O_DBUTTON[5] then
     loop
         exitwhen i > 11
         if udg_RealNames[i] != "" then
-            call DisplayTimedTextToPlayer(p,0,0,7,COLOR_CODE[i]+I2S(i+1)+"|r "+udg_RealNames[i]+" "+COLOR_CODE[currentcolor[i]]+"[c]|r")
+            call DisplayTimedTextToPlayer(p,0,0,7,COLOR_CODE[i]+I2S(i+1)+"|r "+udg_RealNames[i])
         endif
         set i=i+1
     endloop

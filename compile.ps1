@@ -19,7 +19,7 @@ $ScriptPath  = Split-Path -Parent $MyInvocation.MyCommand.Definition
 
 $CommonJ     = Join-Path -Path $ScriptPath -ChildPath 'bin\jasshelper\common.j'
 $BlizzardJ   = Join-Path -Path $ScriptPath -ChildPath 'bin\jasshelper\blizzard.j'
-$Jasshelper  = Join-Path -Path $ScriptPath -ChildPath 'bin\jasshelper\jasshelper.exe'
+$Jasshelper  = Join-Path -Path $ScriptPath -ChildPath 'bin\jasshelper\clijasshelper.exe'
 
 # Path to directory containing all .j and .zn files to be compiled using jasshelper
 $JassFolder  = Join-Path -Path $ScriptPath -ChildPath 'jass'

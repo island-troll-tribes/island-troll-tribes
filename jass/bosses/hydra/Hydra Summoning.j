@@ -3,7 +3,7 @@
 //TESH.scrollpos=71
 //TESH.alwaysfold=0
 function SummonConditions takes nothing returns boolean
-    return GetManipulatingUnit() == gg_unit_n019_0145
+    return GetManipulatingUnit() == OMINOUS_ALTAR
 endfunction
 
 globals
@@ -29,7 +29,7 @@ local item array t
 local integer s
 if not hydraStarted and Mammoth_Dead then
     loop
-        set t[e] = UnitItemInSlot(gg_unit_n019_0145, e)
+        set t[e] = UnitItemInSlot(OMINOUS_ALTAR, e)
         exitwhen t[e] == null or e > 5
         set i[e] = GetItemTypeId(t[e])
         set e = e + 1
@@ -39,14 +39,14 @@ if not hydraStarted and Mammoth_Dead then
     // Jungle Bear Hide x2
     // Wolf Skin
     // 1 of 4 Island Herbs
-    
+
     // new:
     // Herb, mushroom, root, elk hide, 3 corpse near altar
     /*
     A flesh offering scattered amongst the vicinity, thrice, however, more.. then retrieve the leaf of the island... the presence of the Fungi... the origin of water from below... finally, the bare skin of a Cervidae... all served within the altar...
     */
     set corpse_amt = 0
-    call GroupEnumUnitsInRange(tGroup, GetUnitX(gg_unit_n019_0145) , GetUnitY(gg_unit_n019_0145) , 600, Condition(function FilterUnitIsCorpse))
+    call GroupEnumUnitsInRange(tGroup, GetUnitX(OMINOUS_ALTAR) , GetUnitY(OMINOUS_ALTAR) , 600, Condition(function FilterUnitIsCorpse))
     call ForGroup(tGroup, function CountCorpse)
     if i[1] == ITEM_MUSHROOM and i[2] == ITEM_RIVER_ROOT and i[3] == ITEM_ELK_HIDE then
         if corpse_check then

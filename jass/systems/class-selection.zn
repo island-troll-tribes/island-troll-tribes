@@ -183,6 +183,7 @@ library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 				if (!udg_started[i]) {
 					spawn = GetSpawn(i);
 					u = Tribe.ofPlayerId(i).getRandomAvailableClass(Player(i), spawn);
+					SetPlayerState(Player(i), PLAYER_STATE_RESOURCE_LUMBER, 0);
 					initializePlayerTroll(u);
 	            }
 	            else {
@@ -194,10 +195,10 @@ library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 			}
 		}
 
-		TriggerExecute(gg_trg_boards);
 		ReleaseTimer(GetExpiredTimer());
 		TimerDialogDisplay(selectionDialog, false);
 		DestroyTimerDialog(selectionDialog);
+		TriggerExecute(gg_trg_boards);
 		GenerateMap();
 
 		u = null;

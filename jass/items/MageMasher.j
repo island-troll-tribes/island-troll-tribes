@@ -1,11 +1,5 @@
 //TESH.scrollpos=40
 //TESH.alwaysfold=0
-function mashSilence takes nothing returns boolean
-    if ( not ( GetRandomPercentageBJ() <= 16.00 ) ) then
-        return false
-    endif
-    return true
-endfunction
 
 function checkmashertroll takes nothing returns boolean
     if ( ( GetUnitTypeId(GetAttackedUnitBJ()) == UNIT_MAGE ) ) then
@@ -57,9 +51,6 @@ function mashhit takes nothing returns nothing
         if (attacker!=0 and attacked!=0) then
             call StoreInteger(udg_attackerCache,"attacker.w3v","Player "+I2S(GetPlayerId(GetOwningPlayer(attack))),0)
             call StoreInteger(udg_attackedCache,"attacked.w3v","Player "+I2S(GetPlayerId(GetOwningPlayer(defend))),0)
-            if ( mashSilence() ) then
-                call masterCastAtCaster(attack,defend,0,0,'A064',"soulburn")
-            endif
             if ( checkmashertroll() ) then
                 call masterCastAtCaster(attack,defend,0,0,'A065',"manaburn")
             endif

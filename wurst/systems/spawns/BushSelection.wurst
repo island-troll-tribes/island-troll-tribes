@@ -1,0 +1,21 @@
+package BushSelection
+import HashMap
+import RegisterEvents
+import InventoryUtils
+import Classes
+
+let MAX_DIST = 300
+let MAX_DIST_SQ = compiletime(MAX_DIST * MAX_DIST)
+
+let map = new HashMap<int, int>()
+..put(UNIT_THIEFS_BUSH, UNIT_THIEF)
+..put(UNIT_SCOUTS_BUSH, UNIT_SCOUT)
+
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SELECTED) ->
+        let bush = GetTriggerUnit()
+        let hero = getPlayersTroll(GetTriggerPlayer())
+        let id = bush.getTypeId()
+
+        if map.has(id) and map.get(id) == getTrollBaseClass(hero) and hero.getPos().distanceToSq(bush.getPos()) < MAX_DIST_SQ
+            bush.transferItems(hero)

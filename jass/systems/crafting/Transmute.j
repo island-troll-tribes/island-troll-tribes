@@ -700,7 +700,7 @@ local item added
             call UnitAddItemByIdSwapped( ITEM_ANABOLIC_BOOTS, GetTriggerUnit() )
             call itemLower(1)
         endif
-        if i[0] == ITEM_BONE_BOOTS and i[1] == ITEM_SPIRIT_WIND and i[2] == ITEM_SPIRIT_WATER and i[3] == ITEM_ANABOLIC_POTION and GetItemCharges(t[3]) > 1 then
+        if i[0] == ITEM_BONE_BOOTS and i[1] == ITEM_SPIRIT_WIND and i[2] == ITEM_SPIRIT_WATER and i[3] == ITEM_MANA_CRYSTAL and i[4] == ITEM_ANABOLIC_POTION and GetItemCharges(t[3]) > 1 then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
             call RemoveItem(t[2])
@@ -712,7 +712,7 @@ local item added
             call UnitAddItemByIdSwapped( ITEM_ANABOLIC_BOOTS, GetTriggerUnit() )
             call itemLower(1)
         endif
-        if i[0] == ITEM_BONE_GLOVES and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_IRON_INGOT and i[1] == ITEM_SPIRIT_WIND and i[2] == ITEM_SPIRIT_WATER and i[3] == ITEM_MANA_CRYSTAL then
+        if i[0] == ITEM_BONE_GLOVES and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_IRON_INGOT and i[3] == ITEM_SPIRIT_WIND and i[4] == ITEM_SPIRIT_WATER and i[5] == ITEM_MANA_CRYSTAL then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
             call RemoveItem(t[2])
@@ -747,7 +747,7 @@ local item added
             call UnitAddItemByIdSwapped( ITEM_FIRE_BOMB, GetTriggerUnit() )
             call itemLower(2)
         endif
-//      if i[0] == ITEM_SPEAR and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_STEEL_INGOT and i[3] == ITEM_MANA_CRYSTAL and i[4] == ITEM_SPIRIT_WIND and i[5] == ITEM_SPIRIT_WATER then
+//      if i[0] == ITEM_SPEAR and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_STEEL_INGOT and i[3] == ITEM_SPIRIT_WIND and i[4] == ITEM_SPIRIT_WATER and i[5] == ITEM_MANA_CRYSTAL then
 //          call RemoveItem(t[0])
 //          call RemoveItem(t[1])
 //          call RemoveItem(t[2])

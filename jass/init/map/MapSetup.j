@@ -45,6 +45,8 @@ endfunction
 function Start_Game takes nothing returns nothing
     call ReleaseTimer(GetExpiredTimer())
 
+    call SetTimeOfDay( 6.00 )
+
     call Map.fireStartGameEvents()
 
     call DisplayTText(GENERAL_COLOR+"Game has begun.|r", 10)

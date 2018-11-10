@@ -13,21 +13,9 @@ function ItemFilterSpecific takes nothing returns nothing
     local integer pid = GetPlayerId(GetOwningPlayer(u))
     //if IsUnitTroll(GetEnumUnit()) then
         set BATTLE_SHIELD_NUMBER[pid] = 0
-        set frostar[pid] = false
-        set healar[pid] = false
         loop
             set it = UnitItemInSlot(u,i)
             if it != null then
-                if GetItemTypeId(it) == ITEM_CLOAK_OF_FROST then
-                    set frostar[pid] = true
-                endif
-                if GetItemTypeId(it) == ITEM_CLOAK_OF_HEALING then
-                    set healar[pid] = true
-                    if not IsUnitInGroup(u, healGroup) then
-                        call GroupAddUnit(healGroup, u)
-                        call TriggerRegisterUnitEvent( trighealhit, u, EVENT_UNIT_DAMAGED )
-                    endif
-                endif
                 if GetItemTypeId(it) == ITEM_BATTLE_SHIELD then
                     set BATTLE_SHIELD_NUMBER[pid] = BATTLE_SHIELD_NUMBER[pid] + 1
                 endif

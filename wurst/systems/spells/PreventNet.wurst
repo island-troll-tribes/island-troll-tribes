@@ -4,8 +4,15 @@ import TrollExtensions
 
 public constant SPELL_WEB = 'Aweb'
 public constant SPELL_ENSNARE = 'Aens'
+public constant SPELL_ENSNARE_TRAP = 'A0FR'
 public constant BUFF_WEB = 'Beng'
 public constant BUFF_ANTI_MAGIC_SHIELD = 'Bam2'
+
+function preventNet()
+    let t = GetSpellTargetUnit()
+    let c = GetSpellAbilityUnit()
+    if t.isTroll() and (t.getAbilityLevel(BUFF_ANTI_MAGIC_SHIELD) > 0 or t.getAbilityLevel(BUFF_WEB) > 0) and c.getTypeId() != UNIT_DISCO_DUCK and c.getTypeId() != UNIT_ONE
+        c.issueImmediateOrder("stop")
 
 init
     registerSpellEffectEvent(SPELL_ENSNARE) ->
@@ -14,8 +21,5 @@ init
         if t.isTroll() and t.getAbilityLevel(BUFF_ANTI_MAGIC_SHIELD) > 0 and c.getTypeId() != UNIT_DISCO_DUCK and c.getTypeId() != UNIT_ONE
             c.issueImmediateOrder("stop")
 
-    registerSpellEffectEvent(SPELL_WEB) ->
-        let t = GetSpellTargetUnit()
-        let c = GetSpellAbilityUnit()
-        if t.isTroll() and (t.getAbilityLevel(BUFF_ANTI_MAGIC_SHIELD) > 0 or t.getAbilityLevel(BUFF_WEB) > 0) and c.getTypeId() != UNIT_DISCO_DUCK and c.getTypeId() != UNIT_ONE
-            c.issueImmediateOrder("stop")
+    registerSpellEffectEvent(SPELL_WEB, function preventNet)
+    registerSpellEffectEvent(SPELL_ENSNARE_TRAP, function preventNet)

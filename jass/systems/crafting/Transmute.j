@@ -707,7 +707,7 @@ local item added
             call RemoveItem(t[2])
             call RemoveItem(t[3])
             if GetItemCharges(t[4]) > 2 then
-                call SetItemCharges(t[4], GetItemCharges(t[4]) - 1 )
+                call SetItemCharges(t[4], GetItemCharges(t[4]) - 2 )
             else
                 call RemoveItem(t[4])
             endif

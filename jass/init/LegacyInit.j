@@ -57,7 +57,6 @@ library LegacyInit initializer onInit
         call ExecuteFunc("InitTrig_Nether_Fade")
         call ExecuteFunc("InitTrig_Jump")
         call ExecuteFunc("InitTrig_blink_ww_short_radius")
-        call ExecuteFunc("InitTrig_AcidBoost")
         call ExecuteFunc("InitTrig_MageMasher")
         call ExecuteFunc("InitTrig_ShieldBash")
         call ExecuteFunc("InitTrig_Shadow_Pinion")

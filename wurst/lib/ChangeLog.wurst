@@ -1,15 +1,21 @@
 package ChangeLog
 import LinkedList
-import LinkedListModule
 import HashMap
 import StringUtils
 import ChatCommands
 import ClosureTimers
 
 public class ChangeLog
-    use LinkedListModule
-
     static let versions = new HashMap<string, thistype>()
+    static let list = new LinkedList<thistype>()
+    static var sorted = false
+    static Comparator<thistype> comparator = (a, b) -> begin
+        return a.major != b.major ?
+            (b.major - a.major) :
+            (a.minor != b.minor ?
+                b.minor - a.minor :
+                b.rev.toInt() - a.rev.toInt())
+    end
 
     int major
     int minor
@@ -21,6 +27,7 @@ public class ChangeLog
         this.minor = minor
         this.rev = char(rev)
         versions.put(this.getVersionString(), this)
+        list.add(this)
 
     function getVersionString() returns string
         return "v{0}.{1}{2}".format(this.major.toString(), this.minor.toString(), this.rev.toString())
@@ -33,22 +40,33 @@ public class ChangeLog
             return versions.get(which)
         return null
 
+    static function ordered() returns LinkedList<thistype>
+        if not sorted
+            list.sortWith(comparator)
+            sorted = true
+        return list
 
-init
-    registerCommandAll("changelog") (triggerPlayer, args) ->
-        var changelog = ChangeLog.last
+    static function handler(player triggerPlayer, LinkedList<string> args)
+        var changelog = ChangeLog.ordered().getFirst()
         if args.size() > 1
             changelog = ChangeLog.getVersion(args.get(1))
-        
-        let title = "{0}Change Log for {1}{2}".format(ENERGY_COLOR, GOLD_COLOR, changelog.getVersionString())
-        printTimedToPlayer(title, 15, triggerPlayer)
-        for change in changelog.changes
-            printTimedToPlayer("{0}{1}{2}".format(DASH, GENERAL_COLOR, change), 15, triggerPlayer)
+
+        if changelog == null
+            printTimedToPlayer("{0}Change Log not found|r".format(ENERGY_COLOR), 15, triggerPlayer)
+        else
+            let title = "{0}Change Log for {1}{2}".format(ENERGY_COLOR, GOLD_COLOR, changelog.getVersionString())
+            printTimedToPlayer(title, 15, triggerPlayer)
+            for change in changelog.changes
+                printTimedToPlayer("{0}{1}{2}".format(DASH, GENERAL_COLOR, change), 15, triggerPlayer)
+
+init
+    registerCommandAll("changelog", (triggerPlayer, args) -> ChangeLog.handler(triggerPlayer, args))
+    registerCommandAll("cl", (triggerPlayer, args) -> ChangeLog.handler(triggerPlayer, args))
 
     nullTimer() ->
-        for changelog in ChangeLog
+        for changelog in ChangeLog.ordered()
             let title = "{0}Change Log for {1}{2}".format(SPECIAL_COLOR, GOLD_COLOR, changelog.getVersionString())
             let changes = changelog.changes.foldl<string>("", (string change, string memo) -> begin
-                return memo + DASH + GENERAL_COLOR + change + "|n"
+                return memo + DASH + GENERAL_COLOR + change + "|r|n"
             end)
             CreateQuestBJ(bj_QUESTTYPE_REQ_DISCOVERED, title, changes, "ReplaceableTextures\\CommandButtons\\BTNBerserkForTrolls.blp")

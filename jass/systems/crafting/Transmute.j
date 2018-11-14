@@ -701,14 +701,15 @@ local item added
             call UnitAddItemByIdSwapped( ITEM_ANABOLIC_BOOTS, GetTriggerUnit() )
             call itemLower(1)
         endif
-        if i[0] == ITEM_BONE_BOOTS and i[1] == ITEM_SPIRIT_WIND and i[2] == ITEM_SPIRIT_WATER and i[3] == ITEM_MANA_CRYSTAL and i[4] == ITEM_ANABOLIC_POTION and GetItemCharges(t[3]) > 1 then
+        if i[0] == ITEM_BONE_BOOTS and i[1] == ITEM_SPIRIT_WIND and i[2] == ITEM_SPIRIT_WATER and i[3] == ITEM_MANA_CRYSTAL and i[4] == ITEM_ANABOLIC_POTION and GetItemCharges(t[4]) > 1 then
             call RemoveItem(t[0])
             call RemoveItem(t[1])
             call RemoveItem(t[2])
-            if GetItemCharges(t[3]) > 2 then
-                call SetItemCharges(t[3], GetItemCharges(t[3]) - 1 )
+            call RemoveItem(t[3])
+            if GetItemCharges(t[4]) > 2 then
+                call SetItemCharges(t[4], GetItemCharges(t[4]) - 1 )
             else
-                call RemoveItem(t[3])
+                call RemoveItem(t[4])
             endif
             call UnitAddItemByIdSwapped( ITEM_ANABOLIC_BOOTS, GetTriggerUnit() )
             call itemLower(1)

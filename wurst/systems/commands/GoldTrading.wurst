@@ -8,14 +8,14 @@ import PlayerUtils
 CommandHandler giveGold = (player giver, LinkedList<string> args) -> begin
     let tribeId = giver.getTribeId()
     let playerId = findPlayerIdByStringMatchingTribe(args.get(1), tribeId)
-    let amount = args.get(2).toInt()
     let currentGold = giver.getLumber()
     let target = players[playerId]
-
+    var amount = args.get(2).toInt()
+  
+    if amount <= 0
+        amount = currentGold
     if playerId < 0 or playerId > 11
         simError(giver, "Command: -g player amount")
-    else if amount <= 0
-        simError(giver, "Amount must be greater than zero")
     else if amount > currentGold
         simError(giver, "Not enough gold")
     else if playerId == giver.getId()
@@ -26,10 +26,10 @@ CommandHandler giveGold = (player giver, LinkedList<string> args) -> begin
         giver.subLumber(amount)
         target.addLumber(amount)
 
-        let targetMessage = "{0}You received|r {1}{2} gold|r{3} from |r{4}".format(GENERAL_COLOR, args.get(2), GOLD_COLOR, GENERAL_COLOR, giver.getNameColored())
+        let targetMessage = "{0}You received|r {1}{2} gold|r{3} from |r{4}".format(GENERAL_COLOR, amount.toString(), GOLD_COLOR, GENERAL_COLOR, giver.getNameColored())
         printTimedToPlayer(targetMessage, 10, target)
 
-        let giverMessage = "{0}Sent|r {1}{2} gold|r{3} to |r{4}".format(GENERAL_COLOR, GOLD_COLOR, args.get(2), GENERAL_COLOR, target.getNameColored())
+        let giverMessage = "{0}Sent|r {1}{2} gold|r{3} to |r{4}".format(GENERAL_COLOR, GOLD_COLOR, amount.toString(), GENERAL_COLOR, target.getNameColored())
         printTimedToPlayer(giverMessage, 10, giver)
 end
 

@@ -171,9 +171,14 @@ library ClassSelection requires ID, MapSetup, TimerUtils, Table {
 		integer i;
 		unit u;
 		rect spawn;
+		integer numTribes = GameConfig.getInstance().getNumTribes();
 
 		for (0 <= i < 12) {
 			Tribe.find(i).removeTotem();
+
+			if (i < numTribes && GameConfig.getInstance().isStartWithOneFire()) {
+				CreateUnit(Player(GetMinPlayerIdForTribe(tribeId)), UNIT_FIRE, GetRectCenterX(Tribe.spawn), GetRectCenterY(Tribe.spawn), 0);
+			}
 		}
 
 		for (0 <= i < 12) {

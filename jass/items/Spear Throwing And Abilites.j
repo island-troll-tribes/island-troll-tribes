@@ -1,4 +1,5 @@
 
+
 //===========================================================================
 //TESH.scrollpos=12
 //TESH.alwaysfold=0
@@ -77,14 +78,10 @@ library SpearThrowsAndAbilities initializer onInit requires PublicLibrary, DUMMY
         elseif id==SPELL_STEEL_SPEAR and GetRandomInt(1,3) <= 2 then
             set i = CreateItem(ITEM_STEEL_SPEAR, x, y)
         elseif id==SPELL_DARK_SPEAR then
-            if GetRandomInt(1,3) <= 2 then
+            if GetRandomReal(0, 1) <= 0.4 then
                 set i = CreateItem(ITEM_DARK_SPEAR, x, y)
             endif
-            if GetRandomReal(0,100) <= 20 then
-                call ManaBurn(GetTriggerUnit(), GetRandomReal(20,70))
-            else
-                call ManaBurn(GetTriggerUnit(), GetRandomReal(20,40))
-            endif
+            call ManaBurn(GetTriggerUnit(), GetRandomReal(40,60))
         elseif id==SPELL_POISON_SPEAR and GetRandomInt(1,2) == 1 then
             set i = CreateItem(ITEM_POISON_SPEAR, x, y)
         elseif id==SPELL_RPOISON_SPEAR and GetRandomInt(1,2) == 1 then

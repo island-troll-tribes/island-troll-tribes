@@ -48,4 +48,13 @@ ForEach ($File in $InputFiles)
 
 # Run jasshelper to perform actual compilation of map script
 $Params = $args + @('--scriptonly', $CommonJ, $BlizzardJ, $GeneratedJ, $OutputJ)
-& $Jasshelper $Params
+
+
+If (Get-Command wine -errorAction SilentlyContinue)
+{
+    & wine $Jasshelper $Params
+}
+Else
+{
+    & $Jasshelper $Params
+}

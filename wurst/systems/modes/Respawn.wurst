@@ -1,0 +1,61 @@
+package Respawn
+import RegisterEvents
+import TrollExtensions
+import TimerExtensions
+import ClosureTimers
+import GameConfig
+import TimerUtils
+import TimerDialog
+
+@configurable constant GRACE_PERIOD_REVIVE_DELAY = 10.0
+
+function isGracePeriodActive() returns boolean
+    return udg_NOOB_TIME
+
+function quadraticReviveDelay(real x) returns real
+    let minutes = x / 60
+    return minutes * minutes
+
+function revive(unit dyingUnit, player owner)
+    let spawn = GetSpawn(owner.getId())
+    dyingUnit.revive(spawn.getCenter(), true)
+    owner.setGold(udg_MAX_HEAT)
+    if GetLocalPlayer() == owner
+        PanCameraToTimed(spawn.getCenterX(), spawn.getCenterY(), 0.3)
+
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
+        let dyingUnit = GetDyingUnit()
+        if dyingUnit.isTroll()
+            let owner = dyingUnit.getOwner()
+
+            if gameConfig.isGracePeriodEnabled() and isGracePeriodActive()
+                let msg = "{0}Grace period has not ended, your troll will revive in {1} seconds|r".format(GENERAL_COLOR, GRACE_PERIOD_REVIVE_DELAY.toString(0))
+                printTimedToPlayer(msg, 10, owner)
+
+                doAfter(GRACE_PERIOD_REVIVE_DELAY) ->
+                    revive(dyingUnit, owner)
+
+            else if gameConfig.isRespawnSystemEnabled()
+                let seconds = GAME_TIMER.getElapsed()
+                let delay = quadraticReviveDelay(seconds)
+                
+                if gameConfig.isForcedDuelEnabled() and delay >= DUEL_TIMER.getRemaining()
+                    let msg = "Forced duel approaching, your troll will not revive"
+                    printTimedToPlayer(msg, 10, owner)
+
+                else
+                    let delayTimer = getTimer()
+                    let timerDialog = delayTimer.createTimerDialog()
+                    let msg = "Your troll will revive in {0} seconds|r".format(delay.toString(0))
+
+                    printTimedToPlayer(msg, 10, owner)
+
+                    delayTimer.doAfter(delay) ->
+                        revive(dyingUnit, owner)
+                        timerDialog.display(false)
+                        timerDialog.destr()
+
+                    timerDialog.setTitle("Respawn")
+                    if GetLocalPlayer() == owner
+                        timerDialog.display(true)

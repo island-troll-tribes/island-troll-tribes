@@ -323,6 +323,12 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       GameMode.message(ENERGY_COLOR + "Grace period duration|r " + I2S(R2I(amount)) + " min");
     });
 
+    GameMode.create("respawn-system", "re", "Use the new respawn system instead of grace period", function(ArgsList a) {
+      GameConfig.getInstance().setRespawnSystemEnabled(true);
+      GameMode.find("gp").triggerWithArgs("0");
+      GameMode.message(ENERGY_COLOR + "Respawn system|r enabled");
+    });
+
     GameMode.create("forced-duel", "fd", "Set a forced duel after a time limit, defaults to 1 h, eg: \"-fd 60\"", function(ArgsList a) {
       real amount = 60.0;
       if (a.length() >= 1) {

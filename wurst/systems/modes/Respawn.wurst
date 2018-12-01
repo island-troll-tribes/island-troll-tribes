@@ -9,11 +9,12 @@ import TimerUtils
 import TimerDialog
 import ChatCommands
 import LinkedList
+import GameStart
 
 @configurable constant GRACE_PERIOD_REVIVE_DELAY = 10.0
 
 function isGracePeriodActive() returns boolean
-    return gameConfig.isGracePeriodEnabled() and udg_NOOB_TIME
+    return gameConfig.isGracePeriodEnabled() and GRACE_PERIOD_TIMER.getRemaining() > 0
 
 function quadraticReviveDelay(real numSeconds) returns real
     let numMinutes = numSeconds / 60
@@ -35,6 +36,17 @@ function respawnTimeHandler(player triggerPlayer, LinkedList<string> args)
 init
     registerCommandAll("-rt", (triggerPlayer, args) -> respawnTimeHandler(triggerPlayer, args))
     registerCommandAll("-respawn-time", (triggerPlayer, args) -> respawnTimeHandler(triggerPlayer, args))
+
+    registerGameStartEvent() ->
+        if gameConfig.isGracePeriodEnabled()
+            GRACE_PERIOD_TIMER.start(gameConfig.getGracePeriodDuration()) ->
+                let msg = "{0}Grace period is over. Now you will not be automatically revived when you die! You can still be revived if your team builds a |c00ff0000Spirit Ward|r{1}!|r".format(GENERAL_COLOR, GENERAL_COLOR)
+                printTimed(msg, 15)
+                mammothGate.kill()
+                mammothGate.setAnimation("death alternate")
+
+                doAfter(10) ->
+                    gg_trg_check_win.execute()
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
         let dyingUnit = GetDyingUnit()

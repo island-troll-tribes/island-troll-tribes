@@ -1,16 +1,19 @@
 package Respawn
 import RegisterEvents
 import TrollExtensions
+import TribeUtils
 import TimerExtensions
 import ClosureTimers
 import GameConfig
 import TimerUtils
 import TimerDialog
+import ChatCommands
+import LinkedList
 
 @configurable constant GRACE_PERIOD_REVIVE_DELAY = 10.0
 
 function isGracePeriodActive() returns boolean
-    return udg_NOOB_TIME
+    return gameConfig.isGracePeriodEnabled() and udg_NOOB_TIME
 
 function quadraticReviveDelay(real numSeconds) returns real
     let numMinutes = numSeconds / 60
@@ -23,13 +26,23 @@ function revive(unit dyingUnit, player owner)
     if GetLocalPlayer() == owner
         PanCameraToTimed(spawn.getCenterX(), spawn.getCenterY(), 0.3)
 
+function respawnTimeHandler(player triggerPlayer, LinkedList<string> args)
+    let numSeconds = args.size() > 1 ? args.get(1).toReal() : GAME_TIMER.getElapsed()
+    let respawnTime = quadraticReviveDelay(numSeconds)
+    let msg = "{0}Respawn time: |r{1}{2}s|r".format(GENERAL_COLOR, ENERGY_COLOR, respawnTime.toString(0))
+    printTimedToPlayer(msg, 10, triggerPlayer)
+
 init
+    registerCommandAll("-rt", (triggerPlayer, args) -> respawnTimeHandler(triggerPlayer, args))
+    registerCommandAll("-respawn-time", (triggerPlayer, args) -> respawnTimeHandler(triggerPlayer, args))
+
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
         let dyingUnit = GetDyingUnit()
+
         if dyingUnit.isTroll()
             let owner = dyingUnit.getOwner()
 
-            if gameConfig.isGracePeriodEnabled() and isGracePeriodActive()
+            if isGracePeriodActive()
                 let msg = "{0}Grace period has not ended, your troll will revive in {1} seconds|r".format(GENERAL_COLOR, GRACE_PERIOD_REVIVE_DELAY.toString(0))
                 printTimedToPlayer(msg, 10, owner)
 
@@ -46,16 +59,15 @@ init
 
                 else
                     let delayTimer = getTimer()
-                    let timerDialog = delayTimer.createTimerDialog()
                     let msg = "Your troll will revive in {0} seconds|r".format(delay.toString(0))
-
                     printTimedToPlayer(msg, 10, owner)
+
+                    let timerDialog = delayTimer.createTimerDialog()
+                    let display = GetLocalPlayer().getTribe() == owner.getTribe()
+                    timerDialog.setTitle("{0} Respawn".format(owner.getName()))
+                    timerDialog.display(display)
 
                     delayTimer.doAfter(delay) ->
                         revive(dyingUnit, owner)
                         timerDialog.display(false)
                         timerDialog.destr()
-
-                    timerDialog.setTitle("Respawn")
-                    if GetLocalPlayer() == owner
-                        timerDialog.display(true)

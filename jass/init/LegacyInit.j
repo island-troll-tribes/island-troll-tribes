@@ -136,11 +136,6 @@ library LegacyInit initializer onInit
         call ExecuteFunc("InitTrig_FlameCloak")
         call ExecuteFunc("InitTrig_FrostCloak")
         call ExecuteFunc("InitTrig_HealCloak")
-        call ExecuteFunc("InitTrig_Set_up_Item_Array")
-        call ExecuteFunc("InitTrig_Tag_Toggling")
-        call ExecuteFunc("InitTrig_Buying")
-        call ExecuteFunc("InitTrig_Start_Dual_CountDown")
-        call ExecuteFunc("InitTrig_Dual_Begin")
         call ExecuteFunc("InitTrig_Shapeshift")
 
         call ConditionalTriggerExecute(gg_trg_AcidBoost)

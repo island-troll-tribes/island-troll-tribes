@@ -10,6 +10,8 @@ import TimerDialog
 import ChatCommands
 import LinkedList
 import Game
+import GroupExtensions
+import PlayerExtensions
 
 @configurable constant GRACE_PERIOD_REVIVE_DELAY = 10.0
 
@@ -80,6 +82,25 @@ init
                     timerDialog.display(display)
 
                     delayTimer.doAfter(delay) ->
-                        revive(dyingUnit, owner)
                         timerDialog.display(false)
                         timerDialog.destr()
+
+                        let units = ENUM_GROUP
+                            ..enumUnitsOfForce(owner.getAllies())
+                            .toLinkedList()
+                            ..sortWith((a, b) -> begin
+                                let aType = a.isType(UNIT_TYPE_STRUCTURE) ? 1 : 0
+                                let bType = a.isType(UNIT_TYPE_STRUCTURE) ? 1 : 0
+                                return aType == bType ?
+                                    a.getLevel() - b.getLevel() :
+                                    aType - bType
+                            end)
+
+                        let spawnOn = units.getFirst()
+                        let pos = spawnOn.getPos()
+                        dyingUnit.revive(pos, true)
+                        owner.setGold(udg_MAX_HEAT)
+                        if GetLocalPlayer() == owner
+                            PanCameraToTimed(pos.x, pos.y, 0.3)
+
+                        destroy units

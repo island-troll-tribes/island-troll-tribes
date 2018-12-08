@@ -10,6 +10,7 @@ library GameConfig {
     public boolean forcedDuelEnabled = false;
     public real forcedDuelAfter = 0;
     public real gracePeriodDuration = 8.0;
+    public boolean respawnSystemEnabled = false;
     public boolean randomizeSpawns = false;
     public boolean startWithFire = false;
     public boolean startWithOneFire = false;
@@ -75,17 +76,28 @@ library GameConfig {
       return this.forcedDuelAfter;
     }
 
+    public method isRespawnSystemEnabled() -> boolean {
+      return this.respawnSystemEnabled;
+    }
+
+    public method setRespawnSystemEnabled(boolean value) {
+      this.respawnSystemEnabled = value;
+    }
+
     public method setGracePeriodDuration(real numMinutes) -> boolean {
       if (this.forcedDuelEnabled && numMinutes > this.forcedDuelAfter) {
         return false;
       }
       this.gracePeriodDuration = numMinutes;
-      udg_NOOB_TIME_LEFT = numMinutes * 60; // TODO remove
       return true;
     }
 
     public method getGracePeriodDuration() -> real {
       return this.gracePeriodDuration;
+    }
+
+    public method isGracePeriodEnabled() -> boolean {
+      return this.gracePeriodDuration > 0;
     }
 
     public method setRandomSpawns(boolean value) {

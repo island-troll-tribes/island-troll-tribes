@@ -50,8 +50,6 @@ function Start_Game takes nothing returns nothing
     call Map.fireStartGameEvents()
 
     call DisplayTText(GENERAL_COLOR+"Game has begun.|r", 10)
-
-    call TimerStart(udg_noobTimer, udg_NOOB_TIME_LEFT , false , null)
     call TimerStart(GAME_TIMER, 99999999, false, null)
 
     call RegisterPlayersTrollClasses()

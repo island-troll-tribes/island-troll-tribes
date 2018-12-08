@@ -21,7 +21,7 @@ local integer mt_mins = 0
 local integer mt_secs = 0
 local integer mt_time = R2I(TimerGetElapsed(GAME_TIMER))
 local string array s
-local integer gracePeriodRemaining = R2I(TimerGetRemaining(udg_noobTimer))
+local integer gracePeriodRemaining = R2I(TimerGetRemaining(GRACE_PERIOD_TIMER))
 local integer forcedDuelRemaining = R2I(TimerGetRemaining(DUEL_TIMER))
 local integer forestFireRemaining = R2I(TimerGetRemaining(FOREST_FIRE_TIMER))
 set forcedDuelStr = ""

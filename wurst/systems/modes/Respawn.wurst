@@ -1,0 +1,106 @@
+package Respawn
+import RegisterEvents
+import TrollExtensions
+import TribeUtils
+import TimerExtensions
+import ClosureTimers
+import GameConfig
+import TimerUtils
+import TimerDialog
+import ChatCommands
+import LinkedList
+import Game
+import GroupExtensions
+import PlayerExtensions
+
+@configurable constant GRACE_PERIOD_REVIVE_DELAY = 10.0
+
+function isGracePeriodActive() returns boolean
+    return gameConfig.isGracePeriodEnabled() and GRACE_PERIOD_TIMER.getRemaining() > 0
+
+function quadraticReviveDelay(real numSeconds) returns real
+    let numMinutes = numSeconds / 60
+    return numMinutes * numMinutes
+
+function revive(unit dyingUnit, player owner)
+    let spawn = GetSpawn(owner.getId())
+    dyingUnit.revive(spawn.getCenter(), true)
+    owner.setGold(udg_MAX_HEAT)
+    if GetLocalPlayer() == owner
+        PanCameraToTimed(spawn.getCenterX(), spawn.getCenterY(), 0.3)
+
+function respawnTimeHandler(player triggerPlayer, LinkedList<string> args)
+    let numSeconds = args.size() > 1 ? args.get(1).toReal() * 60 : GAME_TIMER.getElapsed()
+    let respawnTime = quadraticReviveDelay(numSeconds)
+    let msg = "{0}Respawn time: |r{1}{2}s|r".format(GENERAL_COLOR, ENERGY_COLOR, respawnTime.toString(0))
+    printTimedToPlayer(msg, 10, triggerPlayer)
+
+init
+    registerCommandAll("-rt", (triggerPlayer, args) -> respawnTimeHandler(triggerPlayer, args))
+    registerCommandAll("-respawn-time", (triggerPlayer, args) -> respawnTimeHandler(triggerPlayer, args))
+
+    registerGameStartEvent() ->
+        if gameConfig.isGracePeriodEnabled()
+            GRACE_PERIOD_TIMER.start(gameConfig.getGracePeriodDuration()) ->
+                let msg = "{0}Grace period is over. Now you will not be automatically revived when you die! You can still be revived if your team builds a |c00ff0000Spirit Ward|r{1}!|r".format(GENERAL_COLOR, GENERAL_COLOR)
+                printTimed(msg, 15)
+                mammothGate.kill()
+                mammothGate.setAnimation("death alternate")
+
+                doAfter(10) ->
+                    gg_trg_check_win.execute()
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
+        let dyingUnit = GetDyingUnit()
+
+        if dyingUnit.isTroll()
+            let owner = dyingUnit.getOwner()
+
+            if isGracePeriodActive()
+                let msg = "{0}Grace period has not ended, your troll will revive in {1} seconds|r".format(GENERAL_COLOR, GRACE_PERIOD_REVIVE_DELAY.toString(0))
+                printTimedToPlayer(msg, 10, owner)
+
+                doAfter(GRACE_PERIOD_REVIVE_DELAY) ->
+                    revive(dyingUnit, owner)
+
+            else if gameConfig.isRespawnSystemEnabled()
+                let seconds = GAME_TIMER.getElapsed()
+                let delay = quadraticReviveDelay(seconds)
+                
+                if gameConfig.isForcedDuelEnabled() and delay >= DUEL_TIMER.getRemaining()
+                    let msg = "Forced duel approaching, your troll will not revive"
+                    printTimedToPlayer(msg, 10, owner)
+
+                else
+                    let delayTimer = getTimer()
+                    let msg = "Your troll will revive in {0} seconds|r".format(delay.toString(0))
+                    printTimedToPlayer(msg, 10, owner)
+
+                    let timerDialog = delayTimer.createTimerDialog()
+                    let display = GetLocalPlayer().getTribe() == owner.getTribe()
+                    timerDialog.setTitle("{0} Respawn".format(owner.getName()))
+                    timerDialog.display(display)
+
+                    delayTimer.doAfter(delay) ->
+                        timerDialog.display(false)
+                        timerDialog.destr()
+
+                        let units = ENUM_GROUP
+                            ..enumUnitsOfForce(owner.getAllies())
+                            .toLinkedList()
+                            ..sortWith((a, b) -> begin
+                                let aType = a.isType(UNIT_TYPE_STRUCTURE).toInt()
+                                let bType = a.isType(UNIT_TYPE_STRUCTURE).toInt()
+                                return aType == bType
+                                    ? a.getLevel() - b.getLevel()
+                                    : aType - bType
+                            end)
+
+                        let spawnOn = units.getFirst()
+                        let pos = spawnOn.getPos()
+                        dyingUnit.revive(pos, true)
+                        owner.setGold(udg_MAX_HEAT)
+                        if GetLocalPlayer() == owner
+                            PanCameraToTimed(pos.x, pos.y, 0.3)
+
+                        destroy units

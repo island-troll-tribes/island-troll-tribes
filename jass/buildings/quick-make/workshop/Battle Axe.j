@@ -16,7 +16,7 @@ local unit u=GetSpellAbilityUnit()
 local item i = null
     if((UnitInventorySizeBJ(u) - UnitInventoryCount(u)) >= slotsNeeded) then
         call cleanInventory(u)
-        set i = RandomItemInRectBJ(GetRectFromCircleBJ(GetUnitLoc(u), range),Condition(function FilterItemIsPole))
+        set i = RandomItemInRectBJ(GetRectFromCircleBJ(GetUnitLoc(u), range),Condition(function FilterItemIsStick))
         call UnitAddItemSwapped( i, u )
         set i = null
         set i = RandomItemInRectBJ(GetRectFromCircleBJ(GetUnitLoc(u), range),Condition(function FilterItemIsSteelIngot))

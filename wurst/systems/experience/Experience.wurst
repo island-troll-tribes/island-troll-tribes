@@ -4,11 +4,16 @@ import PlayerExtensions
 import PlayerUtils
 import UnitExtensions
 import MathUtils
+import ClosureTimers
 import Classes
+import LinkedList
+import GroupExtensions
+import Vectors
 
 constant creepExp = [3, 25]
 constant heroExp = [0, 100, 120, 160, 220, 300]
 constant expPerLevel = [0, 200]
+constant expRange = 1200.0
 
 public function getMultiplier(unit troll) returns integer
     switch getTrollClassType(troll)
@@ -32,11 +37,31 @@ init
     for i = 0 to PLAYER_NEUTRAL_PASSIVE - 1
         players[i].setHandicapXP(0)
 
+    doPeriodically(ANIMATION_PERIOD) (cb) ->
+        for troll in udg_trolls
+            if troll.getMana() < 1 and troll.isAlive()
+                let owner = troll.getOwner()
+                if owner.getGold() < 1
+                    let pos = troll.getPos()
+                    let killer = ENUM_GROUP
+                        ..enumUnitsInRange(pos, expRange, Filter(() -> begin
+                            return GetFilterUnit().getOwner().getId() < bj_MAX_PLAYER_SLOTS
+                        end))
+                        .toLinkedList()
+                        .filter(x -> not x.getOwner().isAllyOf(owner))
+                        ..sortWith((a, b) -> (a.getPos().distanceToSq(pos) - b.getPos().distanceToSq(pos)).toInt())
+                        .getFirst()
+
+                    if killer == null
+                        troll.kill()
+                    else
+                        killer.damageTarget(troll, troll.getHP() * 2, ATTACK_TYPE_CHAOS)
+
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
         let dead = GetDyingUnit()
         let killer = GetKillingUnit()
         if not killer.getOwner().isAllyOf(dead.getOwner())
-            let heroes = GetUnitsInRangeMatching(1200, dead.getX(), dead.getY(), Condition(() -> begin
+            let heroes = GetUnitsInRangeMatching(expRange, dead.getX(), dead.getY(), Condition(() -> begin
                 let filterUnit = GetFilterUnit()
                 return filterUnit.isType(UNIT_TYPE_HERO) and filterUnit.getOwner().isAllyOf(GetKillingUnit().getOwner()) and filterUnit.isAlive()
             end))

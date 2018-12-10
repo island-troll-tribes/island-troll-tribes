@@ -39,23 +39,22 @@ init
 
     doPeriodically(ANIMATION_PERIOD) (cb) ->
         for troll in udg_trolls
-            if troll.getMana() < 1 and troll.isAlive()
-                let owner = troll.getOwner()
-                if owner.getGold() < 1
-                    let pos = troll.getPos()
-                    let killer = ENUM_GROUP
-                        ..enumUnitsInRange(pos, expRange, Filter(() -> begin
-                            return GetFilterUnit().getOwner().getId() < bj_MAX_PLAYER_SLOTS
-                        end))
-                        .toLinkedList()
-                        .filter(x -> not x.getOwner().isAllyOf(owner))
-                        ..sortWith((a, b) -> (a.getPos().distanceToSq(pos) - b.getPos().distanceToSq(pos)).toInt())
-                        .getFirst()
+            let owner = troll.getOwner()
+            if troll.getMana() < 1 or owner.getGold() < 1 and troll.isAlive()
+                let pos = troll.getPos()
+                let killer = ENUM_GROUP
+                    ..enumUnitsInRange(pos, expRange, Filter(() -> begin
+                        return GetFilterUnit().getOwner().getId() < bj_MAX_PLAYER_SLOTS
+                    end))
+                    .toLinkedList()
+                    .filter(x -> not x.getOwner().isAllyOf(owner))
+                    ..sortWith((a, b) -> (a.getPos().distanceToSq(pos) - b.getPos().distanceToSq(pos)).toInt())
+                    .getFirst()
 
-                    if killer == null
-                        troll.kill()
-                    else
-                        killer.damageTarget(troll, troll.getHP() * 2, ATTACK_TYPE_CHAOS)
+                if killer == null
+                    troll.kill()
+                else
+                    killer.damageTarget(troll, troll.getHP() * 2, ATTACK_TYPE_CHAOS)
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
         let dead = GetDyingUnit()

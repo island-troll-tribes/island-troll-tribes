@@ -341,16 +341,20 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       GameMode.message(ENERGY_COLOR + "Forced duel|r after " + I2S(R2I(amount)) + " min");
     });
 
-    GameMode.create("shrinking-map", "sm", "Map begins to shrink due to a forest fire after a time limit, defaults to 1 h, eg: \"-sm 60\"", function(ArgsList a) {
+    GameMode.create("shrinking-map", "sm", "Forest fire shrinks map after a default of 60 minutes to a default of 4000 units from center, eg: \"-sm 60 4000\"", function(ArgsList a) {
       real amount = 60.0;
+      real distance = 4000.0;
       if (a.length() >= 1) {
         amount = S2R(a[0]);
+      }
+      if (a.length() >= 2) {
+        distance = S2R(a[1]);
       }
       if (amount < 0) {
         GameMode.error("Shrinking map timeout must be greater than 0!");
         return;
       }
-      GameConfig.getInstance().setForestFire(amount);
+      GameConfig.getInstance().setForestFire(amount, distance);
       GameMode.message(RED_COLOR + "Forest fire|r after " + I2S(R2I(amount)) + " min");
     });
 

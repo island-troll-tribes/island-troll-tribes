@@ -15,8 +15,8 @@ library CheckWin requires PublicLibrary, ClassSelection, MMD, GameConfig {
 		});
 	}
 
-	function notNoobTime() -> boolean {
-		return !udg_NOOB_TIME && !GameConfig.getInstance().getTestMode();
+	function notGracePeriod() -> boolean {
+		return TimerGetRemaining(GRACE_PERIOD_TIMER) > 0 && !GameConfig.getInstance().getTestMode();
 	}
 
 	function customVictory() {
@@ -129,7 +129,7 @@ library CheckWin requires PublicLibrary, ClassSelection, MMD, GameConfig {
 		Map.onGameStart(function removeNonPresentTribes);
 
 		gg_trg_check_win = CreateTrigger();
-		TriggerAddCondition(gg_trg_check_win, Condition(function notNoobTime));
+		TriggerAddCondition(gg_trg_check_win, Condition(function notGracePeriod));
 		TriggerAddAction(gg_trg_check_win, function checkWin);
 	}
 }

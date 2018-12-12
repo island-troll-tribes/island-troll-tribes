@@ -28,11 +28,7 @@ function RelayObserverEvents__Show takes nothing returns nothing
     elseif e == EVENT_PLAYER_UNIT_CONSTRUCT_FINISH then
         call DisplayTimedTextToNoticeObservers(ob_TextTime, udg_RealNames[id]+"["+GetUnitName(udg_PUnits[id])+"] has built: "+GetUnitName(u))
     elseif e == EVENT_PLAYER_HERO_REVIVE_FINISH then
-        if udg_NOOB_TIME then
-            call DisplayTimedTextToNoticeObservers(ob_TextTime, udg_RealNames[id]+"["+GetUnitName(u)+"] has revived at noob time.")
-        else
-            call DisplayTimedTextToNoticeObservers(ob_TextTime, udg_RealNames[id]+"["+GetUnitName(u)+"] has revived with ward.")
-        endif
+        call DisplayTimedTextToNoticeObservers(ob_TextTime, udg_RealNames[id]+"["+GetUnitName(u)+"] has revived")
     endif
     set u = null
 endfunction

@@ -5,10 +5,14 @@
 # use regex for version number
 # use regex for changes
 
+Signal.trap("PIPE", "EXIT")
+
+LATEST_ONLY = ARGV[0] == "--latest"
+
 Dir.chdir(File.dirname(__FILE__))
 Dir.chdir(File.join(["..","wurst","changelogs"]))
 
-puts "# Island Troll Tribes Change Log\n\n\n"
+puts "# Island Troll Tribes Change Log\n\n\n" unless LATEST_ONLY
 
 def get_version(file)
   basename = File.basename(file, '.wurst')
@@ -34,6 +38,8 @@ end.reverse.each do |f|
   changes.each do |change|
     puts " - #{change[0].gsub('\"','"')}\n"
   end
+
+  break if LATEST_ONLY
 
   puts "\n"
 end

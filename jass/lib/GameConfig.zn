@@ -9,9 +9,11 @@ library GameConfig {
     public integer allTrollUnitId = 0;
     public boolean forcedDuelEnabled = false;
     public real forcedDuelAfter = 0;
-    public real gracePeriodDuration = 8.0;
+    public real gracePeriodDuration = 8.0 * 60;
+    public boolean respawnSystemEnabled = false;
     public boolean randomizeSpawns = false;
     public boolean startWithFire = false;
+    public boolean startWithOneFire = false;
     public boolean startWithSpiritWard = false;
     public boolean oldRandomEnabled = false;
     public integer selectionTimeAllowed = 40;
@@ -19,6 +21,7 @@ library GameConfig {
     public integer heatMaximum = 100;
     public boolean tradeEnabled = true;
     public boolean forestFireEnabled = false;
+    public real forestFireDistance = 0;
     public real forestFireAfter = 0;
     public boolean coralBlockers = false;
     public boolean testMode = false;
@@ -74,17 +77,28 @@ library GameConfig {
       return this.forcedDuelAfter;
     }
 
+    public method isRespawnSystemEnabled() -> boolean {
+      return this.respawnSystemEnabled;
+    }
+
+    public method setRespawnSystemEnabled(boolean value) {
+      this.respawnSystemEnabled = value;
+    }
+
     public method setGracePeriodDuration(real numMinutes) -> boolean {
       if (this.forcedDuelEnabled && numMinutes > this.forcedDuelAfter) {
         return false;
       }
       this.gracePeriodDuration = numMinutes;
-      udg_NOOB_TIME_LEFT = numMinutes * 60; // TODO remove
       return true;
     }
 
     public method getGracePeriodDuration() -> real {
       return this.gracePeriodDuration;
+    }
+
+    public method isGracePeriodEnabled() -> boolean {
+      return this.gracePeriodDuration > 0;
     }
 
     public method setRandomSpawns(boolean value) {
@@ -101,6 +115,14 @@ library GameConfig {
 
     public method isStartWithFire() -> boolean {
       return this.startWithFire;
+    }
+
+    public method setStartWithOneFire(boolean value) {
+      this.startWithOneFire = true;
+    }
+
+    public method isStartWithOneFire() -> boolean {
+      return this.startWithOneFire;
     }
 
     public method setStartWithSpiritWard(boolean value) {
@@ -168,9 +190,10 @@ library GameConfig {
       });
     }
 
-    public method setForestFire(real numMinutes) {
+    public method setForestFire(real numMinutes, real distance) {
       this.forestFireEnabled = true;
       this.forestFireAfter = numMinutes;
+      this.forestFireDistance = distance;
     }
 
     public method isForestFireEnabled() -> boolean {
@@ -179,6 +202,10 @@ library GameConfig {
 
     public method getForestFireAfter() -> real {
       return this.forestFireAfter;
+    }
+
+    public method getForestFireDistance() -> real {
+      return this.forestFireDistance;
     }
 
     public method isCoralBlockersEnabled() -> boolean {

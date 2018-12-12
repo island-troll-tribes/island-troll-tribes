@@ -1,7 +1,7 @@
 
 function Trig_GUI_REcipes_Actions takes nothing returns nothing
 
-call CreateQuestBJ( bj_QUESTTYPE_REQ_DISCOVERED,HIGHLIGHT_COLOR+"Cool Commands", HIGHLIGHT_COLOR+"-i am noob:|r pings the recipes again for those who cant find them
+call CreateQuestBJ( bj_QUESTTYPE_REQ_DISCOVERED,HIGHLIGHT_COLOR+"Cool Commands", HIGHLIGHT_COLOR+"-recipes:|r pings the recipes again for those who cant find them
 "+HIGHLIGHT_COLOR+"-cc [number]:|r changes your units color to the color of that number
 "+HIGHLIGHT_COLOR+"-p:|r toggles private/public vision for your team
 "+HIGHLIGHT_COLOR+"-h:|r toggles hints

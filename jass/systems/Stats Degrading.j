@@ -69,8 +69,6 @@ function Trig_stats_degrading_Actions takes nothing returns nothing
     endif
 
     //call ConditionalTriggerExecute( gg_trg_update_boards )
-
-    call ConditionalTriggerExecute( gg_trg_checkDeath )
 endfunction
 
 //===========================================================================

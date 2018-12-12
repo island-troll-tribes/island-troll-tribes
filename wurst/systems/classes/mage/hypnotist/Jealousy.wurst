@@ -11,7 +11,7 @@ import ClosureForGroups
 @configurable constant real CURSE_RADIUS = 600
 @configurable constant real CURSE_DURATION = 7
 
-constant table = new Table()
+constant target_table = new Table()
 
 function onCast()
     var target = GetSpellTargetUnit()
@@ -20,7 +20,7 @@ function onCast()
     var bewitched = new LinkedList<int>()
 
     doPeriodicallyTimed(INTERVAL, CURSE_DURATION) cb ->
-        bewitched.forEach(idx -> table.removeHandle(idx))
+        bewitched.forEach(idx -> target_table.removeHandle(idx))
 
         if not target.isAlive()
             cb.stop()
@@ -29,23 +29,35 @@ function onCast()
             destroy bewitched
         else
             bewitched.clear()
+            pos = target.getPos()
             forUnitsInRange(pos, CURSE_RADIUS) u ->
                 var index = u.getHandleId()
-                if u != target and u.isAlive() and u.getOwner().isAllyOf(owner) and not table.hasHandle(index)
+                if u != target and u.isAlive() and u.getOwner().isAllyOf(owner) and not target_table.hasHandle(index)
                     bewitched.push(index)
-                    table.saveUnit(index, target)
-                    u.issueTargetOrderById(Orders.attack, target)
+                    target_table.saveUnit(index, target)
+                    if target.isInvulnerable()
+                        //u.issuePointOrderById(Oders.move, target.getPos())
+                        //Move to target location or something, the above code crashes game
+                    else
+                        u.issueTargetOrderById(Orders.attack, target)
+                        
+                    
+                    
 
 function onAnyOrder()
     var u = GetTriggerUnit()
     var index = u.getHandleId()
 
-    if table.hasHandle(index)
-        var target = table.loadUnit(index)
+    if target_table.hasHandle(index)
+        var target = target_table.loadUnit(index)
         if target.isAlive()
             let t = getPlayerUnitEventTrigger(EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER)
             t.disable()
-            u.issueTargetOrderById(Orders.attack, target)
+            if target.isInvulnerable()
+                //u.issuePointOrderById(Oders.move, target.getPos())
+                //Move to target location or something, the above code crashes game
+            else
+                u.issueTargetOrderById(Orders.attack, target)
             t.enable()
 
 init

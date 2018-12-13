@@ -41,7 +41,8 @@ init
 
     registerGameStartEvent() ->
         if gameConfig.isGracePeriodEnabled()
-            GRACE_PERIOD_TIMER.start(gameConfig.getGracePeriodDuration()) ->
+            let numSeconds = gameConfig.getGracePeriodDurationMinutes() * 60
+            GRACE_PERIOD_TIMER.start(numSeconds) ->
                 let msg = "{0}Grace period is over. Now you will not be automatically revived when you die! You can still be revived if your team builds a |c00ff0000Spirit Ward|r{1}!|r".format(GENERAL_COLOR, GENERAL_COLOR)
                 printTimed(msg, 15)
                 mammothGate.kill()

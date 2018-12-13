@@ -1,0 +1,34 @@
+package ForcePush
+
+import RegisterEvents
+import ClosureTimers
+import ClosureForGroups
+import LinkedList
+import Knockback3
+
+@configurable constant int ABILITY_ID = 'A0GS'
+@configurable constant real RADIUS = 275
+@configurable constant real DURATION = 1.5
+@configurable constant string EFFECT_PATH = "Abilities\\Spells\\NightElf\\BattleRoar\\RoarCaster.mdl"
+
+function onCast()
+    var caster = GetSpellAbilityUnit()
+    var owner = caster.getOwner()
+    var pos = caster.getPos()
+
+    var efx = addEffect(EFFECT_PATH, pos)
+    efx..setTimeScale(1.3)..setScale(1)
+    doAfter(3, () -> efx.destr())
+
+    forUnitsInRange(pos, RADIUS) u ->
+        if u.getOwner().isEnemyOf(owner) and not u.isType(UNIT_TYPE_FLYING)
+            caster.damageTarget(u, 30)
+            Knockback3.add(u, 280, angle(3.141/2), angle(3.141/4))
+            
+
+
+ 
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    

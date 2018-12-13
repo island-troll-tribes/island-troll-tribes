@@ -1,0 +1,43 @@
+package Zap
+
+import RegisterEvents
+import ClosureTimers
+import DummyCaster
+import Orders
+
+@configurable constant int ABILITY_ID = 'A0GP'
+@configurable constant int SLOW_ABILITY_ID = 'A0GN'
+@configurable constant int BUFF_ZAP1 = 'A0GM'
+@configurable constant int BUFF_ZAP2 = 'A0GO'
+@configurable constant real CHARGE_DAMAGE = 30
+@configurable constant int CHARGES_REQUIRED = 3
+@configurable constant real CHARGE_REMOVE_TIME = 15
+@configurable constant string EFFECT_PATH = "Abilities\\Spells\\Orc\\Purge\\PurgeBuffTarget.mdl" 
+
+function onCast()
+    var caster = GetSpellAbilityUnit()
+    var owner = caster.getOwner()
+    var target = GetSpellTargetUnit()
+
+    doAfter(0.15) ->
+        if target.hasAbility( BUFF_ZAP1 )
+            target.removeAbility(BUFF_ZAP1)
+            target.addAbility(BUFF_ZAP2)
+            doAfter(CHARGE_REMOVE_TIME) ->
+                target.removeAbility(BUFF_ZAP2)
+        else if target.hasAbility(BUFF_ZAP2)
+            target.removeAbility(BUFF_ZAP1)
+            target.removeAbility(BUFF_ZAP2)
+            caster.damageTarget(target, CHARGE_DAMAGE, ATTACK_TYPE_MAGIC)
+            new DummyCaster().castTarget(owner, SLOW_ABILITY_ID, 1, Orders.slow, target)
+            var efx = AddSpecialEffectTargetUnitBJ("chest", target, EFFECT_PATH)
+            efx.setScale(1)
+            doAfter(3)->
+                efx.destr()
+        else 
+            target.addAbility(BUFF_ZAP1)
+            doAfter(CHARGE_REMOVE_TIME) ->
+                target.removeAbility(BUFF_ZAP1)
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())

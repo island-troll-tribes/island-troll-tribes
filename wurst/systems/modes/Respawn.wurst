@@ -36,8 +36,8 @@ function respawnTimeHandler(player triggerPlayer, LinkedList<string> args)
     printTimedToPlayer(msg, 10, triggerPlayer)
 
 init
-    registerCommandAll("-rt", (triggerPlayer, args) -> respawnTimeHandler(triggerPlayer, args))
-    registerCommandAll("-respawn-time", (triggerPlayer, args) -> respawnTimeHandler(triggerPlayer, args))
+    registerCommandAll("rt", (triggerPlayer, args) -> respawnTimeHandler(triggerPlayer, args))
+    registerCommandAll("respawn-time", (triggerPlayer, args) -> respawnTimeHandler(triggerPlayer, args))
 
     registerGameStartEvent() ->
         if gameConfig.isGracePeriodEnabled()
@@ -50,6 +50,9 @@ init
 
                 doAfter(10) ->
                     gg_trg_check_win.execute()
+        else
+            mammothGate.kill()
+            mammothGate.setAnimation("death alternate")
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
         let dyingUnit = GetDyingUnit()
@@ -67,7 +70,7 @@ init
             else if gameConfig.isRespawnSystemEnabled()
                 let seconds = GAME_TIMER.getElapsed()
                 let delay = quadraticReviveDelay(seconds)
-                
+
                 if gameConfig.isForcedDuelEnabled() and delay >= DUEL_TIMER.getRemaining()
                     let msg = "Forced duel approaching, your troll will not revive"
                     printTimedToPlayer(msg, 10, owner)

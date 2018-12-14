@@ -1,0 +1,74 @@
+package StatLoss
+import Game
+import ClosureTimers
+import GameConfig
+
+constant BUFF_CAMO_ID = 'B009'
+constant BUFF_BONFIRE_ID = 'B01L'
+constant BUFF_DEPRESSED_THISTLE_ID = 'B000'
+constant BUFF_DEPRESSED_AURA_ID = 'B00F'
+constant BUFF_DEPRESSED_ARROW_ID = 'B00E'
+constant BUFF_FROZE_TO_BONE_ID = 'BCbf'
+constant BUFF_THE_GLOW = 'BOae'
+
+init
+    registerGameStartEvent() ->
+        let lossAmount = gameConfig.getStatLossAmount()
+        let maxHeat = gameConfig.getMaxHeat()
+
+        doPeriodically(gameConfig.getStatGainInterval()) cb ->
+            for troll in udg_trolls
+                let owner = troll.getOwner()
+                var heat = owner.getGold()
+
+                if GetTimeOfDay() >= 6 and GetTimeOfDay() <= 18
+                    heat += 3
+
+                if troll.hasAbility(BUFF_THE_GLOW)
+                    heat += 2
+
+                for i = 0 to troll.inventorySize() - 1
+                    let gear = troll.itemInSlot(i)
+                    if IsItemCoat(gear)
+                        heat += 5
+                    else if IsItemBoots(gear) or IsItemGloves(gear)
+                        heat += 2
+                    else if gear.getTypeId() == ITEM_DD_PINION_FIRE
+                        heat += 8
+
+                owner.setGold(min(maxHeat, heat))
+
+        doPeriodically(gameConfig.getStatLossInterval()) cb ->
+            for troll in udg_trolls
+                var heatLoss = lossAmount
+                var energyLoss = lossAmount
+                var healthLoss = lossAmount
+
+                if troll.hasAbility(BUFF_CAMO_ID)
+                    heatLoss *= 3
+                    energyLoss *= 3
+                    healthLoss *= 3
+
+                if troll.hasAbility(BUFF_BONFIRE_ID)
+                    heatLoss -= 2
+
+                if troll.hasAbility(BUFF_FROZE_TO_BONE_ID)
+                    heatLoss += GetRandomInt(1, 5)
+
+                let numStacksOfDepression = (
+                    troll.hasAbility(BUFF_DEPRESSED_AURA_ID).toInt() +
+                    troll.hasAbility(BUFF_DEPRESSED_ARROW_ID).toInt() +
+                    troll.hasAbility(BUFF_FROZE_TO_BONE_ID).toInt()
+                )
+
+                for i = 0 to numStacksOfDepression
+                    energyLoss += GetRandomInt(1, 3)
+
+                if numStacksOfDepression > 1
+                    energyLoss += GetRandomInt(1, 6)
+                    if numStacksOfDepression > 2
+                        energyLoss += GetRandomInt(1, 6) + GetRandomInt(1, 6)
+
+                troll.getOwner().subGold(heatLoss)
+                troll.subMana(energyLoss.toReal())
+                troll.subHP(healthLoss.toReal())

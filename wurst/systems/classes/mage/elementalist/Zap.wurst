@@ -8,6 +8,7 @@ import AbilityObjEditing
 import BuffObjEditing
 import TimerUtils
 import TimerExtensions
+import HashMap
 
 @configurable constant int ABILITY_ID = 'XEZS'
 @configurable constant int SLOW_ABILITY_ID = 'XEZD'
@@ -54,7 +55,7 @@ import TimerExtensions
 @compiletime function createDummyAuras()
     new AbilityDefinitionAuraSlow(BUFF_ZAP1_AURA)
     ..setArtTarget("Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl")
-    ..setTargetAttachmentPoint("chest")
+    ..setTargetAttachmentPoint1("chest")
     ..setMovementSpeedFactor(1, 0)
     ..setAreaofEffect(1, 0)
     ..setBuffs(1, BUFF_ZAP1_STR)
@@ -65,7 +66,7 @@ import TimerExtensions
 
     new AbilityDefinitionAuraSlow(BUFF_ZAP2_AURA)
     ..setArtTarget("Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl")
-    ..setTargetAttachmentPoint("chest")
+    ..setTargetAttachmentPoint1("chest")
     ..setMovementSpeedFactor(1, 0)
     ..setAreaofEffect(1, 0)
     ..setBuffs(1, BUFF_ZAP2_STR)
@@ -110,51 +111,50 @@ import TimerExtensions
     ..setTargetsAllowed(1, "air,allies,enemies,ground")
     ..setName("Zap Dummy Slow")
 
+let timerMap = new HashMap<unit, timer>()
 
 function onCast()
     var caster = GetSpellAbilityUnit()
     var owner = caster.getOwner()
     var target = GetSpellTargetUnit()
-    timer t = null
-    
-    //Small delay so the effect doesnt hit before animation
-    doAfter(0.15) ->
-        if target.hasAbility( BUFF_ZAP1_AURA )
-            //Upgrade zap 1 charge to zap 2
-            target.removeAbility(BUFF_ZAP1_AURA)
-            target.addAbility(BUFF_ZAP2_AURA)
 
-            //Remove existing charge removal timers and start a new one
-            if (t != null)
-                t.release()
-            t = getTimer()
-            t.doAfter(CHARGE_REMOVE_TIME, () -> begin
-                target.removeAbility(BUFF_ZAP2_AURA)
-            end)
-        else if target.hasAbility(BUFF_ZAP2_AURA)
-            //Remove existing charge removal timers
-            if (t != null)
-                t.release()
-            
-            //Remove charges and do effects
-            target.removeAbility(BUFF_ZAP1_AURA)
+    /*
+    if timerMap.has(target)
+        var tim = timerMap.get(target)
+        if (tim != null or tim.getData() == TimerUtils__HELD)
+            tim.release()
+            timerMap.remove(target)
+            */
+    if timerMap.has(target)
+        timerMap.getAndRemove(target).release()
+
+
+    if target.hasAbility(BUFF_ZAP2_AURA)
+        target.removeAbility(BUFF_ZAP1_AURA)
+        target.removeAbility(BUFF_ZAP2_AURA)
+        caster.damageTarget(target, CHARGE_DAMAGE, ATTACK_TYPE_MAGIC)
+        new DummyCaster().castTarget(owner, SLOW_ABILITY_ID, 1, Orders.slow, target)
+        var efx = AddSpecialEffectTargetUnitBJ("chest", target, EFFECT_PATH)
+        efx.setScale(1)
+        doAfter(3)->
+            efx.destr()
+    else if target.hasAbility( BUFF_ZAP1_AURA )
+        target.removeAbility(BUFF_ZAP1_AURA)
+        target.addAbility(BUFF_ZAP2_AURA)
+
+        let t = getTimer()
+        t.doAfter(CHARGE_REMOVE_TIME) ->
             target.removeAbility(BUFF_ZAP2_AURA)
-            caster.damageTarget(target, CHARGE_DAMAGE, ATTACK_TYPE_NORMAL)
-            new DummyCaster().castTarget(owner, SLOW_ABILITY_ID, 1, Orders.slow, target)
-            var efx = AddSpecialEffectTargetUnitBJ("chest", target, EFFECT_PATH)
-            efx.setScale(1)
-            doAfter(3)->
-                efx.destr()
-        else 
-            target.addAbility(BUFF_ZAP1_AURA)
+            timerMap.remove(target)
+        timerMap.put(target, t)
+    else
+        target.addAbility(BUFF_ZAP1_AURA)
 
-            //Remove existing charge removal timers and start a new one
-            if (t != null)
-                t.release()
-            t = getTimer()
-            t.doAfter(CHARGE_REMOVE_TIME, () -> begin
-                target.removeAbility(BUFF_ZAP1_AURA)
-            end)
+        let t = getTimer()
+        t.doAfter(CHARGE_REMOVE_TIME) ->
+            target.removeAbility(BUFF_ZAP1_AURA)
+            timerMap.remove(target)
+        timerMap.put(target, t)
 
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())

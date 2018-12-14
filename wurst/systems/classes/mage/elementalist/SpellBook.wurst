@@ -2,6 +2,7 @@ package SpellBook
 
 import AbilityObjEditing
 import ClosureForGroups
+import GameConfig
 
 @configurable constant string array SPELLS = ["XFPS,A0GQ,A0GP", "XFPS,A0GQ,A0GP", "XFPS,A0GQ,A0GP"]
 
@@ -35,11 +36,13 @@ import ClosureForGroups
 function addSpellbook()
     var trigPlayer = GetTriggerPlayer()
     
-    print("Add spells command detected")
-    
-    forUnitsSelected(trigPlayer) u ->
-        if (u.isType(UNIT_TYPE_HERO))
-            u.addAbility('XESB')
+    if (gameConfig.isTestModeEnabled())
+        print("Add spells command detected")
+        forUnitsSelected(trigPlayer) u ->
+            if (u.isType(UNIT_TYPE_HERO))
+                u.addAbility('XESB')
+    else
+        print("Requires test mode!")
 
 
 init

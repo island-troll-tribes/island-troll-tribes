@@ -4,15 +4,57 @@ import RegisterEvents
 import ClosureTimers
 import ClosureForGroups
 import LinkedList
-import Knockback3
+import AbilityObjEditing
+import BuffObjEditing
 
-@configurable constant int ABILITY_ID = 'A0GS'
+@configurable constant int ABILITY_ID = 'XFPS'
 @configurable constant real RADIUS = 285
+@configurable constant real CAST_TIME = 0.25
+@configurable constant real COOLDOWN = 5
+@configurable constant real MS_SLOW = 0.7
+@configurable constant int MANACOST = 5
 @configurable constant real KNOCKBACK_DURATION = 1
 @configurable constant real KNOCKBACK_SPEED = 550
-@configurable constant real KNOCKBACK_FRICTION_FACTOR = 1
+@configurable constant real KNOCKBACK_FRICTION_MULTIPLIER = 0.93
+@configurable constant real KNOCKBACK_INTERVAL = 0.05
+
 @configurable constant string SLIDE_EFFECT_PATH = "Objects\\Spawnmodels\\Undead\\ImpaleTargetDust\\ImpaleTargetDust.mdl"
 @configurable constant string EFFECT_PATH = "Abilities\\Spells\\NightElf\\BattleRoar\\RoarCaster.mdl"
+
+@compiletime function createBuffs()
+    new BuffDefinition('XFPB', 'BHtc')
+    ..setIcon("ReplaceableTextures\\CommandButtons\\BTNGolemThunderclap.blp")
+    ..setName(1, "Force Push")
+    ..setTooltipNormal(1, "Force Push")
+    ..setTooltipNormalExtended(1, "Knocked back by force push.")
+    ..setArtTarget(1, "")
+
+@compiletime function createSpell()
+    new AbilityDefinitionThunderClapCreep('XFPS')
+    ..setButtonPositionNormalX(2)
+    ..setButtonPositionNormalY(0)
+    ..setArtCaster("")
+    ..setCasterAttachmentPoint("")
+    ..setArtTarget("")
+    ..setIconNormal("ReplaceableTextures\\CommandButtons\\BTNGolemThunderclap.blp")
+    ..setAreaofEffect(1, RADIUS)
+    ..setBuffs(1, "XFPB")
+    ..setCastRange(1, 0)
+    ..setCastingTime(1, CAST_TIME)
+    ..setCooldown(1, COOLDOWN)
+    ..setDurationHero(1, KNOCKBACK_DURATION+0.05)
+    ..setDurationNormal(1, KNOCKBACK_DURATION+0.05)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setManaCost(1, MANACOST)
+    ..setHotkeyNormal("E")
+    ..setName("Force Push")
+    ..setTooltipNormal(1, "E - Force Push")
+    ..setTooltipNormalExtended(1, "After a short channel creates a force wave radiating outwards, knocking back nearby enemies.")
+    ..setMovementSpeedReduction(1, MS_SLOW)
+    ..setAttackSpeedReduction(1, 0)
+    ..setDamage(1, 0)
 
 class KBInfo
     unit u
@@ -21,11 +63,11 @@ class KBInfo
         var oldpos = u.getPos()
         var newpos = oldpos + kbamount
         u.setPos(newpos)
-        kbamount = kbamount * 0.94
+        kbamount = kbamount * KNOCKBACK_FRICTION_MULTIPLIER
 
         var fx = addEffect(SLIDE_EFFECT_PATH, u.getPos().withTerrainZ())
-        fx..setScale(0.3)..setTimeScale(1.7)
-        doAfter(2) ->
+        fx..setScale(0.3)..setTimeScale(2)
+        doAfter(0.3) ->
             fx.destr()
 
 
@@ -45,11 +87,11 @@ function onCast()
         if u.getOwner().isEnemyOf(owner) and not u.isType(UNIT_TYPE_FLYING)
             KBInfo toAdd = new KBInfo()
             toAdd.u = u
-            toAdd.kbamount = caster.getPos().normalizedPointerTo(u.getPos()) * KNOCKBACK_SPEED * 0.05
+            toAdd.kbamount = caster.getPos().normalizedPointerTo(u.getPos()) * KNOCKBACK_SPEED * KNOCKBACK_INTERVAL
             kbs.add(toAdd)
             //Knockback3.add(u, 500., pos.angleTo(u.getPos()), angle(bj_PI / 5.))
 
-    doPeriodicallyTimed(0.05, KNOCKBACK_DURATION) cb ->
+    doPeriodicallyTimed(KNOCKBACK_INTERVAL, KNOCKBACK_DURATION) cb ->
         kbs.forEach(kb -> kb.doKB())
         if (cb.isLast())
             kbs.forEach(kb -> destroy kb)

@@ -5,17 +5,66 @@ import ClosureTimers
 import ClosureForGroups
 import Orders
 import DummyCaster
+import AbilityObjEditing
 
-@configurable constant int ABILITY_ID = 'A0GQ'
-@configurable constant int DUMMY_STUN_ABILITY_ID = 'A0GR'
+@configurable constant int ABILITY_ID = 'XEMS'
+@configurable constant int DUMMY_STUN_ABILITY_ID = 'XEMD'
+@configurable constant real COOLDOWN = 5
+@configurable constant int MANACOST = 5
 @configurable constant real IMPACT_DAMAGE = 70
-@configurable constant real IMPACT_RADIUS = 175
+@configurable constant real IMPACT_STUN_DURATION_HERO = 1
+@configurable constant real IMPACT_STUN_DURATION_NORMAL = 1
+@configurable constant real IMPACT_RADIUS_MAX = 240
+@configurable constant real IMPACT_RADIUS_DAMAGEFALLOFF = 170
 @configurable constant real IMPACT_DELAY = 1
 @configurable constant real PROJECTILE_INITIAL_HEIGHT = 900
 @configurable constant real PROJECTILE_INITIAL_DISTANCE = 300
 @configurable constant real LOOP_INTERVAL = 0.03125
 @configurable constant string PROJECTILE_EFFECT_PATH = "Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl" 
 @configurable constant string EXPLOSION_EFFECT_PATH = "Objects\\Spawnmodels\\Other\\NeutralBuildingExplosion\\NeutralBuildingExplosion.mdl" 
+@configurable constant string ICON_PATH = "ReplaceableTextures\\CommandButtons\\BTNFlare.blp"
+
+@compiletime function createSpell()
+    new AbilityDefinitionRainofFire(ABILITY_ID)
+    ..setAnimationNames("spell")
+    ..setButtonPositionNormalX(1)
+    ..setButtonPositionNormalY(0)
+    ..setIconNormal(ICON_PATH)
+    ..setDamage(1, 0)
+    ..setDamagePerSecond(1, 0)
+    ..setNumberofShards(1, 0)
+    ..setNumberofWaves(1, 0)
+    ..setAreaofEffect(1, IMPACT_RADIUS_MAX)
+    ..setBuffs(1, "")
+    ..setCastingTime(1, 0)
+    ..setCooldown(1, COOLDOWN)
+    ..setDurationHero(1, 0)
+    ..setDurationNormal(1, 0)
+    ..setEffects(1, "")
+    ..setManaCost(1, MANACOST)
+    ..setHotkeyNormal("W")
+    ..setName("Meteor")
+    ..setTooltipNormal(1, "W - Meteor")
+    ..setTooltipNormalExtended(1, "Calls down a meteor with an impact delay of 1 second. Upon impact it explodes, stunning and dealing 70 damage to the area with reduced damage to units further from the center.")
+
+@compiletime function createDummySpell()
+    new AbilityDefinitionFireBolt(DUMMY_STUN_ABILITY_ID)
+    ..setAnimationNames("")
+    ..setMissileSpeed(3000)
+    ..setMissileArt("")
+    ..setCastRange(1, 9999)
+    ..setCooldown(1, 0)
+    ..setDurationHero(1, IMPACT_STUN_DURATION_HERO)
+    ..setDurationNormal(1, IMPACT_STUN_DURATION_NORMAL)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setManaCost(1, 0)
+    ..setRace(Race.Creeps)
+    ..setName("Meteor Stun Dummy Spell")
+
+
+
 
 function onCast()
     var caster = GetSpellAbilityUnit()
@@ -26,8 +75,10 @@ function onCast()
     vec3 startPos = target2D.withTerrainZ(PROJECTILE_INITIAL_HEIGHT).offset2d(target2D.angleTo(casterpos), PROJECTILE_INITIAL_DISTANCE)
     vec3 projectilePath = target3D - startPos
 
-    var projectile = addEffect(PROJECTILE_EFFECT_PATH, startPos)
+    effect projectile = addEffect(PROJECTILE_EFFECT_PATH, startPos)
     projectile.setScale(1.35)
+    projectile.setColor(250, 200, 0)
+    
 
     //Grant vision
     doAfter(0.3) ->
@@ -48,7 +99,7 @@ function onCast()
         //Impact effects here
         if cb.isLast()
             projectile.destr()
-            forUnitsInRange(target2D, IMPACT_RADIUS) u ->
+            forUnitsInRange(target2D, IMPACT_RADIUS_MAX) u ->
                 if u.isAlive() and u.getOwner().isEnemyOf(owner) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isType(UNIT_TYPE_FLYING) and not u.isInvulnerable()
                     caster.damageTarget(u, IMPACT_DAMAGE, ATTACK_TYPE_MAGIC)
                     new DummyCaster().castTarget(owner, DUMMY_STUN_ABILITY_ID, 1, Orders.thunderbolt, u)

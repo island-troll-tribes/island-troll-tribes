@@ -8,27 +8,54 @@ import Knockback3
 
 @configurable constant int ABILITY_ID = 'A0GS'
 @configurable constant real RADIUS = 275
-@configurable constant real DURATION = 1.5
+@configurable constant real KNOCKBACK_DURATION = 1
+@configurable constant real KNOCKBACK_SPEED = 550
+@configurable constant real KNOCKBACK_FRICTION_FACTOR = 1
+@configurable constant string SLIDE_EFFECT_PATH = "Objects\\Spawnmodels\\Undead\\ImpaleTargetDust\\ImpaleTargetDust.mdl"
 @configurable constant string EFFECT_PATH = "Abilities\\Spells\\NightElf\\BattleRoar\\RoarCaster.mdl"
+
+class KBInfo
+    unit u
+    vec2 kbamount
+    function doKB()
+        var oldpos = u.getPos()
+        var newpos = oldpos + kbamount
+        u.setPos(newpos)
+        kbamount = kbamount * 0.94
+
+        var fx = addEffect(SLIDE_EFFECT_PATH, u.getPos().withTerrainZ())
+        fx..setScale(0.3)..setTimeScale(1.7)
+        doAfter(2) ->
+            fx.destr()
+
 
 function onCast()
     var caster = GetSpellAbilityUnit()
     var owner = caster.getOwner()
     var pos = caster.getPos()
-
+    LinkedList<KBInfo> kbs = new LinkedList<KBInfo>()
+    
+    //SFX
     var efx = addEffect(EFFECT_PATH, pos)
-    efx..setTimeScale(1.3)..setScale(1)
+    efx..setTimeScale(3)..setScale(0.75)
     doAfter(3, () -> efx.destr())
 
+    //Add to list all units effected
     forUnitsInRange(pos, RADIUS) u ->
         if u.getOwner().isEnemyOf(owner) and not u.isType(UNIT_TYPE_FLYING)
-            caster.damageTarget(u, 30)
-            Knockback3.add(u, 280, angle(3.141/2), angle(3.141/4))
+            KBInfo toAdd = new KBInfo()
+            toAdd.u = u
+            toAdd.kbamount = caster.getPos().normalizedPointerTo(u.getPos()) * KNOCKBACK_SPEED * 0.05
+            kbs.add(toAdd)
+            //Knockback3.add(u, 500., pos.angleTo(u.getPos()), angle(bj_PI / 5.))
+
+    doPeriodicallyTimed(0.05, KNOCKBACK_DURATION) cb ->
+        kbs.forEach(kb -> kb.doKB())
+        if (cb.isLast())
+            kbs.forEach(kb -> destroy kb)
+            destroy kbs
+        
             
-
-
- 
-
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())
     

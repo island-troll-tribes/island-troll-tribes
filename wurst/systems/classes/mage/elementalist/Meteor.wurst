@@ -11,7 +11,9 @@ import DummyCaster
 @configurable constant real IMPACT_DAMAGE = 70
 @configurable constant real IMPACT_RADIUS = 175
 @configurable constant real IMPACT_DELAY = 1
-@configurable constant real PROJECTILE_INITIAL_HEIGHT = 800
+@configurable constant real PROJECTILE_INITIAL_HEIGHT = 900
+@configurable constant real PROJECTILE_INITIAL_DISTANCE = 300
+@configurable constant real LOOP_INTERVAL = 0.03125
 @configurable constant string PROJECTILE_EFFECT_PATH = "Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl" 
 @configurable constant string EXPLOSION_EFFECT_PATH = "Objects\\Spawnmodels\\Other\\NeutralBuildingExplosion\\NeutralBuildingExplosion.mdl" 
 
@@ -21,11 +23,11 @@ function onCast()
     var owner = caster.getOwner()
     vec2 target2D = vec2(GetSpellTargetX(), GetSpellTargetY())
     vec3 target3D = target2D.withTerrainZ(0)
-    vec3 startPos = vec2(casterpos.x, casterpos.y).withTerrainZ(PROJECTILE_INITIAL_HEIGHT)
+    vec3 startPos = target2D.withTerrainZ(PROJECTILE_INITIAL_HEIGHT).offset2d(target2D.angleTo(casterpos), PROJECTILE_INITIAL_DISTANCE)
     vec3 projectilePath = target3D - startPos
 
     var projectile = addEffect(PROJECTILE_EFFECT_PATH, startPos)
-    projectile.setScale(1.2)
+    projectile.setScale(1.35)
 
     //Grant vision
     doAfter(0.3) ->
@@ -36,9 +38,9 @@ function onCast()
 
     //Periodic loop for landing projectile
     real elapsedTime = 0
-    doPeriodicallyTimed(0.05, IMPACT_DELAY) cb ->
+    doPeriodicallyTimed(LOOP_INTERVAL, IMPACT_DELAY) cb ->
         //Use elapsed time relative to impact delay to calculate position
-        elapsedTime = elapsedTime + 0.05
+        elapsedTime = elapsedTime + LOOP_INTERVAL
         real ratio = elapsedTime / IMPACT_DELAY
         vec3 currentPos = startPos + ratio * projectilePath
         projectile.setPos(currentPos)

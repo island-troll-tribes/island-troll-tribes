@@ -13,7 +13,7 @@ import AbilityObjEditing
 @configurable constant int MANACOST = 5
 @configurable constant real IMPACT_DAMAGE = 70
 @configurable constant real IMPACT_STUN_DURATION_HERO = 1
-@configurable constant real IMPACT_STUN_DURATION_NORMAL = 1
+@configurable constant real IMPACT_STUN_DURATION_NORMAL = 2
 @configurable constant real IMPACT_RADIUS_MAX = 240
 @configurable constant real IMPACT_RADIUS_DAMAGEFALLOFF = 170
 @configurable constant real IMPACT_DELAY = 1
@@ -54,6 +54,7 @@ import AbilityObjEditing
     ..setMissileArt("")
     ..setCastRange(1, 9999)
     ..setCooldown(1, 0)
+    ..setDamage(1, 0)
     ..setDurationHero(1, IMPACT_STUN_DURATION_HERO)
     ..setDurationNormal(1, IMPACT_STUN_DURATION_NORMAL)
     ..setHeroAbility(false)
@@ -76,8 +77,8 @@ function onCast()
     vec3 projectilePath = target3D - startPos
 
     effect projectile = addEffect(PROJECTILE_EFFECT_PATH, startPos)
-    projectile.setScale(1.35)
-    projectile.setColor(250, 200, 0)
+    projectile.setScale(1.3)
+    projectile.setColor(255, 0, 0)
     
 
     //Grant vision
@@ -101,8 +102,14 @@ function onCast()
             projectile.destr()
             forUnitsInRange(target2D, IMPACT_RADIUS_MAX) u ->
                 if u.isAlive() and u.getOwner().isEnemyOf(owner) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isType(UNIT_TYPE_FLYING) and not u.isInvulnerable()
-                    caster.damageTarget(u, IMPACT_DAMAGE, ATTACK_TYPE_MAGIC)
-                    new DummyCaster().castTarget(owner, DUMMY_STUN_ABILITY_ID, 1, Orders.thunderbolt, u)
+                    
+                    var distance = target2D.distanceTo(u.getPos())
+                    if (distance <= IMPACT_RADIUS_DAMAGEFALLOFF)
+                        caster.damageTarget(u, IMPACT_DAMAGE, ATTACK_TYPE_NORMAL)
+                    else 
+                        var reducedDamage = IMPACT_DAMAGE * (1 - ((distance - IMPACT_RADIUS_DAMAGEFALLOFF) / (IMPACT_RADIUS_MAX - IMPACT_RADIUS_DAMAGEFALLOFF)))
+                        caster.damageTarget(u, reducedDamage, ATTACK_TYPE_NORMAL)
+                    new DummyCaster().castTarget(owner, DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, u)
 
             var explosion = addEffect(EXPLOSION_EFFECT_PATH, target3D)
             explosion.setScale(0.5)

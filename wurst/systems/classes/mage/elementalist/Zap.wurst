@@ -54,7 +54,7 @@ import TimerExtensions
 @compiletime function createDummyAuras()
     new AbilityDefinitionAuraSlow(BUFF_ZAP1_AURA)
     ..setArtTarget("Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl")
-    ..setTargetAttachmentPoint1("chest")
+    ..setTargetAttachmentPoint("chest")
     ..setMovementSpeedFactor(1, 0)
     ..setAreaofEffect(1, 0)
     ..setBuffs(1, BUFF_ZAP1_STR)
@@ -65,7 +65,7 @@ import TimerExtensions
 
     new AbilityDefinitionAuraSlow(BUFF_ZAP2_AURA)
     ..setArtTarget("Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl")
-    ..setTargetAttachmentPoint1("chest")
+    ..setTargetAttachmentPoint("chest")
     ..setMovementSpeedFactor(1, 0)
     ..setAreaofEffect(1, 0)
     ..setBuffs(1, BUFF_ZAP2_STR)
@@ -117,12 +117,14 @@ function onCast()
     var target = GetSpellTargetUnit()
     timer t = null
     
+    //Small delay so the effect doesnt hit before animation
     doAfter(0.15) ->
         if target.hasAbility( BUFF_ZAP1_AURA )
+            //Upgrade zap 1 charge to zap 2
             target.removeAbility(BUFF_ZAP1_AURA)
             target.addAbility(BUFF_ZAP2_AURA)
 
-
+            //Remove existing charge removal timers and start a new one
             if (t != null)
                 t.release()
             t = getTimer()
@@ -130,11 +132,14 @@ function onCast()
                 target.removeAbility(BUFF_ZAP2_AURA)
             end)
         else if target.hasAbility(BUFF_ZAP2_AURA)
+            //Remove existing charge removal timers
             if (t != null)
                 t.release()
+            
+            //Remove charges and do effects
             target.removeAbility(BUFF_ZAP1_AURA)
             target.removeAbility(BUFF_ZAP2_AURA)
-            caster.damageTarget(target, CHARGE_DAMAGE, ATTACK_TYPE_MAGIC)
+            caster.damageTarget(target, CHARGE_DAMAGE, ATTACK_TYPE_NORMAL)
             new DummyCaster().castTarget(owner, SLOW_ABILITY_ID, 1, Orders.slow, target)
             var efx = AddSpecialEffectTargetUnitBJ("chest", target, EFFECT_PATH)
             efx.setScale(1)
@@ -143,14 +148,13 @@ function onCast()
         else 
             target.addAbility(BUFF_ZAP1_AURA)
 
+            //Remove existing charge removal timers and start a new one
             if (t != null)
                 t.release()
             t = getTimer()
             t.doAfter(CHARGE_REMOVE_TIME, () -> begin
                 target.removeAbility(BUFF_ZAP1_AURA)
             end)
-
-function removeCharge(unit u)
 
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())

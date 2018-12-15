@@ -22,6 +22,7 @@ import AbilityObjEditing
     new AbilityDefinitionIllidanChannel(ABILITY_ID)
     ..setTargetType(1, 0)
     ..setAnimationNames("stand")
+    ..setArtCaster("")
     ..setArtEffect("")
     ..setArtTarget("")
     ..setArtSpecial("")
@@ -57,14 +58,24 @@ class MeditateInstance
     bool isChanneling = true
     unit caster
 
+
     function manaLoop()
+        effect fx1 = addEffect(EFFECT_PATH, caster.getPos3Real())
+        effect fx2 = addEffect(EFFECT_PATH, caster.getPos3Real())
+        fx1.setRoll(0)
+        fx2.setRoll(180)
+        fx1.setTimeScale(0.1)
+        fx2.setTimeScale(0.2)
         doPeriodicallyTimed(PERIOD_INTERVAL, DURATION) managiverloop ->
             if (isChanneling)
                 var newmana = caster.getMana() + PERIOD_INTERVAL * MANA_PER_SECOND
                 caster.setMana(newmana)
+            else
                 managiverloop.stop()
-            
+
             if (managiverloop.isLast())
+                fx1.destr()
+                fx2.destr()
                 destroy this
 
     construct(unit casterUnit)

@@ -1,0 +1,97 @@
+package Meditate
+
+import RegisterEvents
+import HashMap
+import ClosureTimers
+import AbilityObjEditing
+
+
+@configurable constant int ABILITY_ID = 'ESMD'
+@configurable constant real COOLDOWN = 5
+@configurable constant int MANACOST = 10
+@configurable constant real DURATION = 8
+@configurable constant real PERIOD_INTERVAL = 0.1
+@configurable constant real MANA_PER_SECOND = 20
+@configurable constant string SPELL_ICON = "ReplaceableTextures\\CommandButtons\\BTNDispelMagic.blp"
+@configurable constant string EFFECT_PATH = "Abilities\\Spells\\Undead\\DeathPact\\DeathPactTarget.mdl"
+@configurable constant string TOOLTIP_NORM = "M - Meditate"
+@configurable constant string TOOLTIP_EXT = "Caster channels to regenerate X mana per second for Y seconds."
+
+
+@compiletime function createSpell()
+    new AbilityDefinitionIllidanChannel(ABILITY_ID)
+    ..setTargetType(1, 0)
+    ..setAnimationNames("stand")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..setButtonPositionNormalX(0)
+    ..setButtonPositionNormalY(1)
+    ..setButtonPositionResearchX(0)
+    ..setButtonPositionResearchY(1)
+    ..setIconNormal(SPELL_ICON)
+    ..setIconResearch(SPELL_ICON)
+    ..setIconTurnOff(SPELL_ICON)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setHotkeyNormal("M")
+    ..setName("Meditate")
+    ..setDisableOtherAbilities(1, false)
+    ..setFollowThroughTime(1, DURATION)
+    ..setTooltipNormal(1, TOOLTIP_NORM)
+    ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+    ..setBaseOrderID(1, "bearform")
+    ..setOrderStringUseTurnOn("bearform")
+    ..setOrderStringActivate("bearform")
+    ..setOrderStringDeactivate("bearform")
+    ..setOrderStringTurnOff("bearform")
+    ..setOptions(1, 1)
+    ..setCooldown(1, COOLDOWN)
+    ..setManaCost(1, MANACOST)
+
+
+HashMap<unit, MeditateInstance> instances = new HashMap<unit,MeditateInstance>()
+
+class MeditateInstance
+    bool isChanneling = true
+    unit caster
+
+    function manaLoop()
+        doPeriodicallyTimed(PERIOD_INTERVAL, DURATION) managiverloop ->
+            if (isChanneling)
+                var newmana = caster.getMana() + PERIOD_INTERVAL * MANA_PER_SECOND
+                caster.setMana(newmana)
+                managiverloop.stop()
+            
+            if (managiverloop.isLast())
+                destroy this
+
+    construct(unit casterUnit)
+        isChanneling = true
+        caster = casterUnit
+        manaLoop()
+
+    ondestroy
+        if (instances.has(caster))
+            if (instances.get(caster) == this)
+                instances.remove(caster)
+
+
+function onCast()
+    var caster = GetSpellAbilityUnit()
+
+    if instances.has(caster)
+        instances.getAndRemove(caster)
+
+    instances.put(caster, new MeditateInstance(caster))
+
+function onEndCast()
+    if GetSpellAbilityId() == ABILITY_ID
+        var caster = GetSpellAbilityUnit()
+        if (instances.has(caster))
+            var instance = instances.get(caster)
+            instance.isChanneling = false
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST, () -> onEndCast())

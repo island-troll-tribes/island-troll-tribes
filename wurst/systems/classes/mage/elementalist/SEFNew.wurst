@@ -11,8 +11,8 @@ import Orders
 
 @configurable constant int ABILITY_ID = 'ESEF'
 @configurable constant int DUMMY_STUN_ABILITY_ID = 'ESES'
-@configurable constant real IMPACT_STUN_DURATION_HERO = 0.15
-@configurable constant real IMPACT_STUN_DURATION_NORMAL = 0.15
+@configurable constant real IMPACT_STUN_DURATION_HERO = 0.10
+@configurable constant real IMPACT_STUN_DURATION_NORMAL = 0.10
 @configurable constant real COOLDOWN = 5
 @configurable constant int MANACOST = 10
 @configurable constant real ORB_ATTACK_RADIUS = 575
@@ -43,6 +43,8 @@ import Orders
     ..setArtSpecial("")
     ..setButtonPositionNormalX(3)
     ..setButtonPositionNormalY(0)
+    ..setButtonPositionResearchX(3)
+    ..setButtonPositionResearchY(0)
     ..setIconNormal(SPELL_ICON)
     ..setIconResearch(SPELL_ICON)
     ..setIconTurnOff(SPELL_ICON)
@@ -136,13 +138,10 @@ class SEFOrb
     function onImpactEffect()
         if (target_unit.isAlive() and not target_unit.isInvulnerable())
             ownerunit.damageTarget(target_unit, ORB_IMPACT_DAMAGE)
-            var dummy = new DummyCaster()
-            bool success = dummy.castTarget(ownerunit.getOwner(), DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, target_unit, target_unit.getPos3Real())
-            print("Successful cast: " + success.toString())
+            new DummyCaster().castTarget(ownerunit.getOwner(), DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, target_unit, target_unit.getPos3Real())
 
         var efx = addEffect(ORB_IMPACT_EFFECT, projectile.getPos3())
         efx.setScale(1)
-        efx.setColor(0, 255, 0)
         doAfter(3) ->
             efx.destr()
         destroy this
@@ -165,19 +164,17 @@ class SEFInstance
     construct (unit caster)
         ownerUnit = caster
         real channel_time = 0
-        real lastorb_created = 0
+        real _lastorb_created = 0
         real orb_interval = ORB_SPAWN_INTERVAL
         isChanneling = true
-        int i = 0
 
         orbCreationLoopPeriodic = doPeriodicallyTimed(ORB_PERIODICINTERVAL_SPAWN, CHANNEL_DURATION) orbcreation ->
             if (isChanneling)
                 channel_time = channel_time + ORB_PERIODICINTERVAL_SPAWN
                 //Avoid floating point errors in the interval check with the -0.01
-                if (channel_time - lastorb_created >= orb_interval-0.01)
+                if (channel_time - _lastorb_created >= orb_interval-0.01)
                     orbs.push(new SEFOrb(ownerUnit, this, caster.getPos().withTerrainZ(ORB_ORBIT_HEIGHT)))
-                    lastorb_created = channel_time
-                    i = i + 1
+                    _lastorb_created = channel_time
             else 
                 orbCreationLoopPeriodic.stop()
 
@@ -189,7 +186,6 @@ class SEFInstance
 
         orbLoopPeriodic = doPeriodicallyTimed(ORB_PERIODICINTERVAL_LOOP, ORB_LIFETIME) orbLoop ->
             
-            // ------------------- INTERESTING PART 1 -------------------
             //Check for destruction conditions first before accessing any objects
             if (orbLoop.isLast() or (orbs.size() == 0 and not isChanneling))
                 if (not orbLoop.isLast()) //Make this stop in case the entry condition was orbs.size = 0
@@ -225,8 +221,6 @@ class SEFInstance
             if (instances.get(ownerUnit) == this) 
                 instances.remove(ownerUnit)
 
-
-
 function onCast()
     var caster = GetSpellAbilityUnit()
 
@@ -238,9 +232,6 @@ function onCast()
 
     var SEF = new SEFInstance(caster)
     instances.put(caster, SEF)
-
-
-
 
 function onEndCast()
     if GetSpellAbilityId() == ABILITY_ID

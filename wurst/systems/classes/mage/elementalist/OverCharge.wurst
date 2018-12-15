@@ -1,13 +1,20 @@
-@configurable constant int ABILITY_ID = 'ESMD'
-@configurable constant real COOLDOWN = 60
-@configurable constant int MANACOST = 0
-@configurable constant real DURATION = 8
-@configurable constant real PERIOD_INTERVAL = 0.1
-@configurable constant real MANA_PER_SECOND = 15
-@configurable constant string SPELL_ICON = "ReplaceableTextures\\CommandButtons\\BTNDispelMagic.blp"
-@configurable constant string EFFECT_PATH = "Abilities\\Spells\\Undead\\DarkRitual\\DarkRitualTarget.mdl"
-@configurable constant string TOOLTIP_NORM = "M - Meditate"
-@configurable constant string TOOLTIP_EXT = "Caster channels to regenerate X mana per second for Y seconds."
+package OverCharge
+import AbilityObjEditing
+import HashMap
+import ClosureEvents
+import TimerExtensions
+import TimerUtils
+
+@configurable constant int ABILITY_ID = 'ESOC'
+@configurable constant int DUMMY_AURA_ID = 'ESOA'
+@configurable constant real COOLDOWN = 45
+@configurable constant int MANACOST = 10
+@configurable constant real DURATION = 10
+
+@configurable constant string SPELL_ICON = "ReplaceableTextures\\PassiveButtons\\PASBTNFeedBack.blp"
+@configurable constant string AURA_EFFECT_PATH = "Abilities\\Weapons\\IllidanMissile+\\IllidanMissile.mdl"
+@configurable constant string TOOLTIP_NORM = "A - Overcharge"
+@configurable constant string TOOLTIP_EXT = "Empowers you, causing the next spell you cast in 10 seconds have extra effects."
 
 
 @compiletime function createSpell()
@@ -28,17 +35,66 @@
     ..setHeroAbility(false)
     ..setItemAbility(false)
     ..setLevels(1)
-    ..setHotkeyNormal("M")
-    ..setName("Meditate")
+    ..setHotkeyNormal("A")
+    ..setName("Overcharge")
     ..setDisableOtherAbilities(1, false)
     ..setFollowThroughTime(1, DURATION)
     ..setTooltipNormal(1, TOOLTIP_NORM)
     ..setTooltipNormalExtended(1, TOOLTIP_EXT)
-    ..setBaseOrderID(1, "bearform")
-    ..setOrderStringUseTurnOn("bearform")
-    ..setOrderStringActivate("bearform")
-    ..setOrderStringDeactivate("bearform")
-    ..setOrderStringTurnOff("bearform")
+    ..setBaseOrderID(1, "defend")
+    ..setOrderStringUseTurnOn("defend")
+    ..setOrderStringActivate("defend")
+    ..setOrderStringDeactivate("defend")
+    ..setOrderStringTurnOff("defend")
     ..setOptions(1, 1)
     ..setCooldown(1, COOLDOWN)
     ..setManaCost(1, MANACOST)
+
+@compiletime function createDummyAuras()
+    new AbilityDefinitionAuraSlow(DUMMY_AURA_ID)
+    ..setArtTarget(AURA_EFFECT_PATH)
+    ..setTargetAttachmentPoint1("hand,left")
+    ..setTargetAttachmentPoint2("hand,right")
+    ..setTargetAttachments(2)
+    ..setMovementSpeedFactor(1, 0)
+    ..setAreaofEffect(1, 0)
+    ..setDurationHero(1, 15)
+    ..setDurationNormal(1, 15)
+    ..setTargetsAllowed(1, "self")
+    ..setName("Overcharged")
+
+HashMap<unit, timer> removalTimers = new HashMap<unit,timer>()
+
+public function isUnitOvercharged(unit u) returns bool
+    if (u.hasAbility(DUMMY_AURA_ID)) 
+        return true
+    else
+        return false
+    
+public  function consumeOvercharge(unit u) returns bool
+    if isUnitOvercharged(u)
+        u.removeAbility(DUMMY_AURA_ID)
+        if removalTimers.has(u)
+            removalTimers.getAndRemove(u).release()
+        return true
+    else
+        return false
+
+public function onCast()
+    var caster = GetSpellAbilityUnit()
+    
+    //Reset existing timer
+    if removalTimers.has(caster)
+        removalTimers.getAndRemove(caster).release()
+    
+    caster.addAbility(DUMMY_AURA_ID)
+
+    //Create timer to remove buff after duration
+    let t = getTimer()
+    t.doAfter(DURATION) ->
+        caster.removeAbility(DUMMY_AURA_ID)
+        removalTimers.remove(caster)
+    removalTimers.put(caster, t)
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())

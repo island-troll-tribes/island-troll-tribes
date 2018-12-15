@@ -6,6 +6,7 @@ import DummyCaster
 import Orders
 import AbilityObjEditing
 import BuffObjEditing
+import ClosureForGroups
 import TimerUtils
 import TimerExtensions
 import HashMap
@@ -21,19 +22,20 @@ import HashMap
 @configurable constant string BUFF_ZAP_SLOW = "EZSB"
 @configurable constant int BUFF_ZAP_SLOW_INT = 'EZSB'
 @configurable constant real CAST_RANGE = 800
-@configurable constant real COOLDOWN = 5
-@configurable constant int MANACOST = 5
+@configurable constant real COOLDOWN = 4
+@configurable constant int MANACOST = 10
 @configurable constant real MAIN_DAMAGE = 15
-@configurable constant real CHARGE_DAMAGE = 35
+@configurable constant real CHARGE_BOUNCE_RADIUS = 500
+@configurable constant real CHARGE_DAMAGE = 25
 @configurable constant real CHARGE_STACK_DURATION = 30
 @configurable constant real CHARGE_REMOVE_TIME = 15
-@configurable constant real CHARGE_AS_SLOW = 0.7
-@configurable constant real CHARGE_MS_SLOW = 0.7
-@configurable constant real CHARGE_SLOW_DURATION_HERO = 2.5
-@configurable constant real CHARGE_SLOW_DURATION_NORM = 3.5
+@configurable constant real CHARGE_AS_SLOW = 0.65
+@configurable constant real CHARGE_MS_SLOW = 0.65
+@configurable constant real CHARGE_SLOW_DURATION_HERO = 1.5
+@configurable constant real CHARGE_SLOW_DURATION_NORM = 2.5
 @configurable constant string EFFECT_PATH = "Abilities\\Spells\\Orc\\Purge\\PurgeBuffTarget.mdl" 
 @configurable constant string TOOLTIP_NORMAL = "[|c00ffcc00Q|r] Zap"
-@configurable constant string TOOLTIP_NORMAL_EXT = "Zaps the target for |c00ff000015|r damage. Stacks charges on the target and |c0000ffffexplodes slowing movement and attack speed|r|c00dbf825 |rand|c00dbf825 |rdealing |c00ff000035|r bonus damage on the third charge."
+@configurable constant string TOOLTIP_NORMAL_EXT = "Zaps the target for |c00ff000015|r damage. Stacks charges on the target and |c0000ffffexplodes slowing movement and attack speed|r|c00dbf825 |rand|c00dbf825 |rdealing |c00ff000025|r bonus damage on the third charge."
 
 
 @compiletime function createBuffs()
@@ -84,6 +86,7 @@ import HashMap
     ..setNumberofTargetsHit(1, 1)
     ..setAreaofEffect(1, 1)
     ..setCastRange(1, CAST_RANGE)
+    ..setCastingTime(1, 0)
     ..setCooldown(1, COOLDOWN)
     ..setManaCost(1, MANACOST)
     ..setHeroAbility(false)
@@ -91,10 +94,6 @@ import HashMap
     ..setLevels(1)
     ..setHotkeyNormal("Q")
     ..setName("Zap")
-    ..setOrderStringUseTurnOn("forkedlightning")
-    ..setOrderStringActivate("forkedlightning")
-    ..setOrderStringDeactivate("forkedlightning")
-    ..setOrderStringTurnOff("forkedlightning")
     ..setTooltipNormal(1, TOOLTIP_NORMAL)
     ..setTooltipNormalExtended(1, TOOLTIP_NORMAL_EXT)
 
@@ -104,6 +103,7 @@ import HashMap
     ..setMovementSpeedFactor(1, CHARGE_MS_SLOW)
     ..setBuffs(1, BUFF_ZAP_SLOW)
     ..setCastRange(1, 1500)
+    ..setCastingTime(1, 0)
     ..setCooldown(1, 0)
     ..setDurationHero(1, CHARGE_SLOW_DURATION_HERO)
     ..setDurationNormal(1, CHARGE_SLOW_DURATION_NORM)
@@ -115,39 +115,52 @@ let timerMap = new HashMap<unit, timer>()
 
 function onCast()
     var caster = GetSpellAbilityUnit()
-    var owner = caster.getOwner()
     var target = GetSpellTargetUnit()
 
-    if timerMap.has(target)
-        timerMap.getAndRemove(target).release()
+    doAfter(0.15) ->
+        if timerMap.has(target)
+            timerMap.getAndRemove(target).release()
 
-
-    if target.hasAbility(BUFF_ZAP2_AURA)
-        target.removeAbility(BUFF_ZAP1_AURA)
-        target.removeAbility(BUFF_ZAP2_AURA)
-        caster.damageTarget(target, CHARGE_DAMAGE, ATTACK_TYPE_MAGIC)
-        new DummyCaster().castTarget(owner, SLOW_ABILITY_ID, 1, Orders.slow, target)
-        var efx = AddSpecialEffectTargetUnitBJ("chest", target, EFFECT_PATH)
-        efx.setScale(1)
-        doAfter(3)->
-            efx.destr()
-    else if target.hasAbility( BUFF_ZAP1_AURA )
-        target.removeAbility(BUFF_ZAP1_AURA)
-        target.addAbility(BUFF_ZAP2_AURA)
-
-        let t = getTimer()
-        t.doAfter(CHARGE_REMOVE_TIME) ->
-            target.removeAbility(BUFF_ZAP2_AURA)
-            timerMap.remove(target)
-        timerMap.put(target, t)
-    else
-        target.addAbility(BUFF_ZAP1_AURA)
-
-        let t = getTimer()
-        t.doAfter(CHARGE_REMOVE_TIME) ->
+        if target.hasAbility(BUFF_ZAP2_AURA)
+            //Zap2 -> Charges explosion
             target.removeAbility(BUFF_ZAP1_AURA)
-            timerMap.remove(target)
-        timerMap.put(target, t)
+            target.removeAbility(BUFF_ZAP2_AURA)
+            zapChargeExplosion(caster, target)
+        else if target.hasAbility( BUFF_ZAP1_AURA )
+            //Zap 1 -> 2
+            target.removeAbility(BUFF_ZAP1_AURA)
+            target.addAbility(BUFF_ZAP2_AURA)
+            let t = getTimer()
+            t.doAfter(CHARGE_REMOVE_TIME) ->
+                target.removeAbility(BUFF_ZAP2_AURA)
+                timerMap.remove(target)
+            timerMap.put(target, t)
+            
+        else
+            //0 -> >Zap 1
+            target.addAbility(BUFF_ZAP1_AURA)
+
+            let t = getTimer()
+            t.doAfter(CHARGE_REMOVE_TIME) ->
+                target.removeAbility(BUFF_ZAP1_AURA)
+                timerMap.remove(target)
+            timerMap.put(target, t)
+
+function zapChargeExplosion(unit caster, unit target)
+    //Main target damage
+    if (target.isAlive() and not target.isInvulnerable())
+        new DummyCaster().castTarget(caster.getOwner(), SLOW_ABILITY_ID, 1, Orders.slow, target)
+        caster.damageTarget(target, CHARGE_DAMAGE, ATTACK_TYPE_NORMAL)
+
+    var efx = AddSpecialEffectTargetUnitBJ("chest", target, EFFECT_PATH)
+    efx.setScale(0.8)
+    doAfter(3)->
+        efx.destr()
+
+    //Also cast zap on nearby targets in radius
+    forUnitsInRange(target.getPos(), CHARGE_BOUNCE_RADIUS) u ->
+        if (u.isAlive() and u.getOwner().isEnemyOf(caster.getOwner()) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isInvulnerable() and not u == target)
+            new DummyCaster().castTarget(caster.getOwner(), ABILITY_ID, 1, Orders.chainlightning, u, target.getPos3Real())
 
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())

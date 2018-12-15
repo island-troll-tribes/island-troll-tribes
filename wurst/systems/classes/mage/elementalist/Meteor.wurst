@@ -11,7 +11,10 @@ import AbilityObjEditing
 @configurable constant int DUMMY_STUN_ABILITY_ID = 'XEMD'
 @configurable constant real COOLDOWN = 5
 @configurable constant int MANACOST = 5
-@configurable constant real IMPACT_DAMAGE = 70
+@configurable constant real IMPACT_DAMAGE = 45
+@configurable constant real IMPACT_BURN_DPS = 7
+@configurable constant real IMPACT_BURN_DURATION = 5
+@configurable constant real IMPACT_BURN_INTERVAL = 0.1
 @configurable constant real IMPACT_STUN_DURATION_HERO = 1
 @configurable constant real IMPACT_STUN_DURATION_NORMAL = 2
 @configurable constant real IMPACT_RADIUS_MAX = 240
@@ -22,8 +25,8 @@ import AbilityObjEditing
 @configurable constant real LOOP_INTERVAL = 0.03125
 @configurable constant string PROJECTILE_EFFECT_PATH = "abilities\\weapons\\catapult\\catapultmissile.mdl" //"Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl" 
 @configurable constant string PROJECTILE_TRAIL_EFFECT_PATH = "Abilities\\Weapons\\RedDragonBreath\\RedDragonMissile.mdl" 
-
 @configurable constant string EXPLOSION_EFFECT_PATH = "Objects\\Spawnmodels\\Other\\NeutralBuildingExplosion\\NeutralBuildingExplosion.mdl" 
+@configurable constant string BURN_EFFECT_PATH = "Abilities\\Spells\\Other\\BreathOfFire\\BreathOfFireDamage.mdl"
 @configurable constant string ICON_PATH = "ReplaceableTextures\\CommandButtons\\BTNFlare.blp"
 
 @compiletime function createSpell()
@@ -52,8 +55,11 @@ import AbilityObjEditing
 @compiletime function createDummySpell()
     new AbilityDefinitionFireBolt(DUMMY_STUN_ABILITY_ID)
     ..setAnimationNames("")
-    ..setMissileSpeed(3000)
+    ..setMissileSpeed(8000)
     ..setMissileArt("")
+    ..setMissileHomingEnabled(true)
+    ..setCastingTime(1, 0)
+    ..setBuffs(1, "BSTN")
     ..setCastRange(1, 9999)
     ..setCooldown(1, 0)
     ..setDamage(1, 0)
@@ -100,25 +106,44 @@ function onCast()
         vec3 currentPos = startPos + ratio * projectilePath
         projectile.setPos(currentPos)
         trail.setPos(currentPos)
+
         //Impact effects here
         if cb.isLast()
             projectile.destr()
             trail.destr()
+
+            //Impact SFX
+            var explosion = addEffect(EXPLOSION_EFFECT_PATH, target3D)
+            explosion.setScale(0.5)
+            doAfter(3) ->
+                explosion.destr()
+
+            //Impact unit effects
             forUnitsInRange(target2D, IMPACT_RADIUS_MAX) u ->
                 if u.isAlive() and u.getOwner().isEnemyOf(owner) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isType(UNIT_TYPE_FLYING) and not u.isInvulnerable()
                     
+                    //Calculate reduced damage for units away from center
                     var distance = target2D.distanceTo(u.getPos())
                     if (distance <= IMPACT_RADIUS_DAMAGEFALLOFF)
                         caster.damageTarget(u, IMPACT_DAMAGE, ATTACK_TYPE_NORMAL)
                     else 
                         var reducedDamage = IMPACT_DAMAGE * (1 - ((distance - IMPACT_RADIUS_DAMAGEFALLOFF) / (IMPACT_RADIUS_MAX - IMPACT_RADIUS_DAMAGEFALLOFF)))
                         caster.damageTarget(u, reducedDamage, ATTACK_TYPE_NORMAL)
+                    
+                    //Apply stun
                     new DummyCaster().castTarget(owner, DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, u)
 
-            var explosion = addEffect(EXPLOSION_EFFECT_PATH, target3D)
-            explosion.setScale(0.5)
-            doAfter(3) ->
-                explosion.destr()
+                    //Apply burn on units
+                    var burnfx = AddSpecialEffectTargetUnitBJ("chest", u, BURN_EFFECT_PATH)
+                    burnfx.setScale(5)
+
+                    doPeriodicallyTimed(IMPACT_BURN_INTERVAL, IMPACT_BURN_DURATION) burn ->
+                        if (not u.isInvulnerable() and u.isAlive())
+                            caster.damageTarget(u, IMPACT_BURN_DPS * IMPACT_BURN_INTERVAL, ATTACK_TYPE_NORMAL)
+                        if (burn.isLast() or not u.isAlive())
+                            burnfx.destr()
+
+
             
 
 init

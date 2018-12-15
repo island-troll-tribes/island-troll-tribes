@@ -13,7 +13,7 @@ import Orders
 @configurable constant real PERIOD_INTERVAL = 0.1
 @configurable constant real MANA_PER_SECOND = 15
 @configurable constant string SPELL_ICON = "ReplaceableTextures\\CommandButtons\\BTNDispelMagic.blp"
-@configurable constant string EFFECT_PATH = "Abilities\\Spells\\Orc\\EtherealForm\\SpiritWalkerChange.mdl"
+@configurable constant string EFFECT_PATH = "Abilities\\Spells\\Undead\\DarkRitual\\DarkRitualTarget.mdl"
 @configurable constant string TOOLTIP_NORM = "M - Meditate"
 @configurable constant string TOOLTIP_EXT = "Caster channels to regenerate X mana per second for Y seconds."
 
@@ -56,26 +56,36 @@ HashMap<unit, MeditateInstance> instances = new HashMap<unit,MeditateInstance>()
 
 class MeditateInstance
     bool isChanneling = true
+    bool isOvercharged
     unit caster
     var dmgTrig = CreateTrigger()
     
     function manaLoop()
-        effect fx = addEffect(EFFECT_PATH, caster.getPos3Real())
-        fx.setRoll(0)
+        
+        doPeriodicallyTimed(1, DURATION) fxloop ->
+            
+            if (isChanneling)
+                var efx = AddSpecialEffectTargetUnitBJ("origin", caster, EFFECT_PATH)
+                efx.setTimeScale(2)
+                doAfter(1) ->
+                    efx.destr()
+            else
+                fxloop.stop()
 
         doPeriodicallyTimed(PERIOD_INTERVAL, DURATION) managiverloop ->
             if (isChanneling)
+                     
                 var newmana = caster.getMana() + PERIOD_INTERVAL * MANA_PER_SECOND
                 caster.setMana(newmana)
             else
                 managiverloop.stop()
 
             if (managiverloop.isLast())
-                fx.destr()
                 destroy this
 
-    construct(unit casterUnit)
+    construct(unit casterUnit, bool overCharged)
         isChanneling = true
+        isOvercharged = overCharged
         caster = casterUnit
         manaLoop()
 
@@ -90,8 +100,8 @@ function onCast()
 
     if instances.has(caster)
         instances.getAndRemove(caster)
-
-    instances.put(caster, new MeditateInstance(caster))
+    
+    instances.put(caster, new MeditateInstance(caster, false))
 
 function onDamage(unit target, real amount)
     if instances.has(target) and amount >= 1

@@ -88,61 +88,61 @@ let instances = new HashMap<unit, SEFInstance>()
 
 class SEFOrb
     SEFInstance instance
-    unit ownerunit = null
+    unit ownerUnit = null
     real speed = ORB_SPEED
     effect projectile = null
-    vec3 target_pos
-    unit target_unit = null
+    vec3 targetPos
+    unit targetUnit = null
 
     construct (unit owner, SEFInstance SEF, vec3 startPos)
-        ownerunit = owner
+        ownerUnit = owner
         instance = SEF
         projectile = addEffect(ORB_EFFECT_PATH, startPos)
         projectile.setScale(0.65)
 
     function moveTowardsTarget()
         //Update target location to targeted unit if its alive
-        if (target_unit != null)
-            if (target_unit.isAlive())
-                target_pos = target_unit.getPos3Real()
+        if (targetUnit != null)
+            if (targetUnit.isAlive())
+                targetPos = targetUnit.getPos3Real()
 
         //Limit movement by speed
         var oldpos = projectile.getPos3()
         vec3 newpos
-        if (oldpos.distanceTo(target_pos) <= ORB_SPEED * ORB_PERIODICINTERVAL_SPAWN)
-            newpos = target_pos
-            if (target_unit != null)
+        if (oldpos.distanceTo(targetPos) <= ORB_SPEED * ORB_PERIODICINTERVAL_SPAWN)
+            newpos = targetPos
+            if (targetUnit != null)
                 onImpactEffect()
         else
-            newpos = oldpos + oldpos.normalizedPointerTo(target_pos) * ORB_SPEED * ORB_PERIODICINTERVAL_SPAWN
+            newpos = oldpos + oldpos.normalizedPointerTo(targetPos) * ORB_SPEED * ORB_PERIODICINTERVAL_SPAWN
 
         projectile.setPos(newpos)
 
     function findTarget()
         var curPos = projectile.getPos()
-        if (target_unit == null and instance.orbLoopDuration >= 0.55 and instance.orbLoopDuration - instance.lastOrbAttackTimestamp >= ORB_ATTACK_COOLDOWN)
+        if (targetUnit == null and instance.orbLoopDuration >= 0.55 and instance.orbLoopDuration - instance.lastOrbAttackTimestamp >= ORB_ATTACK_COOLDOWN)
             forUnitsInRange(curPos, ORB_ATTACK_RADIUS) u ->
-                if (IsUnitVisible(u, ownerunit.getOwner()) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isHidden() and u.isAlive() and not u.isInvulnerable() and u.getOwner().isEnemyOf(ownerunit.getOwner()))
+                if (IsUnitVisible(u, ownerUnit.getOwner()) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isHidden() and u.isAlive() and not u.isInvulnerable() and u.getOwner().isEnemyOf(ownerUnit.getOwner()))
                     //Get the closest unit if multiples happen to come into range at once
-                    if (target_unit != null)
-                        if (curPos.distanceTo( target_unit.getPos() ) > curPos.distanceTo(u.getPos()))
-                            target_unit = u
+                    if (targetUnit != null)
+                        if (curPos.distanceTo( targetUnit.getPos() ) > curPos.distanceTo(u.getPos()))
+                            targetUnit = u
                             instance.lastOrbAttackTimestamp = instance.orbLoopDuration
                     else
-                        target_unit = u
+                        targetUnit = u
                         instance.lastOrbAttackTimestamp = instance.orbLoopDuration
                     
     function updateLoop()
-        if (target_unit == null)
+        if (targetUnit == null)
             findTarget()
             moveTowardsTarget()
         else
             moveTowardsTarget()
         
     function onImpactEffect()
-        if (target_unit.isAlive() and not target_unit.isInvulnerable())
-            ownerunit.damageTarget(target_unit, ORB_IMPACT_DAMAGE, ATTACK_TYPE_NORMAL)
-            new DummyCaster().castTarget(ownerunit.getOwner(), DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, target_unit, ownerunit.getPos3Real())
+        if (targetUnit.isAlive() and not targetUnit.isInvulnerable())
+            ownerUnit.damageTarget(targetUnit, ORB_IMPACT_DAMAGE, ATTACK_TYPE_NORMAL)
+            new DummyCaster().castTarget(ownerUnit.getOwner(), DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, targetUnit, ownerUnit.getPos3Real())
 
         var efx = addEffect(ORB_IMPACT_EFFECT, projectile.getPos3())
         efx.setScale(1)
@@ -171,8 +171,8 @@ class SEFInstance
     construct (unit caster, bool overcharged)
         isOvercharged = overcharged
         ownerUnit = caster
-        real channel_time = 0
-        real _lastorb_created = 0
+        real channeledTime = 0
+        real lastOrbCreatedTimestamp = 0
         lastOrbAttackTimestamp = 0
         orbLoopDuration = 0
         real orb_interval = ORB_SPAWN_INTERVAL
@@ -181,11 +181,11 @@ class SEFInstance
         if not overcharged
             orbCreationLoopPeriodic = doPeriodicallyTimed(ORB_PERIODICINTERVAL_SPAWN, CHANNEL_DURATION) orbcreation ->
                 if (isChanneling)
-                    channel_time = channel_time + ORB_PERIODICINTERVAL_SPAWN
+                    channeledTime = channeledTime + ORB_PERIODICINTERVAL_SPAWN
                     //Avoid floating point errors in the interval check with the -0.01
-                    if (channel_time - _lastorb_created >= orb_interval-0.01)
+                    if (channeledTime - lastOrbCreatedTimestamp >= orb_interval-0.01)
                         orbs.push(new SEFOrb(ownerUnit, this, caster.getPos().withTerrainZ(ORB_ORBIT_HEIGHT)))
-                        _lastorb_created = channel_time
+                        lastOrbCreatedTimestamp = channeledTime
                 else 
                     orbCreationLoopPeriodic.stop()
         else
@@ -212,7 +212,7 @@ class SEFInstance
                 int orbsWithoutTarget = 0
 
                 for o in orbs
-                    if (o.target_unit == null)
+                    if (o.targetUnit == null)
                         orbsWithoutTarget += 1
 
                 angle orbOffset = angle(bj_PI/4)
@@ -223,8 +223,8 @@ class SEFInstance
                 
                 for o in orbs
                     angle indexOrbAngle = orbAngle + orbOffset * i.toReal()
-                    if (o.target_unit == null)
-                        o.target_pos = ownerUnit.getPos().withTerrainZ(ORB_ORBIT_HEIGHT).offset2d(indexOrbAngle, ORB_ORBIT_RADIUS)
+                    if (o.targetUnit == null)
+                        o.targetPos = ownerUnit.getPos().withTerrainZ(ORB_ORBIT_HEIGHT).offset2d(indexOrbAngle, ORB_ORBIT_RADIUS)
                     o.updateLoop()
                     i = i + 1
 

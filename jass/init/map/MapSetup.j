@@ -53,9 +53,6 @@ function Start_Game takes nothing returns nothing
     call TimerStart(GAME_TIMER, 99999999, false, null)
 
     call RegisterPlayersTrollClasses()
-
-    call TriggerRegisterTimerEvent( gg_trg_stats_degrading, udg_STAT_LOWER_INTERVAL, true)
-    call TriggerRegisterTimerEvent( gg_trg_warmth, udg_CLOTHS_HEATUP_INTERVAL, true )
 endfunction
 
 function RemoveUnitX takes nothing returns nothing

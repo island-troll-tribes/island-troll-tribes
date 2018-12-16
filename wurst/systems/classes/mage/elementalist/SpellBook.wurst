@@ -3,6 +3,7 @@ package SpellBook
 import AbilityObjEditing
 import ClosureForGroups
 import GameConfig
+import ClosureEvents
 import Knockback3
 
 @configurable constant string array SPELLS = ["XEZS, XEMS, XFPS, ESEF, ESOC, ESMD", "XEZS, XEMS, XFPS, ESEF, ESOC, ESMD", "XEZS, XEMS, XFPS, ESEF, ESOC, ESMD"]
@@ -35,7 +36,7 @@ import Knockback3
 
 function addSpellbook()
     var trigPlayer = GetTriggerPlayer()
-    
+
     if (gameConfig.isTestModeEnabled())
         print("Adding spellbook to selected heroes")
         forUnitsSelected(trigPlayer) u ->
@@ -47,9 +48,11 @@ function addSpellbook()
 function addKnockback()
     var trigPlayer = GetTriggerPlayer()
     forUnitsSelected(trigPlayer) u ->
+        print("Knocking back " + u.getName())
         Knockback3.add(u, 500., angle(0), angle(0))
-
+        
 init
+    /*
     var chatTrig = CreateTrigger()
     var chatTrigKB = CreateTrigger()
 
@@ -58,3 +61,11 @@ init
         chatTrig.registerPlayerChatEvent(players[ix], "-knockback", true)
     chatTrig.addAction(() -> addSpellbook())
     chatTrigKB.addAction(() -> addKnockback())
+    */
+    
+    EventListener.add(EVENT_PLAYER_CHAT_FILTER) ->
+        string msg = GetEventPlayerChatString()
+        if (msg == "-spells")
+            addSpellbook()
+        else if (msg == "-knockback")
+            addKnockback()

@@ -3,8 +3,6 @@ library LegacyInit initializer onInit
         call DestroyTimer(GetExpiredTimer())
         call ExecuteFunc("InitTrig_Smell_Drop")
         call ExecuteFunc("InitTrig_Attraction_Aura")
-        call ExecuteFunc("InitTrig_warmth")
-        call ExecuteFunc("InitTrig_stats_degrading")
         call ExecuteFunc("InitTrig_stat_display")
         call ExecuteFunc("InitTrig_meat_and_bone")
         call ExecuteFunc("InitTrig_unit_killed")

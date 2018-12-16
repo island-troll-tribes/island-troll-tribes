@@ -385,30 +385,6 @@ function checkItem takes unit u, integer itm returns boolean
     return false
 endfunction
 
-function countHeat takes nothing returns nothing
-    local unit u=udg_parameterUnit
-    local integer t=0
-    local integer warm=0
-    loop
-        exitwhen t > 5
-        if (IsItemCoat(UnitItemInSlot(u, t))) then
-            set warm=warm+5
-        endif
-        if (IsItemBoots(UnitItemInSlot(u, t))) then
-            set warm=warm+2
-        endif
-        if (IsItemGloves(UnitItemInSlot(u, t))) then
-            set warm=warm+2
-        endif
-        if(GetItemTypeId(UnitItemInSlot(u, t)) == ITEM_DD_PINION_FIRE) then
-            set warm=warm+8
-        endif
-        set t = t + 1
-    endloop
-    set udg_integerParameter=warm
-    set u=null
-endfunction
-
 function setUpSkillTriggers takes unit u returns nothing
     local player p=GetOwningPlayer(u)
 

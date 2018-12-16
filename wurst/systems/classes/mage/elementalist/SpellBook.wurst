@@ -3,9 +3,8 @@ package SpellBook
 import AbilityObjEditing
 import ClosureForGroups
 import GameConfig
-import ClosureEvents
-import ITTKnockback
-
+import ChatCommands
+import LinkedList
 
 @configurable constant string array SPELLS = ["XEZS, XEMS, XFPS, ESEF, ESOC, ESMD", "XEZS, XEMS, XFPS, ESEF, ESOC, ESMD", "XEZS, XEMS, XFPS, ESEF, ESOC, ESMD"]
 
@@ -35,30 +34,17 @@ import ITTKnockback
     ..presetTooltipNormalExtended(lvl -> "Contains various spells n such")
     ..presetSharedSpellCooldown(lvl -> false)
 
-function addSpellbook()
-    if (gameConfig.isTestModeEnabled())
-        var trigPlayer = GetTriggerPlayer()
-        print("Adding spellbook to selected heroes")
-        forUnitsSelected(trigPlayer) u ->
-            if (u.isType(UNIT_TYPE_HERO))
-                u.addAbility('XESB')
-    else
-        print("Requires test mode!")
-
-init
-    /*
-    var chatTrig = CreateTrigger()
-    var chatTrigKB = CreateTrigger()
-
-    for ix = 0 to bj_MAX_PLAYERS - 1
-        chatTrig.registerPlayerChatEvent(players[ix], "-spells", true)
-        chatTrig.registerPlayerChatEvent(players[ix], "-knockback", true)
-    chatTrig.addAction(() -> addSpellbook())
-    chatTrigKB.addAction(() -> addKnockback())
-    */
+class SpellsCommandHandler implements CommandHandler
+    function run(player triggerPlayer, LinkedList<string> arguments)
+        if (gameConfig.isTestModeEnabled())
+            printTimedToPlayer("Added spellbook to selected heroes", 5., triggerPlayer)
+            forUnitsSelected(triggerPlayer) u ->
+                if (u.isType(UNIT_TYPE_HERO))
+                    u.addAbility('XESB')
+        else
+        printTimedToPlayer("Requires test mode!", 5., triggerPlayer)
     
-    EventListener.add(EVENT_PLAYER_CHAT_FILTER) ->
-        string msg = GetEventPlayerChatString()
-        if (msg == "-spells")
-            addSpellbook()
+init
+    registerCommandAll("-spells", new SpellsCommandHandler())
+
         

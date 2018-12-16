@@ -4,7 +4,8 @@ import AbilityObjEditing
 import ClosureForGroups
 import GameConfig
 import ClosureEvents
-import Knockback3
+import ITTKnockback
+
 
 @configurable constant string array SPELLS = ["XEZS, XEMS, XFPS, ESEF, ESOC, ESMD", "XEZS, XEMS, XFPS, ESEF, ESOC, ESMD", "XEZS, XEMS, XFPS, ESEF, ESOC, ESMD"]
 
@@ -47,10 +48,12 @@ function addSpellbook()
 
 function addKnockback()
     var trigPlayer = GetTriggerPlayer()
-    forUnitsSelected(trigPlayer) u ->
-        print("Knocking back " + u.getName())
-        Knockback3.add(u, 500., angle(0), angle(0))
-        
+    if (gameConfig.isTestModeEnabled())
+        forUnitsSelected(trigPlayer) u ->
+            print("Knocking back " + u.getName())
+            ITTKnockback.add(u, 500., angle(0), angle(90 * DEGTORAD))
+    else
+        print("Requires test mode!")
 init
     /*
     var chatTrig = CreateTrigger()

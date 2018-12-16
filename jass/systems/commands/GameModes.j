@@ -105,7 +105,7 @@ endfunction
 endlibrary
 
 function GameModes_Conditions takes nothing returns boolean
-    return not udg_STARTED and mode_enter
+    return mode_enter
 endfunction
 
 function GameModes_Relay takes nothing returns nothing

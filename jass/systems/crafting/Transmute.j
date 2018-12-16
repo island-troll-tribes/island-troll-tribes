@@ -1,8 +1,4 @@
 library Transmute initializer onInit requires FilterTypeIsThing, IsTypeThing
-    function Trig_transmute_Conditions takes nothing returns boolean
-        return udg_STARTED
-    endfunction
-
     function Trig_transmute_Actions takes nothing returns nothing
     local boolean bol1 = IsUnitTroll(GetTriggerUnit())
     local boolean bol2 = false
@@ -772,7 +768,6 @@ library Transmute initializer onInit requires FilterTypeIsThing, IsTypeThing
     private function onInit takes nothing returns nothing
         set gg_trg_transmute = CreateTrigger(  )
         call TriggerRegisterAnyUnitEventBJ( gg_trg_transmute, EVENT_PLAYER_UNIT_PICKUP_ITEM )
-        call TriggerAddCondition( gg_trg_transmute, Condition( function Trig_transmute_Conditions ) )
         call TriggerAddAction( gg_trg_transmute, function Trig_transmute_Actions )
     endfunction
 endlibrary

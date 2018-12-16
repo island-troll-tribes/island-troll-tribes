@@ -1,13 +1,3 @@
-
-//
-// GAME_TIMER
-//===========================================================================
-//TESH.scrollpos=30
-//TESH.alwaysfold=0
-function Trig_update_boards_Conditions takes nothing returns boolean
-    return udg_STARTED
-endfunction
-
 globals
     string gameTimeStr = ""
     string forcedDuelStr = ""
@@ -151,7 +141,6 @@ endfunction
 //===========================================================================
 function InitTrig_update_boards takes nothing returns nothing
     set gg_trg_update_boards = CreateTrigger(  )
-    call TriggerAddCondition( gg_trg_update_boards, Condition( function Trig_update_boards_Conditions ) )
     call TriggerAddAction( gg_trg_update_boards, function Trig_update_boards_Actions )
 endfunction
 

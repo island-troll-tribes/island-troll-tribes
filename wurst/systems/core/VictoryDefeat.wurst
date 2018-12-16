@@ -1,76 +1,28 @@
 package VictoryDefeat
 import GameConfig
-import Game
 import RegisterEvents
 import TrollExtensions
-import ClosureTimers
-import TimerUtils
-import TimerExtensions
-import TimerDialog
+import Tribe
 
-let REMOVAL_DELAY = 20.0
 var gameOver = false
-boolean array tribeDefeated
 
 function isGracePeriod() returns boolean
     return gameConfig.isTestModeEnabled() or GRACE_PERIOD_TIMER.getRemaining() > 0
 
 init
-    registerGameStartEvent() ->
-        let numTribes = gameConfig.getNumTribes()
-        let numPlayers = gameConfig.getNumPlayersPerTribe()
-
-        for tribeId = 0 to numTribes - 1
-            tribeDefeated[tribeId] = true
-
-            for i = 0 to numPlayers - 1
-                let pid = tribeId * numPlayers + i
-
-                let playing = players[pid].getSlotState() == PLAYER_SLOT_STATE_PLAYING
-                let userController = players[pid].getController() == MAP_CONTROL_USER
-                if not isobserver[pid] and userController and playing
-                    tribeDefeated[tribeId] = false
-
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
         if not gameOver and GetDyingUnit().isTroll() and not isGracePeriod()
-            let numTribes = gameConfig.getNumTribes()
-            let numPlayers = gameConfig.getNumPlayersPerTribe()
-            var tribesAlive = 0
-
-            for tribeId = 0 to numTribes - 1
-                if not tribeDefeated[tribeId]
-                    var defeated = true
-
-                    for i = 0 to numPlayers - 1
-                        let pid = tribeId * numPlayers + i
-                        if players[pid].getTroll().isAlive()
-                            defeated = false
-
-                    tribeDefeated[tribeId] = defeated
-                    if defeated
-                        DisplayTimedTextToForce(s__TEAM[tribeId + 1], 60, HIGHLIGHT_COLOR + "Your tribe has been killed! Please play again.")
-                        doAfter(REMOVAL_DELAY) ->
-                            s__TEAM[tribeId + 1].forEach() ->
-                                CDef(GetEnumPlayer(), "You have been defeated")
-                    else
-                        tribesAlive += 1
-
-            if tribesAlive == 1
-                gameOver = true
-
-                var winningTribeId = 0
-                for tribeId = 0 to numTribes - 1
-                    if not tribeDefeated[tribeId]
-                        winningTribeId = tribeId
-
-                DisplayTimedTextToForce(s__TEAM[winningTribeId + 1], 60, HIGHLIGHT_COLOR + "You have won! Please play again!")
-
-                getTimer()
-                ..doAfter(REMOVAL_DELAY, -> begin
-                    s__TEAM[winningTribeId + 1].forEach() ->
-                        CVic(GetEnumPlayer(), true, true)
+            Tribe.getTribes()
+                .filter(tribe -> not tribe.isDefeated())
+                .filter(tribe -> begin
+                    return tribe
+                        .getMembers()
+                        .foldl(false, (member, alive) -> alive or member.getTroll().isAlive())
                 end)
-                .createTimerDialog()
-                ..setTitle("Game ends in...")
-                ..display(true)
+                .forEach(tribe -> tribe.wasDefeated())
 
+            let aliveTribes = Tribe.getTribes().filter(tribe -> not tribe.isDefeated())
+
+            if aliveTribes.size() == 1
+                gameOver = true
+                aliveTribes.getFirst().wasVictorious()

@@ -1,0 +1,32 @@
+package Setup
+import UnitExtensions
+
+public function generateMap()
+    gg_trg_spawn_call_first.execute()
+    gg_trg_ShowPlayers.execute()
+    SetTimeOfDay(6)
+    s__Map_fireStartGameEvents()
+    print(GENERAL_COLOR + "Game has begun!|r")
+    GAME_TIMER.start(99999999, null)
+
+init
+    SetTimeOfDayScale(1.3)
+    SetTimeOfDay(3)
+    SetMapFlag(MAP_USE_HANDICAPS, false)
+    EnableMinimapFilterButtons(true, false)
+    SetCreepCampFilterState(false)
+
+    OMINOUS_ALTAR.addItemToStock(ITEM_HYDRA_HINT, 1, 1)
+
+    ForForce(bj_FORCE_ALL_PLAYERS) ->
+        let enumPlayer = GetEnumPlayer()
+        SetFogStateRect(enumPlayer, FOG_OF_WAR_VISIBLE, gg_rct_vision, true)
+        // TODO remove legacy bm pet system
+        resetBMSkill(enumPlayer)
+
+    // TODO remove legacy initialization or move elsewhere
+    InitGameCache("ITT.w3v")
+    udg_jumpCache = bj_lastCreatedGameCache
+    udg_GameHash = InitHashtable()
+    gg_trg_GameModes = CreateTrigger()
+    prepareSpells()

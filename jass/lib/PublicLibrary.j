@@ -1,8 +1,4 @@
-library PublicLibrary initializer initPublicLibrary requires TimerUtils, IDUtils, Constants, FilterTypeIsThing, String, GameConfig, InitializeUnits
-
-globals
-integer array TEAM_PLAYER
-endglobals
+library PublicLibrary initializer initPublicLibrary requires TimerUtils, IDUtils, Constants, FilterTypeIsThing, String, GameConfig, InitializeUnits, GlobalsInit
 
 function GetExpiredTimerData takes nothing returns integer
   return GetTimerData( GetExpiredTimer() )
@@ -265,14 +261,6 @@ endfunction
 
 function GetPidTroll takes integer pid returns unit
     return udg_PUnits[pid]
-endfunction
-
-function GetPlayerTribe takes player p returns force
-    return TEAM[TEAM_PLAYER[GetPlayerId(p)]]
-endfunction
-
-function GetPlayerTribeId takes player p returns integer
-    return TEAM_PLAYER[GetPlayerId(p)] - 1
 endfunction
 
 function GetPidTribeId takes integer pid returns integer
@@ -1075,16 +1063,6 @@ function ZoomSetCamera takes integer i returns nothing
         call SetCameraField(CAMERA_FIELD_ZOFFSET,ZOOM_DISTANCE[i],1)
         call SetCameraField(CAMERA_FIELD_FARZ,ZOOM_FOGZ[i],0)
     endif
-endfunction
-
-function ConditionalUpdateBoards takes nothing returns nothing
-    call ConditionalTriggerExecute( gg_trg_update_boards )
-endfunction
-
-function UpdateBoardsLoopInit takes nothing returns nothing
-    local timer t=CreateTimer()
-    call TimerStart(t,1,true, function ConditionalUpdateBoards )
-    set t=null
 endfunction
 
 function SetCameraBoundsEX takes player p, real minX, real minY, real maxX, real maxY returns nothing

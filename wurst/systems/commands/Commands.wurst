@@ -3,7 +3,6 @@ import HashMap
 import LinkedList
 import ChatCommands
 import StringExtensions
-import TribeUtils
 import ChatUtils
 import PlayerExtensions
 
@@ -29,15 +28,13 @@ let settings = new HashMap<string, PlayerAllianceSetting>()
 
 function handlePlayerAllianceSettingToggle(player triggerPlayer, LinkedList<string> args)
     let setting = settings.get(args.get(0))
-    let id = triggerPlayer.getId()
-    let range = getTribePlayerIdRangeForPlayerId(id)
     let newValue = args.size() > 1 ? args.get(1).isConfirmation() : not setting.values.get(triggerPlayer)
     let msg = "{0} has turned {1} {2}".format(triggerPlayer.getNameColored(), setting.name.color(SPECIAL_COLOR), newValue.toSwitch().color(ENERGY_COLOR))
     DisplayTimedTextToForce(triggerPlayer.getAllies(), 5, msg)
     setting.values.put(triggerPlayer, newValue)
-    for i = range.min to range.max
-        if i != id
-            players[id].setPlayerAlliance(players[i], setting.setting, setting.invertSetting ? not newValue : newValue)
+    triggerPlayer.getTribe().getMembers().forEach() member ->
+        if member != triggerPlayer
+            triggerPlayer.setPlayerAlliance(member, setting.setting, setting.invertSetting ? not newValue : newValue)
 
 init
     settings

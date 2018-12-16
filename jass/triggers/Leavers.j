@@ -1,4 +1,4 @@
-library Leavers initializer onInit requires PublicLibrary, MapSetup, GameConfig, Utils
+library Leavers initializer onInit requires PublicLibrary, GameConfig, Utils, Map
     globals
         private integer tempInt
     endglobals
@@ -44,7 +44,7 @@ library Leavers initializer onInit requires PublicLibrary, MapSetup, GameConfig,
 
         call DisplayText(GENERAL_COLOR+GetPlayerName(GetTriggerPlayer())+GRAY_COLOR+" ["+COLOR_CODE[PID]+udg_RealNames[PID]+GRAY_COLOR+"]"+GENERAL_COLOR+" has left the game."+GRAY_COLOR+" (Player "+I2S(PID+1)+")|r")
 
-        if isobserver[PID] or not udg_STARTED then
+        if isobserver[PID] then
             return
         endif
 
@@ -93,7 +93,7 @@ library Leavers initializer onInit requires PublicLibrary, MapSetup, GameConfig,
     endfunction
 
     //===========================================================================
-    private function onInit takes nothing returns nothing
+    private function initialize takes nothing returns nothing
         local integer i = 0
         set gg_trg_leavers = CreateTrigger(  )
         loop
@@ -103,5 +103,9 @@ library Leavers initializer onInit requires PublicLibrary, MapSetup, GameConfig,
         endloop
         call TriggerAddAction( gg_trg_leavers, function Trig_leavers_Actions )
     endfunction
+
     //===========================================================================
+    private function onInit takes nothing returns nothing
+        call Map.onGameStart(function initialize)
+    endfunction
 endlibrary

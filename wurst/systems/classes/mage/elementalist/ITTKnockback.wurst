@@ -31,7 +31,7 @@ public class ITTKnockback
 	static var restitutionCoefficientDestructable = .3
 
 	/** Ratio. */
-	static var frictionCoefficientGround = .075
+	static var frictionCoefficientGround = .0725
 
 	/** In units per second squared. */
 	static var gravity = 90.
@@ -58,14 +58,14 @@ public class ITTKnockback
 	static var minimumSlideSpeed = 30.
 
 	/** Above this speed, sliding units will spawn a dust effect. */
-	static var frictionFxThreshold = 180.
+	static var frictionFxThreshold = 45.
 	static var frictionFxPath = Objects.impaleTargetDust
 
 	/** Above this speed, destructables hit will be destroyed. */
-	static var destroyDestructableSpeedThreshold = 1500.
+	static var destroyDestructableSpeedThreshold = 3000.
 
 	/** Below this height, destructables hit may be destroyed. */
-	static var destroyDestructableHeightThreshold = 150.
+	static var destroyDestructableHeightThreshold = -5.
 
 	/**
 	Apply a knockback vector to unit u. `velocity` is initial speed in units
@@ -145,7 +145,7 @@ public class ITTKnockback
 				knockback.del *= (1. - frictionCoefficientGround)
 
 				if velXySquared > frictionFxThreshold * frictionFxThreshold * ANIMATION_PERIOD
-					addEffect(frictionFxPath, pos3).destr()
+					addEffect(frictionFxPath, knockback.u.getPos().withTerrainZ()).destr()
 
 			if USE_MOVE_SPEED_MODIFIERS
 				knockback.u.setMoveSpeed(knockback.u.getDefaultMovespeed())
@@ -211,7 +211,7 @@ public class ITTKnockback
 
 	private static function tick()
 		for knockback from staticItr()
-			let pos3		 = knockback.u.getPos3Real()
+			let pos3		 = knockback.u.getPos3Zero()
 			let newPos3	  = pos3 + knockback.del
 			let newInMap	 = newPos3.inPlayable()
 			let velXySquared = knockback.del.toVec2().lengthSq()

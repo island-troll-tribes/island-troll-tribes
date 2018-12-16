@@ -5,6 +5,7 @@ import ClosureEvents
 import ClosureTimers
 import AbilityObjEditing
 import Orders
+import OverCharge
 
 @configurable constant int ABILITY_ID = 'ESMD'
 @configurable constant real COOLDOWN = 60
@@ -21,7 +22,7 @@ import Orders
 @compiletime function createSpell()
     new AbilityDefinitionIllidanChannel(ABILITY_ID)
     ..setTargetType(1, 0)
-    ..setAnimationNames("stand")
+    ..setAnimationNames("")
     ..setArtCaster("")
     ..setArtEffect("")
     ..setArtTarget("")
@@ -40,6 +41,7 @@ import Orders
     ..setName("Meditate")
     ..setDisableOtherAbilities(1, false)
     ..setFollowThroughTime(1, DURATION)
+    ..setCastingTime(1, 0)
     ..setTooltipNormal(1, TOOLTIP_NORM)
     ..setTooltipNormalExtended(1, TOOLTIP_EXT)
     ..setBaseOrderID(1, "bearform")
@@ -55,7 +57,7 @@ import Orders
 HashMap<unit, MeditateInstance> instances = new HashMap<unit,MeditateInstance>()
 
 class MeditateInstance
-    bool isChanneling = true
+    bool isChanneling
     bool isOvercharged
     unit caster
     var dmgTrig = CreateTrigger()
@@ -64,7 +66,7 @@ class MeditateInstance
         
         doPeriodicallyTimed(1, DURATION) fxloop ->
             
-            if (isChanneling)
+            if (isChanneling or isOvercharged)
                 var efx = AddSpecialEffectTargetUnitBJ("origin", caster, EFFECT_PATH)
                 efx.setTimeScale(2)
                 doAfter(1) ->
@@ -73,8 +75,7 @@ class MeditateInstance
                 fxloop.stop()
 
         doPeriodicallyTimed(PERIOD_INTERVAL, DURATION) managiverloop ->
-            if (isChanneling)
-                     
+            if (isChanneling or isOvercharged)
                 var newmana = caster.getMana() + PERIOD_INTERVAL * MANA_PER_SECOND
                 caster.setMana(newmana)
             else
@@ -101,14 +102,15 @@ function onCast()
     if instances.has(caster)
         instances.getAndRemove(caster)
     
-    instances.put(caster, new MeditateInstance(caster, false))
+    instances.put(caster, new MeditateInstance(caster, consumeOvercharge(caster)))
 
 function onDamage(unit target, real amount)
     if instances.has(target) and amount >= 1
         var instance = instances.get(target)
-        if (instance.isChanneling)
+        if not instance.isOvercharged
             target.issueImmediateOrderById(Orders.stop)
-            instance.isChanneling = false
+        instance.isChanneling = false
+        instance.isOvercharged = false
 
 function onEndCast()
     if GetSpellAbilityId() == ABILITY_ID

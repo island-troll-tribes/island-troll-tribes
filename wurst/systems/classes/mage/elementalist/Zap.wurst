@@ -10,7 +10,7 @@ import ClosureForGroups
 import TimerUtils
 import TimerExtensions
 import HashMap
-
+import OverCharge
 
 @configurable constant int ABILITY_ID = 'XEZS'
 @configurable constant int SLOW_ABILITY_ID = 'XEZD'
@@ -26,6 +26,8 @@ import HashMap
 @configurable constant real COOLDOWN = 4
 @configurable constant int MANACOST = 10
 @configurable constant real MAIN_DAMAGE = 15
+@configurable constant int OVERCHARGE_FORK_AMOUNT = 3
+@configurable constant real OVERCHARGE_FORK_AOE = 400
 @configurable constant real CHARGE_BOUNCE_RADIUS = 450
 @configurable constant real CHARGE_DAMAGE = 25
 @configurable constant real CHARGE_STACK_DURATION = 30
@@ -120,12 +122,32 @@ let timerMap = new HashMap<unit, timer>()
 function onCast()
     var caster = GetSpellAbilityUnit()
     var target = GetSpellTargetUnit()
-    onCastEffects(caster, target)
+    onCastEffects(caster, target, consumeOvercharge(caster))
 
-function onCastEffects(unit caster, unit target)
-    doAfter(0.15) ->
+function onCastEffects(unit caster, unit target, bool overcharged)
+    
+    doAfter(0.08) ->
+
+        //Overcharged spell acts like forked lightning
+        if (overcharged)
+            var targetsHit = 1
+            forUnitsInRange(target.getPos(), OVERCHARGE_FORK_AOE) u ->
+                if (u.isAlive() and u.getOwner().isEnemyOf(caster.getOwner()) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isInvulnerable() and not u == target)
+                    //Limit hit count
+                    if targetsHit < OVERCHARGE_FORK_AMOUNT
+                        targetsHit += 1
+                        onCastEffects(caster, u, false)
+                        var targetFX = AddSpecialEffectTargetUnitBJ("origin", u, BOUNCE_IMPACT_EFFECT_PATH)
+                        var lightningFX = addLightning(LIGHTNING_CHAIN_LIGHTNING_SEECONDARY, true, caster.getPos3Real(), u.getPos3Real())
+                        doPeriodicallyTimed(0.05, 0.5) ofxUpdater ->
+                            lightningFX.move(true, caster.getPos3Real(), u.getPos3Real())
+                            if ofxUpdater.isLast()
+                                lightningFX.destr()
+                                targetFX.destr()
+
+        //Main target damage
         caster.damageTarget(target, MAIN_DAMAGE, ATTACK_TYPE_NORMAL)
-
+        
         if timerMap.has(target)
             timerMap.getAndRemove(target).release()
 
@@ -168,7 +190,7 @@ function zapChargeExplosion(unit caster, unit target)
     //Also zap nearby targets in radius
     forUnitsInRange(target.getPos(), CHARGE_BOUNCE_RADIUS) u ->
         if (u.isAlive() and u.getOwner().isEnemyOf(caster.getOwner()) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isInvulnerable() and not u == target)
-            onCastEffects(caster, u)
+            onCastEffects(caster, u, false)
             
             var targetFX = AddSpecialEffectTargetUnitBJ("origin", u, BOUNCE_IMPACT_EFFECT_PATH)
             var lightningFX = addLightning(LIGHTNING_CHAIN_LIGHTNING_SEECONDARY, true, target.getPos3Real(), u.getPos3Real())

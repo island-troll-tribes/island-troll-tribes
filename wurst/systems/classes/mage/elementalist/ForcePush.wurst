@@ -6,17 +6,23 @@ import ClosureForGroups
 import LinkedList
 import AbilityObjEditing
 import BuffObjEditing
+import OverCharge
+import Orders
+import DummyCaster
 
 @configurable constant int ABILITY_ID = 'XFPS'
+@configurable constant int DUMMY_STUN_ABILITY_ID = 'XFPD'
 @configurable constant real RADIUS = 285
 @configurable constant real CAST_TIME = 0.25
 @configurable constant real COOLDOWN = 5
 @configurable constant real MS_SLOW = 0.7
 @configurable constant int MANACOST = 5
 @configurable constant real KNOCKBACK_DURATION = 1
-@configurable constant real KNOCKBACK_SPEED = 550
+@configurable constant real KNOCKBACK_SPEED = 475
 @configurable constant real KNOCKBACK_FRICTION_MULTIPLIER = 0.93
 @configurable constant real KNOCKBACK_INTERVAL = 0.05
+@configurable constant real OVERCHARGE_KNOCKBACK_MULTIPLIER = 1.25
+@configurable constant real OVERCHARGE_STUN_DURATION = 1
 
 @configurable constant string SLIDE_EFFECT_PATH = "Objects\\Spawnmodels\\Undead\\ImpaleTargetDust\\ImpaleTargetDust.mdl"
 @configurable constant string EFFECT_PATH = "Abilities\\Spells\\NightElf\\BattleRoar\\RoarCaster.mdl"
@@ -58,6 +64,26 @@ import BuffObjEditing
     ..setAttackSpeedReduction(1, 0)
     ..setDamage(1, 0)
 
+@compiletime function createStunDummySpell()
+    new AbilityDefinitionFireBolt(DUMMY_STUN_ABILITY_ID)
+    ..setAnimationNames("")
+    ..setMissileSpeed(8000)
+    ..setMissileArt("")
+    ..setMissileHomingEnabled(true)
+    ..setCastingTime(1, 0)
+    ..setBuffs(1, "BSTN")
+    ..setCastRange(1, 9999)
+    ..setCooldown(1, 0)
+    ..setDamage(1, 0)
+    ..setDurationHero(1, OVERCHARGE_STUN_DURATION)
+    ..setDurationNormal(1, OVERCHARGE_STUN_DURATION)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setManaCost(1, 0)
+    ..setRace(Race.Creeps)
+    ..setName("Forcepush overcharged Stun Dummy Spell")
+
 class KBInfo
     unit u
     vec2 kbamount
@@ -77,6 +103,7 @@ function onCast()
     var caster = GetSpellAbilityUnit()
     var owner = caster.getOwner()
     var pos = caster.getPos()
+    bool isOvercharged = consumeOvercharge(caster)
     LinkedList<KBInfo> kbs = new LinkedList<KBInfo>()
     
     //SFX
@@ -89,8 +116,13 @@ function onCast()
         if u.getOwner().isEnemyOf(owner) and not u.isType(UNIT_TYPE_FLYING) and u.isAlive()
             KBInfo toAdd = new KBInfo()
             toAdd.u = u
-            toAdd.kbamount = caster.getPos().normalizedPointerTo(u.getPos()) * KNOCKBACK_SPEED * KNOCKBACK_INTERVAL
+            if not isOvercharged
+                toAdd.kbamount = caster.getPos().normalizedPointerTo(u.getPos()) * KNOCKBACK_SPEED * KNOCKBACK_INTERVAL
+            else if isOvercharged
+                new DummyCaster().castTarget(owner, DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, u, u.getPos3Real())
+                toAdd.kbamount = caster.getPos().normalizedPointerTo(u.getPos()) * KNOCKBACK_SPEED * KNOCKBACK_INTERVAL * OVERCHARGE_KNOCKBACK_MULTIPLIER
             kbs.add(toAdd)
+                        
             //Knockback3.add(u, 500., pos.angleTo(u.getPos()), angle(bj_PI / 5.))
 
     doPeriodicallyTimed(KNOCKBACK_INTERVAL, KNOCKBACK_DURATION) cb ->

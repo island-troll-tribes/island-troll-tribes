@@ -6,6 +6,7 @@ import ClosureForGroups
 import ClosureTimers
 import AbilityObjEditing
 import DummyCaster
+import OverCharge
 import Orders
 
 
@@ -16,6 +17,7 @@ import Orders
 @configurable constant real COOLDOWN = 5
 @configurable constant int MANACOST = 10
 @configurable constant real ORB_ATTACK_RADIUS = 575
+@configurable constant real ORB_ATTACK_COOLDOWN = 0.25
 @configurable constant real ORB_DAMAGE = 15
 @configurable constant real ORB_IMPACT_DAMAGE = 10
 @configurable constant real ORB_LIFETIME = 20
@@ -118,15 +120,17 @@ class SEFOrb
 
     function findTarget()
         var curPos = projectile.getPos()
-        if (target_unit == null)
+        if (target_unit == null and instance.orbLoopDuration >= 0.55 and instance.orbLoopDuration - instance.lastOrbAttackTimestamp >= ORB_ATTACK_COOLDOWN)
             forUnitsInRange(curPos, ORB_ATTACK_RADIUS) u ->
                 if (IsUnitVisible(u, ownerunit.getOwner()) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isHidden() and u.isAlive() and not u.isInvulnerable() and u.getOwner().isEnemyOf(ownerunit.getOwner()))
                     //Get the closest unit if multiples happen to come into range at once
                     if (target_unit != null)
                         if (curPos.distanceTo( target_unit.getPos() ) > curPos.distanceTo(u.getPos()))
                             target_unit = u
+                            instance.lastOrbAttackTimestamp = instance.orbLoopDuration
                     else
                         target_unit = u
+                        instance.lastOrbAttackTimestamp = instance.orbLoopDuration
                     
     function updateLoop()
         if (target_unit == null)
@@ -156,28 +160,39 @@ class SEFInstance
     angle orbAngle
     unit ownerUnit
     bool isChanneling
+    bool isOvercharged
+    real orbLoopDuration
+    real lastOrbAttackTimestamp
     CallbackCounted orbLoopPeriodic
     CallbackCounted orbCreationLoopPeriodic
 
     LinkedList<SEFOrb> orbs = new LinkedList<SEFOrb>()
 
-    construct (unit caster)
+    construct (unit caster, bool overcharged)
+        isOvercharged = overcharged
         ownerUnit = caster
         real channel_time = 0
         real _lastorb_created = 0
+        lastOrbAttackTimestamp = 0
+        orbLoopDuration = 0
         real orb_interval = ORB_SPAWN_INTERVAL
         isChanneling = true
 
-        orbCreationLoopPeriodic = doPeriodicallyTimed(ORB_PERIODICINTERVAL_SPAWN, CHANNEL_DURATION) orbcreation ->
-            if (isChanneling)
-                channel_time = channel_time + ORB_PERIODICINTERVAL_SPAWN
-                //Avoid floating point errors in the interval check with the -0.01
-                if (channel_time - _lastorb_created >= orb_interval-0.01)
-                    orbs.push(new SEFOrb(ownerUnit, this, caster.getPos().withTerrainZ(ORB_ORBIT_HEIGHT)))
-                    _lastorb_created = channel_time
-            else 
-                orbCreationLoopPeriodic.stop()
-
+        if not overcharged
+            orbCreationLoopPeriodic = doPeriodicallyTimed(ORB_PERIODICINTERVAL_SPAWN, CHANNEL_DURATION) orbcreation ->
+                if (isChanneling)
+                    channel_time = channel_time + ORB_PERIODICINTERVAL_SPAWN
+                    //Avoid floating point errors in the interval check with the -0.01
+                    if (channel_time - _lastorb_created >= orb_interval-0.01)
+                        orbs.push(new SEFOrb(ownerUnit, this, caster.getPos().withTerrainZ(ORB_ORBIT_HEIGHT)))
+                        _lastorb_created = channel_time
+                else 
+                    orbCreationLoopPeriodic.stop()
+        else
+            int count = (CHANNEL_DURATION/ORB_SPAWN_INTERVAL).round()
+            for i = 0 to count
+                orbs.push(new SEFOrb(ownerUnit, this, caster.getPos().withTerrainZ(ORB_ORBIT_HEIGHT)))
+        
         this.startOrbLoop()
 
 
@@ -185,7 +200,7 @@ class SEFInstance
         orbAngle = angle(0)
 
         orbLoopPeriodic = doPeriodicallyTimed(ORB_PERIODICINTERVAL_LOOP, ORB_LIFETIME) orbLoop ->
-            
+            orbLoopDuration += ORB_PERIODICINTERVAL_LOOP
             //Check for destruction conditions first before accessing any objects
             if (orbLoop.isLast() or (orbs.size() == 0 and not isChanneling))
                 if (not orbLoop.isLast()) //Make this stop in case the entry condition was orbs.size = 0
@@ -230,7 +245,7 @@ function onCast()
         prev_instance.orbLoopPeriodic.stop()
 
 
-    var SEF = new SEFInstance(caster)
+    var SEF = new SEFInstance(caster, consumeOvercharge(caster))
     instances.put(caster, SEF)
 
 function onEndCast()

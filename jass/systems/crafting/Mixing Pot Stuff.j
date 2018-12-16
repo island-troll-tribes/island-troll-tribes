@@ -128,7 +128,11 @@ function Trig_mixing_pot_stuff_Actions takes nothing returns nothing
             call UnitAddItemByIdSwapped( ITEM_MANA_POTION_I, u )
             return
         endif
-///healing
+
+
+        ///healing
+        /* II - IV commented out
+        
         if(butsu>2 and rivRoot>1) then
             call removeHerbs(u)
             call UnitAddItemByIdSwapped( ITEM_HEALING_POTION_IV, u )
@@ -144,6 +148,7 @@ function Trig_mixing_pot_stuff_Actions takes nothing returns nothing
             call UnitAddItemByIdSwapped( ITEM_HEALING_POTION_II, u )
             return
         endif
+        */
         if(butsu>0 and rivRoot>0) then
             call removeHerbs(u)
             call UnitAddItemByIdSwapped( ITEM_HEALING_POTION_I, u )

@@ -135,7 +135,7 @@ function onCastEffects(unit caster, unit target, bool overcharged)
                 if (u.isAlive() and u.getOwner().isEnemyOf(caster.getOwner()) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isInvulnerable() and not u == target)
                     //Limit hit count
                     if targetsHit < OVERCHARGE_FORK_AMOUNT
-                        targetsHit += 1
+                        targetsHit = targetsHit + 1
                         onCastEffects(caster, u, false)
                         var targetFX = AddSpecialEffectTargetUnitBJ("origin", u, BOUNCE_IMPACT_EFFECT_PATH)
                         var lightningFX = addLightning(LIGHTNING_CHAIN_LIGHTNING_SEECONDARY, true, caster.getPos3Real(), u.getPos3Real())
@@ -179,7 +179,7 @@ function onCastEffects(unit caster, unit target, bool overcharged)
 function zapChargeExplosion(unit caster, unit target)
     //Main target damage
     if (target.isAlive() and not target.isInvulnerable())
-        new DummyCaster().castTarget(caster.getOwner(), SLOW_ABILITY_ID, 1, Orders.slow, target)
+        new DummyCaster().castTarget(caster.getOwner(), SLOW_ABILITY_ID, 1, Orders.slow, target, caster.getPos3Real())
         caster.damageTarget(target, CHARGE_DAMAGE, ATTACK_TYPE_NORMAL)
 
     var efx = AddSpecialEffectTargetUnitBJ("chest", target, EFFECT_PATH)

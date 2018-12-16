@@ -106,49 +106,23 @@ function Trig_mixing_pot_stuff_Actions takes nothing returns nothing
 			call removeHerbs(u)
 			call UnitAddItemByIdSwapped( ITEM_OMNICURE, u ) // Omnicure
 			return
-		endif
-//manas
-        if(rivStem>1 and butsu>2) then
-            call removeHerbs(u)
-            call UnitAddItemByIdSwapped( ITEM_MANA_POTION_IV, u )
-            return
         endif
-        if(rivStem>1 and butsu>1) then
-            call removeHerbs(u)
-            call UnitAddItemByIdSwapped( ITEM_MANA_POTION_III, u )
-            return
-        endif
-        if(rivStem>0 and butsu>1) then
-            call removeHerbs(u)
-            call UnitAddItemByIdSwapped( ITEM_MANA_POTION_II, u )
-            return
-        endif
+        
+        //Manas 
         if(rivStem>0 and butsu>0) then
             call removeHerbs(u)
             call UnitAddItemByIdSwapped( ITEM_MANA_POTION_I, u )
             return
         endif
-///healing
-        if(butsu>2 and rivRoot>1) then
-            call removeHerbs(u)
-            call UnitAddItemByIdSwapped( ITEM_HEALING_POTION_IV, u )
-            return
-        endif
-        if(butsu>1 and rivRoot>1) then
-            call removeHerbs(u)
-            call UnitAddItemByIdSwapped( ITEM_HEALING_POTION_III, u )
-            return
-        endif
-        if(butsu>1 and rivRoot>0) then
-            call removeHerbs(u)
-            call UnitAddItemByIdSwapped( ITEM_HEALING_POTION_II, u )
-            return
-        endif
+
+
+        //Healing
         if(butsu>0 and rivRoot>0) then
             call removeHerbs(u)
             call UnitAddItemByIdSwapped( ITEM_HEALING_POTION_I, u )
             return
         endif
+        
 //essences
         if specTypes >= 2 and specCount >= 4 then
             call removeHerbs(u)

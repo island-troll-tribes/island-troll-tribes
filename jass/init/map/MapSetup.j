@@ -1,24 +1,4 @@
-
-// HCL Modes
-// a = No Boats
-// B = Elimination
-// c = All Random
-// D = No Horn
-// e = 6v6
-// f = EQUAL random
-// g = fast start
-// h = -hm
-// i = no trade
-// j = op mode
-// p = team kill off
-// , = spawn boundaries
-// = = HCL Lock, modes cant be entered.
-// CLAN HCL CODE
-// 0 = tdit
-// 7 =  ittp
-// 8 = tsot
-
-library MapSetup initializer onInit requires TimerUtils, PublicLibrary, ClassTracking, GameMode, InitializeUnits
+library MapSetup initializer onInit requires TimerUtils, PublicLibrary, GameMode, InitializeUnits
 
 globals
     integer MODES_TIME_LIMIT = 60
@@ -38,10 +18,6 @@ function ResetBMSkills takes nothing returns nothing
     call resetBMSkill(GetEnumPlayer())
 endfunction
 
-function StartupGold takes nothing returns nothing
-    call SetPlayerState(GetEnumPlayer(), PLAYER_STATE_RESOURCE_LUMBER, 3 )
-endfunction
-
 function Start_Game takes nothing returns nothing
     call ReleaseTimer(GetExpiredTimer())
 
@@ -51,16 +27,6 @@ function Start_Game takes nothing returns nothing
 
     call DisplayTText(GENERAL_COLOR+"Game has begun.|r", 10)
     call TimerStart(GAME_TIMER, 99999999, false, null)
-
-    call RegisterPlayersTrollClasses()
-endfunction
-
-function RemoveUnitX takes nothing returns nothing
-    call RemoveUnit(GetEnumUnit())
-endfunction
-
-function IsMerchant takes nothing returns boolean
-    return GetUnitTypeId(GetFilterUnit()) == UNIT_TROLL_MERCHANT
 endfunction
 
 function SlowDisplayea takes nothing returns nothing
@@ -76,10 +42,6 @@ function LocustDisplayUnits takes nothing returns nothing
     call UnitAddAbility(RECIPE_TANNERY, 'Aloc')
     call UnitAddAbility(RECIPE_FIRE, 'Aloc')
     call UnitAddAbility(RECIPE_GATHERER, 'Aloc')
-endfunction
-
-function FirstSpawnItemsAnimals takes nothing returns nothing
-    call TriggerExecute(gg_trg_spawn_call_first)
 endfunction
 
 function GenerateMap takes nothing returns nothing
@@ -103,7 +65,7 @@ function GenerateMap takes nothing returns nothing
     endloop
 
     call ExecuteFunc("Start_Game")
-    call FirstSpawnItemsAnimals()
+    call TriggerExecute(gg_trg_spawn_call_first)
 endfunction
 
 function ModesTimerFinished takes nothing returns nothing
@@ -119,65 +81,9 @@ function Startup_Timer takes nothing returns nothing
     call ReleaseTimer(GetExpiredTimer())
     call LockMammoth()
     call prepareSpells()
-    debug call BJDebugMsg("DEBUG MODE ACTIVE.")
 
-    //HCL Modes
-
-    if checkHCLletter("i") then //no trade
-        call GameModes_Action("-no trade",Player(0))
-    endif
-
-    if checkHCLletter("0") then
-        call GameMode.find("ffa").trigger()
-    endif
-
-    if checkHCLletter("1") then
-        call GameMode.find("1v1").trigger()
-    endif
-
-    if checkHCLletter("2") then
-        call GameMode.find("2s").trigger()
-    endif
-
-    if checkHCLletter("3") then
-        call GameMode.find("3s").trigger()
-    endif
-
-    if checkHCLletter("4") then
-        call GameMode.find("4s").trigger()
-    endif
-
-    if checkHCLletter("6") then
-        call GameMode.find("6s").trigger()
-    endif
-
-    if checkHCLletter("a") then //all random
-        call GameMode.find("all").triggerWithArgs("random")
-    endif
-
-    if checkHCLletter("e") then //elimination
-        call GameMode.find("el").trigger()
-    endif
-
-    if checkHCLletter("f") then
-        call GameMode.find("fd").trigger()
-    endif
-
-    if checkHCLletter("h") then //-hm
-        call GameMode.find("hm").trigger()
-    endif
-
-    if checkHCLletter("s") then
-        call GameMode.find("sf").trigger()
-    endif
-
-    if checkHCLletter("t") then
-        call GameMode.find("to").trigger()
-    endif
-
-    if checkHCLletter(".") then
-        set HOSTING_CLAN = "TwGB"
-    endif
+    call DisplayTText(COLOR_CODE[GetPlayerId(modePlayer)]+GetPlayerName(modePlayer)+"|r"+GENERAL_COLOR+" can choose game modes.|r", 30)
+    call DisplayTimedTextToPlayer(modePlayer,0,0,30,GENERAL_COLOR+"You have 30 seconds to enter modes|r|n")
 
     set i = 0
     loop
@@ -189,39 +95,8 @@ function Startup_Timer takes nothing returns nothing
         set i = i + 1
     endloop
 
-    if checkHCLletter("=") then //locks hcl
-        set mode_enter = false
-        set MODES_TIME_LIMIT = 0
-        call DisplayTText(GENERAL_COLOR+"Mode input is locked.", 45)
-    else
-        call DisplayTText(COLOR_CODE[GetPlayerId(modePlayer)]+GetPlayerName(modePlayer)+"|r"+GENERAL_COLOR+" can choose game modes.|r", 30)
-        call GameMode.registerAll(modePlayer)
-
-        if HOSTING_CLAN == "TwGB" then
-            set i = 0
-            loop
-                exitwhen i > 11
-                if modePlayer != Player(i) and StringCase(GetPlayerName(Player(i)), false) == "liquid." then
-                    call DisplayTText(COLOR_CODE[i]+GetPlayerName(Player(i))+"|r"+GENERAL_COLOR+" can also choose game modes.|r", 30)
-                    call GameMode.registerAll(Player(i))
-                endif
-                set i = i + 1
-            endloop
-        endif
-
-        call DisplayTimedTextToPlayer(modePlayer,0,0,30,GENERAL_COLOR+"You have 30 seconds to enter modes|r")
-    endif
-
-    call DisplayNewLine()
-
-    if not( HOSTING_CLAN == "" ) then
-        call DisplayTText( GENERAL_COLOR + "This game is hosted by " + GREEN_COLOR + "Clan " + HOSTING_CLAN + "|r", 50 )
-    endif
-
+    call GameMode.registerAll(modePlayer)
     call TriggerRegisterPlayerChatEvent( gg_trg_GameModes, modePlayer, "-", false )
-    call TriggerRegisterPlayerChatEvent( gg_trg_no_trees, modePlayer, "-no trees", true )
-    call TriggerRegisterPlayerChatEvent( gg_trg_no_herbs, modePlayer, "-no herbs", true )
-
     call TimerStart(MODES_TIMER, MODES_TIME_LIMIT, false, function ModesTimerFinished)
 endfunction
 
@@ -231,25 +106,20 @@ private function onInit takes nothing returns nothing
 
     call SetTimeOfDayScale(130 * 0.01)
     call SetFloatGameState(GAME_STATE_TIME_OF_DAY, 3)
-    call SetMapFlag( MAP_USE_HANDICAPS, false )
-    call EnableMinimapFilterButtons( true, false )
-    call SetCreepCampFilterState( false )
+    call SetMapFlag(MAP_USE_HANDICAPS, false)
+    call EnableMinimapFilterButtons(true, false)
+    call SetCreepCampFilterState(false)
 
-    static if LIBRARY_HydrAROUTINE then
-        call AddItemToStockBJ( ITEM_HYDRA_HINT, OMINOUS_ALTAR, 1, 1 )
-    endif
+    call AddItemToStockBJ( ITEM_HYDRA_HINT, OMINOUS_ALTAR, 1, 1 )
 
-    call ForForce(bj_FORCE_ALL_PLAYERS, function ItemRecipeVision )
-    call ForForce(bj_FORCE_ALL_PLAYERS, function ResetBMSkills )
-    call ForForce(bj_FORCE_ALL_PLAYERS, function StartupGold )
+    call ForForce(bj_FORCE_ALL_PLAYERS, function ItemRecipeVision)
+    call ForForce(bj_FORCE_ALL_PLAYERS, function ResetBMSkills)
 
     call InitGameCacheBJ( "ITT.w3v" )
     set udg_jumpCache = bj_lastCreatedGameCache
     set udg_GameHash = InitHashtable()
 
-    set gg_trg_no_trees = CreateTrigger(  )
-    set gg_trg_GameModes = CreateTrigger(  )
-    set gg_trg_no_herbs = CreateTrigger(  )
+    set gg_trg_GameModes = CreateTrigger()
 
     call UpdateBoardsLoopInit()
     call LocustDisplayUnits()

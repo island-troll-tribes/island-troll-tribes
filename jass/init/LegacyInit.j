@@ -5,7 +5,6 @@ library LegacyInit initializer onInit
         call ExecuteFunc("InitTrig_Attraction_Aura")
         call ExecuteFunc("InitTrig_stat_display")
         call ExecuteFunc("InitTrig_meat_and_bone")
-        call ExecuteFunc("InitTrig_unit_killed")
         call ExecuteFunc("InitTrig_hydra_summoning")
         call ExecuteFunc("InitTrig_hydradespawn")
         call ExecuteFunc("InitTrig_hydrabeeskin")

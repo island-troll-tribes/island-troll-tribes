@@ -3,7 +3,7 @@
 //TESH.scrollpos=0
 //TESH.alwaysfold=0
 function Trig_update_names_Conditions takes nothing returns boolean
-    return udg_STARTED and not GAME_END
+    return udg_STARTED
 endfunction
 
 function Trig_update_names_Actions takes nothing returns nothing

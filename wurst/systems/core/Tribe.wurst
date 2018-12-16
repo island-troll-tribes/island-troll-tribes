@@ -1,0 +1,43 @@
+package Tribe
+import LinkedList
+import HashMap
+
+public class Tribe
+    static let playerToTribeMap = new HashMap<player, Tribe>()
+    static let tribes = new LinkedList<Tribe>()
+
+    int tribeId
+    let tribePlayers  = new LinkedList<player>()
+    let tribe = CreateForce()
+    var defeated = false
+
+    static function getTribes() returns LinkedList<Tribe>
+        return tribes
+
+    static function ofPlayer(player query) returns Tribe
+        return playerToTribeMap.get(query)
+
+    construct(int id, int minPid, int maxPid)
+        tribeId = id
+
+        for pid = minPid to maxPid
+            let member = players[pid]
+            tribePlayers.push(member)
+            playerToTribeMap.put(member, this)
+            tribe.addPlayer(member)
+
+        tribes.push(this)
+
+    
+
+    function getDefeated() returns bool
+        return defeated
+
+    function setDefeated()
+        defeated = true
+
+    function getForce() returns force
+        return tribe
+
+    function getMembers() returns LinkedList<player>
+        return tribePlayers

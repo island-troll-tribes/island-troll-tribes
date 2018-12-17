@@ -8,8 +8,8 @@ import HashMap
 @configurable constant int KA_ABILITY_ID = 'A079'
 @configurable constant int LEZ_ABILITY_ID = 'A07A'
 @configurable constant real LOOP_INTERVAL = 0.03125
-@configurable constant real ORBIT_ANGULARSPEED = 50
-@configurable constant real ORBIT_DISTANCE = 90
+@configurable constant real ORBIT_ANGULARSPEED = 80
+@configurable constant real ORBIT_DISTANCE = 170
 @configurable constant int MAX_RUNE_COUNT = 5
 
 @configurable constant string RUNE_LEZ_EFFECT_PATH = "Doodads\\Cinematic\\GlowingRunes\\GlowingRunes4.mdl"
@@ -27,28 +27,35 @@ enum RUNE_TYPE
 class DementiaRune
     DementiaRunesInstance instance
     RUNE_TYPE runeType
-    effect FX = null
+    //effect FX = null
+    unit dummy
     vec3 pos
 
     construct (DementiaRunesInstance instance, RUNE_TYPE runeType)
         pos = instance.ownerUnit.getPos3Real()
         this.runeType = runeType
         if this.runeType == RUNE_TYPE.Lez
-            FX = addEffect(RUNE_LEZ_EFFECT_PATH, pos)
+            dummy = createUnit(instance.ownerUnit.getOwner(), UNIT_LOCUST_LEZ, pos, angle(0))
         else if this.runeType == RUNE_TYPE.Nel
-            FX = addEffect(RUNE_NEL_EFFECT_PATH, pos)
+            dummy = createUnit(instance.ownerUnit.getOwner(), UNIT_LOCUST_LEZ, pos, angle(0))
         else if this.runeType == RUNE_TYPE.Ka
-            FX = addEffect(RUNE_KA_EFFECT_PATH, pos)
-        FX.setScale(0.7)
+            dummy = createUnit(instance.ownerUnit.getOwner(), UNIT_LOCUST_LEZ, pos, angle(0))
+        //FX.setScale(1.5)
+        //FX.setTimeScale(0.1)
 
     function setPos(vec3 newpos)
         pos = newpos
         //Adjust orbs a little lower since the SFX looks like its higher
-        FX.setPos(pos - vec3(0,0,75))
+        //FX.setPos(pos - vec3(0,0,75))
+        dummy.setPos(pos.toVec2())
+
+    function setFacing(angle facing)
+        dummy.setFacing(facing)
 
     ondestroy
         instance.runes.remove(this)
-        FX.destr()
+        RemoveUnit(dummy)
+        //FX.destr()
 
 class DementiaRunesInstance
     angle runeAngleBase
@@ -80,15 +87,22 @@ class DementiaRunesInstance
         vec3 ownerpos = ownerUnit.getPos3Real()
         for r in runes
             angle indexRuneAngle = runeAngleBase + offset * i.toReal()
-            r.setPos(ownerpos.offset2d(indexRuneAngle, ORBIT_DISTANCE))
+            r.setPos(ownerpos.offset2d(indexRuneAngle, ORBIT_DISTANCE) + vec3(0,0,150))
+            r.setFacing(r.pos.angleTo2d(ownerUnit.getPos()))
             i = i + 1
 
+    
+
+
     function addRune(DementiaRune rune)
+        
         if runes.size() < MAX_RUNE_COUNT
             runes.add(rune)
         else 
             runes.removeAt(0)
             runes.add(rune)
+
+        print("Adding rune " + runes.size().toString())
 
     ondestroy
         destroy runeLoop

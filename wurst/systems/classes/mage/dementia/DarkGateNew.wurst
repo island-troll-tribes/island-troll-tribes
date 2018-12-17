@@ -1,17 +1,17 @@
 package DarkGateNew
-
-
-
 import RegisterEvents
 import HashMap
 import LinkedList
 import ClosureTimers
 import Orders
+import ClosureForGroups
+import DummyCaster
+import AbilityObjEditing
 
 @configurable constant int ABILITY_ID = 'A076'
 @configurable constant real GROW_DURATION = 10
 @configurable constant real MINIMUM_GROW_DURATION = 1.5
-@configurable constant real DURATION = 40
+@configurable constant real DURATION_MAX = 40
 @configurable constant int ORB_COUNT = 7
 @configurable constant real ORB_LOOP_INTERVAL = 0.03125
 @configurable constant real ORB_ANGULARSPEED_SUMMON = 80 
@@ -19,17 +19,108 @@ import Orders
 @configurable constant real SPELLCAST_INTERVAL_FASTEST = 1.5
 @configurable constant real SPELLCAST_INTERVAL_START = 2.5
 @configurable constant real PORTAL_GROWSPEED = 100 
-@configurable constant string INITIAL_EFFECT_PATH = "Abilities\\Spells\\Demon\\DarkPortal\\DarkPortalTarget.mdl"
+@configurable constant string SPELLCAST_EFFECT_PATH = "Abilities\\Spells\\Demon\\DarkPortal\\DarkPortalTarget.mdl"
 @configurable constant string TRAIL_EFFECT_PATH = "Abilities\\Weapons\\AvengerMissile\\AvengerMissile.mdl"
 @configurable constant string ORB_EFFECT_PATH = "Objects\\InventoryItems\\CrystalShard\\CrystalShard.mdl" 
 
-let darkPortalInstances = new HashMap<unit, DarkPortalInstance>()
-let spellList = new LinkedList<orbSpell>()
+@compiletime function createDummyChainlightning()
+    new AbilityDefinitionChainLightningcreep('PRTA')
+    ..setAnimationNames("")
+    ..setDamageReductionperTarget(1, 0.1)
+    ..setDamageperTarget(1, 20)
+    ..setNumberofTargetsHit(1, 4)
+    ..setAreaofEffect(1, 2000)
+    ..setCastRange(1, 2000)
+    ..setCastingTime(1, 0)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setCooldown(1,0)
 
-class orbSpell
+@compiletime function createDummyFrostnova()
+    new AbilityDefinitionFrostNovacreep('PRTC')
+    ..setAnimationNames("")
+    ..setBuffs(1, "Bfro")
+    ..setCastRange(1, 4000)
+    ..setCastingTime(1, 0)
+    ..setDurationHero(1, 4)
+    ..setDurationNormal(1, 4)
+    ..setAreaofEffectDamage(1, 10)
+    ..setSpecificTargetDamage(1, 15)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setCooldown(1,0)
+
+@compiletime function createDummyForkedlightning()
+    new AbilityDefinitionSeaWitchForkedLightning('PRTD')
+    ..setCastRange(1, 4000)
+    ..setAnimationNames("")
+    ..setCastingTime(1, 0)
+    ..setDamageperTarget(1, 20)
+    ..setDistance(1, 2000)
+    ..setNumberofTargetsHit(1, 2)
+    ..setAreaofEffect(1, 500)
+    ..setFinalArea(1, 500)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setCooldown(1,0)
+
+@compiletime function createDummyManaburn()
+    new AbilityDefinitionManaBurndemon('PRTE')
+    ..setCastRange(1, 4000)
+    ..setAnimationNames("")
+    ..setCastingTime(1, 0)
+    ..setMaxManaDrained(1, 10)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setCooldown(1,0)
+
+@compiletime function createDummyCrushingwave()
+    new AbilityDefinitionCrushingWave('PRTG')
+    ..setAnimationNames("")
+    ..setCastRange(1, 4000)
+    ..setDistance(1, 2000)
+    ..setCastingTime(1, 0)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setDamage(1, 25)
+    ..setDistance(1, 1300)
+    ..setMaxDamage(1, 200)
+    ..setCooldown(1,0)
+
+@compiletime function createDummyFirebolt()
+    new AbilityDefinitionFireBoltcreep('PRTH')
+    ..setAnimationNames("")
+    ..setCastRange(1, 2000)
+    ..setCastingTime(1, 0)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setDamage(1, 25)
+    ..setDurationHero(1, 0.7)
+    ..setDurationNormal(1, 2.1)
+    ..setCooldown(1,0)
+
+
+let darkPortalInstances = new HashMap<unit, DarkPortalInstance>()
+let spellList = new LinkedList<OrbSpell>()
+
+enum TARGET_TYPE
+    ground
+    targeted
+
+class OrbSpell
     int spellId
     int orderId
-    construct(int spellId, int orderId)
+    string name
+    construct(string name, int spellId, int orderId)
+        this.spellId = spellId
+        this.orderId = orderId
+        this.name = name
 
 class PortalOrb
     DarkPortalInstance instance
@@ -68,6 +159,7 @@ class DarkPortalInstance
     real channeledTime
     real lastSpellCastTimestamp
     real spellIntervalCurrent
+    real durationBuildup
     vec3 centerPos
     CallbackCounted portalActiveLoop = null
     CallbackCounted portalCreationLoop = null
@@ -81,6 +173,7 @@ class DarkPortalInstance
         centerPos = pos
         elapsedLifetime = 0
         channeledTime = 0
+        durationBuildup = 0
         lastSpellCastTimestamp = -9999
         orbAngle = angle(0)
         spellIntervalCurrent = SPELLCAST_INTERVAL_START
@@ -95,26 +188,45 @@ class DarkPortalInstance
                 portalGrowLoop.stop()
                 this.startPortalLoop()
             else
-                portalRadius += ORB_LOOP_INTERVAL * PORTAL_GROWSPEED
-                orbAngle = angle(orbAngle.radians() + ORB_LOOP_INTERVAL * ORB_ANGULARSPEED_SUMMON * DEGTORAD)
-            
-                //Avoid creating vision on every loop cycle
+                //Avoid creating vision on every loop cycle with mod check
                 if (portalGrowLoop.getCount() mod 30 == 0)
                     var vis = createVision(ownerUnit.getOwner(), centerPos.toVec2(), portalRadius+100, true)
                     vis.start()
-                    doAfter(DURATION + GROW_DURATION - elapsedLifetime) ->
+                    //Should be the full duration of portal calculated below for vision mods
+                    doAfter(durationBuildup + GROW_DURATION - elapsedLifetime) ->
                         vis.destr()
                 
-                
-                //Depending on how long portal was channeled, increase spellcasting rate
+                //Update things that change with channeling time
                 spellIntervalCurrent = SPELLCAST_INTERVAL_START - (SPELLCAST_INTERVAL_START - SPELLCAST_INTERVAL_FASTEST) * (elapsedLifetime/GROW_DURATION)
                 elapsedLifetime += ORB_LOOP_INTERVAL
                 channeledTime += ORB_LOOP_INTERVAL
+                portalRadius += ORB_LOOP_INTERVAL * PORTAL_GROWSPEED
+                durationBuildup = (channeledTime / GROW_DURATION) * DURATION_MAX
+                orbAngle = angle(orbAngle.radians() + ORB_LOOP_INTERVAL * ORB_ANGULARSPEED_SUMMON * DEGTORAD)
+
+                //Move orbs around
                 updateOrbAngles()
 
     function randomOrbCastSpell()
         var orb = this.orbs.get( GetRandomInt(0, orbs.size() - 1))
-        var randomSpell = spellList.get( GetRandomInt(0, spellList.size() - 1))
+        var owner = ownerUnit.getOwner()
+        var centerPosVec2 = centerPos.toVec2()
+        var foundTarget = false
+
+        //Find random target and cast + spawn effect on orb
+        forUnitsInRange(centerPosVec2, portalRadius) t ->
+            if not foundTarget
+                if t.getOwner().isEnemyOf(owner) and not t.isInvulnerable() and not t.isType(UNIT_TYPE_STRUCTURE) and t.isAlive() and IsUnitVisible(t, owner)
+                    var randomSpell = spellList.get( GetRandomInt(0, spellList.size() - 1))
+                    //Dont use manaburn on units without mana pools
+                    while (t.getMaxMana() <= 10 and randomSpell.name == "Manaburn")
+                        randomSpell = spellList.get( GetRandomInt(0, spellList.size() - 1))
+                    new DummyCaster().castTarget(owner, randomSpell.spellId, 1, randomSpell.orderId, t, orb.pos)
+
+                    print("Cast " + randomSpell.name + " on " + t.getName())
+                    addEffect(SPELLCAST_EFFECT_PATH, orb.pos).destr()
+                    foundTarget = true
+            
 
     function updateOrbAngles()
         //Calculate orb angles and set it
@@ -130,18 +242,18 @@ class DarkPortalInstance
         if channeledTime < MINIMUM_GROW_DURATION
             destroy this
         else
-            portalActiveLoop = doPeriodicallyTimed(ORB_LOOP_INTERVAL, DURATION) portalLoop ->
+            portalActiveLoop = doPeriodicallyTimed(ORB_LOOP_INTERVAL, durationBuildup) portalLoop ->
                 //Check for destruction conditions first before accessing any objects
                 if (portalLoop.isLast())
                     destroy this
                 else    
-                    
-                    orbAngle = angle(orbAngle.radians() + ORB_LOOP_INTERVAL * ORB_ANGULARSPEED_ACTIVE * DEGTORAD)
-                    updateOrbAngles()
+                    //Update orb loop actions
                     if (this.elapsedLifetime - this.lastSpellCastTimestamp >= this.spellIntervalCurrent)
                         this.lastSpellCastTimestamp = this.elapsedLifetime
                         randomOrbCastSpell()
                     elapsedLifetime += ORB_LOOP_INTERVAL
+                    orbAngle = angle(orbAngle.radians() + ORB_LOOP_INTERVAL * ORB_ANGULARSPEED_ACTIVE * DEGTORAD)
+                    updateOrbAngles()
 
     ondestroy
         orbs.forEach(o -> destroy o)
@@ -172,17 +284,25 @@ function onEndCast()
         instance.isChanneling = false
 
 function createSpellList()
-    spellList.push(new orbSpell('A038', Orders.carrionswarm) )
-    spellList.push(new orbSpell('A01K', Orders.shadowstrike) )
-    spellList.push(new orbSpell('A02A', Orders.frostnova) )
-    spellList.push(new orbSpell('A028', Orders.impale) )
-    spellList.push(new orbSpell('A065', Orders.manaburn) )
-    spellList.push(new orbSpell('A02V', Orders.creepthunderbolt) )
-    spellList.push(new orbSpell('ACfl', Orders.forkedlightning) )
-    spellList.push(new orbSpell('ACtb', Orders.creepthunderbolt) )
-    spellList.push(new orbSpell('A020', Orders.frostnova) )
-    spellList.push(new orbSpell('A01X', Orders.chainlightning) )
+    //Chainlight
+    spellList.push(new OrbSpell("Chain lightning",'PRTA', Orders.chainlightning) )
+    //Thistle
+    spellList.push(new OrbSpell("Thistle poison",'A01K', Orders.shadowstrike) )
+    //Frostnova
+    spellList.push(new OrbSpell("Frost nova",'PRTC', Orders.frostnova) )
+    //Forked
+    spellList.push(new OrbSpell("Forked lightning",'PRTD', Orders.forkedlightning) )
+    //Manaburn
+    spellList.push(new OrbSpell("Manaburn",'PRTE', Orders.manaburn) )
+    //Meteor
+    spellList.push(new OrbSpell("Meteor",'XEMS', Orders.rainoffire) )
+    //Wave
+    spellList.push(new OrbSpell("Crushingwave",'PRTG', Orders.carrionswarm) )
+    //Firebolt
+    spellList.push(new OrbSpell("Firebolt",'PRTH', Orders.firebolt) )
+
 
 init
+    createSpellList()
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST, () -> onEndCast())

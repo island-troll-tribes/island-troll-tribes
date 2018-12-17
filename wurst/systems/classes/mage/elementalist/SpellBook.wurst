@@ -9,6 +9,7 @@ import ClosureEvents
 
 //With darkgate and runes "XEZS, XEMS, XFPS, ESEF, ESOC, ESMD, A076, A06S, A079, A07A"
 @configurable constant string array SPELLS = ["XEZS, XEMS, XFPS, ESEF, ESOC, ESMD", "XEZS, XEMS, XFPS, ESEF, ESOC, ESMD", "XEZS, XEMS, XFPS, ESEF, ESOC, ESMD"]
+@configurable constant string array SPELLS2 = ["A076, A06S, A079, A07A", "A076, A06S, A079, A07A", "A076, A06S, A079, A07A"]
 
 @compiletime function createSpellbook()
     new AbilityDefinitionSpellBook('XESB')
@@ -36,16 +37,51 @@ import ClosureEvents
     ..presetTooltipNormalExtended(lvl -> "Contains various spells n such")
     ..presetSharedSpellCooldown(lvl -> false)
 
+@compiletime function createSpellbook2()
+    new AbilityDefinitionSpellBook('XDSB')
+    ..setButtonPositionNormalX(1)
+    ..setButtonPositionNormalY(1)
+    ..setButtonPositionResearchX(1)
+    ..setButtonPositionResearchY(1)
+    ..setIconNormal("ReplaceableTextures\\CommandButtons\\BTNTomeOfRetraining.blp")
+    ..setIconResearch("ReplaceableTextures\\CommandButtons\\BTNTomeOfRetraining.blp")
+    ..setIconTurnOff("ReplaceableTextures\\CommandButtons\\BTNTomeOfRetraining.blp")
+    ..setHeroAbility(true)
+    ..setItemAbility(false)
+    ..setLevels(3)
+    ..presetBaseOrderID(lvl -> "spellbook")
+    ..setHotkeyLearn("Z")
+    ..setHotkeyNormal("Z")
+    ..setName("New Dementia Master")
+    ..setTooltipLearn("Learn Spells of The Dementia Master")
+    ..setTooltipLearnExtended("Harness the power of runes and demons to do your bidding")
+    ..presetMaximumSpells(lvl -> 11)
+    ..presetMinimumSpells(lvl -> 11)
+    ..presetSpellList(lvl -> SPELLS2[lvl-1])
+    ..presetCooldown(lvl -> 0)
+    ..presetTooltipNormal(lvl -> "Look up Dementia Master spell (|cffffcc00Z|r)")
+    ..presetTooltipNormalExtended(lvl -> "Contains various spells n such")
+    ..presetSharedSpellCooldown(lvl -> false)
+
 init
+
     registerCommandAll("spells") (triggerPlayer, args) ->
         if (gameConfig.isTestModeEnabled())
-            printTimedToPlayer("Added spellbook to selected heroes", 5., triggerPlayer)
+            printTimedToPlayer("Added elementalist test spellbook to any selected heroes", 5., triggerPlayer)
             forUnitsSelected(triggerPlayer) u ->
                 if (u.isType(UNIT_TYPE_HERO))
                     u.addAbility('XESB')
         else
             printTimedToPlayer("Requires test mode!", 5., triggerPlayer)
 
+    registerCommandAll("spells2") (triggerPlayer, args) ->
+        if (gameConfig.isTestModeEnabled())
+            printTimedToPlayer("Added dementia test spellbook to any selected heroes", 5., triggerPlayer)
+            forUnitsSelected(triggerPlayer) u ->
+                if (u.isType(UNIT_TYPE_HERO))
+                    u.addAbility('XDSB')
+        else
+            printTimedToPlayer("Requires test mode!", 5., triggerPlayer)
 
 
         

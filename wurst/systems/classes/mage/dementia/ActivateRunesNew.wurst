@@ -6,6 +6,7 @@ import Orders
 import ClosureEvents
 import DummyCaster
 import LinkedList
+import Camera
 import SoundUtils
 
 @configurable constant int ABILITY_ID = 'A07B'
@@ -96,14 +97,8 @@ function trySummonDemon(unit caster, DementiaRunesInstance runesInstance, DarkPo
                         printTimedToPlayer(GENERAL_COLOR + "You have summoned " + summonInfo.name + GENERAL_COLOR + "!|r", 4, caster.getOwner())
                         portalInstance.summons.push(new Summon(createUnit(caster.getOwner(), summonInfo.summonUnitID, portalInstance.centerPos, angle(-90 * DEGTORAD)), summonInfo.cooldown, summonInfo.orderId))
                         
-                        for i = 0 to bj_MAX_PLAYERS
-                            player p = Player(i)
-                            unit troll = getPlayersTroll(p)
-                            if troll != null
-                                if troll.getPos().distanceTo( portalInstance.centerPos.toVec2() ) < 2000
-                                    SUMMON_SOUND_FX.playForPlayer(p, 3)
-                        
-                        SUMMON_SOUND_FX.play(3)
+                        if getCameraTargetPosition().distanceTo(portalInstance.centerPos.toVec2()) < 1300
+                            SUMMON_SOUND_FX.play(3)
 
                         for r in runesInstance.runes
                             destroy r

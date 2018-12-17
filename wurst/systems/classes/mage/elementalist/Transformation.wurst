@@ -1,21 +1,12 @@
 package Transformation
 
 import AbilityObjEditing
+import Orders
 import ClosureEvents
-
-@compiletime function createElementalistTransformAbility()
-    new AbilityDefinitionChaosGrom('XTSE')
-    ..setHeroAbility(true)
-    ..setRequiredLevel(6)
-    ..setCheckDependencies(false)
-    ..setRequirements("")
-    ..setName("Elementalist")
-    ..setTooltipLearn("Transform to Elementalist")
-    ..setTooltipLearnExtended("Raise your class status to Elementalist. The Elementalist is adept at controlling powerful damage dealing spells. |c00ff0000Can only choose 1 subclass!|r")
 
 function ReplaceUnit(unit whichUnit, integer newUnitId) returns unit
     var oldUnit = whichUnit
-    unit newUnit = null
+    unit newUnit = createUnit(whichUnit.getOwner(), newUnitId, oldUnit.getPos(), oldUnit.getFacingAngle())
 
     //Bogus check
     if oldUnit == null
@@ -23,7 +14,6 @@ function ReplaceUnit(unit whichUnit, integer newUnitId) returns unit
     
     //Hide original
     oldUnit.hide()
-    newUnit = createUnit(oldUnit.getOwner(), newUnitId, oldUnit.getPos(), oldUnit.getFacingAngle())
 
     //Copy stats
     newUnit.setMana(oldUnit.getMana())
@@ -31,19 +21,15 @@ function ReplaceUnit(unit whichUnit, integer newUnitId) returns unit
 
     //Transfer items
     for i = 0 to oldUnit.inventorySize()-1
-        var moveItem = oldUnit.itemInSlot(i)
+        item moveItem = oldUnit.itemInSlot(i)
         if moveItem != null
             oldUnit.removeItem(moveItem)
             newUnit.addItemHandle(moveItem)
-        
+            newUnit.issueTargetOrder("itemdrag0" + i.toString(), moveItem)
     oldUnit.remove()
-
     return newUnit
 
-    
-
-
-function trollUpgrade(unit whichUnit, integer newUnitId, bool isSupersub, bool isMedallion)
+public function trollUpgrade(unit whichUnit, integer newUnitId, bool isSupersub, bool isMedallion)
     var oldUnit = whichUnit
     player owner = oldUnit.getOwner()
     unit newUnit = ReplaceUnit(whichUnit, newUnitId)
@@ -54,7 +40,7 @@ function trollUpgrade(unit whichUnit, integer newUnitId, bool isSupersub, bool i
     udg_PUnits[GetPlayerId(owner)] = newUnit
 
     //Level and skillpoints
-    newUnit.setLevel(1, false)
+    newUnit.setLevel(0, false)
     newUnit.setSkillPoints(0)
 
     //Supersubs from normal subs get more stats
@@ -90,7 +76,7 @@ function handleTransformation()
     int upgradeSkill = GetLearnedSkill()
 
     if GetLearnedSkill() == 'XTSE' //Elementalist
-        trollUpgrade(u, 1, false, false)
+        trollUpgrade(u, 'XELE', false, false)
         
 init
     EventListener.add(EVENT_PLAYER_HERO_SKILL) ->

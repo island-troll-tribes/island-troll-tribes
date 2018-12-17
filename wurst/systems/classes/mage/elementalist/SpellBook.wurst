@@ -4,6 +4,7 @@ import AbilityObjEditing
 import ClosureForGroups
 import GameConfig
 import ChatCommands
+import Transformation
 
 //With darkgate and runes "XEZS, XEMS, XFPS, ESEF, ESOC, ESMD, A076, A06S, A079, A07A"
 @configurable constant string array SPELLS = ["XEZS, XEMS, XFPS, ESEF, ESOC, ESMD", "XEZS, XEMS, XFPS, ESEF, ESOC, ESMD", "XEZS, XEMS, XFPS, ESEF, ESOC, ESMD"]
@@ -81,5 +82,16 @@ init
         else
             printTimedToPlayer("Requires test mode!", 5., triggerPlayer)
 
+    registerCommandAll("newmage") (triggerPlayer, args) ->
+        if (gameConfig.isTestModeEnabled())
+            printTimedToPlayer("Transformed to new mage", 5., triggerPlayer)
+            forUnitsSelected(triggerPlayer) u ->
+                if (u.isType(UNIT_TYPE_HERO) and udg_trolls.contains(u))
+                    trollUpgrade(u, 'XMGE', false, false)
 
+        else    
+            printTimedToPlayer("Requires test mode!", 5., triggerPlayer)
+    
+    
+            
         

@@ -6,11 +6,13 @@ import Orders
 import ClosureEvents
 import DummyCaster
 import LinkedList
+import SoundUtils
 
 @configurable constant int ABILITY_ID = 'A07B'
 @configurable constant int RREQUIREMENT_ABILITY_ID = 'A07D'
 @configurable constant real PORTAL_OFFSET = 150
 @configurable constant real RUNE_CAST_RADIUS = 350
+constant SUMMON_SOUND_FX = new SoundDefinition(Sounds.varimathrasReady1, false, true)
 
 LinkedList<SummonData> summonsList = new LinkedList<SummonData>()
 
@@ -93,13 +95,7 @@ function trySummonDemon(unit caster, DementiaRunesInstance runesInstance, DarkPo
                     if summonInfo.rune_order.equals(runeSequence)
                         printTimedToPlayer(GENERAL_COLOR + "You have summoned " + summonInfo.name + GENERAL_COLOR + "!|r", 4, caster.getOwner())
                         portalInstance.summons.push(new Summon(createUnit(caster.getOwner(), summonInfo.summonUnitID, portalInstance.centerPos, angle(-90 * DEGTORAD)), summonInfo.cooldown, summonInfo.orderId))
-                        
-                        /* Sound playing doesnt work yet
-                        var snd = new SoundDefinition("Sounds\\Internal\\Units\\Undead\\Varimathras\\VarimathrasReady1.wav", false)
-                        snd.play()
-                        doAfter(3) ->
-                            destroy snd
-                        */
+                        SUMMON_SOUND_FX.playOnPoint(portalInstance.centerPos)
 
                         for r in runesInstance.runes
                             destroy r
@@ -113,5 +109,6 @@ function initSummonsData()
     summonsList.push(new SummonData(RUNE_TYPE.Nel, RUNE_TYPE.Nel, RUNE_TYPE.Ka, RUNE_TYPE.Nel, RUNE_TYPE.Lez, "|c0075f041Nelnelka Nellez|r", Orders.soulburn, 1.5, UNIT_LOCUST_GHOST))
     
 init
+
     initSummonsData()
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())

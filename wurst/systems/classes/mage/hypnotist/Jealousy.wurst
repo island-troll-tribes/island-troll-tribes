@@ -1,55 +1,30 @@
 package Jealousy
 import RegisterEvents
-import LinkedList
 import Orders
 import Table
 import ClosureTimers
 import ClosureForGroups
 
 @configurable constant int ABILITY_ID = 'A051'
-@configurable constant real INTERVAL = 0.05
+@configurable constant int BUFF_ID = 'BHav'
+@configurable constant real INTERVAL = 0.5
 @configurable constant real CURSE_RADIUS = 600
 @configurable constant real CURSE_DURATION = 7
 
-constant table = new Table()
+constant targetTable = new Table()
 
 function onCast()
     var target = GetSpellTargetUnit()
     var owner = target.getOwner()
-    var pos = target.getPos()
-    var bewitched = new LinkedList<int>()
 
     doPeriodicallyTimed(INTERVAL, CURSE_DURATION) cb ->
-        bewitched.forEach(idx -> table.removeHandle(idx))
-
-        if not target.isAlive()
+        if not target.isAlive() or not target.hasAbility(BUFF_ID)
             cb.stop()
-            destroy bewitched
-        else if cb.isLast()
-            destroy bewitched
         else
-            bewitched.clear()
-            forUnitsInRange(pos, CURSE_RADIUS) u ->
-                var index = u.getHandleId()
-                if u != target and u.isAlive() and u.getOwner().isAllyOf(owner) and not table.hasHandle(index)
-                    bewitched.push(index)
-                    table.saveUnit(index, target)
-                    u.issueTargetOrderById(Orders.attack, target)
-
-function onAnyOrder()
-    var u = GetTriggerUnit()
-    var index = u.getHandleId()
-
-    if table.hasHandle(index)
-        var target = table.loadUnit(index)
-        if target.isAlive()
-            let t = getPlayerUnitEventTrigger(EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER)
-            t.disable()
-            u.issueTargetOrderById(Orders.attack, target)
-            t.enable()
+            forUnitsInRange(target.getPos(), CURSE_RADIUS) u ->
+                if u != target and u.isAlive() and u.getOwner().isAllyOf(owner)
+                    if not target.isInvulnerable() and not u.isInvulnerable()
+                        u.issueTargetOrderById(Orders.attack, target)
 
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())
-    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_ORDER, () -> onAnyOrder())
-    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER, () -> onAnyOrder())
-    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, () -> onAnyOrder())

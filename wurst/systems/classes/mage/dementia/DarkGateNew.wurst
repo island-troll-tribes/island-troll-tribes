@@ -6,7 +6,7 @@ import RegisterEvents
 import HashMap
 import LinkedList
 import ClosureTimers
-
+import Orders
 
 @configurable constant int ABILITY_ID = 'A076'
 @configurable constant real GROW_DURATION = 10
@@ -20,6 +20,12 @@ import ClosureTimers
 @configurable constant string ORB_EFFECT_PATH = "Objects\\InventoryItems\\CrystalShard\\CrystalShard.mdl" 
 
 let darkPortalInstances = new HashMap<unit, DarkPortalInstance>()
+let spellList = new LinkedList<orbSpell>()
+
+class orbSpell
+    int spellId
+    int orderId
+    construct(int spellId, int orderId)
 
 class PortalOrb
     DarkPortalInstance instance
@@ -129,6 +135,18 @@ function onEndCast()
         var caster = GetSpellAbilityUnit()
         var instance = darkPortalInstances.get(caster)
         instance.isChanneling = false
+
+function createSpellList()
+    spellList.push(new orbSpell('A038', Orders.carrionswarm) )
+    spellList.push(new orbSpell('A01K', Orders.shadowstrike) )
+    spellList.push(new orbSpell('A02A', Orders.frostnova) )
+    spellList.push(new orbSpell('A028', Orders.impale) )
+    spellList.push(new orbSpell('A065', Orders.manaburn) )
+    spellList.push(new orbSpell('A02V', Orders.creepthunderbolt) )
+    spellList.push(new orbSpell('ACfl', Orders.forkedlightning) )
+    spellList.push(new orbSpell('ACtb', Orders.creepthunderbolt) )
+    spellList.push(new orbSpell('A020', Orders.frostnova) )
+    spellList.push(new orbSpell('A01X', Orders.chainlightning) )
 
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())

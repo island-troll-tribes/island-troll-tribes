@@ -1,0 +1,112 @@
+package Hints
+import ClosureTimers
+import LinkedList
+import ChatCommands
+
+let TIME_BETWEEN_HINTS = 60.0
+let HINTS_OFF_MESSAGE = GENERAL_COLOR + "Your hints are now " + GOLD_COLOR + "off" + GENERAL_COLOR + "."
+let HINTS_ON_MESSAGE = GENERAL_COLOR + "Your hints are now " + GOLD_COLOR + "on" + GENERAL_COLOR + "."
+
+class Hint
+    
+    static force players = CreateForce()
+
+    private string message
+    private unit unitLoc
+    private trigger action = null
+
+    construct(string hint)
+        this.message = hint
+        this.unitLoc = null
+
+    construct(string hint, code what)
+        this.message = hint
+        this.action = CreateTrigger()
+        TriggerAddAction(this.action, what)
+
+    construct(string hint, unit toPing)
+        this.message = hint
+        this.unitLoc = toPing
+
+    function display()
+        if IsPlayerInForce(GetLocalPlayer(), players)
+            printTimedToPlayer(GOLD_COLOR + "Hint: |r" + GENERAL_COLOR + message + "|r", 10, GetLocalPlayer())
+            if action != null
+                TriggerExecute(action)
+
+    static function pingUnit(unit which)
+        pingLoc(GetUnitLoc(which))
+
+    static function pingLoc(location loc)
+        PingMinimapLocForForceEx(players, loc, 5, bj_MINIMAPPINGSTYLE_FLASHY, 100, 100, 100)
+
+    static function addPLayer(player p)
+        ForceAddPlayer(players, p)
+        printTimedToPlayer(HINTS_ON_MESSAGE, 5, p)
+
+    static function removePlayer(player p)
+        ForceRemovePlayer(players, p)
+        printTimedToPlayer(HINTS_OFF_MESSAGE, 5, p)
+
+    static function togglePlayer(player p)
+        if (IsPlayerInForce(p, players))
+            Hint.removePlayer(p)
+        else    
+            Hint.addPLayer(p)
+
+    static function initialize()
+        for i = 0 to 11
+            ForceAddPlayer(players, Player(i))
+               
+        registerCommandAll("h") (triggerPlayer, args) -> 
+            Hint.togglePlayer(triggerPlayer)
+        
+public function displayNextHint(LinkedList<Hint> hintList)
+        let hint = hintList.dequeue()
+        hint.display()
+                
+public function doPeriodicDisplay(LinkedList<Hint> hintList)
+        doPeriodicallyCounted(TIME_BETWEEN_HINTS, hintList.size(), (cb) -> displayNextHint(hintList))
+
+public function displayStatsWarningMessages()
+        let user = GetManipulatingUnit()
+        let p = GetOwningPlayer(GetEnumUnit())
+        let health = user.getHP()
+        let mana = GetUnitState(GetEnumUnit(), UNIT_STATE_MANA)
+        let heat = GetPlayerState(p, PLAYER_STATE_RESOURCE_GOLD)
+
+        print(health)
+        if IsPlayerInForce(p, Hint.players)
+            if health <= 25
+                 print("hello")
+                doPeriodically(20, (cb) -> printTimedToPlayer(COLOR_RED + "Your health is low, eat some meat!", 5, p))
+            if mana <= 25
+                printTimedToPlayer(COLOR_RED + "Your energy is low, get some sleep!", 5, p)
+            if heat <= 25
+                printTimedToPlayer(COLOR_RED + "Your heat is low, go stand by a fire!", 5, p)
+
+
+init
+     s__Map_onGameStart() ->
+        let hintList = new LinkedList<Hint>()
+        ..add(new Hint( "For help on building, refer to these shops or for some basics, the quest log.", -> Hint.pingLoc(GetRectCenter(gg_rct_vision)) ))
+        ..add(new Hint("To toggle hints, type " + HIGHLIGHT_COLOR + "-h|r." ))
+        ..add(new Hint("If you have no hunter, fires can be used to trap elk. They also make cheap lookouts." ))
+        ..add(new Hint("If any of your stats (health, mana, heat) hit 0, YOU DIE instantly so keep them up at all times." ))
+        ..add(new Hint("The Master Crafter in the center of the map can help your team build if you do not have enough inventory slots.", -> Hint.pingUnit(MASTER_CRAFTER)))
+        ..add(new Hint("Boats frequently travel up and down the streams. The fur trade is especially lucrative." ))
+        ..add(new Hint("Remember to keep a watch on you and your team's stats. Remind someone if they are running low on anything." ))
+        ..add(new Hint("Beware the mammoth. He is a strong foe and defeating him is a team effort, but you will be rewarded....", -> Hint.pingUnit(MAMMOTH) ))
+        ..add(new Hint("Try not to sit around in your base the whole game. You can almost always be doing something useful." ))
+        ..add(new Hint("Exploring unknown area may be dangerous, remember to carry meat." ))
+        ..add(new Hint("If it seems you have collected all the items or hunted all the wildlife in one area, move to another. Sometimes fertile land is just an island away." ))
+        ..add(new Hint("Fighting the bosses around the edges of the map is a good way to level up and gain valuable items." ))
+        ..add(new Hint("Each island got bushes of special herb used for powerful potion, you can see their location by using a command, answer is in the quest log." ))
+        ..add(new Hint("Speed, strategy, and meat are crucial to winning wars." ))
+        ..add(new Hint("An old altar seems to require a certain magical artifact to be activated, who knows what might happen.", -> Hint.pingLoc(GetRectCenter(gg_rct_TheOne)) ))
+        ..add(new Hint("Use quickmake skills and unload items to quickly manage the inventories of buildings." ))
+        ..add(new Hint("Use |r" + ENERGY_COLOR + "-changelog|r" + GENERAL_COLOR + " to view changelog for this version" ))
+
+        Hint.initialize()
+        doPeriodicDisplay(hintList)
+        //displayStatsWarningMessages()

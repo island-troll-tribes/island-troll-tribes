@@ -6,27 +6,30 @@ import Orders
 import ClosureEvents
 import DummyCaster
 import LinkedList
+import SoundUtils
+import ClosureTimers
 
 @configurable constant int ABILITY_ID = 'A07B'
 @configurable constant real PORTAL_OFFSET = 150
 @configurable constant real RUNE_CAST_RADIUS = 350
 
-LinkedList<summonData> summonsList = new LinkedList<summonData>()
+LinkedList<SummonData> summonsList = new LinkedList<SummonData>()
 
-public class summonData
+public class SummonData
     LinkedList<RUNE_TYPE> rune_order
     string name
-    int OrderId
+    int orderId
     real cooldown
     int summonUnitID
     construct(RUNE_TYPE r1, RUNE_TYPE r2, RUNE_TYPE r3, RUNE_TYPE r4, RUNE_TYPE r5, string name, int orderId, real cooldown, int summonUnitID)
+        rune_order = new LinkedList<RUNE_TYPE>()
         rune_order.push(r1)
         rune_order.push(r2)
         rune_order.push(r3)
         rune_order.push(r4)
         rune_order.push(r5)
         this.name = name
-        this.OrderId = orderId
+        this.orderId = orderId
         this.cooldown = cooldown
         this.summonUnitID = summonUnitID
 
@@ -65,9 +68,18 @@ function LinkedList<RUNE_TYPE>.equals(LinkedList<RUNE_TYPE> other) returns boole
         return false
     var iter = other.staticItr()
     for elem in this
-        if elem != iter.next()
+        var elem2 = iter.next()
+        if elem != elem2
             return false
     return true
+
+function RUNE_TYPE.toString() returns string
+    if (this == RUNE_TYPE.Ka)
+        return "Ka"
+    else if (this == RUNE_TYPE.Nel)
+        return "Nel"
+    else
+        return "Lez"
 
 function trySummonDemon(unit caster, DementiaRunesInstance runesInstance, DarkPortalInstance portalInstance) returns bool
     if runesInstance != null
@@ -80,18 +92,23 @@ function trySummonDemon(unit caster, DementiaRunesInstance runesInstance, DarkPo
 
                 for summonInfo in summonsList
                     if summonInfo.rune_order.equals(runeSequence)
-                        print("Summoned: " + summonInfo.name)
-
-                for r in runesInstance.runes
-                    destroy r
+                        printTimedToPlayer(GENERAL_COLOR + "You have summoned " + summonInfo.name + GENERAL_COLOR + "!|r", 4, caster.getOwner())
+                        portalInstance.summons.push(new Summon(createUnit(caster.getOwner(), summonInfo.summonUnitID, portalInstance.centerPos, angle(-90 * DEGTORAD)), summonInfo.cooldown, summonInfo.orderId))
+                        var snd = new SoundDefinition("Sounds\\Internal\\Units\\Undead\\Varimathras\\VarimathrasReady1.wav", false)
+                        snd.play()
+                        doAfter(3) ->
+                            destroy snd
+                        
+                        for r in runesInstance.runes
+                            destroy r
             
-                return true
+                        return true
     return false
 
 function initSummonsData()
-    summonsList.push(new summonData(RUNE_TYPE.Ka, RUNE_TYPE.Lez, RUNE_TYPE.Ka, RUNE_TYPE.Nel, RUNE_TYPE.Ka, "|c00ff0000Kalezka Nelka|r", Orders.acidbomb, 1, UNIT_LOCUST_FIRE_LORD))
-    summonsList.push(new summonData(RUNE_TYPE.Lez, RUNE_TYPE.Nel, RUNE_TYPE.Lez, RUNE_TYPE.Lez, RUNE_TYPE.Ka, "|c00005a95Leznel Lezlezka|r", Orders.thunderbolt, 1, UNIT_LOCUST_WATER_LORD))
-    summonsList.push(new summonData(RUNE_TYPE.Nel, RUNE_TYPE.Nel, RUNE_TYPE.Ka, RUNE_TYPE.Nel, RUNE_TYPE.Lez, "|c00005a95Leznel Lezlezka|r", Orders.soulburn, 1.5, UNIT_LOCUST_WATER_LORD))
+    summonsList.push(new SummonData(RUNE_TYPE.Ka, RUNE_TYPE.Lez, RUNE_TYPE.Ka, RUNE_TYPE.Nel, RUNE_TYPE.Ka, "|c00ff0000Kalezka Nelka|r", Orders.acidbomb, 1, UNIT_LOCUST_FIRE_LORD))
+    summonsList.push(new SummonData(RUNE_TYPE.Lez, RUNE_TYPE.Nel, RUNE_TYPE.Lez, RUNE_TYPE.Lez, RUNE_TYPE.Ka, "|c00005a95Leznel Lezlezka|r", Orders.thunderbolt, 1, UNIT_LOCUST_WATER_LORD))
+    summonsList.push(new SummonData(RUNE_TYPE.Nel, RUNE_TYPE.Nel, RUNE_TYPE.Ka, RUNE_TYPE.Nel, RUNE_TYPE.Lez, "|c0075f041Nelnelka Nellez|r", Orders.soulburn, 1.5, UNIT_LOCUST_GHOST))
     
 init
     initSummonsData()

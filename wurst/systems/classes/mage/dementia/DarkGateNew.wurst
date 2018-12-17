@@ -165,6 +165,24 @@ class PortalOrb
         orbFX.destr()
         trailFX.destr()
 
+public class Summon
+    unit summonUnit
+    real cooldown
+    real elapsedLifetime
+    real lastAttack
+    int orderId
+
+    construct(unit u, real cooldown, int orderId)
+        this.summonUnit = u
+        this.cooldown = cooldown
+        this.orderId = orderId
+        this.elapsedLifetime = 0
+        this.lastAttack = -cooldown //Attack right away after spawn
+
+    ondestroy
+        this.summonUnit.remove()
+
+
 public class DarkPortalInstance
     angle orbAngle
     unit ownerUnit
@@ -180,6 +198,7 @@ public class DarkPortalInstance
     CallbackCounted portalCreationLoop = null
 
     LinkedList<PortalOrb> orbs = new LinkedList<PortalOrb>()
+    LinkedList<Summon> summons = new LinkedList<Summon>()
 
     construct (unit caster, vec3 pos)
         ownerUnit = caster
@@ -272,9 +291,33 @@ public class DarkPortalInstance
                     orbAngle = angle(orbAngle.radians() + ORB_LOOP_INTERVAL * ORB_ANGULARSPEED_ACTIVE * DEGTORAD)
                     updateOrbAngles()
 
+                    //Update any summons too
+                    for s in summons
+                        if (s.elapsedLifetime - s.lastAttack >= s.cooldown)
+                            //s.summonUnit.issueTargetOrderById(s.orderId, null)
+                            unit summonTarget = null
+                            forUnitsInRange(centerPos.toVec2(), portalRadius) t ->
+                                //Try to find enemies first
+                                if summonTarget == null
+                                    if t.getOwner().isEnemyOf(ownerUnit.getOwner()) and not t.isInvulnerable() and not t.isType(UNIT_TYPE_STRUCTURE) and t.isAlive() and IsUnitVisible(t, ownerUnit.getOwner())
+                                        summonTarget = t
+
+                                //Try to find allies second
+                                if summonTarget == null
+                                    if not t.isInvulnerable() and not t.isType(UNIT_TYPE_STRUCTURE) and t.isAlive() and IsUnitVisible(t, ownerUnit.getOwner())
+                                        summonTarget = t
+                                
+                                if summonTarget != null
+                                    s.summonUnit.issueTargetOrderById(s.orderId, summonTarget)
+                                    s.lastAttack = s.elapsedLifetime
+                        //Update summon lifetime clock
+                        s.elapsedLifetime += ORB_LOOP_INTERVAL
     ondestroy
         orbs.forEach(o -> destroy o)
         destroy orbs
+
+        summons.forEach(s -> destroy s)
+        destroy summons
 
         if darkPortalInstances.has(ownerUnit)
             if (darkPortalInstances.get(ownerUnit) == this) 

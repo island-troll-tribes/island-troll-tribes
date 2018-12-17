@@ -35,9 +35,11 @@ function onCast()
         var dpos = pos.polarOffset(dummyAngle, TURN_DISTANCE)
         dummy.setXY(dpos)
 
-        forUnitsInRange(dummy.getPos(), RADIUS) u ->
-            if not u.hasAbility(BUFF_ID)
-                new DummyCaster().castTarget(owner, DUMMY_ABILITY_ID, 1, Orders.acidbomb, u, dpos)
+        //Avoid spamming darts at too high interval before buff gets applied resulting in multiple darts
+        if (cb.getCount() mod 7 == 0)
+            forUnitsInRange(dummy.getPos(), RADIUS) u ->
+                if not u.hasAbility(BUFF_ID)
+                    new DummyCaster().castTarget(owner, DUMMY_ABILITY_ID, 1, Orders.acidbomb, u, dpos)
         if cb.isLast()
             dummy.kill()
 

@@ -5,8 +5,9 @@ import ClosureForGroups
 import GameConfig
 import ChatCommands
 import LinkedList
+import ClosureEvents
 
-@configurable constant string array SPELLS = ["XEZS, XEMS, XFPS, ESEF, ESOC, ESMD", "XEZS, XEMS, XFPS, ESEF, ESOC, ESMD", "XEZS, XEMS, XFPS, ESEF, ESOC, ESMD"]
+@configurable constant string array SPELLS = ["XEZS, XEMS, XFPS, ESEF, ESOC, ESMD, A076", "XEZS, XEMS, XFPS, ESEF, ESOC, ESMD, A076", "XEZS, XEMS, XFPS, ESEF, ESOC, ESMD, A076"]
 
 @compiletime function createSpellbook()
     new AbilityDefinitionSpellBook('XESB')
@@ -34,17 +35,16 @@ import LinkedList
     ..presetTooltipNormalExtended(lvl -> "Contains various spells n such")
     ..presetSharedSpellCooldown(lvl -> false)
 
-class SpellsCommandHandler implements CommandHandler
-    function run(player triggerPlayer, LinkedList<string> arguments)
+init
+    registerCommandAll("spells") (triggerPlayer, args) ->
         if (gameConfig.isTestModeEnabled())
             printTimedToPlayer("Added spellbook to selected heroes", 5., triggerPlayer)
             forUnitsSelected(triggerPlayer) u ->
                 if (u.isType(UNIT_TYPE_HERO))
                     u.addAbility('XESB')
         else
-        printTimedToPlayer("Requires test mode!", 5., triggerPlayer)
-    
-init
-    registerCommandAll("-spells", new SpellsCommandHandler())
+            printTimedToPlayer("Requires test mode!", 5., triggerPlayer)
+
+
 
         

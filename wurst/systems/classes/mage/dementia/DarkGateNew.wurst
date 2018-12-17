@@ -1,0 +1,135 @@
+package DarkGateNew
+
+
+
+import RegisterEvents
+import HashMap
+import LinkedList
+import ClosureTimers
+
+
+@configurable constant int ABILITY_ID = 'A076'
+@configurable constant real GROW_DURATION = 10
+@configurable constant real DURATION = 15
+@configurable constant int ORB_COUNT = 7
+@configurable constant real ORB_LOOP_INTERVAL = 0.03125
+@configurable constant real ORB_ANGULARORBITSPEED = 80 
+@configurable constant real PORTAL_GROWSPEED = 100 
+@configurable constant string INITIAL_EFFECT_PATH = "Abilities\\Spells\\Demon\\DarkPortal\\DarkPortalTarget.mdl"
+@configurable constant string TRAIL_EFFECT_PATH = "Abilities\\Weapons\\AvengerMissile\\AvengerMissile.mdl"
+@configurable constant string ORB_EFFECT_PATH = "Objects\\InventoryItems\\CrystalShard\\CrystalShard.mdl" 
+
+let darkPortalInstances = new HashMap<unit, DarkPortalInstance>()
+
+class PortalOrb
+    DarkPortalInstance instance
+    effect orbFX = null
+    effect trailFX = null
+    vec3 pos
+
+    construct (DarkPortalInstance portal, vec3 startPos)
+        instance = portal
+        pos = startPos
+        orbFX = addEffect(ORB_EFFECT_PATH, startPos)
+        trailFX = addEffect(TRAIL_EFFECT_PATH, startPos)
+
+    function setPos(vec3 newpos)
+        pos = newpos
+        //Adjust orbs a little lower since the SFX looks like its higher
+        orbFX.setPos(pos - vec3(0,0,75))
+        trailFX.setPos(pos)
+
+    ondestroy
+        instance.orbs.remove(this)
+        orbFX.destr()
+        trailFX.destr()
+
+
+class DarkPortalInstance
+    angle orbAngle
+    unit ownerUnit
+    bool isChanneling
+    real portalRadius
+    real elapsedLifetime
+    vec3 centerPos
+    CallbackCounted portalActiveLoop = null
+    CallbackCounted portalCreationLoop = null
+
+    LinkedList<PortalOrb> orbs = new LinkedList<PortalOrb>()
+
+    construct (unit caster, vec3 pos)
+        ownerUnit = caster
+        isChanneling = true
+        portalRadius = 50
+        centerPos = pos
+        elapsedLifetime = 0
+        orbAngle = angle(0)
+        startPortalCreation()
+
+    function startPortalCreation()
+        for i = 1 to ORB_COUNT
+            orbs.push(new PortalOrb(this, centerPos))
+        
+        portalCreationLoop = doPeriodicallyTimed(ORB_LOOP_INTERVAL, GROW_DURATION) portalGrowLoop ->
+            elapsedLifetime += ORB_LOOP_INTERVAL
+            if not isChanneling or portalGrowLoop.isLast()
+                portalGrowLoop.stop()
+                this.startPortalLoop()
+            else
+                portalRadius += ORB_LOOP_INTERVAL * PORTAL_GROWSPEED
+                orbAngle = angle(orbAngle.radians() + ORB_LOOP_INTERVAL * ORB_ANGULARORBITSPEED * DEGTORAD)
+            
+                //Avoid creating vision on every loop cycle
+                if (portalGrowLoop.getCount() mod 30 == 0)
+                    var vis = createVision(ownerUnit.getOwner(), centerPos.toVec2(), portalRadius+150, true)
+                    vis.start()
+                    doAfter(DURATION + GROW_DURATION - elapsedLifetime) ->
+                        vis.destr()
+
+                //Calculate orb angles and set it
+                angle orbOffset = angle((360 / orbs.size())*DEGTORAD)
+                int i = 0
+                for o in orbs
+                    angle indexOrbAngle = orbAngle + orbOffset * i.toReal()
+                    o.setPos(centerPos.offset2d(indexOrbAngle, portalRadius))
+                    i = i + 1
+
+    function startPortalLoop()
+        portalActiveLoop = doPeriodicallyTimed(ORB_LOOP_INTERVAL, DURATION) portalLoop ->
+            //Check for destruction conditions first before accessing any objects
+            if (portalLoop.isLast())
+                destroy this
+            else
+                //Call stuff or orb / cast spells or something
+
+    ondestroy
+        orbs.forEach(o -> destroy o)
+        destroy orbs
+
+        if darkPortalInstances.has(ownerUnit)
+            if (darkPortalInstances.get(ownerUnit) == this) 
+                darkPortalInstances.remove(ownerUnit)
+
+function onCast()
+    var caster = GetSpellAbilityUnit()
+
+    //Destroy previous instance
+    if darkPortalInstances.has(caster)
+        var prev_instance = darkPortalInstances.get(caster)
+        if prev_instance.portalActiveLoop != null
+            prev_instance.portalActiveLoop.stop()
+        if prev_instance.portalActiveLoop != null
+            prev_instance.portalActiveLoop.stop()
+    
+    //Spawn the portal, a bit higher than the caster on Z axis
+    darkPortalInstances.put(caster, new DarkPortalInstance(caster, caster.getPos3Real() + vec3(0, 0, 50)))
+
+function onEndCast()
+    if GetSpellAbilityId() == ABILITY_ID
+        var caster = GetSpellAbilityUnit()
+        var instance = darkPortalInstances.get(caster)
+        instance.isChanneling = false
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST, () -> onEndCast())

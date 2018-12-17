@@ -88,7 +88,7 @@ import AbilityObjEditing
     ..setItemAbility(false)
     ..setLevels(1)
     ..setDamage(1, 25)
-    ..setDistance(1, 1300)
+    ..setDistance(1, GROW_DURATION * PORTAL_GROWSPEED * 2)
     ..setMaxDamage(1, 200)
     ..setCooldown(1,0)
 
@@ -103,6 +103,22 @@ import AbilityObjEditing
     ..setDamage(1, 25)
     ..setDurationHero(1, 0.7)
     ..setDurationNormal(1, 2.1)
+    ..setCooldown(1,0)
+
+@compiletime function createDummyImpale()
+    new AbilityDefinitionImpaleCreep('PRTF')
+    ..setAnimationNames("")
+    ..setCastRange(1, 2500)
+    ..setAirTimeseconds(1, 0.7)
+    ..setCastingTime(1, 0)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setDamageDealt(1, 10)
+    ..setWaveDistance(1, GROW_DURATION * PORTAL_GROWSPEED * 2)
+    ..setWaveTimeseconds(1, 0)
+    ..setDurationHero(1, 0.5)
+    ..setDurationNormal(1, 2)
     ..setCooldown(1,0)
 
 
@@ -149,8 +165,7 @@ class PortalOrb
         orbFX.destr()
         trailFX.destr()
 
-
-class DarkPortalInstance
+public class DarkPortalInstance
     angle orbAngle
     unit ownerUnit
     bool isChanneling
@@ -219,11 +234,13 @@ class DarkPortalInstance
                 if t.getOwner().isEnemyOf(owner) and not t.isInvulnerable() and not t.isType(UNIT_TYPE_STRUCTURE) and t.isAlive() and IsUnitVisible(t, owner)
                     var randomSpell = spellList.get( GetRandomInt(0, spellList.size() - 1))
                     //Dont use manaburn on units without mana pools
-                    while (t.getMaxMana() <= 10 and randomSpell.name == "Manaburn")
+                    while (t.getMaxMana() <= 10 and randomSpell.name == "Manaburn") 
                         randomSpell = spellList.get( GetRandomInt(0, spellList.size() - 1))
-                    new DummyCaster().castTarget(owner, randomSpell.spellId, 1, randomSpell.orderId, t, orb.pos)
-
-                    print("Cast " + randomSpell.name + " on " + t.getName())
+                    
+                    if (randomSpell.name == "Crushingwave")
+                        new DummyCaster(2.5).castTarget(owner, randomSpell.spellId, 1, randomSpell.orderId, t, orb.pos)
+                    else
+                        new DummyCaster().castTarget(owner, randomSpell.spellId, 1, randomSpell.orderId, t, orb.pos)
                     addEffect(SPELLCAST_EFFECT_PATH, orb.pos).destr()
                     foundTarget = true
             
@@ -294,11 +311,19 @@ function createSpellList()
     spellList.push(new OrbSpell("Forked lightning",'PRTD', Orders.forkedlightning) )
     //Manaburn
     spellList.push(new OrbSpell("Manaburn",'PRTE', Orders.manaburn) )
-    //Wave
+    //Tsunami
     spellList.push(new OrbSpell("Crushingwave",'PRTG', Orders.carrionswarm) )
     //Firebolt
     spellList.push(new OrbSpell("Firebolt",'PRTH', Orders.firebolt) )
+    //Impale
+    spellList.push(new OrbSpell("Impale",'PRTF', Orders.impale) )
 
+
+public function getDementiaGate(unit owner) returns DarkPortalInstance
+    if (darkPortalInstances.has(owner))
+        return darkPortalInstances.get(owner)
+    else 
+        return null
 
 init
     createSpellList()

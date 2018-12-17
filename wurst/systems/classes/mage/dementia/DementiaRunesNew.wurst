@@ -3,6 +3,7 @@ import RegisterEvents
 import LinkedList
 import ClosureTimers
 import HashMap
+import Orders
 
 @configurable constant int NEL_ABILITY_ID = 'A06S'
 @configurable constant int KA_ABILITY_ID = 'A079'
@@ -17,12 +18,23 @@ import HashMap
 @configurable constant string RUNE_KA_EFFECT_PATH = "Doodads\\Cinematic\\GlowingRunes\\GlowingRunes0.mdl"
 
 let dementiaRunesInstances = new HashMap<unit, DementiaRunesInstance>()
+let runeSpellsList = new LinkedList<DementiaRuneSpell>()
 
-enum RUNE_TYPE
+public enum RUNE_TYPE
     Nel
     Lez
     Ka
     None
+
+public class DementiaRuneSpell
+    int spellId
+    int orderId
+    string name
+
+    construct(string name, int spellId, int orderId)
+        this.name = name
+        this.spellId = spellId
+        this.orderId = orderId
 
 class DementiaRune
     DementiaRunesInstance instance
@@ -53,6 +65,15 @@ class DementiaRune
 
     function setFacing(angle facing)
         dummy.setFacing(facing)
+    
+    function getRandomRuneSpellID() returns DementiaRuneSpell
+        if this.runeType == RUNE_TYPE.Ka
+            return runeSpellsList.get(GetRandomInt(0, 1))  
+        else if this.runeType == RUNE_TYPE.Nel
+            return runeSpellsList.get(GetRandomInt(2, 3))
+        else
+            return runeSpellsList.get(4)
+
 
     ondestroy
         if instance.runes.has(this)
@@ -60,7 +81,7 @@ class DementiaRune
         dummy.remove()
         //FX.destr()
 
-class DementiaRunesInstance
+public class DementiaRunesInstance
     angle runeAngleBase
     unit ownerUnit
     real elapsedLifetime
@@ -137,7 +158,21 @@ function onCast()
         dementiaRunesInstances.put(caster, instance)
         instance.addRune(new DementiaRune(instance, runeType))
 
+public function getRunesInstance(unit owner) returns DementiaRunesInstance
+    if (dementiaRunesInstances.has(owner))
+        return dementiaRunesInstances.get(owner)
+    else 
+        return null
+
+function setupRuneSpellsList()
+    runeSpellsList.add(new DementiaRuneSpell("Firebolt", 'A07C', Orders.creepthunderbolt))
+    runeSpellsList.add(new DementiaRuneSpell("Soul burn", 'A064', Orders.soulburn))
+    runeSpellsList.add(new DementiaRuneSpell("Null damage", 'A01Y', Orders.cripple))
+    runeSpellsList.add(new DementiaRuneSpell("Drunken haze", 'A03E', Orders.drunkenhaze))
+    runeSpellsList.add(new DementiaRuneSpell("Frost nova", 'A02A', Orders.frostnova))
+
 init
+    setupRuneSpellsList()
     registerSpellEffectEvent(NEL_ABILITY_ID, () -> onCast())
     registerSpellEffectEvent(KA_ABILITY_ID, () -> onCast())
     registerSpellEffectEvent(LEZ_ABILITY_ID, () -> onCast())

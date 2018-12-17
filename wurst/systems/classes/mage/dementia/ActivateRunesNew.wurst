@@ -1,0 +1,98 @@
+package ActivateRunesNew
+import DarkGateNew
+import DementiaRunesNew
+import ClosureForGroups
+import Orders
+import ClosureEvents
+import DummyCaster
+import LinkedList
+
+@configurable constant int ABILITY_ID = 'A07B'
+@configurable constant real PORTAL_OFFSET = 150
+@configurable constant real RUNE_CAST_RADIUS = 350
+
+LinkedList<summonData> summonsList = new LinkedList<summonData>()
+
+public class summonData
+    LinkedList<RUNE_TYPE> rune_order
+    string name
+    int OrderId
+    real cooldown
+    int summonUnitID
+    construct(RUNE_TYPE r1, RUNE_TYPE r2, RUNE_TYPE r3, RUNE_TYPE r4, RUNE_TYPE r5, string name, int orderId, real cooldown, int summonUnitID)
+        rune_order.push(r1)
+        rune_order.push(r2)
+        rune_order.push(r3)
+        rune_order.push(r4)
+        rune_order.push(r5)
+        this.name = name
+        this.OrderId = orderId
+        this.cooldown = cooldown
+        this.summonUnitID = summonUnitID
+
+function onCast()
+    var caster = GetSpellAbilityUnit()
+    DementiaRunesInstance runesInstance = getRunesInstance(caster)
+    DarkPortalInstance portalInstance = getDementiaGate(caster)
+
+    if runesInstance == null
+        return
+
+    if trySummonDemon(caster, runesInstance, portalInstance)
+        return
+    else
+        runesCastSpells(caster, runesInstance)
+        return
+
+function runesCastSpells(unit caster, DementiaRunesInstance runesInstance)
+    unit target = null
+    var owner = caster.getOwner()
+    var casterPos = caster.getPos()
+    forUnitsInRange(caster.getPos(), RUNE_CAST_RADIUS) t ->
+        if t.getOwner().isEnemyOf(owner) and not t.isInvulnerable() and not t.isType(UNIT_TYPE_STRUCTURE) and t.isAlive() and IsUnitVisible(t, owner)
+            if (target == null)
+                target = t
+            else if (target.getPos().distanceToSq(casterPos) > t.getPos().distanceToSq(casterPos))
+                target = t
+
+            for r in runesInstance.runes
+                DementiaRuneSpell spell = r.getRandomRuneSpellID()
+                new DummyCaster().castTarget(owner, spell.spellId, 1, spell.orderId, target, r.pos)
+                destroy r
+
+function LinkedList<RUNE_TYPE>.equals(LinkedList<RUNE_TYPE> other) returns boolean
+    if other == null or this.size() != other.size()
+        return false
+    var iter = other.staticItr()
+    for elem in this
+        if elem != iter.next()
+            return false
+    return true
+
+function trySummonDemon(unit caster, DementiaRunesInstance runesInstance, DarkPortalInstance portalInstance) returns bool
+    if runesInstance != null
+        if portalInstance != null and runesInstance.runes.size() > 0
+            if portalInstance.centerPos.toVec2().distanceTo(caster.getPos()) <= portalInstance.portalRadius and runesInstance.runes.size() == 5
+                //Have portal, and standing inside portal
+                var runeSequence = new LinkedList<RUNE_TYPE>()
+                for r in runesInstance.runes
+                    runeSequence.push(r.runeType)
+
+                for summonInfo in summonsList
+                    if summonInfo.rune_order.equals(runeSequence)
+                        print("Summoned: " + summonInfo.name)
+
+                for r in runesInstance.runes
+                    destroy r
+            
+                return true
+    return false
+
+function initSummonsData()
+    summonsList.push(new summonData(RUNE_TYPE.Ka, RUNE_TYPE.Lez, RUNE_TYPE.Ka, RUNE_TYPE.Nel, RUNE_TYPE.Ka, "|c00ff0000Kalezka Nelka|r", Orders.acidbomb, 1, UNIT_LOCUST_FIRE_LORD))
+    summonsList.push(new summonData(RUNE_TYPE.Lez, RUNE_TYPE.Nel, RUNE_TYPE.Lez, RUNE_TYPE.Lez, RUNE_TYPE.Ka, "|c00005a95Leznel Lezlezka|r", Orders.thunderbolt, 1, UNIT_LOCUST_WATER_LORD))
+    summonsList.push(new summonData(RUNE_TYPE.Nel, RUNE_TYPE.Nel, RUNE_TYPE.Ka, RUNE_TYPE.Nel, RUNE_TYPE.Lez, "|c00005a95Leznel Lezlezka|r", Orders.soulburn, 1.5, UNIT_LOCUST_WATER_LORD))
+    
+init
+    initSummonsData()
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())

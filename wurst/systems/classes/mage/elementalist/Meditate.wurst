@@ -1,0 +1,126 @@
+package Meditate
+
+import HashMap
+import ClosureEvents
+import ClosureTimers
+import AbilityObjEditing
+import Orders
+import OverCharge
+
+@configurable constant int ABILITY_ID = 'ESMD'
+@configurable constant real COOLDOWN = 60
+@configurable constant int MANACOST = 0
+@configurable constant real DURATION = 8
+@configurable constant real PERIOD_INTERVAL = 0.2
+@configurable constant real MANA_PER_SECOND = 15
+@configurable constant string SPELL_ICON = "ReplaceableTextures\\CommandButtons\\BTNDispelMagic.blp"
+@configurable constant string EFFECT_PATH = "Abilities\\Spells\\Undead\\DarkRitual\\DarkRitualTarget.mdl"
+@configurable constant string TOOLTIP_NORM = "M - Meditate"
+@configurable constant string TOOLTIP_EXT = "Caster channels to regenerate X mana per second for Y seconds."
+
+
+@compiletime function createSpell()
+    new AbilityDefinitionIllidanChannel(ABILITY_ID)
+    ..setTargetType(1, 0)
+    ..setAnimationNames("")
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..setButtonPositionNormalX(0)
+    ..setButtonPositionNormalY(1)
+    ..setButtonPositionResearchX(0)
+    ..setButtonPositionResearchY(1)
+    ..setIconNormal(SPELL_ICON)
+    ..setIconResearch(SPELL_ICON)
+    ..setIconTurnOff(SPELL_ICON)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setHotkeyNormal("M")
+    ..setName("Meditate")
+    ..setDisableOtherAbilities(1, false)
+    ..setFollowThroughTime(1, DURATION)
+    ..setCastingTime(1, 0)
+    ..setTooltipNormal(1, TOOLTIP_NORM)
+    ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+    ..setBaseOrderID(1, "bearform")
+    ..setOrderStringUseTurnOn("bearform")
+    ..setOrderStringActivate("bearform")
+    ..setOrderStringDeactivate("bearform")
+    ..setOrderStringTurnOff("bearform")
+    ..setOptions(1, 1)
+    ..setCooldown(1, COOLDOWN)
+    ..setManaCost(1, MANACOST)
+
+
+HashMap<unit, MeditateInstance> instances = new HashMap<unit,MeditateInstance>()
+
+class MeditateInstance
+    bool isChanneling
+    bool isOvercharged
+    unit caster
+    var dmgTrig = CreateTrigger()
+    
+    function manaLoop()
+        
+        doPeriodicallyTimed(1, DURATION) fxloop ->
+            
+            if (isChanneling or isOvercharged)
+                var efx = AddSpecialEffectTargetUnitBJ("origin", caster, EFFECT_PATH)
+                efx.setTimeScale(2)
+                doAfter(1) ->
+                    efx.destr()
+            else
+                fxloop.stop()
+
+        doPeriodicallyTimed(PERIOD_INTERVAL, DURATION) managiverloop ->
+            if (isChanneling or isOvercharged)
+                var newmana = caster.getMana() + PERIOD_INTERVAL * MANA_PER_SECOND
+                caster.setMana(newmana)
+            else
+                managiverloop.stop()
+
+            if (managiverloop.isLast())
+                destroy this
+
+    construct(unit casterUnit, bool overCharged)
+        isChanneling = true
+        isOvercharged = overCharged
+        caster = casterUnit
+        manaLoop()
+
+    ondestroy
+        if (instances.has(caster))
+            if (instances.get(caster) == this)
+                instances.remove(caster)
+
+
+function onCast()
+    var caster = GetSpellAbilityUnit()
+
+    if instances.has(caster)
+        instances.getAndRemove(caster)
+    
+    instances.put(caster, new MeditateInstance(caster, consumeOvercharge(caster)))
+
+function onDamage(unit target, real amount)
+    if instances.has(target) and amount >= 1
+        var instance = instances.get(target)
+        if not instance.isOvercharged
+            target.issueImmediateOrderById(Orders.stop)
+        instance.isChanneling = false
+        instance.isOvercharged = false
+
+function onEndCast()
+    if GetSpellAbilityId() == ABILITY_ID
+        var caster = GetSpellAbilityUnit()
+        if (instances.has(caster))
+            var instance = instances.get(caster)
+            instance.isChanneling = false
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST, () -> onEndCast())
+
+    EventListener.add(EVENT_UNIT_DAMAGED) ->
+        onDamage(GetTriggerUnit(), GetEventDamage().abs())

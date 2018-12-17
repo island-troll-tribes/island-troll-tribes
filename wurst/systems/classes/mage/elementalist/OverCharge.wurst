@@ -1,0 +1,148 @@
+package OverCharge
+import AbilityObjEditing
+import HashMap
+import ClosureEvents
+import TimerExtensions
+import TimerUtils
+import BuffObjEditing
+
+@configurable constant int ABILITY_ID = 'ESOC'
+@configurable constant int DUMMY_AURA_ID = 'ESOA'
+@configurable constant int DUMMY_AURA_BUFF_INT = 'ESOB'
+@configurable constant string DUMMY_AURA_BUFF_STR = "ESOB"
+@configurable constant real COOLDOWN = 45
+@configurable constant int MANACOST = 10
+@configurable constant real DURATION = 10
+
+@configurable constant string SPELL_ICON = "ReplaceableTextures\\PassiveButtons\\PASBTNFeedBack.blp"
+@configurable constant string AURA_EFFECT_PATH = "Abilities\\Spells\\Human\\ManaFlare\\ManaFlareBase.mdl" //"Abilities\\Spells\\Human\\ManaShield\\ManaShieldCaster.mdl"
+@configurable constant string TOOLTIP_NORM = "A - Overcharge"
+@configurable constant string TOOLTIP_EXT = "Empowers you, causing the next spell you cast in 10 seconds have extra effects."
+
+@compiletime function createBuffs()
+    new BuffDefinition(DUMMY_AURA_BUFF_INT, 'Bstt')
+    ..setArtTarget(1, "")
+    ..setTooltipNormal(1, "Overcharge")
+    ..setTooltipNormalExtended(1, "Next spellcast is empowered.")
+    ..setIcon("ReplaceableTextures\\PassiveButtons\\PASBTNFeedBack.blp")
+    ..setIconNormal(1, "ReplaceableTextures\\PassiveButtons\\PASBTNFeedBack.blp")
+    //..setArtTarget(1, AURA_EFFECT_PATH)
+    //..setTargetAttachmentPoint0(1, "hand, left")
+    //..setTargetAttachmentPoint1(1, "hand, right")
+    ..setTargetAttachments(1, 2)
+
+@compiletime function createSpell()
+/*
+    new AbilityDefinitionIllidanChannel(ABILITY_ID)
+    ..setTargetType(1, 0)
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..setButtonPositionNormalX(0)
+    ..setButtonPositionNormalY(1)
+    ..setButtonPositionResearchX(0)
+    ..setButtonPositionResearchY(1)
+    ..setIconNormal(SPELL_ICON)
+    ..setIconResearch(SPELL_ICON)
+    ..setIconTurnOff(SPELL_ICON)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setHotkeyNormal("A")
+    ..setName("Overcharge")
+    ..setDisableOtherAbilities(1, false)
+    ..setFollowThroughTime(1, DURATION)
+    ..setTooltipNormal(1, TOOLTIP_NORM)
+    ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+    ..setBaseOrderID(1, "defend")
+    ..setOrderStringUseTurnOn("defend")
+    ..setOrderStringActivate("defend")
+    ..setOrderStringDeactivate("defend")
+    ..setOrderStringTurnOff("defend")
+    ..setOptions(1, 1)
+    ..setCooldown(1, COOLDOWN)
+    ..setManaCost(1, MANACOST)
+    ..setAnimationNames("")
+    ..setCastingTime(1, 0)
+
+    */
+    new AbilityDefinitionWindWalk(ABILITY_ID)
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..setButtonPositionNormalX(0)
+    ..setButtonPositionNormalY(1)
+    ..setButtonPositionResearchX(0)
+    ..setButtonPositionResearchY(1)
+    ..setIconNormal(SPELL_ICON)
+    ..setIconResearch(SPELL_ICON)
+    ..setIconTurnOff(SPELL_ICON)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setHotkeyNormal("A")
+    ..setName("Overcharge")
+    ..setTooltipNormal(1, TOOLTIP_NORM)
+    ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+    ..setCooldown(1, COOLDOWN)
+    ..setManaCost(1, MANACOST)
+    ..setAnimationNames("")
+    ..setDurationHero(1, 0.01)
+    ..setCastingTime(1, 0)
+    ..setDurationNormal(1, 0)
+    ..setEffectSound("")
+    ..setBuffs(1, "")
+
+
+@compiletime function createDummyAuras()
+    new AbilityDefinitionAuraSlow(DUMMY_AURA_ID)
+    ..setArtTarget(AURA_EFFECT_PATH)
+    ..setTargetAttachmentPoint1("hand,right")
+    ..setTargetAttachmentPoint("hand,left")
+    ..setTargetAttachments(2)
+    ..setBuffs(1, DUMMY_AURA_BUFF_STR)
+    ..setMovementSpeedFactor(1, 0)
+    ..setAreaofEffect(1, 0)
+    ..setDurationHero(1, 15)
+    ..setDurationNormal(1, 15)
+    ..setTargetsAllowed(1, "self")
+    ..setName("Overcharged")
+
+HashMap<unit, timer> removalTimers = new HashMap<unit,timer>()
+
+public function isUnitOvercharged(unit u) returns bool
+    if (u.hasAbility(DUMMY_AURA_ID)) 
+        return true
+    else
+        return false
+    
+public  function consumeOvercharge(unit u) returns bool
+    if isUnitOvercharged(u)
+        u.removeAbility(DUMMY_AURA_ID)
+        if removalTimers.has(u)
+            removalTimers.getAndRemove(u).release()
+        return true
+    else
+        return false
+
+function onCast()
+    var caster = GetSpellAbilityUnit()
+    
+    //Reset existing timer
+    if removalTimers.has(caster)
+        caster.removeAbility(DUMMY_AURA_ID)
+        removalTimers.getAndRemove(caster).release()
+    
+    caster.addAbility(DUMMY_AURA_ID)
+
+    //Create timer to remove buff after duration
+    let t = getTimer()
+    t.doAfter(DURATION) ->
+        caster.removeAbility(DUMMY_AURA_ID)
+        removalTimers.remove(caster)
+    removalTimers.put(caster, t)
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())

@@ -1,0 +1,203 @@
+package Zap
+
+import RegisterEvents
+import ClosureTimers
+import DummyCaster
+import Orders
+import AbilityObjEditing
+import BuffObjEditing
+import ClosureForGroups
+import TimerUtils
+import TimerExtensions
+import HashMap
+import OverCharge
+
+@configurable constant int ABILITY_ID = 'XEZS'
+@configurable constant int SLOW_ABILITY_ID = 'XEZD'
+@configurable constant int BUFF_ZAP1_AURA = 'XEZA'
+@configurable constant int BUFF_ZAP2_AURA = 'XEZB'
+@configurable constant int BUFF_ZAP1 = 'XEZC'
+@configurable constant string BUFF_ZAP1_STR = "XEZC"
+@configurable constant int BUFF_ZAP2 = 'XEZD'
+@configurable constant string BUFF_ZAP2_STR = "XEZD"
+@configurable constant string BUFF_ZAP_SLOW = "EZSB"
+@configurable constant int BUFF_ZAP_SLOW_INT = 'EZSB'
+@configurable constant real CAST_RANGE = 800
+@configurable constant real COOLDOWN = 4
+@configurable constant int MANACOST = 10
+@configurable constant real MAIN_DAMAGE = 15
+@configurable constant int OVERCHARGE_FORK_AMOUNT = 3
+@configurable constant real OVERCHARGE_FORK_AOE = 400
+@configurable constant real CHARGE_BOUNCE_RADIUS = 450
+@configurable constant real CHARGE_DAMAGE = 25
+@configurable constant real CHARGE_STACK_DURATION = 30
+@configurable constant real CHARGE_REMOVE_TIME = 15
+@configurable constant real CHARGE_AS_SLOW = 0.65
+@configurable constant real CHARGE_MS_SLOW = 0.65
+@configurable constant real CHARGE_SLOW_DURATION_HERO = 1.5
+@configurable constant real CHARGE_SLOW_DURATION_NORM = 2.5
+@configurable constant string EFFECT_PATH = "Abilities\\Spells\\Orc\\Purge\\PurgeBuffTarget.mdl" 
+@configurable constant string BOUNCE_IMPACT_EFFECT_PATH = "Abilities\\Weapons\\Bolt\\BoltImpact.mdl" 
+@configurable constant string TOOLTIP_NORMAL = "[|c00ffcc00Q|r] Zap"
+@configurable constant string TOOLTIP_NORMAL_EXT = "Zaps the target for |c00ff000015|r damage. Stacks charges on the target and |c0000ffffexplodes slowing movement and attack speed|r|c00dbf825 |rand|c00dbf825 |rdealing |c00ff000025|r bonus damage on the third charge."
+
+
+@compiletime function createBuffs()
+    new BuffDefinition(BUFF_ZAP_SLOW_INT, 'Bstt')
+    ..setArtTarget(1, "")
+    ..setTooltipNormal(1, "Zap Slow")
+    ..setTooltipNormalExtended(1, "Slowed by Zap spell")
+    
+    new BuffDefinition(BUFF_ZAP1, 'Bstt')
+    ..setArtTarget(1, "")
+    ..setTooltipNormal(1, "Zap 1")
+    ..setTooltipNormalExtended(1, "1 Zap Charge")
+
+    new BuffDefinition(BUFF_ZAP2, 'Bstt')
+    ..setArtTarget(1, "")
+    ..setTooltipNormal(1, "Zap 2")
+    ..setTooltipNormalExtended(1, "2 Zap Charges")
+
+@compiletime function createDummyAuras()
+    new AbilityDefinitionAuraSlow(BUFF_ZAP1_AURA)
+    ..setArtTarget("Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl")
+    ..setTargetAttachmentPoint1("chest")
+    ..setMovementSpeedFactor(1, 0)
+    ..setAreaofEffect(1, 0)
+    ..setBuffs(1, BUFF_ZAP1_STR)
+    ..setDurationHero(1, 15)
+    ..setDurationNormal(1, 15)
+    ..setTargetsAllowed(1, "self")
+    ..setName("Zap 1")
+
+    new AbilityDefinitionAuraSlow(BUFF_ZAP2_AURA)
+    ..setArtTarget("Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl")
+    ..setTargetAttachmentPoint1("chest")
+    ..setMovementSpeedFactor(1, 0)
+    ..setAreaofEffect(1, 0)
+    ..setBuffs(1, BUFF_ZAP2_STR)
+    ..setDurationHero(1, 15)
+    ..setDurationNormal(1, 15)
+    ..setTargetsAllowed(1, "self")
+    ..setName("Zap 2")
+
+@compiletime function createSpell()
+    new AbilityDefinitionChainLightningcreep(ABILITY_ID)
+    ..setButtonPositionNormalX(0)
+    ..setButtonPositionNormalY(0)
+    ..setButtonPositionResearchX(0)
+    ..setButtonPositionResearchY(0)
+    ..setDamageReductionperTarget(1, 0)
+    ..setDamageperTarget(1, 0)
+    ..setNumberofTargetsHit(1, 1)
+    ..setAreaofEffect(1, 1)
+    ..setCastRange(1, CAST_RANGE)
+    ..setCastingTime(1, 0)
+    ..setCooldown(1, COOLDOWN)
+    ..setManaCost(1, MANACOST)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setHotkeyNormal("Q")
+    ..setName("Zap")
+    ..setTooltipNormal(1, TOOLTIP_NORMAL)
+    ..setTooltipNormalExtended(1, TOOLTIP_NORMAL_EXT)
+
+@compiletime function createSlowDummySpell()
+    new AbilityDefinitionSlowCreep('XEZD')
+    ..setAttackSpeedFactor(1, CHARGE_AS_SLOW)
+    ..setMovementSpeedFactor(1, CHARGE_MS_SLOW)
+    ..setBuffs(1, BUFF_ZAP_SLOW)
+    ..setCastRange(1, 1500)
+    ..setCastingTime(1, 0)
+    ..setCooldown(1, 0)
+    ..setDurationHero(1, CHARGE_SLOW_DURATION_HERO)
+    ..setDurationNormal(1, CHARGE_SLOW_DURATION_NORM)
+    ..setManaCost(1, 0)
+    ..setTargetsAllowed(1, "air,allies,enemies,ground")
+    ..setName("Zap Dummy Slow")
+
+let timerMap = new HashMap<unit, timer>()
+
+function onCast()
+    var caster = GetSpellAbilityUnit()
+    var target = GetSpellTargetUnit()
+    onCastEffects(caster, target, consumeOvercharge(caster))
+
+function onCastEffects(unit caster, unit target, bool isOvercharged)
+    
+    doAfter(0.08) ->
+
+        //Overcharged spell acts like forked lightning
+        if (isOvercharged)
+            var targetsHit = 1
+            forUnitsInRange(target.getPos(), OVERCHARGE_FORK_AOE) u ->
+                if (u.isAlive() and u.getOwner().isEnemyOf(caster.getOwner()) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isInvulnerable() and not u == target)
+                    //Limit hit count
+                    if targetsHit < OVERCHARGE_FORK_AMOUNT
+                        targetsHit = targetsHit + 1
+                        onCastEffects(caster, u, false)
+                        var targetFX = AddSpecialEffectTargetUnitBJ("origin", u, BOUNCE_IMPACT_EFFECT_PATH)
+                        var lightningFX = addLightning(LIGHTNING_CHAIN_LIGHTNING_SEECONDARY, true, caster.getPos3Real(), u.getPos3Real())
+                        doPeriodicallyTimed(0.05, 0.5) ofxUpdater ->
+                            lightningFX.move(true, caster.getPos3Real(), u.getPos3Real())
+                            if ofxUpdater.isLast()
+                                lightningFX.destr()
+                                targetFX.destr()
+
+        //Main target damage
+        caster.damageTarget(target, MAIN_DAMAGE, ATTACK_TYPE_NORMAL)
+        
+        if timerMap.has(target)
+            timerMap.getAndRemove(target).release()
+
+        if target.hasAbility(BUFF_ZAP2_AURA)
+            //Zap2 -> Charges explosion
+            target.removeAbility(BUFF_ZAP1_AURA)
+            target.removeAbility(BUFF_ZAP2_AURA)
+            zapChargeExplosion(caster, target)
+        else if target.hasAbility( BUFF_ZAP1_AURA )
+            //Zap 1 -> 2
+            target.removeAbility(BUFF_ZAP1_AURA)
+            target.addAbility(BUFF_ZAP2_AURA)
+            let t = getTimer()
+            t.doAfter(CHARGE_REMOVE_TIME) ->
+                target.removeAbility(BUFF_ZAP2_AURA)
+                timerMap.remove(target)
+            timerMap.put(target, t)
+            
+        else
+            //0 -> >Zap 1
+            target.addAbility(BUFF_ZAP1_AURA)
+
+            let t = getTimer()
+            t.doAfter(CHARGE_REMOVE_TIME) ->
+                target.removeAbility(BUFF_ZAP1_AURA)
+                timerMap.remove(target)
+            timerMap.put(target, t)
+
+function zapChargeExplosion(unit caster, unit target)
+    //Main target damage
+    if (target.isAlive() and not target.isInvulnerable())
+        new DummyCaster().castTarget(caster.getOwner(), SLOW_ABILITY_ID, 1, Orders.slow, target, caster.getPos3Real())
+        caster.damageTarget(target, CHARGE_DAMAGE, ATTACK_TYPE_NORMAL)
+
+    var efx = AddSpecialEffectTargetUnitBJ("chest", target, EFFECT_PATH)
+    efx.setScale(0.8)
+    doAfter(3)->
+        efx.destr()
+
+    //Also zap nearby targets in radius
+    forUnitsInRange(target.getPos(), CHARGE_BOUNCE_RADIUS) u ->
+        if (u.isAlive() and u.getOwner().isEnemyOf(caster.getOwner()) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isInvulnerable() and not u == target)
+            onCastEffects(caster, u, false)
+            
+            var targetFX = AddSpecialEffectTargetUnitBJ("origin", u, BOUNCE_IMPACT_EFFECT_PATH)
+            var lightningFX = addLightning(LIGHTNING_CHAIN_LIGHTNING_SEECONDARY, true, target.getPos3Real(), u.getPos3Real())
+            doPeriodicallyTimed(0.05, 0.5) fxUpdater ->
+                lightningFX.move(true, target.getPos3Real(), u.getPos3Real())
+                if fxUpdater.isLast()
+                    lightningFX.destr()
+                    targetFX.destr()
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())

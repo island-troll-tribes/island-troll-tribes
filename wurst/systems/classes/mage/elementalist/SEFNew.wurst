@@ -1,0 +1,259 @@
+package SEFNew
+import RegisterEvents
+import HashMap
+import LinkedList
+import ClosureForGroups
+import ClosureTimers
+import AbilityObjEditing
+import DummyCaster
+import OverCharge
+import Orders
+
+
+@configurable constant int ABILITY_ID = 'ESEF'
+@configurable constant int DUMMY_STUN_ABILITY_ID = 'ESES'
+@configurable constant real IMPACT_STUN_DURATION_HERO = 0.10
+@configurable constant real IMPACT_STUN_DURATION_NORMAL = 0.10
+@configurable constant real COOLDOWN = 5
+@configurable constant int MANACOST = 10
+@configurable constant real ORB_ATTACK_RADIUS = 575
+@configurable constant real ORB_ATTACK_COOLDOWN = 0.25
+@configurable constant real ORB_DAMAGE = 15
+@configurable constant real ORB_IMPACT_DAMAGE = 10
+@configurable constant real ORB_LIFETIME = 20
+@configurable constant real ORB_SPEED = 550
+@configurable constant real ORB_SPAWN_INTERVAL = 0.4
+@configurable constant real CHANNEL_DURATION = 0.4*6 //6 Projectiles
+@configurable constant real ORB_PERIODICINTERVAL_SPAWN = 0.05
+@configurable constant real ORB_PERIODICINTERVAL_LOOP = 0.03125
+@configurable constant real ORB_ANGULARORBITSPEED = 90 
+@configurable constant real ORB_ORBIT_RADIUS = 150
+@configurable constant real ORB_ORBIT_HEIGHT = 140
+@configurable constant string SPELL_ICON = "ReplaceableTextures\\CommandButtons\\BTNGolemStormBolt.blp"
+@configurable constant string TOOLTIP_NORM = "R - Channel"
+@configurable constant string TOOLTIP_EXT = "Conjures orbs to circle around you that fly to strike nearby enemies for 15 damage."
+@configurable constant string ORB_EFFECT_PATH = "Abilities\\Weapons\\AncientProtectorMissile\\AncientProtectorMissile.mdl" 
+@configurable constant string ORB_IMPACT_EFFECT = "Objects\\Spawnmodels\\Undead\\ImpaleTargetDust\\ImpaleTargetDust.mdl"
+
+@compiletime function createSpell()
+    new AbilityDefinitionIllidanChannel(ABILITY_ID)
+    ..setTargetType(1, 0)
+    ..setAnimationNames("spell,channel")
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..setButtonPositionNormalX(3)
+    ..setButtonPositionNormalY(0)
+    ..setButtonPositionResearchX(3)
+    ..setButtonPositionResearchY(0)
+    ..setIconNormal(SPELL_ICON)
+    ..setIconResearch(SPELL_ICON)
+    ..setIconTurnOff(SPELL_ICON)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setHotkeyNormal("R")
+    ..setName("Storm, Earth and Fire")
+    ..setDisableOtherAbilities(1, false)
+    ..setFollowThroughTime(1, CHANNEL_DURATION)
+    ..setTooltipNormal(1, TOOLTIP_NORM)
+    ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+    ..setBaseOrderID(1, "rechargeoff")
+    ..setOptions(1, 1)
+    ..setCooldown(1, COOLDOWN)
+    ..setManaCost(1, MANACOST)
+
+@compiletime function createDummySpell()
+    new AbilityDefinitionFireBolt(DUMMY_STUN_ABILITY_ID)
+    ..setAnimationNames("")
+    ..setMissileSpeed(20000)
+    ..setBuffs(1, "BSTN")
+    ..setMissileArt("")
+    ..setMissileHomingEnabled(true)
+    ..setCastRange(1, 9999)
+    ..setCooldown(1, 0)
+    ..setCastingTime(1, 0)
+    ..setDamage(1, 0)
+    ..setDurationHero(1, IMPACT_STUN_DURATION_HERO)
+    ..setDurationNormal(1, IMPACT_STUN_DURATION_NORMAL)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setManaCost(1, 0)
+    ..setRace(Race.Creeps)
+    ..setName("Orb stun Dummy Spell")
+
+let instances = new HashMap<unit, SEFInstance>()
+
+class SEFOrb
+    SEFInstance instance
+    unit ownerUnit = null
+    real speed = ORB_SPEED
+    effect projectile = null
+    vec3 targetPos
+    unit targetUnit = null
+
+    construct (unit owner, SEFInstance SEF, vec3 startPos)
+        ownerUnit = owner
+        instance = SEF
+        projectile = addEffect(ORB_EFFECT_PATH, startPos)
+        projectile.setScale(0.65)
+
+    function moveTowardsTarget()
+        //Update target location to targeted unit if its alive
+        if (targetUnit != null)
+            if (targetUnit.isAlive())
+                targetPos = targetUnit.getPos3Real()
+
+        //Limit movement by speed
+        var oldpos = projectile.getPos3()
+        vec3 newpos
+        if (oldpos.distanceTo(targetPos) <= ORB_SPEED * ORB_PERIODICINTERVAL_SPAWN)
+            newpos = targetPos
+            if (targetUnit != null)
+                onImpactEffect()
+        else
+            newpos = oldpos + oldpos.normalizedPointerTo(targetPos) * ORB_SPEED * ORB_PERIODICINTERVAL_SPAWN
+
+        projectile.setPos(newpos)
+
+    function findTarget()
+        var curPos = projectile.getPos()
+        if (targetUnit == null and instance.orbLoopDuration >= 0.55 and instance.orbLoopDuration - instance.lastOrbAttackTimestamp >= ORB_ATTACK_COOLDOWN)
+            forUnitsInRange(curPos, ORB_ATTACK_RADIUS) u ->
+                if (IsUnitVisible(u, ownerUnit.getOwner()) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isHidden() and u.isAlive() and not u.isInvulnerable() and u.getOwner().isEnemyOf(ownerUnit.getOwner()))
+                    //Get the closest unit if multiples happen to come into range at once
+                    if (targetUnit != null)
+                        if (curPos.distanceTo( targetUnit.getPos() ) > curPos.distanceTo(u.getPos()))
+                            targetUnit = u
+                            instance.lastOrbAttackTimestamp = instance.orbLoopDuration
+                    else
+                        targetUnit = u
+                        instance.lastOrbAttackTimestamp = instance.orbLoopDuration
+                    
+    function updateLoop()
+        if (targetUnit == null)
+            findTarget()
+            moveTowardsTarget()
+        else
+            moveTowardsTarget()
+        
+    function onImpactEffect()
+        if (targetUnit.isAlive() and not targetUnit.isInvulnerable())
+            ownerUnit.damageTarget(targetUnit, ORB_IMPACT_DAMAGE, ATTACK_TYPE_NORMAL)
+            new DummyCaster().castTarget(ownerUnit.getOwner(), DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, targetUnit, ownerUnit.getPos3Real())
+
+        var efx = addEffect(ORB_IMPACT_EFFECT, projectile.getPos3())
+        efx.setScale(1)
+        doAfter(3) ->
+            efx.destr()
+        destroy this
+
+
+    ondestroy
+        instance.orbs.remove(this)
+        projectile.destr()
+
+
+class SEFInstance
+    angle orbAngle
+    unit ownerUnit
+    bool isChanneling
+    bool isOvercharged
+    real orbLoopDuration
+    real lastOrbAttackTimestamp
+    CallbackCounted orbLoopPeriodic
+    CallbackCounted orbCreationLoopPeriodic
+
+    LinkedList<SEFOrb> orbs = new LinkedList<SEFOrb>()
+
+    construct (unit caster, bool overcharged)
+        isOvercharged = overcharged
+        ownerUnit = caster
+        real channeledTime = 0
+        real lastOrbCreatedTimestamp = 0
+        lastOrbAttackTimestamp = 0
+        orbLoopDuration = 0
+        real orb_interval = ORB_SPAWN_INTERVAL
+        isChanneling = true
+
+        if not overcharged
+            orbCreationLoopPeriodic = doPeriodicallyTimed(ORB_PERIODICINTERVAL_SPAWN, CHANNEL_DURATION) orbcreation ->
+                if (isChanneling)
+                    channeledTime = channeledTime + ORB_PERIODICINTERVAL_SPAWN
+                    //Avoid floating point errors in the interval check with the -0.01
+                    if (channeledTime - lastOrbCreatedTimestamp >= orb_interval-0.01)
+                        orbs.push(new SEFOrb(ownerUnit, this, caster.getPos().withTerrainZ(ORB_ORBIT_HEIGHT)))
+                        lastOrbCreatedTimestamp = channeledTime
+                else 
+                    orbCreationLoopPeriodic.stop()
+        else
+            int count = (CHANNEL_DURATION/ORB_SPAWN_INTERVAL).round()
+            for i = 0 to count
+                orbs.push(new SEFOrb(ownerUnit, this, caster.getPos().withTerrainZ(ORB_ORBIT_HEIGHT)))
+        
+        this.startOrbLoop()
+
+
+    function startOrbLoop()
+        orbAngle = angle(0)
+
+        orbLoopPeriodic = doPeriodicallyTimed(ORB_PERIODICINTERVAL_LOOP, ORB_LIFETIME) orbLoop ->
+            orbLoopDuration += ORB_PERIODICINTERVAL_LOOP
+            //Check for destruction conditions first before accessing any objects
+            if (orbLoop.isLast() or (orbs.size() == 0 and not isChanneling))
+                if (not orbLoop.isLast()) //Make this stop in case the entry condition was orbs.size = 0
+                    orbLoop.stop()
+                destroy this
+            else
+                orbAngle = angle(orbAngle.radians() + ORB_PERIODICINTERVAL_LOOP * ORB_ANGULARORBITSPEED * DEGTORAD)
+                
+                int orbsWithoutTarget = 0
+
+                for o in orbs
+                    if (o.targetUnit == null)
+                        orbsWithoutTarget += 1
+
+                angle orbOffset = angle(bj_PI/4)
+                if (orbsWithoutTarget != 0)
+                    orbOffset = angle(2 * bj_PI / orbsWithoutTarget )
+
+                int i = 0
+                
+                for o in orbs
+                    angle indexOrbAngle = orbAngle + orbOffset * i.toReal()
+                    if (o.targetUnit == null)
+                        o.targetPos = ownerUnit.getPos().withTerrainZ(ORB_ORBIT_HEIGHT).offset2d(indexOrbAngle, ORB_ORBIT_RADIUS)
+                    o.updateLoop()
+                    i = i + 1
+
+    ondestroy
+        orbs.forEach(o -> destroy o)
+        destroy orbs
+
+        if instances.has(ownerUnit)
+            if (instances.get(ownerUnit) == this) 
+                instances.remove(ownerUnit)
+
+function onCast()
+    var caster = GetSpellAbilityUnit()
+
+    //Destroy previous instance
+    if instances.has(caster)
+        var prev_instance = instances.get(caster)
+        prev_instance.orbLoopPeriodic.stop()
+
+
+    var SEF = new SEFInstance(caster, consumeOvercharge(caster))
+    instances.put(caster, SEF)
+
+function onEndCast()
+    if GetSpellAbilityId() == ABILITY_ID
+        var caster = GetSpellAbilityUnit()
+        var instance = instances.get(caster)
+        instance.isChanneling = false
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST, () -> onEndCast())

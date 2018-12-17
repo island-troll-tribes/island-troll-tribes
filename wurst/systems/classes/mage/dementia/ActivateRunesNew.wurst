@@ -6,10 +6,9 @@ import Orders
 import ClosureEvents
 import DummyCaster
 import LinkedList
-import SoundUtils
-import ClosureTimers
 
 @configurable constant int ABILITY_ID = 'A07B'
+@configurable constant int RREQUIREMENT_ABILITY_ID = 'A07D'
 @configurable constant real PORTAL_OFFSET = 150
 @configurable constant real RUNE_CAST_RADIUS = 350
 
@@ -83,7 +82,7 @@ function RUNE_TYPE.toString() returns string
 
 function trySummonDemon(unit caster, DementiaRunesInstance runesInstance, DarkPortalInstance portalInstance) returns bool
     if runesInstance != null
-        if portalInstance != null and runesInstance.runes.size() > 0
+        if portalInstance != null and runesInstance.runes.size() > 0 and caster.hasAbility(RREQUIREMENT_ABILITY_ID)
             if portalInstance.centerPos.toVec2().distanceTo(caster.getPos()) <= portalInstance.portalRadius and runesInstance.runes.size() == 5
                 //Have portal, and standing inside portal
                 var runeSequence = new LinkedList<RUNE_TYPE>()

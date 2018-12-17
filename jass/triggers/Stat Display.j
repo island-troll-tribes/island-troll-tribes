@@ -1,4 +1,3 @@
-
 function DisplayStatsWarningMessages takes nothing returns nothing
   if R2I( GetUnitState( GetEnumUnit(), UNIT_STATE_LIFE ) ) == 25 then
     call DisplayTimedTextToPlayer( GetOwningPlayer( GetEnumUnit() ), 0, 0, 5.00, COLOR_RED + "Your health is low, eat some meat!" )

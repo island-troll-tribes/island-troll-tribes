@@ -1,2 +1,22 @@
 package GameMode
 
+import ClassSelection
+
+init
+    // TODO don't use global mode player
+    modePlayer = players[0]
+    for i = 0 to bj_MAX_PLAYERS - 1
+        if players[i].isIngame()
+            modePlayer = players[i]
+            break
+
+    print(modePlayer.getNameColored() + GENERAL_COLOR + "can choose game modes.|r")
+    printTimedToPlayer(GENERAL_COLOR + "You can select modes|r", 10, modePlayer)
+
+    // TODO rewrite with wurst
+    s__GameMode_registerAll(modePlayer)
+    gg_trg_GameModes.registerPlayerChatEvent(modePlayer, "-", false)
+
+    s__GameMode_onModeSelectionFinish() ->
+        s__GameMode_deregisterAll()
+        startClassSelection()

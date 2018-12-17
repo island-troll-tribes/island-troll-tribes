@@ -1,4 +1,4 @@
-library PublicLibrary initializer initPublicLibrary requires TimerUtils, IDUtils, Constants, FilterTypeIsThing, String, GameConfig, InitializeUnits, GlobalsInit
+library PublicLibrary initializer initPublicLibrary requires TimerUtils, IDUtils, Constants, FilterTypeIsThing, String, InitializeUnits, GlobalsInit
 
 function GetExpiredTimerData takes nothing returns integer
   return GetTimerData( GetExpiredTimer() )
@@ -13,44 +13,6 @@ endfunction
 
 function IsUnitImmobilized takes unit u returns boolean
     return GetUnitAbilityLevel(u, 'Beng') > 0 or GetUnitAbilityLevel(u, 'Bena') > 0 or GetUnitAbilityLevel(u, 'BEer') > 0
-endfunction
-
-function ReplayToNoticeObservers takes nothing returns nothing
-    if IsPlayerObserver(GetEnumPlayer()) == true and obs_notices[GetPlayerId(GetEnumPlayer())] then
-        call DisplayTimedTextToPlayer(GetEnumPlayer(), 0, 0, bj_cineFadeContinueTrans, bj_lastPlayedMusic)
-    endif
-endfunction
-
-function DisplayTimedTextToNoticeObservers takes real duration, string message returns nothing
-    local real r = bj_cineFadeContinueTrans
-    local string s = bj_lastPlayedMusic
-
-    set bj_cineFadeContinueTrans = duration
-    set bj_lastPlayedMusic = message
-
-    call ForForce(bj_FORCE_ALL_PLAYERS,function ReplayToNoticeObservers)
-
-    set bj_cineFadeContinueTrans = r
-    set bj_lastPlayedMusic = s
-endfunction
-
-function ReplayToObservers takes nothing returns nothing
-    if IsPlayerObserver(GetEnumPlayer()) == true then
-        call DisplayTimedTextToPlayer(GetEnumPlayer(), 0, 0, bj_cineFadeContinueTrans, bj_lastPlayedMusic)
-    endif
-endfunction
-
-function DisplayTimedTextToObservers takes real duration, string message returns nothing
-    local real r = bj_cineFadeContinueTrans
-    local string s = bj_lastPlayedMusic
-
-    set bj_cineFadeContinueTrans = duration
-    set bj_lastPlayedMusic = message
-
-    call ForForce(bj_FORCE_ALL_PLAYERS,function ReplayToObservers)
-
-    set bj_cineFadeContinueTrans = r
-    set bj_lastPlayedMusic = s
 endfunction
 
 function ReplayToAll takes nothing returns nothing

@@ -1,6 +1,7 @@
 library LegacyInit initializer onInit
     private function LegacyInit takes nothing returns nothing
         call DestroyTimer(GetExpiredTimer())
+        call DestroyTimer(GetExpiredTimer())
         call ExecuteFunc("InitTrig_Smell_Drop")
         call ExecuteFunc("InitTrig_Attraction_Aura")
         call ExecuteFunc("InitTrig_stat_display")
@@ -73,9 +74,6 @@ library LegacyInit initializer onInit
         call ExecuteFunc("InitTrig_depress_thistle_mana_drain")
         call ExecuteFunc("InitTrig_bow_stagest")
         call ExecuteFunc("InitTrig_bow_tract")
-        call ExecuteFunc("InitTrig_observer_msgs")
-        call ExecuteFunc("InitTrig_event_commands")
-        call ExecuteFunc("InitTrig_control_dialog")
         call ExecuteFunc("InitTrig_LevelChicken")
         call ExecuteFunc("InitTrig_Release_Pets")
         call ExecuteFunc("InitTrig_back_to_tame")
@@ -85,10 +83,6 @@ library LegacyInit initializer onInit
         call ExecuteFunc("InitTrig_to_mid_spells_flyer")
         call ExecuteFunc("InitTrig_CreateQuests")
         call ExecuteFunc("InitTrig_spawn_call_first")
-        call ExecuteFunc("InitTrig_boards")
-        call ExecuteFunc("InitTrig_update_names")
-        call ExecuteFunc("InitTrig_update_boards")
-        call ExecuteFunc("InitTrig_ShowPlayers")
         call ExecuteFunc("InitTrig_GameModes")
         call ExecuteFunc("InitTrig_find_nearest_hatchery")
         call ExecuteFunc("InitTrig_eggza_CUTE_orders")

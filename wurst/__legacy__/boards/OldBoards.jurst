@@ -1,59 +1,51 @@
-
-//
-//     call MultiboardSetRowCount(bj_lastCreatedMultiboard, rows)
-//     call MultiboardSetColumnCount(bj_lastCreatedMultiboard, cols)
-//     call MultiboardSetTitleText(bj_lastCreatedMultiboard, title)
-//     call MultiboardDisplay(bj_lastCreatedMultiboard, true)
-//===========================================================================
-//TESH.scrollpos=70
-//TESH.alwaysfold=0
+library OldBoards initializer onInit requires GameConfig
 
 globals
-multiboard array BOARD_TEAM
-integer array BOARD_INT
-integer array PLAYER_INT_BOARD
-multiboard OBSERVER_BOARD
-dialog array OBSERVER_DIALOG
-button array O_DBUTTON
+    public multiboard array BOARD_TEAM
+    public integer array BOARD_INT
+    public integer array PLAYER_INT_BOARD
+    public multiboard OBSERVER_BOARD
+    public dialog array OBSERVER_DIALOG
+    public button array O_DBUTTON
 endglobals
 
-function CreateObsBoardAndDialog takes nothing returns nothing
-local string array CMD_DES
-local string COLOR = ""
-local integer MAX_CMDS = 1
-local integer INT = 1
+function createObsBoardAndDialog takes nothing returns nothing
+    local string array CMD_DES
+    local string COLOR = ""
+    local integer MAX_CMDS = 1
+    local integer INT = 1
 
 
-call DialogSetMessage(OBSERVER_DIALOG[0],"Controls:")
-set O_DBUTTON[0]=DialogAddButton(OBSERVER_DIALOG[0],"Exit",HK_A)
-set O_DBUTTON[1]=DialogAddButton(OBSERVER_DIALOG[0],"Zoom Out",HK_1)
-set O_DBUTTON[2]=DialogAddButton(OBSERVER_DIALOG[0],"Zoom In",HK_2)
-set O_DBUTTON[3]=DialogAddButton(OBSERVER_DIALOG[0],"Toggle Notices",HK_4)
-set O_DBUTTON[4]=DialogAddButton(OBSERVER_DIALOG[0],"-rn",HK_5)
+    call DialogSetMessage(OBSERVER_DIALOG[0],"Controls:")
+    set O_DBUTTON[0]=DialogAddButton(OBSERVER_DIALOG[0],"Exit",HK_A)
+    set O_DBUTTON[1]=DialogAddButton(OBSERVER_DIALOG[0],"Zoom Out",HK_1)
+    set O_DBUTTON[2]=DialogAddButton(OBSERVER_DIALOG[0],"Zoom In",HK_2)
+    set O_DBUTTON[3]=DialogAddButton(OBSERVER_DIALOG[0],"Toggle Notices",HK_4)
+    set O_DBUTTON[4]=DialogAddButton(OBSERVER_DIALOG[0],"-rn",HK_5)
 
-set CMD_DES[1] = ""
+    set CMD_DES[1] = ""
 
-//
-set OBSERVER_BOARD = CreateMultiboard()
-call MultiboardSetColumnCount(OBSERVER_BOARD, 1)
-call MultiboardSetRowCount(OBSERVER_BOARD, MAX_CMDS)
-call MultiboardSetTitleText(OBSERVER_BOARD, "Observer Events")
-call MultiboardSetItemsStyle(OBSERVER_BOARD, true, false)
-call MultiboardMinimize(OBSERVER_BOARD, false)
-                
-loop
-    exitwhen INT > MAX_CMDS
-        call MultiboardSetItemValueBJ(OBSERVER_BOARD, 1, INT, COLOR+CMD_DES[INT])
-        call MultiboardSetItemWidthBJ(OBSERVER_BOARD, 1, INT, 30)
-    set INT = INT + 1
-endloop
-call TriggerExecute(gg_trg_event_commands)
+    //
+    set OBSERVER_BOARD = CreateMultiboard()
+    call MultiboardSetColumnCount(OBSERVER_BOARD, 1)
+    call MultiboardSetRowCount(OBSERVER_BOARD, MAX_CMDS)
+    call MultiboardSetTitleText(OBSERVER_BOARD, "Observer Events")
+    call MultiboardSetItemsStyle(OBSERVER_BOARD, true, false)
+    call MultiboardMinimize(OBSERVER_BOARD, false)
+                    
+    loop
+        exitwhen INT > MAX_CMDS
+            call MultiboardSetItemValueBJ(OBSERVER_BOARD, 1, INT, COLOR+CMD_DES[INT])
+            call MultiboardSetItemWidthBJ(OBSERVER_BOARD, 1, INT, 30)
+        set INT = INT + 1
+    endloop
+    call TriggerExecute(gg_trg_event_commands)
 endfunction
 
-function CreateTrollStatusBoard takes nothing returns nothing
+function createTrollStatusBoard takes nothing returns nothing
 local integer INTEGER = 1
 local integer PLAYER_INT = 0
-local integer numTribes = GameConfig.getInstance().getNumTribes()
+local integer numTribes = gameConfig.getNumTribes()
 
     loop
         exitwhen INTEGER > numTribes
@@ -100,16 +92,14 @@ local integer numTribes = GameConfig.getInstance().getNumTribes()
     
     // make observer board
     if obs_present then
-        call CreateObsBoardAndDialog()
+        call createObsBoardAndDialog()
     endif
 endfunction
 
 //===========================================================================
-function InitTrig_boards takes nothing returns nothing
+function onInit takes nothing returns nothing
     set gg_trg_boards = CreateTrigger(  )
-    //call TriggerRegisterTimerEventSingle( gg_trg_boards, 12.00 )
-    //call TriggerRegisterTimerEventSingle( gg_trg_boards, .5 )
-    call TriggerAddAction( gg_trg_boards, function CreateTrollStatusBoard )
+    call TriggerAddAction( gg_trg_boards, function createTrollStatusBoard )
 endfunction
 
 //===========================================================================

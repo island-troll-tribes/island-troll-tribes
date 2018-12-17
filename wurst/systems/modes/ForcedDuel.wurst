@@ -1,0 +1,41 @@
+package ForcedDuel
+import Game
+import GameConfig
+import UnitExtensions
+import TrollExtensions
+import TimerUtils
+import TimerExtensions
+import Tribe
+import ClosureTimers
+
+function moveTrollsToArena()
+    print(GENERAL_COLOR + "Your duel has begun!|r")
+
+    Tribe.getTribes().forEach() tribe ->
+        let pos = gg_rct_Dualing_Area.randomPoint()
+
+        tribe.getMembers().forEach() member ->
+            let troll = member.getTroll()
+            if troll.isAlive()
+                troll
+                ..pause()
+                ..removeBuffs(true, true)
+                ..setPos(pos)
+                ..setHP(troll.getMaxHP())
+                ..setMana(troll.getMaxMana())
+                ..setHeat(gameConfig.getMaxHeat())
+
+                member.panCamToTimed(troll, 0.1)
+
+    doAfter(3.0) ->
+        Tribe.getTribes().forEach() tribe ->
+            tribe.getMembers().forEach() member ->
+                let troll = member.getTroll()
+                if troll.isAlive()
+                    troll.unpause()
+
+init
+    registerGameStartEvent() ->
+        if gameConfig.isForcedDuelEnabled()
+            let timeout = gameConfig.getForcedDuelAfter() * 60
+            DUEL_TIMER = getTimer()..doAfter(timeout, () -> moveTrollsToArena())

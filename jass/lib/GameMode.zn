@@ -1,6 +1,8 @@
 library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtils {
   public struct GameMode {
     public static multiboard modeboard;
+    public static trigger observers = CreateTrigger();
+
     static integer numGameModes = 0;
     static integer numDisplayedModes = 0;
     static string modesString = "";
@@ -143,6 +145,17 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
           MultiboardSetTitleText(modeboard, "Modes - 00:" + time);
         }
       });
+    }
+
+    static method endModeSelection() {
+      removeModeBoard();
+      deregisterAll();
+      mode_enter = false;
+      TriggerExecute(observers);
+    }
+
+    static method onModeSelectionFinish(code c) {
+      TriggerAddAction(observers, c);
     }
   }
 
@@ -358,11 +371,6 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
       GameMode.message(RED_COLOR + "Forest fire|r after " + I2S(R2I(amount)) + " min");
     });
 
-    GameMode.create("coral-blockers", "cb", "Islands begin cut off from one and other by coral reefs", function(ArgsList a) {
-      GameMode.message("Islands cut off from one and other by coral reefs");
-      GameConfig.getInstance().setCoralBlockers(true);
-    });
-
     GameMode.create("quick-pick", "qp", "Reduce class selection time, defaults to 5, eg: \"-qp 15\"", function(ArgsList a) {
       integer timeAllowed = 5;
       if (a.length() >= 1) {
@@ -379,10 +387,10 @@ library GameMode requires ChatCommands, GameConfig, Table, PublicLibrary, IDUtil
 
     GameMode.create("start", "st", "Start the game by entering class selection", function(ArgsList a) {
       PauseTimer(MODES_TIMER);
-      GameMode.removeModeBoard();
-      ExecuteFunc("ModesTimerFinished");
+      GameMode.endModeSelection();
     });
 
-    TimerStart(CreateTimer(), 0, false, function GameMode.createModeBoard);
+    TimerStart(MODES_TIMER, MODES_TIME_LIMIT, false, function GameMode.endModeSelection);
+    TimerStart(NewTimer(), 0, false, function GameMode.createModeBoard);
   }
 }

@@ -32,6 +32,7 @@ class DementiaRune
     vec3 pos
 
     construct (DementiaRunesInstance instance, RUNE_TYPE runeType)
+        this.instance = instance
         pos = instance.ownerUnit.getPos3Real()
         this.runeType = runeType
         if this.runeType == RUNE_TYPE.Lez
@@ -48,14 +49,15 @@ class DementiaRune
         //Adjust orbs a little lower since the SFX looks like its higher
         //FX.setPos(pos - vec3(0,0,75))
         dummy.setPos(pos.toVec2())
-        dummy.setFlyHeight(75, 600)
+        dummy.setFlyHeight(50, 600)
 
     function setFacing(angle facing)
         dummy.setFacing(facing)
 
     ondestroy
-        instance.runes.remove(this)
-        RemoveUnit(dummy)
+        if instance.runes.has(this)
+            instance.runes.remove(this)
+        dummy.remove()
         //FX.destr()
 
 class DementiaRunesInstance
@@ -64,12 +66,13 @@ class DementiaRunesInstance
     real elapsedLifetime
     CallbackPeriodic runeLoop = null
     
-    LinkedList<DementiaRune> runes = new LinkedList<DementiaRune>()
+    LinkedList<DementiaRune> runes 
 
     construct (unit caster)
         ownerUnit = caster
         elapsedLifetime = 0
         runeAngleBase = angle(0)
+        runes = new LinkedList<DementiaRune>()
         startRuneLoop()
 
     function startRuneLoop()
@@ -92,18 +95,13 @@ class DementiaRunesInstance
             r.setFacing(r.pos.angleTo2d(ownerUnit.getPos()))
             i = i + 1
 
-    
-
-
     function addRune(DementiaRune rune)
-        
         if runes.size() < MAX_RUNE_COUNT
             runes.add(rune)
         else 
-            runes.removeAt(0)
+            destroy runes.get(0)
             runes.add(rune)
 
-        print("Adding rune " + runes.size().toString())
 
     ondestroy
         destroy runeLoop
@@ -140,6 +138,6 @@ function onCast()
         instance.addRune(new DementiaRune(instance, runeType))
 
 init
-    registerSpellEffectEvent(NEL_ABILITY_ID, () -> onCast())
-    registerSpellEffectEvent(KA_ABILITY_ID, () -> onCast())
-    registerSpellEffectEvent(LEZ_ABILITY_ID, () -> onCast())
+    //registerSpellEffectEvent(NEL_ABILITY_ID, () -> onCast())
+    //registerSpellEffectEvent(KA_ABILITY_ID, () -> onCast())
+    //registerSpellEffectEvent(LEZ_ABILITY_ID, () -> onCast())

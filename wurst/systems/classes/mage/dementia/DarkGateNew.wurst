@@ -10,10 +10,14 @@ import Orders
 
 @configurable constant int ABILITY_ID = 'A076'
 @configurable constant real GROW_DURATION = 10
-@configurable constant real DURATION = 15
+@configurable constant real MINIMUM_GROW_DURATION = 1.5
+@configurable constant real DURATION = 40
 @configurable constant int ORB_COUNT = 7
 @configurable constant real ORB_LOOP_INTERVAL = 0.03125
-@configurable constant real ORB_ANGULARORBITSPEED = 80 
+@configurable constant real ORB_ANGULARSPEED_SUMMON = 80 
+@configurable constant real ORB_ANGULARSPEED_ACTIVE = 10 
+@configurable constant real SPELLCAST_INTERVAL_FASTEST = 1.5
+@configurable constant real SPELLCAST_INTERVAL_START = 2.5
 @configurable constant real PORTAL_GROWSPEED = 100 
 @configurable constant string INITIAL_EFFECT_PATH = "Abilities\\Spells\\Demon\\DarkPortal\\DarkPortalTarget.mdl"
 @configurable constant string TRAIL_EFFECT_PATH = "Abilities\\Weapons\\AvengerMissile\\AvengerMissile.mdl"
@@ -37,6 +41,7 @@ class PortalOrb
         instance = portal
         pos = startPos
         orbFX = addEffect(ORB_EFFECT_PATH, startPos)
+        orbFX.setTimeScale(0)
         trailFX = addEffect(TRAIL_EFFECT_PATH, startPos)
 
     function setPos(vec3 newpos)
@@ -44,6 +49,9 @@ class PortalOrb
         //Adjust orbs a little lower since the SFX looks like its higher
         orbFX.setPos(pos - vec3(0,0,75))
         trailFX.setPos(pos)
+
+    function setFacing(angle facing)
+        orbFX.setRoll(facing)
 
     ondestroy
         instance.orbs.remove(this)
@@ -57,6 +65,9 @@ class DarkPortalInstance
     bool isChanneling
     real portalRadius
     real elapsedLifetime
+    real channeledTime
+    real lastSpellCastTimestamp
+    real spellIntervalCurrent
     vec3 centerPos
     CallbackCounted portalActiveLoop = null
     CallbackCounted portalCreationLoop = null
@@ -69,7 +80,10 @@ class DarkPortalInstance
         portalRadius = 50
         centerPos = pos
         elapsedLifetime = 0
+        channeledTime = 0
+        lastSpellCastTimestamp = -9999
         orbAngle = angle(0)
+        spellIntervalCurrent = SPELLCAST_INTERVAL_START
         startPortalCreation()
 
     function startPortalCreation()
@@ -77,13 +91,12 @@ class DarkPortalInstance
             orbs.push(new PortalOrb(this, centerPos))
         
         portalCreationLoop = doPeriodicallyTimed(ORB_LOOP_INTERVAL, GROW_DURATION) portalGrowLoop ->
-            elapsedLifetime += ORB_LOOP_INTERVAL
             if not isChanneling or portalGrowLoop.isLast()
                 portalGrowLoop.stop()
                 this.startPortalLoop()
             else
                 portalRadius += ORB_LOOP_INTERVAL * PORTAL_GROWSPEED
-                orbAngle = angle(orbAngle.radians() + ORB_LOOP_INTERVAL * ORB_ANGULARORBITSPEED * DEGTORAD)
+                orbAngle = angle(orbAngle.radians() + ORB_LOOP_INTERVAL * ORB_ANGULARSPEED_SUMMON * DEGTORAD)
             
                 //Avoid creating vision on every loop cycle
                 if (portalGrowLoop.getCount() mod 30 == 0)
@@ -91,22 +104,44 @@ class DarkPortalInstance
                     vis.start()
                     doAfter(DURATION + GROW_DURATION - elapsedLifetime) ->
                         vis.destr()
+                
+                
+                //Depending on how long portal was channeled, increase spellcasting rate
+                spellIntervalCurrent = SPELLCAST_INTERVAL_START - (SPELLCAST_INTERVAL_START - SPELLCAST_INTERVAL_FASTEST) * (elapsedLifetime/GROW_DURATION)
+                elapsedLifetime += ORB_LOOP_INTERVAL
+                channeledTime += ORB_LOOP_INTERVAL
+                updateOrbAngles()
 
-                //Calculate orb angles and set it
-                angle orbOffset = angle((360 / orbs.size())*DEGTORAD)
-                int i = 0
-                for o in orbs
-                    angle indexOrbAngle = orbAngle + orbOffset * i.toReal()
-                    o.setPos(centerPos.offset2d(indexOrbAngle, portalRadius))
-                    i = i + 1
+    function randomOrbCastSpell()
+        var orb = this.orbs.get( GetRandomInt(0, orbs.size() - 1))
+        var randomSpell = spellList.get( GetRandomInt(0, spellList.size() - 1))
+
+    function updateOrbAngles()
+        //Calculate orb angles and set it
+        angle orbOffset = angle((360 / orbs.size())*DEGTORAD)
+        int i = 0
+        for o in orbs
+            angle indexOrbAngle = orbAngle + orbOffset * i.toReal()
+            o.setPos(centerPos.offset2d(indexOrbAngle, portalRadius))
+            o.setFacing(o.pos.angleTo2d(centerPos))
+            i = i + 1
 
     function startPortalLoop()
-        portalActiveLoop = doPeriodicallyTimed(ORB_LOOP_INTERVAL, DURATION) portalLoop ->
-            //Check for destruction conditions first before accessing any objects
-            if (portalLoop.isLast())
-                destroy this
-            else
-                //Call stuff or orb / cast spells or something
+        if channeledTime < MINIMUM_GROW_DURATION
+            destroy this
+        else
+            portalActiveLoop = doPeriodicallyTimed(ORB_LOOP_INTERVAL, DURATION) portalLoop ->
+                //Check for destruction conditions first before accessing any objects
+                if (portalLoop.isLast())
+                    destroy this
+                else    
+                    
+                    orbAngle = angle(orbAngle.radians() + ORB_LOOP_INTERVAL * ORB_ANGULARSPEED_ACTIVE * DEGTORAD)
+                    updateOrbAngles()
+                    if (this.elapsedLifetime - this.lastSpellCastTimestamp >= this.spellIntervalCurrent)
+                        this.lastSpellCastTimestamp = this.elapsedLifetime
+                        randomOrbCastSpell()
+                    elapsedLifetime += ORB_LOOP_INTERVAL
 
     ondestroy
         orbs.forEach(o -> destroy o)

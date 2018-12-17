@@ -1,0 +1,97 @@
+package Transformation
+
+import AbilityObjEditing
+import ClosureEvents
+
+@compiletime function createElementalistTransformAbility()
+    new AbilityDefinitionChaosGrom('XTSE')
+    ..setHeroAbility(true)
+    ..setRequiredLevel(6)
+    ..setCheckDependencies(false)
+    ..setRequirements("")
+    ..setName("Elementalist")
+    ..setTooltipLearn("Transform to Elementalist")
+    ..setTooltipLearnExtended("Raise your class status to Elementalist. The Elementalist is adept at controlling powerful damage dealing spells. |c00ff0000Can only choose 1 subclass!|r")
+
+function ReplaceUnit(unit whichUnit, integer newUnitId) returns unit
+    var oldUnit = whichUnit
+    unit newUnit = null
+
+    //Bogus check
+    if oldUnit == null
+        return oldUnit
+    
+    //Hide original
+    oldUnit.hide()
+    newUnit = createUnit(oldUnit.getOwner(), newUnitId, oldUnit.getPos(), oldUnit.getFacingAngle())
+
+    //Copy stats
+    newUnit.setMana(oldUnit.getMana())
+    newUnit.setHP(oldUnit.getHP())
+
+    //Transfer items
+    for i = 0 to oldUnit.inventorySize()-1
+        var moveItem = oldUnit.itemInSlot(i)
+        if moveItem != null
+            oldUnit.removeItem(moveItem)
+            newUnit.addItemHandle(moveItem)
+        
+    oldUnit.remove()
+
+    return newUnit
+
+    
+
+
+function trollUpgrade(unit whichUnit, integer newUnitId, bool isSupersub, bool isMedallion)
+    var oldUnit = whichUnit
+    player owner = oldUnit.getOwner()
+    unit newUnit = ReplaceUnit(whichUnit, newUnitId)
+
+    //Change globals to new unit
+    udg_trolls.removeUnit(oldUnit)
+    udg_trolls.addUnit(newUnit)
+    udg_PUnits[GetPlayerId(owner)] = newUnit
+
+    //Level and skillpoints
+    newUnit.setLevel(1, false)
+    newUnit.setSkillPoints(0)
+
+    //Supersubs from normal subs get more stats
+    if not isMedallion and isSupersub
+        newUnit.setAgi(13)
+        newUnit.setStr(13)
+        newUnit.setInt(13)
+
+    //Preserve / release BM pet
+    if newUnitId == UNIT_CHICKEN_FORM or newUnitId == UNIT_SHAPESHIFTER_WOLF
+        udg_parameterUnit = newUnit
+        TriggerExecute(gg_trg_Release_Pets)
+        SetPlayerTechResearched(owner, 'Roch', 1)
+    else if newUnitId == UNIT_TRUE_FORM or newUnitId == UNIT_ULTIMATE_FORM
+        udg_parameterUnit = newUnit
+        TriggerExecute(gg_trg_Rest_BM_SKills)
+        SetPlayerTechResearched(owner, 'Roch', 1)
+
+    // Assassin begins with Assassinate level 1
+    if newUnitId == UNIT_ASSASSIN
+        newUnit.setSkillPoints(1)
+        newUnit.selectSkill(ABILITY_ASSASINATE)
+
+    //Avoid desync with localplayer check
+    if owner == GetLocalPlayer()
+        owner.select(newUnit)
+        ForceUICancel()
+    
+function handleTransformation()
+    bool isMedallion = false
+    bool isSupersub = false
+    unit u = GetTriggerUnit()
+    int upgradeSkill = GetLearnedSkill()
+
+    if GetLearnedSkill() == 'XTSE' //Elementalist
+        trollUpgrade(u, 1, false, false)
+        
+init
+    EventListener.add(EVENT_PLAYER_HERO_SKILL) ->
+        handleTransformation()

@@ -9,10 +9,12 @@ import HashMap
 @configurable constant int LEZ_ABILITY_ID = 'A07A'
 @configurable constant real LOOP_INTERVAL = 0.03125
 @configurable constant real ORBIT_ANGULARSPEED = 50
-@configurable constant real ORBIT_DISTANCE = 275
+@configurable constant real ORBIT_DISTANCE = 90
 @configurable constant int MAX_RUNE_COUNT = 5
 
-@configurable constant string RUNE_EFFECT_PATH = ""
+@configurable constant string RUNE_LEZ_EFFECT_PATH = "Doodads\\Cinematic\\GlowingRunes\\GlowingRunes4.mdl"
+@configurable constant string RUNE_NEL_EFFECT_PATH = "Doodads\\Cinematic\\GlowingRunes\\GlowingRunes6.mdl"
+@configurable constant string RUNE_KA_EFFECT_PATH = "Doodads\\Cinematic\\GlowingRunes\\GlowingRunes0.mdl"
 
 let dementiaRunesInstances = new HashMap<unit, DementiaRunesInstance>()
 
@@ -24,12 +26,20 @@ enum RUNE_TYPE
 
 class DementiaRune
     DementiaRunesInstance instance
+    RUNE_TYPE runeType
     effect FX = null
     vec3 pos
 
-    construct (DementiaRunesInstance instance)
+    construct (DementiaRunesInstance instance, RUNE_TYPE runeType)
         pos = instance.ownerUnit.getPos3Real()
-        FX = addEffect(RUNE_EFFECT_PATH, pos)
+        this.runeType = runeType
+        if this.runeType == RUNE_TYPE.Lez
+            FX = addEffect(RUNE_LEZ_EFFECT_PATH, pos)
+        else if this.runeType == RUNE_TYPE.Nel
+            FX = addEffect(RUNE_NEL_EFFECT_PATH, pos)
+        else if this.runeType == RUNE_TYPE.Ka
+            FX = addEffect(RUNE_KA_EFFECT_PATH, pos)
+        FX.setScale(0.7)
 
     function setPos(vec3 newpos)
         pos = newpos
@@ -45,7 +55,7 @@ class DementiaRunesInstance
     unit ownerUnit
     real elapsedLifetime
     CallbackPeriodic runeLoop = null
-
+    
     LinkedList<DementiaRune> runes = new LinkedList<DementiaRune>()
 
     construct (unit caster)
@@ -74,7 +84,11 @@ class DementiaRunesInstance
             i = i + 1
 
     function addRune(DementiaRune rune)
-        runes.add(rune)
+        if runes.size() < MAX_RUNE_COUNT
+            runes.add(rune)
+        else 
+            runes.removeAt(0)
+            runes.add(rune)
 
     ondestroy
         destroy runeLoop
@@ -103,12 +117,12 @@ function onCast()
     if dementiaRunesInstances.has(caster)
         //If caster has instance, add rune
         var instance = dementiaRunesInstances.get(caster)
-        instance.addRune(new DementiaRune(instance))
+        instance.addRune(new DementiaRune(instance, runeType))
     else
         //If caster has no instance, create one
         var instance = new DementiaRunesInstance(caster)
         dementiaRunesInstances.put(caster, instance)
-        instance.addRune(new DementiaRune(instance))
+        instance.addRune(new DementiaRune(instance, runeType))
 
 init
     registerSpellEffectEvent(NEL_ABILITY_ID, () -> onCast())

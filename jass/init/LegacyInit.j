@@ -1,7 +1,6 @@
 library LegacyInit initializer onInit
     private function LegacyInit takes nothing returns nothing
         call DestroyTimer(GetExpiredTimer())
-        call DestroyTimer(GetExpiredTimer())
         call ExecuteFunc("InitTrig_Smell_Drop")
         call ExecuteFunc("InitTrig_Attraction_Aura")
         call ExecuteFunc("InitTrig_stat_display")

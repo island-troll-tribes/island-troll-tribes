@@ -8,12 +8,14 @@ import DummyCaster
 import LinkedList
 import Camera
 import SoundUtils
+import ClosureTimers
 
 @configurable constant int ABILITY_ID = 'A07B'
 @configurable constant int RREQUIREMENT_ABILITY_ID = 'A07D'
-@configurable constant real PORTAL_OFFSET = 150
+@configurable constant real PORTAL_OFFSET = 350
 @configurable constant real RUNE_CAST_RADIUS = 350
-constant SUMMON_SOUND_FX = new SoundDefinition(Sounds.varimathrasReady1, false)
+@configurable constant string SUMMON_EFFECT_PATH = "Abilities\\Spells\\Orc\\AncestralSpirit\\AncestralSpiritCaster.mdl"
+@configurable constant SUMMON_SOUND_FX = new SoundDefinition(Sounds.varimathrasReady1, false)
 
 LinkedList<SummonData> summonsList = new LinkedList<SummonData>()
 
@@ -94,11 +96,15 @@ function trySummonDemon(unit caster, DementiaRunesInstance runesInstance, DarkPo
 
                 for summonInfo in summonsList
                     if summonInfo.rune_order.equals(runeSequence)
-                        printTimedToPlayer(GENERAL_COLOR + "You have summoned " + summonInfo.name + GENERAL_COLOR + "!|r", 4, caster.getOwner())
-                        portalInstance.summons.push(new Summon(createUnit(caster.getOwner(), summonInfo.summonUnitID, portalInstance.centerPos, angle(-90 * DEGTORAD)), summonInfo.cooldown, summonInfo.orderId))
-                        
-                        if getCameraTargetPosition().distanceTo(portalInstance.centerPos.toVec2()) < 1300
-                            SUMMON_SOUND_FX.play(3)
+                        var efx = addEffect(SUMMON_EFFECT_PATH, portalInstance.centerPos + vec3(0, 0, 300))
+                        efx.setScale(2)
+                        doAfter(1.25) ->
+                            efx.destr()
+                            printTimedToPlayer(GENERAL_COLOR + "You have summoned " + summonInfo.name + GENERAL_COLOR + "!|r", 4, caster.getOwner())
+                            portalInstance.summons.push(new Summon(createUnit(caster.getOwner(), summonInfo.summonUnitID, portalInstance.centerPos, angle(-90 * DEGTORAD)), summonInfo.cooldown, summonInfo.orderId))
+                            
+                            if getCameraTargetPosition().distanceTo(portalInstance.centerPos.toVec2()) < 1300
+                                SUMMON_SOUND_FX.play(3)
 
                         for r in runesInstance.runes
                             destroy r

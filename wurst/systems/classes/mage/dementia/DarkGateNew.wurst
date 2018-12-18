@@ -245,11 +245,11 @@ public class DarkPortalInstance
         var orb = this.orbs.get( GetRandomInt(0, orbs.size() - 1))
         var owner = ownerUnit.getOwner()
         var centerPosVec2 = centerPos.toVec2()
-        var foundTarget = false
+        var _foundTarget = false
 
         //Find random target and cast + spawn effect on orb
         forUnitsInRange(centerPosVec2, portalRadius) t ->
-            if not foundTarget
+            if not _foundTarget
                 if t.getOwner().isEnemyOf(owner) and not t.isInvulnerable() and not t.isType(UNIT_TYPE_STRUCTURE) and t.isAlive() and IsUnitVisible(t, owner)
                     var randomSpell = spellList.get( GetRandomInt(0, spellList.size() - 1))
                     //Dont use manaburn on units without mana pools
@@ -261,7 +261,7 @@ public class DarkPortalInstance
                     else
                         new DummyCaster().castTarget(owner, randomSpell.spellId, 1, randomSpell.orderId, t, orb.pos)
                     addEffect(SPELLCAST_EFFECT_PATH, orb.pos).destr()
-                    foundTarget = true
+                    _foundTarget = true
             
 
     function updateOrbAngles()

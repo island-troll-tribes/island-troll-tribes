@@ -41,6 +41,9 @@ library TrollUpgrade initializer onInit requires ID, Constants, PublicLibrary
   private function TrollUpgrade takes unit REPLACED_UNIT, integer UNIT_ID_REPLACE, boolean SUPERSUB, boolean medallion returns nothing
     local unit REPLACING_UNIT = ReplaceUnitEx(REPLACED_UNIT, UNIT_ID_REPLACE, 1)
     local player PLAYER = GetOwningPlayer(REPLACED_UNIT)
+    local integer strength = GetHeroStr(REPLACED_UNIT, false)
+    local integer agility = GetHeroAgi(REPLACED_UNIT, false)
+    local integer intelligence = GetHeroInt(REPLACED_UNIT, false)
 
     call GroupRemoveUnit(udg_trolls, REPLACED_UNIT)
     call GroupAddUnit(udg_trolls, REPLACING_UNIT)
@@ -48,12 +51,10 @@ library TrollUpgrade initializer onInit requires ID, Constants, PublicLibrary
     call SetHeroLevelBJ(REPLACING_UNIT, 1, false)
     call UnitModifySkillPoints(REPLACING_UNIT, 0)
 
-    // Supersub from sub needs extra stats
-    if not medallion and SUPERSUB then
-        call SetHeroStr(REPLACING_UNIT, 13, true)
-        call SetHeroAgi(REPLACING_UNIT, 13, true)
-        call SetHeroInt(REPLACING_UNIT, 13, true)
-    endif
+    // Copy previous attributes
+    call SetHeroStr(REPLACING_UNIT, strength, true)
+    call SetHeroAgi(REPLACING_UNIT, agility, true)
+    call SetHeroInt(REPLACING_UNIT, intelligence, true)
 
     // Preserve or release BM pet
     if UNIT_ID_REPLACE == UNIT_CHICKEN_FORM or UNIT_ID_REPLACE == UNIT_SHAPESHIFTER_WOLF then

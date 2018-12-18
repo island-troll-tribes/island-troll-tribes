@@ -290,28 +290,35 @@ public class DarkPortalInstance
                     elapsedLifetime += ORB_LOOP_INTERVAL
                     orbAngle = angle(orbAngle.radians() + ORB_LOOP_INTERVAL * ORB_ANGULARSPEED_ACTIVE * DEGTORAD)
                     updateOrbAngles()
+                    updateSummons()
+                    
 
-                    //Update any summons too
-                    for s in summons
-                        if (s.elapsedLifetime - s.lastAttack >= s.cooldown)
-                            //s.summonUnit.issueTargetOrderById(s.orderId, null)
-                            unit summonTarget = null
-                            forUnitsInRange(centerPos.toVec2(), portalRadius) t ->
-                                //Try to find enemies first
-                                if summonTarget == null
-                                    if t.getOwner().isEnemyOf(ownerUnit.getOwner()) and not t.isInvulnerable() and not t.isType(UNIT_TYPE_STRUCTURE) and t.isAlive() and IsUnitVisible(t, ownerUnit.getOwner())
-                                        summonTarget = t
+    function updateSummons()
+        for s in summons
+            if (s.elapsedLifetime - s.lastAttack >= s.cooldown)
+                //s.summonUnit.issueTargetOrderById(s.orderId, null)
+                unit summonTarget = null
+                forUnitsInRange(centerPos.toVec2(), portalRadius) t ->
+                    //Try to find enemies first
+                    if summonTarget == null
+                        if t.getOwner().isEnemyOf(ownerUnit.getOwner()) and not t.isInvulnerable() and not t.isType(UNIT_TYPE_STRUCTURE) and t.isAlive() and IsUnitVisible(t, ownerUnit.getOwner())
+                            //Pick targets without buffs over those who have em
+                            if summonTarget == null or summonTarget.hasAbility('Bmlt') or summonTarget.hasAbility('B00Q') 
+                                summonTarget = t
 
-                                //Try to find allies second
-                                if summonTarget == null
-                                    if not t.isInvulnerable() and not t.isType(UNIT_TYPE_STRUCTURE) and t.isAlive() and IsUnitVisible(t, ownerUnit.getOwner())
-                                        summonTarget = t
-                                
-                                if summonTarget != null
-                                    s.summonUnit.issueTargetOrderById(s.orderId, summonTarget)
-                                    s.lastAttack = s.elapsedLifetime
-                        //Update summon lifetime clock
-                        s.elapsedLifetime += ORB_LOOP_INTERVAL
+                    //Try to find allies second
+                    if summonTarget == null
+                        if not t.isInvulnerable() and not t.isType(UNIT_TYPE_STRUCTURE) and t.isAlive() and IsUnitVisible(t, ownerUnit.getOwner())
+                            //Pick targets without buffs over those who have em
+                            if summonTarget == null or summonTarget.hasAbility('Bmlt') or summonTarget.hasAbility('B00Q') 
+                                summonTarget = t
+                    
+                    if summonTarget != null
+                        s.summonUnit.issueTargetOrderById(s.orderId, summonTarget)
+                        s.lastAttack = s.elapsedLifetime
+            //Update summon lifetime clock
+            s.elapsedLifetime += ORB_LOOP_INTERVAL
+            
     ondestroy
         orbs.forEach(o -> destroy o)
         destroy orbs

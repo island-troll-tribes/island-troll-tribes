@@ -1,4 +1,4 @@
-library PublicLibrary initializer initPublicLibrary requires TimerUtils, IDUtils, Constants, FilterTypeIsThing, String, InitializeUnits, GlobalsInit
+library PublicLibrary initializer initPublicLibrary requires TimerUtils, ID, Constants, FilterTypeIsThing, String, InitializeUnits, GlobalsInit
 
 function GetExpiredTimerData takes nothing returns integer
   return GetTimerData( GetExpiredTimer() )

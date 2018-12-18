@@ -1,14 +1,16 @@
 package Game
 import UnitExtensions
 
+let listeners = CreateTrigger()
+
 public function registerGameStartEvent(code handler)
-    s__Map_onGameStart(handler)
+    listeners.addAction(handler)
 
 public function generateMap()
     gg_trg_spawn_call_first.execute()
     gg_trg_ShowPlayers.execute()
+    listeners.execute()
     SetTimeOfDay(6)
-    s__Map_fireStartGameEvents()
     print(GENERAL_COLOR + "Game has begun!|r")
     GAME_TIMER.start(99999999, null)
 
@@ -31,5 +33,4 @@ init
     InitGameCache("ITT.w3v")
     udg_jumpCache = bj_lastCreatedGameCache
     udg_GameHash = InitHashtable()
-    gg_trg_GameModes = CreateTrigger()
     prepareSpells()

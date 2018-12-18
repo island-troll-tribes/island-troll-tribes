@@ -1,0 +1,105 @@
+package TradeShipSupervisor
+import TradeShipStop
+import HashMap
+import LinkedList
+import ClosureTimers
+
+let TRADE_SHIP_PAUSE_TIME_DEST = 0
+let TRADE_SHIP_PAUSE_TIME_SELL = 0
+
+public interface TradeShipListener
+    function run(TradeShipSupervisor ship)
+
+public enum TradeShipSupervisorState
+    MOVING
+    STOPPED
+    EXITED
+
+public class TradeShipSupervisor
+    static let ships = new HashMap<unit, thistype>()
+    static let whenEnterRegion = CreateTrigger()
+    ..registerEnterRegion(TradeShipStop.tradeStops, null)
+    ..addAction(function TradeShipSupervisor.handleEnterRegion)
+
+    unit ship
+    TradeShipStop firstStop
+    TradeShipStop nextStop
+    CallbackPeriodic callback
+    var state = TradeShipSupervisorState.MOVING
+    let listeners = new LinkedList<TradeShipListener>()
+    var numForksReached = 0
+
+    static function handleEnterRegion()
+        let enteringUnit = GetEnteringUnit()
+        if ships.has(enteringUnit)
+            ships.get(enteringUnit).processEnterRegion()
+
+    construct(TradeShipStop firstStop, int shipId)
+        ship = createUnit(Player(PLAYER_NEUTRAL_PASSIVE), shipId, firstStop.getPos(), angle(0))
+        nextStop = firstStop.getNext()
+        ships.put(ship, this)
+        moveToNextStop()
+        
+    function getState() returns TradeShipSupervisorState
+        return state
+
+    function addListener(TradeShipListener listener)
+        listeners.add(listener)
+
+    function triggerListeners()
+        listeners.forEach(listener -> listener.run(this))
+
+    function moveToNextStop()
+        if state == TradeShipSupervisorState.MOVING
+            return
+
+        state = TradeShipSupervisorState.MOVING
+        ship.issuePointOrder("move", nextStop.getPos())
+        callback = doPeriodically(1.0) cb ->
+            ship.issuePointOrder("move", nextStop.getPos())
+
+    function pause(real duration)
+        if state != TradeShipSupervisorState.STOPPED
+            return
+
+        if callback != null
+            destroy callback
+
+        state = TradeShipSupervisorState.STOPPED
+        doAfter(duration, -> moveToNextStop())
+
+    function removeShip()
+        ships.remove(ship)
+        ship.remove()
+        state = TradeShipSupervisorState.EXITED
+        ship = null
+
+    function setNextStop()
+        let hasFork = nextStop.hasFork()
+        if hasFork and numForksReached > 3
+            nextStop = nextStop.getFork()
+        else
+            numForksReached += hasFork.toInt()
+            nextStop = nextStop.getNext()
+
+    private function processEnterRegion()
+        if not nextStop.contains(ship)
+            return
+
+        if nextStop.isLastStop()
+            removeShip()
+        else
+            pause(nextStop.getPauseTime())
+            setNextStop()
+
+        triggerListeners()
+
+    ondestroy
+        listeners.forEach(listener -> destroy listener)
+        destroy listeners
+
+        if callback != null
+            destroy callback
+
+        if ship != null
+            removeShip()

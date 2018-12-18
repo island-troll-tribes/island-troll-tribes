@@ -1,0 +1,38 @@
+package TradeShipCoordinator
+import TradeShipList
+import TradeShipSupervisor
+import TradeShipRoutePair
+import LinkedList
+
+public class TradeShipCoordinator
+    var nextShip = TradeShipList.getFirst()
+    let routes = new LinkedList<TradeShipRoutePair>()
+    LinkedList<TradeShipSupervisor> ships
+
+    function swap()
+        routes.forEach(route -> route.swap())
+
+    function spawn()
+        ships.forEach(ship -> destroy ship)
+        destroy ships
+
+        ships = routes
+        .map(route -> new TradeShipSupervisor(route.getFirst(), nextShip.getId()))
+        ..forEach(ship -> ship.addListener(ship -> handleEvent(ship)))
+
+        nextShip = nextShip.getNext()
+
+    function handleEvent(TradeShipSupervisor _ship)
+        let size = ships
+        .map(ship -> ship.getState())
+        .filter(state -> state != TradeShipSupervisorState.EXITED)
+        .size()
+
+        if size == 0
+            spawn()
+
+    function addPair(TradeShipRoutePair pair)
+        routes.add(pair)
+
+    function getPairs() returns LinkedList<TradeShipRoutePair>
+        return routes

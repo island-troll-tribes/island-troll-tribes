@@ -2,6 +2,7 @@ package Transformation
 
 import Classes
 import ClosureEvents
+import GameConfig
 
 function replaceUnit(unit whichUnit, integer newUnitId) returns unit
     var oldUnit = whichUnit
@@ -75,8 +76,10 @@ function handleTransformation()
     int upgradeSkill = GetLearnedSkill()
 
     if upgradeSkill == 'S002' //Elementalist new
-        trollUpgrade(u, UNIT_ELEMENTALIST_NEW)
-        
+        if gameConfig.getUseOldMage()
+            trollUpgrade(u, UNIT_ELEMENTALIST)
+        else 
+            trollUpgrade(u, UNIT_ELEMENTALIST_NEW)
 init
     EventListener.add(EVENT_PLAYER_HERO_SKILL) ->
         handleTransformation()

@@ -89,7 +89,6 @@ library TrollUpgrade initializer onInit requires ID, Constants, PublicLibrary
     local boolean SUPERSUB = false
     local integer SKILL_UPGRADE = GetLearnedSkill()
     local unit OLD_UNIT = GetLearningUnit()
-    local boolean newElementalist = GameConfig.getInstance().isNewMageEnabled()
 
     local boolean medallion = false
 
@@ -102,12 +101,6 @@ library TrollUpgrade initializer onInit requires ID, Constants, PublicLibrary
     elseif SKILL_UPGRADE == 'S00C' then
         set UNIT_ID_REPLACE = UNIT_TRACKER
         set TRACKER_PRESENT = true
-    elseif SKILL_UPGRADE == 'S002' then
-        if newElementalist then
-            set UNIT_ID_REPLACE = UNIT_ELEMENTALIST_NEW
-        else
-            set UNIT_ID_REPLACE = UNIT_ELEMENTALIST
-        endif
     elseif SKILL_UPGRADE == 'S009' then
         set UNIT_ID_REPLACE = UNIT_HYPNOTIST
     elseif SKILL_UPGRADE == 'S00B' then

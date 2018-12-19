@@ -1,0 +1,64 @@
+package ShrinkingMap
+import Game
+import GameConfig
+import TimerUtils
+import TimerExtensions
+import ClosureTimers
+
+constant MAX_DISTANCE_FROM_CENTER = 13000
+constant DISTANCE_INCREMENT = 100
+constant DISTANCE_BETWEEN_SMOKE = 2000
+constant FIRE_APPROACH_PERIOD = 1.5
+constant LIFE_DRAIN_PERIOD = 0.5
+constant LIFE_DRAIN_PERCENT_PER_SECOND = 0.05
+constant GUST_MODEL_PATH = "Doodads\\Cinematic\\FirePillarMedium\\FirePillarMedium.mdl"
+
+var distanceFromCenter = MAX_DISTANCE_FROM_CENTER
+
+function isTreeOutsideBounds() returns bool
+    let tree = GetFilterDestructable()
+    if tree.getTypeId() != 'ZTtw'
+        return false
+
+    let dist = tree.getPos().distanceTo(vec2(0, 0))
+    return dist >= distanceFromCenter and dist < distanceFromCenter + DISTANCE_INCREMENT
+
+function burnThings()
+    doPeriodically(LIFE_DRAIN_PERIOD) cb ->
+        let burnedUnits = CreateGroup()
+        ..enumUnitsInRect(bj_mapInitialPlayableArea, Filter(-> begin
+            let burned = GetFilterUnit()
+            let dist = burned.getPos().distanceTo(vec2(0, 0))
+            return dist >= distanceFromCenter and not IsUnitBoss(burned) and not burned.isInvulnerable()
+        end))
+
+        for burned from burnedUnits
+            if burned.getTypeId() == UNIT_MEAT
+                createItem(ITEM_COOKED_MEAT, burned.getPos())
+                burned.remove()
+            else
+                burned.subHP(burned.getMaxHP() * LIFE_DRAIN_PERCENT_PER_SECOND * LIFE_DRAIN_PERIOD)
+
+    doPeriodically(FIRE_APPROACH_PERIOD) cb ->
+        distanceFromCenter -= DISTANCE_INCREMENT
+
+        if distanceFromCenter < gameConfig.getForestFireDistance()
+            destroy cb
+        else
+            EnumDestructablesInRect(bj_mapInitialPlayableArea, Filter(function isTreeOutsideBounds)) ->
+                AddSpecialEffectLoc(GUST_MODEL_PATH, GetDestructableLoc(GetEnumDestructable()))
+
+        // while (theta < 2 * bj_PI) {
+        //     x = distanceFromCenter * Cos(theta);
+        //     y = distanceFromCenter * Sin(theta);
+        //     place = Rect(x, y, x + 1, y + 1);
+        //     smoke = AddWeatherEffect(place, 'WOlw');
+        //     EnableWeatherEffect(smoke, true);
+        //     theta += Asin(DISTANCE_BETWEEN_SMOKE / distanceFromCenter);
+        // }
+
+init
+    registerGameStartEvent() ->
+        if gameConfig.isForestFireEnabled()
+            let timeout = gameConfig.getForestFireAfter() * 60
+            FOREST_FIRE_TIMER = getTimer()..doAfter(timeout, () -> burnThings())

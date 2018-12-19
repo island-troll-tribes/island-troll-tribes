@@ -1,0 +1,42 @@
+package Leavers
+import RegisterEvents
+import PlayerExtensions
+import TrollExtensions
+import Game
+
+function handlePlayerLeave()
+    let leaver = GetTriggerPlayer()
+
+    if leaver.isObserver()
+        return
+
+    let allies = leaver.getTribe().getMembers()
+
+    let alliesInGame = allies.filter(member -> member != leaver and member.isIngame())
+    let alliesInGameCount = alliesInGame.size()
+    if alliesInGameCount == 0
+        allies
+        .map(member -> member.getTroll())
+        .filter(troll -> troll.isAlive())
+        .forEach(troll -> troll.kill())
+        return
+
+    let goldPerPlayer = (leaver.getGold() / alliesInGameCount).floor()
+    let msg = "{0}They left you {1}{2}{3} gold|r".format(GENERAL_COLOR, GOLD_COLOR, goldPerPlayer.toString(), GENERAL_COLOR)
+    alliesInGame.forEach() member ->
+        printTimedToPlayer(msg, DEBUG_MSG_DURATION, member)
+        member.addLumber(goldPerPlayer)
+
+        leaver
+        ..setPlayerAlliance(member, ALLIANCE_SHARED_VISION, true)
+        ..setPlayerAlliance(member, ALLIANCE_SHARED_CONTROL, true)
+        ..setPlayerAlliance(member, ALLIANCE_SHARED_ADVANCED_CONTROL, true)
+
+init
+    registerPlayerEvent(EVENT_PLAYER_LEAVE) ->
+        print(GetTriggerPlayer().getNameColored() + " has left the game")
+
+    registerGameStartEvent() ->
+        registerPlayerEvent(EVENT_PLAYER_LEAVE, function handlePlayerLeave)
+
+            

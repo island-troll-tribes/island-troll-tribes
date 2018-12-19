@@ -1,17 +1,169 @@
 package GameConfig
 
 class GameConfig
-    function isGracePeriodEnabled() returns boolean
-        return s__GameConfig_isGracePeriodEnabled(1)
+    var numTribes = 2
+    var playersPerTribe = 6
+    var enableTransportShips = true
+    var heatPerCast = 15
+    var hostileSpawnRate = 1.0
+    var allTrollEnabled = false
+    var allTrollUnitId = 0
+    var forcedDuelEnabled = false
+    var forcedDuelAfter = 0.0
+    var gracePeriodDuration = 8.0
+    var respawnSystemEnabled = false
+    var randomizeSpawns = false
+    var startWithFire = false
+    var startWithOneFire = false
+    var startWithSpiritWard = false
+    var oldRandomEnabled = false
+    var selectionTimeAllowed = 40
+    var eliminationMode = false
+    var heatMaximum = 100
+    var tradeEnabled = true
+    var forestFireEnabled = false
+    var forestFireDistance = 0.0
+    var forestFireAfter = 0.0
+    var testMode = false
 
-    function isRespawnSystemEnabled() returns boolean
-        return s__GameConfig_isRespawnSystemEnabled(1)
+    function setHeatPerCast(int amount)
+        heatPerCast = amount
+
+    function getHeatPerCast() returns int
+        return heatPerCast
+
+    function setAllTrollEnabled(integer unitId)
+        allTrollEnabled = true
+        allTrollUnitId = unitId
+
+    function isAllTrollEnabled() returns boolean
+        return allTrollEnabled
+
+    function getAllTrollUnitId() returns integer
+        return allTrollUnitId
+
+    function setNumPlayersPerTribe(integer n)
+        numTribes = (12 / n).toInt()
+        playersPerTribe = n
+
+    function getNumTribes() returns integer
+        return numTribes
+
+    function getNumPlayersPerTribe() returns integer
+        return playersPerTribe
+
+    function setForcedDuel(real numMinutes) returns boolean
+        if numMinutes < gracePeriodDuration
+            return false
+        forcedDuelEnabled = true
+        forcedDuelAfter = numMinutes
+        return true
 
     function isForcedDuelEnabled() returns boolean
-        return s__GameConfig_isForcedDuelEnabled(1)
+        return forcedDuelEnabled
+
+    function getForcedDuelAfter() returns real
+        return forcedDuelAfter
+
+    function isRespawnSystemEnabled() returns boolean
+        return respawnSystemEnabled
+
+    function setRespawnSystemEnabled(boolean value)
+        respawnSystemEnabled = value
+
+    function setGracePeriodDuration(real numMinutes) returns boolean
+        if forcedDuelEnabled and numMinutes > forcedDuelAfter
+            return false
+        gracePeriodDuration = numMinutes
+        return true
 
     function getGracePeriodDurationMinutes() returns real
-        return s__GameConfig_getGracePeriodDuration(1)
+        return gracePeriodDuration
+
+    function isGracePeriodEnabled() returns boolean
+        return gracePeriodDuration > 0
+
+    function setRandomSpawns(boolean value)
+        randomizeSpawns = value
+
+    function isRandomSpawns() returns boolean
+        return randomizeSpawns
+
+    function setStartWithFire(boolean value)
+        startWithFire = true
+
+    function isStartWithFire() returns boolean
+        return startWithFire
+
+    function setStartWithOneFire(boolean value)
+        startWithOneFire = true
+
+    function isStartWithOneFire() returns boolean
+        return startWithOneFire
+
+    function setStartWithSpiritWard(boolean value)
+        startWithSpiritWard = true
+
+    function isStartWithSpiritWard() returns boolean
+        return startWithSpiritWard
+
+    function getHostileSpawnRate() returns real
+        return udg_BADDIE_BASE
+
+    function setHostileSpawnRate(real value)
+        udg_BADDIE_BASE = value
+
+    function setOldRandomEnabled(boolean value)
+        oldRandomEnabled = value
+
+    function isOldRandomEnabled() returns boolean
+        return oldRandomEnabled
+
+    function setSelectionTimeAllowed(integer value)
+        selectionTimeAllowed = value
+
+    function getSelectionTimeAllowed() returns integer
+        return selectionTimeAllowed
+
+    function setEliminationEnabled(boolean value)
+        eliminationMode = value
+        udg_ELIMINATION = value
+
+    function getEliminationEnabled() returns boolean
+        return eliminationMode
+
+    function setHeatMaximum(integer amount)
+        heatMaximum = amount
+        udg_MAX_HEAT = amount
+
+    function getHeatMaximum() returns integer
+        return heatMaximum
+
+    function setTradeEnabled(boolean value)
+        tradeEnabled = value
+
+    function getTradeEnabled() returns boolean
+        return tradeEnabled
+
+    function setForestFire(real numMinutes, real distance)
+        forestFireEnabled = true
+        forestFireAfter = numMinutes
+        forestFireDistance = distance
+
+    function isForestFireEnabled() returns boolean
+        return forestFireEnabled
+
+    function getForestFireAfter() returns real
+        return forestFireAfter
+
+    function getForestFireDistance() returns real
+        return forestFireDistance
+
+    function setTestMode(boolean value)
+        testMode = value
+
+    function isTestModeEnabled() returns boolean
+        return testMode
 
     function getStatLossAmount() returns int
         return udg_STAT_DEGRADE_AMOUNT

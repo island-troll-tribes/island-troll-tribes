@@ -1,0 +1,38 @@
+package SpawningTestHelpers
+
+import ChatCommands
+import Game
+import SimError
+import TrollExtensions
+import GameConfig
+
+let HELP_MESSAGE = (
+    "create units and items|n|n" +
+    "-create obj [pid]|n|n" +
+    "where obj is like UNIT_MAMMOTH, pid is the player id number, x/y are coords"
+)
+
+init
+    registerGameStartEvent() ->
+        if gameConfig.isTestModeEnabled()
+            registerCommandAll("create") (triggerPlayer, args) ->
+                if args.size() == 1
+                    if localPlayer == triggerPlayer
+                        print(HELP_MESSAGE)
+
+                let idStr = args.get(1).toUpperCase()
+                let id = S2ID(idStr)
+
+                if id < 0
+                    simError(triggerPlayer, "{0} not found".format(idStr))
+                else
+                    let owner = args.size() > 2 ? players[args.get(2).toInt()] : triggerPlayer
+                    let troll = triggerPlayer.getTroll()
+                    let pos = troll.getPos().polarOffset(troll.getFacingAngle(), 100)
+
+                    if idStr.startsWith("UNIT_")
+                        createUnit(owner, id, pos, angle(0))
+                    else if idStr.startsWith("ITEM_")
+                        createItem(id, pos)
+                    else
+                        simError(triggerPlayer, "Cannot spawn {0}".format(idStr))

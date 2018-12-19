@@ -2,6 +2,7 @@ package SpiritWard
 import HashMap
 import RegisterEvents
 import ClosureTimers
+import PlayerExtensions
 
 let map = new HashMap<unit, unit>()
 
@@ -46,7 +47,7 @@ init
     registerPlayerEvent(EVENT_PLAYER_LEAVE) ->
         let leaver = GetTriggerPlayer()
         let wards = GetUnitsOfPlayerAndTypeId(leaver, UNIT_SPIRIT_WARD)
-        let tribe = GetPlayerTribe(leaver)
+        let newOwner = leaver.getTribe().getForce().getRandomPlayer()
 
         for ward from wards
-            ward.setOwner(tribe.getRandomPlayer(), true)
+            ward.setOwner(newOwner, true)

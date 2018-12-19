@@ -31,8 +31,8 @@ let spawns = [
     gg_rct_revive_12
 ]
 
-public class Selector
-    static let spawns = new HashMap<unit, Selector>()
+public class ClassSelector
+    static let spawns = new HashMap<unit, thistype>()
 
     Tribe tribe
     LinkedList<unit> pickers
@@ -43,9 +43,9 @@ public class Selector
     static function findByTotem(unit totem) returns thistype
         return spawns.get(totem)
 
-    construct(Tribe _tribe, rect _spawn)
-        spawn = _spawn
+    construct(Tribe _tribe)
         tribe = _tribe
+        spawn = tribe.getSpawn()
 
         initializeTotem()
         initializePool()
@@ -193,7 +193,9 @@ public function startClassSelection()
         spawnList.shuffle()
 
     let spawners = Tribe.getTribes().map() tribe ->
-        return new Selector(tribe, spawnList.get(tribe.getId()))
+        let spawn = spawnList.get(tribe.getId())
+        tribe.setSpawn(spawn)
+        return new ClassSelector(tribe)
 
     var selectionTime = 0
 
@@ -214,7 +216,7 @@ public function startClassSelection()
 
 init
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SELL) ->
-        Selector.findByTotem(GetSellingUnit()).handleUnitSold()
+        ClassSelector.findByTotem(GetSellingUnit()).handleUnitSold()
 
     GameMode.onModeSelectionFinish() ->
         startClassSelection()

@@ -1,5 +1,6 @@
 package Transformation
 
+import Classes
 import ClosureEvents
 
 function replaceUnit(unit whichUnit, integer newUnitId) returns unit
@@ -39,9 +40,10 @@ public function trollUpgrade(unit whichUnit, integer newUnitId, bool isSupersub,
     udg_trolls.addUnit(newUnit)
     udg_PUnits[owner.getId()] = newUnit
 
-    //Level and skillpoints
+    //Level and 1 skillpoint for non-baseclasses
     newUnit.setLevel(0, false)
-    newUnit.setSkillPoints(0)
+    if getTrollClassType(newUnit) == ClassType.SUB_CLASS or getTrollClassType(newUnit) == ClassType.SUPER_CLASS
+        newUnit.setSkillPoints(1)
 
     //Copy stats
     newUnit.setAgi(agility)

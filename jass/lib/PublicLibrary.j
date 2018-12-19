@@ -221,14 +221,6 @@ function GetPlayerTroll takes player p returns unit
     return udg_parameterUnit
 endfunction
 
-function GetPidTroll takes integer pid returns unit
-    return udg_PUnits[pid]
-endfunction
-
-function GetPidTribeId takes integer pid returns integer
-    return TEAM_PLAYER[pid] - 1
-endfunction
-
 function cleanInventory takes unit u returns nothing
     local integer temp=UnitInventorySize(u)
     local integer temp2

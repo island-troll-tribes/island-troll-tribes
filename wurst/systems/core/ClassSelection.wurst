@@ -16,7 +16,7 @@ import Game
 
 let UNIT_TROLL_TOTEM = 'o00H'
 
-let spawns = [
+let spawnRects = [
     gg_rct_revive_1,
     gg_rct_revive_2,
     gg_rct_revive_3,
@@ -31,17 +31,84 @@ let spawns = [
     gg_rct_revive_12
 ]
 
+function LinkedList<T>.take<T>(int numElems) returns LinkedList<T>
+    let list = new LinkedList<T>()
+    let take = min(numElems, this.size())
+    for i = 0 to take
+        list.add(this.get(i))
+    return list
+
 public class ClassSelector
     static let spawns = new HashMap<unit, thistype>()
-
-    Tribe tribe
-    LinkedList<unit> pickers
-    rect spawn
-    unitpool pool
-    unit totem
+    static LinkedList<thistype> spawners
 
     static function findByTotem(unit totem) returns thistype
         return spawns.get(totem)
+
+    static function resetAllianceState()
+        for i = 0 to bj_MAX_PLAYER_SLOTS - 1
+            for j = 0 to bj_MAX_PLAYER_SLOTS - 1
+                if i != j
+                    SetPlayerAllianceStateBJ(players[i], players[j], bj_ALLIANCE_UNALLIED)
+
+    static function initializeTribes()
+        let numTribes = gameConfig.getNumTribes()
+        for tribeId = 0 to numTribes - 1
+            new Tribe(tribeId)
+
+    static function initializeSpawns()
+        let maxTribeId = Tribe
+            .getTribes()
+            .filter(tribe -> not tribe.isDefeated())
+            .peek()
+            .getId()
+
+        let spawnList = new LinkedList<rect>()
+        for i = 0 to maxTribeId
+            spawnList.push(spawnRects[i])
+
+        if gameConfig.isRandomSpawns()
+            spawnList.shuffle()
+
+        spawners = Tribe.getTribes().map() tribe ->
+            let spawn = spawnList.get(tribe.getId())
+            tribe.setSpawn(spawn)
+            return new ClassSelector(tribe)
+
+    static function startClassSelection()
+        resetAllianceState()
+        initializeTribes()
+        initializeSpawns()
+
+        var selectionTime = 0
+
+        if not gameConfig.isAllTrollEnabled()
+            selectionTime = gameConfig.getSelectionTimeAllowed()
+            print(GENERAL_COLOR + "Choose a troll class|r")
+            print(GENERAL_COLOR + "You will be appointed a random troll if you do not pick|r")
+
+        getTimer()
+        ..doAfter(selectionTime.toReal(), -> begin
+            spawners.forEach(spawner -> spawner.endSelection())
+            gg_trg_boards.execute()
+            generateMap()
+        end)
+        .createTimerDialog()
+        ..setTitle("Select Class")
+        ..display(true)
+
+    static function initialize()
+        registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SELL) ->
+            findByTotem(GetSellingUnit()).handleUnitSold()
+
+        GameMode.onModeSelectionFinish() ->
+            startClassSelection()
+
+    Tribe tribe
+    let pickers = new LinkedList<unit>()
+    rect spawn
+    unitpool pool
+    unit totem
 
     construct(Tribe _tribe)
         tribe = _tribe
@@ -83,7 +150,6 @@ public class ClassSelector
 
     private function initializePickers()
         let pos = spawn.getCenter()
-        pickers = new LinkedList<unit>
         tribe.getMembers().forEach() member ->
             pickers.push(createUnit(member, UNIT_HERO_PICKER, pos.polarOffset(angle(PI), 1200), angle(0)))
             member.setLumber(3)
@@ -169,54 +235,6 @@ public class ClassSelector
         ..setLumber(3)
 
 public function startClassSelection()
-    for i = 0 to bj_MAX_PLAYER_SLOTS - 1
-        for j = 0 to bj_MAX_PLAYER_SLOTS - 1
-            if i != j
-                SetPlayerAllianceStateBJ(players[i], players[j], bj_ALLIANCE_UNALLIED)
-
-    let numTribes = gameConfig.getNumTribes()
-    for tribeId = 0 to numTribes - 1
-        new Tribe(tribeId)
-
-    let maxTribeId = Tribe
-        .getTribes()
-        .filter(tribe -> not tribe.isDefeated())
-        .peek()
-        .getId()
-
-    let spawnList = new LinkedList<rect>()
-
-    for i = 0 to maxTribeId
-        spawnList.push(spawns[i])
-
-    if gameConfig.isRandomSpawns()
-        spawnList.shuffle()
-
-    let spawners = Tribe.getTribes().map() tribe ->
-        let spawn = spawnList.get(tribe.getId())
-        tribe.setSpawn(spawn)
-        return new ClassSelector(tribe)
-
-    var selectionTime = 0
-
-    if not gameConfig.isAllTrollEnabled()
-        selectionTime = gameConfig.getSelectionTimeAllowed()
-        print(GENERAL_COLOR + "Choose a troll class|r")
-        print(GENERAL_COLOR + "You will be appointed a random troll if you do not pick|r")
-    
-    getTimer()
-    ..doAfter(selectionTime.toReal(), -> begin
-        spawners.forEach(spawner -> spawner.endSelection())
-        gg_trg_boards.execute()
-        generateMap()
-    end)
-    .createTimerDialog()
-    ..setTitle("Select Class")
-    ..display(true)
 
 init
-    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SELL) ->
-        ClassSelector.findByTotem(GetSellingUnit()).handleUnitSold()
-
-    GameMode.onModeSelectionFinish() ->
-        startClassSelection()
+    ClassSelector.initialize()

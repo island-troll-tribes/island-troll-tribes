@@ -44,7 +44,6 @@ library TrollUpgrade initializer onInit requires ID, Constants, PublicLibrary
     local integer strength = GetHeroStr(REPLACED_UNIT, false)
     local integer agility = GetHeroAgi(REPLACED_UNIT, false)
     local integer intelligence = GetHeroInt(REPLACED_UNIT, false)
-    local integer newElementalist = GameConfig.getInstance().isNewMageEnabled()
 
     call GroupRemoveUnit(udg_trolls, REPLACED_UNIT)
     call GroupAddUnit(udg_trolls, REPLACING_UNIT)
@@ -90,6 +89,7 @@ library TrollUpgrade initializer onInit requires ID, Constants, PublicLibrary
     local boolean SUPERSUB = false
     local integer SKILL_UPGRADE = GetLearnedSkill()
     local unit OLD_UNIT = GetLearningUnit()
+    local boolean newElementalist = GameConfig.getInstance().isNewMageEnabled()
 
     local boolean medallion = false
 
@@ -103,10 +103,11 @@ library TrollUpgrade initializer onInit requires ID, Constants, PublicLibrary
         set UNIT_ID_REPLACE = UNIT_TRACKER
         set TRACKER_PRESENT = true
     elseif SKILL_UPGRADE == 'S002' then
-        if (newElementalist == true) then
+        if newElementalist then
             set UNIT_ID_REPLACE = UNIT_ELEMENTALIST_NEW
         else
             set UNIT_ID_REPLACE = UNIT_ELEMENTALIST
+        endif
     elseif SKILL_UPGRADE == 'S009' then
         set UNIT_ID_REPLACE = UNIT_HYPNOTIST
     elseif SKILL_UPGRADE == 'S00B' then

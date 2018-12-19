@@ -171,7 +171,7 @@ class SEFInstance
         isOvercharged = overcharged
         ownerUnit = caster
         real channeledTime = 0
-        real lastOrbCreatedTimestamp = 0
+        real _lastOrbCreatedTimestamp = 0
         lastOrbAttackTimestamp = 0
         orbLoopDuration = 0
         real orb_interval = ORB_SPAWN_INTERVAL
@@ -182,9 +182,9 @@ class SEFInstance
                 if (isChanneling)
                     channeledTime = channeledTime + ORB_PERIODICINTERVAL_SPAWN
                     //Avoid floating point errors in the interval check with the -0.01
-                    if (channeledTime - lastOrbCreatedTimestamp >= orb_interval-0.01)
+                    if (channeledTime - _lastOrbCreatedTimestamp >= orb_interval-0.01)
                         orbs.push(new SEFOrb(ownerUnit, this, caster.getPos().withTerrainZ(ORB_ORBIT_HEIGHT)))
-                        lastOrbCreatedTimestamp = channeledTime
+                        _lastOrbCreatedTimestamp = channeledTime
                 else 
                     orbCreationLoopPeriodic.stop()
         else

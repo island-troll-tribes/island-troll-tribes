@@ -7,7 +7,7 @@ import ChatCommands
 import Transformation
 
 //With darkgate and runes "XEZS, XEMS, XFPS, ESEF, ESOC, ESMD, A076, A06S, A079, A07A"
-@configurable constant string array SPELLS = ["XEZS, XEMS, XFPS, ESEF, ESOC, ESMD", "XEZS, XEMS, XFPS, ESEF, ESOC, ESMD", "XEZS, XEMS, XFPS, ESEF, ESOC, ESMD"]
+@configurable constant string array SPELLS = ["XEZS, ESEF", "XEZS, XFPS, ESEF, ESMD", "XEZS, XEMS, XFPS, ESEF, ESOC, ESMD"]
 @configurable constant string array SPELLS2 = ["A076, A06S, A079, A07A, A07B, A07D", "A076, A06S, A079, A07A, A07B, A07D", "A076, A06S, A079, A07A, A07B, A07D"]
 
 @compiletime function createSpellbook()
@@ -86,9 +86,8 @@ init
         if (gameConfig.isTestModeEnabled())
             printTimedToPlayer("Transformed to new mage", 5., triggerPlayer)
             forUnitsSelected(triggerPlayer) u ->
-                if (u.isType(UNIT_TYPE_HERO) and udg_trolls.contains(u))
+                if (u.isType(UNIT_TYPE_HERO) and udg_trolls.contains(u) and u.getOwner() == triggerPlayer and u.getTypeId() == 'O00D')
                     trollUpgrade(u, 'XMGE', false, false)
-
         else    
             printTimedToPlayer("Requires test mode!", 5., triggerPlayer)
     

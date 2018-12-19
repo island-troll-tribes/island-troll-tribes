@@ -82,7 +82,6 @@ library LegacyInit initializer onInit
         call ExecuteFunc("InitTrig_to_mid_spells_flyer")
         call ExecuteFunc("InitTrig_CreateQuests")
         call ExecuteFunc("InitTrig_spawn_call_first")
-        call ExecuteFunc("InitTrig_GameModes")
         call ExecuteFunc("InitTrig_find_nearest_hatchery")
         call ExecuteFunc("InitTrig_eggza_CUTE_orders")
         call ExecuteFunc("InitTrig_grow_up")

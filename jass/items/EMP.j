@@ -1,4 +1,4 @@
-library EMP initializer onInit requires EnumTypeIsThing, PublicLibrary, ID, Utils
+library EMP initializer onInit requires EnumTypeIsThing, PublicLibrary, ID
     globals
         real EMP_DURATION = 45.0
     endglobals

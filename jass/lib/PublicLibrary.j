@@ -1,4 +1,4 @@
-library PublicLibrary initializer initPublicLibrary requires TimerUtils, ID, Constants, FilterTypeIsThing, String, InitializeUnits, GlobalsInit
+library PublicLibrary initializer initPublicLibrary requires TimerUtils, ID, Constants, FilterTypeIsThing, InitializeUnits, GlobalsInit
 
 function GetExpiredTimerData takes nothing returns integer
   return GetTimerData( GetExpiredTimer() )
@@ -219,14 +219,6 @@ endfunction
 function GetPlayerTroll takes player p returns unit
     set udg_parameterUnit=udg_PUnits[GetPlayerId(p)]
     return udg_parameterUnit
-endfunction
-
-function GetPidTroll takes integer pid returns unit
-    return udg_PUnits[pid]
-endfunction
-
-function GetPidTribeId takes integer pid returns integer
-    return TEAM_PLAYER[pid] - 1
 endfunction
 
 function cleanInventory takes unit u returns nothing

@@ -25,7 +25,7 @@ public class TradeShipSupervisor
     TradeShipStop firstStop
     TradeShipStop nextStop
     CallbackPeriodic callback
-    var state = TradeShipSupervisorState.MOVING
+    var state = TradeShipSupervisorState.STOPPED
     let listeners = new LinkedList<TradeShipListener>()
     var numForksReached = 0
 
@@ -35,11 +35,11 @@ public class TradeShipSupervisor
             ships.get(enteringUnit).processEnterRegion()
 
     construct(TradeShipStop firstStop, int shipId)
-        ship = createUnit(Player(PLAYER_NEUTRAL_PASSIVE), shipId, firstStop.getPos(), angle(0))
+        ship = createUnit(players[PLAYER_NEUTRAL_PASSIVE], shipId, firstStop.getPos(), angle(0))
         nextStop = firstStop.getNext()
         ships.put(ship, this)
         moveToNextStop()
-        
+
     function getState() returns TradeShipSupervisorState
         return state
 

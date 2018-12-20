@@ -52,18 +52,19 @@ public class ClassSelector
             new Tribe(tribeId)
 
     static function initializeSpawns()
-        let maxTribeId = Tribe
+        let randomSpawns = gameConfig.getRandomSpawns()
+        let numUndefeatedTribes = Tribe
             .getTribes()
             .filter(tribe -> not tribe.isDefeated())
-            .peek()
-            .getId()
+            .size()
+        let numTribes = max(numUndefeatedTribes, randomSpawns)
 
-        spawnList.take(maxTribeId + 1)
-        if gameConfig.isRandomSpawns()
-            spawnList.shuffle()
+        let spawns = spawnList.take(numTribes)
+        if randomSpawns > 0
+            spawns.shuffle()
 
         spawners = Tribe.getTribes().map() tribe ->
-            let spawn = spawnList.get(tribe.getId())
+            let spawn = spawns.get(tribe.getId())
             tribe.setSpawn(spawn)
             return new ClassSelector(tribe)
 
@@ -79,15 +80,17 @@ public class ClassSelector
             print(GENERAL_COLOR + "Choose a troll class|r")
             print(GENERAL_COLOR + "You will be appointed a random troll if you do not pick|r")
 
-        getTimer()
-        ..doAfter(selectionTime.toReal(), -> begin
+        let clock = getTimer()
+
+        let clockDialog = clock.createTimerDialog()
+        ..setTitle("Select Class")
+        ..display(true)
+
+        clock.doAfter(selectionTime.toReal()) ->
             spawners.forEach(spawner -> spawner.endSelection())
             gg_trg_boards.execute()
             generateMap()
-        end)
-        .createTimerDialog()
-        ..setTitle("Select Class")
-        ..display(true)
+            clockDialog.destr()
 
     static function initialize()
         registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SELL) ->
@@ -104,13 +107,15 @@ public class ClassSelector
 
     construct(Tribe _tribe)
         tribe = _tribe
-        spawn = tribe.getSpawn()
 
-        initializeTotem()
-        initializePool()
-        initializePickers()
+        if not tribe.isDefeated()
+            spawn = tribe.getSpawn()
 
-        spawns.put(totem, this)
+            initializeTotem()
+            initializePool()
+            initializePickers()
+
+            spawns.put(totem, this)
 
     private function initializeTotem()
         let pos = spawn.getCenter()

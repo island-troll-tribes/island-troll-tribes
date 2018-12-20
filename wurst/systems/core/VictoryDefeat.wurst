@@ -4,24 +4,10 @@ import RegisterEvents
 import TrollExtensions
 import Tribe
 import LinkedList
+import Lodash
+
 
 var gameOver = false
-
-function LinkedList<T>.every<T>(LinkedListPredicate<T> predicate) returns bool
-    return this.foldl(true, (elem, value) -> value and predicate.isTrueFor(elem))
-
-function LinkedList<T>.any<T>(LinkedListPredicate<T> predicate) returns bool
-    return this.foldl(false, (elem, value) -> value or predicate.isTrueFor(elem))
-
-@Test
-function testLinkedListEvery()
-    asList(1, 2, 3).every(x -> x < 4).assertTrue()
-    asList(1, 2, 3).every(x -> x < 3).assertFalse()
-
-@Test
-function testLinkedListAny()
-    asList(1, 2, 3).any(x -> x < 4).assertTrue()
-    asList(1, 2, 3).any(x -> x > 3).assertFalse()
 
 function isGracePeriod() returns bool
     return gameConfig.isTestModeEnabled() or GRACE_PERIOD_TIMER.getRemaining() > 0

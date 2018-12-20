@@ -5,7 +5,8 @@ import HashMap
 public interface Function<S, R>
     function call(S s) returns R
 
-public interface Predicate<S> extends Function<S, bool>
+public interface Predicate<S>
+    function call(S s) returns bool
 
 public interface BiFunction<S, T, R>
     function call(S s, T t) returns R
@@ -24,14 +25,10 @@ public function LinkedList<T>.takeWhile<T>(TriFunction<T, int, LinkedList<T>, bo
     return list
 
 public function LinkedList<T>.takeWhile<T>(BiFunction<T, int, bool> predicate) returns LinkedList<T>
-    let result = this.takeWhile((x, y, _z) -> predicate.call(x, y))
-    destroy this
-    return result
+    return this.takeWhile((x, y, _z) -> predicate.call(x, y))
 
 public function LinkedList<T>.takeWhile<T>(Predicate<T> predicate) returns LinkedList<T>
-    let result = this.takeWhile((x, _y) -> predicate.call(x))
-    destroy this
-    return result
+    return this.takeWhile((x, _y) -> predicate.call(x))
 
 public function take<T>(int numElems, LinkedList<T> list) returns LinkedList<T>
     let result = new LinkedList<T>()
@@ -48,9 +45,7 @@ public function take<T>(int numElems) returns Function<LinkedList<T>, LinkedList
     return list -> take(numElems, list)
 
 public function LinkedList<T>.take<T>(int numElems) returns LinkedList<T>
-    let result = take(numElems, this)
-    destroy this
-    return result
+    return take(numElems, this)
 
 public function foldl<Q, T>(Q startValue, BiFunction<T, Q, Q> transform, LinkedList<T> list) returns Q
     var result = startValue
@@ -64,9 +59,7 @@ public function foldl<Q, T>(Q startValue, BiFunction<T, Q, Q> transform) returns
     return list -> foldl(startValue, transform, list)
 
 public function LinkedList<T>.foldl<Q, T>(Q startValue, BiFunction<T, Q, Q> transform) returns Q
-    let result = foldl(startValue, transform, this)
-    destroy this
-    return result
+    return foldl(startValue, transform, this)
 
 public function every<T>(Predicate<T> predicate, LinkedList<T> list) returns bool
     let iter = list.iterator()
@@ -80,9 +73,7 @@ public function every<T>(Predicate<T> predicate) returns Predicate<LinkedList<T>
     return list -> every(predicate, list)
 
 public function LinkedList<T>.every<T>(Predicate<T> predicate) returns bool
-    let result = every(predicate, this)
-    destroy this
-    return result
+    return every(predicate, this)
 
 public function any<T>(Predicate<T> predicate, LinkedList<T> list) returns bool
     let iter = list.iterator()
@@ -96,9 +87,7 @@ public function any<T>(Predicate<T> predicate) returns Predicate<LinkedList<T>>
     return list -> any(predicate, list)
 
 public function LinkedList<T>.any<T>(Predicate<T> predicate) returns bool
-    let result = any(predicate, this)
-    destroy this
-    return result
+    return any(predicate, this)
 
 public function keys<T, Q>(IterableMap<T, Q> map) returns LinkedList<T>
     let keys = new LinkedList<T>()
@@ -109,9 +98,7 @@ public function keys<T, Q>(IterableMap<T, Q> map) returns LinkedList<T>
     return keys
 
 public function IterableMap<T, Q>.keys<T, Q>() returns LinkedList<T>
-    let result = keys(this)
-    destroy this
-    return result
+    return keys(this)
 
 public function values<T, Q>(IterableMap<T, Q> map) returns LinkedList<Q>
     let values = new LinkedList<Q>()
@@ -122,9 +109,7 @@ public function values<T, Q>(IterableMap<T, Q> map) returns LinkedList<Q>
     return values
 
 public function IterableMap<T, Q>.values<T, Q>() returns LinkedList<Q>
-    let result = values(this)
-    destroy this
-    return result
+    return values(this)
 
 public function map<T, Q>(Function<T, Q> transform, LinkedList<T> list) returns LinkedList<Q>
     let result = new LinkedList<Q>()
@@ -175,7 +160,7 @@ public function testMapValues()
 
     let mapValues = map<IterableMap<int, int>>(elem -> values(elem))
     let values = flatten(mapValues.call(maps))
-    
+
     values.size().assertEquals(3)
     values.get(0).assertEquals(2)
     values.get(1).assertEquals(4)

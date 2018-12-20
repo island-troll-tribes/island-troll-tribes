@@ -52,18 +52,19 @@ public class ClassSelector
             new Tribe(tribeId)
 
     static function initializeSpawns()
-        let maxTribeId = Tribe
+        let randomSpawns = gameConfig.getRandomSpawns()
+        let numUndefeatedTribes = Tribe
             .getTribes()
             .filter(tribe -> not tribe.isDefeated())
-            .peek()
-            .getId()
+            .size()
+        let numTribes = max(numUndefeatedTribes, randomSpawns)
 
-        spawnList.take(maxTribeId + 1)
-        if gameConfig.isRandomSpawns()
-            spawnList.shuffle()
+        let spawns = spawnList.take(numTribes)
+        if randomSpawns > 0
+            spawns.shuffle()
 
         spawners = Tribe.getTribes().map() tribe ->
-            let spawn = spawnList.get(tribe.getId())
+            let spawn = spawns.get(tribe.getId())
             tribe.setSpawn(spawn)
             return new ClassSelector(tribe)
 
@@ -106,13 +107,15 @@ public class ClassSelector
 
     construct(Tribe _tribe)
         tribe = _tribe
-        spawn = tribe.getSpawn()
 
-        initializeTotem()
-        initializePool()
-        initializePickers()
+        if not tribe.isDefeated()
+            spawn = tribe.getSpawn()
 
-        spawns.put(totem, this)
+            initializeTotem()
+            initializePool()
+            initializePickers()
+
+            spawns.put(totem, this)
 
     private function initializeTotem()
         let pos = spawn.getCenter()

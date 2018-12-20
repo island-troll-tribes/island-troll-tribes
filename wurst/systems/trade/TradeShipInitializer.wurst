@@ -2,6 +2,7 @@ package TradeShipInitializer
 import TradeShipStop
 import TradeShipCoordinator
 import TradeShipRoutePair
+import Game
 
 let TRADE_SHIP_PAUSE_TIME = 10.0
 TradeShipCoordinator coordinator
@@ -66,62 +67,62 @@ init
 
     leftBranchE
         .tail()
-        .addStop(tlBranchNE)
+        ..addStop(tlBranchNE)
         .addFork(blBranchSE)
 
     topBranchS
         .tail()
-        .addStop(tlBranchSW)
+        ..addStop(tlBranchSW)
         .addFork(trBranchSE)
 
     rightBranchW
         .tail()
-        .addStop(brBranchSW)
+        ..addStop(brBranchSW)
         .addFork(trBranchNW)
 
     bottomBranchN
         .tail()
-        .addStop(brBranchNE)
+        ..addStop(brBranchNE)
         .addFork(blBranchNW)
 
     tlBranchNE
         .tail()
-        .addStop(trBranchSE)
+        ..addStop(trBranchSE)
         .addFork(topBranchN)
 
     tlBranchSW
         .tail()
-        .addStop(blBranchSE)
+        ..addStop(blBranchSE)
         .addFork(leftBranchW)
 
     trBranchSE
         .tail()
-        .addStop(brBranchSW)
+        ..addStop(brBranchSW)
         .addFork(rightBranchE)
 
     trBranchNW
         .tail()
-        .addStop(tlBranchSW)
+        ..addStop(tlBranchSW)
         .addFork(topBranchN)
 
     brBranchSW
         .tail()
-        .addStop(blBranchNW)
+        ..addStop(blBranchNW)
         .addFork(bottomBranchS)
 
     brBranchNE
         .tail()
-        .addStop(trBranchNW)
+        ..addStop(trBranchNW)
         .addFork(rightBranchE)
 
     blBranchNW
         .tail()
-        .addStop(tlBranchNE)
+        ..addStop(tlBranchNE)
         .addFork(leftBranchW)
 
     blBranchSE
         .tail()
-        .addStop(brBranchNE)
+        ..addStop(brBranchNE)
         .addFork(bottomBranchS)
 
     coordinator = new TradeShipCoordinator()
@@ -130,3 +131,6 @@ init
 
     if GetRandomInt(0, 1) < 0.5
         coordinator.swap()
+
+    registerGameStartEvent() ->
+        coordinator.spawn()

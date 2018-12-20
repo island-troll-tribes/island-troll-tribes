@@ -97,7 +97,7 @@ public class GameMode
             ..setWidth(.75)
             ..release()
 
-            let name = "{0}-{1}|r {2}(|r{3}{4}|r{5})|r".format(GOLD_COLOR, mode.name, GRAY_COLOR, SPECIAL_COLOR, mode.abbrev, GOLD_COLOR)
+            let name = "{0}-{1}|r {2}(|r{3}{4}|r{5})|r".format(GOLD_COLOR, mode.name, GRAY_COLOR, SPECIAL_COLOR, mode.abbrev, GRAY_COLOR)
             modeboard.getItem(row, 0)
             ..setValue(name)
             ..setWidth(.25)
@@ -141,7 +141,7 @@ public class GameMode
         list.add(this)
 
     function registerFor(player modesPlayer, string command)
-        registerCommand(modesPlayer, command, (enablePlayer, args) -> action.run(this, args))
+        registerCommand(modesPlayer, command, (enablePlayer, args) -> enable(args))
 
     function deregisterFor(string command)
         deregisterCommandAll(command)
@@ -173,7 +173,7 @@ init
     GameMode.initialize()
 
     new GameMode("players-per-tribe", "ppt", "Set the number of players in each tribe, eg: \"-ppt 6\"") (mode, args) ->
-        if args.size() < 1
+        if args.size() < 2
             mode.error("Must supply # of tribes to \"ppt\"")
         else
             let ppt = args.get(1).toInt()
@@ -231,14 +231,14 @@ init
 
     new GameMode("hot-mode", "hm", "Increase the amount of heat a fire gives per cast, defaults to 22, eg: \"-hm 30\"") (mode, args) ->
         var amount = 22
-        if (args.size() >= 1)
+        if (args.size() > 1)
             amount = args.get(1).toInt()
         gameConfig.setHeatPerCast(amount)
         mode.message(ENERGY_COLOR + "Hot mode|r enabled, heat per cast is now " + GOLD_COLOR + I2S(amount) + "|r")
 
     new GameMode("raise-heat", "rh", "Increase heat capacity, defaults to 150, eg: \"-rh 200\"") (mode, args) ->
         var amount = 150
-        if (args.size() >= 1)
+        if (args.size() > 1)
             amount = S2I(args.get(1))
         gameConfig.setHeatMaximum(amount)
         mode.message(ENERGY_COLOR + "Heat Max|r has been increased. Heat capacity is " + I2S(amount))
@@ -257,10 +257,11 @@ init
         gameConfig.setTradeEnabled(false)
         mode.message("Trade ships and merchants have been disabled.")
 
-    new GameMode("random-spawns", "rs", "Randomize spawn locations") (mode, args) ->
+    new GameMode("random-spawns", "rs", "Randomize spawn locations, can optionally specify how many to randomize between, eg: \"-rs 4\"") (mode, args) ->
+        let numSpawns = args.size() > 1 ? max(12, args.get(1).toInt()) : 1
         mode.deregister()
         mode.message(ENERGY_COLOR + "Spawn locations|r have been randomized")
-        gameConfig.setRandomSpawns(true)
+        gameConfig.setRandomSpawns(numSpawns)
 
     new GameMode("start-with-fire", "sf", "Every troll starts with a fire kit") (mode, args) ->
         mode.deregister()
@@ -279,7 +280,7 @@ init
 
     new GameMode("more-hostiles", "rb", "Raise hostile animal spawn rate, eg: \"-rb 300\"") (mode, args) ->
         real next
-        if (args.size() >= 1)
+        if (args.size() > 1)
             next = S2R(args.get(1)) / 100
         else
             next = gameConfig.getHostileSpawnRate() + 0.20
@@ -302,7 +303,7 @@ init
 
     new GameMode("grace-period-duration", "gp", "Change the duration of the grace period, eg: \"-gp 8\"") (mode, args) ->
         var amount = 8.0
-        if (args.size() >= 1)
+        if (args.size() > 1)
             amount = S2R(args.get(1))
         if (not gameConfig.setGracePeriodDuration(amount))
             mode.error("Grace period must end before forced duel")
@@ -316,7 +317,7 @@ init
 
     new GameMode("forced-duel", "fd", "Set a forced duel after a time limit, defaults to 1 h, eg: \"-fd 60\"") (mode, args) ->
         var amount = 60.0
-        if (args.size() >= 1)
+        if (args.size() > 1)
             amount = args.get(1).toReal()
         if (not gameConfig.setForcedDuel(amount))
             mode.error("Force duel must be after end of the grace period")
@@ -326,9 +327,9 @@ init
     new GameMode("shrinking-map", "sm", "Forest fire shrinks map after a default of 60 minutes to a default of 4000 units from center, eg: \"-sm 60 4000\"") (mode, args) ->
         var amount = 60.0
         var distance = 4000.0
-        if (args.size() >= 1)
+        if (args.size() > 1)
             amount = S2R(args.get(1))
-        if (args.size() >= 2)
+        if (args.size() > 2)
             distance = S2R(args.get(2))
         if (amount < 0)
             mode.error("Shrinking map timeout must be greater than 0!")
@@ -338,7 +339,7 @@ init
 
     new GameMode("quick-pick", "qp", "Reduce class selection time, defaults to 5, eg: \"-qp 15\"") (mode, args) ->
         var timeAllowed = 5
-        if (args.size() >= 1)
+        if (args.size() > 1)
             timeAllowed = S2I(args.get(1))
         mode.message(ENERGY_COLOR + "Selection time|r set to " + I2S(timeAllowed) + "s")
         gameConfig.setSelectionTimeAllowed(timeAllowed)

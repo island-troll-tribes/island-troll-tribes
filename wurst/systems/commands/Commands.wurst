@@ -6,6 +6,7 @@ import StringExtensions
 import ChatUtils
 import PlayerExtensions
 import Game
+import TrollExtensions
 
 class PlayerAllianceSetting
     string name
@@ -44,7 +45,7 @@ init
     ..put("p", new PlayerAllianceSetting("private mode", ALLIANCE_SHARED_VISION, true))
 
     registerCommandAll("clear") (triggerPlayer, args) ->
-        if GetLocalPlayer() == triggerPlayer
+        if localPlayer == triggerPlayer
             ClearTextMessages()
 
     registerCommandAll("c") (triggerPlayer, args) ->
@@ -56,7 +57,7 @@ init
         printTimedToPlayer(msg, 5, triggerPlayer)
 
     registerCommandAll("rn") (triggerPlayer, args) ->
-        for i = 0 to PLAYER_NEUTRAL_PASSIVE - 1
+        for i = 0 to PLAYER_NEUTRAL_AGGRESSIVE - 1
             if udg_RealNames[i] != ""
                 let msg = "{0} {1}".format((i + 1).toString().color(COLOR_CODE[i]), players[i].getName())
                 printTimedToPlayer(msg, 10, triggerPlayer)
@@ -72,13 +73,13 @@ init
         registerCommandAll("p", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))
 
         registerCommandAll("ms") (triggerPlayer, args) ->
-            let hero = udg_PUnits[triggerPlayer.getId()]
+            let hero = triggerPlayer.getTroll()
             if hero.isAlive()
                 let msg = "Your movement speed is {0}".format(hero.getMoveSpeed().toString().color(ENERGY_COLOR))
                 printTimedToPlayer(msg, 5, triggerPlayer)
 
         registerCommandAll("cc") (triggerPlayer, args) ->
-            let id = args.get(1).toInt() mod 24
+            let id = args.get(1).toInt() mod 12
             let msg = "Adjusted player color to {0}Player {1}|r".format(COLOR_CODE[id], (id + 1).toString())
             printTimedToPlayer(msg, 5, triggerPlayer)
             triggerPlayer.setColor(ConvertPlayerColor(id), true)

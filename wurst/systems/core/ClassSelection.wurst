@@ -13,10 +13,12 @@ import HashMap
 import RegisterEvents
 import GameMode
 import Game
+import Lodash
 
 let UNIT_TROLL_TOTEM = 'o00H'
 
-let spawnRects = [
+let spawnList = new LinkedList<rect>()
+..add(
     gg_rct_revive_1,
     gg_rct_revive_2,
     gg_rct_revive_3,
@@ -29,14 +31,7 @@ let spawnRects = [
     gg_rct_revive_10,
     gg_rct_revive_11,
     gg_rct_revive_12
-]
-
-function LinkedList<T>.take<T>(int numElems) returns LinkedList<T>
-    let list = new LinkedList<T>()
-    let take = min(numElems, this.size())
-    for i = 0 to take
-        list.add(this.get(i))
-    return list
+)
 
 public class ClassSelector
     static let spawns = new HashMap<unit, thistype>()
@@ -63,10 +58,7 @@ public class ClassSelector
             .peek()
             .getId()
 
-        let spawnList = new LinkedList<rect>()
-        for i = 0 to maxTribeId
-            spawnList.push(spawnRects[i])
-
+        spawnList.take(maxTribeId + 1)
         if gameConfig.isRandomSpawns()
             spawnList.shuffle()
 

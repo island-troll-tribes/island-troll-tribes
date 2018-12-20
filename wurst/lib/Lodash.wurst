@@ -1,0 +1,253 @@
+package Lodash
+import LinkedList
+import HashMap
+
+public interface Function<S, R>
+    function call(S s) returns R
+
+public interface Predicate<S> extends Function<S, bool>
+
+public interface BiFunction<S, T, R>
+    function call(S s, T t) returns R
+
+public interface TriFunction<S, T, U, R>
+    function call(S s, T t, U u) returns R
+
+public function LinkedList<T>.takeWhile<T>(TriFunction<T, int, LinkedList<T>, bool> predicate) returns LinkedList<T>
+    let list = new LinkedList<T>()
+    let iter = this.iterator()
+    for elem from iter
+        if not predicate.call(elem, list.size(), this)
+            break
+        list.add(elem)
+    iter.close()
+    return list
+
+public function LinkedList<T>.takeWhile<T>(BiFunction<T, int, bool> predicate) returns LinkedList<T>
+    let result = this.takeWhile((x, y, _z) -> predicate.call(x, y))
+    destroy this
+    return result
+
+public function LinkedList<T>.takeWhile<T>(Predicate<T> predicate) returns LinkedList<T>
+    let result = this.takeWhile((x, _y) -> predicate.call(x))
+    destroy this
+    return result
+
+public function take<T>(int numElems, LinkedList<T> list) returns LinkedList<T>
+    let result = new LinkedList<T>()
+    let take = min(numElems, list.size())
+    let iter = list.iterator()
+    for elem from iter
+        if result.size() == take
+            break
+        result.add(elem)
+    iter.close()
+    return result
+
+public function take<T>(int numElems) returns Function<LinkedList<T>, LinkedList<T>>
+    return list -> take(numElems, list)
+
+public function LinkedList<T>.take<T>(int numElems) returns LinkedList<T>
+    let result = take(numElems, this)
+    destroy this
+    return result
+
+public function foldl<Q, T>(Q startValue, BiFunction<T, Q, Q> transform, LinkedList<T> list) returns Q
+    var result = startValue
+    let iter = list.iterator()
+    for elem from iter
+        result = transform.call(elem, result)
+    iter.close()
+    return result
+
+public function foldl<Q, T>(Q startValue, BiFunction<T, Q, Q> transform) returns Function<LinkedList<T>, Q>
+    return list -> foldl(startValue, transform, list)
+
+public function LinkedList<T>.foldl<Q, T>(Q startValue, BiFunction<T, Q, Q> transform) returns Q
+    let result = foldl(startValue, transform, this)
+    destroy this
+    return result
+
+public function every<T>(Predicate<T> predicate, LinkedList<T> list) returns bool
+    let iter = list.iterator()
+    for elem from iter
+        if not predicate.call(elem)
+            return false
+    iter.close()
+    return true
+
+public function every<T>(Predicate<T> predicate) returns Predicate<LinkedList<T>>
+    return list -> every(predicate, list)
+
+public function LinkedList<T>.every<T>(Predicate<T> predicate) returns bool
+    let result = every(predicate, this)
+    destroy this
+    return result
+
+public function any<T>(Predicate<T> predicate, LinkedList<T> list) returns bool
+    let iter = list.iterator()
+    for elem from iter
+        if predicate.call(elem)
+            return true
+    iter.close()
+    return false
+
+public function any<T>(Predicate<T> predicate) returns Predicate<LinkedList<T>>
+    return list -> any(predicate, list)
+
+public function LinkedList<T>.any<T>(Predicate<T> predicate) returns bool
+    let result = any(predicate, this)
+    destroy this
+    return result
+
+public function keys<T, Q>(IterableMap<T, Q> map) returns LinkedList<T>
+    let keys = new LinkedList<T>()
+    let iter = map.iterator()
+    for key from iter
+        keys.add(key)
+    iter.close()
+    return keys
+
+public function IterableMap<T, Q>.keys<T, Q>() returns LinkedList<T>
+    let result = keys(this)
+    destroy this
+    return result
+
+public function values<T, Q>(IterableMap<T, Q> map) returns LinkedList<Q>
+    let values = new LinkedList<Q>()
+    let iter = map.iterator()
+    for key from iter
+        values.add(map.get(key))
+    iter.close()
+    return values
+
+public function IterableMap<T, Q>.values<T, Q>() returns LinkedList<Q>
+    let result = values(this)
+    destroy this
+    return result
+
+public function map<T, Q>(Function<T, Q> transform, LinkedList<T> list) returns LinkedList<Q>
+    let result = new LinkedList<Q>()
+    let iter = list.iterator()
+    for elem from iter
+        result.add(transform.call(elem))
+    iter.close()
+    return result
+
+public function map<T, Q>(Function<T, Q> transform) returns Function<LinkedList<T>, LinkedList<Q>>
+    return list -> map(transform, list)
+
+public function flatten<T>(LinkedList<LinkedList<T>> list) returns LinkedList<T>
+    let result = new LinkedList<T>()
+    let iter = list.iterator()
+    for elem from iter
+        let subIter = elem.iterator()
+        for subElem from subIter
+            result.add(subElem)
+    iter.close()
+    return result
+
+public function flatten<T>() returns Function<LinkedList<LinkedList<T>>, LinkedList<T>>
+    return list -> flatten(list)
+
+public function drop<T>(int numElems, LinkedList<T> list) returns LinkedList<T>
+    let result = new LinkedList<T>()
+    var drop = min(numElems, list.size())
+    let iter = list.iterator()
+    for elem from iter
+        if drop > 0
+            drop -= 1
+        else
+            result.add(elem)
+    iter.close()
+    return result
+
+public function drop<T>(int numElems) returns Function<LinkedList<T>, LinkedList<T>>
+    return list -> drop(numElems, list)
+
+@Test
+public function testMapValues()
+    let maps = asList(
+        new IterableMap<int, int>()..put(1, 2),
+        new IterableMap<int, int>()..put(3, 4),
+        new IterableMap<int, int>()..put(5, 6)
+    )
+
+    let mapValues = map<IterableMap<int, int>>(elem -> values(elem))
+    let values = flatten(mapValues.call(maps))
+    
+    values.size().assertEquals(3)
+    values.get(0).assertEquals(2)
+    values.get(1).assertEquals(4)
+    values.get(2).assertEquals(6)
+
+    destroy mapValues
+
+@Test
+public function testFlatten()
+    let lists = asList(
+        asList(
+            asList(1, 2, 3, 4, 5),
+            asList(6, 7, 8, 9, 10)
+        ),
+        asList(
+            asList(1, 2, 3, 4, 5),
+            asList(6, 7, 8, 9, 10)
+        )
+    )
+
+    let mapFlatten = map(flatten<int>())
+    let result = mapFlatten.call(lists)
+    result.size().assertEquals(2)
+    result.get(0).size().assertEquals(10)
+
+@Test
+function testTake2()
+    let ints = asList(1, 2, 3)
+    let take2 = take<int>(2)
+    take2.call(ints).size().assertEquals(2)
+
+@Test
+function testTake()
+    let list = new LinkedList<int>()
+    list.size().assertEquals(0)
+
+    list..add(1, 2, 3, 4)
+    list.size().assertEquals(4)
+
+    list.take(2).size().assertEquals(2)
+    list.take(5).size().assertEquals(list.size())
+    list.take(0).size().assertEquals(0)
+
+    let list2 = list.take(3)
+    list2.get(0).assertEquals(1)
+    list2.get(1).assertEquals(2)
+    list2.get(2).assertEquals(3)
+
+
+@Test
+function testLinkedListEvery()
+    asList(1, 2, 3).every(x -> x < 4).assertTrue()
+    asList(1, 2, 3).every(x -> x < 3).assertFalse()
+
+@Test
+function testLinkedListAny()
+    asList(1, 2, 3).any(x -> x < 4).assertTrue()
+    asList(1, 2, 3).any(x -> x > 3).assertFalse()
+
+@Test
+function testTakeWhile()
+    let list = new LinkedList<int>()
+    list.size().assertEquals(0)
+
+    list..add(1, 2, 3, 4)
+    list.size().assertEquals(4)
+
+    list.takeWhile(x -> x < 3).size().assertEquals(2)
+    list.takeWhile((x, y) -> y < 3).size().assertEquals(3)
+    list.takeWhile((x, y, z) -> z.get(y) == x).size().assertEquals(4)
+
+    let list2 = list.takeWhile((x, y) -> y < 3)
+    list2.get(0).assertEquals(1)
+    list2.get(1).assertEquals(2)
+    list2.get(2).assertEquals(3)

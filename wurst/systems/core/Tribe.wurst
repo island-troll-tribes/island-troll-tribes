@@ -2,10 +2,16 @@ package Tribe
 import LinkedList
 import HashMap
 import TribeUtils
+import Lodash
+import TrollExtensions
 
 public class Tribe
     static let playerToTribeMap = new HashMap<player, Tribe>()
     static let tribes = new LinkedList<Tribe>()
+
+    static Predicate<Tribe> isNotDefeated = tribe -> not tribe.isDefeated()
+    static Predicate<player> memberIsDead = member -> not member.getTroll().isAlive()
+    static Predicate<Tribe> hasNoAliveMembers = tribe -> tribe.getMembers().every(memberIsDead)
 
     int tribeId
     rect spawn

@@ -990,11 +990,6 @@ function GetPlayerIdByRealName takes string name returns integer
     return GetPlayerId(GetPlayerByRealName(name))
 endfunction
 
-function LockMammoth takes nothing returns nothing
-    call SetDestructableInvulnerable( mammothGate, true )
-    call SetUnitOwner( MAMMOTH, Player(PLAYER_NEUTRAL_AGGRESSIVE), true )
-endfunction
-
 function ConvertEnumCorpseToCookedMeat takes nothing returns nothing
   local unit u = GetEnumUnit()
   local integer INTEGER = 0

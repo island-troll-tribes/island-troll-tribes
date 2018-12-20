@@ -55,8 +55,11 @@ public class TradeShipSupervisor
 
         state = TradeShipSupervisorState.MOVING
         ship.issuePointOrder("move", nextStop.getPos())
+        
         if callback != null
             destroy callback
+            callback = null
+
         callback = doPeriodically(1.0) cb ->
             ship.issuePointOrder("move", nextStop.getPos())
 
@@ -66,6 +69,8 @@ public class TradeShipSupervisor
 
         if callback != null
             destroy callback
+            callback = null
+            
 
         state = TradeShipSupervisorState.STOPPED
         doAfter(duration, -> moveToNextStop())
@@ -85,7 +90,7 @@ public class TradeShipSupervisor
             nextStop = nextStop.getNext()
 
     private function processEnterRegion()
-        if not nextStop.contains(ship)
+        if not nextStop.isInStopRange(ship)
             return
 
         if nextStop.isLastStop()
@@ -102,6 +107,8 @@ public class TradeShipSupervisor
 
         if callback != null
             destroy callback
+            callback = null
+            
 
         if ship != null
             removeShip()

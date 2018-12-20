@@ -1,5 +1,6 @@
 package TradeShipStop
 import ErrorHandling
+import ClosureForGroups
 
 public class TradeShipStop
     static region tradeStops = CreateRegion()
@@ -25,7 +26,12 @@ public class TradeShipStop
         pauseTime = _pauseTime
 
     function contains(unit ship) returns bool
-        return stopAt.contains(ship.getPos())
+        var found = false
+        forUnitsInRect(stopAt) u ->
+            if u == ship
+                found = true
+        return found
+        //return stopAt.getCenter().distanceTo(ship.getPos()) < 250
 
     function getNext() returns thistype
         return next

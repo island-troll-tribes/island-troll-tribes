@@ -33,7 +33,7 @@ public class TradeShipSupervisor
         let enteringUnit = GetEnteringUnit()
         if ships.has(enteringUnit)
             ships.get(enteringUnit).processEnterRegion()
-
+            
     construct(TradeShipStop firstStop, int shipId)
         ship = createUnit(players[PLAYER_NEUTRAL_PASSIVE], shipId, firstStop.getPos(), angle(0))
         nextStop = firstStop.getNext()
@@ -55,11 +55,13 @@ public class TradeShipSupervisor
 
         state = TradeShipSupervisorState.MOVING
         ship.issuePointOrder("move", nextStop.getPos())
+        if callback != null
+            destroy callback
         callback = doPeriodically(1.0) cb ->
             ship.issuePointOrder("move", nextStop.getPos())
 
     function pause(real duration)
-        if state != TradeShipSupervisorState.STOPPED
+        if state == TradeShipSupervisorState.STOPPED
             return
 
         if callback != null

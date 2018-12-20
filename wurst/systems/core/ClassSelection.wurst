@@ -34,8 +34,7 @@ let spawnList = new LinkedList<rect>()
 )
 
 public class ClassSelector
-    static let spawns = new HashMap<unit, thistype>()
-    static LinkedList<thistype> spawners
+    static let spawns = new IterableMap<unit, thistype>()
 
     static function findByTotem(unit totem) returns thistype
         return spawns.get(totem)
@@ -63,7 +62,7 @@ public class ClassSelector
         if randomSpawns > 0
             spawns.shuffle()
 
-        spawners = Tribe.getTribes().map() tribe ->
+        Tribe.getTribes().map() tribe ->
             let spawn = spawns.get(tribe.getId())
             tribe.setSpawn(spawn)
             return new ClassSelector(tribe)
@@ -87,7 +86,7 @@ public class ClassSelector
         ..display(true)
 
         clock.doAfter(selectionTime.toReal()) ->
-            spawners.forEach(spawner -> spawner.endSelection())
+            values(spawns).forEach(spawner -> spawner.endSelection())
             gg_trg_boards.execute()
             generateMap()
             clockDialog.destr()

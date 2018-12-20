@@ -25,16 +25,16 @@ public class Tribe
         let range = getPlayerIdRangeForTribe(tribeId)
         for pid = range.min to range.max
             let member = players[pid]
-            tribePlayers.push(member)
-            playerToTribeMap.put(member, this)
-            tribe.addPlayer(member)
+            if member.isIngame() and not isobserver[pid]
+                tribePlayers.push(member)
+                playerToTribeMap.put(member, this)
+                tribe.addPlayer(member)
 
-            if not isobserver[pid] and member.isIngame()
                 defeated = false
 
-            for alt = range.min to range.max
-                if pid != alt
-                    SetPlayerAllianceStateBJ(players[pid], players[alt], bj_ALLIANCE_ALLIED_VISION)
+                for alt = range.min to range.max
+                    if pid != alt
+                        SetPlayerAllianceStateBJ(players[pid], players[alt], bj_ALLIANCE_ALLIED_VISION)
 
         tribes.push(this)
 

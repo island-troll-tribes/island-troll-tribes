@@ -10,7 +10,168 @@ import TimerUtils
 import TimerExtensions
 
 
+let MODES_TIME_LIMIT = 60.0
+
+public interface GameModeHandler
+    function run(GameMode mode, LinkedList<string> args)
+
+public class GameMode
+    static let list = new LinkedList<thistype>()
+    static let modeboard = CreateMultiboard()
+    static let listeners = CreateTrigger()
+    static let modes = new HashMap<string, thistype>()
+    static let clock = getTimer()
+
+    static function initialize()
+        var modePlayer = players[0]
+        for i = 0 to bj_MAX_PLAYERS - 1
+            if players[i].isIngame()
+                modePlayer = players[i]
+                break
+
+        print(modePlayer.getNameColored() + GENERAL_COLOR + " can choose game modes.|r")
+        printTimedToPlayer(GENERAL_COLOR + "You can select modes|r", 10, modePlayer)
+
+        doAfter(0) ->
+            createModeBoard()
+            registerAll(modePlayer)
+
+        clock.doAfter(MODES_TIME_LIMIT) ->
+            endModeSelection()
+
+        registerCommandAll("modes") (triggerPlayer, args) ->
+            printTimedToPlayer(GENERAL_COLOR + "Modes:|r", 15, triggerPlayer)
+            printTimedToPlayer(getEnabledModes(), 15, triggerPlayer)
+
+    static function getEnabledModes() returns string
+        return list
+        .filter(mode -> mode.enabled)
+        .map(mode -> mode.message)
+        .joinBy("|n")
+
+    static function find(string query) returns thistype
+        return modes.get(query)
+
+    static function endModeSelection()
+        removeModeBoard()
+        deregisterAll()
+        listeners.execute()
+
+    static function endModeSelection(bool forced)
+        if forced
+            clock.release()
+        endModeSelection()
+
+    static function onModeSelectionFinish(code c)
+        listeners.addAction(c)
+
+    static function registerAll(player modesPlayer)
+        for mode in list
+            mode.register(modesPlayer)
+
+    static function deregisterAll()
+        for mode in list
+            mode.deregister()
+
+    static function removeModeBoard()
+        modeboard
+        ..display(false)
+        ..destr()
+
+    static function createModeBoard()
+        let displayableModes = list.filter(mode -> mode.display)
+
+        modeboard
+        ..setColumnCount(2)
+        ..setRowCount(displayableModes.size())
+        ..setTitle("Modes - 00:{0}".format(MODES_TIME_LIMIT.toString(0)))
+        ..setItemsStyle(true, false)
+        ..display(true)
+        ..minimalize(false)
+
+        for row = 0 to displayableModes.size()
+            let mode = displayableModes.get(row)
+
+            modeboard.getItem(row, 1)
+            ..setValue(mode.description)
+            ..setWidth(.75)
+            ..release()
+
+            let name = "{0}-{1}|r {2}(|r{3}{4}|r{5})|r".format(GOLD_COLOR, mode.name, GRAY_COLOR, SPECIAL_COLOR, mode.abbrev, GOLD_COLOR)
+            modeboard.getItem(row, 0)
+            ..setValue(name)
+            ..setWidth(.25)
+            ..release()
+
+        doPeriodically(1.0) cb ->
+            let remaining = clock.getRemaining()
+            if remaining <= 0
+                destroy cb
+                GameMode.removeModeBoard()
+            else
+                var time = remaining.toInt().toString()
+                if remaining < 10
+                    time = "0" + time
+
+                modeboard.setTitle("Modes - 00:" + time)
+
+    let description = ""
+    let name = ""
+    let abbrev = ""
+    var message = ""
+    let display = true
+    var enabled = false
+    GameModeHandler action = null
+
+    construct(string _name, string _abbrev, string _description, GameModeHandler _action)
+        name = _name
+        description = _description
+        abbrev = _abbrev
+        action = _action
+        modes..put(abbrev, this)..put(name, this)
+        list.add(this)
+
+    construct(string _name, string _abbrev, string _description, bool _display, GameModeHandler _action)
+        name = _name
+        description = _description
+        abbrev = _abbrev
+        action = _action
+        display = _display
+        modes..put(abbrev, this)..put(name, this)
+        list.add(this)
+
+    function registerFor(player modesPlayer, string command)
+        registerCommand(modesPlayer, command, (enablePlayer, args) -> action.run(this, args))
+
+    function deregisterFor(string command)
+        deregisterCommandAll(command)
+
+    function register(player modesPlayer)
+        registerFor(modesPlayer, name)
+        registerFor(modesPlayer, abbrev)
+
+    function deregister()
+        deregisterFor(name)
+        deregisterFor(abbrev)
+
+    function enable(LinkedList<string> elems)
+        enabled = true
+        action.run(this, elems)
+
+    function enable()
+        enable(new LinkedList<string>())
+
+    function message(string msg)
+        message = msg
+        print(msg)
+
+    function error(string msg)
+        print(RED_COLOR + msg)
+
+
 init
+    GameMode.initialize()
+
     new GameMode("players-per-tribe", "ppt", "Set the number of players in each tribe, eg: \"-ppt 6\"") (mode, args) ->
         if args.size() < 1
             mode.error("Must supply # of tribes to \"ppt\"")
@@ -156,11 +317,11 @@ init
     new GameMode("forced-duel", "fd", "Set a forced duel after a time limit, defaults to 1 h, eg: \"-fd 60\"") (mode, args) ->
         var amount = 60.0
         if (args.size() >= 1)
-            amount = S2R(args.get(1))
+            amount = args.get(1).toReal()
         if (not gameConfig.setForcedDuel(amount))
             mode.error("Force duel must be after end of the grace period")
         else
-            mode.message(ENERGY_COLOR + "Forced duel|r after " + amount.toString(0) + " min")
+            mode.message(ENERGY_COLOR + "Forced duel|r after " + amount.toInt().toString() + " min")
 
     new GameMode("shrinking-map", "sm", "Forest fire shrinks map after a default of 60 minutes to a default of 4000 units from center, eg: \"-sm 60 4000\"") (mode, args) ->
         var amount = 60.0
@@ -198,7 +359,7 @@ init
         udg_PET_CHANCE = 0.23 //.17
         mode.message(ENERGY_COLOR + "Increased Pet|r mode has been enabled. Pets now appear way more frequently. 23%.")
 
-    new GameMode("rpg", "rpg", "Increase pet growth chance to 30%", false) (mode, args) ->
+    new GameMode("raise-pet-growth", "rpg", "Increase pet growth chance to 30%", false) (mode, args) ->
         udg_PET_GROWTH = 0.03
         mode.message(ENERGY_COLOR + "Pet Growth Chance|r has been increased to 30%.")
 
@@ -226,7 +387,7 @@ init
         udg_ITEM_LIMIT_MODE = false
         mode.message(ENERGY_COLOR + "Inventory Limits|r have been taken off. Trolls can now carry any number of axes/spells/armor.")
 
-    new GameMode("survival", "sv", "This mode combines famine, cold, and slow mode", false) (mode, args) ->
+    new GameMode("survival", "sv", "This mode combines famine, cold, and slow mode") (mode, args) ->
         udg_FOOD_BASE = 0.40
         udg_FOOD_FOR_KILL_PROPORTION = 0.80
         udg_ITEM_BASE = 0.80
@@ -258,172 +419,11 @@ init
         udg_FAST_MODE = false
         mode.message("|c00ae4946Slow mode|r has been enabled. Less items spawn at once.")
 
-    new GameMode("lower-food-limit", "lfl", "Lower spawn rate for animals on the map", false) (mode, args) ->
+    new GameMode("lower-food-limit", "lfl", "Lower spawn rate for animals on the map") (mode, args) ->
         udg_ANIMAL_MAX = 60
         udg_FISH_MAX = 50
         mode.message("Food limits have been |c00755d00decreased|r.")
 
-    new GameMode("lower-item-limit", "lil", "Item spawn limits have been |c00755d00decreased|r.", false) (mode, args) ->
+    new GameMode("lower-item-limit", "lil", "Lower item spawn rate on the map") (mode, args) ->
         udg_ITEM_MAX = 250
         mode.message("Item limits have been |cff755d00decreased|r.")
-
-    var modePlayer = players[0]
-    for i = 0 to bj_MAX_PLAYERS - 1
-        if players[i].isIngame()
-            modePlayer = players[i]
-            break
-
-    print(modePlayer.getNameColored() + GENERAL_COLOR + " can choose game modes.|r")
-    printTimedToPlayer(GENERAL_COLOR + "You can select modes|r", 10, modePlayer)
-    GameMode.startModeSelection()
-
-    registerCommandAll("modes") (triggerPlayer, args) ->
-        printTimedToPlayer(GameMode.getEnabledModes(), 15, triggerPlayer)
-
-
-let MODES_TIME_LIMIT = 60.0
-
-public interface GameModeHandler
-    function run(GameMode mode, LinkedList<string> args)
-
-public class GameMode
-    static let list = new LinkedList<thistype>
-    static let modeboard = CreateMultiboard()
-    static let listeners = CreateTrigger()
-    static let modes = new HashMap<string, thistype>()
-    static let clock = getTimer()
-
-    static function getEnabledModes() returns string
-        return list
-        .filter(mode -> mode.enabled)
-        .map(mode -> mode.message)
-        .joinBy("|n")
-
-    static function find(string query) returns thistype
-        return modes.get(query)
-
-    static function startModeSelection()
-        doAfter(0) ->
-            createModeBoard()
-
-        clock.doAfter(MODES_TIME_LIMIT) ->
-            endModeSelection()
-
-    static function endModeSelection()
-        removeModeBoard()
-        deregisterAll()
-        listeners.execute()
-
-    static function endModeSelection(bool forced)
-        if forced
-            clock.release()
-        endModeSelection()
-
-    static function onModeSelectionFinish(code c)
-        listeners.addAction(c)
-
-    static function registerAll(player modesPlayer)
-        for mode in list
-            mode.register(modesPlayer)
-
-    static function deregisterAll()
-        for mode in list
-            mode.deregister()
-
-    static function removeModeBoard()
-        modeboard
-        ..display(false)
-        ..destr()
-
-    static function createModeBoard()
-        let displayableModes = list.filter(mode -> mode.display)
-
-        modeboard
-        ..setColumnCount(2)
-        ..setRowCount(displayableModes.size())
-        ..setTitle("Modes - 00:{0}" + MODES_TIME_LIMIT.toString(0))
-        ..setItemsStyle(true, false)
-        ..display(true)
-        ..minimalize(false)
-
-        for i = 0 to displayableModes.size() - 1
-            let row = i + 1
-            let mode = displayableModes.get(i)
-
-            let descItem = modeboard.getItem(row, 2)
-            modeboard
-            ..setItemsValue(mode.description)
-            ..setItemsWidth(0.20)
-            descItem.release()
-
-            let name = "{0}-{1}|r {2}(|r{3}{4}|r{0})|r".format(GOLD_COLOR, mode.name, GRAY_COLOR, SPECIAL_COLOR, mode.abbrev)
-            let nameItem = modeboard.getItem(row, 2)
-            modeboard
-            ..setItemsValue(name)
-            ..setItemsWidth(0.60)
-            nameItem.release()
-
-        doPeriodically(1.0) cb ->
-            let remaining = MODES_TIMER.getRemaining()
-            if remaining <= 0
-                destroy cb
-                GameMode.removeModeBoard()
-            else
-                var time = remaining.toString(0)
-                if remaining < 10
-                    time = "0" + time
-
-                modeboard.setTitle("Modes - 00:" + time)
-
-    let description = ""
-    let name = ""
-    let abbrev = ""
-    var message = ""
-    let display = true
-    var enabled = false
-    GameModeHandler action = null
-
-    construct(string _name, string _abbrev, string _description, GameModeHandler _action)
-        name = _name
-        description = _description
-        abbrev = _abbrev
-        action = _action
-        modes..put(abbrev, this)..put(name, this)
-        list.add(this)
-
-    construct(string _name, string _abbrev, string _description, bool _display, GameModeHandler _action)
-        name = _name
-        description = _description
-        abbrev = _abbrev
-        action = _action
-        display = _display
-        modes..put(abbrev, this)..put(name, this)
-        list.add(this)
-
-    function registerFor(player modesPlayer, string command)
-        registerCommand(modesPlayer, command, (enablePlayer, args) -> action.run(this, args))
-
-    function deregisterFor(string command)
-        deregisterCommandAll(command)
-
-    function register(player modesPlayer)
-        registerFor(modesPlayer, name)
-        registerFor(modesPlayer, abbrev)
-
-    function deregister()
-        deregisterFor(name)
-        deregisterFor(abbrev)
-
-    function enable(LinkedList<string> elems)
-        enabled = true
-        action.run(this, elems)
-
-    function enable()
-        enable(new LinkedList<string>())
-
-    function message(string msg)
-        message = msg
-        print(msg)
-
-    function error(string msg)
-        print(RED_COLOR + msg)

@@ -79,15 +79,17 @@ public class ClassSelector
             print(GENERAL_COLOR + "Choose a troll class|r")
             print(GENERAL_COLOR + "You will be appointed a random troll if you do not pick|r")
 
-        getTimer()
-        ..doAfter(selectionTime.toReal(), -> begin
+        let clock = getTimer()
+
+        let clockDialog = clock.createTimerDialog()
+        ..setTitle("Select Class")
+        ..display(true)
+
+        clock.doAfter(selectionTime.toReal()) ->
             spawners.forEach(spawner -> spawner.endSelection())
             gg_trg_boards.execute()
             generateMap()
-        end)
-        .createTimerDialog()
-        ..setTitle("Select Class")
-        ..display(true)
+            clockDialog.destr()
 
     static function initialize()
         registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SELL) ->

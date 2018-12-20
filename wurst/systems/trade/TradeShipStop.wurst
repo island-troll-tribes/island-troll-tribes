@@ -1,6 +1,8 @@
 package TradeShipStop
 import ErrorHandling
+import ClosureForGroups
 
+@configurable constant real STOP_RANGE = 600
 public class TradeShipStop
     static region tradeStops = CreateRegion()
 
@@ -24,8 +26,8 @@ public class TradeShipStop
     function setPauseTime(real _pauseTime)
         pauseTime = _pauseTime
 
-    function contains(unit ship) returns bool
-        return stopAt.contains(ship.getPos())
+    function isInStopRange(unit ship) returns bool
+        return stopAt.getCenter().distanceTo(ship.getPos()) < STOP_RANGE
 
     function getNext() returns thistype
         return next

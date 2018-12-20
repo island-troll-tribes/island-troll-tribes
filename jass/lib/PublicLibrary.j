@@ -1,43 +1,7 @@
 library PublicLibrary initializer initPublicLibrary requires TimerUtils, ID, Constants, FilterTypeIsThing, InitializeUnits, GlobalsInit
 
-function GetExpiredTimerData takes nothing returns integer
-  return GetTimerData( GetExpiredTimer() )
-endfunction
-
-function IsThereItemInSlot takes unit u, integer i returns boolean
-    if ( not ( UnitItemInSlotBJ(u, i) != null ) ) then
-        return true
-    endif
-    return false
-endfunction
-
 function IsUnitImmobilized takes unit u returns boolean
     return GetUnitAbilityLevel(u, 'Beng') > 0 or GetUnitAbilityLevel(u, 'Bena') > 0 or GetUnitAbilityLevel(u, 'BEer') > 0
-endfunction
-
-function ReplayToAll takes nothing returns nothing
-    call DisplayTimedTextToPlayer(GetEnumPlayer(), 0, 0, bj_cineFadeContinueTrans, bj_lastPlayedMusic)
-endfunction
-
-function DisplayTimedTextToAll takes real duration, string message returns nothing
-    local real r = bj_cineFadeContinueTrans
-    local string s = bj_lastPlayedMusic
-
-    set bj_cineFadeContinueTrans = duration
-    set bj_lastPlayedMusic = message
-
-    call ForForce(bj_FORCE_ALL_PLAYERS,function ReplayToAll)
-
-    set bj_cineFadeContinueTrans = r
-    set bj_lastPlayedMusic = s
-endfunction
-
-function DisplayText takes string message returns nothing
-    call DisplayTimedTextToAll(7, message)
-endfunction
-
-function DisplayTText takes string message, real time returns nothing
-    call DisplayTimedTextToAll(time, message)
 endfunction
 
 // superior function to GetUnitsInRangeOfLocMatching
@@ -46,16 +10,6 @@ function GetUnitsInRangeMatching takes real radius, real x, real y, boolexpr fil
     call GroupEnumUnitsInRange(g, x , y , radius, filter)
     call DestroyBoolExpr(filter)
     return g
-endfunction
-
-function IsWidgetInRect takes rect r, widget w returns boolean
-    local real x = GetWidgetX( w )
-    local real y = GetWidgetY( w )
-    local real collision = 100
-    if GetRectMinX(r) - collision <= x and x <= GetRectMaxX(r) + collision and GetRectMinY(r) - collision <= y and y <= GetRectMaxY(r) + collision then
-        return true
-    endif
-    return false
 endfunction
 
 // New Timed Effects --
@@ -71,15 +25,6 @@ endfunction
 
 function AddTimedEffectLoc takes string STRINGPATH, location UNITLOC, real TIME returns nothing
     local effect e = AddSpecialEffectLoc(STRINGPATH,UNITLOC)
-    local timer t = NewTimer()
-    call SaveEffectHandle(udg_GameHash, GetHandleId(t), StringHash("effect"),e)
-    call TimerStart(t , TIME, false, function DestroyEffectTimed)
-    set t = null
-    set e = null
-endfunction
-
-function AddTimedEffectPoint takes string STRINGPATH, real x, real y, real TIME returns nothing
-    local effect e = AddSpecialEffect(STRINGPATH,x,y)
     local timer t = NewTimer()
     call SaveEffectHandle(udg_GameHash, GetHandleId(t), StringHash("effect"),e)
     call TimerStart(t , TIME, false, function DestroyEffectTimed)
@@ -123,29 +68,6 @@ function getAnimalGreenLight takes unit u returns nothing
     endif
     set bms = null
     set bm = null
-endfunction
-
-globals
-    boolean real_random = false
-endglobals
-
-function GetClassFromId takes integer id returns integer
-    if id == 0 then
-        return UNIT_PRIEST
-    elseif id == 1 then
-        return UNIT_GATHERER
-    elseif id == 2 then
-        return UNIT_HUNTER
-    elseif id == 3 then
-        return UNIT_SCOUT
-    elseif id == 4 then
-        return UNIT_MAGE
-    elseif id == 5 then
-        return UNIT_THIEF
-    elseif id == 6 then
-        return UNIT_BEAST_MASTER
-    endif
-    return 0
 endfunction
 
 function prepareSpells takes nothing returns nothing
@@ -201,19 +123,8 @@ function prepareSpells takes nothing returns nothing
 
 endfunction
 
-function checkGrow takes unit u returns nothing
-    local real i=GetRandomReal(0,1)
-    if(i<=udg_PET_GROWTH) then
-        set udg_growingPet=u
-        set udg_booleanParameter=true
-    else
-        set udg_booleanParameter=false
-    endif
-endfunction
-
-function getPlayersTroll takes player p returns unit
+function getPlayersTroll takes player p returns nothing
     set udg_parameterUnit=udg_PUnits[GetPlayerId(p)]
-    return udg_parameterUnit
 endfunction
 
 function GetPlayerTroll takes player p returns unit
@@ -280,18 +191,6 @@ function countItem takes unit u,integer itm returns integer
     return count
 endfunction
 
-function UnitHasItemType takes unit u, integer id returns boolean
-    local integer i = 0
-    loop
-        exitwhen i > 5
-        if GetItemTypeId( UnitItemInSlot( u, i ) ) == id then
-            return true
-        endif
-        set i = i + 1
-    endloop
-    return false
-endfunction
-
 function removeItem takes unit u,integer itm returns nothing
     local integer t=0
     loop
@@ -301,30 +200,6 @@ function removeItem takes unit u,integer itm returns nothing
         endif
         set t = t + 1
     endloop
-endfunction
-
-function checkItemWithCharge takes unit u, integer itm returns boolean
-    local integer t=0
-    loop
-        exitwhen t > UnitInventorySize(u)
-        if(( GetItemTypeId(UnitItemInSlot(u, t)) == itm ) and ( GetItemCharges(UnitItemInSlot(u, t)) > 0 )) then
-            return true
-        endif
-        set t = t + 1
-    endloop
-    return true
-endfunction
-
-function checkItem takes unit u, integer itm returns boolean
-    local integer t=0
-    loop
-        exitwhen t > UnitInventorySize(u)
-        if( GetItemTypeId(UnitItemInSlot(u, t)) == itm ) then
-            return true
-        endif
-        set t = t + 1
-    endloop
-    return false
 endfunction
 
 function setUpSkillTriggers takes unit u returns nothing
@@ -394,419 +269,8 @@ function setUpSkillTriggers takes unit u returns nothing
 	set p=null
 endfunction
 
-globals
-    boolean fishytrigger = false
-endglobals
-function makeAFish takes rect loc returns nothing
-    local integer t = GetRandomInt(1,13)
-    local integer i = GetRandomInt(0,20000)
-    local unit u
-    local real x
-    local real y
-    if udg_FISH_CURRENT<udg_FISH_MAX or udg_ITEM_LIMIT_MODE==false then
-        set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
-        set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
-        if i == 0 and not fishytrigger then
-            set i = GetRandomInt(0,10000)
-            if i == 0 then
-                set i = GetRandomInt(0,1000)
-                if i == 0 then
-                    set fishytrigger = true
-                    call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MAGENTA_FISH, x, y, 270 )
-                endif
-            endif
-        elseif t <= 4 then
-            set u = CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_HAWK, x, y, 270 )
-        elseif t <= 6 then
-            set u = CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_GREEN_FISH, x, y, 270 )
-        else
-            set u = CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_FISH, x, y, 270 )
-        endif
-    endif
-    set u = null
-    set udg_FISH_CURRENT=udg_FISH_CURRENT+1
-endfunction
-
-function makeFish takes nothing returns nothing
-    local integer i=0
-    loop
-        exitwhen i > udg_FISH_PER_AREA
-        call PolledWait( udg_DELAY_TIME )
-        call makeAFish(gg_rct_out_1_1)
-        call makeAFish(gg_rct_out_3_2)
-        call makeAFish(gg_rct_out_1_2)
-        call makeAFish(gg_rct_out_5_2)
-        call makeAFish(gg_rct_out_2_2)
-        call makeAFish(gg_rct_out_3_1)
-        call makeAFish(gg_rct_out_4_1)
-        call makeAFish(gg_rct_out_4_2)
-        call makeAFish(gg_rct_our_5_1)
-        call makeAFish(gg_rct_out_2_1)
-        call makeAFish(gg_rct_fish_new_2)
-        call makeAFish(gg_rct_fish_new_3)
-        call makeAFish(gg_rct_fish_new_1)
-        call makeAFish(gg_rct_fish_new_4)
-        call makeAFish(gg_rct_fish_new_6)
-        call makeAFish(gg_rct_fish_new_5)
-        call makeAFish(gg_rct_fish_new_7)
-        call makeAFish(gg_rct_fish_new_8)
-        set i=i+1
-    endloop
-endfunction
-
-function spawnIslandOne takes itempool p returns nothing
-    local integer temp=1
-    local item q
-    local real x=1
-    local real y=1
-    local rect loc
-    if((udg_ITEM_CURRENT<udg_ITEM_MAX) or (udg_ITEM_LIMIT_MODE==false)) then
-        set udg_ITEM_CURRENT=udg_ITEM_CURRENT+1
-        call PolledWait( udg_DELAY_TIME )
-        set temp=GetRandomInt(1,udg_ISLAND1_1+udg_ISLAND1_2+udg_ISLAND1_3)
-        if ( temp<=udg_ISLAND1_3 ) then
-            set loc=gg_rct_spawn_area_1_3
-        elseif (temp<=udg_ISLAND1_2+udg_ISLAND1_3) then
-            set loc=gg_rct_spawn_area_1_2
-        elseif (temp<=udg_ISLAND1_1+udg_ISLAND1_2+udg_ISLAND1_3) then
-            set loc=gg_rct_spawn_area_1_1
-        endif
-        if loc != null then
-            loop
-                set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
-                set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
-                exitwhen IsTerrainLand(x, y) and IsTerrainWalkable(x, y)
-            endloop
-            set q=PlaceRandomItem(p,x,y)
-        endif
-    endif
-    set q=null
-    set loc=null
-endfunction
-
-function spawnIslandTwo takes itempool p returns nothing
-    local integer temp=1
-    local item q
-    local real x=1
-    local real y=1
-    local rect loc
-    if((udg_ITEM_CURRENT<udg_ITEM_MAX) or (udg_ITEM_LIMIT_MODE==false)) then
-        set udg_ITEM_CURRENT=udg_ITEM_CURRENT+1
-        call PolledWait( udg_DELAY_TIME )
-        set temp=GetRandomInt(1,udg_ISLAND2_1+udg_ISLAND2_2+udg_ISLAND2_3)
-        if ( temp<=udg_ISLAND2_3 ) then
-            set loc=gg_rct_spawn_area_2_3
-        elseif (temp<=udg_ISLAND2_3+udg_ISLAND2_2) then
-            set loc=gg_rct_spawn_area_2_2
-        elseif (temp<=udg_ISLAND2_1+udg_ISLAND2_2+udg_ISLAND2_3) then
-            set loc=gg_rct_spawn_area_2_1
-        endif
-        if loc != null then
-            loop
-                set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
-                set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
-                exitwhen IsTerrainLand(x, y) and IsTerrainWalkable(x, y)
-            endloop
-            set q=PlaceRandomItem(p,x,y)
-        endif
-    endif
-    set loc=null
-    set q=null
-endfunction
-
-function spawnIslandThree takes itempool p returns nothing
-    local integer temp=1
-    local item q
-    local real x=1
-    local real y=1
-    local rect loc
-    if((udg_ITEM_CURRENT<udg_ITEM_MAX) or (udg_ITEM_LIMIT_MODE==false)) then
-        set udg_ITEM_CURRENT=udg_ITEM_CURRENT+1
-        call PolledWait( udg_DELAY_TIME )
-        set temp=GetRandomInt(1,udg_ISLAND3_1+udg_ISLAND3_2+udg_ISLAND3_3)
-        if ( temp<=udg_ISLAND3_2 ) then
-            set loc=gg_rct_spawn_area_3_2
-        elseif (temp<=udg_ISLAND3_2+udg_ISLAND3_3) then
-            set loc=gg_rct_spawn_area_3_3
-        elseif (temp<=udg_ISLAND3_1+udg_ISLAND3_2+udg_ISLAND3_3) then
-            set loc=gg_rct_spawn_area_3_1
-        endif
-        if loc != null then
-            loop
-                set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
-                set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
-                exitwhen IsTerrainLand(x, y) and IsTerrainWalkable(x, y)
-            endloop
-            set q=PlaceRandomItem(p,x,y)
-        endif
-    endif
-    set loc=null
-    set q=null
-endfunction
-
-function spawnIslandFour takes itempool p returns nothing
-    local integer temp=1
-    local item q
-    local real x=1
-    local real y=1
-    local rect loc
-    if((udg_ITEM_CURRENT<udg_ITEM_MAX) or (udg_ITEM_LIMIT_MODE==false)) then
-        set udg_ITEM_CURRENT=udg_ITEM_CURRENT+1
-        call PolledWait( udg_DELAY_TIME )
-        set temp=GetRandomInt(1,udg_ISLAND4_1+udg_ISLAND4_2+udg_ISLAND4_3)
-        if ( temp<=udg_ISLAND4_2 ) then
-            set loc=gg_rct_spawn_area_4_2
-        elseif (temp<=udg_ISLAND4_2+udg_ISLAND4_3) then
-            set loc=gg_rct_spawn_area_4_3
-        elseif (temp<=udg_ISLAND4_3+udg_ISLAND4_2+udg_ISLAND4_1) then
-            set loc=gg_rct_spawn_area_4_1
-        endif
-        if loc != null then
-            loop
-                set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
-                set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
-                exitwhen IsTerrainLand(x, y) and IsTerrainWalkable(x, y)
-            endloop
-            set q=PlaceRandomItem(p,x,y)
-        endif
-    endif
-    set loc=null
-    set q=null
-endfunction
-
-//WOW Long spawning Function. CHange pool values for rarity
-function spawnItems takes nothing returns nothing
-    local itempool p=CreateItemPool()
-    local integer i=GetRandomInt(1, 25)
-    local integer loopStart
-    local integer loopStop
-    local integer temp=1
-    local real rndX=1
-    local real y=1
-    local integer spawnCount=0
-    local integer curIsland
-    local item q
-    call ItemPoolAddItemType(p,ITEM_TINDER,udg_TINDER_RATE)
-    call ItemPoolAddItemType(p,ITEM_FLINT,udg_FLINT_RATE)
-    call ItemPoolAddItemType(p,ITEM_STICK,udg_STICK_RATE)
-    call ItemPoolAddItemType(p,ITEM_CLAY_BALL,udg_CLAYBALL_RATE)
-    call ItemPoolAddItemType(p,ITEM_STONE,udg_ROCK_RATE)
-    call ItemPoolAddItemType(p,ITEM_MANA_CRYSTAL,udg_MANACRYSTAL_RATE)
-    call ItemPoolAddItemType(p,ITEM_MUSHROOM,udg_MUSHROOM_RATE)
-    //magic
-    call ItemPoolAddItemType(p,ITEM_MAGIC,.25)
-    set curIsland=GetRandomInt(0,3)
-
-    loop
-        exitwhen spawnCount>3
-
-        if(curIsland==0) then
-            set loopStart=1
-            set loopStop=R2I(udg_NORTH_LEFT_ITEM*udg_SPAWN_BASE)
-            loop
-                exitwhen loopStart > loopStop
-                call spawnIslandOne(p)
-                set loopStart = loopStart + 1
-            endloop
-        endif
-        if(curIsland==1) then
-            set loopStop=R2I(udg_NORTH_RIGHT_ITEM*udg_SPAWN_BASE)
-            set loopStart=1
-            loop
-                exitwhen loopStart > loopStop
-                call spawnIslandTwo(p)
-                set loopStart = loopStart + 1
-            endloop
-        endif
-        if(curIsland==2) then
-            set loopStop=R2I(udg_SOUTH_RIGHT_ITEM*udg_SPAWN_BASE)
-            set loopStart=1
-            loop
-                exitwhen loopStart > loopStop
-                call spawnIslandThree(p)
-                set loopStart = loopStart + 1
-            endloop
-        endif
-        if(curIsland==3) then
-            set loopStop=R2I(udg_SOUTH_LEFT_ITEM*udg_SPAWN_BASE)
-            set loopStart=1
-            loop
-                exitwhen loopStart > loopStop
-                call spawnIslandFour(p)
-                set loopStart = loopStart + 1
-            endloop
-        endif
-        set curIsland=ModuloInteger(curIsland+1,4)
-        set spawnCount=spawnCount+1
-    endloop
-
-    call modStats()
-    set p=null
-	set q=null
-endfunction
-
 function itemLower takes integer i returns nothing
     set udg_ITEM_CURRENT=IMaxBJ(udg_ITEM_CURRENT-i,0)
-endfunction
-
-function makeAnimal takes rect loc returns nothing
-    local integer t = GetRandomInt(1, udg_ELK_RATE+udg_WOLF_RATE+udg_BEAR_RATE+udg_PANTHER_RATE+udg_SNAKE_RATE)
-    local real x
-    local real y
-    if udg_ANIMAL_CURRENT<udg_ANIMAL_MAX or udg_ITEM_LIMIT_MODE==false then
-        loop
-            set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
-            set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
-            exitwhen IsTerrainLand(x, y) and IsTerrainWalkable(x, y)
-        endloop
-        if t<=udg_PANTHER_RATE then
-            call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_PANTHER, x, y, 270 )
-        elseif t<=udg_BEAR_RATE+udg_PANTHER_RATE then
-            call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_SNAKE, x, y, 270 )
-        elseif t<=udg_BEAR_RATE+udg_PANTHER_RATE+udg_SNAKE_RATE then
-            call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_JUNGLE_BEAR, x, y, 270 )
-        elseif t<=udg_BEAR_RATE+udg_WOLF_RATE+udg_PANTHER_RATE+udg_SNAKE_RATE then
-            call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_JUNGLE_WOLF, x, y, 270 )
-        else
-            call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_ELK, x, y, 270 )
-        endif
-        set udg_ANIMAL_CURRENT = udg_ANIMAL_CURRENT + 1
-    endif
-endfunction
-
-//WOW Long animal spawn
-function spawnAnimals takes nothing returns nothing
-    local integer loopStart=1
-    local integer loopStop=R2I(udg_NORTH_LEFT_FOOD*udg_FOOD_BASE)
-    local integer temp=1
-    loop
-        exitwhen loopStart > loopStop
-        call PolledWait( udg_DELAY_TIME / 1000 )
-        set temp=GetRandomInt(1,udg_ISLAND1_3+udg_ISLAND1_2+udg_ISLAND1_1)
-        if ( temp<=udg_ISLAND1_3 ) then
-            call makeAnimal(gg_rct_spawn_area_1_3)
-        elseif (temp<=udg_ISLAND1_2+udg_ISLAND1_3) then
-            call makeAnimal(gg_rct_spawn_area_1_2)
-        elseif (temp<=udg_ISLAND1_1+udg_ISLAND1_2+udg_ISLAND1_3) then
-            call makeAnimal(gg_rct_spawn_area_1_1)
-        endif
-        set loopStart = loopStart + 1
-    endloop
-
-    set loopStop=R2I(udg_NORTH_RIGHT_FOOD*udg_FOOD_BASE)
-    set loopStart=1
-    loop
-        exitwhen loopStart > loopStop
-        call PolledWait( udg_DELAY_TIME )
-        set temp=GetRandomInt(1,udg_ISLAND2_1+udg_ISLAND2_2+udg_ISLAND2_3)
-        if ( temp<=udg_ISLAND2_3 ) then
-            call makeAnimal(gg_rct_spawn_area_2_3)
-        elseif (temp<=udg_ISLAND2_3+udg_ISLAND2_2) then
-            call makeAnimal(gg_rct_spawn_area_2_2)
-        elseif (temp<=udg_ISLAND2_1+udg_ISLAND2_2+udg_ISLAND2_3) then
-            call makeAnimal(gg_rct_spawn_area_2_1)
-        endif
-        set loopStart = loopStart + 1
-    endloop
-
-    set loopStop=R2I(udg_SOUTH_RIGHT_FOOD*udg_FOOD_BASE)
-    set loopStart=1
-    loop
-        exitwhen loopStart > loopStop
-        call PolledWait( udg_DELAY_TIME )
-        set temp=GetRandomInt(1,udg_ISLAND3_1+udg_ISLAND3_2+udg_ISLAND3_3)
-        if ( temp<=udg_ISLAND3_2 ) then
-            call makeAnimal(gg_rct_spawn_area_3_2)
-        elseif (temp<=udg_ISLAND3_2+udg_ISLAND3_3) then
-            call makeAnimal(gg_rct_spawn_area_3_3)
-        elseif (temp<=udg_ISLAND3_1+udg_ISLAND3_2+udg_ISLAND3_3) then
-            call makeAnimal(gg_rct_spawn_area_3_1)
-        endif
-        set loopStart = loopStart + 1
-    endloop
-
-    set loopStop=R2I(udg_SOUTH_LEFT_FOOD*udg_FOOD_BASE)
-    set loopStart=1
-    loop
-        exitwhen loopStart > loopStop
-        call PolledWait( udg_DELAY_TIME )
-        set temp=GetRandomInt(1,udg_ISLAND4_1+udg_ISLAND4_2+udg_ISLAND4_3)
-        if ( temp<=udg_ISLAND4_2 ) then
-            call makeAnimal(gg_rct_spawn_area_4_2)
-        elseif (temp<=udg_ISLAND4_2+udg_ISLAND4_3) then
-            call makeAnimal(gg_rct_spawn_area_4_3)
-        elseif (temp<=udg_ISLAND4_3+udg_ISLAND4_2+udg_ISLAND4_1) then
-            call makeAnimal(gg_rct_spawn_area_4_1)
-        endif
-        set loopStart = loopStart + 1
-    endloop
-endfunction
-
-function getTrollBossItem takes nothing returns integer
-    local integer t=GetRandomInt(1,7)
-    if(t==1) then
-        return ITEM_ANABOLIC_POTION
-    elseif(t==2) then
-        return ITEM_BEE_HIVE
-    elseif(t==3) then
-        return ITEM_FERVER_POTION
-    elseif(t==4) then
-        return ITEM_DARK_ROCK
-    elseif(t==5) then
-        return ITEM_IRON_AXE
-    elseif(t==6) then
-        return ITEM_IRON_SPEAR
-    else
-        return ITEM_STEEL_INGOT
-    endif
-    //return ITEM_BONE_COAT
-    //Bone coat
-    //return ITEM_ULTRA_POISON
-    //poison
-    //return ITEM_STEEL_SPEAR
-    //steel spear
-endfunction
-
-function getBossItem takes nothing returns integer
-    local integer t=GetRandomInt(1,10)
-    if(t==1) then
-        return ITEM_POTION_TWIN_ISLANDS
-    elseif(t==2) then
-        return ITEM_BEE_HIVE
-    elseif(t==3) then
-        return ITEM_DISEASE_POTION
-    elseif(t==4) then
-        return ITEM_BEE_HIVE
-    elseif(t==5) then
-        return ITEM_STEEL_SPEAR
-    elseif(t==6) then
-        return ITEM_IRON_SPEAR
-    elseif(t==7) then
-        return ITEM_HEALING_POTION_IV
-    elseif(t==8) then
-        return ITEM_ULTRA_POISON
-    elseif(t==9) then
-        return ITEM_MANA_POTION_IV
-    else
-        return ITEM_STEEL_INGOT
-    endif
-endfunction
-
-function placeMedallion takes real x, real y returns nothing
-    local itempool q
-    local item u
-    //set q=H2IP(GetHandleHandle(Cache(),"medals"))
-    set q = LoadItemPoolHandle(udg_GameHash,StringHash("medals"),StringHash("medals"))
-    if(q==null) then
-        set q=CreateItemPool()
-        call ItemPoolAddItemType(q,ITEM_MEDALLION_COURAGE,4)
-        call ItemPoolAddItemType(q,ITEM_STEEL_INGOT,1)
-        //call SetHandleHandle(udg_jumpCache,"medals",q)
-        call SaveItemPoolHandle(udg_GameHash,StringHash("medals"),StringHash("medals"),q)
-    endif
-    set u=PlaceRandomItem(q,x,y)
-    set q=null
-    set u=null
 endfunction
 
 function placePinion takes real x, real y returns nothing
@@ -831,110 +295,6 @@ function placePinion takes real x, real y returns nothing
     set u=null
 endfunction
 
-//*************************************************************************************
-//*                                                                                   *
-//*                     START OF Tree Revival Section                                 *
-//*                                                                                   *
-//*************************************************************************************
-
-function IsDesTree takes destructable a returns boolean
-    local integer d=GetDestructableTypeId(a)
-    if d =='ATtr' then
-        return true
-    elseif d=='BTtw' then
-        return true
-    elseif d=='KTtw' then
-        return true
-    elseif d=='YTft' then
-        return true
-    elseif d=='JTct' then
-        return true
-    elseif d=='YTst' then
-        return true
-    elseif d=='YTct' then
-        return true
-    elseif d=='YTwt' then
-        return true
-    elseif d=='JTwt' then
-        return true
-    elseif d=='DTsh' then
-        return true
-    elseif d=='FTtw' then
-        return true
-    elseif d=='CTtr' then
-        return true
-    elseif d=='ITtw' then
-        return true
-    elseif d=='NTtw' then
-        return true
-    elseif d=='OTtw' then
-        return true
-    elseif d==DEST_RUINS_TREE then
-        return true
-    elseif d=='WTst' then
-        return true
-    elseif d=='LTlt' then
-        return true
-    elseif d=='GTsh' then
-        return true
-    elseif d=='Xtlt' then
-        return true
-    elseif d=='WTtw' then
-        return true
-    elseif d=='Attc' then
-        return true
-    elseif d=='BTtc' then
-        return true
-    elseif d=='CTtc' then
-        return true
-    elseif d=='ITtc' then
-        return true
-    elseif d=='NTtc' then
-        return true
-    elseif d==DEST_RUINS_TREE_CANOPY then
-        return true
-    else
-        return false
-    endif
-endfunction
-
-function RegrowTrees takes nothing returns nothing
-    local destructable tree = GetDyingDestructable()
-    local integer chance = GetRandomInt(1,100)
-    if chance < 11 then
-        call CreateItem( ITEM_STICK, GetDestructableX(tree), GetDestructableY(tree))
-    endif
-    set tree=null
-endfunction
-
-function Trig_Int_Tree_Revival takes nothing returns nothing
-    local trigger t
-    if IsDesTree(GetEnumDestructable())==true then
-        set t=CreateTrigger()
-        call TriggerRegisterDeathEvent( t, GetEnumDestructable() )
-        call TriggerAddAction(t,function RegrowTrees)
-    endif
-	set t=null
-endfunction
-
-function Int_Tree_Revive takes nothing returns nothing
-    call EnumDestructablesInRect( bj_mapInitialPlayableArea, null, function Trig_Int_Tree_Revival )
-endfunction
-
-
-//*************************************************************************************
-//*                                                                                   *
-//*                     END OF Tree Revival System                                    *
-//*                                                                                   *
-//*************************************************************************************
-
-//Trickster sub-function, got tired of writing it.
-//Checks a group (used in conjunction with ForGroup)
-//returns unit in udg_TempTroll
-//ie
-//    call ForGroupBJ( udg_trolls, function checkGroup )
-//    set mirror =udg_TempTroll
-
 function checkGroup takes nothing returns nothing
     if ( GetOwningPlayer(GetEnumUnit()) == GetTriggerPlayer()  ) then
         set udg_TempTroll = GetEnumUnit()
@@ -952,42 +312,6 @@ function resetBMSkill takes player p returns nothing
     call SetPlayerAbilityAvailableBJ( false, 'A06R', p )//bring items
     call SetPlayerAbilityAvailableBJ( false, SPELL_PET_GO_TO_HATCHERY, p )//go to hatchery
     call SetPlayerAbilityAvailableBJ( false, SPELL_PET_DROP_ITEMS, p )//drop items
-endfunction
-
-function SetRealNames takes nothing returns nothing
-    local integer INTEGER = 0
-    call ReleaseTimer( GetExpiredTimer() )
-    loop
-        exitwhen INTEGER > 11
-        if GetPlayerSlotState(Player(INTEGER)) == PLAYER_SLOT_STATE_PLAYING then
-            set udg_RealNames[INTEGER] = GetPlayerName(Player(INTEGER))
-        endif
-        set INTEGER = INTEGER + 1
-    endloop
-endfunction
-
-function GetPlayerRealName takes player who returns string
-    return udg_RealNames[GetPlayerId(who)]
-endfunction
-
-function GetPlayerRealNameById takes integer id returns string
-    return udg_RealNames[id]
-endfunction
-
-function GetPlayerByRealName takes string name returns player
-    local integer i=0
-    loop
-        exitwhen i>11
-        if (StringCase(udg_RealNames[i],false)==StringCase(name,false)) then
-            return Player(i)
-        endif
-        set i=i+1
-    endloop
-    return Player(PLAYER_NEUTRAL_AGGRESSIVE)
-endfunction
-
-function GetPlayerIdByRealName takes string name returns integer
-    return GetPlayerId(GetPlayerByRealName(name))
 endfunction
 
 function ConvertEnumCorpseToCookedMeat takes nothing returns nothing
@@ -1014,54 +338,12 @@ function ZoomSetCamera takes integer i returns nothing
     endif
 endfunction
 
-function SetCameraBoundsEX takes player p, real minX, real minY, real maxX, real maxY returns nothing
-    if (GetLocalPlayer() == p) then
-        // Use only local code (no net traffic) within this block to avoid desyncs.
-        call SetCameraBounds(minX, minY, minX, maxY, maxX, maxY, maxX, minY)
-    endif
-endfunction
-
 function GetRandomX takes rect whichRect returns real
     return GetRandomReal(GetRectMinX(whichRect), GetRectMaxX(whichRect))
 endfunction
 
 function GetRandomY takes rect whichRect returns real
     return GetRandomReal(GetRectMinY(whichRect), GetRectMaxY(whichRect))
-endfunction
-
-function CVic takes player whichPlayer, boolean showDialog, boolean showScores returns nothing
-    if not isobserver[GetPlayerId(whichPlayer)] then
-        call RemovePlayer( whichPlayer, PLAYER_GAME_RESULT_VICTORY )
-
-        if not bj_isSinglePlayer then
-            call DisplayTimedTextFromPlayer(whichPlayer, 0, 0, 60, GetLocalizedString( "PLAYER_VICTORIOUS" ) )
-        endif
-
-        // UI only needs to be displayed to users.
-        if (GetPlayerController(whichPlayer) == MAP_CONTROL_USER) then
-            set bj_changeLevelShowScores = showScores
-            if showDialog then
-                call CustomVictoryDialogBJ( whichPlayer )
-            else
-                call CustomVictorySkipBJ( whichPlayer )
-            endif
-        endif
-    endif
-endfunction
-
-function CDef takes player whichPlayer, string message returns nothing
-    if not isobserver[GetPlayerId(whichPlayer)] then
-        call RemovePlayer( whichPlayer, PLAYER_GAME_RESULT_DEFEAT )
-
-        if not bj_isSinglePlayer then
-            call DisplayTimedTextFromPlayer(whichPlayer, 0, 0, 60, GetLocalizedString( "PLAYER_DEFEATED" ) )
-        endif
-
-        // UI only needs to be displayed to users.
-        if (GetPlayerController(whichPlayer) == MAP_CONTROL_USER) then
-            call CustomDefeatDialogBJ( whichPlayer, message )
-        endif
-    endif
 endfunction
 
 globals
@@ -1092,14 +374,6 @@ function ManaBurn takes unit whichUnit, real dmg returns nothing
 	set tt=null
 endfunction
 
-function DisplayNewLineToPlayer takes player p returns nothing
-    call DisplayTextToPlayer( p, 0, 0, " " )
-endfunction
-
-function DisplayNewLine takes nothing returns nothing
-    call DisplayNewLineToPlayer( GetLocalPlayer() )
-endfunction
-
 function ControlCameraZoom takes nothing returns nothing
     local integer i = 0
     loop
@@ -1109,98 +383,8 @@ function ControlCameraZoom takes nothing returns nothing
     endloop
 endfunction
 
-function Round takes real r returns integer
-    if r - I2R(R2I(r)) >= 0.5 then
-        return R2I(r+1)
-    else
-        return R2I(r)
-    endif
-endfunction
-
-// http://kattana.users.whitehat.dk/script/?script=216
-function GetNextItemEnum takes nothing returns nothing
-    if DistanceBetweenPoints(GetItemLoc(GetEnumItem()),GetRectCenter(bj_isUnitGroupInRectRect)) < bj_randomSubGroupChance then
-        set bj_itemRandomCurrentPick = GetEnumItem()
-        set bj_randomSubGroupChance = DistanceBetweenPoints(GetItemLoc(GetEnumItem()),GetRectCenter(bj_isUnitGroupInRectRect))
-    endif
-endfunction
-
-function FindNextItem takes location L returns item
-    local real TempR = bj_randomSubGroupChance
-    local item TempI = bj_itemRandomCurrentPick
-    local item TempItm
-    local rect R = bj_isUnitGroupInRectRect
-    set bj_randomSubGroupChance = 1000000
-    set bj_isUnitGroupInRectRect = RectFromLoc(Location(0,0),Location(2,2))
-    call MoveRectToLoc(bj_isUnitGroupInRectRect,L)
-    call EnumItemsInRect(GetEntireMapRect(),null,function GetNextItemEnum)
-    set bj_randomSubGroupChance = TempR
-    call RemoveRect(bj_isUnitGroupInRectRect)
-    set bj_isUnitGroupInRectRect = R
-    set R = null
-    set TempItm = bj_itemRandomCurrentPick
-    set bj_itemRandomCurrentPick = TempI
-    set TempI = null
-    return TempItm
-endfunction
-
-// http://www.thehelper.net/threads/jass-return-item-cost.53645/
-function GetItemGoldCostById takes integer uid returns integer
-    local integer Val = GetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_GOLD)
-    local integer ValB = GetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_LUMBER)
-    local integer Diff
-    local unit U = CreateUnitAtLoc(Player(PLAYER_NEUTRAL_PASSIVE),'nshe',GetRectCenter(GetPlayableMapRect()),bj_UNIT_FACING)
-    call AdjustPlayerStateBJ(50000,Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_GOLD)
-    call AdjustPlayerStateBJ(50000,Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_LUMBER)
-    call UnitAddAbilityBJ('Asid',U)
-    set Diff = GetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_GOLD)
-    call AddItemToStockBJ(uid,U,1,1)
-    call IssueTrainOrderByIdBJ(U,uid)
-    set Diff = Diff - GetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_GOLD)
-    call SetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_GOLD,Val)
-    call SetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_LUMBER,ValB)
-    call RemoveItem(FindNextItem(GetUnitLoc(U)))
-    call RemoveUnit(U)
-    set U = null
-    return Diff
-endfunction
-
-function GetItemLumberCostById takes integer uid returns integer
-    local integer Val = GetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_GOLD)
-    local integer ValB = GetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_LUMBER)
-    local integer Diff
-    local unit U = CreateUnitAtLoc(Player(PLAYER_NEUTRAL_PASSIVE),'nshe',GetRectCenter(GetPlayableMapRect()),bj_UNIT_FACING)
-    call AdjustPlayerStateBJ(50000,Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_GOLD)
-    call AdjustPlayerStateBJ(50000,Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_LUMBER)
-    call UnitAddAbilityBJ('Asid',U)
-    set Diff = GetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_LUMBER)
-    call AddItemToStockBJ(uid,U,1,1)
-    call IssueTrainOrderByIdBJ(U,uid)
-    set Diff = Diff - GetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_LUMBER)
-    call SetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_GOLD,Val)
-    call SetPlayerState(Player(PLAYER_NEUTRAL_PASSIVE),PLAYER_STATE_RESOURCE_LUMBER,ValB)
-    call RemoveItem(FindNextItem(GetUnitLoc(U)))
-    call RemoveUnit(U)
-    set U = null
-    return Diff
-endfunction
-
-function GetItemLumberCost takes item i returns integer
-    return GetItemLumberCostById(GetItemTypeId(i))
-endfunction
-
-function GetItemGoldCost takes item i returns integer
-    return GetItemGoldCostById(GetItemTypeId(i))
-endfunction
-
-function GetItemSellPrice takes item i returns integer
-    return Round( GetItemLumberCost( i ) * 0.635 )
-endfunction
-
 function initPublicLibrary takes nothing returns nothing
     local timer t = NewTimer()
-    call TimerStart( t, 0., false, function SetRealNames )
-    set t = CreateTimer()
     call TimerStart( t, 1., true, function ControlCameraZoom )
     set t = null
 endfunction

@@ -1,0 +1,120 @@
+package QuickMake
+import ClosureEvents
+import LinkedList
+import ClosuresForItems
+import Lodash
+import UnitExtensions
+
+
+class QuickMake
+    let itemPredicates = new LinkedList<Predicate<item>>()
+
+    construct(int spellAbilityId)
+        EventListener.onCast(spellAbilityId, caster -> onCast(caster))
+
+    function onCast(unit caster)
+        let pos = caster.getPos()
+
+        if caster.inventorySize() - caster.itemCount() < itemPredicates.size()
+            return
+
+        caster.moveInventoryDown()
+        itemPredicates.forEach() predicate ->
+            var found = caster.getItemMatching(predicate)
+            if found == null
+                found = findNearestItem(pos, 700, i -> predicate.call(i))
+            else
+                caster.removeItem(found)
+            caster.addItemHandle(found)
+
+    function add(vararg int itemIds)
+        for itemId from itemIds
+            itemPredicates.add(i -> i.getTypeId() == itemId)
+
+    function add(vararg Predicate<item> predicates)
+        for predicate from predicates
+                itemPredicates.add(predicate)
+
+
+init
+    new QuickMake('A06A')
+    ..add(i -> IsItemBasicBoots(i))
+    ..add(
+        ITEM_BONE,
+        ITEM_BONE,
+        ITEM_BONE,
+        ITEM_BONE,
+        ITEM_BONE
+    )
+
+    new QuickMake('A06C')
+    ..add(i -> IsItemBasicCoat(i))
+    ..add(
+        ITEM_BONE,
+        ITEM_BONE,
+        ITEM_BONE,
+        ITEM_BONE,
+        ITEM_BONE
+    )
+
+    new QuickMake('A06B')
+    ..add(i -> IsItemBasicGloves(i))
+    ..add(
+        ITEM_BONE,
+        ITEM_BONE,
+        ITEM_BONE,
+        ITEM_BONE,
+        ITEM_BONE
+    )
+
+    new QuickMake('A0A0')
+    ..add(
+        ITEM_SHIELD,
+        ITEM_BONE,
+        ITEM_BONE,
+        ITEM_BONE,
+        ITEM_BONE,
+        ITEM_BONE
+    )
+
+    new QuickMake('A06E')
+    ..add(
+        ITEM_STONE,
+        ITEM_STONE,
+        ITEM_FLINT,
+        ITEM_FLINT
+    )
+
+    new QuickMake('A06D')
+    ..add(
+        ITEM_STONE,
+        ITEM_FLINT
+    )
+
+    new QuickMake('A06F')
+    ..add(ITEM_STONE)
+    ..add(i -> IsItemPole(i))
+
+    new QuickMake('A0G7')
+    ..add(ITEM_DARK_ROCK)
+    ..add(i -> IsItemPole(i))
+
+    new QuickMake('A06G')
+    ..add(ITEM_IRON_INGOT)
+    ..add(i -> IsItemPole(i))
+
+    new QuickMake('A06H')
+    ..add(ITEM_STEEL_INGOT)
+    ..add(i -> IsItemPole(i))
+
+    new QuickMake('A06I')
+    ..add(ITEM_TINDER)
+    ..add(i -> IsItemPole(i))
+    ..add(ITEM_STICK)
+
+    new QuickMake('A09Z')
+    ..add(i -> IsItemHide(i))
+    ..add(
+        ITEM_STICK,
+        ITEM_STICK
+    )

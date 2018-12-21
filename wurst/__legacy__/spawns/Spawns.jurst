@@ -1,4 +1,4 @@
-library Spawns initializer onInit
+library Spawns initializer onInit requires Game
 
 globals
     boolean fishytrigger = false
@@ -343,26 +343,30 @@ function spawnAnimals takes nothing returns nothing
     endloop
 endfunction
 
-function Trig_spawn_normal_Actions takes nothing returns nothing
-    call modStats()
-    call spawnItems()
-    call spawnAnimals()
-    call makeFish()
-    call ConditionalTriggerExecute( gg_trg_add_items_to_plants )
+function spawn()
+    modStats()
+    spawnItems()
+    spawnAnimals()
+    makeFish()
+    gg_trg_add_items_to_plants.execute()
 endfunction
 
-function Trig_spawn_call_first_Actions takes nothing returns nothing
-    call spawnAnimals()
-    call spawnItems()
-    call makeFish()
-    call ConditionalTriggerExecute( gg_trg_add_items_to_plants )
+function spawnFirst()
+    spawnAnimals()
+    spawnItems()
+    makeFish()
+    gg_trg_add_items_to_plants.execute()
+endfunction
+
+function startSpawns()
+    gg_trg_spawn_normal = CreateTrigger()
+    ..registerTimerEvent(240.00, true)
+    ..addAction(function spawn)
 endfunction
 
 function onInit takes nothing returns nothing
-    set gg_trg_spawn_normal = CreateTrigger(  )
-    call TriggerRegisterTimerEventPeriodic( gg_trg_spawn_normal, 300.00 )
-    call TriggerAddAction( gg_trg_spawn_normal, function Trig_spawn_normal_Actions )
+    registerGameStartEvent(function startSpawns)
 
-    set gg_trg_spawn_call_first = CreateTrigger(  )
-    call TriggerAddAction( gg_trg_spawn_call_first, function Trig_spawn_call_first_Actions )
+    gg_trg_spawn_call_first = CreateTrigger()
+    ..addAction(function spawnFirst)
 endfunction

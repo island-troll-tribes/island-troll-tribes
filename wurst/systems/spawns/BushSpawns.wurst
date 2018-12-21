@@ -1,6 +1,9 @@
 package BushSpawns
 import HashMap
 import ItemPoolExtensions
+import ClosureTimers
+
+let herbs = CreateGroup()
 
 class BushPool
     static let map = new HashMap<int, thistype>()
@@ -19,15 +22,10 @@ class BushPool
     function getItem(vec2 pos) returns item
         return pool.getRandomItem(pos)
 
-function addItemToBush()
-    let bush = GetEnumUnit()
-    let herb = BushPool.findForUnitId(bush.getTypeId())
-    if herb == null
-        return
-
-    let herbitem = herb.getItem(bush.getPos())
-    if herbitem == null
-        return
+function addItemToBush(unit bush)
+    let herbitem = BushPool
+    .findForUnitId(bush.getTypeId())
+    .getItem(bush.getPos())
 
     if herbitem.getTypeId() == ITEM_NULL
         herbitem.remove()
@@ -35,11 +33,22 @@ function addItemToBush()
         UnitStackItemEx(bush, herbitem, false)
 
 function addItemsToBushes()
-    ForGroup(udg_plants, function addItemToBush)
+    for herb in herbs
+        doAfter(GetRandomReal(0, 1)) ->
+            addItemToBush(herb)
 
 init
     gg_trg_add_items_to_plants = CreateTrigger()
     gg_trg_add_items_to_plants.addAction(function addItemsToBushes)
+
+    GroupEnumUnitsInRect(herbs, GetWorldBounds(), Filter(() -> begin
+        let filter = GetFilterUnit()
+        return filter.isType(UNIT_TYPE_ANCIENT) and filter.isType(UNIT_TYPE_STRUCTURE)
+    end))
+
+    for herb in herbs
+        if herb.getOwner().getId() == PLAYER_NEUTRAL_AGGRESSIVE
+            herb.setOwner(players[PLAYER_NEUTRAL_PASSIVE], true)
 
     new BushPool(UNIT_THIEFS_BUSH)
     ..addItem(ITEM_NETS, 15)

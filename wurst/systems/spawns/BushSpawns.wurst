@@ -3,7 +3,7 @@ import HashMap
 import ItemPoolExtensions
 import ClosureTimers
 
-let herbs = CreateGroup()
+let bushes = CreateGroup()
 
 class BushPool
     static let map = new HashMap<int, thistype>()
@@ -23,32 +23,30 @@ class BushPool
         return pool.getRandomItem(pos)
 
 function addItemToBush(unit bush)
-    let herbitem = BushPool
+    let herb = BushPool
     .findForUnitId(bush.getTypeId())
     .getItem(bush.getPos())
 
-    if herbitem.getTypeId() == ITEM_NULL
-        herbitem.remove()
-    else
-        UnitStackItemEx(bush, herbitem, false)
+    if herb != null
+        UnitStackItemEx(bush, herb, false)
 
 function addItemsToBushes()
-    for herb in herbs
+    for bush in bushes
         doAfter(GetRandomReal(0, 1)) ->
-            addItemToBush(herb)
+            addItemToBush(bush)
 
 init
     gg_trg_add_items_to_plants = CreateTrigger()
     gg_trg_add_items_to_plants.addAction(function addItemsToBushes)
 
-    GroupEnumUnitsInRect(herbs, GetWorldBounds(), Filter(() -> begin
+    GroupEnumUnitsInRect(bushes, GetWorldBounds(), Filter(() -> begin
         let filter = GetFilterUnit()
         return filter.isType(UNIT_TYPE_ANCIENT) and filter.isType(UNIT_TYPE_STRUCTURE)
     end))
 
-    for herb in herbs
-        if herb.getOwner().getId() == PLAYER_NEUTRAL_AGGRESSIVE
-            herb.setOwner(players[PLAYER_NEUTRAL_PASSIVE], true)
+    for bush in bushes
+        if bush.getOwner().getId() == PLAYER_NEUTRAL_AGGRESSIVE
+            bush.setOwner(players[PLAYER_NEUTRAL_PASSIVE], true)
 
     new BushPool(UNIT_THIEFS_BUSH)
     ..addItem(ITEM_NETS, 15)
@@ -73,11 +71,11 @@ init
 
     new BushPool(UNIT_MUSHROOM_COLONY)
     ..addItem(ITEM_MUSHROOM, 3)
-    ..addItem(ITEM_NULL, 1)
+    ..addItem(0, 1)
 
     new BushPool(UNIT_THISTLE_SHRUB)
     ..addItem(ITEM_THISTLES, 3)
-    ..addItem(ITEM_NULL, 1)
+    ..addItem(0, 1)
 
     new BushPool(UNIT_BLUE_HERB_BUSH)
     ..addItem(ITEM_BLUE_HERB, 1)

@@ -166,7 +166,14 @@ class SEFOrb
                                     targetUnit = u
                             else
                                 targetUnit = u
-        
+                    else 
+                        //Get the closest unit if multiples happen to come into range at once
+                        if (targetUnit != null)
+                            if (curPos.distanceTo( targetUnit.getPos() ) > curPos.distanceTo(u.getPos()))
+                                targetUnit = u
+                        else
+                            targetUnit = u
+                            
             //Put newly acquired target into timestamp map
             if targetUnit != null
                 instance.targetedTimestampMap.put(targetUnit, instance.orbLoopDuration)
@@ -274,7 +281,7 @@ class SEFInstance
         destroy orbs
 
         destroy targetedTimestampMap
-        
+
         if instances.has(ownerUnit)
             if (instances.get(ownerUnit) == this) 
                 instances.remove(ownerUnit)

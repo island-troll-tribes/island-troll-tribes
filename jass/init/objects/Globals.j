@@ -20,7 +20,6 @@ globals
     trigger                 gg_trg_bad_mammy           = null
     trigger                 gg_trg_flyer_spell_refreshing = null
     trigger                 gg_trg_Smell_Drop          = null
-    trigger                 gg_trg_Attraction_Aura     = null
     trigger                 gg_trg_cook_meat3          = null
     trigger                 gg_trg_warmth              = null
     trigger                 gg_trg_stats_degrading     = null

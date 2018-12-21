@@ -8,17 +8,21 @@ import AbilityObjEditing
 import DummyCaster
 import OverCharge
 import Orders
+import BuffObjEditing
+import Icons
 
 
 @configurable constant int ABILITY_ID = 'ESEF'
-@configurable constant int DUMMY_STUN_ABILITY_ID = 'ESES'
+@configurable constant int DUMMY_STUN_SPELL_ID = 'ESES'
+@configurable constant int DUMMY_BUFF_SPELL_ID = 'XSSB'
 @configurable constant real IMPACT_STUN_DURATION_HERO = 0.10
 @configurable constant real IMPACT_STUN_DURATION_NORMAL = 0.10
 @configurable constant real COOLDOWN = 35
 @configurable constant int MANACOST = 25
 @configurable constant real ORB_ATTACK_RADIUS = 575
 @configurable constant real ORB_ATTACK_COOLDOWN = 0.35
-@configurable constant real ORB_IMPACT_DAMAGE = 15
+@configurable constant real ORB_IMPACT_DAMAGE = 25
+@configurable constant real ORB_IMPACT_DAMAGE_SAMETARGET = 15
 @configurable constant real ORB_LIFETIME = 25
 @configurable constant real ORB_SPEED = 625
 @configurable constant real ORB_SPAWN_INTERVAL = 0.4
@@ -64,7 +68,7 @@ import Orders
     ..setManaCost(1, MANACOST)
 
 @compiletime function createDummySpell()
-    new AbilityDefinitionFireBolt(DUMMY_STUN_ABILITY_ID)
+    new AbilityDefinitionFireBolt(DUMMY_STUN_SPELL_ID)
     ..setAnimationNames("")
     ..setMissileSpeed(20000)
     ..setBuffs(1, "BSTN")
@@ -82,6 +86,37 @@ import Orders
     ..setManaCost(1, 0)
     ..setRace(Race.Creeps)
     ..setName("Orb stun Dummy Spell")
+
+@compiletime function createDummyBuff()
+    new BuffDefinition('XSFB', 'Bclf')
+    ..setIcon(Icons.bTNResistantSkin)
+    ..setTooltipNormal(1, "Hit by earth orbs")
+    ..setTooltipNormalExtended(1, "Hit by earth orbs")
+
+@compiletime function createBuffSpell()
+    new AbilityDefinitionAlchemistAcidBomb('XSSB')
+    ..setAnimationNames("")
+    ..setMissileSpeed(20000)
+    ..setBuffs(1, "XSFB")
+    ..setMissileArt("")
+    ..setMissileHomingEnabled(true)
+    ..setCastRange(1, 9999)
+    ..setCooldown(1, 0)
+    ..setCastingTime(1, 0)
+    ..setDurationHero(1, 1)
+    ..setDurationNormal(1, 1)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setManaCost(1, 0)
+    ..setRace(Race.Creeps)
+    ..setName("Orb stun Dummy Spell")
+    ..setArmorPenalty(1, 0)
+    ..setAreaofEffect(1, 1)
+    ..setAttackSpeedReduction(1, 0)
+    ..setMovementSpeedReduction(1, 0)
+    ..setSecondaryDamage(1, 0)
+    ..setPrimaryDamage(1, 0)
 
 let instances = new HashMap<unit, SEFInstance>()
 
@@ -119,17 +154,22 @@ class SEFOrb
 
     function findTarget()
         var curPos = projectile.getPos()
-        if (targetUnit == null and instance.orbLoopDuration >= 0.55 and instance.orbLoopDuration - instance.lastOrbAttackTimestamp >= ORB_ATTACK_COOLDOWN)
+        if (targetUnit == null and instance.orbLoopDuration >= 0.55)
             forUnitsInRange(curPos, ORB_ATTACK_RADIUS) u ->
                 if (IsUnitVisible(u, ownerUnit.getOwner()) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isHidden() and u.isAlive() and not u.isInvulnerable() and u.getOwner().isEnemyOf(ownerUnit.getOwner()))
-                    //Get the closest unit if multiples happen to come into range at once
-                    if (targetUnit != null)
-                        if (curPos.distanceTo( targetUnit.getPos() ) > curPos.distanceTo(u.getPos()))
-                            targetUnit = u
-                            instance.lastOrbAttackTimestamp = instance.orbLoopDuration
-                    else
-                        targetUnit = u
-                        instance.lastOrbAttackTimestamp = instance.orbLoopDuration
+                    //check if unit has been targeted previously by orb
+                    if (instance.targetedTimestampMap.has(u))
+                        if (instance.orbLoopDuration - instance.targetedTimestampMap.get(u) >= ORB_ATTACK_COOLDOWN)
+                            //Get the closest unit if multiples happen to come into range at once
+                            if (targetUnit != null)
+                                if (curPos.distanceTo( targetUnit.getPos() ) > curPos.distanceTo(u.getPos()))
+                                    targetUnit = u
+                            else
+                                targetUnit = u
+        
+            //Put newly acquired target into timestamp map
+            if targetUnit != null
+                instance.targetedTimestampMap.put(targetUnit, instance.orbLoopDuration)
                     
     function updateLoop()
         if (targetUnit == null)
@@ -140,8 +180,12 @@ class SEFOrb
         
     function onImpactEffect()
         if (targetUnit.isAlive() and not targetUnit.isInvulnerable())
-            ownerUnit.damageTarget(targetUnit, ORB_IMPACT_DAMAGE, ATTACK_TYPE_NORMAL)
-            new DummyCaster().castTarget(ownerUnit.getOwner(), DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, targetUnit, ownerUnit.getPos3Real())
+            if (targetUnit.hasAbility('XSFB')) //If hit previously by another orb
+                ownerUnit.damageTarget(targetUnit, ORB_IMPACT_DAMAGE_SAMETARGET, ATTACK_TYPE_NORMAL)
+            else
+                ownerUnit.damageTarget(targetUnit, ORB_IMPACT_DAMAGE, ATTACK_TYPE_NORMAL)
+            new DummyCaster().castTarget(ownerUnit.getOwner(), DUMMY_STUN_SPELL_ID, 1, Orders.firebolt, targetUnit, ownerUnit.getPos3Real())
+            new DummyCaster().castTarget(ownerUnit.getOwner(), DUMMY_BUFF_SPELL_ID, 1, Orders.acidbomb, targetUnit, ownerUnit.getPos3Real())
 
         var efx = addEffect(ORB_IMPACT_EFFECT, projectile.getPos3())
         efx.setScale(1)
@@ -161,10 +205,9 @@ class SEFInstance
     bool isChanneling
     bool isOvercharged
     real orbLoopDuration
-    real lastOrbAttackTimestamp
     CallbackCounted orbLoopPeriodic
     CallbackCounted orbCreationLoopPeriodic
-
+    let targetedTimestampMap = new HashMap<unit, real>()
     LinkedList<SEFOrb> orbs = new LinkedList<SEFOrb>()
 
     construct (unit caster, bool overcharged)
@@ -172,7 +215,6 @@ class SEFInstance
         ownerUnit = caster
         real channeledTime = 0
         real _lastOrbCreatedTimestamp = 0
-        lastOrbAttackTimestamp = 0
         orbLoopDuration = 0
         real orb_interval = ORB_SPAWN_INTERVAL
         isChanneling = true
@@ -189,7 +231,7 @@ class SEFInstance
                     orbCreationLoopPeriodic.stop()
         else
             int count = (CHANNEL_DURATION/ORB_SPAWN_INTERVAL).round()
-            for i = 0 to count
+            for i = 1 to count
                 orbs.push(new SEFOrb(ownerUnit, this, caster.getPos().withTerrainZ(ORB_ORBIT_HEIGHT)))
         
         this.startOrbLoop()
@@ -231,6 +273,8 @@ class SEFInstance
         orbs.forEach(o -> destroy o)
         destroy orbs
 
+        destroy targetedTimestampMap
+        
         if instances.has(ownerUnit)
             if (instances.get(ownerUnit) == this) 
                 instances.remove(ownerUnit)

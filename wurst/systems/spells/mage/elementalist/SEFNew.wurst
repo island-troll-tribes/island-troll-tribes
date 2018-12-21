@@ -21,20 +21,21 @@ import Icons
 @configurable constant int MANACOST = 25
 @configurable constant real ORB_ATTACK_RADIUS = 575
 @configurable constant real ORB_ATTACK_COOLDOWN = 0.35
-@configurable constant real ORB_IMPACT_DAMAGE = 25
-@configurable constant real ORB_IMPACT_DAMAGE_SAMETARGET = 15
+@configurable constant real ORB_IMPACT_DAMAGE = 40
+@configurable constant real ORB_IMPACT_DAMAGE_SAMETARGET = 10
+@configurable constant real ORB_SAMETARGET_BUFF_MARKER_DURATION = 0.7
 @configurable constant real ORB_LIFETIME = 25
-@configurable constant real ORB_SPEED = 625
-@configurable constant real ORB_SPAWN_INTERVAL = 0.4
-@configurable constant real CHANNEL_DURATION = 0.4*7 //7 Projectiles
+@configurable constant real ORB_SPEED = 650
+@configurable constant real ORB_SPAWN_INTERVAL = 0.35
+@configurable constant real CHANNEL_DURATION = 0.35*7 //7 Projectiles
 @configurable constant real ORB_PERIODICINTERVAL_SPAWN = 0.05
 @configurable constant real ORB_PERIODICINTERVAL_LOOP = 0.03125
-@configurable constant real ORB_ANGULARORBITSPEED = 90 
+@configurable constant real ORB_ANGULARORBITSPEED = 100
 @configurable constant real ORB_ORBIT_RADIUS = 150
 @configurable constant real ORB_ORBIT_HEIGHT = 140
 @configurable constant string SPELL_ICON = "ReplaceableTextures\\CommandButtons\\BTNGolemStormBolt.blp"
 @configurable constant string TOOLTIP_NORM = "|c00ffcc00R |r- Earth Guardians"
-@configurable constant string TOOLTIP_EXT = "Channels to conjure 7 orbs that circle around you, striking enemies that come close for |c00ff000015|r damage and stunning them very briefly."
+@configurable constant string TOOLTIP_EXT = "Channels to conjure 7 orbs that circle around you, striking enemies that come close for |c00ff000040|r damage and stunning them very briefly. Subsequent impacts on the same target do |c00ff000010|r damage."
 @configurable constant string ORB_EFFECT_PATH = "Abilities\\Weapons\\AncientProtectorMissile\\AncientProtectorMissile.mdl" 
 @configurable constant string ORB_IMPACT_EFFECT = "Objects\\Spawnmodels\\Undead\\ImpaleTargetDust\\ImpaleTargetDust.mdl"
 
@@ -103,8 +104,8 @@ import Icons
     ..setCastRange(1, 9999)
     ..setCooldown(1, 0)
     ..setCastingTime(1, 0)
-    ..setDurationHero(1, 1)
-    ..setDurationNormal(1, 1)
+    ..setDurationHero(1, ORB_SAMETARGET_BUFF_MARKER_DURATION)
+    ..setDurationNormal(1, ORB_SAMETARGET_BUFF_MARKER_DURATION)
     ..setHeroAbility(false)
     ..setItemAbility(false)
     ..setLevels(1)
@@ -173,17 +174,20 @@ class SEFOrb
                                 targetUnit = u
                         else
                             targetUnit = u
-                            
             //Put newly acquired target into timestamp map
             if targetUnit != null
                 instance.targetedTimestampMap.put(targetUnit, instance.orbLoopDuration)
-                    
+
+        else if (targetUnit != null)
+            //If we have a target, check that its still valid and untarget if not
+            if not targetUnit.isAlive() or targetUnit.isInvulnerable() or not IsUnitVisible(targetUnit, ownerUnit.getOwner())
+                targetUnit = null
+
+
     function updateLoop()
-        if (targetUnit == null)
-            findTarget()
-            moveTowardsTarget()
-        else
-            moveTowardsTarget()
+        findTarget()
+        moveTowardsTarget()
+
         
     function onImpactEffect()
         if (targetUnit.isAlive() and not targetUnit.isInvulnerable())

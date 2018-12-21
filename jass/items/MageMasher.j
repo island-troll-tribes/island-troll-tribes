@@ -14,6 +14,9 @@ function checkmashertroll takes nothing returns boolean
     if ( ( GetUnitTypeId(GetAttackedUnitBJ()) == UNIT_ELEMENTALIST_1 ) ) then
         return true
     endif
+    if ( ( GetUnitTypeId(GetAttackedUnitBJ()) == UNIT_ELEMENTALIST_NEW ) ) then
+        return true
+    endif
     if ( ( GetUnitTypeId(GetAttackedUnitBJ()) == UNIT_HYPNOTIST ) ) then
         return true
     endif

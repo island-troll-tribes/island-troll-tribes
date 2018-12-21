@@ -22,14 +22,6 @@ init
     EnableMinimapFilterButtons(true, false)
     SetCreepCampFilterState(false)
 
-    OMINOUS_ALTAR.addItemToStock(ITEM_HYDRA_HINT, 1, 1)
-
-    ForForce(bj_FORCE_ALL_PLAYERS) ->
-        let enumPlayer = GetEnumPlayer()
-        SetFogStateRect(enumPlayer, FOG_OF_WAR_VISIBLE, gg_rct_vision, true)
-        // TODO remove legacy bm pet system
-        resetBMSkill(enumPlayer)
-
     // TODO remove legacy initialization or move elsewhere
     InitGameCache("ITT.w3v")
     udg_jumpCache = bj_lastCreatedGameCache
@@ -37,5 +29,13 @@ init
     prepareSpells()
 
     nullTimer() ->
+        ForForce(bj_FORCE_ALL_PLAYERS) ->
+            let enumPlayer = GetEnumPlayer()
+            CreateFogModifierRect(enumPlayer, FOG_OF_WAR_VISIBLE, gg_rct_vision, true, false).start()
+            // TODO remove legacy bm pet system
+            resetBMSkill(enumPlayer)
+
+        OMINOUS_ALTAR.addItemToStock(ITEM_HYDRA_HINT, 1, 1)
+
         mammothGate.setInvulnerable(true)
         MAMMOTH.setOwner(players[PLAYER_NEUTRAL_AGGRESSIVE], true)

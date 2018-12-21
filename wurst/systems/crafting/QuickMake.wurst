@@ -14,18 +14,24 @@ class QuickMake
 
     function onCast(unit caster)
         let pos = caster.getPos()
+        let recipeSize = itemPredicates.size()
+        let items = new LinkedList<int>()
 
-        if caster.inventorySize() - caster.itemCount() < itemPredicates.size()
-            return
+        caster
+        ..moveInventoryDown()
+        ..dropItems(recipeSize)
 
-        caster.moveInventoryDown()
         itemPredicates.forEach() predicate ->
             var found = caster.getItemMatching(predicate)
             if found == null
                 found = findNearestItem(pos, 700, i -> predicate.call(i))
-            else
-                caster.removeItem(found)
-            caster.addItemHandle(found)
+            items.add(found.getTypeId())
+            found.remove()
+
+        items.forEach() itemId ->
+            caster.addItemById(itemId)
+
+        destroy items
 
     function add(int itemId)
         itemPredicates.add(i -> i.getTypeId() == itemId)
@@ -42,7 +48,7 @@ init
     ..add(ITEM_BONE)
     ..add(ITEM_BONE)
     ..add(ITEM_BONE)
-    
+
 
     new QuickMake('A06C')
     ..add(i -> IsItemBasicCoat(i))
@@ -51,7 +57,7 @@ init
     ..add(ITEM_BONE)
     ..add(ITEM_BONE)
     ..add(ITEM_BONE)
-    
+
 
     new QuickMake('A06B')
     ..add(i -> IsItemBasicGloves(i))
@@ -60,7 +66,7 @@ init
     ..add(ITEM_BONE)
     ..add(ITEM_BONE)
     ..add(ITEM_BONE)
-    
+
 
     new QuickMake('A0A0')
     ..add(ITEM_SHIELD)
@@ -69,19 +75,19 @@ init
     ..add(ITEM_BONE)
     ..add(ITEM_BONE)
     ..add(ITEM_BONE)
-    
 
-    new QuickMake('A06E')
-    ..add(ITEM_STONE)
-    ..add(ITEM_STONE)
-    ..add(ITEM_FLINT)
-    ..add(ITEM_FLINT)
-    
 
     new QuickMake('A06D')
     ..add(ITEM_STONE)
+    ..add(ITEM_STONE)
+    ..add(ITEM_FLINT)
+    ..add(ITEM_FLINT)
+
+
+    new QuickMake('A06E')
+    ..add(ITEM_STONE)
     ..add(ITEM_FLINT_AXE)
-    
+
 
     new QuickMake('A06F')
     ..add(ITEM_STONE)
@@ -108,4 +114,3 @@ init
     ..add(i -> IsItemHide(i))
     ..add(ITEM_STICK)
     ..add(ITEM_STICK)
-    

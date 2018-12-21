@@ -20,15 +20,19 @@ class BushPool
         return pool.getRandomItem(pos)
 
 function addItemToBush()
-    let bush = GetEnumUnit()
-    let herb = BushPool
-    .findForUnitId(bush.getTypeId())
-    .getItem(bush.getPos())
+    let bush = GetEnumUnit()    
+    let herb = BushPool.findForUnitId(bush.getTypeId())
+    if herb == null
+        return 
 
-    if herb.getTypeId() == ITEM_NULL
-        herb.remove()
+    var herbitem = herb.getItem(bush.getPos())
+    if herbitem == null
+        return
+
+    if herbitem.getTypeId() == ITEM_NULL
+        herbitem.remove()
     else
-        UnitStackItemEx(bush, herb, false)
+        UnitStackItemEx(bush, herbitem, false)
 
 function addItemsToBushes()
     ForGroup(udg_plants, function addItemToBush)

@@ -39,71 +39,7 @@ local integer v = 0
 local unit u
 local player p = GetOwningPlayer(dying)
 local integer numCorpses = 0
-    // Stuff
-    if uid == UNIT_ELK then
-        call RemoveUnit(dying)
-        set numCorpses = 3
-        call CreateItem( ITEM_BONE, x, y )
-        call CreateItem( ITEM_ELK_HIDE, x, y )
-        set udg_ANIMAL_CURRENT = ( udg_ANIMAL_CURRENT - 1 )
-        call getAnimalGreenLight(dying)
-        if udg_booleanParameter then
-            call CreateUnit( Player(PLAYER_NEUTRAL_PASSIVE), UNIT_FAWN, x, y, 270.00 )
-        endif
-    elseif uid == UNIT_JUNGLE_WOLF then
-        call RemoveUnit( dying )
-        set numCorpses = 4
-        call CreateItem( ITEM_BONE, x, y )
-        call CreateItem( ITEM_JUNGLE_WOLF_HIDE, x, y )
-        set udg_ANIMAL_CURRENT = ( udg_ANIMAL_CURRENT - 1 )
-        call getAnimalGreenLight(dying)
-        if udg_booleanParameter then
-            call CreateUnit( Player(PLAYER_NEUTRAL_PASSIVE), UNIT_WOLF_PUP, x, y, 270.00 )
-        endif
-    elseif uid == UNIT_JUNGLE_BEAR then
-        call RemoveUnit( dying )
-        set numCorpses = 7
-        call CreateItem( ITEM_BONE, x, y )
-        call CreateItem( ITEM_JUNGLE_BEAR_HIDE, x, y )
-        set udg_ANIMAL_CURRENT = ( udg_ANIMAL_CURRENT - 1 )
-        call getAnimalGreenLight(dying)
-        if udg_booleanParameter then
-            call CreateUnit( Player(PLAYER_NEUTRAL_PASSIVE), UNIT_BEAR_CUB, x, y, 270.00 )
-        endif
-    elseif uid == UNIT_MAMMOTH and GetUnitAbilityLevel(dying, 'BIil') == 0 then
-        set Mammoth_Dead = true
-        call RemoveUnit( dying )
-        set numCorpses = 16
-        call CreateItem( ITEM_BONE, x, y )
-        call CreateItem( ITEM_BONE, x, y )
-        call CreateItem( ITEM_BONE, x, y )
-        call CreateItem( ITEM_BONE, x, y )
-        call CreateItem( ITEM_BONE, x, y )
-        if udg_BOSS_PRIZE_MODE then
-            // medallion
-            call CreateItem( ITEM_MEDALLION_COURAGE, x, y )
-            // horns
-            call CreateItem( ITEM_HORN_MAMMOTH, x, y )
-        endif
-    elseif uid == UNIT_DISCO_DUCK and GetUnitAbilityLevel(dying, 'BIil') == 0 then
-        //if not FirstDuckDead then
-          //  set FirstDuckDead = true
-            //call Start_Boss_Turtle()
-        //endif
-        set DD_Dead = true
-        call RemoveUnit( dying )
-        set numCorpses = 13
-        call CreateItem( ITEM_BONE, x, y )
-        call CreateItem( ITEM_BONE, x, y )
-        if udg_BOSS_PRIZE_MODE then
-            call CreateItem( ITEM_MEDALLION_COURAGE, x, y )
-            call CreateItem( ITEM_STEEL_INGOT, x, y )
-            call CreateItem( ITEM_STEEL_INGOT, x, y )
-            call placePinion(x, y)
-        endif
-    endif
     // TEH HYDRA ~
-    static if LIBRARY_HydrAROUTINE then
     if uid == UNIT_ANCIENT_HYDRA and GetUnitAbilityLevel(dying, 'BIil') == 0 then
         set Hydra_Dead = true
         call RemoveUnit( dying )
@@ -174,90 +110,9 @@ local integer numCorpses = 0
             call TimerStart(hydraTimer, 2.5, false, function AddHydraS)
         endif
     endif
-    endif
-    set udg_booleanParameter = IsUnitTroll(dying)
-    if udg_booleanParameter and GetUnitAbilityLevel(dying, 'BIil') == 0 then
+    if IsUnitTroll(dying) and GetUnitAbilityLevel(dying, 'BIil') == 0 then
         set numCorpses = 1
         call CreateItem( ITEM_BONE, x, y )
-    elseif uid == UNIT_FISH then
-        set numCorpses = 1
-        set udg_FISH_CURRENT = ( udg_FISH_CURRENT - 1 )
-        call RemoveUnit( dying )
-    elseif uid == UNIT_MAGENTA_FISH then
-        set numCorpses = 9
-        call CreateItem(ITEM_STICK, x, y)
-        call CreateItem(ITEM_MUSHROOM, x, y)
-        set udg_ITEM_CURRENT = udg_ITEM_CURRENT + 2
-        set udg_FISH_CURRENT = ( udg_FISH_CURRENT - 1 )
-        call RemoveUnit( dying )
-    elseif uid == UNIT_GREEN_FISH then
-        loop
-            exitwhen i > R2I(( 3.00 * udg_FOOD_FOR_KILL_PROPORTION ))
-             call CreateCorpse(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MEAT, x, y, GetRandomReal(0,360) )
-            set i = i + 1
-        endloop
-        set udg_FISH_CURRENT = ( udg_FISH_CURRENT - 1 )
-        call RemoveUnit( dying )
-    elseif uid == UNIT_ADULT_ELK then
-        set numCorpses = 7
-        call CreateItem( ITEM_BONE, x, y )
-        call CreateItem( ITEM_ELK_HIDE, x, y )
-        call RemoveUnit( dying )
-    elseif uid == UNIT_ELK_ADOLESCENT then
-        set numCorpses = 6
-        call CreateItem( ITEM_BONE, x, y )
-        call CreateItem( ITEM_ELK_HIDE, x, y )
-        call RemoveUnit( dying )
-    elseif uid == UNIT_ADULT_JUNGLE_BEAR then
-        set numCorpses = 9
-        call CreateItem( ITEM_BONE, x, y )
-        call CreateItem( ITEM_JUNGLE_BEAR_HIDE, x, y )
-        call RemoveUnit( dying )
-    elseif uid == UNIT_ADULT_JUNGLE_WOLF then
-        set numCorpses = 8
-        call CreateItem( ITEM_BONE, x, y )
-        call CreateItem( ITEM_JUNGLE_WOLF_HIDE, x, y )
-        call RemoveUnit( dying )
-    elseif uid == UNIT_BEAR_CUB then
-        set numCorpses = 3
-        call CreateItem( ITEM_BONE, x, y )
-        call RemoveUnit( dying )
-    elseif uid == UNIT_WOLF_PUP then
-        set numCorpses = 2
-        call CreateItem( ITEM_BONE, x, y )
-        call RemoveUnit( dying )
-    elseif uid == UNIT_FAWN then
-        set numCorpses = 1
-        call CreateItem( ITEM_BONE, x, y )
-        call RemoveUnit( dying )
-    elseif uid == UNIT_SNAKE then
-        set numCorpses = 1
-        set udg_ANIMAL_CURRENT = ( udg_ANIMAL_CURRENT - 1 )
-        call PolledWait( 0.50 )
-        call RemoveUnit( dying )
-    elseif uid == UNIT_PANTHER or uid == UNIT_ELDER_PANTHER then
-        set numCorpses = 8
-        call CreateItem( ITEM_BONE, x, y )
-        call CreateItem( ITEM_BONE, x, y )
-        if uid == UNIT_PANTHER then
-            set udg_ANIMAL_CURRENT = ( udg_ANIMAL_CURRENT - 1 )
-        endif
-        call RemoveUnit( dying )
-    elseif uid == UNIT_ALIGATOR_MAN then
-        set numCorpses = 10
-        call CreateItem( ITEM_BONE, x, y )
-        call CreateItem( ITEM_BONE, x, y )
-        if udg_BOSS_PRIZE_MODE then
-            call CreateItem( ITEM_ALIGATOR_GOLD, x, y )
-        endif
-        call RemoveUnit( dying )
-    elseif uid == UNIT_ONE then
-        set numCorpses = 3
-        call CreateItem( ITEM_BONE, x, y )
-        if udg_BOSS_PRIZE_MODE then
-            call CreateItem(ITEM_ESSENCE_BEES, x, y)
-            call CreateItem(ITEM_STEEL_AXE, x, y)
-        endif
     elseif IsUnitHawk(dying) then
         set numCorpses = 1
         call CreateItem( ITEM_BONE, x, y )

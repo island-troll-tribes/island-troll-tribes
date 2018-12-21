@@ -1,0 +1,90 @@
+package Hostile
+import RegisterEvents
+import UnitIndexer
+import HashMap
+import LinkedList
+import ClosureTimers
+import Lodash
+
+public function createCorpse(player p, int unitId, vec2 pos, angle facing) returns unit
+    return CreateCorpse(p, unitId, pos.x, pos.y, facing.degrees())
+
+function randomAngle() returns angle
+    return angle(GetRandomReal(0, PI2))
+
+public abstract class Hostile
+    static thistype array instances
+    static let factories = new HashMap<int, Function<unit, thistype>>()
+
+    static function initialize()
+        registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
+            findForUnit(GetDyingUnit()).onDeath()
+
+        onUnitIndex() ->
+            let indexedUnit = getIndexedUnit()
+            nullTimer() ->
+                if findForUnit(indexedUnit) == null
+                    let unitTypeId = indexedUnit.getTypeId()
+                    if factories.has(unitTypeId)
+                        let factory = factories.get(unitTypeId)
+                        factory.call(indexedUnit)
+
+    static function register(int unitTypeId, Function<unit, thistype> factory)
+        factories.put(unitTypeId, factory)
+
+    static function findForUnit(unit hostile) returns thistype
+        return instances[hostile.getIndex()]
+
+    private constant unit theUnit = null
+    protected constant let drops = new LinkedList<int>()
+
+    construct(unit whichUnit)
+        theUnit = whichUnit
+        postCreate()
+
+    construct(player whichPlayer, vec2 pos, angle facing)
+        theUnit = createUnit(whichPlayer, getTypeId(), pos, facing)
+        postCreate()
+
+    construct(player whichPlayer, vec2 pos)
+        theUnit = createUnit(whichPlayer, getTypeId(), pos, randomAngle())
+        postCreate()
+
+    function postCreate()
+        instances[theUnit.getIndex()] = this
+
+    function getUnit() returns unit
+        return theUnit
+
+    function getPos() returns vec2
+        return theUnit.getPos()
+
+    function addDrop(int itemId)
+        drops.add(itemId)
+
+    function getNumCorpses() returns int
+        return 1
+
+    abstract function getTypeId() returns int
+
+    function onDeath()
+        let pos = getPos()
+        let numCorpses = getNumCorpses()
+
+        for i = 1 to numCorpses
+            createCorpse(players[PLAYER_NEUTRAL_AGGRESSIVE], UNIT_MEAT, pos, randomAngle())
+
+        let iter = drops.iterator()
+        for drop from iter
+            createItem(drop, pos)
+        iter.close()
+
+        postDeath()
+
+    function postDeath()
+        getUnit().remove()
+        destroy this
+
+
+init
+    Hostile.initialize()

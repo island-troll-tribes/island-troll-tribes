@@ -48,7 +48,7 @@ function hasPets takes nothing returns boolean
     return ( GetUnitTypeId(GetFilterUnit()) == UNIT_BEAST_MASTER or GetUnitTypeId(GetFilterUnit()) == UNIT_TRUE_FORM or GetUnitTypeId(GetFilterUnit()) == UNIT_ULTIMATE_FORM )
 endfunction
 
-function getAnimalGreenLight takes unit u returns nothing
+function getAnimalGreenLight takes unit u returns boolean
     local group bms
     local unit bm
     local integer maxLevel = 0
@@ -68,6 +68,7 @@ function getAnimalGreenLight takes unit u returns nothing
     endif
     set bms = null
     set bm = null
+    return udg_booleanParameter
 endfunction
 
 function prepareSpells takes nothing returns nothing

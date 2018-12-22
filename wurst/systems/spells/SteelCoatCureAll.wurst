@@ -1,0 +1,32 @@
+package SteelCoatCureAll
+import DummyCaster
+import RegisterEvents
+import AbilityObjEditing
+
+public constant ABILITY_ID = 'XSCC'
+public constant SPELL_CURE = 'A02H'
+
+@compiletime function createSteelcoatAbility()
+    new AbilityDefinitionWardenFanofKnives(ABILITY_ID)
+    ..setHeroAbility(false)
+    ..setItemAbility(true)
+    ..setLevels(1)
+    ..setManaCost(1, 0)
+    ..setAnimationNames("")
+    ..setArtCaster("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..setArtEffect("")
+    ..setDamagePerTarget(1, 0)
+    ..setMaximumNumberofTargets(1, 0)
+    ..setCooldown(1, 90)
+    ..setOrderStringActivate("autodispel")
+    ..setOrderStringUseTurnOn("autodispel")
+
+
+function onCast()
+    let caster = GetSpellAbilityUnit()
+    new DummyCaster().castTarget(caster.getOwner(), SPELL_CURE, 1, "autodispel", caster)
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())

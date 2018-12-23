@@ -20,9 +20,15 @@ function handlePlayerLeave()
         .forEach(troll -> troll.kill())
         return
 
-    let goldPerPlayer = (leaver.getLumber() / alliesInGameCount).floor()
-    let msg = "{0}They left you {1}{2}{3} gold|r".format(GENERAL_COLOR, GOLD_COLOR, goldPerPlayer.toString(), GENERAL_COLOR)
+    let gold = leaver.getLumber()
+    let goldPerPlayer = (gold / alliesInGameCount).floor()
+    let goldLeftover = gold mod alliesInGameCount
+
     alliesInGame.forEach() member ->
+        var goldGiven = goldPerPlayer
+        if goldLeftover > 0 and member == alliesInGame.getFirst()
+            goldGiven += goldLeftover
+        let msg = "{0}They left you {1}{2}{3} gold|r".format(GENERAL_COLOR, GOLD_COLOR, goldGiven.toString(), GENERAL_COLOR)
         printTimedToPlayer(msg, DEBUG_MSG_DURATION, member)
         member.addLumber(goldPerPlayer)
 

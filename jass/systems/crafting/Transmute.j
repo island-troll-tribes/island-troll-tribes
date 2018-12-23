@@ -200,7 +200,7 @@ library Transmute initializer onInit requires FilterTypeIsThing, IsTypeThing
         endif
     //End of Troll Inventory Item Creation
     //Begging of Armory Item Creation
-        if uid == UNIT_ARMORY and GetUnitUserData(GetTriggerUnit()) == 0 then
+        if uid == UNIT_ARMORY and GetUnitUserDataEx(GetTriggerUnit()) == 0 then
             loop
                 exitwhen e > 5
                 set t[e] = UnitItemInSlot(GetTriggerUnit(), e)
@@ -456,7 +456,7 @@ library Transmute initializer onInit requires FilterTypeIsThing, IsTypeThing
         endif
     //End of Armory Item Creation
     //Begging of Witch Doctors Hut Item Creation
-        if uid == UNIT_WITCH_DOCTORS_HUT and GetUnitUserData(GetTriggerUnit()) == 0 then
+        if uid == UNIT_WITCH_DOCTORS_HUT and GetUnitUserDataEx(GetTriggerUnit()) == 0 then
             loop
                 exitwhen e > 5
                 set t[e] = UnitItemInSlot(GetTriggerUnit(), e)
@@ -579,7 +579,7 @@ library Transmute initializer onInit requires FilterTypeIsThing, IsTypeThing
         endif
     //End of WDH Item Creation
         // workshop
-        if uid == UNIT_WORKSHOP and GetUnitUserData(GetTriggerUnit()) == 0 then
+        if uid == UNIT_WORKSHOP and GetUnitUserDataEx(GetTriggerUnit()) == 0 then
             loop
                 exitwhen e > 5
                 set t[e] = UnitItemInSlot(GetTriggerUnit(), e)

@@ -155,13 +155,13 @@ loop
         set lesserCount = lesserCount + 1
         set u = CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_LESSER_HYDRA, spawn_X[i], spawn_Y[i], GetRandomReal(0, 360))
         call DestroyEffect(AddSpecialEffectTarget(hydraSpawnModel, u, "head"))
-        call SetUnitUserData(u, lesserCount)
+        call SetUnitUserDataEx(u, lesserCount)
         set spawn_X[lesserCount] = 0
         set spawn_Y[lesserCount] = 0
         set lesserCount = lesserCount + 1
         set u = CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_LESSER_HYDRA, spawn_X[i], spawn_Y[i], GetRandomReal(0, 360))
         call DestroyEffect(AddSpecialEffectTarget(hydraSpawnModel, u, "head"))
-        call SetUnitUserData(u, lesserCount)
+        call SetUnitUserDataEx(u, lesserCount)
         set spawn_X[lesserCount] = 0
         set spawn_Y[lesserCount] = 0
         set trueCount = trueCount + 2

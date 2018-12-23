@@ -1,0 +1,38 @@
+package Hawk
+import Hostile
+import ClosureForGroups
+import Classes
+
+
+public class Hawk extends Hostile
+    private static let unitTypeId = UNIT_HAWK
+
+    static function initialize()
+        register(unitTypeId, hawk -> new Hawk(hawk))
+
+    construct(unit whichUnit)
+        super(whichUnit)
+
+    construct(player whichPlayer, vec2 pos)
+        super(whichPlayer, pos)
+
+    construct(player whichPlayer, vec2 pos, angle facing)
+        super(whichPlayer, pos, facing)
+
+    override function getTypeId() returns int
+        return unitTypeId
+
+    override function onDeath()
+        drops.add(ITEM_HAWK_EGG)
+
+        forNearestUnit(getPos(), 400, Filter(-> begin
+            return getHeroBaseClass(GetFilterUnit()) == UNIT_BEAST_MASTER
+        end), bm -> begin
+            if bm != null
+                drops.add(ITEM_HAWK_EGG)
+        end)
+
+        super.onDeath()
+
+init
+    Hawk.initialize()

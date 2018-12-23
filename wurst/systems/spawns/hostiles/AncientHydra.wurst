@@ -1,21 +1,16 @@
-package Mammoth
+package AncientHydra
 import Hostile
+import LesserHydra
 
 
-public class Mammoth extends Hostile
-    private static let unitTypeId = UNIT_MAMMOTH
+public class AncientHydra extends Hostile
+    private static let unitTypeId = UNIT_ANCIENT_HYDRA
 
     static function initialize()
-        register(unitTypeId, mammoth -> new Mammoth(mammoth))
+        register(unitTypeId, hydra -> new AncientHydra(hydra))
 
     construct(unit whichUnit)
         super(whichUnit)
-
-    construct(player whichPlayer, vec2 pos)
-        super(whichPlayer, pos)
-
-    construct(player whichPlayer, vec2 pos, angle facing)
-        super(whichPlayer, pos, facing)
 
     override function postCreate()
         super.postCreate()
@@ -29,15 +24,22 @@ public class Mammoth extends Hostile
         ..add(ITEM_MEDALLION_COURAGE)
 
     override function getNumCorpses() returns int
-        return 16
+        return 8
 
     override function getTypeId() returns int
         return unitTypeId
 
     override function onDeath()
-        Mammoth_Dead = true
-        super.onDeath()
+        Hydra_Dead = true
+        pastTime = false
+
+        hydraDespawnTimer.start(60, function HydraDespawn)
+
+        let pos = getPos()
+        for i = 0 to 1
+            let hydra = new LesserHydra(pos)
+            addEffect(hydraSpawnModel, hydra.getUnit(), "head")
 
 
 init
-    Mammoth.initialize()
+    AncientHydra.initialize()

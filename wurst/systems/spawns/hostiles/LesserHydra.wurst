@@ -1,0 +1,61 @@
+package LesserHydra
+import Hostile
+import LinkedListModule
+
+
+public class LesserHydra extends Hostile
+    use LinkedListModule
+
+    private static let unitTypeId = UNIT_LESSER_HYDRA
+
+    static function initialize()
+        register(unitTypeId, hydra -> new LesserHydra(hydra))
+
+    var deathPos = vec2(0, 0)
+
+    construct(unit whichUnit)
+        super(whichUnit)
+
+    construct(player whichPlayer, vec2 pos)
+        super(whichPlayer, pos)
+
+    construct(player whichPlayer, vec2 pos, angle facing)
+        super(whichPlayer, pos, facing)
+
+    construct(vec2 pos)
+        super(players[PLAYER_NEUTRAL_AGGRESSIVE], pos)
+
+    override function getNumCorpses() returns int
+        return 4
+
+    override function getTypeId() returns int
+        return unitTypeId
+
+    override function postDeath()
+
+    override function onDeath()
+        deathPos = getPos()
+        getUnit().remove()
+
+        if size == 0
+            if pastTime and hydraTimerStarted
+                hydraTimer.start(0, function AddHydraS)
+            else
+                hydraStarted = false
+                hydraTimerStarted = false
+                hydraTimer.pause()
+                hydraDespawnTimer.pause()
+
+                for hydra in LesserHydra
+                    for i = 0 to 2
+                        createItem(ITEM_HYDRA_SCALE, hydra.deathPos)
+                    destroy hydra
+
+        if not hydraTimerStarted and hydraStarted
+            hydraTimerStarted = true
+            pastTime = false
+            hydraTimer.start(2.5, function AddHydraS)
+
+
+init
+    LesserHydra.initialize()

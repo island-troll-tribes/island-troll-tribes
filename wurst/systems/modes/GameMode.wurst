@@ -185,7 +185,7 @@ init
                 mode.error("Must have 1-6 players per tribe and all slots must belong to a team")
             else
                 gameConfig.setNumPlayersPerTribe(ppt)
-                mode.message(ENERGY_COLOR + "Players per tribe|r set to " + I2S(ppt))
+                mode.message(ENERGY_COLOR + "Players per tribe|r set to " + ppt.toString())
 
     new GameMode("6v6", "6s", "Set the number of players in each tribe to 6") (mode, args) ->
         gameConfig.setNumPlayersPerTribe(6)
@@ -238,14 +238,14 @@ init
         if (args.size() > 1)
             amount = args.get(1).toInt()
         gameConfig.setHeatPerCast(amount)
-        mode.message(ENERGY_COLOR + "Hot mode|r enabled, heat per cast is now " + GOLD_COLOR + I2S(amount) + "|r")
+        mode.message(ENERGY_COLOR + "Hot mode|r enabled, heat per cast is now " + GOLD_COLOR + amount.toString() + "|r")
 
     new GameMode("raise-heat", "rh", "Increase heat capacity, defaults to 150, eg: \"-rh 200\"") (mode, args) ->
         var amount = 150
         if (args.size() > 1)
             amount = S2I(args.get(1))
         gameConfig.setHeatMaximum(amount)
-        mode.message(ENERGY_COLOR + "Heat Max|r has been increased. Heat capacity is " + I2S(amount))
+        mode.message(ENERGY_COLOR + "Heat Max|r has been increased. Heat capacity is " + amount.toString())
 
     new GameMode("enable-boats", "eb", "Enables construction of transport boats") (mode, args) ->
         udg_DisabledBoats = false
@@ -290,7 +290,7 @@ init
             next = gameConfig.getHostileSpawnRate() + 0.20
         next = min(next, 3.0)
         gameConfig.setHostileSpawnRate(next)
-        mode.message(ENERGY_COLOR + "Hostile Animal Spawn Rate|r has been increased to "+I2S(R2I(next*100))+"% of normal.")
+        mode.message(ENERGY_COLOR + "Hostile Animal Spawn Rate|r has been increased to " + (next * 100).toInt().toString() + "% of normal.")
 
     new GameMode("elimination", "el", "Elimination mode (no spirit wards)") (mode, args) ->
         mode.message(HIGHLIGHT_COLOR + "Elimination Mode|r has been enabled. Teams can not build spirit wards now!")
@@ -312,7 +312,7 @@ init
         if (not gameConfig.setGracePeriodDuration(amount))
             mode.error("Grace period must end before forced duel")
         else
-            mode.message(ENERGY_COLOR + "Grace period duration|r " + I2S(R2I(amount)) + " min")
+            mode.message(ENERGY_COLOR + "Grace period duration|r " + amount.toInt().toString() + " min")
 
     new GameMode("respawn-system", "re", "Use the new respawn system instead of grace period") (mode, args) ->
         gameConfig.setRespawnSystemEnabled(true)
@@ -339,13 +339,13 @@ init
             mode.error("Shrinking map timeout must be greater than 0!")
         else
             gameConfig.setForestFire(amount, distance)
-            mode.message(RED_COLOR + "Forest fire|r after " + I2S(R2I(amount)) + " min")
+            mode.message(RED_COLOR + "Forest fire|r after " + amount.toInt().toString() + " min")
 
     new GameMode("quick-pick", "qp", "Reduce class selection time, defaults to 5, eg: \"-qp 15\"") (mode, args) ->
         var timeAllowed = 5
         if (args.size() > 1)
             timeAllowed = S2I(args.get(1))
-        mode.message(ENERGY_COLOR + "Selection time|r set to " + I2S(timeAllowed) + "s")
+        mode.message(ENERGY_COLOR + "Selection time|r set to " + timeAllowed.toString() + "s")
         gameConfig.setSelectionTimeAllowed(timeAllowed)
 
     new GameMode("test-mode", "tm", "No one can lose, enables test commands") (mode, args) ->

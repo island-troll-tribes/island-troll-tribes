@@ -285,7 +285,7 @@ init
     new GameMode("more-hostiles", "rb", "Raise hostile animal spawn rate, eg: \"-rb 300\"") (mode, args) ->
         real next
         if (args.size() > 1)
-            next = S2R(args.get(1)) / 100
+            next = args.get(1).toReal() / 100
         else
             next = gameConfig.getHostileSpawnRate() + 0.20
         next = min(next, 3.0)
@@ -308,7 +308,7 @@ init
     new GameMode("grace-period-duration", "gp", "Change the duration of the grace period, eg: \"-gp 8\"") (mode, args) ->
         var amount = 8.0
         if (args.size() > 1)
-            amount = S2R(args.get(1))
+            amount = args.get(1).toReal()
         if (not gameConfig.setGracePeriodDuration(amount))
             mode.error("Grace period must end before forced duel")
         else
@@ -332,9 +332,9 @@ init
         var amount = 60.0
         var distance = 4000.0
         if (args.size() > 1)
-            amount = S2R(args.get(1))
+            amount = args.get(1).toReal()
         if (args.size() > 2)
-            distance = S2R(args.get(2))
+            distance = args.get(2).toReal()
         if (amount < 0)
             mode.error("Shrinking map timeout must be greater than 0!")
         else

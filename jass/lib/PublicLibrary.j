@@ -1,4 +1,16 @@
-library PublicLibrary initializer initPublicLibrary requires TimerUtils, ID, Constants, FilterTypeIsThing, InitializeUnits, GlobalsInit
+library PublicLibrary initializer initPublicLibrary requires TimerUtils, ID, Constants, FilterTypeIsThing, InitializeUnits, GlobalsInit, Table
+
+globals
+    Table unitUserData
+endglobals
+
+function SetUnitUserDataEx takes unit u, integer data returns nothing
+    set unitUserData[GetHandleId(u)] = data
+endfunction
+
+function GetUnitUserDataEx takes unit u returns integer
+    return unitUserData[GetHandleId(u)]
+endfunction
 
 function IsUnitImmobilized takes unit u returns boolean
     return GetUnitAbilityLevel(u, 'Beng') > 0 or GetUnitAbilityLevel(u, 'Bena') > 0 or GetUnitAbilityLevel(u, 'BEer') > 0
@@ -388,6 +400,7 @@ function initPublicLibrary takes nothing returns nothing
     local timer t = NewTimer()
     call TimerStart( t, 1., true, function ControlCameraZoom )
     set t = null
+    set unitUserData = Table.create()
 endfunction
 
 endlibrary

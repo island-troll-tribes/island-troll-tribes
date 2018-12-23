@@ -7,7 +7,7 @@
 //===========================================================================
 //TESH.scrollpos=12
 //TESH.alwaysfold=0
-library HydrAROUTINE initializer onInit
+library HydrAROUTINE initializer onInit requires PublicLibrary
 
 globals
     timer hydraTimer = CreateTimer()

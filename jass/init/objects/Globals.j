@@ -129,7 +129,6 @@ globals
     trigger                 gg_trg_tele_tower_upgrade  = null
     trigger                 gg_trg_tele_mirror_Copy    = null
     trigger                 gg_trg_disease_cloud       = null
-    trigger                 gg_trg_enemy_radar_uber    = null
     trigger                 gg_trg_uber_bee_hive       = null
     trigger                 gg_trg_tsunami_building_damage_and_fire = null
     trigger                 gg_trg_camo_undo           = null

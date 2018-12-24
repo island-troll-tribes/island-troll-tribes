@@ -1,10 +1,13 @@
 package Heat
 import RegisterEvents
+import GameConfig
+import UnitExtensions
 
 public constant SPELL_HEAT = 'A002'
 public constant SPELL_MAGE_HEAT = 'A023'
 public constant BUFF_FROZEN_TO_BONE = 'BCbf'
 
+// TODO sync with cast range
 @configurable let FIRE_RANGE = 380.0
 
 function heat()
@@ -12,8 +15,7 @@ function heat()
         return IsUnitTroll(GetFilterUnit())
     end))
     for hero from heroes
-        let owner = hero.getOwner()
-        owner.setGold(min(owner.getGold() + udg_HEAT_PER_CAST, udg_MAX_HEAT))
+        hero.addHeat(gameConfig.getHeatPerCast())
         if hero.hasAbility(BUFF_FROZEN_TO_BONE)
             hero.removeAbility(BUFF_FROZEN_TO_BONE)
 

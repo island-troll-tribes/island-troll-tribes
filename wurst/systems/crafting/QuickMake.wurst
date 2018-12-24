@@ -1,0 +1,214 @@
+package QuickMake
+import ClosureEvents
+import LinkedList
+import ClosuresForItems
+import Lodash
+import UnitExtensions
+
+
+class QuickMake
+    let itemPredicates = new LinkedList<Predicate<item>>()
+
+    construct(int spellAbilityId)
+        EventListener.onCast(spellAbilityId, caster -> onCast(caster))
+
+    function onCast(unit caster)
+        let pos = caster.getPos()
+        let recipeSize = itemPredicates.size()
+        let items = new LinkedList<int>()
+
+        caster
+        ..moveInventoryDown()
+        ..dropItems(recipeSize)
+
+        itemPredicates.forEach() predicate ->
+            var found = caster.getItemMatching(predicate)
+            if found == null
+                found = findNearestItem(pos, 700, i -> predicate.call(i))
+            items.add(found.getTypeId())
+            found.remove()
+
+        items.forEach() itemId ->
+            caster.addItemById(itemId)
+
+        destroy items
+
+    function add(int itemId)
+        itemPredicates.add(i -> i.getTypeId() == itemId)
+
+    function add(Predicate<item> predicate)
+        itemPredicates.add(predicate)
+
+
+init
+    // Armory
+
+    new QuickMake('A06A')
+    ..add(i -> IsItemBasicBoots(i))
+    ..add(ITEM_BONE)
+    ..add(ITEM_BONE)
+    ..add(ITEM_BONE)
+    ..add(ITEM_BONE)
+    ..add(ITEM_BONE)
+
+    new QuickMake('A06C')
+    ..add(i -> IsItemBasicCoat(i))
+    ..add(ITEM_BONE)
+    ..add(ITEM_BONE)
+    ..add(ITEM_BONE)
+    ..add(ITEM_BONE)
+    ..add(ITEM_BONE)
+
+    new QuickMake('A06B')
+    ..add(i -> IsItemBasicGloves(i))
+    ..add(ITEM_BONE)
+    ..add(ITEM_BONE)
+    ..add(ITEM_BONE)
+    ..add(ITEM_BONE)
+    ..add(ITEM_BONE)
+
+    new QuickMake('A0A0')
+    ..add(ITEM_SHIELD)
+    ..add(ITEM_BONE)
+    ..add(ITEM_BONE)
+    ..add(ITEM_BONE)
+    ..add(ITEM_BONE)
+    ..add(ITEM_BONE)
+
+    new QuickMake('A06E')
+    ..add(ITEM_IRON_INGOT)
+    ..add(ITEM_IRON_INGOT)
+    ..add(ITEM_FLINT)
+    ..add(ITEM_FLINT)
+
+    new QuickMake('A06D')
+    ..add(ITEM_STONE)
+    ..add(ITEM_FLINT)
+
+    new QuickMake('A06F')
+    ..add(ITEM_STONE)
+    ..add(i -> IsItemPole(i))
+
+    new QuickMake('A0G7')
+    ..add(ITEM_DARK_ROCK)
+    ..add(i -> IsItemPole(i))
+
+    new QuickMake('A06G')
+    ..add(ITEM_IRON_INGOT)
+    ..add(i -> IsItemPole(i))
+
+    new QuickMake('A06H')
+    ..add(ITEM_STEEL_INGOT)
+    ..add(i -> IsItemPole(i))
+
+    new QuickMake('A06I')
+    ..add(ITEM_TINDER)
+    ..add(i -> IsItemPole(i))
+    ..add(ITEM_STICK)
+
+    new QuickMake('A09Z')
+    ..add(i -> IsItemHide(i))
+    ..add(ITEM_STICK)
+    ..add(ITEM_STICK)
+
+    // WDH
+
+    new QuickMake('A0GB')
+    ..add(ITEM_MAGIC)
+    ..add(ITEM_BONE_COAT)
+    ..add(ITEM_FLINT)
+
+    new QuickMake('A0GA')
+    ..add(ITEM_MAGIC)
+    ..add(ITEM_BONE_COAT)
+    ..add(ITEM_SPIRIT_WATER)
+
+    new QuickMake('A0GC')
+    ..add(ITEM_MAGIC)
+    ..add(ITEM_BONE_COAT)
+    ..add(ITEM_BUTSU)
+
+    new QuickMake('A062')
+    ..add(ITEM_MUSHROOM)
+    ..add(ITEM_MUSHROOM)
+    ..add(ITEM_MUSHROOM)
+
+    new QuickMake('A068')
+    ..add(ITEM_STONE)
+    ..add(ITEM_MANA_CRYSTAL)
+
+    new QuickMake('A0G8')
+    ..add(ITEM_SPIRIT_WIND)
+    ..add(ITEM_MANA_CRYSTAL)
+
+    new QuickMake('A069')
+    ..add(ITEM_BONE)
+    ..add(ITEM_MANA_CRYSTAL)
+
+    new QuickMake('A067')
+    ..add(ITEM_FLINT)
+    ..add(ITEM_MANA_CRYSTAL)
+
+    new QuickMake('A066')
+    ..add(ITEM_TINDER)
+    ..add(ITEM_MANA_CRYSTAL)
+
+    new QuickMake('A0G9')
+    ..add(ITEM_SPIRIT_WATER)
+    ..add(ITEM_MANA_CRYSTAL)
+
+    new QuickMake('A063')
+    ..add(ITEM_POISON)
+    ..add(ITEM_POISON)
+
+    // Workshop
+
+    new QuickMake('A0G1')
+    ..add(ITEM_BONE_BOOTS)
+    ..add(ITEM_SPIRIT_WIND)
+    ..add(ITEM_SPIRIT_WATER)
+    ..add(ITEM_MANA_CRYSTAL)
+    ..add(ITEM_ANABOLIC_POTION)
+    ..add(ITEM_ANABOLIC_POTION)
+
+    new QuickMake('A0G0')
+    ..add(ITEM_BONE_COAT)
+    ..add(ITEM_SPIRIT_WIND)
+    ..add(ITEM_SPIRIT_WATER)
+    ..add(ITEM_MANA_CRYSTAL)
+
+    new QuickMake('A0G3')
+    ..add(ITEM_STICK)
+    ..add(ITEM_STEEL_INGOT)
+    ..add(ITEM_STEEL_INGOT)
+    ..add(ITEM_SPIRIT_WIND)
+    ..add(ITEM_SPIRIT_WATER)
+    ..add(ITEM_MANA_CRYSTAL)
+
+    new QuickMake('A06M')
+    ..add(ITEM_BONE_GLOVES)
+    ..add(ITEM_STEEL_INGOT)
+    ..add(ITEM_IRON_INGOT)
+    ..add(ITEM_SPIRIT_WIND)
+    ..add(ITEM_SPIRIT_WATER)
+    ..add(ITEM_MANA_CRYSTAL)
+
+    new QuickMake('A0G2')
+    ..add(ITEM_BONE_SHIELD)
+    ..add(ITEM_ELK_HIDE)
+    ..add(ITEM_STEEL_INGOT)
+    ..add(ITEM_SPIRIT_WIND)
+    ..add(ITEM_SPIRIT_WATER)
+    ..add(ITEM_MANA_CRYSTAL)
+
+    new QuickMake('A06J')
+    ..add(ITEM_STICK)
+    ..add(ITEM_CLAY_BALL)
+
+    new QuickMake('A06J')
+    ..add(ITEM_TINDER)
+    ..add(ITEM_TINDER)
+
+    new QuickMake('A0G4')
+    ..add(ITEM_SPEAR)
+    ..add(ITEM_MUSHROOM)

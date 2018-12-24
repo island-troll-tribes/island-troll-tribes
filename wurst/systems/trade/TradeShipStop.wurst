@@ -1,0 +1,94 @@
+package TradeShipStop
+import ErrorHandling
+
+@configurable constant real STOP_RANGE = 600
+public class TradeShipStop
+    static region tradeStops = CreateRegion()
+
+    rect stopAt
+    real pauseTime = 0.0
+    thistype next = null
+    thistype fork = null
+
+    static function getTradeRegion() returns region
+        return tradeStops
+
+    construct(rect _stopAt)
+        stopAt = _stopAt
+        tradeStops.addRect(stopAt)
+
+    construct(rect _stopAt, real _pauseTime)
+        stopAt = _stopAt
+        pauseTime = _pauseTime
+        tradeStops.addRect(stopAt)
+
+    function setPauseTime(real _pauseTime)
+        pauseTime = _pauseTime
+
+    function isInStopRange(unit ship) returns bool
+        return stopAt.getCenter().distanceTo(ship.getPos()) < STOP_RANGE
+
+    function getNext() returns thistype
+        return next
+
+    function getFork() returns thistype
+        return fork
+
+    function hasFork() returns bool
+        return fork != null
+
+    function addStop(rect stopAt) returns thistype
+        if next != null
+            error("TradeShipStop: can't add a stop when one is already set")
+        next = new TradeShipStop(stopAt)
+        return next
+
+    function addStop(rect stopAt, real pauseTime) returns thistype
+        if next != null
+            error("TradeShipStop: can't add a stop when one is already set")
+        next = new TradeShipStop(stopAt, pauseTime)
+        return next
+
+    function addStop(thistype _next) returns thistype
+        if next != null
+            error("TradeShipStop: can't add a stop when one is already set")
+        next = _next
+        return next
+
+    function addFork(thistype _fork) returns thistype
+        if fork != null
+            error("TradeShipStop: can't add a fork when one is already set")
+        fork = _fork
+        return fork
+
+    function isLastStop() returns bool
+        return next == null
+
+    function getPauseTime() returns real
+        return pauseTime
+
+    function getPos() returns vec2
+        return stopAt.getCenter()
+
+    function tail() returns thistype
+        return next != null ? next.tail() : this
+
+    function clone() returns thistype
+        let copy = new TradeShipStop(stopAt)..setPauseTime(pauseTime)
+        if next != null
+            copy.next = next.clone()
+        if fork != null
+            copy.fork = fork
+        return copy
+
+    function reverse() returns thistype
+        var head = this
+
+        if next != null
+            head = next.reverse()
+            next.next = this
+
+        next = null
+        fork = null
+
+        return head

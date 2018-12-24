@@ -45,71 +45,138 @@ import GameConfig
     ..setTooltipBasic("Purchase |cffffcc00B|rlow Gun")
     ..setTooltipExtended("Used for shooting small things. Can be loaded with thistles or bones.")
 
-HashMap<item, Blowpipe> instances
 
 class Blowpipe
     item i
     LinkedList<item> contents
+    unit target
 
     construct(item i)
         this.i = i
         this.contents = new LinkedList<item>()
+        this.target = null
+        TriggerRegisterDeathEvent(cleanupTrigger, this.i)
 
     ondestroy
+        print("Blowgun instance destroyed")
+        //Drop content items
+        for iterItem in contents
+            iterItem.setPos(this.i.getPos())
+            iterItem.setVisible(true)
+
+        //Destroy list
         destroy contents
 
 
-    function onFire(unit caster, unit target)
+    function onFire(unit caster)
         item ammo = contents.get(0)
-        int charges = ammo.getCharges()
-        if (charges > 1)
-            ammo.setCharges(charges - 1)
-            print("Removed a charge")
+
+        if ammo == null
+            print("No ammo!")
+            return
         else
-            contents.remove(ammo)
-            ammo.remove()
-            print("Removed item from contents")
+            int charges = ammo.getCharges()
 
-        if (ammo.getTypeId() == ITEM_THISTLES)
-            print("Fired thistles!")
-        else if (ammo.getTypeId() == ITEM_BONE)
-            print("Fired bone!")
-        else if (ammo.getTypeId() == ITEM_DARK_THISTLES)
-            print("Fired dark thistle!")
+            if (charges > 1)
+                ammo.setCharges(charges - 1)
+                print("Removed a charge")
+            else
+                contents.remove(ammo)
+                ammo.remove()
+                print("Removed item from contents")
 
-        caster.damageTarget(target, 10)
+            if (ammo.getTypeId() == ITEM_THISTLES)
+                print("Fired thistles!")
+            else if (ammo.getTypeId() == ITEM_BONE)
+                print("Fired bone!")
+            else if (ammo.getTypeId() == ITEM_DARK_THISTLES)
+                print("Fired dark thistle!")
+
+            caster.damageTarget(target, 10)
 
     function loadAmmo(unit owner, item i)
-        print(i.getName() + "with " + i.getCharges().toString() + " charges loaded")
+        printTimedToPlayer(i.getName() + " with " + i.getCharges().toString() + " charges loaded", 3, owner.getOwner())
         this.contents.push(i)
         owner.removeItem(i)
         i.setVisible(false)
 
+    function setTarget(unit target)
+        this.target = target
+
+    
+
 
 function onCast()
-    print("Oncast")
-    print("Oncast " + GetManipulatedItem().getName() + " id " + GetManipulatedItem().getTypeId().toString())
+    //This event fires first but cannot retrieve used blowgun item handle
+    //Used to set target for all blowguns in inventory
     let caster = GetSpellAbilityUnit()
     let target = GetSpellTargetUnit()
-    
+
+    for i = 0 to caster.inventorySize()-1
+        var itm = caster.itemInSlot(i)
+        if itm.getTypeId() == ITEM_ID
+            if instances.has(itm)
+                instances.get(itm).setTarget(target)
+            else
+                printTimedToPlayer("ERROR: Tried to target blowgun with no instance!", 10, GetTriggerUnit().getOwner())
+
     
 function onUse()    
-    print("Onuse " + GetManipulatedItem().getName() + " id " + GetManipulatedItem().getTypeId().toString())
+    //Triggers after onCast, used for actually firing the blowgun at the target specified in onCast
+    var itm = GetManipulatedItem()
+    if itm.getTypeId() == ITEM_ID
+        if instances.has(itm)
+            instances.get(itm).onFire(GetTriggerUnit())
+        else
+            printTimedToPlayer("ERROR: Tried to fire blowgun with no instance!", 10, GetTriggerUnit().getOwner())
+ 
+function onPickup()
+    //Create blowpipe instance when new blowpipe is acquired
+    var itm = GetManipulatedItem()
+    var itemId = itm.getTypeId()
+    var trigUnit =  GetTriggerUnit()
 
-    if (GetManipulatedItem().getTypeId() != ITEM_ID)
-    print("Is blowgun")
+    print("Picked up to slot: " + trigUnit.getItemSlot(itm).toString())
+    if itemId == ITEM_ID
+        if not instances.has(itm)
+            instances.put(itm, new Blowpipe(itm))
 
-    let owner = GetTriggerUnit()
-    let target2 = GetEventTargetUnit()
-    
-    print("Target2:" + target2.getName())
+    //Load ammo if ammo is acquired
+    if itemId == ITEM_THISTLES or itemId == ITEM_DARK_THISTLES or itemId == ITEM_BONE
+        var slot1 = trigUnit.itemInSlot(0)
+        if (slot1 != null and slot1.getTypeId() == ITEM_ID)
+            if (instances.has(slot1))
+                instances.get(slot1).loadAmmo(trigUnit, itm)
 
+
+function cleanupInstances()
+    //Check all instances and destroy those that have had item destroyed
+    var iter = instances.iterator()
+    while iter.hasNext()
+        var k = iter.next()
+        var instance = instances.get(k)
+
+        if not instance.i.isAlive()
+            destroy instances.getAndRemove(k)
+
+    iter.close()
+
+
+
+
+IterableMap<item, Blowpipe> instances
+trigger cleanupTrigger
 
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())
-
     EventListener.add(EVENT_PLAYER_UNIT_USE_ITEM, () -> onUse())
-    
+    EventListener.add(EVENT_PLAYER_UNIT_PICKUP_ITEM, () -> onPickup())
+
+    instances = new IterableMap<item, Blowpipe>()
+    cleanupTrigger = CreateTrigger()
+    cleanupTrigger.addAction(function cleanupInstances)
+
+
     registerCommandAll("blowpipe") (triggerPlayer, args) ->
         if (gameConfig.isTestModeEnabled() == true)
             printTimedToPlayer("Added blowpipe to selected heroes", 5., triggerPlayer)

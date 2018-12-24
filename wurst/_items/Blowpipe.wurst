@@ -15,8 +15,14 @@ import GameConfig
 @configurable constant int ITEM_ID = 'XIBP'
 
 @compiletime function createBlowpipeAbility()
-    new AbilityDefinitionSleepcreep(ABILITY_ID)
-    ..setStunDuration(1, 0.01)
+    new AbilityDefinitionIllidanChannel(ABILITY_ID)
+    ..setArtTarget("")
+    ..setArtCaster("")
+    ..setArtSpecial("")
+    ..setArtEffect("")
+    ..setAnimationNames("")
+    ..setFollowThroughTime(1, 0)
+    ..setAreaofEffect(1, 0.01)
     ..setCastRange(1, 450)
     ..setDurationHero(1, 0.01)
     ..setDurationNormal(1, 0.01)
@@ -25,6 +31,9 @@ import GameConfig
     ..setLevels(1)
     ..setManaCost(1, 0)
     ..setName("Blow Gun Ability")
+    ..setOptions(1, 1)
+    ..setTargetsAllowed(1, "air,ground,debris,enemy,neutral,organic")
+    ..setTargetType(1, 1)
 
 @compiletime function createBlowpipeItem()
     new ItemDefinition(ITEM_ID, 'schl')
@@ -72,18 +81,16 @@ class Blowpipe
         item ammo = contents.get(0)
 
         if ammo == null
-            print("No ammo!")
+            printTimedToPlayer("No ammo!", 3, caster.getOwner())
             return
         else
             int charges = ammo.getCharges()
 
             if (charges > 1)
                 ammo.setCharges(charges - 1)
-                print("Removed a charge")
-            else
+            else    
                 contents.remove(ammo)
                 ammo.remove()
-                print("Removed item from contents")
 
             if (ammo.getTypeId() == ITEM_THISTLES)
                 print("Fired thistles!")
@@ -92,7 +99,7 @@ class Blowpipe
             else if (ammo.getTypeId() == ITEM_DARK_THISTLES)
                 print("Fired dark thistle!")
 
-            caster.damageTarget(target, 10)
+            caster.damageTarget(this.target, 10., ATTACK_TYPE_NORMAL)
 
     function loadAmmo(unit owner, item i)
         printTimedToPlayer(i.getName() + " with " + i.getCharges().toString() + " charges loaded", 3, owner.getOwner())

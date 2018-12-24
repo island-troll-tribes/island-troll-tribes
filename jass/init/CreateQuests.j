@@ -86,7 +86,7 @@ As beast master sometimes its better to kill your own animals for exp rather tha
 call CreateQuestBJ( bj_QUESTTYPE_OPT_DISCOVERED, "Gatherer Tips", "Gatherer is weak while unsubclassed.
 He has one of the worst attack speeds, but when subclassed it increases to normal.
 Gatherers are usually in charge of establishing a base while others hunt, but later on they can use items to solo hunt and level pretty fast.
-Gatheres got the best late game if they can get enough gear using their 6 slots.
+Gatherers got the best late game if they can get enough gear using their 6 slots.
 ", "ReplaceableTextures\\CommandButtons\\BTNOrcWarlock.blp" )
 
 call CreateQuestBJ( bj_QUESTTYPE_OPT_DISCOVERED, "Mage Tips", "The mage is good for fighting melee opponents.

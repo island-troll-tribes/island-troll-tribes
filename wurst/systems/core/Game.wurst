@@ -1,0 +1,41 @@
+package Game
+import UnitExtensions
+import ClosureTimers
+
+let listeners = CreateTrigger()
+
+public function registerGameStartEvent(code handler)
+    listeners.addAction(handler)
+
+public function generateMap()
+    gg_trg_spawn_call_first.execute()
+    gg_trg_ShowPlayers.execute()
+    listeners.execute()
+    SetTimeOfDay(6)
+    print(GENERAL_COLOR + "Game has begun!|r")
+    GAME_TIMER.start(99999999, null)
+
+init
+    SetTimeOfDayScale(1.3)
+    SetTimeOfDay(3)
+    SetMapFlag(MAP_USE_HANDICAPS, false)
+    EnableMinimapFilterButtons(true, false)
+    SetCreepCampFilterState(false)
+
+    // TODO remove legacy initialization or move elsewhere
+    InitGameCache("ITT.w3v")
+    udg_jumpCache = bj_lastCreatedGameCache
+    udg_GameHash = InitHashtable()
+    prepareSpells()
+
+    nullTimer() ->
+        ForForce(bj_FORCE_ALL_PLAYERS) ->
+            let enumPlayer = GetEnumPlayer()
+            CreateFogModifierRect(enumPlayer, FOG_OF_WAR_VISIBLE, gg_rct_vision, true, false).start()
+            // TODO remove legacy bm pet system
+            resetBMSkill(enumPlayer)
+
+        OMINOUS_ALTAR.addItemToStock(ITEM_HYDRA_HINT, 1, 1)
+
+        mammothGate.setInvulnerable(true)
+        MAMMOTH.setOwner(players[PLAYER_NEUTRAL_AGGRESSIVE], true)

@@ -1,0 +1,27 @@
+package VictoryDefeat
+import GameConfig
+import RegisterEvents
+import UnitExtensions
+import Tribe
+import LinkedList
+import Lodash
+import Respawn
+
+
+var gameOver = false
+
+function isGracePeriod() returns bool
+    return gameConfig.isTestModeEnabled() or GRACE_PERIOD_TIMER.getRemaining() > 0
+
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
+        if not gameOver and GetDyingUnit().isTroll() and not isGracePeriod()
+            Tribe.getTribes()
+                .filter(Tribe.isNotDefeated)
+                .filter(Tribe.hasNoAliveMembers)
+                .forEach(tribe -> tribe.wasDefeated())
+
+            let aliveTribes = Tribe.getTribes().filter(Tribe.isNotDefeated)
+            if aliveTribes.size() == 1
+                gameOver = true
+                aliveTribes.getFirst().wasVictorious()

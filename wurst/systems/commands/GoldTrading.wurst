@@ -4,9 +4,10 @@ import ChatCommands
 import SimError
 import PlayerExtensions
 import PlayerUtils
+import Game
 
 CommandHandler giveGold = (player giver, LinkedList<string> args) -> begin
-    let tribeId = giver.getTribeId()
+    let tribeId = giver.getTribe().getId()
     let playerId = findPlayerIdByStringMatchingTribe(args.get(1), tribeId)
     let currentGold = giver.getLumber()
     let target = players[playerId]
@@ -20,7 +21,7 @@ CommandHandler giveGold = (player giver, LinkedList<string> args) -> begin
         simError(giver, "Not enough gold")
     else if playerId == giver.getId()
         simError(giver, "You cannot trade with yourself")
-    else if target.getTribeId() != tribeId
+    else if target.getTribe().getId() != tribeId
         simError(giver, "You cannot trade with that player")
     else
         giver.subLumber(amount)
@@ -34,6 +35,6 @@ CommandHandler giveGold = (player giver, LinkedList<string> args) -> begin
 end
 
 init
-    s__Map_onGameStart() () ->
+    registerGameStartEvent() () ->
         registerCommandAll("g", giveGold)
         registerCommandAll("gold", giveGold)

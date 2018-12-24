@@ -27,33 +27,6 @@ function SetBackToBMTame takes player p returns nothing
     call SetPlayerAbilityAvailable( p, SPELL_PET_DROP_ITEMS, false )//drofalse items
 endfunction
 
-/*
-    if ( Trig_meat_and_bone_Func025Func002C() ) then
-        call GroupRemoveUnitSimple( GetDyingUnit(), udg_babyPets )
-        call getPlayersTroll(GetOwningPlayer(GetDyingUnit()))
-        set q=udg_parameterUnit
-        call TriggerExecute( gg_trg_back_to_tame )
-        set udg_parameterUnit=q
-        call DisplayTextToForce( GetPlayersAllies(GetOwningPlayer(udg_parameterUnit)), "TRIGSTR_3430" )
-
-function ResetBMPets takes nothing returns nothing
-local unit d = GetDyingUnit()
-local player p = GetOwningPlayer(d)
-    if d == GetEnumUnit() then
-        if IsUnitInGroup(d, udg_babyPets) then
-            call GroupRemoveUnit( udg_babyPets , d)
-        elseif IsUnitInGroup(d, udg_midPets) then
-            call GroupRemoveUnit( udg_midPets , d)
-        elseif IsUnitInGroup(d, udg_pets) then
-            call GroupRemoveUnit( udg_pets , d)
-        endif
-        //set udg_parameterUnit = udg_PUnits[GetPlayerId(p)]
-        call SetBackToBMTame( p )
-        call DisplayTimedTextToForce(GetPlayersAllies(p), 7, "A pet has died!" )
-    endif
-set d = null
-endfunction
-*/
 function Trig_meat_and_bone_Actions takes nothing returns nothing
 local unit dying = GetDyingUnit()
 local unit killing = GetKillingUnit()
@@ -211,9 +184,6 @@ local integer numCorpses = 0
         set udg_FISH_CURRENT = ( udg_FISH_CURRENT - 1 )
         call RemoveUnit( dying )
     elseif uid == UNIT_MAGENTA_FISH then
-        if not fishytrigger then
-            call AdjustPlayerStateBJ(5, Player(-GetPlayerId(p)), PLAYER_STATE_RESOURCE_GOLD)
-        endif
         set numCorpses = 9
         call CreateItem(ITEM_STICK, x, y)
         call CreateItem(ITEM_MUSHROOM, x, y)

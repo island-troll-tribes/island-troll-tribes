@@ -1,0 +1,97 @@
+package BushSpawns
+import HashMap
+import ItemPoolExtensions
+import ClosureTimers
+
+let bushes = CreateGroup()
+
+class BushPool
+    static let map = new HashMap<int, thistype>()
+
+    static function findForUnitId(int unitId) returns thistype
+        return map.get(unitId)
+
+    let pool = CreateItemPool()
+
+    construct(int unitId)
+        map.put(unitId, this)
+
+    function addItem(int itemId, real weight)
+        pool.addItemType(itemId, weight)
+
+    function getItem(vec2 pos) returns item
+        return pool.placeRandomItem(pos)
+
+function addItemToBush(unit bush)
+    let herb = BushPool
+    .findForUnitId(bush.getTypeId())
+    .getItem(bush.getPos())
+
+    if herb != null
+        UnitStackItemEx(bush, herb, false)
+
+function addItemsToBushes()
+    for bush in bushes
+        doAfter(GetRandomReal(0, 1)) ->
+            addItemToBush(bush)
+
+init
+    gg_trg_add_items_to_plants = CreateTrigger()
+    gg_trg_add_items_to_plants.addAction(function addItemsToBushes)
+
+    GroupEnumUnitsInRect(bushes, GetWorldBounds(), Filter(() -> begin
+        let filter = GetFilterUnit()
+        return filter.isType(UNIT_TYPE_ANCIENT) and filter.isType(UNIT_TYPE_STRUCTURE)
+    end))
+
+    for bush in bushes
+        if bush.getOwner().getId() == PLAYER_NEUTRAL_AGGRESSIVE
+            bush.setOwner(players[PLAYER_NEUTRAL_PASSIVE], true)
+
+    new BushPool(UNIT_THIEFS_BUSH)
+    ..addItem(ITEM_NETS, 15)
+    ..addItem(ITEM_MANA_CRYSTAL, 15)
+    ..addItem(ITEM_SMOKE_BOMB, 15)
+    ..addItem(ITEM_MANA_POTION_I, 15)
+    ..addItem(ITEM_HEALING_POTION_I, 15)
+    ..addItem(ITEM_BEE_HIVE, 5)
+    ..addItem(ITEM_THIEF_MED, 5)
+    ..addItem(ITEM_SPIRIT_WATER, 5)
+    ..addItem(ITEM_DRUNKS_POTION, 5)
+    ..addItem(ITEM_NETHER_POTION, 5)
+
+    new BushPool(UNIT_SCOUTS_BUSH)
+    ..addItem(ITEM_LIVING_CLAY, 4)
+    ..addItem(ITEM_CLAY_EXPLOSION, 1)
+
+    new BushPool(UNIT_HIDDEN_STASH)
+    ..addItem(ITEM_ACORN, 4)
+    ..addItem(ITEM_CLAY_BALL, 1)
+    ..addItem(ITEM_MAGIC_ACORN, 1)
+
+    new BushPool(UNIT_MUSHROOM_COLONY)
+    ..addItem(ITEM_MUSHROOM, 3)
+    ..addItem(0, 1)
+
+    new BushPool(UNIT_THISTLE_SHRUB)
+    ..addItem(ITEM_THISTLES, 3)
+    ..addItem(0, 1)
+
+    new BushPool(UNIT_BLUE_HERB_BUSH)
+    ..addItem(ITEM_BLUE_HERB, 1)
+
+    new BushPool(UNIT_ORANGE_HERB_BUSH)
+    ..addItem(ITEM_ORANGE_HERB, 1)
+
+    new BushPool(UNIT_YELLOW_HERB_BUSH)
+    ..addItem(ITEM_YELLOW_HERB, 1)
+
+    new BushPool(UNIT_PURPLE_HERB_BUSH)
+    ..addItem(ITEM_PURPLE_HERB, 1)
+
+    new BushPool(UNIT_HAISETSU_BUSH)
+    ..addItem(ITEM_BUTSU, 1)
+
+    new BushPool(UNIT_WATER_HERB_BUSH)
+    ..addItem(ITEM_RIVER_ROOT, 2)
+    ..addItem(ITEM_RIVER_STEM, 3)

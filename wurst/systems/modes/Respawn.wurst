@@ -1,7 +1,6 @@
 package Respawn
 import RegisterEvents
-import TrollExtensions
-import TribeUtils
+import UnitExtensions
 import TimerExtensions
 import ClosureTimers
 import GameConfig
@@ -13,7 +12,8 @@ import Game
 import GroupExtensions
 import PlayerExtensions
 
-@configurable constant GRACE_PERIOD_REVIVE_DELAY = 10.0
+public constant GRACE_PERIOD_REVIVE_DELAY = 10.0
+public constant GRACE_PERIOD_TIMER = getTimer()
 
 function isGracePeriodActive() returns boolean
     return gameConfig.isGracePeriodEnabled() and GRACE_PERIOD_TIMER.getRemaining() > 0
@@ -23,7 +23,7 @@ function quadraticReviveDelay(real numSeconds) returns real
     return numMinutes * numMinutes
 
 function revive(unit dyingUnit, player owner)
-    let spawn = GetSpawn(owner.getId())
+    let spawn = owner.getTribe().getSpawn()
     dyingUnit.revive(spawn.getCenter(), true)
     owner.setGold(udg_MAX_HEAT)
     if GetLocalPlayer() == owner
@@ -32,7 +32,7 @@ function revive(unit dyingUnit, player owner)
 function respawnTimeHandler(player triggerPlayer, LinkedList<string> args)
     let numSeconds = args.size() > 1 ? args.get(1).toReal() * 60 : GAME_TIMER.getElapsed()
     let respawnTime = quadraticReviveDelay(numSeconds)
-    let msg = "{0}Respawn time: |r{1}{2}s|r".format(GENERAL_COLOR, ENERGY_COLOR, respawnTime.toString(0))
+    let msg = "{0}Respawn time: |r{1}{2}s|r".format(GENERAL_COLOR, ENERGY_COLOR, respawnTime.toInt().toString())
     printTimedToPlayer(msg, 10, triggerPlayer)
 
 init
@@ -61,7 +61,7 @@ init
             let owner = dyingUnit.getOwner()
 
             if isGracePeriodActive()
-                let msg = "{0}Grace period has not ended, your troll will revive in {1} seconds|r".format(GENERAL_COLOR, GRACE_PERIOD_REVIVE_DELAY.toString(0))
+                let msg = "{0}Grace period has not ended, your troll will revive in {1} seconds|r".format(GENERAL_COLOR, GRACE_PERIOD_REVIVE_DELAY.toInt().toString())
                 printTimedToPlayer(msg, 10, owner)
 
                 doAfter(GRACE_PERIOD_REVIVE_DELAY) ->
@@ -77,7 +77,7 @@ init
 
                 else
                     let delayTimer = getTimer()
-                    let msg = "Your troll will revive in {0} seconds|r".format(delay.toString(0))
+                    let msg = "Your troll will revive in {0} seconds|r".format(delay.toInt().toString())
                     printTimedToPlayer(msg, 10, owner)
 
                     let timerDialog = delayTimer.createTimerDialog()

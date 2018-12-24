@@ -1,0 +1,121 @@
+package Blowpipe
+
+import LinkedList
+import HashMap
+import ClosureEvents
+import ItemObjEditing
+import AbilityObjEditing
+import Assets
+import ChatCommands
+import ClosureForGroups
+import GameConfig
+
+@configurable constant string ICON = Icons.bTNAlleriaFlute
+@configurable constant int ABILITY_ID = 'XBPA'
+@configurable constant int ITEM_ID = 'XIBP'
+
+@compiletime function createBlowpipeAbility()
+    new AbilityDefinitionSleepcreep(ABILITY_ID)
+    ..setStunDuration(1, 0.01)
+    ..setCastRange(1, 450)
+    ..setDurationHero(1, 0.01)
+    ..setDurationNormal(1, 0.01)
+    ..setHeroAbility(false)
+    ..setItemAbility(true)
+    ..setLevels(1)
+    ..setManaCost(1, 0)
+    ..setName("Blow Gun Ability")
+
+@compiletime function createBlowpipeItem()
+    new ItemDefinition(ITEM_ID, 'schl')
+    ..setAbilities("XBPA")
+    ..setScalingValue(0.6)
+    ..setButtonPositionX(3)
+    ..setButtonPositionY(1)
+    ..setClassification("Charged")
+    ..setCooldownGroup("A01K")
+    ..setDroppedWhenCarrierDies(true)
+    ..setGoldCost(0)
+    ..setHitPoints(75)
+    ..setLumberCost(5)
+    ..setStockReplenishInterval(30)
+    ..setDescription("A hollowed out piece of wood. If blown through, could be used to fire small projectiles such as thistles")
+    ..setHotkey("B")
+    ..setName("Blow Gun")
+    ..setTooltipBasic("Purchase |cffffcc00B|rlow Gun")
+    ..setTooltipExtended("Used for shooting small things. Can be loaded with thistles or bones.")
+
+HashMap<item, Blowpipe> instances
+
+class Blowpipe
+    item i
+    LinkedList<item> contents
+
+    construct(item i)
+        this.i = i
+        this.contents = new LinkedList<item>()
+
+    ondestroy
+        destroy contents
+
+
+    function onFire(unit caster, unit target)
+        item ammo = contents.get(0)
+        int charges = ammo.getCharges()
+        if (charges > 1)
+            ammo.setCharges(charges - 1)
+            print("Removed a charge")
+        else
+            contents.remove(ammo)
+            ammo.remove()
+            print("Removed item from contents")
+
+        if (ammo.getTypeId() == ITEM_THISTLES)
+            print("Fired thistles!")
+        else if (ammo.getTypeId() == ITEM_BONE)
+            print("Fired bone!")
+        else if (ammo.getTypeId() == ITEM_DARK_THISTLES)
+            print("Fired dark thistle!")
+
+        caster.damageTarget(target, 10)
+
+    function loadAmmo(unit owner, item i)
+        print(i.getName() + "with " + i.getCharges().toString() + " charges loaded")
+        this.contents.push(i)
+        owner.removeItem(i)
+        i.setVisible(false)
+
+
+function onCast()
+    print("Oncast")
+    print("Oncast " + GetManipulatedItem().getName() + " id " + GetManipulatedItem().getTypeId().toString())
+    let caster = GetSpellAbilityUnit()
+    let target = GetSpellTargetUnit()
+    
+    
+function onUse()    
+    print("Onuse " + GetManipulatedItem().getName() + " id " + GetManipulatedItem().getTypeId().toString())
+
+    if (GetManipulatedItem().getTypeId() != ITEM_ID)
+    print("Is blowgun")
+
+    let owner = GetTriggerUnit()
+    let target2 = GetEventTargetUnit()
+    
+    print("Target2:" + target2.getName())
+
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+
+    EventListener.add(EVENT_PLAYER_UNIT_USE_ITEM, () -> onUse())
+    
+    registerCommandAll("blowpipe") (triggerPlayer, args) ->
+        if (gameConfig.isTestModeEnabled() == true)
+            printTimedToPlayer("Added blowpipe to selected heroes", 5., triggerPlayer)
+            forUnitsSelected(triggerPlayer) u ->
+                if (u.isType(UNIT_TYPE_HERO))
+                    u.addItem(ITEM_ID)
+        else
+            printTimedToPlayer("Requires test mode!", 5., triggerPlayer)
+

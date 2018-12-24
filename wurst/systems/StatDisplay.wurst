@@ -1,0 +1,25 @@
+package StatDisplay
+import Game
+import ClosureTimers
+
+public function checkStat(unit troll)
+    let owner = troll.getOwner()
+    var mana = troll.getMana()
+    var health = troll.getHP()
+    var heat = owner.getGold()
+
+    if health <= 25
+        printTimedToPlayer(COLOR_RED + "Your health is low, eat some meat!", 3, owner)
+    if mana <= 25
+        printTimedToPlayer(COLOR_RED + "Your mana is low, get some sleep!", 3, owner)
+    if heat <= 25
+        printTimedToPlayer(COLOR_RED + "Your heat is low, go stand by a fire!", 3, owner)
+    
+init
+    registerGameStartEvent() ->
+       doPeriodically(10) cb ->
+            for troll in udg_trolls
+                checkStat(troll)
+                    
+
+                

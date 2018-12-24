@@ -67,7 +67,6 @@ class Blowpipe
         TriggerRegisterDeathEvent(cleanupTrigger, this.i)
 
     ondestroy
-        print("Blowgun instance destroyed")
         //Drop content items
         for iterItem in contents
             iterItem.setPos(this.i.getPos())
@@ -84,25 +83,25 @@ class Blowpipe
             printTimedToPlayer("No ammo!", 3, caster.getOwner())
             return
         else
-            int charges = ammo.getCharges()
-
-            if (charges > 1)
-                ammo.setCharges(charges - 1)
-            else    
-                contents.remove(ammo)
-                ammo.remove()
-
             if (ammo.getTypeId() == ITEM_THISTLES)
                 print("Fired thistles!")
             else if (ammo.getTypeId() == ITEM_BONE)
                 print("Fired bone!")
             else if (ammo.getTypeId() == ITEM_DARK_THISTLES)
                 print("Fired dark thistle!")
-
+            else
+                print("Invalid ammo!")
             caster.damageTarget(this.target, 10., ATTACK_TYPE_NORMAL)
 
+            int charges = ammo.getCharges()
+
+            //Reduce ammo
+            if (charges > 1)
+                ammo.setCharges(charges - 1)
+            else    
+                contents.remove(ammo)
+                ammo.remove()
     function loadAmmo(unit owner, item i)
-        printTimedToPlayer(i.getName() + " with " + i.getCharges().toString() + " charges loaded", 3, owner.getOwner())
         this.contents.push(i)
         owner.removeItem(i)
         i.setVisible(false)
@@ -143,7 +142,6 @@ function onPickup()
     var itemId = itm.getTypeId()
     var trigUnit =  GetTriggerUnit()
 
-    print("Picked up to slot: " + trigUnit.getItemSlot(itm).toString())
     if itemId == ITEM_ID
         if not instances.has(itm)
             instances.put(itm, new Blowpipe(itm))

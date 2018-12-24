@@ -2,7 +2,7 @@ package Hints
 import ClosureTimers
 import LinkedList
 import ChatCommands
-import RegisterEvents
+import Game
 
 let TIME_BETWEEN_HINTS = 60.0
 let HINTS_OFF_MESSAGE = GENERAL_COLOR + "Your hints are now " + GOLD_COLOR + "off" + GENERAL_COLOR + "."
@@ -25,16 +25,6 @@ class Hint
         this.action = CreateTrigger()
         TriggerAddAction(this.action, what)
 
-    construct(string hint, unit toPing)
-        this.message = hint
-        this.unitLoc = toPing
-
-    function display()
-        if IsPlayerInForce(GetLocalPlayer(), players)
-            printTimedToPlayer(GOLD_COLOR + "Hint: |r" + GENERAL_COLOR + message + "|r", 10, GetLocalPlayer())
-            if action != null
-                TriggerExecute(action)
-
     static function pingUnit(unit which)
         pingLoc(GetUnitLoc(which))
 
@@ -55,6 +45,12 @@ class Hint
         else    
             Hint.addPLayer(p)
 
+    function display()
+        if IsPlayerInForce(GetLocalPlayer(), players)
+            printTimedToPlayer(GOLD_COLOR + "Hint: |r" + GENERAL_COLOR + message + "|r", 10, GetLocalPlayer())
+            if action != null
+                TriggerExecute(action)
+
     static function initialize()
         for i = 0 to 11
             ForceAddPlayer(players, Player(i))
@@ -62,15 +58,31 @@ class Hint
         registerCommandAll("h") (triggerPlayer, args) -> 
             Hint.togglePlayer(triggerPlayer)
         
-public function displayNextHint(LinkedList<Hint> hintList)
-        let hint = hintList.dequeue()
-        hint.display()
+public function displayNextHint(LLIterator<Hint> iterator)
+    let hint = iterator.next()
+    hint.display()
+    if iterator.hasNext() == false
+        iterator.reset()
         
 public function doPeriodicDisplay(LinkedList<Hint> hintList)
-        doPeriodicallyCounted(TIME_BETWEEN_HINTS, hintList.size(), (cb) -> displayNextHint(hintList))
+        let iterator = hintList.iterator()
+        doPeriodically(TIME_BETWEEN_HINTS, (cb) -> displayNextHint(iterator))
+
+public function checkStat(unit troll)
+    let owner = troll.getOwner()
+    var mana = troll.getMana()
+    var health = troll.getHP()
+    var heat = owner.getGold()
+
+    if health <= 25
+        printTimedToPlayer(COLOR_RED + "Your health is low, eat some meat!", 3, owner)
+    if mana <= 25
+        printTimedToPlayer(COLOR_RED + "Your mana is low, get some sleep!", 3, owner)
+    if heat <= 25
+        printTimedToPlayer(COLOR_RED + "Your heat is low, go stand by a fire!", 3, owner)
 
 init
-     s__Map_onGameStart() ->
+     registerGameStartEvent() ->
         let hintList = new LinkedList<Hint>()
         ..add(new Hint( "For help on building, refer to these shops or for some basics, the quest log.", -> Hint.pingLoc(GetRectCenter(gg_rct_vision)) ))
         ..add(new Hint("To toggle hints, type " + HIGHLIGHT_COLOR + "-h|r." ))
@@ -89,7 +101,11 @@ init
         ..add(new Hint("An old altar seems to require a certain magical artifact to be activated, who knows what might happen.", -> Hint.pingLoc(GetRectCenter(gg_rct_TheOne)) ))
         ..add(new Hint("Use quickmake skills and unload items to quickly manage the inventories of buildings." ))
         ..add(new Hint("Use |r" + ENERGY_COLOR + "-changelog|r" + GENERAL_COLOR + " to view changelog for this version" ))
-        ..add(new Hint("You can join the Island Troll Tribes discord," + ENERGY_COLOR + "https://discord.gg/Rh9JdKs" ))
+        ..add(new Hint("Feel free to share feedback & idea on the Island Troll Tribes discord," + ENERGY_COLOR + " https://discord.gg/Rh9JdKs" ))
 
         Hint.initialize()
         doPeriodicDisplay(hintList)
+        doPeriodically(10) cb ->
+            for troll in udg_trolls
+                if IsPlayerInForce(troll.getOwner(), Hint.players)
+                    checkStat(troll)

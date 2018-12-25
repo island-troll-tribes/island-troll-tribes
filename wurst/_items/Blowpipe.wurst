@@ -10,6 +10,7 @@ import ChatCommands
 import ClosureForGroups
 import GameConfig
 import DummyCaster
+import MathUtils
 import Orders
 
 @configurable constant string ICON = Icons.bTNAlleriaFlute
@@ -17,10 +18,9 @@ import Orders
 @configurable constant int THISTLE_ABILITY_ID = 'A01K'
 @configurable constant int DARKTHISTLE_ABILITY_ID = 'A01L'
 @configurable constant int BONE_ABILITY_ID = 'A015'
-
-
-
+@configurable constant string ITEM_TOOLTIP_EXT = "Used for shooting small things. Can be loaded with thistles or bones."
 @configurable constant int ITEM_ID = 'XIBP'
+@configurable constant int MAX_SLOTS = 10
 
 @compiletime function createBlowpipeAbility()
     new AbilityDefinitionIllidanChannel(ABILITY_ID)
@@ -40,7 +40,7 @@ import Orders
     ..setManaCost(1, 0)
     ..setName("Blow Gun Ability")
     ..setOptions(1, 1)
-    ..setTargetsAllowed(1, "air,ground,enemy,neutral,organic")
+    ..setTargetsAllowed(1, "air,ground,enemy,neutral,organic,self")
     ..setDisableOtherAbilities(1, false)
     ..setTargetType(1, 1)
     ..setCooldown(1, 6)
@@ -52,6 +52,7 @@ import Orders
     ..setButtonPositionX(3)
     ..setButtonPositionY(1)
     ..setClassification("Charged")
+    ..setInterfaceIcon(ICON)
     ..setCooldownGroup("A01K")
     ..setDroppedWhenCarrierDies(true)
     ..setGoldCost(0)
@@ -62,31 +63,89 @@ import Orders
     ..setHotkey("B")
     ..setName("Blow Gun")
     ..setTooltipBasic("Purchase |cffffcc00B|rlow Gun")
-    ..setTooltipExtended("Used for shooting small things. Can be loaded with thistles or bones.")
+    ..setTooltipExtended(ITEM_TOOLTIP_EXT)
 
+
+
+
+IterableMap<item, Blowpipe> instances
+trigger cleanupTrigger
+HashMap<int, int> slotsPerItem
+
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    EventListener.add(EVENT_PLAYER_UNIT_USE_ITEM, () -> onUse())
+    EventListener.add(EVENT_PLAYER_UNIT_PICKUP_ITEM, () -> onPickup())
+
+    instances = new IterableMap<item, Blowpipe>()
+    slotsPerItem = new HashMap<int, int>()
+    slotsPerItem.put(ITEM_BONE, 10)
+    slotsPerItem.put(ITEM_THISTLES, 1)
+    slotsPerItem.put(ITEM_DARK_THISTLES, 2)
+
+    cleanupTrigger = CreateTrigger()
+    cleanupTrigger.addAction(function cleanupInstances)
+
+
+    registerCommandAll("blowpipe") (triggerPlayer, args) ->
+        if (gameConfig.isTestModeEnabled() == true)
+            printTimedToPlayer("Added blowpipe to selected heroes", 5., triggerPlayer)
+            forUnitsSelected(triggerPlayer) u ->
+                if (u.isType(UNIT_TYPE_HERO))
+                    u.addItem(ITEM_ID)
+        else
+            printTimedToPlayer("Requires test mode!", 5., triggerPlayer)
 
 class Blowpipe
     item i
     LinkedList<item> contents
     unit target
+    bool loadingEnabled
 
     construct(item i)
         this.i = i
         this.contents = new LinkedList<item>()
         this.target = null
+        this.loadingEnabled = true
         TriggerRegisterDeathEvent(cleanupTrigger, this.i)
+        updateTooltip()
 
     ondestroy
-        //Drop content items
-        for iterItem in contents
-            iterItem.setPos(this.i.getPos())
-            iterItem.setVisible(true)
+        emptyContents()
 
         //Destroy list
         destroy contents
 
 
+    function emptyContents()
+        for iterItem in contents
+            iterItem.setPos(this.i.getPos())
+            iterItem.setVisible(true)
+            contents.remove(iterItem)
+        this.i.setCharges(0)
+        updateTooltip()
+
+    function emptyContentsToUnit(unit u)
+        //Temporarily disable loading to prevent infinite loop
+        this.loadingEnabled = false
+        for iterItem in contents
+            if u.inventorySize()-u.itemCount() > 0
+                u.addItemHandle(iterItem)
+            else
+                iterItem.setPos(this.i.getPos())
+            iterItem.setVisible(true)
+            contents.remove(iterItem)
+        this.loadingEnabled = true
+        this.i.setCharges(0)
+        updateTooltip()
+
     function onFire(unit caster)
+        if this.target == caster
+            //Empty blowpipe on self-target
+            emptyContentsToUnit(caster)
+            return
+
         item ammo = contents.get(0)
 
         if ammo == null
@@ -99,8 +158,7 @@ class Blowpipe
                 new DummyCaster(2).castTarget(caster.getOwner(), BONE_ABILITY_ID, 1, Orders.creepthunderbolt, this.target, caster.getPos())
             else if (ammo.getTypeId() == ITEM_DARK_THISTLES)
                 new DummyCaster(2).castTarget(caster.getOwner(), DARKTHISTLE_ABILITY_ID, 1, Orders.shadowstrike, this.target, caster.getPos())
-            else
-                print("Invalid ammo!")
+
             caster.damageTarget(this.target, 10., ATTACK_TYPE_NORMAL)
 
             int charges = ammo.getCharges()
@@ -111,16 +169,75 @@ class Blowpipe
             else    
                 contents.remove(ammo)
                 ammo.remove()
-    function loadAmmo(unit owner, item i)
-        this.contents.push(i)
-        owner.removeItem(i)
-        i.setVisible(false)
+
+            updateTooltip()
+
+    function loadAmmo(unit owner, item itm)
+        if not this.loadingEnabled
+            return
+
+        int charges = itm.getCharges()
+        if charges == 0
+            charges = 1
+
+        int slotsLeft = this.getAmmoSlotsLeft()
+        int chargesToLoad = 0
+        chargesToLoad = floor( slotsLeft / slotsPerItem.get(itm.getTypeId()) )
+
+        if chargesToLoad == 0
+            return
+
+        if chargesToLoad >= charges
+            this.contents.push(itm)
+            owner.removeItem(itm)
+            itm.setVisible(false)
+            //Also counts bones etc with 0 charges as 1 ammo
+            if (charges == 0)
+                charges = 1
+            this.i.setCharges(this.i.getCharges() + charges)
+        else
+            //Remove charges from item and create new one with that amount of charges and load it
+            itm.setCharges(charges - chargesToLoad)
+            item newItem = createItem(itm.getTypeId(), this.i.getPos())
+            newItem.setCharges(chargesToLoad)
+            newItem.setVisible(false)
+            this.contents.push(newItem)
+            this.i.setCharges(this.i.getCharges() + chargesToLoad)
+
+        updateTooltip()
+
+    function updateTooltip()
+        string ammoString = "\n\n|cffadff2fLoaded Ammo:|r"
+        if (this.contents.size() == 0)
+            ammoString = ammoString + "\nNone"
+        else
+            for itm in this.contents
+                var charges = itm.getCharges()
+                if (charges == 0)
+                    charges = 1
+                ammoString = ammoString + "\n" + itm.getName() + " x" + charges.toString()
+
+        this.i.setExtendedTooltip(ITEM_TOOLTIP_EXT + ammoString)
+
+    function getAmmoSlotsLeft() returns int
+        if this.contents.size() > 0
+            var totalSlots = 0
+            for itm in this.contents
+                var charges = itm.getCharges()
+                if charges == 0
+                    charges = 1
+                
+                totalSlots += charges * slotsPerItem.get(itm.getTypeId())
+                
+            if totalSlots >= MAX_SLOTS
+                return 0
+            else
+                return MAX_SLOTS - totalSlots
+        else
+            return MAX_SLOTS
 
     function setTarget(unit target)
         this.target = target
-
-    
-
 
 function onCast()
     //This event fires first but cannot retrieve used blowgun item handle
@@ -179,25 +296,6 @@ function cleanupInstances()
 
 
 
-IterableMap<item, Blowpipe> instances
-trigger cleanupTrigger
-
-init
-    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
-    EventListener.add(EVENT_PLAYER_UNIT_USE_ITEM, () -> onUse())
-    EventListener.add(EVENT_PLAYER_UNIT_PICKUP_ITEM, () -> onPickup())
-
-    instances = new IterableMap<item, Blowpipe>()
-    cleanupTrigger = CreateTrigger()
-    cleanupTrigger.addAction(function cleanupInstances)
 
 
-    registerCommandAll("blowpipe") (triggerPlayer, args) ->
-        if (gameConfig.isTestModeEnabled() == true)
-            printTimedToPlayer("Added blowpipe to selected heroes", 5., triggerPlayer)
-            forUnitsSelected(triggerPlayer) u ->
-                if (u.isType(UNIT_TYPE_HERO))
-                    u.addItem(ITEM_ID)
-        else
-            printTimedToPlayer("Requires test mode!", 5., triggerPlayer)
 

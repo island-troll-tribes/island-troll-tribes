@@ -123,80 +123,103 @@ function onCast()
     var target = GetSpellTargetUnit()
     onCastEffects(caster, target, consumeOvercharge(caster))
 
-function onCastEffects(unit caster, unit target, bool isOvercharged)
-    
-    doAfter(0.08) ->
+function handleOverchargeFork(unit caster, unit target)
+    //Create new object for counting targets hit inside closure
+    var targetsHit = new intObject(1)
+    forUnitsInRange(target.getPos(), OVERCHARGE_FORK_AOE) u ->
+        if (isValidTarget(u, caster) and not u == target)
+            //Limit hit count
+            if targetsHit.value < OVERCHARGE_FORK_AMOUNT
+                targetsHit.value = targetsHit.value + 1
+                onCastEffects(caster, u, false)
+                var targetFX = AddSpecialEffectTargetUnitBJ("origin", u, BOUNCE_IMPACT_EFFECT_PATH)
+                var lightningFX = addLightning(LIGHTNING_CHAIN_LIGHTNING_SEECONDARY, true, caster.getPos3Real(), u.getPos3Real())
+                doPeriodicallyTimed(0.05, 0.5) ofxUpdater ->
+                    lightningFX.move(true, caster.getPos3Real(), u.getPos3Real())
+                    if ofxUpdater.isLast()
+                        lightningFX.destr()
+                        targetFX.destr()
 
+    //Cleanup after closure
+    destroy targetsHit
+
+function handleBuff(unit caster, unit target)
+    if timerMap.has(target)
+        timerMap.getAndRemove(target).release()
+
+    if target.hasAbility(BUFF_ZAP2_AURA)
+        //Zap2 -> Charges explosion
+        target.removeAbility(BUFF_ZAP1_AURA)
+        target.removeAbility(BUFF_ZAP2_AURA)
+        zapChargeExplosion(caster, target)
+    else if target.hasAbility( BUFF_ZAP1_AURA )
+        //Zap 1 -> 2
+        target.removeAbility(BUFF_ZAP1_AURA)
+        target.addAbility(BUFF_ZAP2_AURA)
+        let t = getTimer()
+        t.doAfter(CHARGE_REMOVE_TIME) ->
+            target.removeAbility(BUFF_ZAP2_AURA)
+            timerMap.remove(target)
+        timerMap.put(target, t)
+        
+    else
+        //0 -> >Zap 1
+        target.addAbility(BUFF_ZAP1_AURA)
+
+        let t = getTimer()
+        t.doAfter(CHARGE_REMOVE_TIME) ->
+            target.removeAbility(BUFF_ZAP1_AURA)
+            timerMap.remove(target)
+        timerMap.put(target, t)
+
+function onCastEffects(unit caster, unit target, bool isOvercharged)
+    doAfter(0.08) ->
         //Overcharged spell acts like forked lightning
         if (isOvercharged)
-            var _targetsHit = 1
-            forUnitsInRange(target.getPos(), OVERCHARGE_FORK_AOE) u ->
-                if (u.isAlive() and u.getOwner().isEnemyOf(caster.getOwner()) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isInvulnerable() and not u == target)
-                    //Limit hit count
-                    if _targetsHit < OVERCHARGE_FORK_AMOUNT
-                        _targetsHit = _targetsHit + 1
-                        onCastEffects(caster, u, false)
-                        var targetFX = AddSpecialEffectTargetUnitBJ("origin", u, BOUNCE_IMPACT_EFFECT_PATH)
-                        var lightningFX = addLightning(LIGHTNING_CHAIN_LIGHTNING_SEECONDARY, true, caster.getPos3Real(), u.getPos3Real())
-                        doPeriodicallyTimed(0.05, 0.5) ofxUpdater ->
-                            lightningFX.move(true, caster.getPos3Real(), u.getPos3Real())
-                            if ofxUpdater.isLast()
-                                lightningFX.destr()
-                                targetFX.destr()
-
+            handleOverchargeFork(caster, target)
+            
         //Main target damage
         caster.damageTarget(target, MAIN_DAMAGE, ATTACK_TYPE_NORMAL)
         
-        if timerMap.has(target)
-            timerMap.getAndRemove(target).release()
-
-        if target.hasAbility(BUFF_ZAP2_AURA)
-            //Zap2 -> Charges explosion
-            target.removeAbility(BUFF_ZAP1_AURA)
-            target.removeAbility(BUFF_ZAP2_AURA)
-            zapChargeExplosion(caster, target)
-        else if target.hasAbility( BUFF_ZAP1_AURA )
-            //Zap 1 -> 2
-            target.removeAbility(BUFF_ZAP1_AURA)
-            target.addAbility(BUFF_ZAP2_AURA)
-            let t = getTimer()
-            t.doAfter(CHARGE_REMOVE_TIME) ->
-                target.removeAbility(BUFF_ZAP2_AURA)
-                timerMap.remove(target)
-            timerMap.put(target, t)
-            
-        else
-            //0 -> >Zap 1
-            target.addAbility(BUFF_ZAP1_AURA)
-
-            let t = getTimer()
-            t.doAfter(CHARGE_REMOVE_TIME) ->
-                target.removeAbility(BUFF_ZAP1_AURA)
-                timerMap.remove(target)
-            timerMap.put(target, t)
+        handleBuff(caster, target)
 
 function zapChargeExplosion(unit caster, unit target)
-    //Main target damage
+    //Main target bonus effects
     if (target.isAlive() and not target.isInvulnerable())
         new DummyCaster().castTarget(caster.getOwner(), SLOW_ABILITY_ID, 1, Orders.slow, target, caster.getPos3Real())
         caster.damageTarget(target, CHARGE_DAMAGE, ATTACK_TYPE_NORMAL)
 
+    //Charge explosion SFX
     var efx = AddSpecialEffectTargetUnitBJ("chest", target, EFFECT_PATH)
     efx.setScale(0.8)
     doAfter(3)->
         efx.destr()
 
     //Also zap nearby targets in radius
-    forUnitsInRange(target.getPos(), CHARGE_BOUNCE_RADIUS) u ->
-        if (u.isAlive() and u.getOwner().isEnemyOf(caster.getOwner()) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isInvulnerable() and not u == target)
+    zapTargetsInRadius(caster, target, CHARGE_BOUNCE_RADIUS)
+
+function isValidTarget(unit target, unit caster) returns bool
+    unit u = target
+    return u.isAlive() and u.getOwner().isEnemyOf(caster.getOwner()) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isInvulnerable()
+
+function zapTargetsInRadius(unit caster, unit originalTarget, real radius)
+    vec3 targetPos = originalTarget.getPos3Real()
+    forUnitsInRange(targetPos.toVec2(), radius) u ->
+        if (isValidTarget(u, caster) and not u == originalTarget)
             onCastEffects(caster, u, false)
-            
             var targetFX = AddSpecialEffectTargetUnitBJ("origin", u, BOUNCE_IMPACT_EFFECT_PATH)
-            var lightningFX = addLightning(LIGHTNING_CHAIN_LIGHTNING_SEECONDARY, true, target.getPos3Real(), u.getPos3Real())
+            var lightningFX = addLightning(LIGHTNING_CHAIN_LIGHTNING_SEECONDARY, true, originalTarget.getPos3Real(), u.getPos3Real())
             doPeriodicallyTimed(0.05, 0.5) fxUpdater ->
-                lightningFX.move(true, target.getPos3Real(), u.getPos3Real())
+                lightningFX.move(true, originalTarget.getPos3Real(), u.getPos3Real())
                 if fxUpdater.isLast()
                     lightningFX.destr()
                     targetFX.destr()
+
+class intObject
+    int value
+
+    construct(int value)
+        this.value = value
+
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())

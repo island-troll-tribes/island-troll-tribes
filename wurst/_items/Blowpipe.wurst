@@ -9,9 +9,17 @@ import Assets
 import ChatCommands
 import ClosureForGroups
 import GameConfig
+import DummyCaster
+import Orders
 
 @configurable constant string ICON = Icons.bTNAlleriaFlute
 @configurable constant int ABILITY_ID = 'XBPA'
+@configurable constant int THISTLE_ABILITY_ID = 'A01K'
+@configurable constant int DARKTHISTLE_ABILITY_ID = 'A01L'
+@configurable constant int BONE_ABILITY_ID = 'A015'
+
+
+
 @configurable constant int ITEM_ID = 'XIBP'
 
 @compiletime function createBlowpipeAbility()
@@ -84,11 +92,11 @@ class Blowpipe
             return
         else
             if (ammo.getTypeId() == ITEM_THISTLES)
-                print("Fired thistles!")
+                new DummyCaster(2).castTarget(caster.getOwner(), THISTLE_ABILITY_ID, 1, Orders.shadowstrike, this.target, caster.getPos())
             else if (ammo.getTypeId() == ITEM_BONE)
-                print("Fired bone!")
+                new DummyCaster(2).castTarget(caster.getOwner(), BONE_ABILITY_ID, 1, Orders.creepthunderbolt, this.target, caster.getPos())
             else if (ammo.getTypeId() == ITEM_DARK_THISTLES)
-                print("Fired dark thistle!")
+                new DummyCaster(2).castTarget(caster.getOwner(), DARKTHISTLE_ABILITY_ID, 1, Orders.shadowstrike, this.target, caster.getPos())
             else
                 print("Invalid ammo!")
             caster.damageTarget(this.target, 10., ATTACK_TYPE_NORMAL)

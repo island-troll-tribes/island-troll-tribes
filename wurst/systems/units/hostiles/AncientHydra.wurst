@@ -22,15 +22,17 @@ public class AncientHydra extends Hostile
 
     construct(vec2 pos)
         super(players[PLAYER_NEUTRAL_AGGRESSIVE], pos)
-        let hydra = getUnit()
-        ..addSleep(false)
-        ..setCreepGuard(false)
-        flashEffect(teleportModel, hydra, "overhead")
-        callback = doPeriodically(4, cb -> attackCenter())
 
     override function postCreate()
         super.postCreate()
         let hydra = getUnit()
+        ..addSleep(false)
+        ..setCreepGuard(false)
+
+        HornSound()
+        flashEffect(teleportModel, hydra, "overhead")
+        callback = doPeriodically(4, cb -> attackCenter())
+
         EventListener.add(hydra, EVENT_UNIT_DAMAGED, -> onAttacked())
         EventListener.add(hydra, EVENT_UNIT_SPELL_EFFECT, -> onSpellEffect())
 

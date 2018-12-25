@@ -8,16 +8,11 @@ public constant SPELL_CURE = 'A02H'
 
 init
     registerSpellEffectEvent(SPELL_OMNICURE) ->
-        print("> in spell <")
         let heroes = GetUnitsInRectMatching(bj_mapInitialPlayableArea, Condition(() -> begin
-            print("> in rect matcher <")
             let filterUnit = GetFilterUnit()
             return filterUnit.isType(UNIT_TYPE_HERO) and filterUnit.getOwner().isAllyOf(GetSpellAbilityUnit().getOwner())
         end))
 
-        print("count={0}".format(heroes.size().toString()))
-
         let owner = GetSpellAbilityUnit().getOwner()
         for hero in heroes
-            print("{0}".format(hero.getName()))
             new DummyCaster().castTarget(owner, SPELL_CURE, 1, "autodispel", hero)

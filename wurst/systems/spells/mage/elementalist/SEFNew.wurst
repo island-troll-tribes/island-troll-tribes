@@ -23,7 +23,7 @@ import Icons
 @configurable constant real ORB_ATTACK_COOLDOWN = 0.35
 @configurable constant real ORB_IMPACT_DAMAGE = 40
 @configurable constant real ORB_IMPACT_DAMAGE_SAMETARGET = 10
-@configurable constant real ORB_SAMETARGET_BUFF_MARKER_DURATION = 0.90
+@configurable constant real ORB_SAMETARGET_BUFF_MARKER_DURATION = 1.5
 @configurable constant real ORB_LIFETIME = 25
 @configurable constant real ORB_SPEED = 650
 @configurable constant real ORB_SPAWN_INTERVAL = 0.35
@@ -134,6 +134,7 @@ class SEFOrb
         instance = SEF
         projectile = addEffect(ORB_EFFECT_PATH, startPos)
         projectile.setScale(0.65)
+        targetUnit = null
 
     function moveTowardTargetPos()
         //Update target location to targeted unit if one exists
@@ -153,9 +154,9 @@ class SEFOrb
 
         projectile.setPos(newpos)
 
-    function findTarget()
+    function updateTarget()
         if (targetUnit == null and instance.orbLoopDuration >= 0.55)
-            targetUnit = getValidTarget()
+            tryToFindTarget()
             //Put newly acquired target into timestamp map
             if targetUnit != null
                 instance.targetedTimestampMap.put(targetUnit, instance.orbLoopDuration)
@@ -164,9 +165,9 @@ class SEFOrb
             if not targetUnit.isAlive() or targetUnit.isInvulnerable() or not IsUnitVisible(targetUnit, ownerUnit.getOwner()) or not ownerUnit.getOwner().isEnemyOf(targetUnit.getOwner())
                 targetUnit = null
     
-    function getValidTarget() returns unit
-        var curPos = projectile.getPos()
-        unit _foundUnit = null
+    function tryToFindTarget()
+        var curPos = this.projectile.getPos()
+        targetUnit = null
         forUnitsInRange(curPos, ORB_ATTACK_RADIUS) u ->
             if isValidTarget(u)
                 //check if unit has been targeted previously by orb to check for target-specific cooldown
@@ -174,26 +175,24 @@ class SEFOrb
                     if (instance.orbLoopDuration - instance.targetedTimestampMap.get(u) >= ORB_ATTACK_COOLDOWN)
                         //Get the closest unit if multiples happen to come into range at once
                         if (targetUnit != null)
-                            if (curPos.distanceTo( targetUnit.getPos() ) > curPos.distanceTo(u.getPos()))
-                                _foundUnit = u
+                            if (curPos.distanceToSq( targetUnit.getPos() ) > curPos.distanceToSq(u.getPos()))
+                                targetUnit = u
                         else
-                            _foundUnit = u
+                            targetUnit = u
                 else 
                     //Get the closest unit if multiples happen to come into range at once
-                    if (_foundUnit != null)
-                        if (curPos.distanceTo( targetUnit.getPos() ) > curPos.distanceTo(u.getPos()))
-                            _foundUnit = u
+                    if (targetUnit != null)
+                        if (curPos.distanceToSq( targetUnit.getPos() ) > curPos.distanceToSq(u.getPos()))
+                            targetUnit = u
                     else
-                        _foundUnit = u
+                        targetUnit = u
 
-        return _foundUnit
-
-    function isValidTarget(unit u) returns bool
+    function isValidTarget(unit u) returns boolean
         return IsUnitVisible(u, ownerUnit.getOwner()) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isHidden() and u.isAlive() and not u.isInvulnerable() and u.getOwner().isEnemyOf(ownerUnit.getOwner())
 
 
     function updateLoop()
-        findTarget()
+        updateTarget()
         moveTowardTargetPos()
 
         

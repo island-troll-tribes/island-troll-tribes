@@ -5,7 +5,7 @@ import TimerUtils
 import TimerExtensions
 import ClosureTimers
 
-constant MAX_DISTANCE_FROM_CENTER = 13000
+constant MAX_DISTANCE_FROM_CENTER = 13000.0
 constant DISTANCE_INCREMENT = 100
 constant DISTANCE_BETWEEN_SMOKE = 2000
 constant FIRE_APPROACH_PERIOD = 1.5
@@ -40,11 +40,11 @@ function burnThings()
                 burned.subHP(burned.getMaxHP() * LIFE_DRAIN_PERCENT_PER_SECOND * LIFE_DRAIN_PERIOD)
 
     doPeriodically(FIRE_APPROACH_PERIOD) cb ->
-        distanceFromCenter -= DISTANCE_INCREMENT
-
-        if distanceFromCenter < gameConfig.getForestFireDistance()
+        let minDistance = gameConfig.getForestFireDistance()
+        if distanceFromCenter == minDistance
             destroy cb
         else
+            distanceFromCenter = max(distanceFromCenter - DISTANCE_INCREMENT, minDistance)
             EnumDestructablesInRect(bj_mapInitialPlayableArea, Filter(function isTreeOutsideBounds)) ->
                 AddSpecialEffectLoc(GUST_MODEL_PATH, GetDestructableLoc(GetEnumDestructable()))
 

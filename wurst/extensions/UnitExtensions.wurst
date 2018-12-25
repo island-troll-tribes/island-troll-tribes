@@ -1,6 +1,7 @@
 package UnitExtensions
 import HashMap
 import Lodash
+import GameConfig
 
 public function unit.getHeroSkillPoints() returns integer
     return GetHeroSkillPoints(this)
@@ -67,6 +68,14 @@ public function unit.getHeat() returns int
 
 public function unit.setHeat(int heat)
     this.getOwner().setGold(heat)
+
+public function unit.addHeat(int heat)
+    let owner = this.getOwner()
+    owner.setGold(min(owner.getGold() + heat, gameConfig.getMaxHeat()))
+
+public function unit.subHeat(int heat)
+    let owner = this.getOwner()
+    owner.setGold(max(owner.getGold() - heat, 0))
 
 
 public function unit.getItemMatching(Predicate<item> predicate) returns item

@@ -6,15 +6,13 @@ import RegisterEvents
 public constant SPELL_OMNICURE = 'A061'
 public constant SPELL_CURE = 'A02H'
 
-function onCast()
-    let heroes = GetUnitsInRectMatching(bj_mapInitialPlayableArea, Condition(() -> begin
-        let filterUnit = GetFilterUnit()
-        return filterUnit.isType(UNIT_TYPE_HERO) and filterUnit.getOwner().isAllyOf(GetSpellAbilityUnit().getOwner())
-    end))
-
-    let owner = GetSpellAbilityUnit().getOwner()
-    for hero in heroes
-        new DummyCaster().castTarget(owner, SPELL_CURE, 1, "autodispel", hero)
-
 init
-    registerSpellEffectEvent(SPELL_OMNICURE, () -> onCast())
+    registerSpellEffectEvent(SPELL_OMNICURE) ->
+        let heroes = GetUnitsInRectMatching(bj_mapInitialPlayableArea, Condition(() -> begin
+            let filterUnit = GetFilterUnit()
+            return filterUnit.isType(UNIT_TYPE_HERO) and filterUnit.getOwner().isAllyOf(GetSpellAbilityUnit().getOwner())
+        end))
+
+        let owner = GetSpellAbilityUnit().getOwner()
+        for hero in heroes
+            new DummyCaster().castTarget(owner, SPELL_CURE, 1, "autodispel", hero)

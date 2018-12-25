@@ -262,7 +262,6 @@ public class DarkPortalInstance
 
     function randomOrbCastSpell()
         var orb = this.orbs.get( GetRandomInt(0, orbs.size() - 1))
-        var owner = ownerUnit.getOwner()
         var centerPosVec2 = centerPos.toVec2()
         var _foundTarget = false
 
@@ -314,19 +313,19 @@ public class DarkPortalInstance
     function summonTryAttacking(Summon s)
         //Checking time since last attack
         if (s.elapsedLifetime - s.lastAttack >= s.cooldown)
-            unit summonTarget = null
+            unit _summonTarget = null
             forUnitsInRange(centerPos.toVec2(), portalRadius) t ->
                 //Try to find enemies first, pick targets without buffs over those who have em
-                if summonTarget == null or summonTarget.hasAbility('Bmlt') or summonTarget.hasAbility('B00Q')
+                if _summonTarget == null or _summonTarget.hasAbility('Bmlt') or _summonTarget.hasAbility('B00Q')
                     if isValidEnemyTarget(t)
-                        summonTarget = t
+                        _summonTarget = t
 
-                if summonTarget == null or summonTarget.hasAbility('Bmlt') or summonTarget.hasAbility('B00Q')
+                if _summonTarget == null or _summonTarget.hasAbility('Bmlt') or _summonTarget.hasAbility('B00Q')
                     if isValidAllyTarget(t)
-                        summonTarget = t
+                        _summonTarget = t
                 
-            if summonTarget != null
-                s.summonUnit.issueTargetOrderById(s.orderId, summonTarget)
+            if _summonTarget != null
+                s.summonUnit.issueTargetOrderById(s.orderId, _summonTarget)
                 s.lastAttack = s.elapsedLifetime
 
 

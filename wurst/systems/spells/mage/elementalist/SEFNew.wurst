@@ -154,7 +154,6 @@ class SEFOrb
         projectile.setPos(newpos)
 
     function findTarget()
-        var curPos = projectile.getPos()
         if (targetUnit == null and instance.orbLoopDuration >= 0.55)
             targetUnit = getValidTarget()
             //Put newly acquired target into timestamp map
@@ -167,7 +166,7 @@ class SEFOrb
     
     function getValidTarget() returns unit
         var curPos = projectile.getPos()
-        unit foundUnit = null
+        unit _foundUnit = null
         forUnitsInRange(curPos, ORB_ATTACK_RADIUS) u ->
             if isValidTarget(u)
                 //check if unit has been targeted previously by orb to check for target-specific cooldown
@@ -176,18 +175,18 @@ class SEFOrb
                         //Get the closest unit if multiples happen to come into range at once
                         if (targetUnit != null)
                             if (curPos.distanceTo( targetUnit.getPos() ) > curPos.distanceTo(u.getPos()))
-                                foundUnit = u
+                                _foundUnit = u
                         else
-                            foundUnit = u
+                            _foundUnit = u
                 else 
                     //Get the closest unit if multiples happen to come into range at once
-                    if (foundUnit != null)
+                    if (_foundUnit != null)
                         if (curPos.distanceTo( targetUnit.getPos() ) > curPos.distanceTo(u.getPos()))
-                            foundUnit = u
+                            _foundUnit = u
                     else
-                        foundUnit = u
+                        _foundUnit = u
 
-        return foundUnit
+        return _foundUnit
 
     function isValidTarget(unit u) returns bool
         return IsUnitVisible(u, ownerUnit.getOwner()) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isHidden() and u.isAlive() and not u.isInvulnerable() and u.getOwner().isEnemyOf(ownerUnit.getOwner())

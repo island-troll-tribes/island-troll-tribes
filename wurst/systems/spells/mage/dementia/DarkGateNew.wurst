@@ -313,20 +313,24 @@ public class DarkPortalInstance
     function summonTryAttacking(Summon s)
         //Checking time since last attack
         if (s.elapsedLifetime - s.lastAttack >= s.cooldown)
-            unit _summonTarget = null
+
+            //Create object for closure to store unit
+            unitObject _summonTarget = new unitObject(null)
             forUnitsInRange(centerPos.toVec2(), portalRadius) t ->
                 //Try to find enemies first, pick targets without buffs over those who have em
-                if _summonTarget == null or _summonTarget.hasAbility('Bmlt') or _summonTarget.hasAbility('B00Q')
+                if _summonTarget.value == null or _summonTarget.value.hasAbility('Bmlt') or _summonTarget.value.hasAbility('B00Q')
                     if isValidEnemyTarget(t)
-                        _summonTarget = t
+                        _summonTarget.value = t
 
-                if _summonTarget == null or _summonTarget.hasAbility('Bmlt') or _summonTarget.hasAbility('B00Q')
+                if _summonTarget.value == null or _summonTarget.value.hasAbility('Bmlt') or _summonTarget.value.hasAbility('B00Q')
                     if isValidAllyTarget(t)
-                        _summonTarget = t
+                        _summonTarget.value = t
                 
-            if _summonTarget != null
-                s.summonUnit.issueTargetOrderById(s.orderId, _summonTarget)
+            if _summonTarget.value != null
+                s.summonUnit.issueTargetOrderById(s.orderId, _summonTarget.value)
                 s.lastAttack = s.elapsedLifetime
+
+            destroy _summonTarget
 
 
     function updateSummons()
@@ -389,6 +393,11 @@ public function getDementiaGate(unit owner) returns DarkPortalInstance
         return darkPortalInstances.get(owner)
     else 
         return null
+
+class unitObject
+    unit value
+    construct(unit value)
+        this.value = value
 
 init
     createSpellList()

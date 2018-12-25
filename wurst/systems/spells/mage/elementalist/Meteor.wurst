@@ -88,7 +88,7 @@ function onCast()
     vec2 targetPos = vec2(GetSpellTargetX(), GetSpellTargetY())
     callMeteor(caster, targetPos, consumeOvercharge(caster))
 
-function spawnFireGround(unit caster, vec2 pos)
+function handleGroundBurning(unit caster, vec2 pos)
     var owner = caster.getOwner()
     //Spawn fire FX on ground
     for i = 0 to 40
@@ -141,43 +141,56 @@ function callMeteor(unit caster, vec2 targetpos, bool isOvercharged)
             projectile.destr()
             trail.destr()
 
-            //Impact SFX
-            var explosion = addEffect(EXPLOSION_EFFECT_PATH, target3D)
-            explosion.setScale(0.5)
-            doAfter(3) ->
-                explosion.destr()
-
             //Impact unit effects
-            forUnitsInRange(targetpos, IMPACT_RADIUS_MAX) u ->
-                if u.isAlive() and u.getOwner().isEnemyOf(owner) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isType(UNIT_TYPE_FLYING) and not u.isInvulnerable()
-                    
-                    //Calculate reduced damage for units away from center
-                    var distance = targetpos.distanceTo(u.getPos())
-                    if (distance <= IMPACT_RADIUS_DAMAGEFALLOFF)
-                        caster.damageTarget(u, IMPACT_DAMAGE, ATTACK_TYPE_NORMAL)
-                    else 
-                        var reducedDamage = IMPACT_DAMAGE * (1 - ((distance - IMPACT_RADIUS_DAMAGEFALLOFF) / (IMPACT_RADIUS_MAX - IMPACT_RADIUS_DAMAGEFALLOFF)))
-                        caster.damageTarget(u, reducedDamage, ATTACK_TYPE_NORMAL)
-                    
-                    //Apply stun
-                    new DummyCaster().castTarget(owner, DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, u, caster.getPos3Real())
+            handleImpactEffects(target3D, caster, isOvercharged)
 
-                    //Apply burn on units
-                    var burnfx = AddSpecialEffectTargetUnitBJ("chest", u, BURN_EFFECT_PATH)
-                    burnfx.setScale(5)
-                    
-                    //Burn damage loop
-                    doPeriodicallyTimed(IMPACT_BURN_INTERVAL, IMPACT_BURN_DURATION) burn ->
-                        if (not u.isInvulnerable() and u.isAlive())
-                            caster.damageTarget(u, IMPACT_BURN_DPS * IMPACT_BURN_INTERVAL, ATTACK_TYPE_NORMAL)
-                        if (burn.isLast() or not u.isAlive())
-                            burnfx.destr()
-                    
-            if isOvercharged
-                spawnFireGround(caster, targetpos)
+function isValidTarget(unit caster, unit target) returns boolean
+    var owner = caster.getOwner()
+    return target.isAlive() and target.getOwner().isEnemyOf(owner) and not target.isType(UNIT_TYPE_STRUCTURE) and not target.isType(UNIT_TYPE_FLYING) and not target.isInvulnerable()
 
+function handleImpactEffects(vec3 target3D, unit caster, boolean isOvercharged)
+    var targetpos = target3D.toVec2()
+    var owner = caster.getOwner()
+    
+    //Impact SFX
+    var explosion = addEffect(EXPLOSION_EFFECT_PATH, target3D)
+    explosion.setScale(0.5)
+    doAfter(3) ->
+        explosion.destr()
 
-            
+    //Overcharge ground burn
+    if isOvercharged
+        handleGroundBurning(caster, targetpos)
+        
+    //Impact unit effects
+    forUnitsInRange(targetpos, IMPACT_RADIUS_MAX) u ->
+        if isValidTarget(caster, u)
+            handleImpactUnitEffect(targetpos, u, caster)
+
+function handleImpactUnitEffect(vec2 hitPosition, unit target, unit caster)
+    var owner = caster.getOwner()
+
+    //Calculate reduced damage for units away from center
+    var distance = hitPosition.distanceTo(target.getPos())
+    if (distance <= IMPACT_RADIUS_DAMAGEFALLOFF)
+        caster.damageTarget(target, IMPACT_DAMAGE, ATTACK_TYPE_NORMAL)
+    else 
+        var reducedDamage = IMPACT_DAMAGE * (1 - ((distance - IMPACT_RADIUS_DAMAGEFALLOFF) / (IMPACT_RADIUS_MAX - IMPACT_RADIUS_DAMAGEFALLOFF)))
+        caster.damageTarget(target, reducedDamage, ATTACK_TYPE_NORMAL)
+    
+    //Apply stun
+    new DummyCaster().castTarget(owner, DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, target, caster.getPos3Real())
+
+    //Apply burn on units
+    var burnfx = AddSpecialEffectTargetUnitBJ("chest", target, BURN_EFFECT_PATH)
+    burnfx.setScale(5)
+    
+    //Burn damage loop
+    doPeriodicallyTimed(IMPACT_BURN_INTERVAL, IMPACT_BURN_DURATION) burn ->
+        if (not target.isInvulnerable() and target.isAlive())
+            caster.damageTarget(target, IMPACT_BURN_DPS * IMPACT_BURN_INTERVAL, ATTACK_TYPE_NORMAL)
+        if (burn.isLast() or not target.isAlive())
+            burnfx.destr()
 
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())

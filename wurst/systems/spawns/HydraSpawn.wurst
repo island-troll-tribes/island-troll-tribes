@@ -1,0 +1,63 @@
+package HydraSpawn
+import RegisterEvents
+import AncientHydra
+
+
+constant let hydraAltarSfx = "Units\\NightElf\\Wisp\\WispExplode.mdl"
+
+function maybeSummonHydra()
+    let altar = GetManipulatingUnit()
+
+    if altar.getTypeId() != UNIT_OMINOUS_ALTAR
+        return
+
+    let mushroom = altar.itemInSlot(1)
+    if mushroom.getTypeId() != ITEM_MUSHROOM
+        return
+
+    let riverRoot = altar.itemInSlot(2)
+    if riverRoot.getTypeId() != ITEM_RIVER_ROOT
+        return
+
+    let elkHide = altar.itemInSlot(3)
+    if elkHide.getTypeId() != ITEM_ELK_HIDE
+        return
+
+    let herb = altar.itemInSlot(0)
+    rect spawn
+    switch herb.getTypeId()
+        case ITEM_BLUE_HERB
+            spawn = gg_rct_ship_LO
+        case ITEM_YELLOW_HERB
+            spawn = gg_rct_ship_RO
+        case ITEM_ORANGE_HERB
+            spawn = gg_rct_ship_TO
+        case ITEM_PURPLE_HERB
+            spawn = gg_rct_ship_BO
+        default
+            return
+
+    let meats = CreateGroup()..enumUnitsInRange(altar.getPos(), 600, Filter(-> begin
+        return GetFilterUnit().getTypeId() == UNIT_MEAT
+    end))
+    let count = meats.size()
+
+    if count < 4
+        meats.destr()
+        return
+
+    for meat from meats
+        createItem(ITEM_COOKED_MEAT, meat.getPos())
+        meat.remove()
+
+    mushroom.remove()
+    riverRoot.remove()
+    elkHide.remove()
+    herb.remove()
+
+    addEffect(hydraAltarSfx, altar, "chest")
+    new AncientHydra(spawn.getCenter())
+
+
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM, function maybeSummonHydra)

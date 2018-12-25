@@ -1,6 +1,9 @@
 package AncientHydra
 import Hostile
 import LesserHydra
+import ClosureTimers
+import ClosureForGroups
+import UnitExtensions
 
 
 public class AncientHydra extends Hostile
@@ -9,19 +12,37 @@ public class AncientHydra extends Hostile
     static function initialize()
         register(unitTypeId, hydra -> new AncientHydra(hydra))
 
+    CallbackPeriodic callback
+    var frostReady = true
+
     construct(unit whichUnit)
         super(whichUnit)
 
-    override function postCreate()
-        super.postCreate()
-        drops
-        ..add(ITEM_BONE)
-        ..add(ITEM_BONE)
-        ..add(ITEM_BONE)
-        ..add(ITEM_BONE)
-        ..add(ITEM_BONE)
-        ..add(ITEM_HORN_MAMMOTH)
-        ..add(ITEM_MEDALLION_COURAGE)
+    construct(vec2 pos)
+        super(players[PLAYER_NEUTRAL_AGGRESSIVE], pos)
+        let hydra = getUnit()
+        ..addSleep(false)
+        ..setCreepGuard(false)
+        addEffect(teleportModel, hydra, "overhead")
+        callback = doPeriodically(4, cb -> attackCenter())
+
+    function attackCenter()
+        let hydra = getUnit()
+
+        if frostReady
+            forNearestUnit(getPos(), 600, Filter(-> begin
+                return not GetFilterUnit().getOwner().isAllyOf(players[PLAYER_NEUTRAL_AGGRESSIVE])
+            end), closest -> begin
+                if closest != null
+                    hydra.issuePointOrder("breathoffrost", closest.getPos())
+                    frostReady = false
+                    doAfter(10, -> begin
+                        frostReady = true
+                    end)
+            end)
+
+        if frostReady
+            hydra.issuePointOrder("attack", gg_rct_discoduck.getCenter())
 
     override function getNumCorpses() returns int
         return 8
@@ -30,15 +51,11 @@ public class AncientHydra extends Hostile
         return unitTypeId
 
     override function onDeath()
-        Hydra_Dead = true
-        pastTime = false
-
-        hydraDespawnTimer.start(60, function HydraDespawn)
+        destroy callback
 
         let pos = getPos()
         for i = 0 to 1
-            let hydra = new LesserHydra(pos)
-            addEffect(hydraSpawnModel, hydra.getUnit(), "head")
+            new LesserHydra(pos)
 
 
 init

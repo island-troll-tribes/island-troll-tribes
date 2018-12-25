@@ -1,29 +1,80 @@
 package LesserHydra
 import Hostile
 import LinkedListModule
+import ClosureEvents
+import DummyCaster
+import TimerUtils
+
+
+constant let hydraSpawnModel = "Objects\\Spawnmodels\\Naga\\NagaDeath\\NagaDeath.mdl"
+constant let hydraDespawnModel = "Abilities\\Spells\\Other\\CrushingWave\\CrushingWaveDamage.mdl"
+
+constant SPELL_NETHER = 'A037'
+constant BUFF_NETHER = 'BHbn'
 
 
 public class LesserHydra extends Hostile
     use LinkedListModule
 
     private static let unitTypeId = UNIT_LESSER_HYDRA
+    private static let hydraDespawnTimer = getTimer()
+    private static let hydraTimer = getTimer()
 
     static function initialize()
         register(unitTypeId, hydra -> new LesserHydra(hydra))
 
+    static function onLesserHydraDeath()
+        var numAlive = 0
+        for hydra in LesserHydra
+            if hydra.getUnit().isAlive()
+                numAlive += 1
+
+        if numAlive == 0
+            hydraTimerStarted = false
+            hydraTimer.pause()
+            hydraDespawnTimer.pause()
+
+            for hydra in LesserHydra
+                hydra.dropLoot()
+                destroy hydra
+
+        if not hydraTimerStarted
+            hydraTimerStarted = true
+            hydraTimer.start(2.5, function spawnAdditional)
+
+    static function despawn()
+        hydraTimerStarted = false
+        hydraTimer.pause()
+        hydraDespawnTimer.pause()
+
+        for hydra in LesserHydra
+            addEffect(hydraDespawnModel, hydra.getPos())
+            hydra.removeUnit()
+            destroy hydra
+
+    static function spawnAdditional()
+        hydraTimerStarted = false
+        hydraDespawnTimer.start(60, function despawn)
+
+        for hydra in LesserHydra
+            if not hydra.getUnit().isAlive()
+                hydra.maybeSpawnAdditional()
+
     var deathPos = vec2(0, 0)
+    var spawnedAdditional = false
 
     construct(unit whichUnit)
         super(whichUnit)
 
-    construct(player whichPlayer, vec2 pos)
-        super(whichPlayer, pos)
-
-    construct(player whichPlayer, vec2 pos, angle facing)
-        super(whichPlayer, pos, facing)
-
     construct(vec2 pos)
         super(players[PLAYER_NEUTRAL_AGGRESSIVE], pos)
+        hydraDespawnTimer.start(60, function LesserHydra.despawn)
+
+    override function postCreate()
+        let hydra = getUnit()
+        addEffect(hydraSpawnModel, hydra, "head")
+        EventListener.add(hydra, EVENT_UNIT_DAMAGED, -> onAttacked())
+        EventListener.add(hydra, EVENT_UNIT_SPELL_EFFECT, -> onSpellEffect())
 
     override function getNumCorpses() returns int
         return 4
@@ -31,30 +82,46 @@ public class LesserHydra extends Hostile
     override function getTypeId() returns int
         return unitTypeId
 
+    function dropLoot()
+        for i = 0 to 2
+            createItem(ITEM_HYDRA_SCALE, deathPos)
+
+    function maybeSpawnAdditional()
+        if not spawnedAdditional
+            spawnedAdditional = true
+            let pos = getPos()
+            for i = 0 to 1
+                new LesserHydra(pos)
+
     override function postDeath()
 
     override function onDeath()
         deathPos = getPos()
-        getUnit().remove()
+        removeUnit()
+        onLesserHydraDeath()
+        super.onDeath()
 
-        if size == 0
-            if pastTime and hydraTimerStarted
-                hydraTimer.start(0, function AddHydraS)
-            else
-                hydraStarted = false
-                hydraTimerStarted = false
-                hydraTimer.pause()
-                hydraDespawnTimer.pause()
+    function onAttacked()
+        let attacker = GetEventDamageSource()
+        if attacker.getTypeId() == UNIT_BEE
+            attacker.setOwner(players[PLAYER_NEUTRAL_AGGRESSIVE], true)
 
-                for hydra in LesserHydra
-                    for i = 0 to 2
-                        createItem(ITEM_HYDRA_SCALE, hydra.deathPos)
-                    destroy hydra
+        hydraDespawnTimer.start(60, function despawn)
 
-        if not hydraTimerStarted and hydraStarted
-            hydraTimerStarted = true
-            pastTime = false
-            hydraTimer.start(2.5, function AddHydraS)
+    function onSpellEffect()
+        if GetSpellAbilityId() == SPELL_NETHER
+            getUnit().removeAbility(BUFF_NETHER)
+            new DummyCaster().castTarget(
+                players[PLAYER_NEUTRAL_AGGRESSIVE],
+                SPELL_NETHER,
+                0,
+                "banish",
+                GetSpellAbilityUnit()
+            )
+
+    ondestroy
+        if getUnit() != null
+            removeUnit()
 
 
 init

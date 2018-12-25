@@ -35,7 +35,7 @@ public abstract class Hostile
     static function findForUnit(unit hostile) returns thistype
         return instances[hostile.getIndex()]
 
-    private constant unit theUnit = null
+    private unit theUnit = null
     protected constant let drops = new LinkedList<int>()
 
     construct(unit whichUnit)
@@ -67,6 +67,10 @@ public abstract class Hostile
 
     abstract function getTypeId() returns int
 
+    function removeUnit()
+        getUnit().remove()
+        theUnit = null
+
     function onDeath()
         let pos = getPos()
         let numCorpses = getNumCorpses()
@@ -83,7 +87,7 @@ public abstract class Hostile
 
     function postDeath()
         nullTimer() ->
-            getUnit().remove()
+            removeUnit()
             destroy this
 
 

@@ -12,6 +12,15 @@ function GetUnitUserDataEx takes unit u returns integer
     return unitUserData[GetHandleId(u)]
 endfunction
 
+function HornSound takes nothing returns nothing
+    local sound horn = CreateSound("Sound\\Ambient\\DoodadEffects\\TheHornOfCenarius.wav",false,false,false,10,10,"")
+    call SetSoundPitch(horn,1.)
+    call SetSoundVolume(horn,127)
+    call StartSound(horn)
+    call KillSoundWhenDone(horn)
+    set horn = null
+endfunction
+
 function IsUnitImmobilized takes unit u returns boolean
     return GetUnitAbilityLevel(u, 'Beng') > 0 or GetUnitAbilityLevel(u, 'Bena') > 0 or GetUnitAbilityLevel(u, 'BEer') > 0
 endfunction
@@ -325,14 +334,6 @@ function resetBMSkill takes player p returns nothing
     call SetPlayerAbilityAvailableBJ( false, 'A06R', p )//bring items
     call SetPlayerAbilityAvailableBJ( false, SPELL_PET_GO_TO_HATCHERY, p )//go to hatchery
     call SetPlayerAbilityAvailableBJ( false, SPELL_PET_DROP_ITEMS, p )//drop items
-endfunction
-
-function ConvertEnumCorpseToCookedMeat takes nothing returns nothing
-  local unit u = GetEnumUnit()
-  local integer INTEGER = 0
-  call CreateItem( ITEM_COOKED_MEAT, GetUnitX(u),GetUnitY(u))
-  call RemoveUnit(GetEnumUnit())
-  set u = null
 endfunction
 
 function presCheck takes nothing returns boolean

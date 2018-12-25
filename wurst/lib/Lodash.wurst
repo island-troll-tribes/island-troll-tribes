@@ -14,6 +14,19 @@ public interface BiFunction<S, T, R>
 public interface TriFunction<S, T, U, R>
     function call(S s, T t, U u) returns R
 
+public function equals<T>(LinkedList<T> a, LinkedList<T> b) returns bool
+    if a == null or b == null or a.size() != b.size()
+        return false
+    let iter = b.staticItr()
+    for elemA in a
+        let elemB = iter.next()
+        if elemA != elemB
+            return false
+    return true
+
+public function LinkedList<T>.equals<T>(LinkedList<T> b) returns bool
+    return equals(this, b)
+
 public function LinkedList<T>.takeWhile<T>(TriFunction<T, int, LinkedList<T>, bool> predicate) returns LinkedList<T>
     let list = new LinkedList<T>()
     let iter = this.iterator()

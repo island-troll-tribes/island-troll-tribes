@@ -1,0 +1,108 @@
+package TeleportBeacon
+import Building
+import LinkedList
+import HashMap
+import ClosureEvents
+import UnitExtensions
+import TerrainUtils
+import SimError
+
+
+constant let SPELL_TELEPORT_BEACON = 'A042'
+constant let rangeCheckModFirst = "Doodads\\Cinematic\\GlowingRunes\\GlowingRunes2.mdl"
+constant let mirrorEfx = "Abilities\\Spells\\NightElf\\Blink\\BlinkTarget.mdl"
+
+
+public class TeleportBeacon extends Building
+    private static let unitTypeId = UNIT_TELEPORTATION_BEACON
+
+    static function initialize()
+        register(unitTypeId, building -> new TeleportBeacon(building))
+
+    private let effects = new IterableMap<player, LinkedList<effect>>()
+
+    construct(unit whichUnit)
+        super(whichUnit)
+        EventListener.add(whichUnit, EVENT_UNIT_SELECTED, -> onSelected())
+        EventListener.add(whichUnit, EVENT_UNIT_DESELECTED, -> onDeselected())
+        EventListener.add(whichUnit, EVENT_UNIT_PICKUP_ITEM, -> onPickupItem())
+        EventListener.add(whichUnit, EVENT_UNIT_SPELL_CAST, -> onCast())
+
+    override function getTypeId() returns int
+        return unitTypeId
+
+    private function onPickupItem()
+        let pickedUp = GetManipulatedItem()
+        if pickedUp.getTypeId() != ITEM_MAGIC
+            return
+
+        let beacon = getUnit()
+        if beacon.getAbilityLevel(SPELL_TELEPORT_BEACON) > 1
+            return
+
+        pickedUp.remove()
+        beacon.incAbilityLevel(SPELL_TELEPORT_BEACON)
+
+    private function onSelected()
+        let whichPlayer = GetTriggerPlayer()
+
+        if effects.has(whichPlayer)
+            return
+
+        let beacon = getUnit()
+        if not beacon.getOwner().isAllyOf(whichPlayer)
+            return
+
+        let range = beacon.getAbilityLevel(SPELL_TELEPORT_BEACON) == 1 ? 700.0 : 1100.0
+        let beaconPos = beacon.getPos()
+        let list = new LinkedList<effect>()
+        let path = localPlayer == whichPlayer ? rangeCheckModFirst : ""
+
+        for degs = 0 to 360 step 20
+            let angle = degs.toReal().fromDeg()
+            let pos = beaconPos.polarOffset(angle, range)
+            list.add(addEffect(path, pos))
+
+        effects.put(whichPlayer, list)
+
+    private function onDeselected()
+        let whichPlayer = GetTriggerPlayer()
+        if effects.has(whichPlayer)
+            removeList(whichPlayer)
+
+    private function removeList(player whichPlayer)
+        let list = effects.get(whichPlayer)
+        for elem in list
+            elem.destr()
+        destroy list
+
+    private function onCast()
+        if GetSpellAbilityId() != SPELL_TELEPORT_BEACON
+            return
+
+        let target = GetSpellTargetUnit()
+        if target.isImmobilized()
+            target.issueImmediateOrder("stop")
+            return
+
+        let beacon = getUnit()
+        let beaconPos = beacon.getPos()
+        let targetPos = target.getPos()
+        let pos = 2 * beaconPos - targetPos
+
+        if GetWorldBounds().contains(pos) and pos.isTerrainWalkable()
+            target
+            ..setXY(pos)
+            ..setFacing(targetPos.angleTo(beaconPos))
+            flashEffect(mirrorEfx, target, "chest")
+        else
+            simError(target.getOwner(), "Can't teleport there")
+
+    ondestroy
+        for whichPlayer in effects
+            removeList(whichPlayer)
+        destroy effects
+
+
+init
+    TeleportBeacon.initialize()

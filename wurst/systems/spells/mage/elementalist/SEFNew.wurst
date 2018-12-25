@@ -135,8 +135,8 @@ class SEFOrb
         projectile = addEffect(ORB_EFFECT_PATH, startPos)
         projectile.setScale(0.65)
 
-    function moveTowardsTarget()
-        //Update target location to targeted unit if its alive
+    function moveTowardTargetPos()
+        //Update target location to targeted unit if one exists
         if (targetUnit != null)
             if (targetUnit.isAlive())
                 targetPos = targetUnit.getPos3Real()
@@ -156,37 +156,46 @@ class SEFOrb
     function findTarget()
         var curPos = projectile.getPos()
         if (targetUnit == null and instance.orbLoopDuration >= 0.55)
-            forUnitsInRange(curPos, ORB_ATTACK_RADIUS) u ->
-                if (IsUnitVisible(u, ownerUnit.getOwner()) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isHidden() and u.isAlive() and not u.isInvulnerable() and u.getOwner().isEnemyOf(ownerUnit.getOwner()))
-                    //check if unit has been targeted previously by orb
-                    if (instance.targetedTimestampMap.has(u))
-                        if (instance.orbLoopDuration - instance.targetedTimestampMap.get(u) >= ORB_ATTACK_COOLDOWN)
-                            //Get the closest unit if multiples happen to come into range at once
-                            if (targetUnit != null)
-                                if (curPos.distanceTo( targetUnit.getPos() ) > curPos.distanceTo(u.getPos()))
-                                    targetUnit = u
-                            else
-                                targetUnit = u
-                    else 
-                        //Get the closest unit if multiples happen to come into range at once
-                        if (targetUnit != null)
-                            if (curPos.distanceTo( targetUnit.getPos() ) > curPos.distanceTo(u.getPos()))
-                                targetUnit = u
-                        else
-                            targetUnit = u
+            targetUnit = getValidTarget()
             //Put newly acquired target into timestamp map
             if targetUnit != null
                 instance.targetedTimestampMap.put(targetUnit, instance.orbLoopDuration)
-
         else if (targetUnit != null)
             //If we have a target, check that its still valid and untarget if not
-            if not targetUnit.isAlive() or targetUnit.isInvulnerable() or not IsUnitVisible(targetUnit, ownerUnit.getOwner())
+            if not targetUnit.isAlive() or targetUnit.isInvulnerable() or not IsUnitVisible(targetUnit, ownerUnit.getOwner()) or not ownerUnit.getOwner().isEnemyOf(targetUnit.getOwner())
                 targetUnit = null
+    
+    function getValidTarget() returns unit
+        var curPos = projectile.getPos()
+        unit foundUnit = null
+        forUnitsInRange(curPos, ORB_ATTACK_RADIUS) u ->
+            if isValidTarget(u)
+                //check if unit has been targeted previously by orb to check for target-specific cooldown
+                if (instance.targetedTimestampMap.has(u))
+                    if (instance.orbLoopDuration - instance.targetedTimestampMap.get(u) >= ORB_ATTACK_COOLDOWN)
+                        //Get the closest unit if multiples happen to come into range at once
+                        if (targetUnit != null)
+                            if (curPos.distanceTo( targetUnit.getPos() ) > curPos.distanceTo(u.getPos()))
+                                foundUnit = u
+                        else
+                            foundUnit = u
+                else 
+                    //Get the closest unit if multiples happen to come into range at once
+                    if (foundUnit != null)
+                        if (curPos.distanceTo( targetUnit.getPos() ) > curPos.distanceTo(u.getPos()))
+                            foundUnit = u
+                    else
+                        foundUnit = u
+
+        return foundUnit
+
+    function isValidTarget(unit u) returns bool
+        return IsUnitVisible(u, ownerUnit.getOwner()) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isHidden() and u.isAlive() and not u.isInvulnerable() and u.getOwner().isEnemyOf(ownerUnit.getOwner())
 
 
     function updateLoop()
         findTarget()
-        moveTowardsTarget()
+        moveTowardTargetPos()
 
         
     function onImpactEffect()
@@ -231,6 +240,7 @@ class SEFInstance
         isChanneling = true
 
         if not overcharged
+            //Create orbs via channeling if not overcharged
             orbCreationLoopPeriodic = doPeriodicallyTimed(ORB_PERIODICINTERVAL_SPAWN, CHANNEL_DURATION) orbcreation ->
                 if (isChanneling)
                     channeledTime = channeledTime + ORB_PERIODICINTERVAL_SPAWN
@@ -241,6 +251,7 @@ class SEFInstance
                 else 
                     orbCreationLoopPeriodic.stop()
         else
+            //Create orbs instantly if overcharged
             int count = (CHANNEL_DURATION/ORB_SPAWN_INTERVAL).round()
             for i = 1 to count
                 orbs.push(new SEFOrb(ownerUnit, this, caster.getPos().withTerrainZ(ORB_ORBIT_HEIGHT)))
@@ -259,26 +270,28 @@ class SEFInstance
                     orbLoop.stop()
                 destroy this
             else
-                orbAngle = angle(orbAngle.radians() + ORB_PERIODICINTERVAL_LOOP * ORB_ANGULARORBITSPEED * DEGTORAD)
-                
-                int orbsWithoutTarget = 0
+                orbLoopUpdate()
 
-                for o in orbs
-                    if (o.targetUnit == null)
-                        orbsWithoutTarget += 1
+    function orbLoopUpdate()
+        orbAngle = angle(orbAngle.radians() + ORB_PERIODICINTERVAL_LOOP * ORB_ANGULARORBITSPEED * DEGTORAD)
+        int orbsWithoutTarget = 0
 
-                angle orbOffset = angle(bj_PI/4)
-                if (orbsWithoutTarget != 0)
-                    orbOffset = angle(2 * bj_PI / orbsWithoutTarget )
-
-                int i = 0
-                
-                for o in orbs
-                    angle indexOrbAngle = orbAngle + orbOffset * i.toReal()
-                    if (o.targetUnit == null)
-                        o.targetPos = ownerUnit.getPos().withTerrainZ(ORB_ORBIT_HEIGHT).offset2d(indexOrbAngle, ORB_ORBIT_RADIUS)
-                    o.updateLoop()
-                    i = i + 1
+        //Calculate orb angles and set them to spin around user
+        for o in orbs
+            if (o.targetUnit == null)
+                orbsWithoutTarget += 1
+        angle orbOffset = angle(bj_PI/4)
+        if (orbsWithoutTarget != 0)
+            orbOffset = angle(2 * bj_PI / orbsWithoutTarget )
+        
+        //When we have angle offset amount per orb, apply it to orbs
+        int i = 0
+        for o in orbs
+            angle indexOrbAngle = orbAngle + orbOffset * i.toReal()
+            if (o.targetUnit == null)
+                o.targetPos = ownerUnit.getPos().withTerrainZ(ORB_ORBIT_HEIGHT).offset2d(indexOrbAngle, ORB_ORBIT_RADIUS)
+            o.updateLoop()
+            i = i + 1
 
     ondestroy
         orbs.forEach(o -> destroy o)

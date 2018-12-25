@@ -61,7 +61,6 @@ library LegacyInit initializer onInit
         call ExecuteFunc("InitTrig_tele_beacon_select")
         call ExecuteFunc("InitTrig_tele_tower_upgrade")
         call ExecuteFunc("InitTrig_disease_cloud")
-        call ExecuteFunc("InitTrig_enemy_radar_uber")
         call ExecuteFunc("InitTrig_uber_bee_hive")
         call ExecuteFunc("InitTrig_tsunami_building_damage_and_fire")
         call ExecuteFunc("InitTrig_camo_undo")
@@ -85,7 +84,6 @@ library LegacyInit initializer onInit
         call ExecuteFunc("InitTrig_grow_up")
         call ExecuteFunc("InitTrig_pet_abilites")
         call ExecuteFunc("InitTrig_Shapeshift")
-
         call ConditionalTriggerExecute(gg_trg_AcidBoost)
         call ConditionalTriggerExecute(gg_trg_CreateQuests)
         call ConditionalTriggerExecute(gg_trg_Set_up_Item_Array)

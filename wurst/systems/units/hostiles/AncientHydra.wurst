@@ -4,6 +4,8 @@ import LesserHydra
 import ClosureTimers
 import ClosureForGroups
 import UnitExtensions
+import DummyCaster
+import ClosureEvents
 
 
 public class AncientHydra extends Hostile
@@ -23,8 +25,14 @@ public class AncientHydra extends Hostile
         let hydra = getUnit()
         ..addSleep(false)
         ..setCreepGuard(false)
-        addEffect(teleportModel, hydra, "overhead")
+        flashEffect(teleportModel, hydra, "overhead")
         callback = doPeriodically(4, cb -> attackCenter())
+
+    override function postCreate()
+        super.postCreate()
+        let hydra = getUnit()
+        EventListener.add(hydra, EVENT_UNIT_DAMAGED, -> onAttacked())
+        EventListener.add(hydra, EVENT_UNIT_SPELL_EFFECT, -> onSpellEffect())
 
     function attackCenter()
         let hydra = getUnit()
@@ -56,6 +64,24 @@ public class AncientHydra extends Hostile
         let pos = getPos()
         for i = 0 to 1
             new LesserHydra(pos)
+
+    function onAttacked()
+        let attacker = GetEventDamageSource()
+        if attacker.getTypeId() == UNIT_BEE
+            attacker.setOwner(players[PLAYER_NEUTRAL_AGGRESSIVE], true)
+
+        hydraDespawnTimer.start(60, function despawn)
+
+    function onSpellEffect()
+        if GetSpellAbilityId() == SPELL_NETHER
+            getUnit().removeAbility(BUFF_NETHER)
+            new DummyCaster().castTarget(
+                players[PLAYER_NEUTRAL_AGGRESSIVE],
+                SPELL_NETHER,
+                0,
+                "banish",
+                GetSpellAbilityUnit()
+            )
 
 
 init

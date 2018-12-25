@@ -1,18 +1,16 @@
-package Hostile
+package UnitEntity
+import HashMap
+import Lodash
 import RegisterEvents
 import UnitIndexer
-import HashMap
-import LinkedList
 import ClosureTimers
-import Lodash
 
-public function createCorpse(player p, int unitId, vec2 pos, angle facing) returns unit
-    return CreateCorpse(p, unitId, pos.x, pos.y, facing.degrees())
 
-function randomAngle() returns angle
+public function randomAngle() returns angle
     return angle(GetRandomReal(0, PI2))
 
-public abstract class Hostile
+
+public abstract class UnitEntity
     static thistype array instances
     static let factories = new HashMap<int, Function<unit, thistype>>()
 
@@ -36,7 +34,6 @@ public abstract class Hostile
         return instances[hostile.getIndex()]
 
     private unit theUnit = null
-    protected constant let drops = new LinkedList<int>()
 
     construct(unit whichUnit)
         theUnit = whichUnit
@@ -59,12 +56,6 @@ public abstract class Hostile
     function getPos() returns vec2
         return theUnit.getPos()
 
-    function addDrop(int itemId)
-        drops.add(itemId)
-
-    function getNumCorpses() returns int
-        return 1
-
     abstract function getTypeId() returns int
 
     function removeUnit()
@@ -72,17 +63,6 @@ public abstract class Hostile
         theUnit = null
 
     function onDeath()
-        let pos = getPos()
-        let numCorpses = getNumCorpses()
-
-        for i = 1 to numCorpses
-            createCorpse(players[PLAYER_NEUTRAL_AGGRESSIVE], UNIT_MEAT, pos, randomAngle())
-
-        let iter = drops.iterator()
-        for drop from iter
-            createItem(drop, pos)
-        iter.close()
-
         postDeath()
 
     function postDeath()
@@ -92,4 +72,4 @@ public abstract class Hostile
 
 
 init
-    Hostile.initialize()
+    UnitEntity.initialize()

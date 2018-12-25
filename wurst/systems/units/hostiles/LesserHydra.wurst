@@ -1,8 +1,6 @@
 package LesserHydra
 import Hostile
 import LinkedListModule
-import ClosureEvents
-import DummyCaster
 import TimerUtils
 
 
@@ -48,7 +46,7 @@ public class LesserHydra extends Hostile
         hydraDespawnTimer.pause()
 
         for hydra in LesserHydra
-            addEffect(hydraDespawnModel, hydra.getPos())
+            flashEffect(hydraDespawnModel, hydra.getPos())
             hydra.removeUnit()
             destroy hydra
 
@@ -71,10 +69,8 @@ public class LesserHydra extends Hostile
         hydraDespawnTimer.start(60, function LesserHydra.despawn)
 
     override function postCreate()
-        let hydra = getUnit()
-        addEffect(hydraSpawnModel, hydra, "head")
-        EventListener.add(hydra, EVENT_UNIT_DAMAGED, -> onAttacked())
-        EventListener.add(hydra, EVENT_UNIT_SPELL_EFFECT, -> onSpellEffect())
+        super.postCreate()
+        flashEffect(hydraSpawnModel, getUnit(), "head")
 
     override function getNumCorpses() returns int
         return 4
@@ -100,24 +96,6 @@ public class LesserHydra extends Hostile
         removeUnit()
         onLesserHydraDeath()
         super.onDeath()
-
-    function onAttacked()
-        let attacker = GetEventDamageSource()
-        if attacker.getTypeId() == UNIT_BEE
-            attacker.setOwner(players[PLAYER_NEUTRAL_AGGRESSIVE], true)
-
-        hydraDespawnTimer.start(60, function despawn)
-
-    function onSpellEffect()
-        if GetSpellAbilityId() == SPELL_NETHER
-            getUnit().removeAbility(BUFF_NETHER)
-            new DummyCaster().castTarget(
-                players[PLAYER_NEUTRAL_AGGRESSIVE],
-                SPELL_NETHER,
-                0,
-                "banish",
-                GetSpellAbilityUnit()
-            )
 
     ondestroy
         if getUnit() != null

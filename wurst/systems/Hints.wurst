@@ -4,13 +4,13 @@ import LinkedList
 import ChatCommands
 import Game
 
-let TIME_BETWEEN_HINTS = 60.0
+let TIME_BETWEEN_HINTS = 2.0
 let HINTS_OFF_MESSAGE = GENERAL_COLOR + "Your hints are now " + GOLD_COLOR + "off" + GENERAL_COLOR + "."
 let HINTS_ON_MESSAGE = GENERAL_COLOR + "Your hints are now " + GOLD_COLOR + "on" + GENERAL_COLOR + "."
 
 class Hint
     
-    static force players = CreateForce()
+    static force playersF = CreateForce()
 
     private string message
     private trigger action = null
@@ -27,31 +27,32 @@ class Hint
         pingLoc(GetUnitLoc(which))
 
     static function pingLoc(location loc)
-        PingMinimapLocForForceEx(players, loc, 5, bj_MINIMAPPINGSTYLE_FLASHY, 100, 100, 100)
+        PingMinimapLocForForceEx(playersF, loc, 5, bj_MINIMAPPINGSTYLE_FLASHY, 100, 100, 100)
 
-    static function addPLayer(player p)
-        ForceAddPlayer(players, p)
+    static function addPlayer(player p)
+        ForceAddPlayer(playersF, p)
         printTimedToPlayer(HINTS_ON_MESSAGE, 5, p)
 
     static function removePlayer(player p)
-        ForceRemovePlayer(players, p)
+        ForceRemovePlayer(playersF, p)
         printTimedToPlayer(HINTS_OFF_MESSAGE, 5, p)
 
     static function togglePlayer(player p)
-        if (IsPlayerInForce(p, players))
+        if (IsPlayerInForce(p, playersF))
             Hint.removePlayer(p)
         else    
-            Hint.addPLayer(p)
+            Hint.addPlayer(p)
 
     function display()
-        if IsPlayerInForce(GetLocalPlayer(), players)
+        if IsPlayerInForce(GetLocalPlayer(), playersF)
             printTimedToPlayer(GOLD_COLOR + "Hint: |r" + GENERAL_COLOR + message + "|r", 10, GetLocalPlayer())
             if action != null
                 TriggerExecute(action)
 
     static function initialize()
-        for i = 0 to 11
-            ForceAddPlayer(players, Player(i))
+        for i = 0 to bj_MAX_PLAYERS - 1
+            if players[i].isIngame()
+                ForceAddPlayer(playersF, players[i])
                
         registerCommandAll("h") (triggerPlayer, args) -> 
             Hint.togglePlayer(triggerPlayer)
@@ -105,5 +106,5 @@ init
         doPeriodicDisplay(hintList)
         doPeriodically(10) cb ->
             for troll in udg_trolls
-                if IsPlayerInForce(troll.getOwner(), Hint.players)
+                if IsPlayerInForce(troll.getOwner(), Hint.playersF)
                     checkStat(troll)

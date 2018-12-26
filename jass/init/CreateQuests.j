@@ -14,12 +14,10 @@ call CreateQuestBJ( bj_QUESTTYPE_REQ_DISCOVERED,HIGHLIGHT_COLOR+"Cool Commands",
 "+HIGHLIGHT_COLOR+"-sleep [off/on]:|r disables/enables allies ability to sleep you, used to prevent tk by sleep.
 "+HIGHLIGHT_COLOR+"-g #Name #Amount:|r give the #Amount gold to the player #Name, if no amount is specified, all gold will be given, ex: -g Jac 10 or -g Jac  
 "+HIGHLIGHT_COLOR+"-ping #bushes:|r ping the location of following bushes: blue, orange, purple or yellow herb, butsu, mushroom, thistle, thief, scout, stash, ex: -ping orange
-"+HIGHLIGHT_COLOR+"-c ####:|r set your camera distance (-2000 to 5000) default: 0
-"+HIGHLIGHT_COLOR+"-f ####:|r set your camera distance (4000 to 100000) default: 5000", "ReplaceableTextures\\WorldEditUI\\Editor-Force.blp")
+"+HIGHLIGHT_COLOR+"-c ####:|r set your camera distance (-2000 to 5000) default: 0", "ReplaceableTextures\\WorldEditUI\\Editor-Force.blp")
 
 //_//_//_//
-call CreateQuestBJ( bj_QUESTTYPE_REQ_DISCOVERED,GENERAL_COLOR+"Discord & Twitch", ENERGY_COLOR+"Twitch:|r https://www.twitch.tv/dodogongo|r
-"+ENERGY_COLOR+"Discord:|r https://discord.gg/Rh9JdKs
+call CreateQuestBJ( bj_QUESTTYPE_REQ_DISCOVERED,GENERAL_COLOR+"Community", ENERGY_COLOR+"Discord:|r https://discord.gg/Rh9JdKs|r
 "+GENERAL_COLOR+"
 Feel free to join us on discord, ask questions, give your feedback on the map & watch the stream to learn more about the game
 ","ReplaceableTextures\\PassiveButtons\\PASBTNFlyingMachineTrueSight.blp" )
@@ -30,7 +28,7 @@ call CreateQuestBJ( bj_QUESTTYPE_REQ_DISCOVERED,GENERAL_COLOR+"Shouts",ENERGY_CO
 "+GENERAL_COLOR+"Foosh:|r For being almost as good as me at ice trolls
 "+GENERAL_COLOR+"Clan RPP of USWest
 "+GENERAL_COLOR+"Clan ITTP of Europe.
-"+GENERAL_COLOR+"Clan Twgb of USEast.
+"+GENERAL_COLOR+"Clan TwGB of USEast.
 ", "ReplaceableTextures\\CommandButtons\\BTNBattleRoar.blp" )
 
 //_//_//_//
@@ -79,7 +77,7 @@ Warriors got high damage and tanking skill.
 ", "ReplaceableTextures\\CommandButtons\\BTNForestTroll.blp" )
 
 call CreateQuestBJ( bj_QUESTTYPE_OPT_DISCOVERED, "Beastmaster Tips", "Beast master has random base damage and can hit for more than a same level hunter, or for as much as a gatherer.
-Beast master when subclassed has versatile ability to support/escape or chase down ennemies.
+Beast master when subclassed has versatile ability to support/escape or chase down enemies.
 As beast master sometimes its better to kill your own animals for exp rather than let enemies potentially kill them and level off them.
 ", "ReplaceableTextures\\CommandButtons\\BTNShaman.blp" )
 

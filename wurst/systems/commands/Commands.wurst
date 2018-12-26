@@ -3,9 +3,9 @@ import HashMap
 import LinkedList
 import ChatCommands
 import StringExtensions
-import TribeUtils
 import ChatUtils
 import PlayerExtensions
+import Game
 
 class PlayerAllianceSetting
     string name
@@ -29,15 +29,13 @@ let settings = new HashMap<string, PlayerAllianceSetting>()
 
 function handlePlayerAllianceSettingToggle(player triggerPlayer, LinkedList<string> args)
     let setting = settings.get(args.get(0))
-    let id = triggerPlayer.getId()
-    let range = getTribePlayerIdRangeForPlayerId(id)
     let newValue = args.size() > 1 ? args.get(1).isConfirmation() : not setting.values.get(triggerPlayer)
     let msg = "{0} has turned {1} {2}".format(triggerPlayer.getNameColored(), setting.name.color(SPECIAL_COLOR), newValue.toSwitch().color(ENERGY_COLOR))
     DisplayTimedTextToForce(triggerPlayer.getAllies(), 5, msg)
     setting.values.put(triggerPlayer, newValue)
-    for i = range.min to range.max
-        if i != id
-            players[id].setPlayerAlliance(players[i], setting.setting, setting.invertSetting ? not newValue : newValue)
+    triggerPlayer.getTribe().getMembers().forEach() member ->
+        if member != triggerPlayer
+            triggerPlayer.setPlayerAlliance(member, setting.setting, setting.invertSetting ? not newValue : newValue)
 
 init
     settings
@@ -46,30 +44,27 @@ init
     ..put("p", new PlayerAllianceSetting("private mode", ALLIANCE_SHARED_VISION, true))
 
     registerCommandAll("clear") (triggerPlayer, args) ->
-        if GetLocalPlayer() == triggerPlayer
+        if localPlayer == triggerPlayer
             ClearTextMessages()
 
     registerCommandAll("c") (triggerPlayer, args) ->
         let id = triggerPlayer.getId()
         let zoom = args.get(1).toReal()
-        let msg = "Current zoom is {0} (default 0)".format(zoom.toString(0).color(ENERGY_COLOR))
+        let msg = "Current zoom is {0} (default 0)".format(zoom.toInt().toString().color(ENERGY_COLOR))
         ZOOM_DISTANCE[id] = zoom
         ZoomSetCamera(id)
         printTimedToPlayer(msg, 5, triggerPlayer)
 
     registerCommandAll("rn") (triggerPlayer, args) ->
-        for i = 0 to PLAYER_NEUTRAL_PASSIVE - 1
+        for i = 0 to PLAYER_NEUTRAL_AGGRESSIVE - 1
             if udg_RealNames[i] != ""
                 let msg = "{0} {1}".format((i + 1).toString().color(COLOR_CODE[i]), players[i].getName())
                 printTimedToPlayer(msg, 10, triggerPlayer)
 
-    registerCommandAll("modes") (triggerPlayer, args) ->
-        printTimedToPlayer(currentModes + s__GameMode_getEnabledModes(), 15, triggerPlayer)
-
     // registerCommandAll("obs") (triggerPlayer, args) ->
     //    SetPlayerState(triggerPlayer, PLAYER_STATE_OBSERVER, 1)
 
-    s__Map_onGameStart() ->
+    registerGameStartEvent() ->
         // deregisterCommandAll("obs")
 
         registerCommandAll("ac", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))
@@ -77,17 +72,17 @@ init
         registerCommandAll("p", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))
 
         registerCommandAll("ms") (triggerPlayer, args) ->
-            let hero = udg_PUnits[triggerPlayer.getId()]
+            let hero = triggerPlayer.getTroll()
             if hero.isAlive()
                 let msg = "Your movement speed is {0}".format(hero.getMoveSpeed().toString().color(ENERGY_COLOR))
                 printTimedToPlayer(msg, 5, triggerPlayer)
 
         registerCommandAll("cc") (triggerPlayer, args) ->
-            let id = args.get(1).toInt() mod 24
+            let id = args.get(1).toInt() mod 12
             let msg = "Adjusted player color to {0}Player {1}|r".format(COLOR_CODE[id], (id + 1).toString())
             printTimedToPlayer(msg, 5, triggerPlayer)
             triggerPlayer.setColor(ConvertPlayerColor(id), true)
-            
+
         registerCommandAll("recipes") (triggerPlayer, args) ->
             let msg = "{0}Ok, here are the build help locations.\nYou can see the recipe for every item and building by selecting the wards, take time to read".format(GENERAL_COLOR)
             PingMinimapForPlayer(triggerPlayer, gg_rct_vision.getCenterX(), gg_rct_vision.getCenterY(), 5)

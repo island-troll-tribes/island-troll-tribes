@@ -1,0 +1,60 @@
+package ClosuresForItems
+import Lodash
+
+// items
+// ====Callback stack for nested usage====
+public interface ForGroupCallbackI
+	function call(item i)
+
+function filterI() returns boolean
+	currentCallbackI().call(GetEnumItem())
+	return false
+
+ForGroupCallbackI array tempCallbacksI
+int tempCallbacksICount = 0
+
+function pushCallbackI(ForGroupCallbackI c)
+	tempCallbacksI[tempCallbacksICount] = c
+	tempCallbacksICount++
+
+function popCallbackI()
+	tempCallbacksICount--
+	destroy tempCallbacksI[tempCallbacksICount]
+
+function currentCallbackI() returns ForGroupCallbackI
+	return tempCallbacksI[tempCallbacksICount - 1]
+// ====Stack end====
+
+/** Executes the given closure for all destructables in the given rect */
+public function forItemsInRect(rect r, ForGroupCallbackI cb)
+	pushCallbackI(cb)
+	EnumItemsInRect(r, null, () -> filterI())
+	popCallbackI()
+
+/** Executes the given closure for all destructables in the given rect */
+public function forItemsInMap(ForGroupCallbackI cb)
+	pushCallbackI(cb)
+	EnumItemsInRect(bj_mapInitialPlayableArea, null, () -> filterI())
+	popCallbackI()
+
+class FindNearestItemContext
+	real nearestDist
+	item nearest = null
+
+	construct(real range)
+		nearestDist = range.squared()
+
+/** Executes the given closure for the closes item in the given rect.
+	If there is no destructable in range, the closure will be run with "null" */
+public function findNearestItem(vec2 pos, real range, Predicate<item> predicate) returns item
+	let ctx = new FindNearestItemContext(range)
+	let search = Rect(pos.x - range, pos.y - range, pos.x + range, pos.y + range)
+	forItemsInRect(search) filter ->
+		let dist = pos.distanceToSq(filter.getPos())
+		if dist < ctx.nearestDist and predicate != null and filter.isAlive() and filter.isVisible() and predicate.call(filter)
+			ctx.nearestDist = dist
+			ctx.nearest = filter
+	let nearest = ctx.nearest
+	destroy predicate
+	destroy ctx
+	return nearest

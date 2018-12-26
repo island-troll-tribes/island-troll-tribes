@@ -1,0 +1,136 @@
+package TradeShipInitializer
+import TradeShipStop
+import TradeShipCoordinator
+import TradeShipRoutePair
+import Game
+
+let TRADE_SHIP_PAUSE_TIME = 10.0
+TradeShipCoordinator coordinator
+
+public function getTradeShipCoordinator() returns TradeShipCoordinator
+    return coordinator
+
+init
+    let bottomBranchN = new TradeShipStop(gg_rct_ship_BO)
+    let rightBranchW = new TradeShipStop(gg_rct_ship_RO)
+    let leftBranchE = new TradeShipStop(gg_rct_ship_LO)
+    let topBranchS = new TradeShipStop(gg_rct_ship_TO)
+    let tlBranchNE = new TradeShipStop(gg_rct_ship_TL_1, TRADE_SHIP_PAUSE_TIME)
+    let trBranchSE = new TradeShipStop(gg_rct_ship_TR_1)
+    let brBranchSW = new TradeShipStop(gg_rct_ship_BR_1, TRADE_SHIP_PAUSE_TIME)
+    let blBranchNW = new TradeShipStop(gg_rct_ship_BL_1)
+
+    leftBranchE
+        .addStop(gg_rct_ship_L_1)
+        .addStop(gg_rct_ship_L_2)
+        .addStop(gg_rct_ship_L_3)
+    let leftBranchW = leftBranchE.clone().reverse()
+
+    bottomBranchN
+        .addStop(gg_rct_ship_B_1)
+    let bottomBranchS = bottomBranchN.clone().reverse()
+
+    topBranchS
+        .addStop(gg_rct_ship_T_1)
+        .addStop(gg_rct_ship_T_2)
+        .addStop(gg_rct_ship_T_3)
+    let topBranchN = topBranchS.clone().reverse()
+
+    rightBranchW
+        .addStop(gg_rct_ship_R_1)
+        .addStop(gg_rct_ship_R_2)
+    let rightBranchE = rightBranchW.clone().reverse()
+
+    tlBranchNE
+        .addStop(gg_rct_ship_TL_2)
+        .addStop(gg_rct_ship_TL_3)
+        .addStop(gg_rct_ship_TL_4, TRADE_SHIP_PAUSE_TIME)
+    let tlBranchSW = tlBranchNE.clone().reverse()
+
+    trBranchSE
+        .addStop(gg_rct_ship_TR_2)
+        .addStop(gg_rct_ship_TR_3, TRADE_SHIP_PAUSE_TIME)
+    let trBranchNW = trBranchSE.clone().reverse()
+
+    brBranchSW
+        .addStop(gg_rct_ship_BR_2)
+        .addStop(gg_rct_ship_BR_3, TRADE_SHIP_PAUSE_TIME)
+    let brBranchNE = brBranchSW.clone().reverse()
+
+    blBranchNW
+        .addStop(gg_rct_ship_BL_2)
+        .addStop(gg_rct_ship_BL_3, TRADE_SHIP_PAUSE_TIME)
+        .addStop(gg_rct_ship_BL_4)
+        .addStop(gg_rct_ship_BL_5)
+        .addStop(gg_rct_ship_BL_6)
+    let blBranchSE = blBranchNW.clone().reverse()
+
+    leftBranchE
+        .tail()
+        ..addStop(tlBranchNE)
+        .addFork(blBranchSE)
+
+    topBranchS
+        .tail()
+        ..addStop(tlBranchSW)
+        .addFork(trBranchSE)
+
+    rightBranchW
+        .tail()
+        ..addStop(brBranchSW)
+        .addFork(trBranchNW)
+
+    bottomBranchN
+        .tail()
+        ..addStop(brBranchNE)
+        .addFork(blBranchNW)
+
+    tlBranchNE
+        .tail()
+        ..addStop(trBranchSE)
+        .addFork(topBranchN)
+
+    tlBranchSW
+        .tail()
+        ..addStop(blBranchSE)
+        .addFork(leftBranchW)
+
+    trBranchSE
+        .tail()
+        ..addStop(brBranchSW)
+        .addFork(rightBranchE)
+
+    trBranchNW
+        .tail()
+        ..addStop(tlBranchSW)
+        .addFork(topBranchN)
+
+    brBranchSW
+        .tail()
+        ..addStop(blBranchNW)
+        .addFork(bottomBranchS)
+
+    brBranchNE
+        .tail()
+        ..addStop(trBranchNW)
+        .addFork(rightBranchE)
+
+    blBranchNW
+        .tail()
+        ..addStop(tlBranchNE)
+        .addFork(leftBranchW)
+
+    blBranchSE
+        .tail()
+        ..addStop(brBranchNE)
+        .addFork(bottomBranchS)
+
+    coordinator = new TradeShipCoordinator()
+    ..addPair(new TradeShipRoutePair(topBranchS, leftBranchE))
+    ..addPair(new TradeShipRoutePair(bottomBranchN, rightBranchW))
+
+    if GetRandomReal(0, 1) < 0.5
+        coordinator.swap()
+
+    registerGameStartEvent() ->
+        coordinator.spawn()

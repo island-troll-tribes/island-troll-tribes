@@ -1,5 +1,8 @@
 package UnitExtensions
 import HashMap
+import LinkedList
+import Lodash
+import GameConfig
 
 public function unit.getHeroSkillPoints() returns integer
     return GetHeroSkillPoints(this)
@@ -31,9 +34,82 @@ public function unit.getInventoryItemCountMap() returns HashMap<int, int>
             map.put(id, 1)
     return map
 
+public function unit.getInventory() returns LinkedList<item>
+    let list = new LinkedList<item>
+    let size = this.inventorySize()
+    for i = 0 to size - 1
+        list.add(this.itemInSlot(i))
+    return list
 
 public function unit.addXp(int toAdd)
     AddHeroXP(this, toAdd, true)
 
 public function unit.setXp(int newXpVal)
     this.setXp(newXpVal, true)
+
+public function unit.addUnitToStock(int id, int currentStock, int stockMax)
+    AddUnitToStock(this, id, currentStock, stockMax)
+
+public function unit.removeUnitFromStock(int id)
+    RemoveUnitFromStock(this, id)
+
+public function unit.addItemToStock(int id, int currentStock, int maxStock)
+    AddItemToStock(this, id, currentStock, maxStock)
+
+public function unit.removeItemFromStock(int id)
+    RemoveItemFromStock(this, id)
+
+public function unit.shareVision(player whichPlayer, bool share)
+    UnitShareVision(this, whichPlayer, share)
+
+public function unit.shareVision(player whichPlayer)
+    this.shareVision(whichPlayer, true)
+
+public function unit.removeBuffs(bool removePositive, bool removeNegative)
+    UnitRemoveBuffs(this, removePositive, removeNegative)
+
+public function unit.isTroll() returns boolean
+    return IsUnitTroll(this)
+
+public function unit.getHeat() returns int
+    return this.getOwner().getGold()
+
+public function unit.setHeat(int heat)
+    this.getOwner().setGold(heat)
+
+public function unit.addHeat(int heat)
+    let owner = this.getOwner()
+    owner.setGold(min(owner.getGold() + heat, gameConfig.getMaxHeat()))
+
+public function unit.subHeat(int heat)
+    let owner = this.getOwner()
+    owner.setGold(max(owner.getGold() - heat, 0))
+
+
+public function unit.getItemMatching(Predicate<item> predicate) returns item
+    let inventorySize = this.inventorySize()
+    for i = 0 to inventorySize
+        let itm = this.itemInSlot(i)
+        if predicate.call(itm)
+            return itm
+    return null
+
+public function unit.moveInventoryDown()
+    int array freeSlots
+    var bottom = 0
+    var top = 0
+    for slot = this.inventorySize() - 1 downto 0
+        let itm = this.itemInSlot(slot)
+        if itm == null
+            freeSlots[top] = slot
+            top += 1
+        else if top != bottom
+            this.dropItemSlot(itm, freeSlots[bottom])
+            bottom += 1
+
+public function unit.dropItems(int count)
+    for slot = 0 to count - 1
+        this.removeItemFromSlot(slot)
+
+public function unit.dropItems()
+    this.dropItems(this.inventorySize())

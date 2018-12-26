@@ -1,0 +1,61 @@
+package TradeShipRouteCommand
+import ChatCommands
+import TradeShipStop
+import TradeShipInitializer
+import ClosureTimers
+
+public class TradeShipRoutePing
+    TradeShipStop stop
+    player p
+    var numForksReached = 0
+    let r = 0
+    let g = 0
+    let b = 0
+
+    construct(TradeShipStop s, player _p, int _r, int _g, int _b)
+        stop = s
+        r = _r
+        b = _b
+        g = _g
+        p = _p
+        ping()
+
+    function ping()
+        doPeriodically(0.5) cb ->
+            let pos = stop.getPos()
+            var r = this.r
+            var g = this.g
+            var b = this.b
+
+            if (stop.getPauseTime() > 0)
+                r = 0
+                g = 0
+                b = 255
+
+            PingMinimapEx(pos.x, pos.y, 0.4, r, g, b, false)
+
+            if (stop.hasFork())
+                numForksReached += 1
+
+            if stop.hasFork() and numForksReached > 4
+                stop = stop.getFork()
+            else
+                stop = stop.getNext()
+
+            if stop == null
+                destroy cb
+                destroy this    
+
+init
+    registerCommandAll("trade-routes") (triggerPlayer, args) ->
+        printTimedToPlayer(GENERAL_COLOR + "At the start of the game, two boats will spawn from opposite sides of the map", 10, triggerPlayer)
+        printTimedToPlayer(GENERAL_COLOR + "The first boats will randomly spawn at either N & S or E & W", 10, triggerPlayer)
+        printTimedToPlayer(GENERAL_COLOR + "The east/west route will follow these paths, making stops at the blue pings", 10, triggerPlayer)
+
+        getTradeShipCoordinator().getPairs().forEach() pair ->
+            new TradeShipRoutePing(pair.getFirst(), triggerPlayer, 255, 255, 0)
+
+        doAfter(12) ->
+            printTimedToPlayer(GENERAL_COLOR + "The north/south route will follow these paths, making stops at the blue pings", 10, triggerPlayer)
+            getTradeShipCoordinator().getPairs().forEach() pair ->
+                new TradeShipRoutePing(pair.getLast(), triggerPlayer, 255, 255, 0)

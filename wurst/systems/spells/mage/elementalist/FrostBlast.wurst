@@ -22,10 +22,10 @@ constant let MISSILE_SPEED = 1100.
 constant let MISSILE_LIFETIME = 1.5  
 constant let MANACOST = 15
 constant let IMPACT_TRIGGER_AOE = 130.
-constant let MISSILE_FLY_HEIGHT = 120.
-constant let IMPACT_EFFECT_AOE = 280.
-constant let IMPACT_EFFECT_MIN_DAMAGE = 25.
-constant let IMPACT_EFFECT_MAX_DAMAGE = 60.
+constant let MISSILE_FLY_HEIGHT = 140.
+constant let IMPACT_EFFECT_AOE = 250.
+constant let IMPACT_EFFECT_MIN_DAMAGE = 30.
+constant let IMPACT_EFFECT_MAX_DAMAGE = 70.
 constant let IMPACT_EFFECT_MIN_SLOW_AMOUNT = 0.3
 constant let IMPACT_EFFECT_MAX_SLOW_AMOUNT = 0.8
 constant let IMPACT_EFFECT_MIN_DURATION = 2
@@ -36,7 +36,7 @@ constant let SPELL_ICON = Icons.bTNFrostBolt
 constant let PROJECTILE_EFFECT_PATH = "Abilities\\Weapons\\FrostWyrmMissile\\FrostWyrmMissile.mdl"
 constant let IMPACT_EFFECT_PATH = "Abilities\\Spells\\Undead\\FrostNova\\FrostNovaTarget.mdl"
 constant let TOOLTIP_NORM = "|c00ffcc00E|r - Frost Blast"
-constant let TOOLTIP_EXT = "Shoots out a missile of frost that explodes on impact, dealing 25 - 60 damage and slowing by movement and attack speeds by 30% - 80% for 2 - 6 seconds with effects increasing by distance travelled before impact."
+constant let TOOLTIP_EXT = "Shoots out a missile of frost that explodes on impact, dealing |c00ff000030 - 70|r damage to units in a small area and slows their movement and attack speeds by 30% - 80% for 2 - 6 seconds with effects increasing by distance travelled before impact."
 
 @compiletime function createBuff()
     new BuffDefinition(DUMMY_ABILITY_BUFF_ID, 'Bfro')
@@ -147,8 +147,11 @@ class FrostBlastProjectile
                 this.foundTarget = true
 
     function explode()
-        //Scale slow by missile flight time
-        let effectScalingValue = this.lifeTime/MISSILE_LIFETIME
+        //Scale slow and damage by missile flight time relative to 80% of max lifetime
+        var effectScalingValue = this.lifeTime/(MISSILE_LIFETIME*0.8)
+        if effectScalingValue > 1
+            effectScalingValue = 1
+
         int slowTier = 1 + (9*effectScalingValue).round()
         real damage = IMPACT_EFFECT_MIN_DAMAGE + (IMPACT_EFFECT_MAX_DAMAGE-IMPACT_EFFECT_MIN_DAMAGE)*effectScalingValue
         forUnitsInRange(this.pos.toVec2(), IMPACT_EFFECT_AOE) u ->
@@ -167,6 +170,7 @@ function onCast()
     let targetY = GetSpellTargetY()
     let targetPos = vec2(targetX, targetY)
     let targetAngle = casterPos.angleTo(targetPos)
+    let isOverCharged = consumeOvercharge(caster)
     spawnProjectile(caster, targetAngle)
 
 function spawnProjectile(unit caster, angle ang)
@@ -181,8 +185,6 @@ function spawnProjectile(unit caster, angle ang)
         else
             if projectile != null
                 projectile.updateLoop()
-
-
 
 function isValidTarget(unit caster, unit target) returns bool
     return target.getOwner().isEnemyOf(caster.getOwner()) and not target.isInvulnerable() and not target.isType(UNIT_TYPE_FLYING) and target.isAlive() and not target.isHidden()

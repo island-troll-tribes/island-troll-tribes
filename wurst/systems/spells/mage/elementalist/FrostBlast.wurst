@@ -5,29 +5,67 @@ import ClosureTimers
 import AbilityObjEditing
 import OverCharge
 import Assets
-import Fx
 import ObjectIdGenerator
 import ChatCommands
 import GameConfig
 import ClosureForGroups
+import DummyCaster
+import Orders
+import BuffObjEditing
+import ObjectIds
 
 constant let ABILITY_ID = 'ESFB'
-constant let DUMMY_ID = compiletime(UNIT_ID_GEN.next())
+constant let DUMMY_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
+constant let DUMMY_ABILITY_BUFF_ID = compiletime(BUFF_ID_GEN.next())
 constant let COOLDOWN = 40.  
-constant let MISSILE_SPEED = 1000.  
-constant let MISSILE_LIFETIME = 1.7  
+constant let MISSILE_SPEED = 1100.  
+constant let MISSILE_LIFETIME = 1.5  
 constant let MANACOST = 15
-constant let IMPACT_TRIGGER_AOE = 150.
+constant let IMPACT_TRIGGER_AOE = 130.
 constant let MISSILE_FLY_HEIGHT = 120.
 constant let IMPACT_EFFECT_AOE = 280.
-constant let IMPACT_EFFECT_DAMAGE = 25.
+constant let IMPACT_EFFECT_MIN_DAMAGE = 25.
+constant let IMPACT_EFFECT_MAX_DAMAGE = 60.
+constant let IMPACT_EFFECT_MIN_SLOW_AMOUNT = 0.3
+constant let IMPACT_EFFECT_MAX_SLOW_AMOUNT = 0.8
+constant let IMPACT_EFFECT_MIN_DURATION = 2
+constant let IMPACT_EFFECT_MAX_DURATION = 6
 constant let SPAWN_OFFSET_DISTANCE = 50.
 constant let LOOP_INTERVAL = 0.03125
 constant let SPELL_ICON = Icons.bTNFrostBolt
 constant let PROJECTILE_EFFECT_PATH = "Abilities\\Weapons\\FrostWyrmMissile\\FrostWyrmMissile.mdl"
 constant let IMPACT_EFFECT_PATH = "Abilities\\Spells\\Undead\\FrostNova\\FrostNovaTarget.mdl"
 constant let TOOLTIP_NORM = "|c00ffcc00E|r - Frost Blast"
-constant let TOOLTIP_EXT = "Shoots out a missile of frost that explodes on impact, dealing 25 - 60 damage and rooting for 0.5 - 4 seconds increasing with distance travelled."
+constant let TOOLTIP_EXT = "Shoots out a missile of frost that explodes on impact, dealing 25 - 60 damage and slowing by movement and attack speeds by 30% - 80% for 2 - 6 seconds with effects increasing by distance travelled before impact."
+
+@compiletime function createBuff()
+    new BuffDefinition(DUMMY_ABILITY_BUFF_ID, 'Bfro')
+    ..setTooltipNormal(1, "Frost Blast slow")
+    ..setTooltipNormalExtended(1, "Slowed by Frost Blast")
+    ..setIcon(SPELL_ICON)
+    ..setIconNormal(1, SPELL_ICON)
+
+@compiletime function createDummyFrostNovas()
+    new AbilityDefinitionSlowCreep(DUMMY_ABILITY_ID)
+    ..setLevels(10)
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..presetBuffs(lvl -> toRawCode(DUMMY_ABILITY_BUFF_ID))
+    ..presetCastingTime(lvl -> 0)
+    ..presetCastRange(lvl -> 9999)
+    ..presetAreaofEffect(lvl -> 0)
+    ..presetManaCost(lvl -> 0)
+    ..presetCooldown(lvl -> 0)
+    ..presetAttackSpeedFactor(lvl -> IMPACT_EFFECT_MIN_SLOW_AMOUNT + (IMPACT_EFFECT_MAX_SLOW_AMOUNT-IMPACT_EFFECT_MIN_SLOW_AMOUNT)/9* (lvl-1))
+    ..presetMovementSpeedFactor(lvl -> IMPACT_EFFECT_MIN_SLOW_AMOUNT + (IMPACT_EFFECT_MAX_SLOW_AMOUNT-IMPACT_EFFECT_MIN_SLOW_AMOUNT)/9* (lvl-1))
+    ..presetDurationHero(lvl -> IMPACT_EFFECT_MIN_DURATION + (IMPACT_EFFECT_MAX_DURATION-IMPACT_EFFECT_MIN_DURATION)/9 * (lvl-1))
+    ..presetDurationNormal(lvl -> IMPACT_EFFECT_MIN_DURATION + (IMPACT_EFFECT_MAX_DURATION-IMPACT_EFFECT_MIN_DURATION)/9 * (lvl-1))
+    ..setLevelSkipRequirement(0)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+
 
 @compiletime function createSpell()
     new AbilityDefinitionIllidanChannel(ABILITY_ID)
@@ -67,14 +105,14 @@ constant let TOOLTIP_EXT = "Shoots out a missile of frost that explodes on impac
 
 class FrostBlastProjectile
     real lifeTime
-    unit owner
+    unit ownerUnit
     angle ang
     vec3 pos
     effect efx
     bool foundTarget
     bool exploded
     construct(unit owner, vec3 pos, angle ang)
-        this.owner = owner
+        this.ownerUnit = owner
         this.lifeTime = 0
         this.ang = ang
         this.pos = pos
@@ -82,10 +120,11 @@ class FrostBlastProjectile
         this.foundTarget = false
         this.exploded = false
         this.efx.setRoll(ang)
-        this.efx.setScale(2)
+        this.efx.setScale(1.8)
 
     ondestroy
-        this.efx.destr()
+        if this.efx != null
+            this.efx.destr()
 
     function updateLoop()
         //Dont do anything and wait for destruction by closure if already exploded
@@ -104,15 +143,22 @@ class FrostBlastProjectile
     function checkForImpacts()
         this.foundTarget = false
         forUnitsInRange(this.pos.toVec2(), IMPACT_TRIGGER_AOE) u ->
-            if isValidTarget(owner, u)
+            if isValidTarget(ownerUnit, u)
                 this.foundTarget = true
 
     function explode()
+        //Scale slow by missile flight time
+        let effectScalingValue = this.lifeTime/MISSILE_LIFETIME
+        int slowTier = 1 + (9*effectScalingValue).round()
+        real damage = IMPACT_EFFECT_MIN_DAMAGE + (IMPACT_EFFECT_MAX_DAMAGE-IMPACT_EFFECT_MIN_DAMAGE)*effectScalingValue
         forUnitsInRange(this.pos.toVec2(), IMPACT_EFFECT_AOE) u ->
-            if isValidTarget(this.owner, u)
+            if isValidTarget(this.ownerUnit, u)
                 flashEffect(IMPACT_EFFECT_PATH, u.getPos3Real())
-                this.owner.damageTarget(u, IMPACT_EFFECT_DAMAGE, ATTACK_TYPE_NORMAL)
+                this.ownerUnit.damageTarget(u, damage, ATTACK_TYPE_NORMAL)
+                new DummyCaster().castTarget(this.ownerUnit.getOwner(), DUMMY_ABILITY_ID, slowTier, Orders.slow, u)
         this.exploded = true
+        this.efx.destr()
+        this.efx = null
 
 function onCast()
     let caster = GetSpellAbilityUnit()

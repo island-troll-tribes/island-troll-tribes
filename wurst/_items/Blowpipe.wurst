@@ -13,14 +13,16 @@ import DummyCaster
 import MathUtils
 import Orders
 
-@configurable constant string ICON = Icons.bTNAlleriaFlute
-@configurable constant int ABILITY_ID = 'XBPA'
-@configurable constant int THISTLE_ABILITY_ID = 'A01K'
-@configurable constant int DARKTHISTLE_ABILITY_ID = 'A01L'
-@configurable constant int BONE_ABILITY_ID = 'A015'
-@configurable constant string ITEM_TOOLTIP_EXT = "Used for shooting small things. Can be loaded with thistles or bones."
-@configurable constant int ITEM_ID = 'XIBP'
-@configurable constant int MAX_SLOTS = 10
+constant string ICON = Icons.bTNAlleriaFlute
+constant string ITEM_TOOLTIP = "Purchase |cffffcc00B|rlow Gun"
+constant string ITEM_TOOLTIP_EXT = "Used for shooting small things. Can be loaded with thistles or bones."
+constant string ITEM_DESCRIPTION = "A hollowed out piece of wood. If blown through, could be used to fire small projectiles such as thistles"
+constant int ABILITY_ID = 'XBPA'
+constant int THISTLE_ABILITY_ID = 'A01K'
+constant int DARKTHISTLE_ABILITY_ID = 'A01L'
+constant int BONE_ABILITY_ID = 'A015'
+constant int ITEM_ID = 'XIBP'
+constant int MAX_SLOTS = 10
 
 @compiletime function createBlowpipeAbility()
     new AbilityDefinitionIllidanChannel(ABILITY_ID)
@@ -59,10 +61,10 @@ import Orders
     ..setHitPoints(75)
     ..setLumberCost(5)
     ..setStockReplenishInterval(30)
-    ..setDescription("A hollowed out piece of wood. If blown through, could be used to fire small projectiles such as thistles")
+    ..setDescription(ITEM_DESCRIPTION)
     ..setHotkey("B")
     ..setName("Blow Gun")
-    ..setTooltipBasic("Purchase |cffffcc00B|rlow Gun")
+    ..setTooltipBasic(ITEM_TOOLTIP)
     ..setTooltipExtended(ITEM_TOOLTIP_EXT)
 
 
@@ -72,28 +74,26 @@ IterableMap<item, Blowpipe> instances
 trigger cleanupTrigger
 HashMap<int, int> slotsPerItem
 
-
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())
     EventListener.add(EVENT_PLAYER_UNIT_USE_ITEM, () -> onUse())
     EventListener.add(EVENT_PLAYER_UNIT_PICKUP_ITEM, () -> onPickup())
-
+    cleanupTrigger = CreateTrigger()
+    cleanupTrigger.addAction(function cleanupInstances)
     instances = new IterableMap<item, Blowpipe>()
+
+    //Setup slots per item map
     slotsPerItem = new HashMap<int, int>()
     slotsPerItem.put(ITEM_BONE, 10)
     slotsPerItem.put(ITEM_THISTLES, 1)
     slotsPerItem.put(ITEM_DARK_THISTLES, 2)
-
-    cleanupTrigger = CreateTrigger()
-    cleanupTrigger.addAction(function cleanupInstances)
-
 
     registerCommandAll("blowpipe") (triggerPlayer, args) ->
         if (gameConfig.isTestModeEnabled() == true)
             printTimedToPlayer("Added blowpipe to selected heroes", 5., triggerPlayer)
             forUnitsSelected(triggerPlayer) u ->
                 if (u.isType(UNIT_TYPE_HERO))
-                    u.addItem(ITEM_ID)
+                    u.addItemById(ITEM_ID)
         else
             printTimedToPlayer("Requires test mode!", 5., triggerPlayer)
 
@@ -177,32 +177,32 @@ class Blowpipe
             return
 
         int charges = itm.getCharges()
+        //Tread non-charge items as 1 charge
         if charges == 0
             charges = 1
-
+        
+        //Calculate how many full charges can be loaded considering max slots in blowgun and item 'size'
         int slotsLeft = this.getAmmoSlotsLeft()
-        int chargesToLoad = 0
-        chargesToLoad = floor( slotsLeft / slotsPerItem.get(itm.getTypeId()) )
+        int _chargesToLoad = 0
+        _chargesToLoad = floor( slotsLeft / slotsPerItem.get(itm.getTypeId()) )
 
-        if chargesToLoad == 0
+        if _chargesToLoad == 0
             return
 
-        if chargesToLoad >= charges
+        //Load the appropriate amount of charges
+        if _chargesToLoad >= charges
             this.contents.push(itm)
             owner.removeItem(itm)
             itm.setVisible(false)
-            //Also counts bones etc with 0 charges as 1 ammo
-            if (charges == 0)
-                charges = 1
             this.i.setCharges(this.i.getCharges() + charges)
         else
             //Remove charges from item and create new one with that amount of charges and load it
-            itm.setCharges(charges - chargesToLoad)
+            itm.setCharges(charges - _chargesToLoad)
             item newItem = createItem(itm.getTypeId(), this.i.getPos())
-            newItem.setCharges(chargesToLoad)
+            newItem.setCharges(_chargesToLoad)
             newItem.setVisible(false)
             this.contents.push(newItem)
-            this.i.setCharges(this.i.getCharges() + chargesToLoad)
+            this.i.setCharges(this.i.getCharges() + _chargesToLoad)
 
         updateTooltip()
 
@@ -215,7 +215,7 @@ class Blowpipe
                 var charges = itm.getCharges()
                 if (charges == 0)
                     charges = 1
-                ammoString = ammoString + "\n" + itm.getName() + " x" + charges.toString()
+                ammoString = ammoString + "\n" + itm.getName() + " x" + charges.toString() + "|r"
 
         this.i.setExtendedTooltip(ITEM_TOOLTIP_EXT + ammoString)
 

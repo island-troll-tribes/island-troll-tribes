@@ -15,16 +15,17 @@ constant let ABILITY_ID = 'ESFB'
 constant let DUMMY_ID = compiletime(UNIT_ID_GEN.next())
 constant let COOLDOWN = 40.  
 constant let MISSILE_SPEED = 1000.  
-constant let MISSILE_LIFETIME = 1.4  
+constant let MISSILE_LIFETIME = 1.7  
 constant let MANACOST = 15
 constant let IMPACT_TRIGGER_AOE = 150.
-constant let MISSILE_FLY_HEIGHT = 50.
+constant let MISSILE_FLY_HEIGHT = 120.
 constant let IMPACT_EFFECT_AOE = 280.
 constant let IMPACT_EFFECT_DAMAGE = 25.
 constant let SPAWN_OFFSET_DISTANCE = 50.
 constant let LOOP_INTERVAL = 0.03125
 constant let SPELL_ICON = Icons.bTNFrostBolt
 constant let PROJECTILE_EFFECT_PATH = "Abilities\\Weapons\\FrostWyrmMissile\\FrostWyrmMissile.mdl"
+constant let IMPACT_EFFECT_PATH = "Abilities\\Spells\\Undead\\FrostNova\\FrostNovaTarget.mdl"
 constant let TOOLTIP_NORM = "|c00ffcc00E|r - Frost Blast"
 constant let TOOLTIP_EXT = "Shoots out a missile of frost that explodes on impact, dealing 25 - 60 damage and rooting for 0.5 - 4 seconds increasing with distance travelled."
 
@@ -62,6 +63,56 @@ constant let TOOLTIP_EXT = "Shoots out a missile of frost that explodes on impac
     ..setCooldown(1, COOLDOWN)
     ..setManaCost(1, MANACOST)
     ..setTargetType(1, 3)
+    ..setCastRange(1, 1500)
+
+class FrostBlastProjectile
+    real lifeTime
+    unit owner
+    angle ang
+    vec3 pos
+    effect efx
+    bool foundTarget
+    bool exploded
+    construct(unit owner, vec3 pos, angle ang)
+        this.owner = owner
+        this.lifeTime = 0
+        this.ang = ang
+        this.pos = pos
+        this.efx = addEffect(PROJECTILE_EFFECT_PATH, pos)
+        this.foundTarget = false
+        this.exploded = false
+        this.efx.setRoll(ang)
+        this.efx.setScale(2)
+
+    ondestroy
+        this.efx.destr()
+
+    function updateLoop()
+        //Dont do anything and wait for destruction by closure if already exploded
+        if this.exploded
+            return
+        this.lifeTime += LOOP_INTERVAL
+        vec3 newPos = this.pos.offset2d(this.ang, MISSILE_SPEED * LOOP_INTERVAL)
+        let terrainZ = newPos.getTerrainZ()
+        newPos.z = terrainZ + MISSILE_FLY_HEIGHT
+        this.efx.setPos(newPos)
+        this.pos = newPos
+        checkForImpacts()
+        if (this.foundTarget)
+            explode()
+
+    function checkForImpacts()
+        this.foundTarget = false
+        forUnitsInRange(this.pos.toVec2(), IMPACT_TRIGGER_AOE) u ->
+            if isValidTarget(owner, u)
+                this.foundTarget = true
+
+    function explode()
+        forUnitsInRange(this.pos.toVec2(), IMPACT_EFFECT_AOE) u ->
+            if isValidTarget(this.owner, u)
+                flashEffect(IMPACT_EFFECT_PATH, u.getPos3Real())
+                this.owner.damageTarget(u, IMPACT_EFFECT_DAMAGE, ATTACK_TYPE_NORMAL)
+        this.exploded = true
 
 function onCast()
     let caster = GetSpellAbilityUnit()
@@ -70,31 +121,22 @@ function onCast()
     let targetY = GetSpellTargetY()
     let targetPos = vec2(targetX, targetY)
     let targetAngle = casterPos.angleTo(targetPos)
+    print(targetAngle.degrees().toString())
     spawnProjectile(caster, targetAngle)
 
 function spawnProjectile(unit caster, angle ang)
     let casterPos = caster.getPos()
-    let spawnPos = casterPos.polarOffset(ang, SPAWN_OFFSET_DISTANCE)
-    //var efx = addEffect(PROJECTILE_EFFECT_PATH, spawnPos.withTerrainZ(MISSILE_FLY_HEIGHT))
-    var projectile = new Fx(spawnPos.withTerrainZ(MISSILE_FLY_HEIGHT), ang, PROJECTILE_EFFECT_PATH)
-    projectile.setScale(1.5)
+    let spawnPos = casterPos.polarOffset(ang, SPAWN_OFFSET_DISTANCE).withTerrainZ(MISSILE_FLY_HEIGHT)
+    var projectile = new FrostBlastProjectile(caster, spawnPos, ang)
 
     doPeriodicallyTimed(LOOP_INTERVAL, MISSILE_LIFETIME) updateLoop ->
         if (updateLoop.isLast())
-            doImpactExplosion(caster, projectile.getPos2())
-            destroy projectile
+            if projectile != null
+                destroy projectile
         else
-            let newPos = projectile.getPos2().polarOffset(projectile.getXYAngle(), MISSILE_SPEED * LOOP_INTERVAL)
-            projectile.setXYZ( newPos.withTerrainZ(MISSILE_FLY_HEIGHT))
-            forUnitsInRange(newPos, IMPACT_TRIGGER_AOE) u ->
-                if isValidTarget(caster, u)
-                    updateLoop.stop()
+            if projectile != null
+                projectile.updateLoop()
 
-function doImpactExplosion(unit caster, vec2 pos)
-    //flashEffect(path, pos)
-    forUnitsInRange(pos, IMPACT_EFFECT_AOE) u ->
-        if isValidTarget(caster, u)
-            caster.damageTarget(u, IMPACT_EFFECT_DAMAGE, ATTACK_TYPE_NORMAL)
 
 
 function isValidTarget(unit caster, unit target) returns bool

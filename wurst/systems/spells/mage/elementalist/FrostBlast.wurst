@@ -1,0 +1,62 @@
+package FrostBlast
+
+import HashMap
+import ClosureEvents
+import ClosureTimers
+import AbilityObjEditing
+import Orders
+import OverCharge
+import Assets
+
+constant let ABILITY_ID = 'ESFB'
+constant let COOLDOWN = 40.  
+constant let MISSILE_SPEED = 1000.  
+constant let MISSILE_TRIGGER_AOE = 100
+constant let IMPACT_EFFECT_AOE = 200
+constant let LOOP_INTERVAL = 0.03125
+constant let MANACOST = 15
+constant let SPELL_ICON = Icons.bTNFrostBolt
+constant let PROJECTILE_EFFECT_PATH = "Abilities\\Weapons\\FrostWyrmMissile\\FrostWyrmMissile.mdl"
+constant let TOOLTIP_NORM = "|c00ffcc00E|r- Frost Blast"
+constant let TOOLTIP_EXT = "Shoots out a missile of frost that explodes on impact, dealing 25 - 60 damage and rooting for 0.5 - 4 seconds increasing with distance travelled."
+
+
+@compiletime function createSpell()
+    new AbilityDefinitionIllidanChannel(ABILITY_ID)
+    ..setTargetType(1, 0)
+    ..setAnimationNames("")
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..setButtonPositionNormalX(0)
+    ..setButtonPositionNormalY(1)
+    ..setButtonPositionResearchX(0)
+    ..setButtonPositionResearchY(1)
+    ..setIconNormal(SPELL_ICON)
+    ..setIconResearch(SPELL_ICON)
+    ..setIconTurnOff(SPELL_ICON)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setHotkeyNormal("E")
+    ..setName("Frost Blast")
+    ..setDisableOtherAbilities(1, false)
+    ..setFollowThroughTime(1, 0)
+    ..setCastingTime(1, 0)
+    ..setTooltipNormal(1, TOOLTIP_NORM)
+    ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+    ..setBaseOrderID(1, "bearform")
+    ..setOrderStringUseTurnOn("bearform")
+    ..setOrderStringActivate("bearform")
+    ..setOrderStringDeactivate("bearform")
+    ..setOrderStringTurnOff("bearform")
+    ..setOptions(1, 1)
+    ..setCooldown(1, COOLDOWN)
+    ..setManaCost(1, MANACOST)
+    ..setTargetType(1, 3)
+
+function onCast()
+    
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())

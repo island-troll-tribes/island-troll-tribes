@@ -7,16 +7,16 @@ import AbilityObjEditing
 import Orders
 import OverCharge
 
-@configurable constant int ABILITY_ID = 'ESMD'
-@configurable constant real COOLDOWN = 90
-@configurable constant int MANACOST = 0
-@configurable constant real DURATION = 7
-@configurable constant real PERIOD_INTERVAL = 0.2
-@configurable constant real MANA_PER_SECOND = 18
-@configurable constant string SPELL_ICON = "ReplaceableTextures\\CommandButtons\\BTNDispelMagic.blp"
-@configurable constant string EFFECT_PATH = "Abilities\\Spells\\Undead\\DarkRitual\\DarkRitualTarget.mdl"
-@configurable constant string TOOLTIP_NORM = "|c00ffcc00M |r- Meditate"
-@configurable constant string TOOLTIP_EXT = "Channels to recover |c0080ffff120|r mana over 7 seconds. Cancels on damage."
+constant let ABILITY_ID = 'ESMD'
+constant let COOLDOWN = 90.
+constant let MANACOST = 0
+constant let DURATION = 7.
+constant let PERIOD_INTERVAL = 0.2
+constant let MANA_PER_SECOND = 18.
+constant let SPELL_ICON = "ReplaceableTextures\\CommandButtons\\BTNDispelMagic.blp"
+constant let EFFECT_PATH = "Abilities\\Spells\\Undead\\DarkRitual\\DarkRitualTarget.mdl"
+constant let TOOLTIP_NORM = "|c00ffcc00M|r- Meditate"
+constant let TOOLTIP_EXT = "Channels to recover |c0080ffff120|r mana over 7 seconds. Cancels on damage."
 
 
 @compiletime function createSpell()
@@ -63,9 +63,8 @@ class MeditateInstance
     var dmgTrig = CreateTrigger()
     
     function manaLoop()
-        
+        //Special effects loop
         doPeriodicallyTimed(1, DURATION) fxloop ->
-            
             if (isChanneling or isOvercharged)
                 var efx = AddSpecialEffectTargetUnitBJ("origin", caster, EFFECT_PATH)
                 efx.setTimeScale(2)
@@ -74,6 +73,7 @@ class MeditateInstance
             else
                 fxloop.stop()
 
+        //Actual mana loop
         doPeriodicallyTimed(PERIOD_INTERVAL, DURATION) managiverloop ->
             if (isChanneling or isOvercharged)
                 var newmana = caster.getMana() + PERIOD_INTERVAL * MANA_PER_SECOND

@@ -15,23 +15,36 @@ class QuickMake
     function onCast(unit caster)
         let pos = caster.getPos()
         let recipeSize = itemPredicates.size()
-        let items = new LinkedList<int>()
+        let items = new LinkedList<item>()
+        let inventory = caster.getInventory()
 
-        caster
-        ..moveInventoryDown()
-        ..dropItems(recipeSize)
+        caster.dropItems()
 
-        itemPredicates.forEach() predicate ->
-            var found = caster.getItemMatching(predicate)
+        for predicate in itemPredicates
+            let found = findNearestItem(pos, 700, i -> predicate.call(i))
             if found == null
-                found = findNearestItem(pos, 700, i -> predicate.call(i))
-            items.add(found.getTypeId())
-            found.remove()
+                break
+            items.add(found)
+            found.setVisible(false)
 
-        items.forEach() itemId ->
-            caster.addItemById(itemId)
+        for elem in items
+            elem.setVisible(true)
+
+        if items.size() == recipeSize
+            for elem in items
+                inventory.remove(elem)
+                caster.addItemHandle(elem)
+
+        gg_trg_transmute.disable()
+
+        for elem in inventory
+            caster.addItemHandle(elem)
+        caster.moveInventoryDown()
+
+        gg_trg_transmute.enable()
 
         destroy items
+        destroy inventory
 
     function add(int itemId)
         itemPredicates.add(i -> i.getTypeId() == itemId)
@@ -78,7 +91,7 @@ init
     new QuickMake('A06E')
     ..add(ITEM_IRON_INGOT)
     ..add(ITEM_IRON_INGOT)
-    ..add(ITEM_FLINT) 
+    ..add(ITEM_FLINT)
     ..add(ITEM_FLINT)
 
     new QuickMake('A06D')

@@ -8,20 +8,20 @@ import ClosureForGroups
 import DummyCaster
 import AbilityObjEditing
 
-@configurable constant int ABILITY_ID = 'A076'
-@configurable constant real GROW_DURATION = 10
-@configurable constant real MINIMUM_GROW_DURATION = 1.5
-@configurable constant real DURATION_MAX = 40
-@configurable constant int ORB_COUNT = 7
-@configurable constant real ORB_LOOP_INTERVAL = 0.03125
-@configurable constant real ORB_ANGULARSPEED_SUMMON = 80 
-@configurable constant real ORB_ANGULARSPEED_ACTIVE = 10 
-@configurable constant real SPELLCAST_INTERVAL_FASTEST = 1.5
-@configurable constant real SPELLCAST_INTERVAL_START = 2.5
-@configurable constant real PORTAL_GROWSPEED = 100 
-@configurable constant string SPELLCAST_EFFECT_PATH = "Abilities\\Spells\\Demon\\DarkPortal\\DarkPortalTarget.mdl"
-@configurable constant string TRAIL_EFFECT_PATH = "Abilities\\Weapons\\AvengerMissile\\AvengerMissile.mdl"
-@configurable constant string ORB_EFFECT_PATH = "Objects\\InventoryItems\\CrystalShard\\CrystalShard.mdl" 
+constant let ABILITY_ID = 'A076'
+constant let GROW_DURATION = 10.
+constant let MINIMUM_GROW_DURATION = 1.5
+constant let DURATION_MAX = 40.
+constant let ORB_COUNT = 7
+constant let ORB_LOOP_INTERVAL = 0.03125
+constant let ORB_ANGULARSPEED_SUMMON = 80.
+constant let ORB_ANGULARSPEED_ACTIVE = 10.
+constant let SPELLCAST_INTERVAL_FASTEST = 1.5
+constant let SPELLCAST_INTERVAL_START = 2.5
+constant let PORTAL_GROWSPEED = 100.
+constant let SPELLCAST_EFFECT_PATH = "Abilities\\Spells\\Demon\\DarkPortal\\DarkPortalTarget.mdl"
+constant let TRAIL_EFFECT_PATH = "Abilities\\Weapons\\AvengerMissile\\AvengerMissile.mdl"
+constant let ORB_EFFECT_PATH = "Objects\\InventoryItems\\CrystalShard\\CrystalShard.mdl" 
 
 @compiletime function createDummyChainlightning()
     new AbilityDefinitionChainLightningcreep('PRTA')
@@ -160,6 +160,19 @@ class PortalOrb
     function setFacing(angle facing)
         orbFX.setRoll(facing)
 
+    function castRandomSpell(unit t)
+        var owner = instance.ownerUnit.getOwner()
+        var randomSpell = spellList.get( GetRandomInt(0, spellList.size() - 1))
+        //Dont use manaburn on units without mana pools
+        while (t.getMaxMana() <= 10 and randomSpell.name == "Manaburn") 
+            randomSpell = spellList.get( GetRandomInt(0, spellList.size() - 1))
+        
+        if (randomSpell.name == "Crushingwave")
+            new DummyCaster(2.5).castTarget(owner, randomSpell.spellId, 1, randomSpell.orderId, t, this.pos)
+        else
+            new DummyCaster().castTarget(owner, randomSpell.spellId, 1, randomSpell.orderId, t, this.pos)
+        addEffect(SPELLCAST_EFFECT_PATH, this.pos).destr()
+
     ondestroy
         instance.orbs.remove(this)
         orbFX.destr()
@@ -222,45 +235,41 @@ public class DarkPortalInstance
                 portalGrowLoop.stop()
                 this.startPortalLoop()
             else
-                //Avoid creating vision on every loop cycle with mod check
-                if (portalGrowLoop.getCount() mod 30 == 0)
-                    var vis = createVision(ownerUnit.getOwner(), centerPos.toVec2(), portalRadius+100, true)
-                    vis.start()
-                    //Should be the full duration of portal calculated below for vision mods
-                    doAfter(durationBuildup + GROW_DURATION - elapsedLifetime) ->
-                        vis.destr()
-                
-                //Update things that change with channeling time
-                spellIntervalCurrent = SPELLCAST_INTERVAL_START - (SPELLCAST_INTERVAL_START - SPELLCAST_INTERVAL_FASTEST) * (elapsedLifetime/GROW_DURATION)
-                elapsedLifetime += ORB_LOOP_INTERVAL
-                channeledTime += ORB_LOOP_INTERVAL
-                portalRadius += ORB_LOOP_INTERVAL * PORTAL_GROWSPEED
-                durationBuildup = (channeledTime / GROW_DURATION) * DURATION_MAX
-                orbAngle = angle(orbAngle.radians() + ORB_LOOP_INTERVAL * ORB_ANGULARSPEED_SUMMON * DEGTORAD)
+                portalGrowLoopUpdate()
 
-                //Move orbs around
-                updateOrbAngles()
+    function portalGrowLoopUpdate()
+        //Avoid creating vision on every loop cycle with mod check
+        if (portalCreationLoop.getCount() mod 30 == 0)
+            var vis = createVision(ownerUnit.getOwner(), centerPos.toVec2(), portalRadius+100, true)
+            vis.start()
+            //Should be the full duration of portal calculated below for vision mods destruction
+            doAfter(durationBuildup + GROW_DURATION - elapsedLifetime) ->
+                vis.destr()
+        
+        //Update things that change with channeling time
+        spellIntervalCurrent = SPELLCAST_INTERVAL_START - (SPELLCAST_INTERVAL_START - SPELLCAST_INTERVAL_FASTEST) * (elapsedLifetime/GROW_DURATION)
+        elapsedLifetime += ORB_LOOP_INTERVAL
+        channeledTime += ORB_LOOP_INTERVAL
+        portalRadius += ORB_LOOP_INTERVAL * PORTAL_GROWSPEED
+        durationBuildup = (channeledTime / GROW_DURATION) * DURATION_MAX
+        orbAngle = angle(orbAngle.radians() + ORB_LOOP_INTERVAL * ORB_ANGULARSPEED_SUMMON * DEGTORAD)
+
+        //Move orbs around
+        updateOrbAngles()
+
+    function isUnitInsidePortal(unit u) returns boolean
+        return this.centerPos.toVec2().distanceTo(u.getPos()) <= this.portalRadius
 
     function randomOrbCastSpell()
         var orb = this.orbs.get( GetRandomInt(0, orbs.size() - 1))
-        var owner = ownerUnit.getOwner()
         var centerPosVec2 = centerPos.toVec2()
         var _foundTarget = false
 
         //Find random target and cast + spawn effect on orb
         forUnitsInRange(centerPosVec2, portalRadius) t ->
             if not _foundTarget
-                if t.getOwner().isEnemyOf(owner) and not t.isInvulnerable() and not t.isType(UNIT_TYPE_STRUCTURE) and t.isAlive() and IsUnitVisible(t, owner)
-                    var randomSpell = spellList.get( GetRandomInt(0, spellList.size() - 1))
-                    //Dont use manaburn on units without mana pools
-                    while (t.getMaxMana() <= 10 and randomSpell.name == "Manaburn") 
-                        randomSpell = spellList.get( GetRandomInt(0, spellList.size() - 1))
-                    
-                    if (randomSpell.name == "Crushingwave")
-                        new DummyCaster(2.5).castTarget(owner, randomSpell.spellId, 1, randomSpell.orderId, t, orb.pos)
-                    else
-                        new DummyCaster().castTarget(owner, randomSpell.spellId, 1, randomSpell.orderId, t, orb.pos)
-                    addEffect(SPELLCAST_EFFECT_PATH, orb.pos).destr()
+                if isValidEnemyTarget(t)
+                    orb.castRandomSpell(t)
                     _foundTarget = true
             
 
@@ -283,40 +292,50 @@ public class DarkPortalInstance
                 if (portalLoop.isLast())
                     destroy this
                 else    
-                    //Update orb loop actions
-                    if (this.elapsedLifetime - this.lastSpellCastTimestamp >= this.spellIntervalCurrent)
-                        this.lastSpellCastTimestamp = this.elapsedLifetime
-                        randomOrbCastSpell()
-                    elapsedLifetime += ORB_LOOP_INTERVAL
-                    orbAngle = angle(orbAngle.radians() + ORB_LOOP_INTERVAL * ORB_ANGULARSPEED_ACTIVE * DEGTORAD)
-                    updateOrbAngles()
-                    updateSummons()
-                    
+                    portalLoopUpdate()
+        
+    function portalLoopUpdate()
+        //Check time since last spell was cast and cast
+        if (this.elapsedLifetime - this.lastSpellCastTimestamp >= this.spellIntervalCurrent)
+            this.lastSpellCastTimestamp = this.elapsedLifetime
+            randomOrbCastSpell()
+        elapsedLifetime += ORB_LOOP_INTERVAL
+        orbAngle = angle(orbAngle.radians() + ORB_LOOP_INTERVAL * ORB_ANGULARSPEED_ACTIVE * DEGTORAD)
+        updateOrbAngles()
+        updateSummons()
+
+    function isValidEnemyTarget(unit t) returns boolean
+        return t.getOwner().isEnemyOf(ownerUnit.getOwner()) and not t.isInvulnerable() and not t.isType(UNIT_TYPE_STRUCTURE) and t.isAlive() and IsUnitVisible(t, ownerUnit.getOwner())
+
+    function isValidAllyTarget(unit t) returns boolean
+        return not t.isInvulnerable() and not t.isType(UNIT_TYPE_STRUCTURE) and t.isAlive() and IsUnitVisible(t, ownerUnit.getOwner())
+
+    function summonTryAttacking(Summon s)
+        //Checking time since last attack
+        if (s.elapsedLifetime - s.lastAttack >= s.cooldown)
+
+            //Create object for closure to store unit
+            unitObject _summonTarget = new unitObject(null)
+            forUnitsInRange(centerPos.toVec2(), portalRadius) t ->
+                //Try to find enemies first, pick targets without buffs over those who have em
+                if _summonTarget.value == null or _summonTarget.value.hasAbility('Bmlt') or _summonTarget.value.hasAbility('B00Q')
+                    if isValidEnemyTarget(t)
+                        _summonTarget.value = t
+
+                if _summonTarget.value == null or _summonTarget.value.hasAbility('Bmlt') or _summonTarget.value.hasAbility('B00Q')
+                    if isValidAllyTarget(t)
+                        _summonTarget.value = t
+                
+            if _summonTarget.value != null
+                s.summonUnit.issueTargetOrderById(s.orderId, _summonTarget.value)
+                s.lastAttack = s.elapsedLifetime
+
+            destroy _summonTarget
+
 
     function updateSummons()
         for s in summons
-            if (s.elapsedLifetime - s.lastAttack >= s.cooldown)
-                //s.summonUnit.issueTargetOrderById(s.orderId, null)
-                unit summonTarget = null
-                forUnitsInRange(centerPos.toVec2(), portalRadius) t ->
-                    //Try to find enemies first
-                    if summonTarget == null
-                        if t.getOwner().isEnemyOf(ownerUnit.getOwner()) and not t.isInvulnerable() and not t.isType(UNIT_TYPE_STRUCTURE) and t.isAlive() and IsUnitVisible(t, ownerUnit.getOwner())
-                            //Pick targets without buffs over those who have em
-                            if summonTarget == null or summonTarget.hasAbility('Bmlt') or summonTarget.hasAbility('B00Q') 
-                                summonTarget = t
-
-                    //Try to find allies second
-                    if summonTarget == null
-                        if not t.isInvulnerable() and not t.isType(UNIT_TYPE_STRUCTURE) and t.isAlive() and IsUnitVisible(t, ownerUnit.getOwner())
-                            //Pick targets without buffs over those who have em
-                            if summonTarget == null or summonTarget.hasAbility('Bmlt') or summonTarget.hasAbility('B00Q') 
-                                summonTarget = t
-                    
-                    if summonTarget != null
-                        s.summonUnit.issueTargetOrderById(s.orderId, summonTarget)
-                        s.lastAttack = s.elapsedLifetime
-            //Update summon lifetime clock
+            summonTryAttacking(s)
             s.elapsedLifetime += ORB_LOOP_INTERVAL
             
     ondestroy
@@ -374,6 +393,11 @@ public function getDementiaGate(unit owner) returns DarkPortalInstance
         return darkPortalInstances.get(owner)
     else 
         return null
+
+class unitObject
+    unit value
+    construct(unit value)
+        this.value = value
 
 init
     createSpellList()

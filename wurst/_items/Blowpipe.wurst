@@ -12,11 +12,12 @@ import GameConfig
 import DummyCaster
 import MathUtils
 import Orders
+import InventoryEvent
 
 constant string ICON = Icons.bTNAlleriaFlute
 constant string ITEM_TOOLTIP = "Purchase |cffffcc00B|rlow Gun"
-constant string ITEM_TOOLTIP_EXT = "Used for shooting small things. Can be loaded with thistles or bones."
-constant string ITEM_DESCRIPTION = "A hollowed out piece of wood. If blown through, could be used to fire small projectiles such as thistles"
+constant string ITEM_TOOLTIP_EXT = "Used for shooting small things. Can be loaded with thistles or bones. Drag items on the blowpipe to load, click and use on your own troll to unload."
+constant string ITEM_DESCRIPTION = "A hollowed out piece of wood. If blown through, could be used to fire small projectiles such as thistles."
 constant int ABILITY_ID = 'XBPA'
 constant int THISTLE_ABILITY_ID = 'A01K'
 constant int DARKTHISTLE_ABILITY_ID = 'A01L'
@@ -76,6 +77,7 @@ HashMap<int, int> slotsPerItem
 
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerInventoryEvent(EVENT_ITEM_INVENTORY.MOVE, () -> onItemMoved())
     EventListener.add(EVENT_PLAYER_UNIT_USE_ITEM, () -> onUse())
     EventListener.add(EVENT_PLAYER_UNIT_PICKUP_ITEM, () -> onPickup())
     cleanupTrigger = CreateTrigger()
@@ -143,6 +145,7 @@ class Blowpipe
     function onFire(unit caster)
         if this.target == caster
             //Empty blowpipe on self-target
+            caster.endAbilityCooldown(ABILITY_ID)
             emptyContentsToUnit(caster)
             return
 
@@ -187,6 +190,9 @@ class Blowpipe
         _chargesToLoad = floor( slotsLeft / slotsPerItem.get(itm.getTypeId()) )
 
         if _chargesToLoad == 0
+            //Bounce item to stop slot swap from happening
+            owner.removeItem(itm)
+            owner.addItemHandle(itm)
             return
 
         //Load the appropriate amount of charges
@@ -203,6 +209,10 @@ class Blowpipe
             newItem.setVisible(false)
             this.contents.push(newItem)
             this.i.setCharges(this.i.getCharges() + _chargesToLoad)
+            
+            //Bounce item to stop slot swap from happening
+            owner.removeItem(itm)
+            owner.addItemHandle(itm)
 
         updateTooltip()
 
@@ -273,14 +283,6 @@ function onPickup()
         if not instances.has(itm)
             instances.put(itm, new Blowpipe(itm))
 
-    //Load ammo if ammo is acquired
-    if itemId == ITEM_THISTLES or itemId == ITEM_DARK_THISTLES or itemId == ITEM_BONE
-        var slot1 = trigUnit.itemInSlot(0)
-        if (slot1 != null and slot1.getTypeId() == ITEM_ID)
-            if (instances.has(slot1))
-                instances.get(slot1).loadAmmo(trigUnit, itm)
-
-
 function cleanupInstances()
     //Check all instances and destroy those that have had item destroyed
     var iter = instances.iterator()
@@ -293,8 +295,16 @@ function cleanupInstances()
 
     iter.close()
 
+function onItemMoved()
+    var slotFrom = getInventorySlotFrom()
+    var slotTo = getInventorySlotTo()
+    var u = getInventoryManipulatingUnit()
+    var i = getInventoryManipulatedItem()
 
-
+    //If dragging onto blowpipe, and item is loadable, load it
+    if u.itemInSlot(slotTo).getTypeId() == ITEM_ID
+        if slotsPerItem.has(i.getTypeId())
+            instances.get(u.itemInSlot(slotTo)).loadAmmo(u, i)
 
 
 

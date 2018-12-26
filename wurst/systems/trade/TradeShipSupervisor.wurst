@@ -3,6 +3,7 @@ import TradeShipStop
 import HashMap
 import LinkedList
 import ClosureTimers
+import ErrorHandling
 
 let TRADE_SHIP_PAUSE_TIME_DEST = 0
 let TRADE_SHIP_PAUSE_TIME_SELL = 0
@@ -55,10 +56,7 @@ public class TradeShipSupervisor
 
         state = TradeShipSupervisorState.MOVING
         ship.issuePointOrder("move", nextStop.getPos())
-        
-        if callback != null
-            destroy callback
-            callback = null
+        destroyCallback()
 
         callback = doPeriodically(1.0) cb ->
             ship.issuePointOrder("move", nextStop.getPos())
@@ -67,17 +65,14 @@ public class TradeShipSupervisor
         if state == TradeShipSupervisorState.STOPPED
             return
 
-        if callback != null
-            destroy callback
-            callback = null
-            
-
         state = TradeShipSupervisorState.STOPPED
+        destroyCallback()
         doAfter(duration, -> moveToNextStop())
 
     function removeShip()
         ships.remove(ship)
         ship.remove()
+        destroyCallback()
         state = TradeShipSupervisorState.EXITED
         ship = null
 
@@ -101,6 +96,11 @@ public class TradeShipSupervisor
 
         triggerListeners()
 
+    private function destroyCallback()
+        if callback != null
+            destroy callback
+            callback = null
+
     ondestroy
         listeners.forEach(listener -> destroy listener)
         destroy listeners
@@ -108,7 +108,8 @@ public class TradeShipSupervisor
         if callback != null
             destroy callback
             callback = null
-            
+            error("TradeShipSupervisorError: destroyed while callback not null")
 
         if ship != null
             removeShip()
+            error("TradeShipSupervisorError: destroyed while ship not null")

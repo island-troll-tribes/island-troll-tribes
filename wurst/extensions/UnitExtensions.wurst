@@ -1,6 +1,8 @@
 package UnitExtensions
 import HashMap
+import LinkedList
 import Lodash
+import GameConfig
 
 public function unit.getHeroSkillPoints() returns integer
     return GetHeroSkillPoints(this)
@@ -31,6 +33,13 @@ public function unit.getInventoryItemCountMap() returns HashMap<int, int>
         else
             map.put(id, 1)
     return map
+
+public function unit.getInventory() returns LinkedList<item>
+    let list = new LinkedList<item>
+    let size = this.inventorySize()
+    for i = 0 to size - 1
+        list.add(this.itemInSlot(i))
+    return list
 
 public function unit.addXp(int toAdd)
     AddHeroXP(this, toAdd, true)
@@ -67,6 +76,14 @@ public function unit.getHeat() returns int
 
 public function unit.setHeat(int heat)
     this.getOwner().setGold(heat)
+
+public function unit.addHeat(int heat)
+    let owner = this.getOwner()
+    owner.setGold(min(owner.getGold() + heat, gameConfig.getMaxHeat()))
+
+public function unit.subHeat(int heat)
+    let owner = this.getOwner()
+    owner.setGold(max(owner.getGold() - heat, 0))
 
 
 public function unit.getItemMatching(Predicate<item> predicate) returns item

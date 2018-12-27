@@ -1,6 +1,7 @@
 package Lodash
 import LinkedList
 import HashMap
+import ClosureTimers
 
 public interface Function<S, R>
     function call(S s) returns R
@@ -13,6 +14,9 @@ public interface BiFunction<S, T, R>
 
 public interface TriFunction<S, T, U, R>
     function call(S s, T t, U u) returns R
+
+public function LinkedList<T>.nullDestroy<T>()
+    nullTimer(-> destroy this)
 
 public function LinkedList<T>.takeWhile<T>(TriFunction<T, int, LinkedList<T>, bool> predicate) returns LinkedList<T>
     let list = new LinkedList<T>()
@@ -121,8 +125,18 @@ public function map<T, Q>(Function<T, Q> transform, LinkedList<T> list) returns 
     iter.close()
     return result
 
+public function mapD<T, Q>(Function<T, Q> transform, LinkedList<T> list) returns LinkedList<Q>
+    let result = map(transform, list)
+    destroy transform
+    return result
+
 public function map<T, Q>(Function<T, Q> transform) returns Function<LinkedList<T>, LinkedList<Q>>
     return list -> map(transform, list)
+
+public function LinkedList<T>.mapD<T, Q>(Function<T, Q> transform) returns LinkedList<Q>
+    let result = map(transform, this)
+    destroy transform
+    return result
 
 public function flatten<T>(LinkedList<LinkedList<T>> list) returns LinkedList<T>
     let result = new LinkedList<T>()
@@ -163,6 +177,15 @@ public function filter<T>(Predicate<T> filter, LinkedList<T> list) returns Linke
 
 public function LinkedList<T>.filter<T>(Predicate<T> filter) returns LinkedList<T>
     return filter(filter, this)
+
+public function sum<T>(Function<T, int> fn, LinkedList<T> list) returns int
+    return foldl(0, (elem, value) -> value + fn.call(elem), list)
+
+public function LinkedList<T>.sum<T>(Function<T, int> fn) returns int
+    return sum(fn, this)
+
+public function LinkedList<int>.sum() returns int
+    return foldl(0, (elem, value) -> value + elem, this)
 
 @Test
 public function testMapValues()

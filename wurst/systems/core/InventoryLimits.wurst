@@ -27,15 +27,14 @@ function enforceInventoryLimits()
         return
 
     let whichItem = GetManipulatedItem()
-    let size = whichUnit.inventorySize()
-
     let restrictionsForItem = filter(r -> r.getCount.call(whichItem) > 0, restrictions)
 
     for restriction in restrictionsForItem
-        var currCount = restriction.getCount.call(whichItem)
-        for slot = 0 to size - 1
-            let itemInSlot = whichUnit.itemInSlot(slot)
-            currCount += restriction.getCount.call(itemInSlot)
+        let currCount = whichUnit
+            .getInventory()..nullDestroy()
+            .mapD(i -> restriction.getCount.call(i))..nullDestroy()
+            .sum()
+
         if currCount > restriction.maxCount
             whichUnit.removeItem(whichItem)
             break

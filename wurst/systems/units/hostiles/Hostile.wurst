@@ -2,11 +2,12 @@ package Hostile
 import LinkedList
 import UnitEntity
 
+
 public function createCorpse(player p, int unitId, vec2 pos, angle facing) returns unit
     return CreateCorpse(p, unitId, pos.x, pos.y, facing.degrees())
 
 public abstract class Hostile extends UnitEntity
-    protected constant let drops = new LinkedList<int>()
+    protected LinkedList<int> drops
 
     construct(unit whichUnit)
         super(whichUnit)
@@ -22,6 +23,9 @@ public abstract class Hostile extends UnitEntity
 
     function getNumCorpses() returns int
         return 1
+
+    override function postCreate()
+        drops = new LinkedList<int>()
 
     override function onDeath()
         let pos = getPos()

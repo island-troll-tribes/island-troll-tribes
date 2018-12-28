@@ -1,0 +1,45 @@
+package DiscoDuck
+import Hostile
+import ItemPoolExtensions
+
+
+public class DiscoDuck extends Hostile
+    private static let unitTypeId = UNIT_DISCO_DUCK
+    private static let pinions = CreateItemPool()
+
+    static function initialize()
+        register(unitTypeId, duck -> new DiscoDuck(duck))
+
+        pinions
+        ..addItemType(ITEM_DD_PINION_FIRE, 100)
+        ..addItemType(ITEM_DD_PINION_SHADOW, 100)
+        ..addItemType(ITEM_DD_PINION_PAIN, 100)
+
+    construct(unit whichUnit)
+        super(whichUnit)
+
+    override function postCreate()
+        super.postCreate()
+        drops
+        ..add(ITEM_BONE)
+        ..add(ITEM_BONE)
+        ..add(ITEM_STEEL_INGOT)
+        ..add(ITEM_STEEL_INGOT)
+        ..add(ITEM_MEDALLION_COURAGE)
+
+    override function getNumCorpses() returns int
+        return 13
+
+    override function getTypeId() returns int
+        return unitTypeId
+
+    override function onDeath()
+        let pos = getPos()
+        let pinion = pinions.placeRandomItem(pos)
+        pinions.removeItemType(pinion.getTypeId())
+        DD_Dead = true
+        super.onDeath()
+
+
+init
+    DiscoDuck.initialize()

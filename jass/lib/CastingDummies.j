@@ -25,7 +25,7 @@ else
     // debug call DisplayText("DUMMY: Allocate")
 endif
 call UnitResetCooldown(u)
-call SetUnitUserData(u, 1)
+call SetUnitUserDataEx(u, 1)
 call SetUnitOwner(u, p, false)
 call SetUnitX(u, x)
 call SetUnitY(u, y)
@@ -41,7 +41,7 @@ call SpearCastTable.remove_h(u)
 call ReleaseTimer(GetExpiredTimer())
 call SetUnitX(u, spawn_x)
 call SetUnitY(u, spawn_y)
-call SetUnitUserData(u, -1)
+call SetUnitUserDataEx(u, -1)
 call GroupAddUnit(dummyCast, u)
 //call PauseUnit(u, true)
 // Pause caused problems with blowgun abilities..

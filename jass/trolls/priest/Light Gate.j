@@ -47,7 +47,7 @@ function lightGateSpell takes nothing returns nothing
     local unit u5=LoadUnitHandle(udg_GameHash,GetHandleId(u),StringHash("node5"))
     local unit u6=LoadUnitHandle(udg_GameHash,GetHandleId(u),StringHash("node6"))
 
-    //local location center=I2L(GetUnitUserData(u))
+    //local location center=I2L(GetUnitUserDataEx(u))
     //
     
     local real X=LoadReal(udg_GameHash,GetHandleId(u),StringHash("X"))
@@ -89,7 +89,7 @@ function endLightGate takes nothing returns nothing
     local timer t=LoadTimerHandle(udg_GameHash, GetHandleId(GetTriggeringTrigger()), StringHash("timer"))
     local unit u=LoadUnitHandle(udg_GameHash, GetHandleId(t), StringHash("player"))
 
-    call SetUnitUserData(u,0)
+    call SetUnitUserDataEx(u,0)
     
     call FlushChildHashtable(udg_GameHash,GetHandleId(t))
     call FlushChildHashtable(udg_GameHash,GetHandleId(GetTriggeringTrigger()))
@@ -141,7 +141,7 @@ function killLightGate takes nothing returns nothing
        call UnitApplyTimedLifeBJ( 2.8+(i/8), 'BTLF', u5 )
        call UnitApplyTimedLifeBJ( 3+(i/8), 'BTLF', u6 )
 
-       //call SetUnitUserData(GetSpellAbilityUnit(),SaveLocationHandle(Location(LoadReal(udg_GameHash, GetHandleId(t), StringHash("X")),LoadReal(udg_GameHash, GetHandleId(t), StringHash("Y")))))
+       //call SetUnitUserDataEx(GetSpellAbilityUnit(),SaveLocationHandle(Location(LoadReal(udg_GameHash, GetHandleId(t), StringHash("X")),LoadReal(udg_GameHash, GetHandleId(t), StringHash("Y")))))
         //instead: use real x / y directly..
        // LoadReal(udg_GameHash, GetHandleId(t), StringHash("X"))
        // LoadReal(udg_GameHash, GetHandleId(t), StringHash("Y"))

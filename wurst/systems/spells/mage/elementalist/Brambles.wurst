@@ -19,18 +19,22 @@ import MapBounds
 
 constant let ABILITY_ID = 'ESBR'
 constant let DUMMY_SLOW_SPELL_ID = compiletime(ABIL_ID_GEN.next())
+constant let DUMMY_ENTANGLE_SPELL_ID = compiletime(ABIL_ID_GEN.next())
 constant let DUMMY_VISION_BONUS_ID = compiletime(ABIL_ID_GEN.next())
 constant let DUMMY_SLOW_BUFF = compiletime(BUFF_ID_GEN.next())
+constant let DUMMY_ENTANGLE_BUFF = compiletime(BUFF_ID_GEN.next())
 constant let COOLDOWN = 40.
-constant let MANACOST = 15
+constant let MANACOST = 20
 constant let RANGE = 700.
 constant let DURATION = 6.
 constant let EFFECT_AOE = 200.
-constant let MS_SLOW = 0.75
+constant let MS_SLOW = 0.80
 constant let AS_SLOW = 0.40
-constant let DAMAGE_PER_SECOND = 10
-constant let ROOT_CREATION_PERIOD = 0.2
-constant let UPDATE_LOOP_INTERVAL = 0.2
+constant let SLOW_DURATION = 1.2
+constant let OVERCHARGE_ROOT_DURATION = 2.5
+constant let DAMAGE_PER_SECOND = 8
+constant let ROOT_CREATION_PERIOD = 0.25
+constant let UPDATE_LOOP_INTERVAL = 0.03125
 constant let SPELL_ICON = Icons.bTNEntanglingRoots
 constant let ROOTS_EFFECT_PATH = "Abilities\\Spells\\NightElf\\EntanglingRoots\\EntanglingRootsTarget.mdl"
 constant let TOOLTIP_NORM = "|c00ffcc00S|r - Brambles"
@@ -46,10 +50,21 @@ constant let TOOLTIP_EXT = "Causes brambles to surface from underground in a str
 @compiletime function createBuff()
     new BuffDefinition(DUMMY_SLOW_BUFF, 'Bfro')
     ..setTooltipNormal(1, "Brambles")
-    ..setTooltipNormalExtended(1, "Slowed and damaged by brambles")
+    ..setTooltipNormalExtended(1, "Slowed and damaged by brambles.")
     ..setIcon(SPELL_ICON)
     ..setIconNormal(1, SPELL_ICON)
     ..setArtTarget(1, "")
+    ..setArtSpecial(1, "")
+
+@compiletime function createEntangleBuff()
+    new BuffDefinition(DUMMY_ENTANGLE_BUFF, 'Bfro')
+    ..setTooltipNormal(1, "Brambles")
+    ..setTooltipNormalExtended(1, "Rooted by brambles.")
+    ..setIcon(SPELL_ICON)
+    ..setIconNormal(1, SPELL_ICON)
+    ..setArtTarget(1, ROOTS_EFFECT_PATH)
+    ..setTargetAttachmentPoint0(1, "origin")
+    ..setTargetAttachments(1, 1)
     ..setArtSpecial(1, "")
 
 @compiletime function createDummySlow()
@@ -67,8 +82,8 @@ constant let TOOLTIP_EXT = "Causes brambles to surface from underground in a str
     ..presetCooldown(lvl -> 0)
     ..presetAttackSpeedFactor(lvl -> AS_SLOW)
     ..presetMovementSpeedFactor(lvl -> MS_SLOW)
-    ..presetDurationHero(lvl -> UPDATE_LOOP_INTERVAL*5)
-    ..presetDurationNormal(lvl -> UPDATE_LOOP_INTERVAL*5)
+    ..presetDurationHero(lvl -> SLOW_DURATION)
+    ..presetDurationNormal(lvl -> SLOW_DURATION)
     ..setLevelSkipRequirement(0)
     ..setHeroAbility(false)
     ..setItemAbility(false)
@@ -109,6 +124,28 @@ constant let TOOLTIP_EXT = "Causes brambles to surface from underground in a str
     ..setTargetType(1, 3)
     ..setCastRange(1, RANGE)
 
+@compiletime function createDummySnare()
+    new AbilityDefinitionEnsnareCreep(DUMMY_ENTANGLE_SPELL_ID)
+    ..setMissileArt("")
+    ..setMissileHomingEnabled(true)
+    ..setMissileSpeed(99999)
+    ..setLevels(1)
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..presetBuffs(lvl -> toRawCode(DUMMY_ENTANGLE_BUFF))
+    ..presetCastingTime(lvl -> 0)
+    ..presetCastRange(lvl -> 9999)
+    ..presetAreaofEffect(lvl -> 0)
+    ..presetManaCost(lvl -> 0)
+    ..presetCooldown(lvl -> 0)
+    ..presetDurationHero(lvl -> OVERCHARGE_ROOT_DURATION)
+    ..presetDurationNormal(lvl -> OVERCHARGE_ROOT_DURATION)
+    ..setLevelSkipRequirement(0)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+
 class BramblesInstance
     unit ownerUnit
     player owner
@@ -116,6 +153,7 @@ class BramblesInstance
     vec2 startPos
     bool isOvercharged
     LinkedList<unit> rootDummies = null
+    LinkedList<unit> snaredTargets = null
     LinkedList<effect> rootEffects = null
     CallbackPeriodic effectLoop = null
 
@@ -125,6 +163,7 @@ class BramblesInstance
         this.ang = ang
         this.startPos = pos
         this.rootDummies = new LinkedList<unit>()
+        this.snaredTargets = new LinkedList<unit>()
         this.rootEffects = new LinkedList<effect>()
         this.isOvercharged = isOvercharged
         startPropagation()
@@ -144,17 +183,23 @@ class BramblesInstance
 
     function startEffectLoop()
         effectLoop = doPeriodically(UPDATE_LOOP_INTERVAL) cb ->
-
             //Linkedlist to prevent double damaging units
             LinkedList<unit> loopDamagedTargets = new LinkedList<unit>()
 
             for root in rootEffects
                 let rootPos = root.getPos()
                 forUnitsInRange(rootPos, EFFECT_AOE) u ->
-                    if isValidTarget(u) and not loopDamagedTargets.has(u)
-                        new DummyCaster().castTarget(owner, DUMMY_SLOW_SPELL_ID, 1, Orders.slow, u)
-                        ownerUnit.damageTarget(u, DAMAGE_PER_SECOND*UPDATE_LOOP_INTERVAL, ATTACK_TYPE_NORMAL)
-                        loopDamagedTargets.push(u)
+                    if isValidTarget(u)
+                        if not u.hasAbility(DUMMY_SLOW_BUFF)
+                            new DummyCaster().castTarget(owner, DUMMY_SLOW_SPELL_ID, 1, Orders.slow, u)
+                        if not snaredTargets.has(u) and isOvercharged
+                            new DummyCaster().castTarget(owner, DUMMY_ENTANGLE_SPELL_ID, 1, Orders.ensnare, u)
+                            snaredTargets.push(u)
+                        if not loopDamagedTargets.has(u)
+                            ownerUnit.damageTarget(u, DAMAGE_PER_SECOND*UPDATE_LOOP_INTERVAL, ATTACK_TYPE_NORMAL)
+                            loopDamagedTargets.push(u)
+
+
 
             destroy loopDamagedTargets
 
@@ -162,6 +207,9 @@ class BramblesInstance
         let fx = addEffect(ROOTS_EFFECT_PATH, pos.withTerrainZ(-70))
         fx.setRoll(ang)
         fx.setScale(2.4)
+        fx.setTimeScale(3)
+        doAfter(0.325) ->
+            fx.setTimeScale(0.6)
         return fx
 
     function createRootDummy(vec2 pos, angle ang) returns unit
@@ -185,9 +233,11 @@ class BramblesInstance
         destroy rootDummies
 
         for fx in rootEffects
+            fx.setTimeScale(3)
             fx.destr()
         destroy rootEffects
 
+        destroy snaredTargets
         destroy effectLoop
 
 function onCast()

@@ -1,0 +1,57 @@
+package InventoryLimits
+import UnitExtensions
+import ItemExtensions
+import RegisterEvents
+import GameConfig
+import Lodash
+import Game
+
+class Restriction
+    int maxCount
+    Function<item, int> getCount
+
+    construct(int maxCount, Function<item, int> getCount)
+        this.maxCount = maxCount
+        this.getCount = getCount
+
+    construct(Function<item, int> getCount)
+        this.maxCount = 1
+        this.getCount = getCount
+
+let restrictions = new OwnedLinkedList<Restriction>()
+
+function enforceInventoryLimits()
+    let whichUnit = GetManipulatingUnit()
+    if not whichUnit.isTroll()
+        return
+
+    let whichItem = GetManipulatedItem()
+    let restrictionsForItem = filter(r -> r.getCount.call(whichItem) > 0, restrictions)
+
+    for restriction in restrictionsForItem
+        let currCount = whichUnit
+            .getInventory()
+            .map(i -> restriction.getCount.call(i))
+            .sum()
+
+        if currCount > restriction.maxCount
+            whichUnit.removeItem(whichItem)
+            break
+
+    destroy restrictionsForItem
+
+init
+    restrictions
+    ..add(new Restriction(i -> i.isGloves().toInt()))
+    ..add(new Restriction(i -> i.isBoots().toInt()))
+    ..add(new Restriction(i -> i.isCoat().toInt()))
+    ..add(new Restriction(i -> i.isSpell().toInt()))
+    ..add(new Restriction(i -> i.isGloves().toInt()))
+    ..add(new Restriction(i -> (i.getTypeId() == ITEM_SMOKED_MEAT).toInt()))
+    ..add(new Restriction(2, i -> i.getTypeId() == ITEM_BATTLE_AXE ? 2 : i.isAxeOrShield().toInt()))
+    ..add(new Restriction(i -> i.isPinion().toInt()))
+    ..add(new Restriction(i -> i.isShield().toInt()))
+
+    registerGameStartEvent() ->
+        if gameConfig.getInventoryLimits()
+            registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM, function enforceInventoryLimits)

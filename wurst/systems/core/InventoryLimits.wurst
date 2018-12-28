@@ -2,7 +2,6 @@ package InventoryLimits
 import UnitExtensions
 import ItemExtensions
 import RegisterEvents
-import LinkedList
 import GameConfig
 import Lodash
 import Game
@@ -19,7 +18,7 @@ class Restriction
         this.maxCount = 1
         this.getCount = getCount
 
-let restrictions = new LinkedList<Restriction>()
+let restrictions = new OwnedLinkedList<Restriction>()
 
 function enforceInventoryLimits()
     let whichUnit = GetManipulatingUnit()
@@ -31,8 +30,8 @@ function enforceInventoryLimits()
 
     for restriction in restrictionsForItem
         let currCount = whichUnit
-            .getInventory()..nullDestroy()
-            .mapD(i -> restriction.getCount.call(i))..nullDestroy()
+            .getInventory()
+            .map(i -> restriction.getCount.call(i))
             .sum()
 
         if currCount > restriction.maxCount

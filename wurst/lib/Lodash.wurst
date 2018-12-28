@@ -3,36 +3,115 @@ import LinkedList
 import HashMap
 import ClosureTimers
 
-public interface Function<S, R>
-    function call(S s) returns R
+public class OwnedLinkedList<T> extends LinkedList<T>
 
-public interface Predicate<S>
-    function call(S s) returns bool
+public class OwnedIterableMap<K, V> extends IterableMap<K, V>
 
-public interface BiFunction<S, T, R>
-    function call(S s, T t) returns R
+public abstract class Callable
+    var cleanup = true
 
-public interface TriFunction<S, T, U, R>
-    function call(S s, T t, U u) returns R
+    function own()
+        cleanup = false
 
-public function LinkedList<T>.nullDestroy<T>()
+    function maybeFree()
+        if cleanup
+            destroy this
+
+    function destroyNextTick()
+        nullTimer(-> destroy this)
+
+public abstract class VoidFunction<T> extends Callable
+    static function owned<T>(VoidFunction<T> func) returns VoidFunction<T>
+        return func..own()
+
+    static function autoDestroy<T>(VoidFunction<T> func) returns VoidFunction<T>
+        return func..destroyNextTick()
+
+    abstract function call(T t)
+
+public abstract class Function<S, R> extends Callable
+    static function owned<S, R>(Function<S, R> func) returns Function<S, R>
+        return func..own()
+
+    static function autoDestroy<S, R>(Function<S, R> func) returns Function<S, R>
+        return func..destroyNextTick()
+
+    abstract function call(S s) returns R
+
+public abstract class Predicate<S> extends Callable
+    static function owned<S>(Predicate<S> func) returns Predicate<S>
+        return func..own()
+
+    static function autoDestroy<S, R>(Function<S, R> func) returns Function<S, R>
+        return func..destroyNextTick()
+
+    abstract function call(S s) returns bool
+
+public abstract class BiFunction<S, T, R> extends Callable
+    static function owned<S, T, R>(BiFunction<S, T, R> func) returns BiFunction<S, T, R>
+        return func..own()
+
+    static function autoDestroy<S, T, R>(BiFunction<S, T, R> func) returns BiFunction<S, T, R>
+        return func..destroyNextTick()
+
+    abstract function call(S s, T t) returns R
+
+public abstract class TriFunction<S, T, U, R> extends Callable
+    static function owned<S, T, U, R>(TriFunction<S, T, U, R> func) returns TriFunction<S, T, U, R>
+        return func..own()
+
+    static function autoDestroy<S, T, U, R>(TriFunction<S, T, U, R> func) returns TriFunction<S, T, U, R>
+        return func..destroyNextTick()
+
+    abstract function call(S s, T t, U u) returns R
+
+public function LinkedList<T>.destroyNextTick<T>()
     nullTimer(-> destroy this)
 
-public function LinkedList<T>.takeWhile<T>(TriFunction<T, int, LinkedList<T>, bool> predicate) returns LinkedList<T>
-    let list = new LinkedList<T>()
-    let iter = this.iterator()
+public function LinkedList<T>.maybeFree<T>()
+    if not this instanceof OwnedLinkedList<T>
+        destroy this
+
+public function IterableMap<K, V>.maybeFree<K, V>()
+    if not this instanceof OwnedIterableMap<K, V>
+        destroy this
+
+public function asOwnedList<T>(vararg T ts) returns OwnedLinkedList<T>
+    let ll = new OwnedLinkedList<T>
+    for t in ts
+        ll.add(t)
+    return ll
+
+public function takeWhile<T>(TriFunction<T, int, LinkedList<T>, bool> predicate, LinkedList<T> list) returns LinkedList<T>
+    let result = new LinkedList<T>()
+    let iter = list.iterator()
     for elem from iter
-        if not predicate.call(elem, list.size(), this)
+        if not predicate.call(elem, result.size(), list)
             break
-        list.add(elem)
+        result.add(elem)
     iter.close()
-    return list
+    predicate.maybeFree()
+    list.maybeFree()
+    return result
+
+public function takeWhile<T>(BiFunction<T, int, bool> predicate, LinkedList<T> list) returns LinkedList<T>
+    let result = takeWhile((x, y, _z) -> predicate.call(x, y), list)
+    predicate.maybeFree()
+    return result
+
+public function takeWhile<T>(Predicate<T> predicate, LinkedList<T> list) returns LinkedList<T>
+    let result = takeWhile((x, _y, _z) -> predicate.call(x), list)
+    predicate.maybeFree()
+    return result
+
+public function LinkedList<T>.takeWhile<T>(TriFunction<T, int, LinkedList<T>, bool> predicate) returns LinkedList<T>
+    return takeWhile(predicate, this)
 
 public function LinkedList<T>.takeWhile<T>(BiFunction<T, int, bool> predicate) returns LinkedList<T>
     return this.takeWhile((x, y, _z) -> predicate.call(x, y))
 
 public function LinkedList<T>.takeWhile<T>(Predicate<T> predicate) returns LinkedList<T>
-    return this.takeWhile((x, _y) -> predicate.call(x))
+    return this.takeWhile((x, _y, _z) -> predicate.call(x))
 
 public function take<T>(int numElems, LinkedList<T> list) returns LinkedList<T>
     let result = new LinkedList<T>()
@@ -43,6 +122,7 @@ public function take<T>(int numElems, LinkedList<T> list) returns LinkedList<T>
             break
         result.add(elem)
     iter.close()
+    list.maybeFree()
     return result
 
 public function take<T>(int numElems) returns Function<LinkedList<T>, LinkedList<T>>
@@ -57,6 +137,8 @@ public function foldl<Q, T>(Q startValue, BiFunction<T, Q, Q> transform, LinkedL
     for elem from iter
         result = transform.call(elem, result)
     iter.close()
+    transform.maybeFree()
+    list.maybeFree()
     return result
 
 public function foldl<Q, T>(Q startValue, BiFunction<T, Q, Q> transform) returns Function<LinkedList<T>, Q>
@@ -72,6 +154,8 @@ public function every<T>(Predicate<T> predicate, LinkedList<T> list) returns boo
             iter.close()
             return false
     iter.close()
+    list.maybeFree()
+    predicate.maybeFree()
     return true
 
 public function every<T>(Predicate<T> predicate) returns Predicate<LinkedList<T>>
@@ -87,6 +171,8 @@ public function any<T>(Predicate<T> predicate, LinkedList<T> list) returns bool
             iter.close()
             return true
     iter.close()
+    list.maybeFree()
+    predicate.maybeFree()
     return false
 
 public function any<T>(Predicate<T> predicate) returns Predicate<LinkedList<T>>
@@ -101,6 +187,7 @@ public function keys<T, Q>(IterableMap<T, Q> map) returns LinkedList<T>
     for key from iter
         keys.add(key)
     iter.close()
+    map.maybeFree()
     return keys
 
 public function IterableMap<T, Q>.keys<T, Q>() returns LinkedList<T>
@@ -112,6 +199,7 @@ public function values<T, Q>(IterableMap<T, Q> map) returns LinkedList<Q>
     for key from iter
         values.add(map.get(key))
     iter.close()
+    map.maybeFree()
     return values
 
 public function IterableMap<T, Q>.values<T, Q>() returns LinkedList<Q>
@@ -123,20 +211,12 @@ public function map<T, Q>(Function<T, Q> transform, LinkedList<T> list) returns 
     for elem from iter
         result.add(transform.call(elem))
     iter.close()
-    return result
-
-public function mapD<T, Q>(Function<T, Q> transform, LinkedList<T> list) returns LinkedList<Q>
-    let result = map(transform, list)
-    destroy transform
+    transform.maybeFree()
+    list.maybeFree()
     return result
 
 public function map<T, Q>(Function<T, Q> transform) returns Function<LinkedList<T>, LinkedList<Q>>
     return list -> map(transform, list)
-
-public function LinkedList<T>.mapD<T, Q>(Function<T, Q> transform) returns LinkedList<Q>
-    let result = map(transform, this)
-    destroy transform
-    return result
 
 public function flatten<T>(LinkedList<LinkedList<T>> list) returns LinkedList<T>
     let result = new LinkedList<T>()
@@ -161,6 +241,7 @@ public function drop<T>(int numElems, LinkedList<T> list) returns LinkedList<T>
         else
             result.add(elem)
     iter.close()
+    list.maybeFree()
     return result
 
 public function drop<T>(int numElems) returns Function<LinkedList<T>, LinkedList<T>>
@@ -173,6 +254,8 @@ public function filter<T>(Predicate<T> filter, LinkedList<T> list) returns Linke
         if filter.call(elem)
             result.add(elem)
     iter.close()
+    filter.maybeFree()
+    list.maybeFree()
     return result
 
 public function LinkedList<T>.filter<T>(Predicate<T> filter) returns LinkedList<T>
@@ -187,15 +270,36 @@ public function LinkedList<T>.sum<T>(Function<T, int> fn) returns int
 public function LinkedList<int>.sum() returns int
     return foldl(0, (elem, value) -> value + elem, this)
 
+public function LinkedList<real>.sum() returns real
+    return foldl(0.0, (elem, value) -> value + elem, this)
+
+public function length<T>(LinkedList<T> list) returns int
+    let size = list.size()
+    list.maybeFree()
+    return size
+
+public function LinkedList<T>.length<T>() returns int
+    return length(this)
+
+public function each<T>(VoidFunction<T> func, LinkedList<T> list)
+    for elem in list
+        func.call(elem)
+    list.maybeFree()
+    func.maybeFree()
+
+public function LinkedList<T>.each<T>(VoidFunction<T> func)
+    each(func, this)
+
 @Test
 public function testMapValues()
-    let maps = asList(
+    let maps = asOwnedList(
         new IterableMap<int, int>()..put(1, 2),
         new IterableMap<int, int>()..put(3, 4),
         new IterableMap<int, int>()..put(5, 6)
     )
 
-    let mapValues = map<IterableMap<int, int>>(elem -> values(elem))
+    let valuesOf = Function.owned<IterableMap<int, int>, LinkedList<int>>(elem -> values(elem))
+    let mapValues = map(valuesOf)
     let values = flatten(mapValues.call(maps))
 
     values.size().assertEquals(3)
@@ -218,7 +322,7 @@ public function testFlatten()
         )
     )
 
-    let mapFlatten = map(flatten<int>())
+    let mapFlatten = map(Function.owned(flatten<int>()))
     let result = mapFlatten.call(lists)
     result.size().assertEquals(2)
     result.get(0).size().assertEquals(10)
@@ -231,7 +335,7 @@ function testTake2()
 
 @Test
 function testTake()
-    let list = new LinkedList<int>()
+    let list = new OwnedLinkedList<int>()
     list.size().assertEquals(0)
 
     list..add(1, 2, 3, 4)
@@ -259,7 +363,7 @@ function testLinkedListAny()
 
 @Test
 function testTakeWhile()
-    let list = new LinkedList<int>()
+    let list = new OwnedLinkedList<int>()
     list.size().assertEquals(0)
 
     list..add(1, 2, 3, 4)

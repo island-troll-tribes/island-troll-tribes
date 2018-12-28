@@ -2,13 +2,11 @@ package LesserHydra
 import Hostile
 import LinkedListModule
 import TimerUtils
+import ClosureEvents
 
 
 constant let hydraSpawnModel = "Objects\\Spawnmodels\\Naga\\NagaDeath\\NagaDeath.mdl"
 constant let hydraDespawnModel = "Abilities\\Spells\\Other\\CrushingWave\\CrushingWaveDamage.mdl"
-
-constant SPELL_NETHER = 'A037'
-constant BUFF_NETHER = 'BHbn'
 
 
 public class LesserHydra extends Hostile
@@ -16,6 +14,7 @@ public class LesserHydra extends Hostile
 
     private static let unitTypeId = UNIT_LESSER_HYDRA
     private static let hydraDespawnTimer = getTimer()
+    private static var hydraTimerStarted = false
     private static let hydraTimer = getTimer()
 
     static function initialize()
@@ -65,6 +64,7 @@ public class LesserHydra extends Hostile
 
     construct(vec2 pos)
         super(players[PLAYER_NEUTRAL_AGGRESSIVE], pos)
+        EventListener.add(getUnit(), EVENT_UNIT_DAMAGED, -> onAttacked())
         hydraDespawnTimer.start(60, function LesserHydra.despawn)
 
     override function postCreate()
@@ -87,6 +87,9 @@ public class LesserHydra extends Hostile
             let pos = getPos()
             for i = 0 to 1
                 new LesserHydra(pos)
+
+    function onAttacked()
+        hydraDespawnTimer.start(60, function despawn)
 
     override function postDeath()
 

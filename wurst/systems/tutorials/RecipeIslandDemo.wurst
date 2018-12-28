@@ -1,0 +1,77 @@
+package RecipeIslandDemo
+import ClosureTimers
+import ClosureForGroups
+import Texttag
+
+rect elk_run = Rect(2880, -11264, 2944, -11200)
+rect fire_location = Rect(2816, -11136, 2944, -11008)
+rect block_location = Rect(2688, -11264, 2816, -11136)
+rect gatherer_spawn = Rect(2144, -11328, 2272, -11200)
+texttag text1 = null
+texttag text2 = null
+
+function runFireTrapDemo()
+    unit elk = null
+    unit gatherer = null
+    CallbackPeriodic elkMoverLoop = null
+    let tinder = createItem(ITEM_TINDER, gatherer_spawn.getCenter() + vec2(-100, 150))
+    let flint = createItem(ITEM_FLINT, gatherer_spawn.getCenter() + vec2(-100, 0))
+    let stick = createItem(ITEM_STICK, gatherer_spawn.getCenter() + vec2(-100, -150))
+    gatherer = CreateUnit(playerFromIndex(PLAYER_NEUTRAL_PASSIVE), UNIT_GATHERER, gatherer_spawn.getCenterX(), gatherer_spawn.getCenterY(), 0)
+    elk = CreateUnit(playerFromIndex(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_ELK, elk_run.getCenterX(), elk_run.getCenterY(), 0)
+    //Keep elk from escaping with random wander
+    elkMoverLoop = doPeriodically(0.05) cb ->
+        elk.issuePointOrder("move", elk_run.getCenter())
+
+    //Create tip text
+    if text1 == null
+        text1 = createTTEx(gatherer_spawn.getCenter().toVec3() + vec3(-100, 250, 50), "TIP:\nPick up items in the correct order to craft!\nFire: tinder, flint, stick\nSee the buildings on this island for more recipes", 9., colorA(0, 255, 0, 255))
+    
+    //Starting delay, then pickup items
+    doAfter(5) ->
+        gatherer.issueTargetOrder("smart", tinder)
+        doAfter(0.75) ->
+            gatherer.issueTargetOrder("smart", flint)
+            doAfter(0.75) ->
+                gatherer.issueTargetOrder("smart", stick)
+                doAfter(2) ->
+                    //Build fire order
+                    let fire = gatherer.getItemById(ITEM_FIRE_KIT)
+                    gatherer.useItemPoint(fire, fire_location.getCenter())
+                    if text2 == null
+                        text2 = createTTEx(elk_run.getCenter().toVec3() + vec3(-50, 150, 100), "TIP:\nElks can be trapped with a campfire!", 9., colorA(0, 255, 0, 255))
+                    
+                    //Wait for fire to build
+                    doAfter(2.2) ->
+                        //Block elk, attack
+                        gatherer.issuePointOrder("move", block_location.getCenter())
+                        doAfter(0.6) ->
+                            gatherer.issueTargetOrder("attack", elk)
+                            destroy elkMoverLoop
+                            //Keep playing demo for a while, cleanup afterwards
+                            doAfter(11) ->
+                                elk.remove()
+                                gatherer.remove()
+                                elk = null
+                                gatherer = null
+                                elkMoverLoop = null
+                                forUnitsInRect(gg_rct_vision) u ->
+                                    if u.getTypeId() == UNIT_FIRE
+                                        u.remove()
+    
+init
+    //Initial camera at the demo location
+    PanCameraTo(gatherer_spawn.getCenterX()+150, gatherer_spawn.getCenterY()+150)
+
+    //Run the demo twice in recipe island
+    doAfter(1) ->
+        runFireTrapDemo()
+        doAfter(22.5) ->
+            runFireTrapDemo()
+            doAfter(22.5) ->
+                //Only destroy texts once both demos finished
+                text1.destr()
+                text2.destr()
+                text1 = null
+                text2 = null
+

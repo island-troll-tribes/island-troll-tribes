@@ -2,7 +2,6 @@ library LegacyInit initializer onInit
     private function LegacyInit takes nothing returns nothing
         call DestroyTimer(GetExpiredTimer())
         call ExecuteFunc("InitTrig_Smell_Drop")
-        call ExecuteFunc("InitTrig_stat_display")
         call ExecuteFunc("InitTrig_meat_and_bone")
         call ExecuteFunc("InitTrig_hydra_summoning")
         call ExecuteFunc("InitTrig_hydradespawn")
@@ -10,7 +9,6 @@ library LegacyInit initializer onInit
         call ExecuteFunc("InitTrig_hydraantinether")
         call ExecuteFunc("InitTrig_antiescapehydra")
         call ExecuteFunc("InitTrig_mixing_pot_stuff")
-        call ExecuteFunc("InitTrig_pickdrop_2")
         call ExecuteFunc("InitTrig_tannery_stuff")
         call ExecuteFunc("InitTrig_TeleGather")
         call ExecuteFunc("InitTrig_TeleThief")
@@ -78,7 +76,6 @@ library LegacyInit initializer onInit
         call ExecuteFunc("InitTrig_Rest_BM_SKills")
         call ExecuteFunc("InitTrig_Baby_Spells")
         call ExecuteFunc("InitTrig_to_mid_spells_flyer")
-        call ExecuteFunc("InitTrig_CreateQuests")
         call ExecuteFunc("InitTrig_find_nearest_hatchery")
         call ExecuteFunc("InitTrig_eggza_CUTE_orders")
         call ExecuteFunc("InitTrig_grow_up")

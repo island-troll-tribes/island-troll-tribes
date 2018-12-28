@@ -7,11 +7,17 @@ import PlayerExtensions
 
 public class Tribe
     static let playerToTribeMap = new HashMap<player, Tribe>()
-    static let tribes = new LinkedList<Tribe>()
+    static let tribes = new OwnedLinkedList<Tribe>()
 
-    static Predicate<Tribe> isNotDefeated = tribe -> not tribe.isDefeated()
-    static Predicate<player> memberIsDead = member -> not member.getTroll().isAlive()
-    static Predicate<Tribe> hasNoAliveMembers = tribe -> tribe.getMembers().every(memberIsDead)
+    static let isNotDefeated = Predicate.owned<Tribe>(tribe -> not tribe.isDefeated())
+    static let memberIsDead = Predicate.owned<player>(member -> not member.getTroll().isAlive())
+    static let hasNoAliveMembers = Predicate.owned<Tribe>(tribe -> tribe.getMembers().every(memberIsDead))
+
+    int tribeId
+    rect spawn
+    let tribePlayers = new OwnedLinkedList<player>()
+    let tribe = CreateForce()
+    var defeated = true
 
     static function getTribes() returns LinkedList<Tribe>
         return tribes

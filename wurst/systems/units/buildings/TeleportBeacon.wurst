@@ -9,6 +9,7 @@ import SimError
 
 
 constant let SPELL_TELEPORT_BEACON = 'A042'
+constant let RANGE = [0.0, 700, 1100]
 constant let rangeCheckModFirst = "Doodads\\Cinematic\\GlowingRunes\\GlowingRunes2.mdl"
 constant let mirrorEfx = "Abilities\\Spells\\NightElf\\Blink\\BlinkTarget.mdl"
 
@@ -53,7 +54,8 @@ public class TeleportBeacon extends Building
         if not beacon.getOwner().isAllyOf(whichPlayer)
             return
 
-        let range = beacon.getAbilityLevel(SPELL_TELEPORT_BEACON) == 1 ? 700.0 : 1100.0
+        let level = beacon.getAbilityLevel(SPELL_TELEPORT_BEACON)
+        let range = RANGE[level]
         let beaconPos = beacon.getPos()
         let list = new LinkedList<effect>()
         let path = localPlayer == whichPlayer ? rangeCheckModFirst : ""

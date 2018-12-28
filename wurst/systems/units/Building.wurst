@@ -1,0 +1,21 @@
+package Building
+import UnitEntity
+import ClosureEvents
+import UnitExtensions
+
+
+enum BuildingState
+    CONSTRUCTING
+    CONSTRUCTED
+
+public abstract class Building extends UnitEntity
+    private var state = BuildingState.CONSTRUCTING
+
+    construct(unit whichUnit)
+        super(whichUnit)
+        EventListener.add(getUnit(), EVENT_PLAYER_UNIT_CONSTRUCT_FINISH, -> onConstructFinish())
+
+    function onConstructFinish()
+        state = BuildingState.CONSTRUCTED
+        // TODO remove
+        getUnit().setUserDataEx(0)

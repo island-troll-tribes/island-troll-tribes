@@ -1,0 +1,70 @@
+package AutoSkill
+import RegisterEvents
+import HashMap
+import UnitExtensions
+import OnUnitEnterLeave
+import ClosureTimers
+
+
+let skillMap = new HashMap<int, int>()
+
+
+function autoSkill(unit whichUnit)
+    if not whichUnit.isTroll()
+        return
+
+    let unitTypeId = whichUnit.getTypeId()
+    let skillPoints = whichUnit.getSkillPoints()
+
+    if not skillMap.has(unitTypeId)
+        return
+
+    for i = 1 to skillPoints
+        whichUnit.selectSkill(skillMap.get(unitTypeId))
+
+function maybeAutoSkillEnteringUnit(unit whichUnit)
+    if not whichUnit.isTroll()
+        return
+
+    nullTimer(-> autoSkill(whichUnit))
+
+
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_HERO_LEVEL, -> autoSkill(GetTriggerUnit()))
+    onEnter(-> maybeAutoSkillEnteringUnit(getEnterLeaveUnit()))
+
+    skillMap
+    ..put(UNIT_ASSASSIN, 'A075')
+    ..put(UNIT_BOOSTER, 'A05D')
+    ..put(UNIT_BOOSTER_1, 'CBO1')
+    ..put(UNIT_CHICKEN_FORM, 'A07Q')
+    ..put(UNIT_CONTORTIONIST, 'A04K')
+    ..put(UNIT_DEMENTIA_MASTER, 'A03M')
+    ..put(UNIT_DRUID, 'A0EW')
+    ..put(UNIT_DRUNKEN_TROLL, 'A0C1')
+    ..put(UNIT_ELEMENTALIST, 'A04S')
+    ..put(UNIT_ELEMENTALIST_1, 'A04S')
+    ..put(UNIT_ESCAPE_ARTIST, 'A04L')
+    ..put(UNIT_GATHERER, 'A02Z')
+    ..put(UNIT_HERB_MASTER, 'A057')
+    ..put(UNIT_HUNTER, 'A01O')
+    ..put(UNIT_HUNTER_1, 'A01O')
+    ..put(UNIT_HYPNOTIST, 'A04X')
+    ..put(UNIT_JUGGERNAUT, 'A06Z')
+    ..put(UNIT_MAGE, 'A01S')
+    ..put(UNIT_MAGE_1, 'A01S')
+    ..put(UNIT_MASTER_HEALER, 'A05B')
+    ..put(UNIT_MASTER_HEALER_1, 'A05B')
+    ..put(UNIT_OBSERVER, 'A054')
+    ..put(UNIT_OMNIGATHERER, 'A06W')
+    ..put(UNIT_PRIEST, 'A02D')
+    ..put(UNIT_RADAR_GATHERER, 'A057')
+    ..put(UNIT_RADAR_SCOUT, 'A055')
+    ..put(UNIT_SAGE, 'A07J')
+    ..put(UNIT_SCOUT, 'A01R')
+    ..put(UNIT_SPY, 'A073')
+    ..put(UNIT_THIEF, 'A01V')
+    ..put(UNIT_TRACKER, 'A05O')
+    ..put(UNIT_TROLL_BRAWLER, 'A0C3')
+    ..put(UNIT_TROLL_BREWMASTER, 'A0C5')
+    ..put(UNIT_WARRIOR, 'A05H')

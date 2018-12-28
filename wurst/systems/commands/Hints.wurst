@@ -9,7 +9,7 @@ let HINTS_OFF_MESSAGE = GENERAL_COLOR + "Your hints are now " + GOLD_COLOR + "of
 let HINTS_ON_MESSAGE = GENERAL_COLOR + "Your hints are now " + GOLD_COLOR + "on" + GENERAL_COLOR + "."
 
 class Hint
-    
+
     static force playersF = CreateForce()
 
     private string message
@@ -40,7 +40,7 @@ class Hint
     static function togglePlayer(player p)
         if (IsPlayerInForce(p, playersF))
             Hint.removePlayer(p)
-        else    
+        else
             Hint.addPlayer(p)
 
     function display()
@@ -53,16 +53,16 @@ class Hint
         for i = 0 to bj_MAX_PLAYERS - 1
             if players[i].isIngame()
                 ForceAddPlayer(playersF, players[i])
-               
-        registerCommandAll("h") (triggerPlayer, args) -> 
+
+        registerCommandAll("h") (triggerPlayer, args) ->
             Hint.togglePlayer(triggerPlayer)
-        
+
 public function displayNextHint(LLIterator<Hint> iterator)
     let hint = iterator.next()
     hint.display()
     if iterator.hasNext() == false
         iterator.reset()
-        
+
 public function doPeriodicDisplay(LinkedList<Hint> hintList)
         let iterator = hintList.iterator()
         doPeriodically(TIME_BETWEEN_HINTS, (cb) -> displayNextHint(iterator))
@@ -73,8 +73,10 @@ public function checkStat(unit troll)
     var health = troll.getHP()
     var heat = owner.getGold()
 
+    if localPlayer == owner
+        ClearTextMessages()
     if health <= 25
-        printTimedToPlayer(COLOR_RED + "Your health is low, eat some meat!", 3, owner)
+        printTimedToPlayerClear(COLOR_RED + "Your health is low, eat some meat!", 3, owner)
     if mana <= 25
         printTimedToPlayer(COLOR_RED + "Your mana is low, get some sleep!", 3, owner)
     if heat <= 25
@@ -104,7 +106,7 @@ init
 
         Hint.initialize()
         doPeriodicDisplay(hintList)
-        doPeriodically(10) cb ->
+        doPeriodically(1) cb ->
             for troll in udg_trolls
                 if IsPlayerInForce(troll.getOwner(), Hint.playersF)
                     checkStat(troll)

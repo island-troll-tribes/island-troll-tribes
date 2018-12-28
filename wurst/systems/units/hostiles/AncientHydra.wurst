@@ -1,0 +1,92 @@
+package AncientHydra
+import Hostile
+import LesserHydra
+import ClosureTimers
+import ClosureForGroups
+import UnitExtensions
+import DummyCaster
+import ClosureEvents
+
+
+constant SPELL_NETHER = 'A037'
+constant BUFF_NETHER = 'BHbn'
+
+
+public class AncientHydra extends Hostile
+    private static let unitTypeId = UNIT_ANCIENT_HYDRA
+
+    static function initialize()
+        register(unitTypeId, hydra -> new AncientHydra(hydra))
+
+    CallbackPeriodic callback
+    var frostReady = true
+
+    construct(unit whichUnit)
+        super(whichUnit)
+
+    construct(vec2 pos)
+        super(players[PLAYER_NEUTRAL_AGGRESSIVE], pos)
+
+    override function postCreate()
+        super.postCreate()
+        let hydra = getUnit()
+        ..addSleep(false)
+        ..setCreepGuard(false)
+
+        HornSound()
+        flashEffect(teleportModel, hydra, "overhead")
+        callback = doPeriodically(4, cb -> attackCenter())
+
+        EventListener.add(hydra, EVENT_UNIT_DAMAGED, -> onAttacked())
+        EventListener.add(hydra, EVENT_PLAYER_UNIT_SPELL_EFFECT, -> onSpellEffect())
+
+    function attackCenter()
+        let hydra = getUnit()
+
+        if frostReady
+            forNearestUnit(getPos(), 600, Filter(-> begin
+                return not GetFilterUnit().getOwner().isAllyOf(players[PLAYER_NEUTRAL_AGGRESSIVE])
+            end), closest -> begin
+                if closest != null
+                    hydra.issuePointOrder("breathoffrost", closest.getPos())
+                    frostReady = false
+                    doAfter(10, -> begin
+                        frostReady = true
+                    end)
+            end)
+
+        if frostReady
+            hydra.issuePointOrder("attack", gg_rct_discoduck.getCenter())
+
+    override function getNumCorpses() returns int
+        return 8
+
+    override function getTypeId() returns int
+        return unitTypeId
+
+    override function onDeath()
+        destroy callback
+
+        let pos = getPos()
+        for i = 0 to 1
+            new LesserHydra(pos)
+
+    function onAttacked()
+        let attacker = GetEventDamageSource()
+        if attacker.getTypeId() == UNIT_BEE
+            attacker.setOwner(players[PLAYER_NEUTRAL_AGGRESSIVE], true)
+
+    function onSpellEffect()
+        if GetSpellAbilityId() == SPELL_NETHER
+            getUnit().removeAbility(BUFF_NETHER)
+            new DummyCaster().castTarget(
+                players[PLAYER_NEUTRAL_AGGRESSIVE],
+                SPELL_NETHER,
+                1,
+                "banish",
+                GetSpellAbilityUnit()
+            )
+
+
+init
+    AncientHydra.initialize()

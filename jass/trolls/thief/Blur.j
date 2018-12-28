@@ -3,7 +3,7 @@
 //TESH.scrollpos=40
 //TESH.alwaysfold=0
 function Trig_blur_Func001Func001Func003C takes nothing returns boolean
-    if ( not ( GetUnitUserData(GetEnumUnit()) >= 6 ) ) then
+    if ( not ( GetUnitUserDataEx(GetEnumUnit()) >= 6 ) ) then
         return false
     endif
     return true
@@ -17,8 +17,8 @@ function Trig_blur_Conditions takes nothing returns boolean
 endfunction
 
 function Trig_blur_Func001Func001A takes nothing returns nothing
-    call SetUnitUserData( GetEnumUnit(), ( GetUnitUserData(GetEnumUnit()) + 1 ) )
-    call SetUnitVertexColorBJ( GetEnumUnit(), 100, 100, 100, ( 15+15.00 * I2R(GetUnitUserData(GetEnumUnit())) ) )
+    call SetUnitUserDataEx( GetEnumUnit(), ( GetUnitUserDataEx(GetEnumUnit()) + 1 ) )
+    call SetUnitVertexColorBJ( GetEnumUnit(), 100, 100, 100, ( 15+15.00 * I2R(GetUnitUserDataEx(GetEnumUnit())) ) )
     if ( Trig_blur_Func001Func001Func003C() ) then
         call GroupRemoveUnitSimple( GetEnumUnit(), udg_blurs )
         call RemoveUnit( GetEnumUnit() )

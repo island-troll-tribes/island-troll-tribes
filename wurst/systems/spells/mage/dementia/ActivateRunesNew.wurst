@@ -67,12 +67,16 @@ function runesCastSpells(unit caster, DementiaRunesInstance runesInstance)
                 destroy r
 
 function Runes.toString() returns string
-    if (this == Runes.Ka)
-        return "Ka"
-    else if (this == Runes.Nel)
-        return "Nel"
-    else
-        return "Lez"
+    switch this
+        case Ka
+            return "Ka"
+        case Nel
+            return "Nel"
+        case Lez
+            return "Lez"
+        default
+            print("ERROR: Unsupported rune type")
+            return ""
 
 function findMatchingSummonData(LinkedList<Runes> runes) returns SummonData
     for summonInfo in summonsList
@@ -90,6 +94,7 @@ function trySummonDemon(unit caster, DementiaRunesInstance runesInstance, DarkPo
 
             //Find matching summon for rune sequence and summon if found
             var summonData = findMatchingSummonData(runeSequence)
+            destroy runeSequence
             if summonData != null
                 doSummon(summonData, portalInstance, caster.getOwner())
                 for r in runesInstance.runes

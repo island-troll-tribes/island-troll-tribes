@@ -7,6 +7,7 @@ import Orders
 import ClosureForGroups
 import DummyCaster
 import AbilityObjEditing
+import GroupExtensions
 
 constant let ABILITY_ID = 'A076'
 constant let GROW_DURATION = 10.
@@ -184,13 +185,13 @@ public class Summon
     real elapsedLifetime
     real lastAttack
     int orderId
-
     construct(unit u, real cooldown, int orderId)
         this.summonUnit = u
         this.cooldown = cooldown
         this.orderId = orderId
         this.elapsedLifetime = 0
         this.lastAttack = -cooldown //Attack right away after spawn
+        
 
     ondestroy
         this.summonUnit.remove()
@@ -212,6 +213,7 @@ public class DarkPortalInstance
 
     LinkedList<PortalOrb> orbs = new LinkedList<PortalOrb>()
     LinkedList<Summon> summons = new LinkedList<Summon>()
+    Comparator<unit> summonAttackComparator = null
 
     construct (unit caster, vec3 pos)
         ownerUnit = caster
@@ -224,6 +226,7 @@ public class DarkPortalInstance
         lastSpellCastTimestamp = -9999
         orbAngle = angle(0)
         spellIntervalCurrent = SPELLCAST_INTERVAL_START
+        this.summonAttackComparator = (a, b) -> summonAttackOrderSort(a, b)
         startPortalCreation()
 
     function startPortalCreation()
@@ -263,15 +266,17 @@ public class DarkPortalInstance
     function randomOrbCastSpell()
         var orb = this.orbs.get( GetRandomInt(0, orbs.size() - 1))
         var centerPosVec2 = centerPos.toVec2()
-        var _foundTarget = false
 
         //Find random target and cast + spawn effect on orb
-        forUnitsInRange(centerPosVec2, portalRadius) t ->
-            if not _foundTarget
-                if isValidEnemyTarget(t)
-                    orb.castRandomSpell(t)
-                    _foundTarget = true
-            
+        let targets = CreateGroup()..enumUnitsInRange(centerPosVec2, portalRadius)
+        targets.forEachIn(u -> begin
+            if not isValidEnemyTarget(u)
+                targets.removeUnit(u)
+        end)
+        let target = targets.getRandomUnit()
+        if target != null
+            orb.castRandomSpell(target)
+        targets.destr()
 
     function updateOrbAngles()
         //Calculate orb angles and set it
@@ -309,12 +314,53 @@ public class DarkPortalInstance
 
     function isValidAllyTarget(unit t) returns boolean
         return not t.isInvulnerable() and not t.isType(UNIT_TYPE_STRUCTURE) and t.isAlive() and IsUnitVisible(t, ownerUnit.getOwner())
+    
+    private function summonAttackOrderSort(unit a, unit b) returns int
+        //Sort by enemies - allies
+        if (a.getOwner().isEnemyOf(ownerUnit.getOwner()) and not b.getOwner().isEnemyOf(ownerUnit.getOwner()))
+            return -1
+        if (not a.getOwner().isEnemyOf(ownerUnit.getOwner()) and b.getOwner().isEnemyOf(ownerUnit.getOwner()))
+            return 1
+
+        //Sort by units without buff - with buff
+        if (not (a.hasAbility('Bmlt') or a.hasAbility('B00Q')) and (b.hasAbility('Bmlt') or b.hasAbility('B00Q')))
+            return -1
+        if ((a.hasAbility('Bmlt') or a.hasAbility('B00Q')) and not (b.hasAbility('Bmlt') or b.hasAbility('B00Q')))
+            return 1
+            
+        //Sort by lowest distance
+        if (a.getPos().distanceToSq(centerPos.toVec2()) < b.getPos().distanceToSq(centerPos.toVec2()))
+            return -1
+
+        return 0
 
     function summonTryAttacking(Summon s)
         //Checking time since last attack
         if (s.elapsedLifetime - s.lastAttack >= s.cooldown)
 
+            //Create group and filter valid targets
+            var targets = CreateGroup()..enumUnitsInRange(centerPos.toVec2(), portalRadius)
+            targets.forEachIn(u -> begin
+                if not (isValidAllyTarget(u) or isValidEnemyTarget(u))
+                    targets.removeUnit(u)
+            end)
+            
+            //Convert into list and sort
+            let targetlist = targets.toLinkedList()
+            let target = targetlist
+                        ..sortWith(summonAttackComparator)
+                        .getFirst()
+
+            if target != null and not target.isInvulnerable()
+                s.summonUnit.issueTargetOrderById(s.orderId, target)
+                s.lastAttack = s.elapsedLifetime
+
+            //Destroy temporary group and list
+            targets.destr()
+            destroy targetlist
+
             //Create object for closure to store unit
+            /*
             unitObject _summonTarget = new unitObject(null)
             forUnitsInRange(centerPos.toVec2(), portalRadius) t ->
                 //Try to find enemies first, pick targets without buffs over those who have em
@@ -331,7 +377,7 @@ public class DarkPortalInstance
                 s.lastAttack = s.elapsedLifetime
 
             destroy _summonTarget
-
+            */
 
     function updateSummons()
         for s in summons
@@ -344,6 +390,8 @@ public class DarkPortalInstance
 
         summons.forEach(s -> destroy s)
         destroy summons
+
+        destroy summonAttackComparator
 
         if darkPortalInstances.has(ownerUnit)
             if (darkPortalInstances.get(ownerUnit) == this) 
@@ -387,17 +435,11 @@ function createSpellList()
     //Impale
     spellList.push(new OrbSpell("Impale",'PRTF', Orders.impale) )
 
-
 public function getDementiaGate(unit owner) returns DarkPortalInstance
     if (darkPortalInstances.has(owner))
         return darkPortalInstances.get(owner)
     else 
         return null
-
-class unitObject
-    unit value
-    construct(unit value)
-        this.value = value
 
 init
     createSpellList()

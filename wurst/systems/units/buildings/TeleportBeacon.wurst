@@ -24,10 +24,10 @@ public class TeleportBeacon extends Building
 
     construct(unit whichUnit)
         super(whichUnit)
-        EventListener.add(whichUnit, EVENT_UNIT_SELECTED, -> onSelected())
-        EventListener.add(whichUnit, EVENT_UNIT_DESELECTED, -> onDeselected())
-        EventListener.add(whichUnit, EVENT_UNIT_PICKUP_ITEM, -> onPickupItem())
-        EventListener.add(whichUnit, EVENT_UNIT_SPELL_CAST, -> onCast())
+        EventListener.add(whichUnit, EVENT_PLAYER_UNIT_SELECTED, -> onSelected())
+        EventListener.add(whichUnit, EVENT_PLAYER_UNIT_DESELECTED, -> onDeselected())
+        EventListener.add(whichUnit, EVENT_PLAYER_UNIT_PICKUP_ITEM, -> onPickupItem())
+        EventListener.add(whichUnit, EVENT_PLAYER_UNIT_SPELL_CAST, -> onCast())
 
     override function getTypeId() returns int
         return unitTypeId
@@ -51,16 +51,13 @@ public class TeleportBeacon extends Building
             return
 
         let beacon = getUnit()
-        if not beacon.getOwner().isAllyOf(whichPlayer)
-            return
-
         let level = beacon.getAbilityLevel(SPELL_TELEPORT_BEACON)
         let range = RANGE[level]
         let beaconPos = beacon.getPos()
         let list = new LinkedList<effect>()
         let path = localPlayer == whichPlayer ? rangeCheckModFirst : ""
 
-        for degs = 0 to 360 step 20
+        for degs = 0 to 340 step 20
             let angle = degs.toReal().fromDeg()
             let pos = beaconPos.polarOffset(angle, range)
             list.add(addEffect(path, pos))
@@ -77,6 +74,7 @@ public class TeleportBeacon extends Building
         for elem in list
             elem.destr()
         destroy list
+        effects.remove(whichPlayer)
 
     private function onCast()
         if GetSpellAbilityId() != SPELL_TELEPORT_BEACON
@@ -84,7 +82,6 @@ public class TeleportBeacon extends Building
 
         let target = GetSpellTargetUnit()
         if target.isImmobilized()
-            target.issueImmediateOrder("stop")
             return
 
         let beacon = getUnit()
@@ -94,10 +91,11 @@ public class TeleportBeacon extends Building
 
         if GetWorldBounds().contains(pos) and pos.isTerrainWalkable()
             target
-            ..setXY(pos)
+            ..setPos(pos)
             ..setFacing(targetPos.angleTo(beaconPos))
             flashEffect(mirrorEfx, target, "chest")
         else
+            beacon.issueImmediateOrder("stop")
             simError(target.getOwner(), "Can't teleport there")
 
     ondestroy

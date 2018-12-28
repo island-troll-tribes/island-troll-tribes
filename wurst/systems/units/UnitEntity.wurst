@@ -59,17 +59,18 @@ public abstract class UnitEntity
     abstract function getTypeId() returns int
 
     function removeUnit()
-        getUnit().remove()
-        theUnit = null
+        if theUnit != null
+            theUnit.remove()
+            theUnit = null
 
     function onDeath()
         postDeath()
 
     function postDeath()
-        nullTimer() ->
-            removeUnit()
-            destroy this
+        nullTimer(-> destroy this)
 
+    ondestroy
+        removeUnit()
 
 init
     UnitEntity.initialize()

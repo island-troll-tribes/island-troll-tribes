@@ -7,6 +7,7 @@ import Orders
 import ClosureForGroups
 import DummyCaster
 import AbilityObjEditing
+import GroupExtensions
 
 constant let ABILITY_ID = 'A076'
 constant let GROW_DURATION = 10.
@@ -263,15 +264,17 @@ public class DarkPortalInstance
     function randomOrbCastSpell()
         var orb = this.orbs.get( GetRandomInt(0, orbs.size() - 1))
         var centerPosVec2 = centerPos.toVec2()
-        var _foundTarget = false
 
         //Find random target and cast + spawn effect on orb
-        forUnitsInRange(centerPosVec2, portalRadius) t ->
-            if not _foundTarget
-                if isValidEnemyTarget(t)
-                    orb.castRandomSpell(t)
-                    _foundTarget = true
-            
+        let targets = CreateGroup()..enumUnitsInRange(centerPosVec2, portalRadius)
+        targets.forEachIn(u -> begin
+            if not isValidEnemyTarget(u)
+                targets.removeUnit(u)
+        end)
+        let target = targets.getRandomUnit()
+        if target != null
+            orb.castRandomSpell(target)
+        targets.destr()
 
     function updateOrbAngles()
         //Calculate orb angles and set it

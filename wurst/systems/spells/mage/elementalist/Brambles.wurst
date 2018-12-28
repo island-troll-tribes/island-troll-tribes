@@ -28,17 +28,17 @@ constant let MANACOST = 20
 constant let RANGE = 700.
 constant let DURATION = 6.
 constant let EFFECT_AOE = 200.
-constant let MS_SLOW = 0.80
-constant let AS_SLOW = 0.40
+constant let MS_SLOW = 0.75
+constant let AS_SLOW = 0.25
 constant let SLOW_DURATION = 1.2
-constant let OVERCHARGE_ROOT_DURATION = 2.5
+constant let OVERCHARGE_ENTANGLE_DURATION = 3.
 constant let DAMAGE_PER_SECOND = 8
 constant let ROOT_CREATION_PERIOD = 0.25
 constant let UPDATE_LOOP_INTERVAL = 0.03125
 constant let SPELL_ICON = Icons.bTNEntanglingRoots
 constant let ROOTS_EFFECT_PATH = "Abilities\\Spells\\NightElf\\EntanglingRoots\\EntanglingRootsTarget.mdl"
 constant let TOOLTIP_NORM = "|c00ffcc00S|r - Brambles"
-constant let TOOLTIP_EXT = "Causes brambles to surface from underground in a straight line, slowing and damaging targets."
+constant let TOOLTIP_EXT = "Causes brambles to surface from underground in a straight line, and units who stand in the brambles receive |c00ff00008|r damage per second and have their movement speed slowed by 75%, attack speed slowed by 25%"
 
 @compiletime function createDummyVisionAbility()
     new AbilityDefinitionSightBonus(DUMMY_VISION_BONUS_ID)
@@ -124,8 +124,8 @@ constant let TOOLTIP_EXT = "Causes brambles to surface from underground in a str
     ..setTargetType(1, 3)
     ..setCastRange(1, RANGE)
 
-@compiletime function createDummySnare()
-    new AbilityDefinitionEnsnareCreep(DUMMY_ENTANGLE_SPELL_ID)
+@compiletime function createDummyEntangle()
+    new AbilityDefinitionEntanglingRootscreep(DUMMY_ENTANGLE_SPELL_ID)
     ..setMissileArt("")
     ..setMissileHomingEnabled(true)
     ..setMissileSpeed(99999)
@@ -134,14 +134,17 @@ constant let TOOLTIP_EXT = "Causes brambles to surface from underground in a str
     ..setArtEffect("")
     ..setArtTarget("")
     ..setArtSpecial("")
+    ..setTargetAttachmentPoint("")
+    ..setTargetAttachments(0)
     ..presetBuffs(lvl -> toRawCode(DUMMY_ENTANGLE_BUFF))
     ..presetCastingTime(lvl -> 0)
+    ..presetDamageperSecond(lvl -> 0)
     ..presetCastRange(lvl -> 9999)
     ..presetAreaofEffect(lvl -> 0)
     ..presetManaCost(lvl -> 0)
     ..presetCooldown(lvl -> 0)
-    ..presetDurationHero(lvl -> OVERCHARGE_ROOT_DURATION)
-    ..presetDurationNormal(lvl -> OVERCHARGE_ROOT_DURATION)
+    ..presetDurationHero(lvl -> OVERCHARGE_ENTANGLE_DURATION)
+    ..presetDurationNormal(lvl -> OVERCHARGE_ENTANGLE_DURATION)
     ..setLevelSkipRequirement(0)
     ..setHeroAbility(false)
     ..setItemAbility(false)
@@ -191,15 +194,13 @@ class BramblesInstance
                 forUnitsInRange(rootPos, EFFECT_AOE) u ->
                     if isValidTarget(u)
                         if not u.hasAbility(DUMMY_SLOW_BUFF)
-                            new DummyCaster().castTarget(owner, DUMMY_SLOW_SPELL_ID, 1, Orders.slow, u)
+                            new DummyCaster().castTarget(owner, DUMMY_SLOW_SPELL_ID, 1, Orders.slow, u, ownerUnit.getPos())
                         if not snaredTargets.has(u) and isOvercharged
-                            new DummyCaster().castTarget(owner, DUMMY_ENTANGLE_SPELL_ID, 1, Orders.ensnare, u)
+                            new DummyCaster(0.2).castTarget(owner, DUMMY_ENTANGLE_SPELL_ID, 1, Orders.entanglingroots, u, ownerUnit.getPos())
                             snaredTargets.push(u)
                         if not loopDamagedTargets.has(u)
                             ownerUnit.damageTarget(u, DAMAGE_PER_SECOND*UPDATE_LOOP_INTERVAL, ATTACK_TYPE_NORMAL)
                             loopDamagedTargets.push(u)
-
-
 
             destroy loopDamagedTargets
 
@@ -220,6 +221,7 @@ class BramblesInstance
         return dummy
 
     function cleanupDummy(unit dummy)
+        dummy.removeAbility(DUMMY_VISION_BONUS_ID)
         dummy.setOwner(DUMMY_PLAYER, false)
         dummy.setPos(boundMax)
         DummyRecycler.recycle(dummy)
@@ -249,9 +251,6 @@ function onCast()
     let targetAngle = casterPos.angleTo(targetPos)
     let isOverCharged = consumeOvercharge(caster)
     new BramblesInstance(caster, caster.getPos(), targetAngle, isOverCharged)
-
-
-
 
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())

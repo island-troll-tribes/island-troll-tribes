@@ -17,9 +17,9 @@ import ObjectIds
 constant let ABILITY_ID = 'ESFB'
 constant let DUMMY_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
 constant let DUMMY_ABILITY_BUFF_ID = compiletime(BUFF_ID_GEN.next())
-constant let COOLDOWN = 40.  
-constant let MISSILE_SPEED = 1100.  
-constant let MISSILE_LIFETIME = 1.5  
+constant let COOLDOWN = 35.
+constant let MISSILE_SPEED = 1100.
+constant let MISSILE_LIFETIME = 1.5
 constant let MANACOST = 15
 constant let IMPACT_TRIGGER_AOE = 130.
 constant let MISSILE_FLY_HEIGHT = 140.
@@ -50,7 +50,7 @@ constant let TOOLTIP_EXT = "Shoots out a missile of frost that explodes on impac
     ..setIcon(SPELL_ICON)
     ..setIconNormal(1, SPELL_ICON)
 
-@compiletime function createDummyFrostNovas()
+@compiletime function createDummySlow()
     new AbilityDefinitionSlowCreep(DUMMY_ABILITY_ID)
     ..setLevels(10)
     ..setArtCaster("")
@@ -97,11 +97,11 @@ constant let TOOLTIP_EXT = "Shoots out a missile of frost that explodes on impac
     ..setCastingTime(1, 0)
     ..setTooltipNormal(1, TOOLTIP_NORM)
     ..setTooltipNormalExtended(1, TOOLTIP_EXT)
-    ..setBaseOrderID(1, "bearform")
-    ..setOrderStringUseTurnOn("bearform")
-    ..setOrderStringActivate("bearform")
-    ..setOrderStringDeactivate("bearform")
-    ..setOrderStringTurnOff("bearform")
+    ..setBaseOrderID(1, "frostarmoroff")
+    ..setOrderStringUseTurnOn("frostarmoroff")
+    ..setOrderStringActivate("frostarmoroff")
+    ..setOrderStringDeactivate("frostarmoroff")
+    ..setOrderStringTurnOff("frostarmoroff")
     ..setOptions(1, 1)
     ..setCooldown(1, COOLDOWN)
     ..setManaCost(1, MANACOST)
@@ -167,7 +167,7 @@ class FrostBlastProjectile
 
     function explode()
         //Scale slow and damage by missile flight time relative to 80% of max lifetime
-        var effectScalingValue = this.lifeTime/(MISSILE_LIFETIME*0.8)
+        var effectScalingValue = this.lifeTime/(MISSILE_LIFETIME*0.75)
         if effectScalingValue > 1
             effectScalingValue = 1
 
@@ -178,7 +178,7 @@ class FrostBlastProjectile
 
         forUnitsInRange(this.pos.toVec2(), IMPACT_EFFECT_AOE) u ->
             if isValidTarget(this.ownerUnit, u)
-                if effectScalingValue >= 0.65
+                if effectScalingValue >= 0.7
                     flashEffect(IMPACT_EFFECT_PATH, u, "chest")
                 this.ownerUnit.damageTarget(u, damage, ATTACK_TYPE_NORMAL)
                 new DummyCaster().castTarget(this.ownerUnit.getOwner(), DUMMY_ABILITY_ID, slowTier, Orders.slow, u)
@@ -216,7 +216,7 @@ function sprayOverchargedProjectiles(unit caster, vec2 targetPos)
                         projectile.updateLoop()
         else
             cb.stop()
-                        
+
 function spawnProjectile(unit caster, angle ang)
     let casterPos = caster.getPos()
     let spawnPos = casterPos.polarOffset(ang, SPAWN_OFFSET_DISTANCE).withTerrainZ(MISSILE_FLY_HEIGHT)
@@ -232,7 +232,7 @@ function spawnProjectile(unit caster, angle ang)
 
 function isValidTarget(unit caster, unit target) returns bool
     return target.getOwner().isEnemyOf(caster.getOwner()) and not target.isInvulnerable() and not target.isType(UNIT_TYPE_FLYING) and target.isAlive() and not target.isHidden()
-        
+
 
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())

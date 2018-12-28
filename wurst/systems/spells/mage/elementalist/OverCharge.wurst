@@ -17,7 +17,7 @@ constant let DURATION = 10.
 constant let SPELL_ICON = "ReplaceableTextures\\PassiveButtons\\PASBTNFeedBack.blp"
 constant let AURA_EFFECT_PATH = "Abilities\\Spells\\Human\\ManaFlare\\ManaFlareBase.mdl" //"Abilities\\Spells\\Human\\ManaShield\\ManaShieldCaster.mdl"
 constant let TOOLTIP_NORM = "|c00ffcc00A |r- Overcharge"
-constant let TOOLTIP_EXT = "Causes the next spell you cast to have a bonus effect.\n\n|c00ffcc00Za|r|c00ffcc00p|r|c00ffcc00|r|nForks to three targets.\n\n|c00ffcc00Meteo|r|c00ffcc00r|r|c00ffcc00|r|nSets the ground on fire dealing 15 damage per second for 7 seconds.\n\n|c00ffcc00Frost Blast|r\nFires out out 7 projectiles in quick succession, dealing 30% of the normal damage.\n\n|c00ffcc00Earth Guardian|r|c00ffcc00s|r|c00ffcc00|r|nDoesnt require channeling to summon orbs.\n\n|c00ffcc00Meditat|r|c00ffcc00e|r|c00ffcc00|r|nDoesnt require standing still to regenerate. Cancels on damage."
+constant let TOOLTIP_EXT = "Causes the next spell you cast to have a bonus effect.\n\n|c00ffcc00Za|r|c00ffcc00p|r|c00ffcc00|r|nForks to three targets.\n\n|c00ffcc00Meteo|r|c00ffcc00r|r|c00ffcc00|r|nSets the ground on fire dealing 15 damage per second for 7 seconds.\n\n|c00ffcc00Frost Blast|r\nFires out out 7 projectiles in quick succession, dealing 30% of the normal damage.\n\n|c00ffcc00Earth Guardian|r|c00ffcc00s|r|c00ffcc00|r|nDoesnt require channeling to summon orbs.\n\n|c00ffcc00Brambles|r\nAdditionally roots targets for 3 seconds. \n\n|c00ffcc00Meditat|r|c00ffcc00e|r|c00ffcc00|r|nDoesnt require standing still to regenerate. Cancels on damage."
 
 @compiletime function createBuffs()
     new BuffDefinition(DUMMY_AURA_BUFF_INT, 'Bstt')
@@ -113,11 +113,11 @@ constant let TOOLTIP_EXT = "Causes the next spell you cast to have a bonus effec
 HashMap<unit, timer> removalTimers = new HashMap<unit,timer>()
 
 public function isUnitOvercharged(unit u) returns bool
-    if (u.hasAbility(DUMMY_AURA_ID)) 
+    if (u.hasAbility(DUMMY_AURA_ID))
         return true
     else
         return false
-    
+
 public  function consumeOvercharge(unit u) returns bool
     if isUnitOvercharged(u)
         u.removeAbility(DUMMY_AURA_ID)
@@ -129,12 +129,12 @@ public  function consumeOvercharge(unit u) returns bool
 
 function onCast()
     var caster = GetSpellAbilityUnit()
-    
+
     //Reset existing timer
     if removalTimers.has(caster)
         caster.removeAbility(DUMMY_AURA_ID)
         removalTimers.getAndRemove(caster).release()
-    
+
     caster.addAbility(DUMMY_AURA_ID)
 
     //Create timer to remove buff after duration

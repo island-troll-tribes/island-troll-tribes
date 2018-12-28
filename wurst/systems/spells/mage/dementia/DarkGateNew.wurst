@@ -318,17 +318,21 @@ public class DarkPortalInstance
     private function summonAttackOrderSort(unit a, unit b) returns int
         //Sort by enemies - allies
         if (a.getOwner().isEnemyOf(ownerUnit.getOwner()) and not b.getOwner().isEnemyOf(ownerUnit.getOwner()))
-            return 0
-
-        //Sort by units without buff - with buff
-        if ((a.hasAbility('Bmlt') or a.hasAbility('B00Q')) and not (b.hasAbility('Bmlt') or b.hasAbility('B00Q')))
+            return -1
+        if (not a.getOwner().isEnemyOf(ownerUnit.getOwner()) and b.getOwner().isEnemyOf(ownerUnit.getOwner()))
             return 1
 
+        //Sort by units without buff - with buff
+        if (not (a.hasAbility('Bmlt') or a.hasAbility('B00Q')) and (b.hasAbility('Bmlt') or b.hasAbility('B00Q')))
+            return -1
+        if ((a.hasAbility('Bmlt') or a.hasAbility('B00Q')) and not (b.hasAbility('Bmlt') or b.hasAbility('B00Q')))
+            return 1
+            
         //Sort by lowest distance
         if (a.getPos().distanceToSq(centerPos.toVec2()) < b.getPos().distanceToSq(centerPos.toVec2()))
-            return 0
+            return -1
 
-        return 1
+        return 0
 
     function summonTryAttacking(Summon s)
         //Checking time since last attack

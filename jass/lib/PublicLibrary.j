@@ -1,4 +1,4 @@
-library PublicLibrary initializer initPublicLibrary requires TimerUtils, ID, Constants, FilterTypeIsThing, InitializeUnits, GlobalsInit, Table
+library PublicLibrary initializer initPublicLibrary requires TimerUtils, ID, Constants, FilterTypeIsThing, GlobalsInit, Table
 
 globals
     Table unitUserData

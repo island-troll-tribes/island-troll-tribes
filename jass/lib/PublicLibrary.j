@@ -2,7 +2,6 @@ library PublicLibrary initializer initPublicLibrary requires TimerUtils, ID, Leg
 
 globals
     Table unitUserData
-    unit DiscoDuck = null
 endglobals
 
 function SetUnitUserDataEx takes unit u, integer data returns nothing

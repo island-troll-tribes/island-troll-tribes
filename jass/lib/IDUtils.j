@@ -66,6 +66,9 @@ library IDUtils initializer onInit requires ArrayLists
 		if s == "UNIT_ELEMENTALIST_1" then
             return UNIT_ELEMENTALIST_1
         endif
+        if s == "UNIT_ELEMENTALIST_NEW" then
+            return UNIT_ELEMENTALIST_NEW
+        endif
 		if s == "UNIT_HYPNOTIST" then
             return UNIT_HYPNOTIST
         endif

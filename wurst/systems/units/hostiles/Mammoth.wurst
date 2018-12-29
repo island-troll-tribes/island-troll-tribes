@@ -4,9 +4,15 @@ import Hostile
 
 public class Mammoth extends Hostile
     private static let unitTypeId = UNIT_MAMMOTH
+    private static thistype instance
 
     static function initialize()
         register(unitTypeId, mammoth -> new Mammoth(mammoth))
+
+    static function getInstance() returns thistype
+        return instance
+
+    var dead = false
 
     construct(unit whichUnit)
         super(whichUnit)
@@ -28,6 +34,9 @@ public class Mammoth extends Hostile
         ..add(ITEM_HORN_MAMMOTH)
         ..add(ITEM_MEDALLION_COURAGE)
 
+        if instance == null
+            instance = this
+
     override function getNumCorpses() returns int
         return 16
 
@@ -35,8 +44,14 @@ public class Mammoth extends Hostile
         return unitTypeId
 
     override function onDeath()
-        Mammoth_Dead = true
+        dead = true
         super.onDeath()
+
+    override function postDeath()
+        getUnit().remove()
+
+    function isDead() returns boolean
+        return dead
 
 
 init

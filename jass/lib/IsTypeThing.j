@@ -89,7 +89,7 @@ library IsTypeThing initializer onInit requires ID, Table
     return GetDestructableTypeId(d) == DEST_RUINS_TREE or GetDestructableTypeId(d) == DEST_FALSE_TREE or GetDestructableTypeId(d) == DEST_RUINS_TREE_CANOPY or GetDestructableTypeId(d) == DEST_RUINS_TREE_ITEM or GetDestructableTypeId(d) == DEST_SUPER_TREE or GetDestructableTypeId(d) == DEST_SUPER_TREE_CANOPY
   endfunction
 
-  function onInit takes nothing returns nothing
+  private function onInit takes nothing returns nothing
     set UNIT_TROLL_ALL                            = Table.create()
     set UNIT_TROLL_ALL[UNIT_HUNTER]               = TROLL_BASE_CLASS
     set UNIT_TROLL_ALL[UNIT_HUNTER_1]             = TROLL_BASE_CLASS

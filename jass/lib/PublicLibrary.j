@@ -1,7 +1,8 @@
-library PublicLibrary initializer initPublicLibrary requires TimerUtils, ID, LegacyColors, FilterTypeIsThing, InitializeUnits, GlobalsInit, Table
+library PublicLibrary initializer initPublicLibrary requires TimerUtils, ID, LegacyColors, FilterTypeIsThing, InitializeUnits, Table
 
 globals
     Table unitUserData
+    unit DiscoDuck = null
 endglobals
 
 function SetUnitUserDataEx takes unit u, integer data returns nothing
@@ -342,13 +343,12 @@ endfunction
 
 globals
     real array ZOOM_DISTANCE
-    real array ZOOM_FOGZ
 endglobals
 
 function ZoomSetCamera takes integer i returns nothing
     if GetLocalPlayer()==Player(i) then
         call SetCameraField(CAMERA_FIELD_ZOFFSET,ZOOM_DISTANCE[i],1)
-        call SetCameraField(CAMERA_FIELD_FARZ,ZOOM_FOGZ[i],0)
+        call SetCameraField(CAMERA_FIELD_FARZ,5000,0)
     endif
 endfunction
 
@@ -399,6 +399,7 @@ endfunction
 
 function initPublicLibrary takes nothing returns nothing
     local timer t = NewTimer()
+    local integer i = 0
     call TimerStart( t, 1., true, function ControlCameraZoom )
     set t = null
     set unitUserData = Table.create()

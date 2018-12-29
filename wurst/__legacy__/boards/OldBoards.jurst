@@ -7,6 +7,44 @@ globals
     public multiboard OBSERVER_BOARD
     public dialog array OBSERVER_DIALOG
     public button array O_DBUTTON
+
+    constant integer HK_0 = 48
+    constant integer HK_1 = 49
+    constant integer HK_2 = 50
+    constant integer HK_3 = 51
+    constant integer HK_4 = 52
+    constant integer HK_5 = 53
+    constant integer HK_6 = 54
+    constant integer HK_7 = 55
+    constant integer HK_8 = 56
+    constant integer HK_9 = 57
+
+    constant integer HK_A = 65
+    constant integer HK_B = 66
+    constant integer HK_C = 67
+    constant integer HK_D = 68
+    constant integer HK_E = 69
+    constant integer HK_F = 70
+    constant integer HK_G = 71
+    constant integer HK_H = 72
+    constant integer HK_I = 73
+    constant integer HK_J = 74
+    constant integer HK_K = 75
+    constant integer HK_L = 76
+    constant integer HK_M = 77
+    constant integer HK_N = 78
+    constant integer HK_O = 79
+    constant integer HK_P = 80
+    constant integer HK_Q = 81
+    constant integer HK_R = 82
+    constant integer HK_S = 83
+    constant integer HK_T = 84
+    constant integer HK_U = 85
+    constant integer HK_V = 86
+    constant integer HK_W = 87
+    constant integer HK_X = 88
+    constant integer HK_Y = 89
+    constant integer HK_Z = 90
 endglobals
 
 function createObsBoardAndDialog takes nothing returns nothing
@@ -32,7 +70,7 @@ function createObsBoardAndDialog takes nothing returns nothing
     call MultiboardSetTitleText(OBSERVER_BOARD, "Observer Events")
     call MultiboardSetItemsStyle(OBSERVER_BOARD, true, false)
     call MultiboardMinimize(OBSERVER_BOARD, false)
-                    
+
     loop
         exitwhen INT > MAX_CMDS
             call MultiboardSetItemValueBJ(OBSERVER_BOARD, 1, INT, COLOR+CMD_DES[INT])
@@ -51,35 +89,35 @@ local integer numTribes = gameConfig.getNumTribes()
         exitwhen INTEGER > numTribes
         // LOOP PER BOARD:
         set BOARD_INT[INTEGER] = 0
-        
+
         set BOARD_TEAM[INTEGER] = CreateMultiboard()
         call MultiboardSetColumnCount(BOARD_TEAM[INTEGER], 4)
         call MultiboardSetRowCount(BOARD_TEAM[INTEGER], 6)
         call MultiboardSetTitleText(BOARD_TEAM[INTEGER], "Team Stats")
-    
+
         loop
             exitwhen PLAYER_INT > 11
             // LOOP PER PLAYER
-            
+
             if IsPlayerInForce(Player(PLAYER_INT),TEAM[INTEGER]) then
                 set TEAM_PLAYER[PLAYER_INT] = INTEGER
                 set BOARD_INT[INTEGER] = BOARD_INT[INTEGER] + 1
-            
+
                 call MultiboardSetItemValueBJ(BOARD_TEAM[INTEGER], 1, BOARD_INT[INTEGER], HIGHLIGHT_COLOR+GetPlayerName(Player(PLAYER_INT))+"|r")
                 call MultiboardSetItemStyleBJ(BOARD_TEAM[INTEGER], 1, BOARD_INT[INTEGER], true, false )
                 call MultiboardSetItemStyleBJ(BOARD_TEAM[INTEGER], 2, BOARD_INT[INTEGER], true, true )
                 call MultiboardSetItemStyleBJ(BOARD_TEAM[INTEGER], 3, BOARD_INT[INTEGER], true, true )
                 call MultiboardSetItemStyleBJ(BOARD_TEAM[INTEGER], 4, BOARD_INT[INTEGER], true, true )
-                
+
                 call MultiboardSetItemIconBJ(BOARD_TEAM[INTEGER], 2, BOARD_INT[INTEGER], "ReplaceableTextures\\CommandButtons\\BTNMonsterLure.blp" )
                 call MultiboardSetItemIconBJ(BOARD_TEAM[INTEGER], 3, BOARD_INT[INTEGER], "ReplaceableTextures\\PassiveButtons\\PASBTNElunesBlessing.blp" )
                 call MultiboardSetItemIconBJ(BOARD_TEAM[INTEGER], 4, BOARD_INT[INTEGER], "ReplaceableTextures\\CommandButtons\\BTNInnerFireOn.blp" )
-                
+
                 call MultiboardSetItemWidthBJ(BOARD_TEAM[INTEGER], 1, BOARD_INT[INTEGER], 10)
                 call MultiboardSetItemWidthBJ(BOARD_TEAM[INTEGER], 2, BOARD_INT[INTEGER], 4)
                 call MultiboardSetItemWidthBJ(BOARD_TEAM[INTEGER], 3, BOARD_INT[INTEGER], 4)
                 call MultiboardSetItemWidthBJ(BOARD_TEAM[INTEGER], 4, BOARD_INT[INTEGER], 4)
-                
+
                 set PLAYER_INT_BOARD[PLAYER_INT] = BOARD_INT[INTEGER]
             endif
             set PLAYER_INT = PLAYER_INT + 1
@@ -89,7 +127,7 @@ local integer numTribes = gameConfig.getNumTribes()
         //call MultiboardDisplay(BOARD_TEAM[INTEGER],true)
         set INTEGER = INTEGER + 1
     endloop
-    
+
     // make observer board
     if obs_present then
         call createObsBoardAndDialog()

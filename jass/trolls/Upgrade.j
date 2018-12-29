@@ -1,4 +1,4 @@
-library TrollUpgrade initializer onInit requires ID, Constants, PublicLibrary
+library TrollUpgrade initializer onInit requires ID, PublicLibrary
   private function ReplaceUnitEx takes unit whichUnit, integer newUnitId, integer unitStateMethod returns unit
     local unit    oldUnit = whichUnit
     local unit    newUnit

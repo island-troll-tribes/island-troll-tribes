@@ -1,7 +1,14 @@
 package UnitExtensions
 import HashMap
+import LinkedList
 import Lodash
 import GameConfig
+
+
+public let BUFF_ENSNARE_GROUND = 'Beng'
+public let BUFF_ENSNARE_AIR = 'Bena'
+public let BUFF_ENTANGLE = 'BEer'
+
 
 public function unit.getHeroSkillPoints() returns integer
     return GetHeroSkillPoints(this)
@@ -32,6 +39,13 @@ public function unit.getInventoryItemCountMap() returns HashMap<int, int>
         else
             map.put(id, 1)
     return map
+
+public function unit.getInventory() returns LinkedList<item>
+    let list = new LinkedList<item>
+    let size = this.inventorySize()
+    for i = 0 to size - 1
+        list.add(this.itemInSlot(i))
+    return list
 
 public function unit.addXp(int toAdd)
     AddHeroXP(this, toAdd, true)
@@ -105,3 +119,22 @@ public function unit.dropItems(int count)
 
 public function unit.dropItems()
     this.dropItems(this.inventorySize())
+
+public function unit.setUserDataEx(int data)
+    SetUnitUserDataEx(this, data)
+
+public function unit.getUserDataEx() returns int
+    return GetUnitUserDataEx(this)
+
+public function unit.addSleep(bool value)
+    UnitAddSleep(this, value)
+
+public function unit.setCreepGuard(bool value)
+    SetUnitCreepGuard(this, value)
+
+public function unit.isImmobilized() returns bool
+    return (
+        this.getAbilityLevel(BUFF_ENSNARE_AIR) > 0 or
+        this.getAbilityLevel(BUFF_ENSNARE_GROUND) > 0 or
+        this.getAbilityLevel(BUFF_ENTANGLE) > 0
+    )

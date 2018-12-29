@@ -1,0 +1,88 @@
+package ResourceSpawning
+
+/*      WALKABLEAREA    RELATIVE TO ISLAND
+1_1 =   20660034        65%
+1_2 =   6896848         22%
+1_3 =   4034578         13%
+
+2_1 =   21861114        66%
+2_2 =   5278101         16%
+2_3 =   6147800         18%
+
+3_1 =   18592940        54%
+3_2 =   4483055         13%
+3_3 =   11186059        33%
+
+4_1 =   43013564        88%
+4_2 =   3645353         7%
+4_3 =   2293053         5%
+
+NW
+(20660034 + 6896848 + 4034578)
+
+NE
+(21861114 + 5278101 + 6147800)
+
+SE
+(18592940 + 4483055+11186059)
+
+SW
+(43013564 + 3645353 + 2293053)
+
+TOTAL AREA OF ALL SPAWN AREAS
+= 148092499
+*/
+
+
+function initSpawnRegionWeights()
+    //Based on data from Analysis.Wurst
+    //These weights result in the same item density in every region
+    //These must be re-calculated if the regions are modified
+    //These weights tell how likely it is for an item to be in this region, if it spawns on the island
+    udg_ISLAND1_1 = 65
+    udg_ISLAND1_2 = 22
+    udg_ISLAND1_3 = 13
+    udg_ISLAND2_1 = 66
+    udg_ISLAND2_2 = 16
+    udg_ISLAND2_3 = 18
+    udg_ISLAND3_1 = 54
+    udg_ISLAND3_2 = 13
+    udg_ISLAND3_3 = 33
+    udg_ISLAND4_1 = 88
+    udg_ISLAND4_2 = 7
+    udg_ISLAND4_3 = 5
+
+function initIslandWeights()
+    //These values tell how many iterations of item / animal spawns an island gets
+    //These should be balanced according to total area an of islands spawn regions
+    //relative to the whole maps all spawn regions
+    //Original values
+    var NORTH_LEFT_ITEM=30
+    var NORTH_LEFT_FOOD=9
+    var NORTH_RIGHT_ITEM=33
+    var NORTH_RIGHT_FOOD=10
+    var SOUTH_RIGHT_ITEM=30
+    var SOUTH_RIGHT_FOOD=10
+    var SOUTH_LEFT_ITEM=45
+    var SOUTH_LEFT_FOOD=17
+    var ITEM_TOTAL = NORTH_LEFT_ITEM+NORTH_RIGHT_ITEM+SOUTH_RIGHT_ITEM+SOUTH_LEFT_ITEM
+    var FOOD_TOTAL = NORTH_LEFT_FOOD+NORTH_RIGHT_FOOD+SOUTH_RIGHT_FOOD+SOUTH_LEFT_FOOD
+    var nwAreaRelative = (20660034 + 6896848 + 4034578) / 148092499
+    var neAreaRelative = (21861114 + 5278101 + 6147800) / 148092499
+    var seAreaRelative = (18592940 + 4483055+11186059)  / 148092499
+    var swAreaRelative = (43013564 + 3645353 + 2293053) / 148092499
+
+    //Redistributing original values according to island spawnable area size
+    udg_NORTH_LEFT_ITEM = (ITEM_TOTAL * nwAreaRelative).round()
+    udg_NORTH_RIGHT_ITEM = (ITEM_TOTAL * neAreaRelative).round()
+    udg_SOUTH_RIGHT_ITEM = (ITEM_TOTAL * seAreaRelative).round()
+    udg_SOUTH_LEFT_FOOD = (ITEM_TOTAL * swAreaRelative).round()
+
+    udg_NORTH_LEFT_FOOD = (FOOD_TOTAL * nwAreaRelative).round()
+    udg_NORTH_RIGHT_FOOD = (FOOD_TOTAL * neAreaRelative).round()
+    udg_SOUTH_RIGHT_FOOD = (FOOD_TOTAL * seAreaRelative).round()
+    udg_SOUTH_LEFT_FOOD = (FOOD_TOTAL * swAreaRelative).round()
+
+init
+    initIslandWeights()
+    initSpawnRegionWeights()

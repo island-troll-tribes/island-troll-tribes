@@ -9,11 +9,11 @@ endfunction
 
 function Trig_TeleThief_Cast_Actions takes nothing returns nothing
     local unit c=GetSpellAbilityUnit()
-    //call SetUnitUserData( c, U2I(GetSpellTargetUnit()) )
+    //call SetUnitUserDataEx( c, U2I(GetSpellTargetUnit()) )
     call SaveUnitHandle( udg_GameHash, GetHandleId(c), StringHash("fire"), GetSpellTargetUnit())
     call masterCastAtTarget(c,c,0,0,'A05Y',"curse")
     call PolledWait(140)
-    //call SetUnitUserData( c, 0 )
+    //call SetUnitUserDataEx( c, 0 )
     call SaveUnitHandle( udg_GameHash, GetHandleId(c), StringHash("fire"), null)
 endfunction
 

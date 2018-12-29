@@ -1,4 +1,4 @@
-library PublicLibrary initializer initPublicLibrary requires TimerUtils, ID, LegacyColors, FilterTypeIsThing, InitializeUnits, Table
+library PublicLibrary initializer initPublicLibrary requires TimerUtils, ID, LegacyColors, FilterTypeIsThing, Table
 
 globals
     Table unitUserData

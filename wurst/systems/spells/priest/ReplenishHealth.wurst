@@ -1,0 +1,24 @@
+package ReplenishHealth
+import RegisterEvents
+
+let SPELL_REPLENISH_HEALTH = 'A0F2'
+int CAST
+int ENDCAST
+
+function onCast()
+    let caster = GetTriggerUnit()
+    let unitTypeId = caster.getTypeId()
+    if unitTypeId != UNIT_MASTER_HEALER and unitTypeId != UNIT_MASTER_HEALER_1 and unitTypeId != UNIT_SAGE
+        return
+
+    switch GetIssuedOrderId()
+        case CAST
+            caster.addAbility(SPELL_REPLENISH_HEALTH)
+        case ENDCAST
+            caster.removeAbility(SPELL_REPLENISH_HEALTH)
+
+init
+    CAST = OrderId("immolation")
+    ENDCAST = OrderId("unimmolation")
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_ORDER, function onCast)

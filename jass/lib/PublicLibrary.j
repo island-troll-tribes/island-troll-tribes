@@ -398,7 +398,6 @@ endfunction
 
 function initPublicLibrary takes nothing returns nothing
     local timer t = NewTimer()
-    local integer i = 0
     call TimerStart( t, 1., true, function ControlCameraZoom )
     set t = null
     set unitUserData = Table.create()

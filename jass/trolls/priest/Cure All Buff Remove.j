@@ -17,7 +17,6 @@ function Trig_cure_all_buff_remove_Actions takes nothing returns nothing
     call UnitRemoveBuffBJ( 'BEsh', GetSpellTargetUnit() )
     call UnitRemoveBuffBJ( 'BNab', GetSpellTargetUnit() )
     call UnitRemoveBuffBJ( BUFF_DYSENTERY, GetSpellTargetUnit() )
-    call ClearHomingBeacon(GetPlayerId(GetOwningPlayer(GetSpellTargetUnit())))
     call masterCastAtTarget(GetSpellTargetUnit(),GetSpellTargetUnit(),0,0,'A07M',"banish")
 endfunction
 

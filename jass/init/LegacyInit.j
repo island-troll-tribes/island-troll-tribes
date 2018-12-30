@@ -73,7 +73,6 @@ library LegacyInit initializer onInit
         call ExecuteFunc("InitTrig_pet_abilites")
         call ExecuteFunc("InitTrig_Shapeshift")
         call ConditionalTriggerExecute(gg_trg_AcidBoost)
-        call ConditionalTriggerExecute(gg_trg_CreateQuests)
         call ConditionalTriggerExecute(gg_trg_Set_up_Item_Array)
     endfunction
 

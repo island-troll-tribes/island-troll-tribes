@@ -156,7 +156,6 @@ globals
     trigger                 gg_trg_Baby_Spells         = null
     trigger                 gg_trg_to_mid_spells_flyer = null
     trigger                 gg_trg_add_items_to_plants = null
-    trigger                 gg_trg_CreateQuests        = null
     trigger                 gg_trg_spawn_call_first    = null
     trigger                 gg_trg_spawn_normal        = null
     trigger                 gg_trg_camp_fire_killed    = null

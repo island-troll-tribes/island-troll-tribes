@@ -1,24 +1,29 @@
 package ReplenishHealth
 import RegisterEvents
+import Orders
+import UnitEntity
+import MasterHealer
+import Sage
 
 let SPELL_REPLENISH_HEALTH = 'A0F2'
-int CAST
-int ENDCAST
 
 function onCast()
     let caster = GetTriggerUnit()
-    let unitTypeId = caster.getTypeId()
-    if unitTypeId != UNIT_MASTER_HEALER and unitTypeId != UNIT_MASTER_HEALER_1 and unitTypeId != UNIT_SAGE
+    let entity = UnitEntity.findForUnit(caster)
+    if entity instanceof MasterHealer or entity instanceof Sage
         return
 
     switch GetIssuedOrderId()
-        case CAST
+        case Orders.immolation
             caster.addAbility(SPELL_REPLENISH_HEALTH)
-        case ENDCAST
+        case Orders.unimmolation
             caster.removeAbility(SPELL_REPLENISH_HEALTH)
 
-init
-    CAST = OrderId("immolation")
-    ENDCAST = OrderId("unimmolation")
+function onDeath()
+    let caster = GetTriggerUnit()
+    if caster.hasAbility(SPELL_REPLENISH_HEALTH)
+        caster.removeAbility(SPELL_REPLENISH_HEALTH)
 
+init
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_ORDER, function onCast)
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH, function onDeath)

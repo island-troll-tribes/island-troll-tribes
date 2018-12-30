@@ -2,11 +2,15 @@ package PingMinimap
 
 let DEFAULT_DURATION = 10.0
 
-public function pingMinimap(vec2 pos, real duration, color color, bool extraEffects)
-    PingMinimapEx(pos.x, pos.y, duration, color.red, color.green, color.blue, extraEffects)
+enum PingMinimapStyle
+    EXCLAMATION
+    ATTACK
+
+public function pingMinimap(vec2 pos, real duration, color color, PingMinimapStyle style)
+    PingMinimapEx(pos.x, pos.y, duration, color.red, color.green, color.blue, style == PingMinimapStyle.EXCLAMATION)
 
 public function pingMinimap(vec2 pos, real duration, color color)
-    pingMinimap(pos, duration, color, false)
+    pingMinimap(pos, duration, color, PingMinimapStyle.ATTACK)
 
 public function pingMinimap(vec2 pos, color color)
     pingMinimap(pos, DEFAULT_DURATION, color)
@@ -17,12 +21,12 @@ public function pingMinimap(vec2 pos, real duration)
 public function pingMinimap(vec2 pos)
     pingMinimap(pos, DEFAULT_DURATION)
 
-public function pingMinimapForPlayer(player whichPlayer, vec2 pos, real duration, color color, bool extraEffects)
+public function pingMinimapForPlayer(player whichPlayer, vec2 pos, real duration, color color, PingMinimapStyle style)
     if whichPlayer == localPlayer
-        pingMinimap(pos, duration, color, extraEffects)
+        pingMinimap(pos, duration, color, style)
 
 public function pingMinimapForPlayer(player whichPlayer, vec2 pos, real duration, color color)
-    pingMinimapForPlayer(whichPlayer, pos, duration, color, false)
+    pingMinimapForPlayer(whichPlayer, pos, duration, color, PingMinimapStyle.ATTACK)
 
 public function pingMinimapForPlayer(player whichPlayer, vec2 pos, color color)
     pingMinimapForPlayer(whichPlayer, pos, DEFAULT_DURATION, color)
@@ -34,12 +38,12 @@ public function pingMinimapForPlayer(player whichPlayer, vec2 pos, real duration
 public function pingMinimapForPlayer(player whichPlayer, vec2 pos)
     pingMinimapForPlayer(whichPlayer, pos, DEFAULT_DURATION)
 
-public function pingMinimapForForce(force whichForce, vec2 pos, real duration, color color, bool extraEffects)
+public function pingMinimapForForce(force whichForce, vec2 pos, real duration, color color, PingMinimapStyle style)
     if whichForce.containsPlayer(localPlayer)
-        pingMinimap(pos, duration, color, extraEffects)
+        pingMinimap(pos, duration, color, style)
 
 public function pingMinimapForForce(force whichForce, vec2 pos, real duration, color color)
-    pingMinimapForForce(whichForce, pos, duration, color, false)
+    pingMinimapForForce(whichForce, pos, duration, color, PingMinimapStyle.ATTACK)
 
 public function pingMinimapForForce(force whichForce, vec2 pos, color color)
     pingMinimapForForce(whichForce, pos, DEFAULT_DURATION, color)

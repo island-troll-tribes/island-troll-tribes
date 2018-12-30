@@ -2,6 +2,7 @@ package BushSpawns
 import HashMap
 import ItemPoolExtensions
 import ClosureTimers
+import StackNSplit
 
 let bushes = CreateGroup()
 
@@ -28,7 +29,8 @@ function addItemToBush(unit bush)
     .getItem(bush.getPos())
 
     if herb != null
-        UnitStackItemEx(bush, herb, false)
+        if not bush.isItemFullyStacked(herb.getTypeId())
+            bush.stackItem(herb)
 
 function addItemsToBushes()
     for bush in bushes

@@ -20,6 +20,7 @@ globals
     trigger                 gg_trg_bad_mammy           = null
     trigger                 gg_trg_flyer_spell_refreshing = null
     trigger                 gg_trg_Smell_Drop          = null
+    trigger                 gg_trg_Attraction_Aura     = null
     trigger                 gg_trg_cook_meat3          = null
     trigger                 gg_trg_warmth              = null
     trigger                 gg_trg_stats_degrading     = null
@@ -155,7 +156,6 @@ globals
     trigger                 gg_trg_Baby_Spells         = null
     trigger                 gg_trg_to_mid_spells_flyer = null
     trigger                 gg_trg_add_items_to_plants = null
-    trigger                 gg_trg_CreateQuests        = null
     trigger                 gg_trg_spawn_call_first    = null
     trigger                 gg_trg_spawn_normal        = null
     trigger                 gg_trg_camp_fire_killed    = null

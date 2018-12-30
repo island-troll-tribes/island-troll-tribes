@@ -1,4 +1,4 @@
-library PublicLibrary initializer initPublicLibrary requires TimerUtils, ID, Constants, FilterTypeIsThing, GlobalsInit, Table
+library PublicLibrary initializer initPublicLibrary requires TimerUtils, ID, LegacyColors, FilterTypeIsThing, Table
 
 globals
     Table unitUserData
@@ -342,13 +342,12 @@ endfunction
 
 globals
     real array ZOOM_DISTANCE
-    real array ZOOM_FOGZ
 endglobals
 
 function ZoomSetCamera takes integer i returns nothing
     if GetLocalPlayer()==Player(i) then
         call SetCameraField(CAMERA_FIELD_ZOFFSET,ZOOM_DISTANCE[i],1)
-        call SetCameraField(CAMERA_FIELD_FARZ,ZOOM_FOGZ[i],0)
+        call SetCameraField(CAMERA_FIELD_FARZ,5000,0)
     endif
 endfunction
 

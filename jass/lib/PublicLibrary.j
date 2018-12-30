@@ -1,4 +1,25 @@
-library PublicLibrary initializer initPublicLibrary requires TimerUtils, ID, Constants, FilterTypeIsThing, InitializeUnits, GlobalsInit
+library PublicLibrary initializer initPublicLibrary requires TimerUtils, ID, LegacyColors, FilterTypeIsThing, Table
+
+globals
+    Table unitUserData
+endglobals
+
+function SetUnitUserDataEx takes unit u, integer data returns nothing
+    set unitUserData[GetHandleId(u)] = data
+endfunction
+
+function GetUnitUserDataEx takes unit u returns integer
+    return unitUserData[GetHandleId(u)]
+endfunction
+
+function HornSound takes nothing returns nothing
+    local sound horn = CreateSound("Sound\\Ambient\\DoodadEffects\\TheHornOfCenarius.wav",false,false,false,10,10,"")
+    call SetSoundPitch(horn,1.)
+    call SetSoundVolume(horn,127)
+    call StartSound(horn)
+    call KillSoundWhenDone(horn)
+    set horn = null
+endfunction
 
 function IsUnitImmobilized takes unit u returns boolean
     return GetUnitAbilityLevel(u, 'Beng') > 0 or GetUnitAbilityLevel(u, 'Bena') > 0 or GetUnitAbilityLevel(u, 'BEer') > 0
@@ -48,7 +69,7 @@ function hasPets takes nothing returns boolean
     return ( GetUnitTypeId(GetFilterUnit()) == UNIT_BEAST_MASTER or GetUnitTypeId(GetFilterUnit()) == UNIT_TRUE_FORM or GetUnitTypeId(GetFilterUnit()) == UNIT_ULTIMATE_FORM )
 endfunction
 
-function getAnimalGreenLight takes unit u returns nothing
+function getAnimalGreenLight takes unit u returns boolean
     local group bms
     local unit bm
     local integer maxLevel = 0
@@ -68,6 +89,7 @@ function getAnimalGreenLight takes unit u returns nothing
     endif
     set bms = null
     set bm = null
+    return udg_booleanParameter
 endfunction
 
 function prepareSpells takes nothing returns nothing
@@ -314,27 +336,18 @@ function resetBMSkill takes player p returns nothing
     call SetPlayerAbilityAvailableBJ( false, SPELL_PET_DROP_ITEMS, p )//drop items
 endfunction
 
-function ConvertEnumCorpseToCookedMeat takes nothing returns nothing
-  local unit u = GetEnumUnit()
-  local integer INTEGER = 0
-  call CreateItem( ITEM_COOKED_MEAT, GetUnitX(u),GetUnitY(u))
-  call RemoveUnit(GetEnumUnit())
-  set u = null
-endfunction
-
 function presCheck takes nothing returns boolean
    return IsUnitAlly(GetFilterUnit(), GetOwningPlayer(udg_parameterUnit)) and IsUnitTroll(GetFilterUnit()) and GetFilterUnit()!=udg_parameterUnit
 endfunction
 
 globals
     real array ZOOM_DISTANCE
-    real array ZOOM_FOGZ
 endglobals
 
 function ZoomSetCamera takes integer i returns nothing
     if GetLocalPlayer()==Player(i) then
         call SetCameraField(CAMERA_FIELD_ZOFFSET,ZOOM_DISTANCE[i],1)
-        call SetCameraField(CAMERA_FIELD_FARZ,ZOOM_FOGZ[i],0)
+        call SetCameraField(CAMERA_FIELD_FARZ,5000,0)
     endif
 endfunction
 
@@ -387,6 +400,7 @@ function initPublicLibrary takes nothing returns nothing
     local timer t = NewTimer()
     call TimerStart( t, 1., true, function ControlCameraZoom )
     set t = null
+    set unitUserData = Table.create()
 endfunction
 
 endlibrary

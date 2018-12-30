@@ -27,9 +27,9 @@ constant let IMPACT_DELAY = 1.
 constant let PROJECTILE_INITIAL_HEIGHT = 900.
 constant let PROJECTILE_INITIAL_DISTANCE = 300.
 constant let LOOP_INTERVAL = 0.03125
-constant let PROJECTILE_EFFECT_PATH = "abilities\\weapons\\catapult\\catapultmissile.mdl" //"Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl" 
-constant let PROJECTILE_TRAIL_EFFECT_PATH = "Abilities\\Weapons\\RedDragonBreath\\RedDragonMissile.mdl" 
-constant let EXPLOSION_EFFECT_PATH = "Objects\\Spawnmodels\\Other\\NeutralBuildingExplosion\\NeutralBuildingExplosion.mdl" 
+constant let PROJECTILE_EFFECT_PATH = "abilities\\weapons\\catapult\\catapultmissile.mdl" //"Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl"
+constant let PROJECTILE_TRAIL_EFFECT_PATH = "Abilities\\Weapons\\RedDragonBreath\\RedDragonMissile.mdl"
+constant let EXPLOSION_EFFECT_PATH = "Objects\\Spawnmodels\\Other\\NeutralBuildingExplosion\\NeutralBuildingExplosion.mdl"
 constant let BURN_EFFECT_PATH = "Abilities\\Spells\\Other\\BreathOfFire\\BreathOfFireDamage.mdl"
 constant let GROUND_BURN_EFFECT_PATH = "Abilities\\Spells\\Other\\BreathOfFire\\BreathOfFireDamage.mdl"
 constant let ICON_PATH = "ReplaceableTextures\\CommandButtons\\BTNFlare.blp"
@@ -98,7 +98,7 @@ function handleGroundBurning(unit caster, vec2 pos)
         fireFX.setScale(0.7)
         doAfter(OVERCHARGE_GROUND_BURN_DURATION - 0.5) ->
             fireFX.destr()
-        
+
     //Damage the units in area
     doPeriodicallyTimed(IMPACT_BURN_INTERVAL, OVERCHARGE_GROUND_BURN_DURATION) burnAOE ->
         forUnitsInRange(pos, IMPACT_RADIUS_MAX) u ->
@@ -115,7 +115,7 @@ function callMeteor(unit caster, vec2 targetpos, bool isOvercharged)
 
     effect projectile = addEffect(PROJECTILE_EFFECT_PATH, startPos)
     effect trail = addEffect(PROJECTILE_TRAIL_EFFECT_PATH, startPos)
-    projectile.setScale(1.3)    
+    projectile.setScale(1.3)
     trail.setScale(0.45)
     trail.setColor(255, 200, 200)
 
@@ -150,7 +150,7 @@ function isValidTarget(unit caster, unit target) returns boolean
 
 function handleImpactEffects(vec3 target3D, unit caster, boolean isOvercharged)
     var targetpos = target3D.toVec2()
-    
+
     //Impact SFX
     var explosion = addEffect(EXPLOSION_EFFECT_PATH, target3D)
     explosion.setScale(0.5)
@@ -160,7 +160,7 @@ function handleImpactEffects(vec3 target3D, unit caster, boolean isOvercharged)
     //Overcharge ground burn
     if isOvercharged
         handleGroundBurning(caster, targetpos)
-        
+
     //Impact unit effects
     forUnitsInRange(targetpos, IMPACT_RADIUS_MAX) u ->
         if isValidTarget(caster, u)
@@ -173,17 +173,17 @@ function handleImpactUnitEffect(vec2 hitPosition, unit target, unit caster)
     var distance = hitPosition.distanceTo(target.getPos())
     if (distance <= IMPACT_RADIUS_DAMAGEFALLOFF)
         caster.damageTarget(target, IMPACT_DAMAGE, ATTACK_TYPE_NORMAL)
-    else 
+    else
         var reducedDamage = IMPACT_DAMAGE * (1 - ((distance - IMPACT_RADIUS_DAMAGEFALLOFF) / (IMPACT_RADIUS_MAX - IMPACT_RADIUS_DAMAGEFALLOFF)))
         caster.damageTarget(target, reducedDamage, ATTACK_TYPE_NORMAL)
-    
+
     //Apply stun
     new DummyCaster().castTarget(owner, DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, target, caster.getPos3Real())
 
     //Apply burn on units
     var burnfx = AddSpecialEffectTargetUnitBJ("chest", target, BURN_EFFECT_PATH)
     burnfx.setScale(5)
-    
+
     //Burn damage loop
     doPeriodicallyTimed(IMPACT_BURN_INTERVAL, IMPACT_BURN_DURATION) burn ->
         if (not target.isInvulnerable() and target.isAlive())

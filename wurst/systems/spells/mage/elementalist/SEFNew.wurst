@@ -36,7 +36,7 @@ constant let ORB_ORBIT_HEIGHT = 140.
 constant let SPELL_ICON = "ReplaceableTextures\\CommandButtons\\BTNGolemStormBolt.blp"
 constant let TOOLTIP_NORM = "|c00ffcc00R |r- Earth Guardians"
 constant let TOOLTIP_EXT = "Channels to conjure 7 orbs that circle around you, striking enemies that come close for |c00ff000040|r damage and stunning them very briefly. Subsequent impacts on the same target do |c00ff000010|r damage."
-constant let ORB_EFFECT_PATH = "Abilities\\Weapons\\AncientProtectorMissile\\AncientProtectorMissile.mdl" 
+constant let ORB_EFFECT_PATH = "Abilities\\Weapons\\AncientProtectorMissile\\AncientProtectorMissile.mdl"
 constant let ORB_IMPACT_EFFECT = "Objects\\Spawnmodels\\Undead\\ImpaleTargetDust\\ImpaleTargetDust.mdl"
 
 @compiletime function createSpell()
@@ -164,7 +164,7 @@ class SEFOrb
             //If we have a target, check that its still valid and untarget if not
             if not targetUnit.isAlive() or targetUnit.isInvulnerable() or not IsUnitVisible(targetUnit, ownerUnit.getOwner()) or not ownerUnit.getOwner().isEnemyOf(targetUnit.getOwner())
                 targetUnit = null
-    
+
     function tryToFindTarget()
         var curPos = this.projectile.getPos()
         targetUnit = null
@@ -179,7 +179,7 @@ class SEFOrb
                                 targetUnit = u
                         else
                             targetUnit = u
-                else 
+                else
                     //Get the closest unit if multiples happen to come into range at once
                     if (targetUnit != null)
                         if (curPos.distanceToSq( targetUnit.getPos() ) > curPos.distanceToSq(u.getPos()))
@@ -195,7 +195,7 @@ class SEFOrb
         updateTarget()
         moveTowardTargetPos()
 
-        
+
     function onImpactEffect()
         if (targetUnit.isAlive() and not targetUnit.isInvulnerable())
             if (targetUnit.hasAbility('XSFB')) //If hit previously by another orb
@@ -246,14 +246,14 @@ class SEFInstance
                     if (channeledTime - _lastOrbCreatedTimestamp >= orb_interval-0.01)
                         orbs.push(new SEFOrb(ownerUnit, this, caster.getPos().withTerrainZ(ORB_ORBIT_HEIGHT)))
                         _lastOrbCreatedTimestamp = channeledTime
-                else 
+                else
                     orbCreationLoopPeriodic.stop()
         else
             //Create orbs instantly if overcharged
             int count = (CHANNEL_DURATION/ORB_SPAWN_INTERVAL).round()
             for i = 1 to count
                 orbs.push(new SEFOrb(ownerUnit, this, caster.getPos().withTerrainZ(ORB_ORBIT_HEIGHT)))
-        
+
         this.startOrbLoop()
 
 
@@ -281,7 +281,7 @@ class SEFInstance
         angle orbOffset = angle(bj_PI/4)
         if (orbsWithoutTarget != 0)
             orbOffset = angle(2 * bj_PI / orbsWithoutTarget )
-        
+
         //When we have angle offset amount per orb, apply it to orbs
         int i = 0
         for o in orbs
@@ -298,7 +298,7 @@ class SEFInstance
         destroy targetedTimestampMap
 
         if instances.has(ownerUnit)
-            if (instances.get(ownerUnit) == this) 
+            if (instances.get(ownerUnit) == this)
                 instances.remove(ownerUnit)
 
 function onCast()

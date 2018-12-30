@@ -58,14 +58,14 @@ init
     registerCommandAll("rn") (triggerPlayer, args) ->
         for i = 0 to PLAYER_NEUTRAL_AGGRESSIVE - 1
             if udg_RealNames[i] != ""
-                let msg = "{0} {1}".format((i + 1).toString().color(COLOR_CODE[i]), players[i].getName())
+                let msg = "{0} {1}".format((i + 1).toString().color(i.toPlayerColor().toColor()), players[i].getName())
                 printTimedToPlayer(msg, 10, triggerPlayer)
 
-    // registerCommandAll("obs") (triggerPlayer, args) ->
-    //    SetPlayerState(triggerPlayer, PLAYER_STATE_OBSERVER, 1)
+    registerCommandAll("obs") (triggerPlayer, args) ->
+        SetPlayerState(triggerPlayer, PLAYER_STATE_OBSERVER, 1)
 
     registerGameStartEvent() ->
-        // deregisterCommandAll("obs")
+        deregisterCommandAll("obs")
 
         registerCommandAll("ac", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))
         registerCommandAll("sc", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))
@@ -79,7 +79,7 @@ init
 
         registerCommandAll("cc") (triggerPlayer, args) ->
             let id = args.get(1).toInt() mod 12
-            let msg = "Adjusted player color to {0}Player {1}|r".format(COLOR_CODE[id], (id + 1).toString())
+            let msg = "Adjusted player color to {0}Player {1}|r".format(id.toPlayerColor().toColor().toColorString(), (id + 1).toString())
             printTimedToPlayer(msg, 5, triggerPlayer)
             triggerPlayer.setColor(ConvertPlayerColor(id), true)
 

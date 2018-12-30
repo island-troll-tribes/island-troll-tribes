@@ -17,26 +17,31 @@ import ObjectIds
 constant let ABILITY_ID = 'ESFB'
 constant let DUMMY_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
 constant let DUMMY_ABILITY_BUFF_ID = compiletime(BUFF_ID_GEN.next())
-constant let COOLDOWN = 40.  
-constant let MISSILE_SPEED = 1100.  
-constant let MISSILE_LIFETIME = 1.5  
+constant let COOLDOWN = 35.
+constant let MISSILE_SPEED = 1100.
+constant let MISSILE_LIFETIME = 1.5
 constant let MANACOST = 15
 constant let IMPACT_TRIGGER_AOE = 130.
 constant let MISSILE_FLY_HEIGHT = 140.
 constant let IMPACT_EFFECT_AOE = 250.
-constant let IMPACT_EFFECT_MIN_DAMAGE = 30.
-constant let IMPACT_EFFECT_MAX_DAMAGE = 70.
-constant let IMPACT_EFFECT_MIN_SLOW_AMOUNT = 0.3
-constant let IMPACT_EFFECT_MAX_SLOW_AMOUNT = 0.8
+constant let OVERCHARGE_DAMAGE_MULTIPLIER = 0.3
+constant let OVERCHARGE_PROJECTILE_COUNT = 7
+constant let OVERCHARGE_PROJECTILE_INTERVAL = 0.35
+constant let IMPACT_EFFECT_MIN_DAMAGE = 25.
+constant let IMPACT_EFFECT_MAX_DAMAGE = 65.
+constant let IMPACT_EFFECT_MIN_SLOW_AMOUNT = 0.35
+constant let IMPACT_EFFECT_MAX_SLOW_AMOUNT = 0.75
 constant let IMPACT_EFFECT_MIN_DURATION = 2
-constant let IMPACT_EFFECT_MAX_DURATION = 6
+constant let IMPACT_EFFECT_MAX_DURATION = 5
 constant let SPAWN_OFFSET_DISTANCE = 50.
 constant let LOOP_INTERVAL = 0.03125
 constant let SPELL_ICON = Icons.bTNFrostBolt
 constant let PROJECTILE_EFFECT_PATH = "Abilities\\Weapons\\FrostWyrmMissile\\FrostWyrmMissile.mdl"
+constant let PROJECTILE_EFFECT_PATH_OVERCHARGED = "Abilities\\Weapons\\ZigguratFrostMissile\\ZigguratFrostMissile.mdl" //"Abilities\\Spells\\Other\\FrostBolt\\FrostBoltMissile.mdl"
+
 constant let IMPACT_EFFECT_PATH = "Abilities\\Spells\\Undead\\FrostNova\\FrostNovaTarget.mdl"
 constant let TOOLTIP_NORM = "|c00ffcc00E|r - Frost Blast"
-constant let TOOLTIP_EXT = "Shoots out a missile of frost that explodes on impact, dealing |c00ff000030 - 70|r damage to units in a small area and slows their movement and attack speeds by 30% - 80% for 2 - 6 seconds with effects increasing by distance travelled before impact."
+constant let TOOLTIP_EXT = "Shoots out a missile of frost that explodes on impact, dealing |c00ff000025 - 65|r damage to units in a small area and slows their movement and attack speeds by 35% - 75% for 2 - 5 seconds with effects increasing by distance travelled before impact."
 
 @compiletime function createBuff()
     new BuffDefinition(DUMMY_ABILITY_BUFF_ID, 'Bfro')
@@ -45,7 +50,7 @@ constant let TOOLTIP_EXT = "Shoots out a missile of frost that explodes on impac
     ..setIcon(SPELL_ICON)
     ..setIconNormal(1, SPELL_ICON)
 
-@compiletime function createDummyFrostNovas()
+@compiletime function createDummySlow()
     new AbilityDefinitionSlowCreep(DUMMY_ABILITY_ID)
     ..setLevels(10)
     ..setArtCaster("")
@@ -92,16 +97,16 @@ constant let TOOLTIP_EXT = "Shoots out a missile of frost that explodes on impac
     ..setCastingTime(1, 0)
     ..setTooltipNormal(1, TOOLTIP_NORM)
     ..setTooltipNormalExtended(1, TOOLTIP_EXT)
-    ..setBaseOrderID(1, "bearform")
-    ..setOrderStringUseTurnOn("bearform")
-    ..setOrderStringActivate("bearform")
-    ..setOrderStringDeactivate("bearform")
-    ..setOrderStringTurnOff("bearform")
+    ..setBaseOrderID(1, "frostarmoroff")
+    ..setOrderStringUseTurnOn("frostarmoroff")
+    ..setOrderStringActivate("frostarmoroff")
+    ..setOrderStringDeactivate("frostarmoroff")
+    ..setOrderStringTurnOff("frostarmoroff")
     ..setOptions(1, 1)
     ..setCooldown(1, COOLDOWN)
     ..setManaCost(1, MANACOST)
     ..setTargetType(1, 3)
-    ..setCastRange(1, 1500)
+    ..setCastRange(1, MISSILE_SPEED * MISSILE_LIFETIME)
 
 class FrostBlastProjectile
     real lifeTime
@@ -111,16 +116,23 @@ class FrostBlastProjectile
     effect efx
     bool foundTarget
     bool exploded
-    construct(unit owner, vec3 pos, angle ang)
+    bool isOvercharged
+
+    construct(unit owner, vec3 pos, angle ang, bool isOvercharged)
         this.ownerUnit = owner
         this.lifeTime = 0
+        this.isOvercharged = isOvercharged
         this.ang = ang
         this.pos = pos
-        this.efx = addEffect(PROJECTILE_EFFECT_PATH, pos)
+        if isOvercharged
+            this.efx = addEffect(PROJECTILE_EFFECT_PATH_OVERCHARGED, pos)
+            efx.setScale(1.5)
+        else
+            this.efx = addEffect(PROJECTILE_EFFECT_PATH, pos)
         this.foundTarget = false
         this.exploded = false
         this.efx.setRoll(ang)
-        this.efx.setScale(1.8)
+
 
     ondestroy
         if this.efx != null
@@ -138,6 +150,7 @@ class FrostBlastProjectile
         this.pos = newPos
         checkForImpacts()
         if (this.foundTarget)
+            spawnTemporaryVision(450, 2)
             explode()
 
     function checkForImpacts()
@@ -146,17 +159,27 @@ class FrostBlastProjectile
             if isValidTarget(ownerUnit, u)
                 this.foundTarget = true
 
+    function spawnTemporaryVision(real radius, real duration)
+        let vis = createVision(ownerUnit.getOwner(), this.pos.toVec2(), radius, true)
+        vis.start()
+        doAfter(duration) ->
+            vis.destr()
+
     function explode()
         //Scale slow and damage by missile flight time relative to 80% of max lifetime
-        var effectScalingValue = this.lifeTime/(MISSILE_LIFETIME*0.8)
+        var effectScalingValue = this.lifeTime/(MISSILE_LIFETIME*0.75)
         if effectScalingValue > 1
             effectScalingValue = 1
 
         int slowTier = 1 + (9*effectScalingValue).round()
         real damage = IMPACT_EFFECT_MIN_DAMAGE + (IMPACT_EFFECT_MAX_DAMAGE-IMPACT_EFFECT_MIN_DAMAGE)*effectScalingValue
+        if (isOvercharged)
+            damage = damage * OVERCHARGE_DAMAGE_MULTIPLIER
+
         forUnitsInRange(this.pos.toVec2(), IMPACT_EFFECT_AOE) u ->
             if isValidTarget(this.ownerUnit, u)
-                flashEffect(IMPACT_EFFECT_PATH, u.getPos3Real())
+                if effectScalingValue >= 0.7
+                    flashEffect(IMPACT_EFFECT_PATH, u, "chest")
                 this.ownerUnit.damageTarget(u, damage, ATTACK_TYPE_NORMAL)
                 new DummyCaster().castTarget(this.ownerUnit.getOwner(), DUMMY_ABILITY_ID, slowTier, Orders.slow, u)
         this.exploded = true
@@ -171,12 +194,33 @@ function onCast()
     let targetPos = vec2(targetX, targetY)
     let targetAngle = casterPos.angleTo(targetPos)
     let isOverCharged = consumeOvercharge(caster)
-    spawnProjectile(caster, targetAngle)
+    if not isOverCharged
+        spawnProjectile(caster, targetAngle)
+    else
+        sprayOverchargedProjectiles(caster, targetPos)
+
+function sprayOverchargedProjectiles(unit caster, vec2 targetPos)
+    doPeriodicallyCounted(OVERCHARGE_PROJECTILE_INTERVAL, OVERCHARGE_PROJECTILE_COUNT) cb ->
+        if caster.isAlive()
+            let casterPos = caster.getPos()
+            let ang = casterPos.angleTo(targetPos)
+            let spawnPos = casterPos.polarOffset(ang, SPAWN_OFFSET_DISTANCE).withTerrainZ(MISSILE_FLY_HEIGHT)
+            var projectile = new FrostBlastProjectile(caster, spawnPos, ang, true)
+
+            doPeriodicallyTimed(LOOP_INTERVAL, MISSILE_LIFETIME) updateLoop ->
+                if (updateLoop.isLast())
+                    if projectile != null
+                        destroy projectile
+                else
+                    if projectile != null
+                        projectile.updateLoop()
+        else
+            cb.stop()
 
 function spawnProjectile(unit caster, angle ang)
     let casterPos = caster.getPos()
     let spawnPos = casterPos.polarOffset(ang, SPAWN_OFFSET_DISTANCE).withTerrainZ(MISSILE_FLY_HEIGHT)
-    var projectile = new FrostBlastProjectile(caster, spawnPos, ang)
+    var projectile = new FrostBlastProjectile(caster, spawnPos, ang, false)
 
     doPeriodicallyTimed(LOOP_INTERVAL, MISSILE_LIFETIME) updateLoop ->
         if (updateLoop.isLast())
@@ -188,7 +232,7 @@ function spawnProjectile(unit caster, angle ang)
 
 function isValidTarget(unit caster, unit target) returns bool
     return target.getOwner().isEnemyOf(caster.getOwner()) and not target.isInvulnerable() and not target.isType(UNIT_TYPE_FLYING) and target.isAlive() and not target.isHidden()
-        
+
 
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())

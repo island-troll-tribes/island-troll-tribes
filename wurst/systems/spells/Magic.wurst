@@ -1,7 +1,9 @@
 package Magic
 import RegisterEvents
 import DummyCaster
-import TheOne
+import TheOneSpawn
+import Mammoth
+import DiscoDuck
 
 init
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_USE_ITEM) ->
@@ -13,10 +15,8 @@ init
 
             if user.isInRegion(THE_ONE_REGION) and canSpawnTheOne()
                 spawnTheOne()
-            else if Mammoth_Dead and DiscoDuck == null
-                HornSound()
-                DiscoDuck = createUnit(players[PLAYER_NEUTRAL_AGGRESSIVE], UNIT_DISCO_DUCK, gg_rct_discoduck.getCenter(), angle(315))
-                AddSpecialEffectTarget(teleportModel, DiscoDuck, "overhead").destr()
+            else if Mammoth.getInstance().isDead() and DiscoDuck.getInstance() == null
+                new DiscoDuck()
             else if chance < 0.1
                 user.setHP(user.getMaxHP() * 0.3)
                 user.setMana(user.getMaxMana() * 0.3)
@@ -28,7 +28,7 @@ init
             else if chance < 0.4
                 user.removeLevels(1)
             else if chance < 0.6
-                new DummyCaster().castTarget(user.getOwner(), 'ANfs', 1, "flamestrike", user)
+                new DummyCaster(3).castTarget(user.getOwner(), 'ANfs', 1, "flamestrike", user)
             else if chance < 0.7
                 user.addXp(500, true)
             else if chance < 0.9

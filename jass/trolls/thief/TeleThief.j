@@ -25,13 +25,13 @@ function Trig_TeleThief_Actions takes nothing returns nothing
     local unit a=GetManipulatingUnit()
     local unit b
     local group q
-    //if(I2U(GetUnitUserData(a))!=null) then
+    //if(I2U(GetUnitUserDataEx(a))!=null) then
     if (LoadUnitHandle(udg_GameHash, GetHandleId(a), StringHash("fire")) != null ) then
-       //set b=I2U(GetUnitUserData(a))
+       //set b=I2U(GetUnitUserDataEx(a))
        set b = LoadUnitHandle(udg_GameHash, GetHandleId(a), StringHash("fire"))
        if(UnitHasBuffBJ(b, 'B00I')==false) then
            call UnitRemoveBuffBJ( 'B00K', a )
-           //call SetUnitUserData( a, 0 )
+           //call SetUnitUserDataEx( a, 0 )
            call RemoveSavedHandle(udg_GameHash, GetHandleId(a), StringHash("fire"))
            //call SaveUnitHandle(udg_GameHash, GetHandleId(a), StringHash("fire"), null)
        else
@@ -46,7 +46,7 @@ function Trig_TeleThief_Actions takes nothing returns nothing
        endif
     else
     call UnitRemoveBuffBJ( 'B00K', a )
-    //call SetUnitUserData( a, 0 )
+    //call SetUnitUserDataEx( a, 0 )
     call RemoveSavedHandle(udg_GameHash, GetHandleId(a), StringHash("fire"))
     endif
 endfunction

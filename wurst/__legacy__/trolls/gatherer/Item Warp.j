@@ -1,9 +1,3 @@
-
-//
-// Abilities\Spells\Undead\DevourMagic\DevourMagicBirthMissile.mdl
-//===========================================================================
-//TESH.scrollpos=90
-//TESH.alwaysfold=0
 scope ItemPull initializer onInit
 private function Conditions takes nothing returns boolean
     return  GetSpellAbilityId() == 'A06W'

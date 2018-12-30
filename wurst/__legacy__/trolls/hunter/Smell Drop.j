@@ -54,7 +54,7 @@ function InitTrig_Smell_Drop takes nothing returns nothing
         exitwhen i > 11
         call TriggerRegisterPlayerUnitEvent(gg_trg_Smell_Drop, Player(i), EVENT_PLAYER_UNIT_PICKUP_ITEM, null)
         call TriggerRegisterPlayerUnitEvent(gg_trg_Smell_Drop, Player(i), EVENT_PLAYER_UNIT_DROP_ITEM, null)
-        call TriggerAddCondition(gg_trg_Smell_Drop, function Smell_Condition)
+        call TriggerAddCondition(gg_trg_Smell_Drop, Condition(function Smell_Condition))
         set i = i + 1
     endloop
     call TriggerAddAction( gg_trg_Smell_Drop, function Trig_Smell_Drop_Actions )

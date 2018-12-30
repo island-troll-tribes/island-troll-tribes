@@ -13,6 +13,7 @@ import DummyCaster
 import MathUtils
 import Orders
 import InventoryEvent
+import SimError
 
 constant string ICON = Icons.bTNAlleriaFlute
 constant string ITEM_TOOLTIP = "Purchase |cffffcc00B|rlow Gun"
@@ -152,7 +153,7 @@ class Blowpipe
         item ammo = contents.get(0)
 
         if ammo == null
-            printTimedToPlayer("No ammo!", 3, caster.getOwner())
+            simError(caster.getOwner(), "No ammo!")
             return
         else
             if (ammo.getTypeId() == ITEM_THISTLES)
@@ -169,7 +170,7 @@ class Blowpipe
             //Reduce ammo
             if (charges > 1)
                 ammo.setCharges(charges - 1)
-            else    
+            else
                 contents.remove(ammo)
                 ammo.remove()
 
@@ -183,7 +184,7 @@ class Blowpipe
         //Tread non-charge items as 1 charge
         if charges == 0
             charges = 1
-        
+
         //Calculate how many full charges can be loaded considering max slots in blowgun and item 'size'
         int slotsLeft = this.getAmmoSlotsLeft()
         int _chargesToLoad = 0
@@ -209,7 +210,7 @@ class Blowpipe
             newItem.setVisible(false)
             this.contents.push(newItem)
             this.i.setCharges(this.i.getCharges() + _chargesToLoad)
-            
+
             //Bounce item to stop slot swap from happening
             owner.removeItem(itm)
             owner.addItemHandle(itm)
@@ -236,9 +237,9 @@ class Blowpipe
                 var charges = itm.getCharges()
                 if charges == 0
                     charges = 1
-                
+
                 totalSlots += charges * slotsPerItem.get(itm.getTypeId())
-                
+
             if totalSlots >= MAX_SLOTS
                 return 0
             else
@@ -263,8 +264,8 @@ function onCast()
             else
                 printTimedToPlayer("ERROR: Tried to target blowgun with no instance!", 10, GetTriggerUnit().getOwner())
 
-    
-function onUse()    
+
+function onUse()
     //Triggers after onCast, used for actually firing the blowgun at the target specified in onCast
     var itm = GetManipulatedItem()
     if itm.getTypeId() == ITEM_ID
@@ -272,7 +273,7 @@ function onUse()
             instances.get(itm).onFire(GetTriggerUnit())
         else
             printTimedToPlayer("ERROR: Tried to fire blowgun with no instance!", 10, GetTriggerUnit().getOwner())
- 
+
 function onPickup()
     //Create blowpipe instance when new blowpipe is acquired
     var itm = GetManipulatedItem()
@@ -305,7 +306,3 @@ function onItemMoved()
     if u.itemInSlot(slotTo).getTypeId() == ITEM_ID
         if slotsPerItem.has(i.getTypeId())
             instances.get(u.itemInSlot(slotTo)).loadAmmo(u, i)
-
-
-
-

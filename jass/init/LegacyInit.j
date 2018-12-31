@@ -54,7 +54,6 @@ library LegacyInit initializer onInit
         call ExecuteFunc("InitTrig_camoflage")
         call ExecuteFunc("InitTrig_fervor_potion")
         call ExecuteFunc("InitTrig_Increased_Meat")
-        call ExecuteFunc("InitTrig_blow_gun")
         call ExecuteFunc("InitTrig_depress_thistle_mana_drain")
         call ExecuteFunc("InitTrig_bow_stagest")
         call ExecuteFunc("InitTrig_bow_tract")

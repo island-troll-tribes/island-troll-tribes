@@ -99,13 +99,6 @@ library Transmute initializer onInit requires FilterTypeIsThing, IsTypeThing
                 call UnitAddItem(GetTriggerUnit(), added)
                 call itemLower(4)
             endif
-            if i[0] == ITEM_BLOW_GUN and i[1] == ITEM_THISTLES then
-                set e = GetItemCharges(t[1])
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                set added = UnitAddItemByIdSwapped(ITEM_LOADED_THISTLES, GetTriggerUnit())
-                call SetItemCharges(added, e)
-            endif
             if i[0] == ITEM_STICK and i[1] == ITEM_IRON_INGOT and i[2] == ITEM_IRON_INGOT then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -356,31 +349,6 @@ library Transmute initializer onInit requires FilterTypeIsThing, IsTypeThing
                 set added = CreateItem(ITEM_STEEL_AXE, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
                 call UnitAddItem(GetTriggerUnit(), added)
                 call itemLower(1)
-            endif
-            if i[0] == ITEM_BLOW_GUN and i[1] == ITEM_BONE then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call UnitAddItemByIdSwapped( ITEM_LOADED_BONE, GetTriggerUnit() )
-                call itemLower(1)
-            endif
-            if i[0] == ITEM_BLOW_GUN and i[1] == ITEM_THISTLES then
-                set e = GetItemCharges(t[1])
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-        set added = UnitAddItemByIdSwapped(ITEM_LOADED_THISTLES, GetTriggerUnit())
-                call SetItemCharges(added, e)
-            endif
-            if i[0] == ITEM_BLOW_GUN and i[1] == ITEM_DARK_THISTLES then
-                set  e = GetItemCharges(t[1])
-                call RemoveItem(t[0])
-                set added = UnitAddItemByIdSwapped(ITEM_LOADED_DARK_THISTLES, GetTriggerUnit())
-                if e > 12 then
-                    call SetItemCharges(added, 12)
-                    call SetItemCharges(t[1] , e - 12)
-                else
-                    call SetItemCharges(added, e)
-                    call RemoveItem(t[1])
-                endif
             endif
             set bol1 = IsItemPole(t[1])
             if i[0] == ITEM_IRON_INGOT and bol1 then

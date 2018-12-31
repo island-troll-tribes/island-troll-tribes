@@ -1,4 +1,4 @@
-library Jump initializer onInit requires TerrainPathability, PublicLibrary
+library Jump initializer onInit requires TerrainPathability, PublicLibrary, LegacyTriggers
 
 function Trig_Jump_Conditions takes nothing returns boolean
     return GetSpellAbilityId() == 'A04G'
@@ -16,7 +16,7 @@ function jumpTimerActions takes nothing returns nothing
     local real d=LoadReal(udg_GameHash,GetHandleId(t),StringHash("mp"))
     local real a=LoadReal(udg_GameHash,GetHandleId(t),StringHash("angle"))
     local real temp=0
-    
+
     if(s>=0) then
         call SetUnitPosition(m,GetUnitX(m)+d*Cos(a),GetUnitY(m)+d*Sin(a))
         call SetUnitFacing(m, a*bj_RADTODEG)
@@ -31,7 +31,7 @@ function jumpTimerActions takes nothing returns nothing
         call SetUnitInvulnerable( m, false )
         call SetUnitFlyHeight(m,0,0)
     endif
-    
+
     set t = null
     set m = null
 endfunction
@@ -68,27 +68,27 @@ function Trig_Jump_Actions takes nothing returns nothing
         set dx = qX-pX
         set dy = qY-pY
         set d = SquareRoot(dx*dx+dy*dy)
-        
+
         set movePer=d/75 //(.75 seconds)
         set angle = Atan2(qY-pY,qX-pX)
         call PauseUnit(u, true)
         call SetUnitInvulnerable(u, true)
-        
+
         call UnitAddAbility( u, 'AEme' )
         call UnitRemoveAbility( u, 'AEme' )
-        
+
         call SetUnitPathing( u, false )
-        
+
         //call DisplayText("Real")
         //call DisplayText(R2S(movePer))
         //call DisplayText(R2S(angle))
         //call DisplayText(R2S(d))
-        
+
         call SaveInteger(udg_GameHash,GetHandleId(t), StringHash("steps"), 75)
         call SaveReal(udg_GameHash,GetHandleId(t),StringHash("mp"),movePer)
         call SaveReal(udg_GameHash,GetHandleId(t),StringHash("angle"),angle)
         call SaveUnitHandle(udg_GameHash,GetHandleId(t),StringHash("unit"),u)
-        
+
 //      call StoreInteger(udg_jumpCache,"jump.w3v","steps",75)
 //      call StoreReal(udg_jumpCache,"jump.w3v","mp",movePer)
 //      call StoreReal(udg_jumpCache,"jump.w3v","angle",a)

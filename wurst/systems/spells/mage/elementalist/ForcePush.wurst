@@ -7,7 +7,7 @@ import AbilityObjEditing
 import BuffObjEditing
 import OverCharge
 import Orders
-import DummyCaster
+import IttDummyCaster
 import ITTKnockback
 
 constant let ABILITY_ID = 'XFPS'
@@ -89,7 +89,7 @@ function onCast()
     var owner = caster.getOwner()
     var pos = caster.getPos()
     bool isOvercharged = consumeOvercharge(caster)
-    
+
     //SFX
     var efx = addEffect(EFFECT_PATH, pos)
     efx..setTimeScale(3)..setScale(0.75)
@@ -102,8 +102,7 @@ function onCast()
                 ITTKnockback.add(u, KNOCKBACK_SPEED, pos.angleTo(u.getPos()), angle( bj_PI / 2))
             else if isOvercharged
                 ITTKnockback.add(u, KNOCKBACK_SPEED * OVERCHARGE_KNOCKBACK_MULTIPLIER, pos.angleTo(u.getPos()), angle( bj_PI / 2))
-                new DummyCaster().castTarget(owner, DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, u, caster.getPos3Real())
-                                
+                new IttDummyCaster().castTarget(owner, DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, u, caster.getPos3Real())
+
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())
-    

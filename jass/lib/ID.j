@@ -43,7 +43,7 @@ library ID
 		constant integer UNIT_MAGE_1          = 'CMA1'
 		constant integer UNIT_ELEMENTALIST    = 'O00U'
 		constant integer UNIT_ELEMENTALIST_1  = 'CEL1'
-		constant integer UNIT_ELEMENTALIST_NEW  = 'XELE'
+		constant integer UNIT_ELEMENTALIST_NEW = 'XELE'
 		constant integer UNIT_HYPNOTIST       = 'O00R'
 		constant integer UNIT_DEMENTIA_MASTER = 'O014'
 

@@ -43,6 +43,7 @@ library ID
 		constant integer UNIT_MAGE_1          = 'CMA1'
 		constant integer UNIT_ELEMENTALIST    = 'O00U'
 		constant integer UNIT_ELEMENTALIST_1  = 'CEL1'
+		constant integer UNIT_ELEMENTALIST_NEW = 'XELE'
 		constant integer UNIT_HYPNOTIST       = 'O00R'
 		constant integer UNIT_DEMENTIA_MASTER = 'O014'
 
@@ -416,7 +417,7 @@ library ID
 		constant integer ITEM_BATTLE_SUIT     = 'I04O'
 		constant integer ITEM_BATTLE_SPEAR    = 'I051'
 		constant integer ITEM_BEE_HIVE        = 'I02T'
-		constant integer ITEM_BLOW_GUN        = 'XIBP'
+		constant integer ITEM_BLOW_GUN        = 'I01T'
 		constant integer ITEM_CAMOUFLAGE_COAT = 'I02W'
 		constant integer ITEM_DARK_THISTLES   = 'I02X'
 		constant integer ITEM_EMP             = 'I03M'

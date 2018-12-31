@@ -101,8 +101,6 @@ library TrollUpgrade initializer onInit requires ID, PublicLibrary
     elseif SKILL_UPGRADE == 'S00C' then
         set UNIT_ID_REPLACE = UNIT_TRACKER
         set TRACKER_PRESENT = true
-    elseif SKILL_UPGRADE == 'S002' then
-        set UNIT_ID_REPLACE = UNIT_ELEMENTALIST
     elseif SKILL_UPGRADE == 'S009' then
         set UNIT_ID_REPLACE = UNIT_HYPNOTIST
     elseif SKILL_UPGRADE == 'S00B' then

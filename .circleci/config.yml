@@ -20,6 +20,10 @@ jobs:
             unzip -qq -n wurstpack_compiler.zip -d $HOME/.wurst
 
       - run:
+          name: Update Dependencies
+          command: java -jar ~/.wurst/WurstSetup.jar -updateProject -silent -projectDir .
+
+      - run:
           name: Test
           command: java -jar $HOME/.wurst/wurstscript.jar $HOME/.wurst/common.j $HOME/.wurst/blizzard.j ./ -runcompiletimefunctions -runtests
 
@@ -27,3 +31,4 @@ jobs:
           key: wurst-dependencies-{{ checksum "wurst.build" }}
           paths:
             - ~/.wurst
+            - ~/island-troll-tribes/_build

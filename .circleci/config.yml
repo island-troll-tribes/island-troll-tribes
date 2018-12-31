@@ -1,0 +1,29 @@
+version: 2
+
+jobs:
+  test:
+    working_directory: ~/
+
+    docker:
+      - image: circleci/openjdk:8-jdk-browsers
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          key: wurst-dependencies-{{ checksum "wurst.build" }}
+
+      - run:
+          name: Get Wurst
+          command: |
+            wget http://peeeq.de/hudson/job/Wurst/lastSuccessfulBuild/artifact/downloads/wurstpack_compiler.zip
+            unzip -qq -n wurstpack_compiler.zip -d $HOME/.wurst
+
+      - run:
+          name: Test
+          command: java -jar $HOME/.wurst/wurstscript.jar $HOME/.wurst/common.j $HOME/.wurst/blizzard.j ./ -runcompiletimefunctions -runtests
+
+      - save_cache:
+          key: wurst-dependencies-{{ checksum "wurst.build" }}
+          paths:
+            - ~/.wurst

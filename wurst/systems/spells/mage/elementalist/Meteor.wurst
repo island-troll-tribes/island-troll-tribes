@@ -1,0 +1,195 @@
+package Meteor
+
+import RegisterEvents
+import ClosureTimers
+import ClosureForGroups
+import Orders
+import OverCharge
+import DummyCaster
+import AbilityObjEditing
+
+constant let ABILITY_ID = 'XEMS'
+constant let DUMMY_STUN_ABILITY_ID = 'XEMD'
+constant let MANACOST = 30
+constant let COOLDOWN = 35.
+constant let IMPACT_DAMAGE = 45.
+constant let CAST_RANGE = 800.
+constant let OVERCHARGE_GROUND_BURN_DPS = 15.
+constant let OVERCHARGE_GROUND_BURN_DURATION = 7.
+constant let IMPACT_BURN_DPS = 7.
+constant let IMPACT_BURN_DURATION = 5.
+constant let IMPACT_BURN_INTERVAL = 0.2
+constant let IMPACT_STUN_DURATION_HERO = 0.5
+constant let IMPACT_STUN_DURATION_NORMAL = 1.5
+constant let IMPACT_RADIUS_MAX = 240.
+constant let IMPACT_RADIUS_DAMAGEFALLOFF = 140.
+constant let IMPACT_DELAY = 1.
+constant let PROJECTILE_INITIAL_HEIGHT = 900.
+constant let PROJECTILE_INITIAL_DISTANCE = 300.
+constant let LOOP_INTERVAL = 0.03125
+constant let PROJECTILE_EFFECT_PATH = "abilities\\weapons\\catapult\\catapultmissile.mdl" //"Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl"
+constant let PROJECTILE_TRAIL_EFFECT_PATH = "Abilities\\Weapons\\RedDragonBreath\\RedDragonMissile.mdl"
+constant let EXPLOSION_EFFECT_PATH = "Objects\\Spawnmodels\\Other\\NeutralBuildingExplosion\\NeutralBuildingExplosion.mdl"
+constant let BURN_EFFECT_PATH = "Abilities\\Spells\\Other\\BreathOfFire\\BreathOfFireDamage.mdl"
+constant let GROUND_BURN_EFFECT_PATH = "Abilities\\Spells\\Other\\BreathOfFire\\BreathOfFireDamage.mdl"
+constant let ICON_PATH = "ReplaceableTextures\\CommandButtons\\BTNFlare.blp"
+constant let TOOLTIP_NORMAL = "|c00ffcc00W|r - Meteor"
+constant let TOOLTIP_NORMAL_EXT = "Calls down a meteor to impact on target point after 1 second. On impact, stuns and deals |c00ff000045|r damage and applies a burning effect on targets hit for another |c00ff000045|r damage over time."
+
+@compiletime function createSpell()
+    new AbilityDefinitionRainofFire(ABILITY_ID)
+    ..setAnimationNames("spell")
+    ..setButtonPositionNormalX(1)
+    ..setButtonPositionNormalY(0)
+    ..setButtonPositionResearchX(1)
+    ..setButtonPositionResearchY(0)
+    ..setIconNormal(ICON_PATH)
+    ..setDamage(1, 0)
+    ..setDamagePerSecond(1, 0)
+    ..setCastRange(1, CAST_RANGE)
+    ..setNumberofShards(1, 0)
+    ..setNumberofWaves(1, 0)
+    ..setAreaofEffect(1, IMPACT_RADIUS_MAX)
+    ..setBuffs(1, "")
+    ..setCastingTime(1, 0)
+    ..setCooldown(1, COOLDOWN)
+    ..setDurationHero(1, 0)
+    ..setDurationNormal(1, 0)
+    ..setEffects(1, "")
+    ..setManaCost(1, MANACOST)
+    ..setHotkeyNormal("W")
+    ..setName("Meteor")
+    ..setTooltipNormal(1, TOOLTIP_NORMAL)
+    ..setTooltipNormalExtended(1, TOOLTIP_NORMAL_EXT)
+
+@compiletime function createDummySpell()
+    new AbilityDefinitionFireBolt(DUMMY_STUN_ABILITY_ID)
+    ..setAnimationNames("")
+    ..setMissileSpeed(9000)
+    ..setMissileArt("")
+    ..setMissileHomingEnabled(true)
+    ..setCastingTime(1, 0)
+    ..setBuffs(1, "BSTN")
+    ..setCastRange(1, 9999)
+    ..setCooldown(1, 0)
+    ..setDamage(1, 0)
+    ..setDurationHero(1, IMPACT_STUN_DURATION_HERO)
+    ..setDurationNormal(1, IMPACT_STUN_DURATION_NORMAL)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setManaCost(1, 0)
+    ..setRace(Race.Creeps)
+    ..setName("Meteor Stun Dummy Spell")
+
+
+function onCast()
+    var caster = GetSpellAbilityUnit()
+    vec2 targetPos = vec2(GetSpellTargetX(), GetSpellTargetY())
+    callMeteor(caster, targetPos, consumeOvercharge(caster))
+
+function handleGroundBurning(unit caster, vec2 pos)
+    var owner = caster.getOwner()
+    //Spawn fire FX on ground
+    for i = 0 to 40
+        angle randAngle = angle(GetRandomReal(0, 2*bj_PI))
+        real randomDist = GetRandomReal(15, IMPACT_RADIUS_MAX)
+        var fireFX = addEffect(GROUND_BURN_EFFECT_PATH, pos.polarOffset(randAngle, randomDist).withTerrainZ(0))
+        fireFX.setScale(0.7)
+        doAfter(OVERCHARGE_GROUND_BURN_DURATION - 0.5) ->
+            fireFX.destr()
+
+    //Damage the units in area
+    doPeriodicallyTimed(IMPACT_BURN_INTERVAL, OVERCHARGE_GROUND_BURN_DURATION) burnAOE ->
+        forUnitsInRange(pos, IMPACT_RADIUS_MAX) u ->
+            if u.isAlive() and u.getOwner().isEnemyOf(owner) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isType(UNIT_TYPE_FLYING) and not u.isInvulnerable()
+                caster.damageTarget(u, OVERCHARGE_GROUND_BURN_DPS * IMPACT_BURN_INTERVAL)
+
+
+function callMeteor(unit caster, vec2 targetpos, bool isOvercharged)
+    var owner = caster.getOwner()
+    var casterPos = caster.getPos()
+    vec3 target3D = targetpos.withTerrainZ(0)
+    vec3 startPos = targetpos.withTerrainZ(PROJECTILE_INITIAL_HEIGHT).offset2d(targetpos.angleTo(casterPos), PROJECTILE_INITIAL_DISTANCE)
+    vec3 projectilePath = target3D - startPos
+
+    effect projectile = addEffect(PROJECTILE_EFFECT_PATH, startPos)
+    effect trail = addEffect(PROJECTILE_TRAIL_EFFECT_PATH, startPos)
+    projectile.setScale(1.3)
+    trail.setScale(0.45)
+    trail.setColor(255, 200, 200)
+
+    //Grant vision
+    doAfter(0.3) ->
+        var vision = createVision(owner, targetpos, 400, true)
+        vision.start()
+        doAfter(IMPACT_DELAY + 0.7) ->
+            vision.destr()
+
+    //Periodic loop for landing projectile
+    real elapsedTime = 0
+    doPeriodicallyTimed(LOOP_INTERVAL, IMPACT_DELAY) cb ->
+        //Use elapsed time relative to impact delay to calculate position
+        elapsedTime = elapsedTime + LOOP_INTERVAL
+        real ratio = elapsedTime / IMPACT_DELAY
+        vec3 currentPos = startPos + ratio * projectilePath
+        projectile.setPos(currentPos)
+        trail.setPos(currentPos)
+
+        //Impact effects here
+        if cb.isLast()
+            projectile.destr()
+            trail.destr()
+
+            //Impact unit effects
+            handleImpactEffects(target3D, caster, isOvercharged)
+
+function isValidTarget(unit caster, unit target) returns boolean
+    var owner = caster.getOwner()
+    return target.isAlive() and target.getOwner().isEnemyOf(owner) and not target.isType(UNIT_TYPE_STRUCTURE) and not target.isType(UNIT_TYPE_FLYING) and not target.isInvulnerable()
+
+function handleImpactEffects(vec3 target3D, unit caster, boolean isOvercharged)
+    var targetpos = target3D.toVec2()
+
+    //Impact SFX
+    var explosion = addEffect(EXPLOSION_EFFECT_PATH, target3D)
+    explosion.setScale(0.5)
+    doAfter(3) ->
+        explosion.destr()
+
+    //Overcharge ground burn
+    if isOvercharged
+        handleGroundBurning(caster, targetpos)
+
+    //Impact unit effects
+    forUnitsInRange(targetpos, IMPACT_RADIUS_MAX) u ->
+        if isValidTarget(caster, u)
+            handleImpactUnitEffect(targetpos, u, caster)
+
+function handleImpactUnitEffect(vec2 hitPosition, unit target, unit caster)
+    var owner = caster.getOwner()
+
+    //Calculate reduced damage for units away from center
+    var distance = hitPosition.distanceTo(target.getPos())
+    if (distance <= IMPACT_RADIUS_DAMAGEFALLOFF)
+        caster.damageTarget(target, IMPACT_DAMAGE, ATTACK_TYPE_NORMAL)
+    else
+        var reducedDamage = IMPACT_DAMAGE * (1 - ((distance - IMPACT_RADIUS_DAMAGEFALLOFF) / (IMPACT_RADIUS_MAX - IMPACT_RADIUS_DAMAGEFALLOFF)))
+        caster.damageTarget(target, reducedDamage, ATTACK_TYPE_NORMAL)
+
+    //Apply stun
+    new DummyCaster().castTarget(owner, DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, target, caster.getPos3Real())
+
+    //Apply burn on units
+    var burnfx = AddSpecialEffectTargetUnitBJ("chest", target, BURN_EFFECT_PATH)
+    burnfx.setScale(5)
+
+    //Burn damage loop
+    doPeriodicallyTimed(IMPACT_BURN_INTERVAL, IMPACT_BURN_DURATION) burn ->
+        if (not target.isInvulnerable() and target.isAlive())
+            caster.damageTarget(target, IMPACT_BURN_DPS * IMPACT_BURN_INTERVAL, ATTACK_TYPE_NORMAL)
+        if (burn.isLast() or not target.isAlive())
+            burnfx.destr()
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())

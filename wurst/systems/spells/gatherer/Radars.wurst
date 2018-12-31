@@ -1,0 +1,318 @@
+package Radars
+
+import AbilityObjEditing
+import Assets
+import ClosureEvents
+import ClosuresForItems
+import ClosureTimers
+
+constant let SPELL_ICON = Icons.bTNSpy
+constant let COOLDOWN = 60.
+constant let CASTTIME = 1.
+constant let RADAR_RANGE_BASE = 3300.
+constant let RADAR_RANGE_PER_LEVEL = 200.
+constant let MAX_RANGE = 5000.
+constant let REVEAL_DURATION = 10.
+constant let MANACOST = 15
+constant string array SPELLBOOKSPELLS = ["XGFT, XGFZ, XGFR, XGFC", "XGFT, XGFZ, XGFR, XGFC, XGFF, XGFS", "XGFT, XGFZ, XGFR, XGFC, XGFF, XGFS, XGFM"]
+constant let ABILITY_ID_FINDTINDER = 'XGFT'
+constant let ABILITY_ID_FINDSTICK = 'XGFZ'
+constant let ABILITY_ID_FINDMUSHROOM = 'XGFR'
+constant let ABILITY_ID_FINDCLAYBALL = 'XGFC'
+constant let ABILITY_ID_FINDFLINT = 'XGFF' 
+constant let ABILITY_ID_FINDSTONE = 'XGFS'
+constant let ABILITY_ID_FINDMANA = 'XGFM'
+constant let ABILITY_ID_SPELLBOOK = 'XGRB'
+constant let TOOLTIP_NORM_FINDTINDER = "|c00ffcc00Q|r - Find Tinder"
+constant let TOOLTIP_EXT_FINDTINDER = "Pings all nearby tinder in the minimap and reveals them for a short duration."
+constant let TOOLTIP_NORM_FINDSTICK = "|c00ffcc00W|r - Find Stick"
+constant let TOOLTIP_EXT_FINDSTICK = "Pings all nearby sticks in the minimap and reveals them for a short duration."
+constant let TOOLTIP_NORM_FINDMUSHROOM = "|c00ffcc00E|r - Find Mushroom"
+constant let TOOLTIP_EXT_FINDMUSHROOM = "Pings all nearby mushrooms in the minimap and reveals them for a short duration."
+constant let TOOLTIP_NORM_FINDCLAYBALL = "|c00ffcc00R|r - Find Clay Ball"
+constant let TOOLTIP_EXT_FINDCLAYBALL = "Pings all nearby clay balls in the minimap and reveals them for a short duration."
+constant let TOOLTIP_NORM_FINDFLINT = "|c00ffcc00A|r - Find Flint"
+constant let TOOLTIP_EXT_FINDFLINT = "Pings all nearby flints in the minimap and reveals them for a short duration."
+constant let TOOLTIP_NORM_FINDSTONE = "|c00ffcc00S|r - Find Stone"
+constant let TOOLTIP_EXT_FINDSTONE = "Pings all nearby stones in the minimap and reveals them for a short duration."
+constant let TOOLTIP_NORM_FINDMANA = "|c00ffcc00D|r - Find Mana Crystals"
+constant let TOOLTIP_EXT_FINDMANA = "Pings all nearby mana crystals in the minimap and reveals them for a short duration."
+
+@compiletime function createFindStone()
+    new AbilityDefinitionIllidanChannel(ABILITY_ID_FINDSTONE)
+    ..setTargetType(1, 0)
+    ..setAnimationNames("spell,slam")
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..setButtonPositionNormalX(3)
+    ..setButtonPositionNormalY(0)
+    ..setButtonPositionResearchX(3)
+    ..setButtonPositionResearchY(0)
+    ..setIconNormal(SPELL_ICON)
+    ..setIconResearch(SPELL_ICON)
+    ..setIconTurnOff(SPELL_ICON)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(3)
+    ..setHotkeyNormal("S")
+    ..setName("Find stones")
+    ..setDisableOtherAbilities(1, false)
+    ..setTooltipNormal(1, TOOLTIP_NORM_FINDSTONE)
+    ..setTooltipNormalExtended(1, TOOLTIP_EXT_FINDSTONE)
+    ..presetBaseOrderID(lvl -> "rechargeoff")
+    ..setOrderStringActivate("channel")
+    ..setOrderStringUseTurnOn("channel")
+    ..presetOptions(lvl -> 1)
+    ..presetCooldown(lvl -> COOLDOWN)
+    ..presetManaCost(lvl -> MANACOST)
+    ..presetFollowThroughTime(lvl -> CASTTIME)
+
+@compiletime function createFindFlint()
+    new AbilityDefinitionIllidanChannel(ABILITY_ID_FINDFLINT)
+    ..setTargetType(1, 0)
+    ..setAnimationNames("spell,slam")
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..setButtonPositionNormalX(2)
+    ..setButtonPositionNormalY(0)
+    ..setButtonPositionResearchX(2)
+    ..setButtonPositionResearchY(0)
+    ..setIconNormal(SPELL_ICON)
+    ..setIconResearch(SPELL_ICON)
+    ..setIconTurnOff(SPELL_ICON)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(3)
+    ..setHotkeyNormal("A")
+    ..setName("Find flints")
+    ..setDisableOtherAbilities(1, false)
+    ..setTooltipNormal(1, TOOLTIP_NORM_FINDFLINT)
+    ..setTooltipNormalExtended(1, TOOLTIP_EXT_FINDFLINT)
+    ..presetBaseOrderID(lvl -> "rechargeon")
+    ..setOrderStringActivate("channel")
+    ..setOrderStringUseTurnOn("channel")
+    ..presetOptions(lvl -> 1)
+    ..presetCooldown(lvl -> COOLDOWN)
+    ..presetManaCost(lvl -> MANACOST)
+    ..presetFollowThroughTime(lvl -> CASTTIME)
+
+@compiletime function createFindMana()
+    new AbilityDefinitionIllidanChannel(ABILITY_ID_FINDMANA)
+    ..setTargetType(1, 0)
+    ..setAnimationNames("spell,slam")
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..setButtonPositionNormalX(2)
+    ..setButtonPositionNormalY(0)
+    ..setButtonPositionResearchX(2)
+    ..setButtonPositionResearchY(0)
+    ..setIconNormal(SPELL_ICON)
+    ..setIconResearch(SPELL_ICON)
+    ..setIconTurnOff(SPELL_ICON)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(3)
+    ..setHotkeyNormal("D")
+    ..setName("Find mana crystals")
+    ..setDisableOtherAbilities(1, false)
+    ..setTooltipNormal(1, TOOLTIP_NORM_FINDMANA)
+    ..setTooltipNormalExtended(1, TOOLTIP_EXT_FINDMANA)
+    ..presetBaseOrderID(lvl -> "barkskinon")
+    ..setOrderStringActivate("channel")
+    ..setOrderStringUseTurnOn("channel")
+    ..presetOptions(lvl -> 1)
+    ..presetCooldown(lvl -> COOLDOWN)
+    ..presetManaCost(lvl -> MANACOST)
+    ..presetFollowThroughTime(lvl -> CASTTIME)
+
+@compiletime function createFindTinder()
+    new AbilityDefinitionIllidanChannel(ABILITY_ID_FINDTINDER)
+    ..setTargetType(1, 0)
+    ..setAnimationNames("spell,slam")
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..setButtonPositionNormalX(2)
+    ..setButtonPositionNormalY(0)
+    ..setButtonPositionResearchX(2)
+    ..setButtonPositionResearchY(0)
+    ..setIconNormal(SPELL_ICON)
+    ..setIconResearch(SPELL_ICON)
+    ..setIconTurnOff(SPELL_ICON)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(3)
+    ..setHotkeyNormal("Q")
+    ..setName("Find tinder")
+    ..setDisableOtherAbilities(1, false)
+    ..setTooltipNormal(1, TOOLTIP_NORM_FINDTINDER)
+    ..setTooltipNormalExtended(1, TOOLTIP_EXT_FINDTINDER)
+    ..presetBaseOrderID(lvl -> "barkskinoff")
+    ..setOrderStringActivate("channel")
+    ..setOrderStringUseTurnOn("channel")
+    ..presetOptions(lvl -> 1)
+    ..presetCooldown(lvl -> COOLDOWN)
+    ..presetManaCost(lvl -> MANACOST)
+    ..presetFollowThroughTime(lvl -> CASTTIME)
+
+@compiletime function createFindStick()
+    new AbilityDefinitionIllidanChannel(ABILITY_ID_FINDSTICK)
+    ..setTargetType(1, 0)
+    ..setAnimationNames("spell,slam")
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..setButtonPositionNormalX(2)
+    ..setButtonPositionNormalY(0)
+    ..setButtonPositionResearchX(2)
+    ..setButtonPositionResearchY(0)
+    ..setIconNormal(SPELL_ICON)
+    ..setIconResearch(SPELL_ICON)
+    ..setIconTurnOff(SPELL_ICON)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(3)
+    ..setHotkeyNormal("W")
+    ..setName("Find sticks")
+    ..setDisableOtherAbilities(1, false)
+    ..setTooltipNormal(1, TOOLTIP_NORM_FINDSTICK)
+    ..setTooltipNormalExtended(1, TOOLTIP_EXT_FINDSTICK)
+    ..presetBaseOrderID(lvl -> "defend")
+    ..setOrderStringActivate("channel")
+    ..setOrderStringUseTurnOn("channel")
+    ..presetOptions(lvl -> 1)
+    ..presetCooldown(lvl -> COOLDOWN)
+    ..presetManaCost(lvl -> MANACOST)
+    ..presetFollowThroughTime(lvl -> CASTTIME)
+
+@compiletime function createFindMushroom()
+    new AbilityDefinitionIllidanChannel(ABILITY_ID_FINDMUSHROOM)
+    ..setTargetType(1, 0)
+    ..setAnimationNames("spell,slam")
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..setButtonPositionNormalX(2)
+    ..setButtonPositionNormalY(0)
+    ..setButtonPositionResearchX(2)
+    ..setButtonPositionResearchY(0)
+    ..setIconNormal(SPELL_ICON)
+    ..setIconResearch(SPELL_ICON)
+    ..setIconTurnOff(SPELL_ICON)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(3)
+    ..setHotkeyNormal("E")
+    ..setName("Find mushrooms")
+    ..setDisableOtherAbilities(1, false)
+    ..setTooltipNormal(1, TOOLTIP_NORM_FINDMUSHROOM)
+    ..setTooltipNormalExtended(1, TOOLTIP_EXT_FINDMUSHROOM)
+    ..presetBaseOrderID(lvl -> "curseon")
+    ..setOrderStringActivate("channel")
+    ..setOrderStringUseTurnOn("channel")
+    ..presetOptions(lvl -> 1)
+    ..presetCooldown(lvl -> COOLDOWN)
+    ..presetManaCost(lvl -> MANACOST)
+    ..presetFollowThroughTime(lvl -> CASTTIME)
+
+@compiletime function createFindClayball()
+    new AbilityDefinitionIllidanChannel(ABILITY_ID_FINDCLAYBALL)
+    ..setTargetType(1, 0)
+    ..setAnimationNames("spell,slam")
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..setButtonPositionNormalX(2)
+    ..setButtonPositionNormalY(0)
+    ..setButtonPositionResearchX(2)
+    ..setButtonPositionResearchY(0)
+    ..setIconNormal(SPELL_ICON)
+    ..setIconResearch(SPELL_ICON)
+    ..setIconTurnOff(SPELL_ICON)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(3)
+    ..setHotkeyNormal("R")
+    ..setName("Find clay balls")
+    ..setDisableOtherAbilities(1, false)
+    ..setTooltipNormal(1, TOOLTIP_NORM_FINDCLAYBALL)
+    ..setTooltipNormalExtended(1, TOOLTIP_EXT_FINDCLAYBALL)
+    ..setOrderStringActivate("channel")
+    ..setOrderStringUseTurnOn("channel")
+    ..presetBaseOrderID(lvl -> "curseoff")
+    ..presetOptions(lvl -> 1)
+    ..presetCooldown(lvl -> COOLDOWN)
+    ..presetManaCost(lvl -> MANACOST)
+    ..presetFollowThroughTime(lvl -> CASTTIME)
+
+@compiletime function createSpellbook()
+    new AbilityDefinitionSpellBook(ABILITY_ID_SPELLBOOK)
+    ..setButtonPositionNormalX(1)
+    ..setButtonPositionNormalY(1)
+    ..setButtonPositionResearchX(0)
+    ..setButtonPositionResearchY(0)
+    ..setIconNormal(SPELL_ICON)
+    ..setIconResearch(SPELL_ICON)
+    ..setIconTurnOff(SPELL_ICON)
+    ..setHeroAbility(true)
+    ..setItemAbility(false)
+    ..setLevels(3)
+    ..presetBaseOrderID(lvl -> "spellbook")
+    ..setHotkeyLearn("Q")
+    ..setHotkeyNormal("Q")
+    ..setName("Radar Spells")
+    ..setTooltipLearn("Learn Radar Spells")
+    ..setTooltipLearnExtended("Contains various item radar abilities for more efficient gathering.")
+    ..presetMaximumSpells(lvl -> 11)
+    ..presetMinimumSpells(lvl -> 11)
+    ..presetSpellList(lvl -> SPELLBOOKSPELLS[lvl - 1])
+    ..presetCooldown(lvl -> COOLDOWN)
+    ..presetTooltipNormal(lvl -> "(|cffffcc00Q|r) - Look up radar spell ")
+    ..presetTooltipNormalExtended(lvl -> "Contains various item radar abilities for more efficient gathering.")
+    ..presetSharedSpellCooldown(lvl -> true)
+
+function onCast(int itemId)
+    var caster = GetSpellAbilityUnit()
+    var casterPos = caster.getPos()
+    var owner = caster.getOwner()
+    var efx = addEffect("Abilities\\Spells\\Human\\Thunderclap\\ThunderClapCaster.mdl", casterPos)
+    efx.setScale(1.5)
+    efx.setTimeScale(1.5)
+    efx.destr()
+
+    //Calculate range
+    var range = min(RADAR_RANGE_BASE + RADAR_RANGE_PER_LEVEL * caster.getLevel(), MAX_RANGE)
+    if (caster.getTypeId() == UNIT_RADAR_GATHERER or caster.getTypeId() == UNIT_OMNIGATHERER)
+        //Max range for subs
+        range = MAX_RANGE
+
+    forItemsInMap() i ->
+        if i.getPos().distanceTo(casterPos) < range and i.getTypeId() == itemId
+            //Vision
+            var vis = createVision(owner, i.getPos(), 200, true)
+            vis.start()
+            doAfter(REVEAL_DURATION) ->
+                vis.destr()
+
+            //Ping
+            PingMinimapForForceEx(GetPlayersAllies(owner), i.getPos().x, i.getPos().y, 10, bj_MINIMAPPINGSTYLE_ATTACK, 0, 0, 255)
+
+init
+    registerSpellEffectEvent(ABILITY_ID_FINDSTONE, () -> onCast(ITEM_STONE))
+    registerSpellEffectEvent(ABILITY_ID_FINDFLINT, () -> onCast(ITEM_FLINT))
+    registerSpellEffectEvent(ABILITY_ID_FINDTINDER, () -> onCast(ITEM_TINDER))
+    registerSpellEffectEvent(ABILITY_ID_FINDSTICK, () -> onCast(ITEM_STICK))
+    registerSpellEffectEvent(ABILITY_ID_FINDCLAYBALL, () -> onCast(ITEM_CLAY_BALL))
+    registerSpellEffectEvent(ABILITY_ID_FINDMUSHROOM, () -> onCast(ITEM_MUSHROOM))
+    registerSpellEffectEvent(ABILITY_ID_FINDMANA, () -> onCast(ITEM_MANA_CRYSTAL))
+

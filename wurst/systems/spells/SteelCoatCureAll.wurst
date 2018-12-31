@@ -1,0 +1,44 @@
+package SteelCoatCureAll
+import DummyCaster
+import RegisterEvents
+import AbilityObjEditing
+
+public constant ABILITY_ID = 'XSCC'
+public constant SPELL_CURE = 'A02H'
+
+@compiletime function createSteelcoatAbility()
+    new AbilityDefinitionIllidanChannel(ABILITY_ID)
+    ..setAnimationNames("spell")
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..setButtonPositionNormalX(3)
+    ..setButtonPositionNormalY(0)
+    ..setButtonPositionResearchX(3)
+    ..setButtonPositionResearchY(0)
+    ..setIconNormal("")
+    ..setIconResearch("")
+    ..setIconTurnOff("")
+    ..setHeroAbility(false)
+    ..setItemAbility(true)
+    ..setLevels(1)
+    ..setHotkeyNormal("")
+    ..setName("Steel Coat Cureall")
+    ..presetBaseOrderID(lvl -> "creephealoff")
+    ..setOrderStringActivate("creephealoff")
+    ..setOrderStringUseTurnOn("creephealoff")
+    ..presetOptions(lvl -> 1)
+    ..presetCooldown(lvl -> 90)
+    ..presetManaCost(lvl -> 0)
+    ..presetFollowThroughTime(lvl -> 0)
+    ..setTargetType(1, 0)
+    ..setDisableOtherAbilities(1, false)
+
+
+function onCast()
+    let caster = GetSpellAbilityUnit()
+    new DummyCaster().castTarget(caster.getOwner(), SPELL_CURE, 1, "autodispel", caster)
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())

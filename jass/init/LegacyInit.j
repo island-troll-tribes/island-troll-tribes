@@ -49,7 +49,6 @@ library LegacyInit initializer onInit
         call ExecuteFunc("InitTrig_cure_all_buff_remove")
         call ExecuteFunc("InitTrig_FireBomB")
         call ExecuteFunc("InitTrig_clay_explosion")
-        call ExecuteFunc("InitTrig_disease_cloud")
         call ExecuteFunc("InitTrig_uber_bee_hive")
         call ExecuteFunc("InitTrig_tsunami_building_damage_and_fire")
         call ExecuteFunc("InitTrig_camo_undo")

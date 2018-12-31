@@ -1,9 +1,9 @@
 package RecipeIslandDemo
 import ClosureTimers
 import ClosureForGroups
-import Texttag
 import ClosuresForItems
 import LinkedList
+import ID
 
 rect elk_run = Rect(2880, -11264, 2944, -11200)
 rect fire_location = Rect(2816, -11136, 2944, -11008)
@@ -20,7 +20,7 @@ class RecipeIslandDemo
     item flint = null
     item stick = null
     bool isFinished = false
-    
+
     construct()
 
     function startNewDemo()
@@ -35,7 +35,7 @@ class RecipeIslandDemo
         //Keep elk from escaping with random wander
         this.elkMoverLoop = doPeriodically(0.05) cb ->
             this.elk.issuePointOrder("move", elk_run.getCenter())
-    
+
         //Create tip text
         if this.text1 != null
             text1.destr()
@@ -59,14 +59,14 @@ class RecipeIslandDemo
         if text2 != null
             text2.destr()
         text2 = createTTEx(elk_run.getCenter().toVec3() + vec3(-50, 150, 100), "TIP:\nElks can be trapped with a campfire!", 9., colorA(0, 255, 0, 255))
-        
+
         //Wait for gatherer to walk to build fire
         doAfter(2.2) ->
             //Remove pack up ability from fire
             forUnitsInRect(gg_rct_vision) u ->
                 if u.getTypeId() == UNIT_FIRE
                     u.removeAbility('A003')
-        
+
             blockAndKillElkPhase()
 
     function blockAndKillElkPhase()
@@ -95,11 +95,11 @@ class RecipeIslandDemo
             forUnitsInRect(gg_rct_vision) u ->
                 if u.getTypeId() == UNIT_FIRE
                     u.issueImmediateOrder("locustswarm")
-                    
-            
+
+
             doAfter(3) ->
                 pickUpMeatPhase()
-                
+
     function pickUpMeatPhase()
         let itemsToPickUp = new LinkedList<item>()
         forItemsInRect(gg_rct_vision) itm ->
@@ -126,7 +126,7 @@ class RecipeIslandDemo
                     cleanUpPhase()
                     this.isFinished = true
                 destroy cb
-                
+
 
     function cleanUpPhase()
         forUnitsInRect(gg_rct_vision) u ->
@@ -137,7 +137,7 @@ class RecipeIslandDemo
             gatherer = null
         if this.elk != null
             elk.remove()
-            elk = null   
+            elk = null
         if this.text1 != null
             text1.destr()
             text1 = null
@@ -161,5 +161,5 @@ init
             if (demosPlayed < 2)
                 demo = new RecipeIslandDemo()
                 demo.startNewDemo()
-            else 
+            else
                 destroy demoLoop

@@ -5,7 +5,7 @@ import LinkedList
 import ClosureTimers
 import Orders
 import ClosureForGroups
-import DummyCaster
+import IttDummyCaster
 import AbilityObjEditing
 import GroupExtensions
 
@@ -22,7 +22,7 @@ constant let SPELLCAST_INTERVAL_START = 2.5
 constant let PORTAL_GROWSPEED = 100.
 constant let SPELLCAST_EFFECT_PATH = "Abilities\\Spells\\Demon\\DarkPortal\\DarkPortalTarget.mdl"
 constant let TRAIL_EFFECT_PATH = "Abilities\\Weapons\\AvengerMissile\\AvengerMissile.mdl"
-constant let ORB_EFFECT_PATH = "Objects\\InventoryItems\\CrystalShard\\CrystalShard.mdl" 
+constant let ORB_EFFECT_PATH = "Objects\\InventoryItems\\CrystalShard\\CrystalShard.mdl"
 
 @compiletime function createDummyChainlightning()
     new AbilityDefinitionChainLightningcreep('PRTA')
@@ -165,13 +165,13 @@ class PortalOrb
         var owner = instance.ownerUnit.getOwner()
         var randomSpell = spellList.get( GetRandomInt(0, spellList.size() - 1))
         //Dont use manaburn on units without mana pools
-        while (t.getMaxMana() <= 10 and randomSpell.name == "Manaburn") 
+        while (t.getMaxMana() <= 10 and randomSpell.name == "Manaburn")
             randomSpell = spellList.get( GetRandomInt(0, spellList.size() - 1))
-        
+
         if (randomSpell.name == "Crushingwave")
-            new DummyCaster(2.5).castTarget(owner, randomSpell.spellId, 1, randomSpell.orderId, t, this.pos)
+            new IttDummyCaster(2.5).castTarget(owner, randomSpell.spellId, 1, randomSpell.orderId, t, this.pos)
         else
-            new DummyCaster().castTarget(owner, randomSpell.spellId, 1, randomSpell.orderId, t, this.pos)
+            new IttDummyCaster().castTarget(owner, randomSpell.spellId, 1, randomSpell.orderId, t, this.pos)
         addEffect(SPELLCAST_EFFECT_PATH, this.pos).destr()
 
     ondestroy
@@ -191,7 +191,7 @@ public class Summon
         this.orderId = orderId
         this.elapsedLifetime = 0
         this.lastAttack = -cooldown //Attack right away after spawn
-        
+
 
     ondestroy
         this.summonUnit.remove()
@@ -232,7 +232,7 @@ public class DarkPortalInstance
     function startPortalCreation()
         for i = 1 to ORB_COUNT
             orbs.push(new PortalOrb(this, centerPos))
-        
+
         portalCreationLoop = doPeriodicallyTimed(ORB_LOOP_INTERVAL, GROW_DURATION) portalGrowLoop ->
             if not isChanneling or portalGrowLoop.isLast()
                 portalGrowLoop.stop()
@@ -248,7 +248,7 @@ public class DarkPortalInstance
             //Should be the full duration of portal calculated below for vision mods destruction
             doAfter(durationBuildup + GROW_DURATION - elapsedLifetime) ->
                 vis.destr()
-        
+
         //Update things that change with channeling time
         spellIntervalCurrent = SPELLCAST_INTERVAL_START - (SPELLCAST_INTERVAL_START - SPELLCAST_INTERVAL_FASTEST) * (elapsedLifetime/GROW_DURATION)
         elapsedLifetime += ORB_LOOP_INTERVAL
@@ -296,9 +296,9 @@ public class DarkPortalInstance
                 //Check for destruction conditions first before accessing any objects
                 if (portalLoop.isLast())
                     destroy this
-                else    
+                else
                     portalLoopUpdate()
-        
+
     function portalLoopUpdate()
         //Check time since last spell was cast and cast
         if (this.elapsedLifetime - this.lastSpellCastTimestamp >= this.spellIntervalCurrent)
@@ -314,7 +314,7 @@ public class DarkPortalInstance
 
     function isValidAllyTarget(unit t) returns boolean
         return not t.isInvulnerable() and not t.isType(UNIT_TYPE_STRUCTURE) and t.isAlive() and IsUnitVisible(t, ownerUnit.getOwner())
-    
+
     private function summonAttackOrderSort(unit a, unit b) returns int
         //Sort by enemies - allies
         let aIsEnemy = a.getOwner().isEnemyOf(ownerUnit.getOwner())
@@ -331,7 +331,7 @@ public class DarkPortalInstance
             return -1
         if (aHasBuff and not bHasBuff)
             return 1
-            
+
         //Sort by lowest distance
         return (a.getPos().distanceToSq(centerPos.toVec2()) - b.getPos().distanceToSq(centerPos.toVec2())).round()
 
@@ -345,7 +345,7 @@ public class DarkPortalInstance
                 if not (isValidAllyTarget(u) or isValidEnemyTarget(u))
                     targets.removeUnit(u)
             end)
-            
+
             //Convert into list and sort
             let targetlist = targets.toLinkedList()
             let target = targetlist
@@ -372,7 +372,7 @@ public class DarkPortalInstance
                 if _summonTarget.value == null or _summonTarget.value.hasAbility('Bmlt') or _summonTarget.value.hasAbility('B00Q')
                     if isValidAllyTarget(t)
                         _summonTarget.value = t
-                
+
             if _summonTarget.value != null
                 s.summonUnit.issueTargetOrderById(s.orderId, _summonTarget.value)
                 s.lastAttack = s.elapsedLifetime
@@ -384,7 +384,7 @@ public class DarkPortalInstance
         for s in summons
             summonTryAttacking(s)
             s.elapsedLifetime += ORB_LOOP_INTERVAL
-            
+
     ondestroy
         orbs.forEach(o -> destroy o)
         destroy orbs
@@ -395,7 +395,7 @@ public class DarkPortalInstance
         destroy summonAttackComparator
 
         if darkPortalInstances.has(ownerUnit)
-            if (darkPortalInstances.get(ownerUnit) == this) 
+            if (darkPortalInstances.get(ownerUnit) == this)
                 darkPortalInstances.remove(ownerUnit)
 
 function onCast()
@@ -408,7 +408,7 @@ function onCast()
             prev_instance.portalActiveLoop.stop()
         if prev_instance.portalActiveLoop != null
             prev_instance.portalActiveLoop.stop()
-    
+
     //Spawn the portal, a bit higher than the caster on Z axis
     darkPortalInstances.put(caster, new DarkPortalInstance(caster, caster.getPos3Real() + vec3(0, 0, 50)))
 
@@ -439,7 +439,7 @@ function createSpellList()
 public function getDementiaGate(unit owner) returns DarkPortalInstance
     if (darkPortalInstances.has(owner))
         return darkPortalInstances.get(owner)
-    else 
+    else
         return null
 
 init

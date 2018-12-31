@@ -2,7 +2,7 @@ package Zap
 
 import RegisterEvents
 import ClosureTimers
-import DummyCaster
+import IttDummyCaster
 import Orders
 import AbilityObjEditing
 import BuffObjEditing
@@ -35,8 +35,8 @@ constant let CHARGE_AS_SLOW = 0.75
 constant let CHARGE_MS_SLOW = 0.75
 constant let CHARGE_SLOW_DURATION_HERO = 2.
 constant let CHARGE_SLOW_DURATION_NORM = 3.
-constant let EFFECT_PATH = "Abilities\\Spells\\Orc\\Purge\\PurgeBuffTarget.mdl" 
-constant let BOUNCE_IMPACT_EFFECT_PATH = "Abilities\\Weapons\\Bolt\\BoltImpact.mdl" 
+constant let EFFECT_PATH = "Abilities\\Spells\\Orc\\Purge\\PurgeBuffTarget.mdl"
+constant let BOUNCE_IMPACT_EFFECT_PATH = "Abilities\\Weapons\\Bolt\\BoltImpact.mdl"
 constant let TOOLTIP_NORMAL = "|c00ffcc00Q|r - Zap"
 constant let TOOLTIP_NORMAL_EXT = "Zaps the target for |c00ff000020|r damage. Stacks charges on the target and on the third charge, they explode slowing movement and attack speed and dealing |c00ff000030|r bonus damage and causing another Zap to be cast on other units nearby."
 
@@ -46,7 +46,7 @@ constant let TOOLTIP_NORMAL_EXT = "Zaps the target for |c00ff000020|r damage. St
     ..setArtTarget(1, "")
     ..setTooltipNormal(1, "Zap Slow")
     ..setTooltipNormalExtended(1, "Slowed by Zap spell")
-    
+
     new BuffDefinition(BUFF_ZAP1, 'Bstt')
     ..setArtTarget(1, "")
     ..setTooltipNormal(1, "Zap 1")
@@ -161,7 +161,7 @@ function handleBuff(unit caster, unit target)
             target.removeAbility(BUFF_ZAP2_AURA)
             timerMap.remove(target)
         timerMap.put(target, t)
-        
+
     else
         //0 -> >Zap 1
         target.addAbility(BUFF_ZAP1_AURA)
@@ -177,16 +177,16 @@ function onCastEffects(unit caster, unit target, bool isOvercharged)
         //Overcharged spell acts like forked lightning
         if (isOvercharged)
             handleOverchargeFork(caster, target)
-            
+
         //Main target damage
         caster.damageTarget(target, MAIN_DAMAGE, ATTACK_TYPE_NORMAL)
-        
+
         handleBuff(caster, target)
 
 function zapChargeExplosion(unit caster, unit target)
     //Main target bonus effects
     if (target.isAlive() and not target.isInvulnerable())
-        new DummyCaster().castTarget(caster.getOwner(), SLOW_ABILITY_ID, 1, Orders.slow, target, caster.getPos3Real())
+        new IttDummyCaster().castTarget(caster.getOwner(), SLOW_ABILITY_ID, 1, Orders.slow, target, caster.getPos3Real())
         caster.damageTarget(target, CHARGE_DAMAGE, ATTACK_TYPE_NORMAL)
 
     //Charge explosion SFX

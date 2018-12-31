@@ -416,7 +416,7 @@ library ID
 		constant integer ITEM_BATTLE_SUIT     = 'I04O'
 		constant integer ITEM_BATTLE_SPEAR    = 'I051'
 		constant integer ITEM_BEE_HIVE        = 'I02T'
-		constant integer ITEM_BLOW_GUN        = 'I01T'
+		constant integer ITEM_BLOW_GUN        = 'XIBP'
 		constant integer ITEM_CAMOUFLAGE_COAT = 'I02W'
 		constant integer ITEM_DARK_THISTLES   = 'I02X'
 		constant integer ITEM_EMP             = 'I03M'

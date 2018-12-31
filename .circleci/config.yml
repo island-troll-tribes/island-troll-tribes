@@ -10,14 +10,15 @@ jobs:
     steps:
       - checkout
 
-      - restore_cache:
-          key: wurst-dependencies-{{ checksum "wurst.build" }}
-
       - run:
           name: Get Wurst
           command: |
             wget http://peeeq.de/hudson/job/Wurst/lastSuccessfulBuild/artifact/downloads/wurstpack_compiler.zip
             unzip -qq -n wurstpack_compiler.zip -d $HOME/.wurst
+
+      - run:
+          name: Get Wurst Setup
+          command: wget https://grill.wurstlang.org/hudson/job/WurstSetup/lastSuccessfulBuild/artifact/downloads/WurstSetup.jar -O ~/.wurst/WurstSetup.jar
 
       - run:
           name: Update Dependencies
@@ -26,9 +27,3 @@ jobs:
       - run:
           name: Test
           command: java -jar $HOME/.wurst/wurstscript.jar $HOME/.wurst/common.j $HOME/.wurst/blizzard.j ./ -runcompiletimefunctions -runtests
-
-      - save_cache:
-          key: wurst-dependencies-{{ checksum "wurst.build" }}
-          paths:
-            - ~/.wurst
-            - ~/island-troll-tribes/_build

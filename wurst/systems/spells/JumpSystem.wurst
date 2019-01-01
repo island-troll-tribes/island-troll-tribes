@@ -1,0 +1,33 @@
+package JumpSystem
+import LinkedList
+import ClosureTimers
+
+constant let DEFAULT_GRAVITY = 50.
+constant let STORMCROWFORM_ID = 'Amrf'
+LinkedList<JumpInstance> jumpInstances = new LinkedList<JumpInstance>()
+
+class JumpInstance
+    unit u
+    vec3 velocity
+    real gravity
+    real time
+    real originalFlyHeight
+    CallbackCounted updaterLoop
+
+    construct(unit u, vec2 targetPos, real groundSpeed)
+        this.u = u
+        this.time = (u.getPos()-targetPos).length()/groundSpeed
+        let vel_z = (gravity*this.time) / 2
+        let vel2D = u.getPos().angleTo(targetPos).toVec(groundSpeed)
+        this.velocity = vel2D.withZ(vel_z)
+        u.setPathing(false)
+        u.addAbility(STORMCROWFORM_ID)
+        u.removeAbility(STORMCROWFORM_ID)
+        this.originalFlyHeight = u.getFlyHeight()
+        this.updaterLoop = doPeriodicallyTimed(ANIMATION_PERIOD, this.time) cb ->
+            updateLoop()
+            if cb.isLast()
+
+    function updateLoop()
+        u.setPos(u.getPos()+this.velocity.toVec2()*ANIMATION_PERIOD)
+        u.setFlyHeight(u.getFlyHeight()+this.velocity.z*ANIMATION_PERIOD, 500)

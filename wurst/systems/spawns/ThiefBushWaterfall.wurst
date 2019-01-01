@@ -1,5 +1,8 @@
 package ThiefBushWaterfall
 import HashMap
+import JumpSystem
+import TerrainUtils
+import ErrorHandling
 
 @configurable let THIEF_BUSH_WATERFALL_HEIGHT = 140.0
 @configurable let THIEF_BUSH_WATERFALL_DURATION = 1.0
@@ -7,18 +10,20 @@ import HashMap
 
 let entranceToExitMap = new HashMap<region, rect>()
 
-function waterfallEntrance() returns boolean
+function waterfallEntrance()
     let hero = GetEnteringUnit()
     if hero.isType(UNIT_TYPE_GROUND)
         let exit = entranceToExitMap.get(GetTriggeringRegion())
-        let dest = exit.randomPoint()
-        // hero.pause()
-        // s__Jump_start(hero, dest.x, dest.y, THIEF_BUSH_WATERFALL_HEIGHT, THIEF_BUSH_WATERFALL_DURATION, THIEF_BUSH_WATERFALL_GRAVITY)
-    return false
-
-function waterfallExit() returns boolean
-    // EVENT_JUMP_UNIT.unpause()
-    return false
+        var dest = exit.randomPoint()
+        for i = 1 to 10
+            //10 Attempts to random a walkable spot
+            if i == 10
+                error("Couldnt find a random point in waterfall exit region!")
+            if not dest.isTerrainWalkable()
+                dest = exit.randomPoint()
+            else
+                break
+        waterFallJump(hero, dest)
 
 init
     let thiefBushEntrance_NW_A = CreateRegion()..addRect(gg_rct_Thief_Bush_NW_A_In)
@@ -45,4 +50,3 @@ init
     ..registerEnterRegion(thiefBushEntrance_SW_C, null)
     ..addCondition(Condition(function waterfallEntrance))
 
-    // OnJumpFinish(function waterfallExit)

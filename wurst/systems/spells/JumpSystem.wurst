@@ -1,33 +1,112 @@
 package JumpSystem
-import LinkedList
+import ChatCommands
+import GameConfig
+import ClosureForGroups
 import ClosureTimers
 
-constant let DEFAULT_GRAVITY = 50.
+constant let DEFAULT_GRAVITY = 175.
 constant let STORMCROWFORM_ID = 'Amrf'
-LinkedList<JumpInstance> jumpInstances = new LinkedList<JumpInstance>()
+
+init
+    registerCommandAll("jump") (triggerPlayer, args) ->
+        if (gameConfig.isTestModeEnabled() == true)
+            forUnitsSelected(triggerPlayer) u ->
+                if (u.isType(UNIT_TYPE_HERO))
+                    waterFallJump(u, u.getPos().polarOffset(angle(0), 400))
+        else
+            printTimedToPlayer("Requires test mode!", 5., triggerPlayer)
+        
+public function waterFallJump(unit u, vec2 targetPos)
+    let distance = u.getPos().distanceTo(targetPos)
+    let groundSpeed = 1.5 * distance
+    let gravity = 175.
+    new JumpInstance(u, targetPos)
+
+    //Play backflip animation
+    u.pause()
+    u.setAnimation(2)
+    //Skip to the actual backflip portion of the animation
+    u.setTimeScale(8)
+    doAfter(0.05) ->
+        u.setTimeScale(0.85) 
+    //Reset animation to stand after jumping
+    doAfter((distance/groundSpeed)) ->
+        u.setAnimation("stand")
+        u.unpause()
+        u.setTimeScale(1)
 
 class JumpInstance
     unit u
     vec3 velocity
+    vec2 targetPos
     real gravity
-    real time
     real originalFlyHeight
+    real height = 0
+    real flightTime = 0.67
+    real originalTurnspeed
+    angle ang
     CallbackCounted updaterLoop
 
-    construct(unit u, vec2 targetPos, real groundSpeed)
+    construct(unit u, vec2 targetPos, real duration, real gravity)
+        this.gravity = gravity
         this.u = u
-        this.time = (u.getPos()-targetPos).length()/groundSpeed
-        let vel_z = (gravity*this.time) / 2
+        this.targetPos = targetPos
+        this.flightTime = duration
+        let groundSpeed = u.getPos().distanceTo(targetPos)/duration
+        let vel_z = (gravity*this.flightTime) / 2
         let vel2D = u.getPos().angleTo(targetPos).toVec(groundSpeed)
         this.velocity = vel2D.withZ(vel_z)
+        this.ang = vel2D.getAngle()
+        startJump()
+
+    construct(unit u, vec2 targetPos, real duration)
+        this.gravity = DEFAULT_GRAVITY
+        this.u = u
+        this.targetPos = targetPos
+        this.flightTime = duration
+        let groundSpeed = u.getPos().distanceTo(targetPos)/duration
+        let vel_z = (gravity*this.flightTime) / 2
+        let vel2D = u.getPos().angleTo(targetPos).toVec(groundSpeed)
+        this.velocity = vel2D.withZ(vel_z)
+        this.ang = vel2D.getAngle()
+        startJump()
+
+    construct(unit u, vec2 targetPos)
+        this.gravity = DEFAULT_GRAVITY
+        this.u = u
+        this.targetPos = targetPos
+        let groundSpeed = u.getPos().distanceTo(targetPos)/this.flightTime
+        let vel_z = (gravity*this.flightTime) / 2
+        let vel2D = u.getPos().angleTo(targetPos).toVec(groundSpeed)
+        this.velocity = vel2D.withZ(vel_z)
+        this.ang = vel2D.getAngle()
+        startJump()
+
+    function startJump()
         u.setPathing(false)
         u.addAbility(STORMCROWFORM_ID)
         u.removeAbility(STORMCROWFORM_ID)
-        this.originalFlyHeight = u.getFlyHeight()
-        this.updaterLoop = doPeriodicallyTimed(ANIMATION_PERIOD, this.time) cb ->
+        this.originalTurnspeed = u.getTurnSpeed()
+        u.setTurnSpeed(90000)
+        this.updaterLoop = doPeriodicallyTimed(ANIMATION_PERIOD, this.flightTime) cb ->
             updateLoop()
             if cb.isLast()
+                //Destructor finishes the jump
+                destroy this
 
     function updateLoop()
+        u.setFacing(ang)
         u.setPos(u.getPos()+this.velocity.toVec2()*ANIMATION_PERIOD)
-        u.setFlyHeight(u.getFlyHeight()+this.velocity.z*ANIMATION_PERIOD, 500)
+        this.height += this.velocity.z
+        u.setFlyHeight(this.height, 10000)
+        this.velocity.z = this.velocity.z - this.gravity * ANIMATION_PERIOD
+
+    function finishJump()
+        u.setPos(targetPos)
+        u.setFacing(ang)
+        u.setTurnSpeed(this.originalTurnspeed)
+        u.setPathing(true)
+        u.setFlyHeight(u.getDefaultFlyHeight(), 10000)
+
+    ondestroy
+        finishJump()

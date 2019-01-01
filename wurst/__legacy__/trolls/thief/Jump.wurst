@@ -1,0 +1,54 @@
+package Jump
+import ClosureEvents
+import TerrainUtils
+import JumpSystem
+import Orders
+import UnitExtensions
+
+constant let JUMP_ID = 'A04G'
+constant let JUMP_RANGE = 600.
+
+init
+    registerSpellEffectEvent(JUMP_ID, () -> onCast())
+    EventListener.add(EVENT_PLAYER_UNIT_SPELL_CAST) ->
+        onStartCast()
+
+function canJumpToTarget(vec2 targetPos) returns bool
+    return targetPos.isTerrainWalkable()
+
+function onCast()
+    let caster = GetSpellAbilityUnit()
+    let targetPos = vec2(GetSpellTargetX(), GetSpellTargetY())
+    let casterPos = caster.getPos()
+    var jumpPos = getJumpPos(casterPos, targetPos)
+    thiefJump(caster, jumpPos)
+
+function onStartCast()
+    let caster = GetSpellAbilityUnit()
+    let targetPos = vec2(GetSpellTargetX(), GetSpellTargetY())
+    let casterPos = caster.getPos()
+    var jumpPos = getJumpPos(casterPos, targetPos)
+
+    //Stop casting if non-jumpable target or we are immobilized
+    if not canJumpToTarget(jumpPos) or caster.isImmobilized()
+        caster.issueImmediateOrderById(Orders.stop)
+
+        
+function getJumpPos(vec2 casterPos, vec2 targetPos) returns vec2
+    var jumpPos = targetPos
+    angle ang = casterPos.angleTo(jumpPos)
+
+    //Limit range if ability used beyond jump range
+    if (casterPos.distanceTo(jumpPos) >= JUMP_RANGE)    
+        var distance = JUMP_RANGE
+        jumpPos = casterPos.polarOffset(ang, distance)
+        
+        //Find furthest point towards cast point where we can jump
+        while distance >= 200 and not canJumpToTarget(jumpPos)
+            distance = distance - 25
+            jumpPos = casterPos.polarOffset(ang, distance)
+
+    return jumpPos
+
+
+    

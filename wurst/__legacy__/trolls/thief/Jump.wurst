@@ -6,8 +6,8 @@ import Orders
 import UnitExtensions
 
 constant let JUMP_ID = 'A04G'
-constant let RANGE_MAX = 600.
-constant let TARGET_SEARCH_MINRANGE = 200.
+constant let TARGET_SEARCH_MAX_RANGE = 600.
+constant let TARGET_SEARCH_MIN_RANGE = 200.
 constant let TARGET_SEARCH_INCREMENT = 25
 
 init
@@ -44,12 +44,12 @@ function getJumpPos(vec2 casterPos, vec2 targetPos) returns vec2
     angle ang = casterPos.angleTo(jumpPos)
 
     //Limit range if ability used beyond jump range
-    if (casterPos.distanceTo(jumpPos) >= RANGE_MAX)    
-        var distance = RANGE_MAX
+    if (casterPos.distanceTo(jumpPos) >= TARGET_SEARCH_MAX_RANGE)    
+        var distance = TARGET_SEARCH_MAX_RANGE
         jumpPos = casterPos.polarOffset(ang, distance)
         
         //Find furthest point towards cast point where we can jump
-        while distance >= TARGET_SEARCH_MINRANGE and not canJumpToTarget(jumpPos)
+        while distance >= TARGET_SEARCH_MIN_RANGE and not canJumpToTarget(jumpPos)
             distance = distance - TARGET_SEARCH_INCREMENT
             jumpPos = casterPos.polarOffset(ang, distance)
 

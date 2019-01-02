@@ -2,7 +2,7 @@ package Metronome
 import RegisterEvents
 import Table
 import Orders
-import DummyCaster
+import IttDummyCaster
 import ClosureTimers
 import EventHelper
 
@@ -39,16 +39,31 @@ function onCast()
     var abilityId = table.loadInt(9)
 
     if GetRandomInt(0, 2) == 0
-        new DummyCaster().castTarget(owner, abilityId, 1, table.loadInt(abilityId), target, pos)
+        //Temporary vision required by dummy
+        var vis = createVision(owner, target.getPos(), 300, true)
+        vis.start()
+        doAfter(0.2) ->
+            vis.destr()
+        new IttDummyCaster().castTarget(owner, abilityId, 1, table.loadInt(abilityId), target, pos)
         return
 
     abilityId = table.loadInt(GetRandomInt(0, 8))
-    new DummyCaster().castTarget(owner, abilityId, 1, table.loadInt(abilityId), target, pos)
+    //Temporary vision required by dummy
+    var vis2 = createVision(owner, target.getPos(), 300, true)
+    vis2.start()
+    doAfter(0.2) ->
+        vis2.destr()
+    new IttDummyCaster().castTarget(owner, abilityId, 1, table.loadInt(abilityId), target, pos)
 
     doPeriodicallyCounted(1.00, GetRandomInt(3, 5)) cb ->
+        //Temporary vision required by dummy
+        var vis3 = createVision(owner, target.getPos(), 300, true)
+        vis3.start()
+        doAfter(0.2) ->
+            vis3.destr()
         abilityId = table.loadInt(GetRandomInt(0, 8))
         pos = targetPos.polarOffset(GetRandomReal(0, 360).fromDeg(), GetRandomReal(0, 200))
-        new DummyCaster().castTarget(owner, abilityId, 1, table.loadInt(abilityId), target, pos)
+        new IttDummyCaster().castTarget(owner, abilityId, 1, table.loadInt(abilityId), target, pos)
 
 init
     initSpellTable()

@@ -4,28 +4,34 @@ import LinkedList
 import ClosuresForItems
 import Lodash
 import UnitExtensions
+import IsTypeThing
+import LegacyTriggers
 
 
 class QuickMake
-    let itemPredicates = new OwnedLinkedList<Predicate<item>>()
+    let itemLists = new OwnedLinkedList<LinkedList<int>>()
 
     construct(int spellAbilityId)
         EventListener.onCast(spellAbilityId, caster -> onCast(caster))
 
     function onCast(unit caster)
         let pos = caster.getPos()
-        let recipeSize = itemPredicates.size()
+        let recipeSize = itemLists.size()
         let items = new OwnedLinkedList<item>()
         let inventory = caster.getInventory()
 
         caster.dropItems()
 
-        for predicate in itemPredicates
-            let found = findNearestItem(pos, 700, i -> predicate.call(i))
+        for itemIds in itemLists
+            item found = null
+            for itemId in itemIds
+                found = findNearestItem(pos, 700, i -> i.getTypeId() == itemId)
+                if found != null
+                    items.add(found)
+                    found.setVisible(false)
+                    break
             if found == null
                 break
-            items.add(found)
-            found.setVisible(false)
 
         for elem in items
             elem.setVisible(true)
@@ -47,17 +53,17 @@ class QuickMake
         destroy inventory
 
     function add(int itemId)
-        itemPredicates.add(i -> i.getTypeId() == itemId)
+        add(asList(itemId))
 
-    function add(Predicate<item> predicate)
-        itemPredicates.add(predicate)
+    function add(LinkedList<int> itemIds)
+        itemLists.add(itemIds)
 
 
 init
     // Armory
 
     new QuickMake('A06A')
-    ..add(i -> IsItemBasicBoots(i))
+    ..add(asList(ITEM_ELK_SKIN_BOOTS, ITEM_WOLF_SKIN_BOOTS, ITEM_BEAR_SKIN_BOOTS))
     ..add(ITEM_BONE)
     ..add(ITEM_BONE)
     ..add(ITEM_BONE)
@@ -65,7 +71,7 @@ init
     ..add(ITEM_BONE)
 
     new QuickMake('A06C')
-    ..add(i -> IsItemBasicCoat(i))
+    ..add(asList(ITEM_ELK_SKIN_COAT, ITEM_WOLF_SKIN_COAT, ITEM_BEAR_SKIN_COAT))
     ..add(ITEM_BONE)
     ..add(ITEM_BONE)
     ..add(ITEM_BONE)
@@ -73,7 +79,7 @@ init
     ..add(ITEM_BONE)
 
     new QuickMake('A06B')
-    ..add(i -> IsItemBasicGloves(i))
+    ..add(asList(ITEM_ELK_SKIN_GLOVES, ITEM_WOLF_SKIN_GLOVES, ITEM_BEAR_SKIN_GLOVES))
     ..add(ITEM_BONE)
     ..add(ITEM_BONE)
     ..add(ITEM_BONE)
@@ -100,27 +106,27 @@ init
 
     new QuickMake('A06F')
     ..add(ITEM_STONE)
-    ..add(i -> IsItemPole(i))
+    ..add(asList(ITEM_BONE, ITEM_STICK))
 
     new QuickMake('A0G7')
     ..add(ITEM_DARK_ROCK)
-    ..add(i -> IsItemPole(i))
+    ..add(asList(ITEM_BONE, ITEM_STICK))
 
     new QuickMake('A06G')
     ..add(ITEM_IRON_INGOT)
-    ..add(i -> IsItemPole(i))
+    ..add(asList(ITEM_BONE, ITEM_STICK))
 
     new QuickMake('A06H')
     ..add(ITEM_STEEL_INGOT)
-    ..add(i -> IsItemPole(i))
+    ..add(asList(ITEM_BONE, ITEM_STICK))
 
     new QuickMake('A06I')
     ..add(ITEM_TINDER)
-    ..add(i -> IsItemPole(i))
+    ..add(asList(ITEM_BONE, ITEM_STICK))
     ..add(ITEM_STICK)
 
     new QuickMake('A09Z')
-    ..add(i -> IsItemHide(i))
+    ..add(asList(ITEM_ELK_HIDE, ITEM_JUNGLE_WOLF_HIDE, ITEM_JUNGLE_BEAR_HIDE))
     ..add(ITEM_STICK)
     ..add(ITEM_STICK)
 
@@ -218,7 +224,7 @@ init
     ..add(ITEM_STICK)
     ..add(ITEM_CLAY_BALL)
 
-    new QuickMake('A06J')
+    new QuickMake('A06K')
     ..add(ITEM_TINDER)
     ..add(ITEM_TINDER)
 

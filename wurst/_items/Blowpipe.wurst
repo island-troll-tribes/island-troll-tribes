@@ -1,0 +1,300 @@
+package Blowpipe
+
+import LinkedList
+import HashMap
+import ClosureEvents
+import ItemObjEditing
+import AbilityObjEditing
+import Assets
+import IttDummyCaster
+import MathUtils
+import Orders
+import InventoryEvent
+import SimError
+import ErrorHandling
+import ID
+
+constant let ICON = Icons.bTNAlleriaFlute
+constant let ITEM_TOOLTIP = "Purchase |cffffcc00B|rlow Gun"
+constant let ITEM_TOOLTIP_EXT = "Used for shooting small things. Can be loaded with thistles or bones. Drag and drop items on the blowpipe to load, click and use on your own troll to unload."
+constant let ITEM_DESCRIPTION = "A hollowed out piece of wood. If blown through, could be used to fire small projectiles such as thistles."
+constant let GROUND_MODEL_PATH = "Doodads\\Northrend\\Water\\FloatingPlank\\FloatingPlank.mdl"
+constant let ABILITY_ID = 'XBPA'
+constant let THISTLE_ABILITY_ID = 'A01K'
+constant let DARKTHISTLE_ABILITY_ID = 'A01L'
+constant let BONE_ABILITY_ID = 'A015'
+constant let ITEM_ID = 'XIBP'
+constant let MAX_SLOTS = 15
+
+@compiletime function createBlowpipeAbility()
+    new AbilityDefinitionIllidanChannel(ABILITY_ID)
+    ..setArtTarget("")
+    ..setArtCaster("")
+    ..setArtSpecial("")
+    ..setArtEffect("")
+    ..setAnimationNames("")
+    ..setFollowThroughTime(1, 0)
+    ..setAreaofEffect(1, 0.01)
+    ..setCastRange(1, 450)
+    ..setDurationHero(1, 0.01)
+    ..setDurationNormal(1, 0.01)
+    ..setHeroAbility(false)
+    ..setItemAbility(true)
+    ..setLevels(1)
+    ..setManaCost(1, 0)
+    ..setName("Blow Gun Ability")
+    ..setOptions(1, 1)
+    ..setTargetsAllowed(1, "air,ground,enemy,neutral,organic,self")
+    ..setDisableOtherAbilities(1, false)
+    ..setTargetType(1, 1)
+    ..setCooldown(1, 6)
+
+@compiletime function createBlowpipeItem()
+    new ItemDefinition(ITEM_ID, 'schl')
+    ..setAbilities("XBPA")
+    ..setModelUsed(GROUND_MODEL_PATH)
+    ..setScalingValue(0.6)
+    ..setButtonPositionX(3)
+    ..setButtonPositionY(1)
+    ..setClassification("Charged")
+    ..setInterfaceIcon(ICON)
+    ..setCooldownGroup("A01K")
+    ..setDroppedWhenCarrierDies(true)
+    ..setGoldCost(0)
+    ..setHitPoints(75)
+    ..setLumberCost(5)
+    ..setStockReplenishInterval(30)
+    ..setDescription(ITEM_DESCRIPTION)
+    ..setHotkey("B")
+    ..setName("Blow Gun")
+    ..setTooltipBasic(ITEM_TOOLTIP)
+    ..setTooltipExtended(ITEM_TOOLTIP_EXT)
+
+
+
+
+IterableMap<item, Blowpipe> instances
+trigger cleanupTrigger
+HashMap<int, int> slotsPerItem
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerInventoryEvent(EVENT_ITEM_INVENTORY.MOVE, () -> onItemMoved())
+    EventListener.add(EVENT_PLAYER_UNIT_USE_ITEM, () -> onUse())
+    EventListener.add(EVENT_PLAYER_UNIT_PICKUP_ITEM, () -> onPickup())
+    cleanupTrigger = CreateTrigger()
+    cleanupTrigger.addAction(function cleanupInstances)
+    instances = new IterableMap<item, Blowpipe>()
+
+    //Setup slots per item map
+    slotsPerItem = new HashMap<int, int>()
+    slotsPerItem.put(ITEM_BONE, 15)
+    slotsPerItem.put(ITEM_THISTLES, 1)
+    slotsPerItem.put(ITEM_DARK_THISTLES, 2)
+
+class Blowpipe
+    item i
+    LinkedList<item> contents
+    unit target
+    bool loadingEnabled
+
+    construct(item i)
+        this.i = i
+        this.contents = new LinkedList<item>()
+        this.target = null
+        this.loadingEnabled = true
+        TriggerRegisterDeathEvent(cleanupTrigger, this.i)
+        updateTooltip()
+
+    ondestroy
+        emptyContents()
+
+        //Destroy list
+        destroy contents
+
+
+    function emptyContents()
+        for iterItem in contents
+            iterItem.setPos(this.i.getPos())
+            iterItem.setVisible(true)
+            contents.remove(iterItem)
+        this.i.setCharges(0)
+        updateTooltip()
+
+    function emptyContentsToUnit(unit u)
+        //Temporarily disable loading to prevent infinite loop
+        this.loadingEnabled = false
+        for iterItem in contents
+            if u.inventorySize()-u.itemCount() > 0
+                u.addItemHandle(iterItem)
+            else
+                iterItem.setPos(this.i.getPos())
+            iterItem.setVisible(true)
+            contents.remove(iterItem)
+        this.loadingEnabled = true
+        this.i.setCharges(0)
+        updateTooltip()
+
+    function onFire(unit caster)
+        if this.target == caster
+            //Empty blowpipe on self-target
+            caster.endAbilityCooldown(ABILITY_ID)
+            emptyContentsToUnit(caster)
+            return
+
+        item ammo = contents.get(0)
+
+        if ammo == null
+            simError(caster.getOwner(), "No ammo!")
+            return
+        else
+            if (ammo.getTypeId() == ITEM_THISTLES)
+                new IttDummyCaster(2).castTarget(caster.getOwner(), THISTLE_ABILITY_ID, 1, Orders.shadowstrike, this.target, caster.getPos())
+            else if (ammo.getTypeId() == ITEM_BONE)
+                new IttDummyCaster(2).castTarget(caster.getOwner(), BONE_ABILITY_ID, 1, Orders.creepthunderbolt, this.target, caster.getPos())
+            else if (ammo.getTypeId() == ITEM_DARK_THISTLES)
+                new IttDummyCaster(2).castTarget(caster.getOwner(), DARKTHISTLE_ABILITY_ID, 1, Orders.shadowstrike, this.target, caster.getPos())
+
+            caster.damageTarget(this.target, 10., ATTACK_TYPE_NORMAL)
+
+            int charges = ammo.getCharges()
+
+            //Reduce ammo
+            if (charges > 1)
+                ammo.setCharges(charges - 1)
+            else
+                contents.remove(ammo)
+                ammo.remove()
+
+            updateTooltip()
+
+    function loadAmmo(unit owner, item itm)
+        if not this.loadingEnabled
+            return
+
+        int charges = itm.getCharges()
+        //Tread non-charge items as 1 charge
+        if charges == 0
+            charges = 1
+
+        //Calculate how many full charges can be loaded considering max slots in blowgun and item 'size'
+        int slotsLeft = this.getAmmoSlotsLeft()
+        int _chargesToLoad = 0
+        _chargesToLoad = floor( slotsLeft / slotsPerItem.get(itm.getTypeId()) )
+
+        if _chargesToLoad == 0
+            //Bounce item to stop slot swap from happening
+            owner.removeItem(itm)
+            owner.addItemHandle(itm)
+            return
+
+        //Load the appropriate amount of charges
+        if _chargesToLoad >= charges
+            this.contents.push(itm)
+            owner.removeItem(itm)
+            itm.setVisible(false)
+            this.i.setCharges(this.i.getCharges() + charges)
+        else
+            //Remove charges from item and create new one with that amount of charges and load it
+            itm.setCharges(charges - _chargesToLoad)
+            item newItem = createItem(itm.getTypeId(), this.i.getPos())
+            newItem.setCharges(_chargesToLoad)
+            newItem.setVisible(false)
+            this.contents.push(newItem)
+            this.i.setCharges(this.i.getCharges() + _chargesToLoad)
+
+            //Bounce item to stop slot swap from happening
+            owner.removeItem(itm)
+            owner.addItemHandle(itm)
+
+        updateTooltip()
+
+    function updateTooltip()
+        string ammoString = "\n\n|cffadff2fLoaded Ammo:|r"
+        if (this.contents.size() == 0)
+            ammoString = ammoString + "\nNone"
+        else
+            for itm in this.contents
+                var charges = itm.getCharges()
+                if (charges == 0)
+                    charges = 1
+                ammoString = ammoString + "\n" + itm.getName() + " x" + charges.toString() + "|r"
+
+        this.i.setExtendedTooltip(ITEM_TOOLTIP_EXT + ammoString)
+
+    function getAmmoSlotsLeft() returns int
+        if this.contents.size() > 0
+            var totalSlots = 0
+            for itm in this.contents
+                var charges = itm.getCharges()
+                if charges == 0
+                    charges = 1
+
+                totalSlots += charges * slotsPerItem.get(itm.getTypeId())
+
+            if totalSlots >= MAX_SLOTS
+                return 0
+            else
+                return MAX_SLOTS - totalSlots
+        else
+            return MAX_SLOTS
+
+    function setTarget(unit target)
+        this.target = target
+
+function onCast()
+    //This event fires first but cannot retrieve used blowgun item handle
+    //Used to set target for all blowguns in inventory
+    let caster = GetSpellAbilityUnit()
+    let target = GetSpellTargetUnit()
+
+    for i = 0 to caster.inventorySize()-1
+        var itm = caster.itemInSlot(i)
+        if itm.getTypeId() == ITEM_ID
+            if instances.has(itm)
+                instances.get(itm).setTarget(target)
+            else
+                error("ERROR: Tried to target blowgun with no instance!")
+
+
+function onUse()
+    //Triggers after onCast, used for actually firing the blowgun at the target specified in onCast
+    var itm = GetManipulatedItem()
+    if itm.getTypeId() == ITEM_ID
+        if instances.has(itm)
+            instances.get(itm).onFire(GetTriggerUnit())
+        else
+            error("ERROR: Tried to fire blowgun with no instance!")
+
+function onPickup()
+    //Create blowpipe instance when new blowpipe is acquired
+    var itm = GetManipulatedItem()
+    var itemId = itm.getTypeId()
+    var trigUnit =  GetTriggerUnit()
+
+    if itemId == ITEM_ID
+        if not instances.has(itm)
+            instances.put(itm, new Blowpipe(itm))
+
+function cleanupInstances()
+    //Check all instances and destroy those that have had item destroyed
+    var iter = instances.iterator()
+    while iter.hasNext()
+        var k = iter.next()
+        var instance = instances.get(k)
+
+        if not instance.i.isAlive()
+            destroy instances.getAndRemove(k)
+
+    iter.close()
+
+function onItemMoved()
+    var slotFrom = getInventorySlotFrom()
+    var slotTo = getInventorySlotTo()
+    var u = getInventoryManipulatingUnit()
+    var i = getInventoryManipulatedItem()
+
+    //If dragging onto blowpipe, and item is loadable, load it
+    if u.itemInSlot(slotTo).getTypeId() == ITEM_ID
+        if slotsPerItem.has(i.getTypeId())
+            instances.get(u.itemInSlot(slotTo)).loadAmmo(u, i)

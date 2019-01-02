@@ -1,0 +1,165 @@
+package RecipeIslandDemo
+import ClosureTimers
+import ClosureForGroups
+import ClosuresForItems
+import LinkedList
+import ID
+
+rect elk_run = Rect(2880, -11264, 2944, -11200)
+rect fire_location = Rect(2816, -11136, 2944, -11008)
+rect block_location = Rect(2688, -11264, 2816, -11136)
+rect gatherer_spawn = Rect(2144, -11328, 2272, -11200)
+
+class RecipeIslandDemo
+    unit elk = null
+    unit gatherer = null
+    CallbackPeriodic elkMoverLoop = null
+    texttag text1 = null
+    texttag text2 = null
+    item tinder = null
+    item flint = null
+    item stick = null
+    bool isFinished = false
+
+    construct()
+
+    function startNewDemo()
+        this.tinder = createItem(ITEM_TINDER, gatherer_spawn.getCenter() + vec2(-100, 150))
+        this.flint = createItem(ITEM_FLINT, gatherer_spawn.getCenter() + vec2(-100, 0))
+        this.stick = createItem(ITEM_STICK, gatherer_spawn.getCenter() + vec2(-100, -150))
+        this.gatherer = CreateUnit(playerFromIndex(PLAYER_NEUTRAL_PASSIVE), UNIT_GATHERER, gatherer_spawn.getCenterX(), gatherer_spawn.getCenterY(), 0)
+        this.gatherer.setBaseDamage(45, 1)
+        this.gatherer.setHP(this.gatherer.getMaxHP() - 175)
+        this.elk = CreateUnit(playerFromIndex(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_ELK, elk_run.getCenterX(), elk_run.getCenterY(), 0)
+
+        //Keep elk from escaping with random wander
+        this.elkMoverLoop = doPeriodically(0.05) cb ->
+            this.elk.issuePointOrder("move", elk_run.getCenter())
+
+        //Create tip text
+        if this.text1 != null
+            text1.destr()
+        this.text1 = createTTEx(gatherer_spawn.getCenter().toVec3() + vec3(-100, 250, 50), "TIP:\nPick up items in the correct order to craft!\nFire: tinder, flint, stick\nSee the buildings on this island for more recipes", 9., colorA(0, 255, 0, 255))
+
+        doAfter(2.5) ->
+            gatherItemsPhase()
+
+    function gatherItemsPhase()
+        gatherer.issueTargetOrder("smart", tinder)
+        doAfter(0.75) ->
+            gatherer.issueTargetOrder("smart", flint)
+            doAfter(0.75) ->
+                gatherer.issueTargetOrder("smart", stick)
+                doAfter(2) ->
+                    buildFirePhase()
+
+    function buildFirePhase()
+        let fire = gatherer.getItemById(ITEM_FIRE_KIT)
+        gatherer.useItemPoint(fire, fire_location.getCenter())
+        if text2 != null
+            text2.destr()
+        text2 = createTTEx(elk_run.getCenter().toVec3() + vec3(-50, 150, 100), "TIP:\nElks can be trapped with a campfire!", 9., colorA(0, 255, 0, 255))
+
+        //Wait for gatherer to walk to build fire
+        doAfter(2.2) ->
+            //Remove pack up ability from fire
+            forUnitsInRect(gg_rct_vision) u ->
+                if u.getTypeId() == UNIT_FIRE
+                    u.removeAbility('A003')
+
+            blockAndKillElkPhase()
+
+    function blockAndKillElkPhase()
+        //Block elk, attack
+        gatherer.issuePointOrder("move", block_location.getCenter())
+        doAfter(0.6) ->
+            gatherer.issueTargetOrder("attack", elk)
+
+            //Let elk roam freely after trap
+            destroy elkMoverLoop
+
+            //Keep attacking elk until death
+            doPeriodically(1) cb ->
+                if not elk.isAlive()
+                    doAfter(0.5) ->
+                        cookMeatPhase()
+                        destroy cb
+
+    function cookMeatPhase()
+        if text2 != null
+            text2.destr()
+        text2 = createTTEx(elk_run.getCenter().toVec3() + vec3(-250, -150, 100), "TIP:\nCook the corpses with a campfire, or pick them up using the \"Get Corpse\" -ability!", 9., colorA(0, 255, 0, 255))
+
+        //Cook the meat
+        doAfter(3) ->
+            forUnitsInRect(gg_rct_vision) u ->
+                if u.getTypeId() == UNIT_FIRE
+                    u.issueImmediateOrder("locustswarm")
+
+
+            doAfter(3) ->
+                pickUpMeatPhase()
+
+    function pickUpMeatPhase()
+        let itemsToPickUp = new LinkedList<item>()
+        forItemsInRect(gg_rct_vision) itm ->
+            if itm.getTypeId() == ITEM_COOKED_MEAT or itm.getTypeId() == ITEM_BONE or itm.getTypeId() == ITEM_ELK_HIDE
+                itemsToPickUp.add(itm)
+
+        doPeriodically(0.5) cb ->
+            if itemsToPickUp.size() > 0
+                gatherer.issueTargetOrder("smart", itemsToPickUp.dequeue())
+            else
+                eatMeatPhase()
+                destroy cb
+
+    function eatMeatPhase()
+        if text2 != null
+            text2.destr()
+        text2 = createTTEx(elk_run.getCenter().toVec3() + vec3(-250, -150, 100), "TIP:\nEat cooked meat to restore health!\nAlso remember to keep your energy (mana) and your heat (gold) up!", 9., colorA(0, 255, 0, 255))
+        doPeriodically(0.5) cb ->
+            var meat = gatherer.getItemById(ITEM_COOKED_MEAT)
+            if meat != null
+                gatherer.useItem(meat)
+            else
+                doAfter(2) ->
+                    cleanUpPhase()
+                    this.isFinished = true
+                destroy cb
+
+
+    function cleanUpPhase()
+        forUnitsInRect(gg_rct_vision) u ->
+            if u.getTypeId() == UNIT_FIRE or u.getTypeId() == UNIT_MEAT
+                u.remove()
+        if this.gatherer != null
+            gatherer.remove()
+            gatherer = null
+        if this.elk != null
+            elk.remove()
+            elk = null
+        if this.text1 != null
+            text1.destr()
+            text1 = null
+        if this.text2 != null
+            text2.destr()
+            text2 = null
+
+
+init
+    //Initial camera at the demo location
+    PanCameraTo(gatherer_spawn.getCenterX()+150, gatherer_spawn.getCenterY()+150)
+
+    //Run the demo
+    var demo = new RecipeIslandDemo()
+    var demosPlayed = 0
+    demo.startNewDemo()
+    doPeriodically(1) demoLoop ->
+        if (demo.isFinished)
+            demosPlayed += 1
+            destroy demo
+            if (demosPlayed < 2)
+                demo = new RecipeIslandDemo()
+                demo.startNewDemo()
+            else
+                destroy demoLoop

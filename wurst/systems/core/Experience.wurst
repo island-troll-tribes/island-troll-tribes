@@ -7,11 +7,16 @@ import ClosureTimers
 import Classes
 import LinkedList
 import GroupExtensions
+import UnitEntity
+import BeastMaster
+import Hunter
+import PublicLibrary
 
 constant creepExp = [3, 25]
 constant heroExp = [0, 100, 120, 160, 220, 300]
 constant expPerLevel = [0, 200]
 constant expRange = 1200.0
+constant GOK_MULTIPLIER = 1.5
 
 public function getMultiplier(unit troll) returns integer
     switch getTrollClassType(troll)
@@ -23,6 +28,55 @@ public function getMultiplier(unit troll) returns integer
             return 2
         default
             return 1
+
+function performExperienceGain()
+    let dead = GetDyingUnit()
+    let killer = GetKillingUnit()
+
+    // Do not grant experience for team kills.
+    if killer.getOwner().isAllyOf(dead.getOwner())
+        return
+
+    let heroes = GetUnitsInRangeMatching(expRange, dead.getX(), dead.getY(), Condition(() -> begin
+        let filterUnit = GetFilterUnit()
+        return filterUnit.isType(UNIT_TYPE_HERO) and filterUnit.getOwner().isAllyOf(GetKillingUnit().getOwner()) and filterUnit.isAlive()
+    end))
+
+    if killer.isType(UNIT_TYPE_HERO)
+        heroes.addUnit(killer)
+    else if killer.getName() == "Dummy Caster" or killer.getTypeId() == UNIT_MASTER_CASTER
+        heroes.addUnit(killer.getOwner().getTroll())
+
+    let count = heroes.size()
+    let deadUnitLevel = dead.getLevel()
+    let baseExp = dead.isType(UNIT_TYPE_HERO) ? heroExp[deadUnitLevel] : creepExp[deadUnitLevel]
+    let reduceExpGain = dead.getOwner().getId() == PLAYER_NEUTRAL_AGGRESSIVE
+
+    for hero from heroes
+        let multiplier = getMultiplier(hero)
+        var experience = floor(baseExp * multiplier / count)
+        var level = hero.getLevel()
+        var heroCurrentXp = hero.getXp()
+
+        // Increase experience for Gem of Knowledge holders.
+        if hero.hasItemById(ITEM_GEM_OF_KNOWLEDGE)
+            var entity = UnitEntity.findForUnit(hero)
+            if not (entity instanceof BeastMaster or entity instanceof Hunter)
+                experience = floor(experience * GOK_MULTIPLIER)
+
+        while experience > 0
+            let expReduction = reduceExpGain ? max(0.4, 0.9 - 0.1 * level) : 1.0
+            let expThisLevel = expPerLevel[level] - heroCurrentXp
+            let expGain = (experience * expReduction).toInt()
+            if expGain > expThisLevel
+                heroCurrentXp += expThisLevel
+                experience -= (expThisLevel / expReduction).toInt()
+                level += 1
+            else
+                heroCurrentXp += expGain
+                experience = 0
+
+        hero.setXp(heroCurrentXp)
 
 init
     for i = 2 to 30
@@ -54,41 +108,4 @@ init
                 else
                     killer.damageTarget(troll, troll.getHP() * 2, ATTACK_TYPE_CHAOS)
 
-    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
-        let dead = GetDyingUnit()
-        let killer = GetKillingUnit()
-        if not killer.getOwner().isAllyOf(dead.getOwner())
-            let heroes = GetUnitsInRangeMatching(expRange, dead.getX(), dead.getY(), Condition(() -> begin
-                let filterUnit = GetFilterUnit()
-                return filterUnit.isType(UNIT_TYPE_HERO) and filterUnit.getOwner().isAllyOf(GetKillingUnit().getOwner()) and filterUnit.isAlive()
-            end))
-
-            if killer.isType(UNIT_TYPE_HERO)
-                heroes.addUnit(killer)
-            else if killer.getName() == "Dummy Caster" or killer.getTypeId() == UNIT_MASTER_CASTER
-                heroes.addUnit(killer.getOwner().getTroll())
-
-            let count = heroes.size()
-            let deadUnitLevel = dead.getLevel()
-            let baseExp = dead.isType(UNIT_TYPE_HERO) ? heroExp[deadUnitLevel] : creepExp[deadUnitLevel]
-            let reduceExpGain = dead.getOwner().getId() == PLAYER_NEUTRAL_AGGRESSIVE
-
-            for hero from heroes
-                let multiplier = getMultiplier(hero)
-                var experience = floor(baseExp * multiplier / count)
-                var level = hero.getLevel()
-                var heroCurrentXp = hero.getXp()
-
-                while experience > 0
-                    let expReduction = reduceExpGain ? max(0.4, 0.9 - 0.1 * level) : 1.0
-                    let expThisLevel = expPerLevel[level] - heroCurrentXp
-                    let expGain = (experience * expReduction).toInt()
-                    if expGain > expThisLevel
-                        heroCurrentXp += expThisLevel
-                        experience -= (expThisLevel / expReduction).toInt()
-                        level += 1
-                    else
-                        heroCurrentXp += expGain
-                        experience = 0
-
-                hero.setXp(heroCurrentXp)
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH, function performExperienceGain)

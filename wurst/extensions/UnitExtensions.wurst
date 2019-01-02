@@ -1,15 +1,15 @@
 package UnitExtensions
-import HashMap
+import StackNSplit
 import LinkedList
 import Lodash
 import GameConfig
 import PublicLibrary
-
+import Brambles
 
 public let BUFF_ENSNARE_GROUND = 'Beng'
 public let BUFF_ENSNARE_AIR = 'Bena'
 public let BUFF_ENTANGLE = 'BEer'
-
+public let BUFF_ENTANGLE_BRAMBLES = getBramblesEntangleBuffId()
 
 public function unit.getHeroSkillPoints() returns integer
     return GetHeroSkillPoints(this)
@@ -133,9 +133,24 @@ public function unit.addSleep(bool value)
 public function unit.setCreepGuard(bool value)
     SetUnitCreepGuard(this, value)
 
+public function unit.addOrStackItem(item itm) returns bool
+    //Stackables
+    if isItemStackable(itm.getTypeId())
+        if not this.isItemFullyStacked(itm.getTypeId())
+            this.stackItem(itm)
+            return true
+    else
+        //Non-stackables
+        if not this.isInventoryFull()
+            this.addItemHandle(itm)
+            return true
+    return false
+    
+
 public function unit.isImmobilized() returns bool
     return (
         this.getAbilityLevel(BUFF_ENSNARE_AIR) > 0 or
         this.getAbilityLevel(BUFF_ENSNARE_GROUND) > 0 or
-        this.getAbilityLevel(BUFF_ENTANGLE) > 0
+        this.getAbilityLevel(BUFF_ENTANGLE) > 0 or
+        this.getAbilityLevel(BUFF_ENTANGLE_BRAMBLES) > 0
     )

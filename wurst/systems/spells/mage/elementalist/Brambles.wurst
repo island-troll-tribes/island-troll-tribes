@@ -19,7 +19,7 @@ import MapBounds
 
 constant let ABILITY_ID = 'ESBR'
 constant let DUMMY_SLOW_SPELL_ID = compiletime(ABIL_ID_GEN.next())
-constant let DUMMY_ENTANGLE_SPELL_ID = compiletime(ABIL_ID_GEN.next())
+public constant let BUFF_ENTANGLE_BRAMBLES_ID = compiletime(ABIL_ID_GEN.next())
 constant let DUMMY_VISION_BONUS_ID = compiletime(ABIL_ID_GEN.next())
 constant let DUMMY_SLOW_BUFF = compiletime(BUFF_ID_GEN.next())
 constant let DUMMY_ENTANGLE_BUFF = compiletime(BUFF_ID_GEN.next())
@@ -42,7 +42,7 @@ constant let TOOLTIP_EXT = "Causes brambles to surface from underground in a str
 
 public function getBramblesEntangleBuffId() returns int
     return DUMMY_ENTANGLE_BUFF
-    
+
 @compiletime function createDummyVisionAbility()
     new AbilityDefinitionSightBonus(DUMMY_VISION_BONUS_ID)
     ..setSightRangeBonus(1, 250)
@@ -128,7 +128,7 @@ public function getBramblesEntangleBuffId() returns int
     ..setCastRange(1, RANGE)
 
 @compiletime function createDummyEntangle()
-    new AbilityDefinitionEntanglingRootscreep(DUMMY_ENTANGLE_SPELL_ID)
+    new AbilityDefinitionEntanglingRootscreep(BUFF_ENTANGLE_BRAMBLES_ID)
     ..setMissileArt("")
     ..setMissileHomingEnabled(true)
     ..setMissileSpeed(99999)
@@ -199,7 +199,7 @@ class BramblesInstance
                         if not u.hasAbility(DUMMY_SLOW_BUFF)
                             new IttDummyCaster().castTarget(owner, DUMMY_SLOW_SPELL_ID, 1, Orders.slow, u, ownerUnit.getPos())
                         if not snaredTargets.has(u) and isOvercharged
-                            new IttDummyCaster(0.2).castTarget(owner, DUMMY_ENTANGLE_SPELL_ID, 1, Orders.entanglingroots, u, ownerUnit.getPos())
+                            new IttDummyCaster(0.2).castTarget(owner, BUFF_ENTANGLE_BRAMBLES_ID, 1, Orders.entanglingroots, u, ownerUnit.getPos())
                             snaredTargets.push(u)
                         if not loopDamagedTargets.has(u)
                             ownerUnit.damageTarget(u, DAMAGE_PER_SECOND*UPDATE_LOOP_INTERVAL, ATTACK_TYPE_NORMAL)

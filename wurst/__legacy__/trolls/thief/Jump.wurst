@@ -6,7 +6,9 @@ import Orders
 import UnitExtensions
 
 constant let JUMP_ID = 'A04G'
-constant let JUMP_RANGE = 600.
+constant let RANGE_MAX = 600.
+constant let TARGET_SEARCH_MINRANGE = 200.
+constant let TARGET_SEARCH_INCREMENT = 25
 
 init
     registerSpellEffectEvent(JUMP_ID, () -> onCast())
@@ -21,7 +23,7 @@ function onCast()
     let targetPos = vec2(GetSpellTargetX(), GetSpellTargetY())
     let casterPos = caster.getPos()
     var jumpPos = getJumpPos(casterPos, targetPos)
-    thiefJump(caster, jumpPos)
+    performJump(caster, jumpPos)
 
 function onStartCast()
     let caster = GetSpellAbilityUnit()
@@ -40,13 +42,13 @@ function getJumpPos(vec2 casterPos, vec2 targetPos) returns vec2
     angle ang = casterPos.angleTo(jumpPos)
 
     //Limit range if ability used beyond jump range
-    if (casterPos.distanceTo(jumpPos) >= JUMP_RANGE)    
-        var distance = JUMP_RANGE
+    if (casterPos.distanceTo(jumpPos) >= RANGE_MAX)    
+        var distance = RANGE_MAX
         jumpPos = casterPos.polarOffset(ang, distance)
         
         //Find furthest point towards cast point where we can jump
-        while distance >= 200 and not canJumpToTarget(jumpPos)
-            distance = distance - 25
+        while distance >= TARGET_SEARCH_MINRANGE and not canJumpToTarget(jumpPos)
+            distance = distance - TARGET_SEARCH_INCREMENT
             jumpPos = casterPos.polarOffset(ang, distance)
 
     return jumpPos

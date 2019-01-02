@@ -5,21 +5,23 @@ import ClosureForGroups
 import ClosureTimers
 
 constant let DEFAULT_GRAVITY = 175.
-constant let STORMCROWFORM_ID = 'Amrf'
+constant let MAX_TURNSPEED = 3.
+constant let HEIGHT_CHANGE_RATE = 10000.
+constant let CROWFORM_ID = 'Amrf'
 
 init
     registerCommandAll("jump") (triggerPlayer, args) ->
         if (gameConfig.isTestModeEnabled() == true)
             forUnitsSelected(triggerPlayer) u ->
                 if (u.isType(UNIT_TYPE_HERO))
-                    thiefJump(u, u.getPos().polarOffset(angle(0), 400))
+                    performJump(u, u.getPos().polarOffset(angle(0), 400))
         else
             printTimedToPlayer("Requires test mode!", 5., triggerPlayer)
         
-public function thiefJump(unit u, vec2 targetPos)
+public function performJump(unit u, vec2 targetPos)
     let distance = u.getPos().distanceTo(targetPos)
     let groundSpeed = 1.5 * distance
-    let gravity = 175.
+    let gravity = DEFAULT_GRAVITY
     new JumpInstance(u, targetPos)
 
     //Play backflip animation
@@ -30,7 +32,7 @@ public function thiefJump(unit u, vec2 targetPos)
     doAfter(0.05) ->
         u.setTimeScale(0.85) 
     //Reset animation to stand after jumping
-    doAfter((distance/groundSpeed)) ->
+    doAfter(distance / groundSpeed) ->
         u.setAnimation("stand")
         u.unpause()
         u.setTimeScale(1)
@@ -39,13 +41,12 @@ class JumpInstance
     unit u
     vec3 velocity
     vec2 targetPos
-    real gravity
+    real gravity = DEFAULT_GRAVITY
     real originalFlyHeight
     real height = 0
     real flightTime = 0.67
     real originalTurnspeed
     angle ang
-    CallbackCounted updaterLoop
 
     construct(unit u, vec2 targetPos, real duration, real gravity)
         this.gravity = gravity
@@ -53,42 +54,42 @@ class JumpInstance
         this.targetPos = targetPos
         this.flightTime = duration
         let groundSpeed = u.getPos().distanceTo(targetPos)/duration
-        let vel_z = (gravity*this.flightTime) / 2
-        let vel2D = u.getPos().angleTo(targetPos).toVec(groundSpeed)
-        this.velocity = vel2D.withZ(vel_z)
-        this.ang = vel2D.getAngle()
+        let velZ = (gravity*this.flightTime) / 2
+        let velXY = u.getPos().angleTo(targetPos).toVec(groundSpeed)
+        this.velocity = velXY.withZ(velZ)
+        this.ang = velXY.getAngle()
         startJump()
 
     construct(unit u, vec2 targetPos, real duration)
-        this.gravity = DEFAULT_GRAVITY
         this.u = u
         this.targetPos = targetPos
         this.flightTime = duration
         let groundSpeed = u.getPos().distanceTo(targetPos)/duration
-        let vel_z = (gravity*this.flightTime) / 2
-        let vel2D = u.getPos().angleTo(targetPos).toVec(groundSpeed)
-        this.velocity = vel2D.withZ(vel_z)
-        this.ang = vel2D.getAngle()
+        let velZ = (gravity*this.flightTime) / 2
+        let velXY = u.getPos().angleTo(targetPos).toVec(groundSpeed)
+        this.velocity = velXY.withZ(velZ)
+        this.ang = velXY.getAngle()
         startJump()
 
     construct(unit u, vec2 targetPos)
-        this.gravity = DEFAULT_GRAVITY
         this.u = u
         this.targetPos = targetPos
         let groundSpeed = u.getPos().distanceTo(targetPos)/this.flightTime
-        let vel_z = (gravity*this.flightTime) / 2
-        let vel2D = u.getPos().angleTo(targetPos).toVec(groundSpeed)
-        this.velocity = vel2D.withZ(vel_z)
-        this.ang = vel2D.getAngle()
+        let velZ = (gravity*this.flightTime) / 2
+        let velXY = u.getPos().angleTo(targetPos).toVec(groundSpeed)
+        this.velocity = velXY.withZ(velZ)
+        this.ang = velXY.getAngle()
         startJump()
 
     function startJump()
+        //Set pathing off so we can actually fly over thing
         u.setPathing(false)
-        u.addAbility(STORMCROWFORM_ID)
-        u.removeAbility(STORMCROWFORM_ID)
+        //Add crowform to enable flying height adjustment
+        u.addAbility(CROWFORM_ID)
+        u.removeAbility(CROWFORM_ID)
         this.originalTurnspeed = u.getTurnSpeed()
-        u.setTurnSpeed(90000)
-        this.updaterLoop = doPeriodicallyTimed(ANIMATION_PERIOD, this.flightTime) cb ->
+        u.setTurnSpeed(MAX_TURNSPEED)
+        doPeriodicallyTimed(ANIMATION_PERIOD, this.flightTime) cb ->
             updateLoop()
             if cb.isLast()
                 //Destructor finishes the jump
@@ -96,17 +97,17 @@ class JumpInstance
 
     function updateLoop()
         u.setFacing(ang)
-        u.setPos(u.getPos()+this.velocity.toVec2()*ANIMATION_PERIOD)
+        u.setPos(u.getPos() + this.velocity.toVec2() * ANIMATION_PERIOD)
         this.height += this.velocity.z
-        u.setFlyHeight(this.height, 10000)
-        this.velocity.z = this.velocity.z - this.gravity * ANIMATION_PERIOD
+        this.velocity.z -= this.gravity * ANIMATION_PERIOD
+        u.setFlyHeight(this.height, HEIGHT_CHANGE_RATE)
 
     function finishJump()
         u.setPos(targetPos)
         u.setFacing(ang)
         u.setTurnSpeed(this.originalTurnspeed)
         u.setPathing(true)
-        u.setFlyHeight(u.getDefaultFlyHeight(), 10000)
+        u.setFlyHeight(u.getDefaultFlyHeight(), HEIGHT_CHANGE_RATE)
 
     ondestroy
         finishJump()

@@ -31,8 +31,18 @@ function addItemToBush(unit bush)
     .getItem(bush.getPos())
 
     if herb != null
-        if not bush.isItemFullyStacked(herb.getTypeId())
-            bush.stackItem(herb)
+        //Stackables
+        if isItemStackable(herb.getTypeId())
+            if not bush.isItemFullyStacked(herb.getTypeId())
+                bush.stackItem(herb)
+            else
+                herb.remove()
+        else
+            //Non-stackables
+            if not bush.isInventoryFull()
+                bush.addItemHandle(herb)
+            else
+                herb.remove()
 
 function addItemsToBushes()
     for bush in bushes

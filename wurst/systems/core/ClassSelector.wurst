@@ -9,15 +9,10 @@ import ClosureTimers
 import TimerExtensions
 import TimerDialog
 import TimerUtils
-import HashMap
 import RegisterEvents
 import GameMode
-import Game
 import Lodash
-import LegacyColors
-import ID
 import PublicLibrary
-import LegacyTriggers
 
 let UNIT_TROLL_TOTEM = 'o00H'
 
@@ -35,6 +30,11 @@ let spawnList = asList(
     gg_rct_revive_11,
     gg_rct_revive_12
 )
+
+let listeners = CreateTrigger()
+
+public function registerClassSelectionEndEvent(code listener)
+    listeners.addAction(listener)
 
 public class ClassSelector
     static let spawns = new IterableMap<unit, thistype>()
@@ -89,9 +89,9 @@ public class ClassSelector
         ..display(true)
 
         clock.doAfter(selectionTime.toReal()) ->
-            values(spawns).forEach(spawner -> spawner.endSelection())
+            values(spawns).each(spawner -> spawner.endSelection())
             gg_trg_boards.execute()
-            generateMap()
+            listeners.execute()
             clockDialog.destr()
 
     static function initialize()
@@ -149,7 +149,7 @@ public class ClassSelector
 
     private function initializePickers()
         let pos = spawn.getCenter()
-        tribe.getMembers().forEach() member ->
+        tribe.getMembers().each() member ->
             pickers.push(createUnit(member, UNIT_HERO_PICKER, pos.polarOffset(angle(PI), 1200), angle(0)))
             member.setLumber(3)
             member.panCamToTimed(totem, 0)
@@ -161,7 +161,7 @@ public class ClassSelector
             let owner = tribe.getMembers().getFirst()
             createUnit(owner, UNIT_FIRE, spawn.getCenter(), angle(0))
 
-        tribe.getMembers().forEach() member ->
+        tribe.getMembers().each() member ->
             var troll = member.getTroll()
             if troll == null
                 troll = getRandomTroll(member)
@@ -174,7 +174,7 @@ public class ClassSelector
 
         totem.remove()
 
-        pickers.forEach(picker -> picker.remove())
+        pickers.each(picker -> picker.remove())
         destroy pickers
 
     function getRandomTroll(player p) returns unit

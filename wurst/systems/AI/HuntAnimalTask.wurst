@@ -1,0 +1,157 @@
+package HuntAnimalTask
+import AITask
+import initlater AIPlayer
+import Orders
+import ClosureEvents
+import RestoreStatsTask
+import UnitExtensions
+
+constant let ENSNARE_RANGE = 700.
+constant let GIVE_UP_CHASING_RANGE = 2000.
+constant let GIVE_UP_CHASING_FOG_TIME = 15.
+constant let STUCK_RANGE_THRESHOLD = 300
+constant let PANIC_MINIMUM_ENERGY = 60
+constant let ANIMAL_FLEE_RESET_TIME = 6.
+
+public class HuntAnimalTask extends AITask
+    vec2 lastPos
+    real lastUnstuckTimestamp
+    unit targetUnit
+    real animalLastAttackedTimestamp
+    real targetLastVisibleTimestamp
+    EventListener attackListener
+
+    construct(AIPlayer ai, unit targetUnit, AITask afterFinishResumeTask)
+        super(ai, "Hunting " + targetUnit.getName(), afterFinishResumeTask)
+        this.lastPos = ai.getTroll().getPos()
+        this.targetUnit = targetUnit
+        this.lastUnstuckTimestamp = 0
+        this.targetLastVisibleTimestamp = 0
+        this.animalLastAttackedTimestamp = -ANIMAL_FLEE_RESET_TIME
+        attackListener = EventListener.add(EVENT_PLAYER_UNIT_ATTACKED) ->
+            if GetAttackedUnitBJ() == targetUnit
+                this.animalLastAttackedTimestamp = this.runTime
+
+    override function watchStats()
+        let troll = ai.getTroll()
+        if (troll.getHP() <= troll.getMaxHP() - EATING_LOST_HP_THRESHOLD)
+            ai.tryToEat()
+        if (ai.owner.getGold() <= LOW_HEAT_THRESHOLD * 0.5)
+            if not ai.currentTask.description.contains("heat")
+                ai.currentTask = new RestoreStatsTask(ai, ai.currentTask)
+        else if troll.getMana() <= SLEEP_ENERGY_THRESHOLD*0.6 and ai.owner.getGold() >= MINIMUM_SLEEP_HEAT and not ai.currentTask.description.contains("heat")
+            ai.tryToSleepOutside()
+
+
+    override function runActions()
+        updateTargetVisibleTimestamp()
+
+        //Check if target dead or too far
+        if not targetUnit.isAlive() or not isTargetInRange(GIVE_UP_CHASING_RANGE) or this.runTime-this.targetLastVisibleTimestamp >= GIVE_UP_CHASING_FOG_TIME
+            this.isCompleted = true
+            return
+
+        switch targetUnit.getTypeId()
+            case UNIT_ELK
+                elkHuntingLoop()
+            case UNIT_HAWK
+                hawkHuntingLoop()
+            default
+                elkHuntingLoop()
+
+    function updateTargetVisibleTimestamp()
+        if IsUnitVisible(targetUnit, ai.owner)
+            this.targetLastVisibleTimestamp = this.runTime
+
+    function elkHuntingLoop()
+        maybePanic()
+        real approachRange = ENSNARE_RANGE
+        if this.runTime - this.animalLastAttackedTimestamp >= ANIMAL_FLEE_RESET_TIME
+            approachRange = 170
+
+        //Check time since last order to make sure we dont animation cancel our abilities
+        if ai.timeSinceLastAIOrder() <= ai.timeBeforeNextOrder
+            return
+
+        let targetInRange = isTargetInRange(approachRange)
+        let targetIsVisible = IsUnitVisible(targetUnit, ai.owner)
+        let targetInMeleeRange = isTargetInRange(170)
+        if not targetInRange or not targetIsVisible
+            moveToTargetPosition()
+        else if targetInRange and targetIsVisible
+            if not targetUnit.isCrowdControlled() and not targetInMeleeRange
+                if (ai.tryToEnsnareTarget(targetUnit))
+                    ai.timeBeforeNextOrder = 0.3
+                else
+                    moveToTargetPosition()
+            else if not targetInMeleeRange
+                if ai.tryToTrackTarget(targetUnit)
+                    ai.timeBeforeNextOrder = 0.3
+                else
+                    moveToTargetPosition()
+            else
+                ai.issueAIOrderTarget(Orders.attack, targetUnit)
+                ai.timeBeforeNextOrder = 0.350
+
+    function hawkHuntingLoop()
+        maybePanic()
+        real approachRange = ENSNARE_RANGE
+
+        //Check time since last order to make sure we dont animation cancel our abilities
+        if ai.timeSinceLastAIOrder() <= ai.timeBeforeNextOrder
+            return
+
+        let targetInRange = isTargetInRange(approachRange)
+        let targetIsVisible = IsUnitVisible(targetUnit, ai.owner)
+        let targetInMeleeRange = isTargetInRange(170)
+
+        if not targetInRange or not targetIsVisible or (not ai.isEnsnareReady() and not targetUnit.isCrowdControlled())
+            if not isTargetInRange(1000)
+                moveToTargetPosition()
+            else
+                directMoveToTargetPosition()
+        else if targetInRange and targetIsVisible
+            if not targetUnit.isCrowdControlled()
+                if (ai.tryToEnsnareTarget(targetUnit))
+                    ai.timeBeforeNextOrder = 0.3
+            else if ai.tryToTrackTarget(targetUnit)
+                ai.timeBeforeNextOrder = 0.3
+            else
+                if targetInMeleeRange
+                    ai.issueAIOrderTarget(Orders.attack, targetUnit)
+                    ai.timeBeforeNextOrder = 0.350
+                else
+                    directMoveToTargetPosition()
+
+    function isTargetInRange(real range) returns bool
+        return ai.getTroll().getPos().distanceToSq(targetUnit.getPos()) <= range*range
+
+    function maybePanic() returns bool
+        if ai.getTroll().getMana() >= PANIC_MINIMUM_ENERGY
+            return ai.tryToUsePanic()
+        return false
+
+    function moveToTargetPosition()
+        ai.issueAIOrderPoint(Orders.move, targetUnit.getPos())
+
+    function directMoveToTargetPosition()
+        let trollPos = ai.getTroll().getPos()
+        let ang = trollPos.angleTo(targetUnit.getPos())
+        ai.issueAIOrderPoint(Orders.move, trollPos.polarOffset(ang, 175))
+
+    function areWeStuck() returns bool
+        //If we are roughly in the same position as last checkstuck, assume we are stuck
+        let curPos = ai.getTroll().getPos()
+        if curPos.distanceToSq(lastPos) <= STUCK_RANGE_THRESHOLD*STUCK_RANGE_THRESHOLD
+            lastPos = curPos
+            this.lastUnstuckTimestamp = runTime
+            return true
+        lastPos = curPos
+        this.lastUnstuckTimestamp = runTime
+        return false
+
+    ondestroy
+        //Destroy the resumetask if this task is abruptly destroyed
+        if afterFinishResumeTask != null and not ranFinishFunction
+            destroy afterFinishResumeTask
+        destroy attackListener

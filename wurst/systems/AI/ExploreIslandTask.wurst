@@ -1,0 +1,195 @@
+package ExploreIslandTask
+import AITask
+import initlater AIPlayer
+import LinkedList
+import Waypoint
+import HashMap
+import PickupItemTask
+import EmptyInventoryTask
+import Orders
+import ID
+
+LinkedList<rect> NW_WAYPOINTS = null
+public HashMap<AIPlayer, LinkedList<Waypoint>> aiWaypointMap = null
+constant let WAYPOINT_CURRENT_RANGE_THRESHOLD = 150.
+constant let WAYPOINT_OTHER_RANGE_TRESHOLD = 500.
+constant let STUCK_RANGE_THRESHOLD = 300.
+constant let PANIC_MINIMUM_ENERGY = 80
+constant let MOVEMENT_SPAM_INTERVAL = 0.5
+constant let SUBTASK_CHECK_INTERVAL = 1
+
+init
+    initIslandWaypoints()
+    aiWaypointMap = new HashMap<AIPlayer, LinkedList<Waypoint>>()
+
+function initIslandWaypoints()
+    NW_WAYPOINTS = new LinkedList<rect>()
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_1)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_2)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_3)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_4)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_5)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_6)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_7)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_8)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_9)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_10)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_11)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_12)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_13)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_14)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_15)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_16)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_17)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_18)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_19)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_20)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_21)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_22)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_23)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_24)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_25)
+    NW_WAYPOINTS.push(gg_rct_nw_waypoint_26)
+
+public function initAIWaypointsLists(AIPlayer ai)
+    if aiWaypointMap.has(ai)
+        return
+    else
+        let waypoints = new LinkedList<Waypoint>()
+        for r in NW_WAYPOINTS
+            waypoints.push(new Waypoint(r))
+        aiWaypointMap.put(ai, waypoints)
+
+public class ExploreIslandTask extends AITask
+    Comparator<Waypoint> waypointComparator
+    Waypoint nextWaypoint
+    vec2 lastPos
+    real lastUnstuckTimestamp = 0
+    real lastItemCheckTimestamp = 0
+    real lastSubtaskCheckTimestamp = 0
+
+    construct(AIPlayer ai)
+        super(ai, "Exploring island", null)
+        this.nextWaypoint = null
+        this.lastPos = ai.getTroll().getPos()
+        this.waypointComparator = (a, b) -> waypointSorterFunction(a, b)
+
+    override function runActions()
+        //Run stuck check every 5 seconds
+        if runTime - lastUnstuckTimestamp >= 5 and this.runTime >= 5 and this.nextWaypoint != null
+            if(areWeStuck())
+                //Update timestamp so waypoint doesnt get selected again and then null waypoint
+                this.nextWaypoint.lastVisitTimestamp = ai.runTime
+                this.nextWaypoint = null
+
+        checkSubTasks()
+
+        //Otherwise just walk around waypoints
+        updateAllWaypoints()
+        patrolWayPoints()
+
+    function checkSubTasks()
+        if runTime - lastSubtaskCheckTimestamp < SUBTASK_CHECK_INTERVAL
+            return
+
+        lastItemCheckTimestamp = runTime
+
+        if ai.getTroll().isInventoryFull()
+            //Check if we need to unload inventory due to full inventory
+            this.ai.currentTask = new EmptyInventoryTask(ai, ai.getApproximateBasePos(), this)
+        else if ai.getApproximateBasePos().distanceToSq(ai.getTroll().getPos()) <= BASE_ITEMS_RADIUS*BASE_ITEMS_RADIUS and ai.getTroll().itemCount() >= 1
+            //Also unload inventory if we happen to be close to base
+            this.ai.currentTask = new EmptyInventoryTask(ai, ai.getApproximateBasePos(), this)
+        else
+            //Loot items
+            lastItemCheckTimestamp = runTime
+            let pickupItem = ai.getBestItemToPickup()
+            if pickupItem != null
+                this.ai.currentTask = new PickupItemTask(ai, pickupItem, this)
+
+
+        //Get corpses
+        //TODO
+
+        //As a hunter, check for animals to hunt
+        if ai.getTroll().getTypeId() == UNIT_HUNTER
+            if ai.checkAnimalsToKill()
+                return
+
+    function updateAllWaypoints()
+        //Updates visited-timestamps for all waypoints and not just the currently targeted one
+        if not aiWaypointMap.has(ai)
+            print("ERROR: AI is not in waypointmap!")
+            return
+
+        let waypoints = aiWaypointMap.get(ai)
+        for waypoint in waypoints
+            if areWeNearWaypoint(waypoint, WAYPOINT_OTHER_RANGE_TRESHOLD)
+                waypoint.lastVisitTimestamp = ai.runTime
+
+    function patrolWayPoints()
+        if this.nextWaypoint == null
+            this.nextWaypoint = getNextWaypoint()
+            moveToWaypoint()
+        else
+            if not areWeNearWaypoint(this.nextWaypoint, WAYPOINT_CURRENT_RANGE_THRESHOLD)
+                maybePanic()
+                if ai.timeSinceLastAIOrder() >= MOVEMENT_SPAM_INTERVAL
+                    moveToWaypoint()
+            else
+                this.nextWaypoint.lastVisitTimestamp = ai.runTime
+                this.nextWaypoint = null
+
+    function areWeNearWaypoint(Waypoint waypoint, real radius) returns bool
+        return ai.getTroll().getPos().distanceToSq(waypoint.rct.getCenter()) <= radius*radius
+
+    function maybePanic()
+        if ai.getTroll().getMana() >= PANIC_MINIMUM_ENERGY
+            ai.tryToUsePanic()
+
+    function moveToWaypoint()
+        ai.issueAIOrderPoint(Orders.move, nextWaypoint.rct.getCenter())
+
+    function areWeStuck() returns bool
+        //If we are roughly in the same position as last checkstuck, assume we are stuck
+        let curPos = ai.getTroll().getPos()
+        if curPos.distanceToSq(lastPos) <= STUCK_RANGE_THRESHOLD*STUCK_RANGE_THRESHOLD
+            lastPos = curPos
+            this.lastUnstuckTimestamp = runTime
+            return true
+        lastPos = curPos
+        this.lastUnstuckTimestamp = runTime
+        return false
+
+    function getNextWaypoint() returns Waypoint
+        if not aiWaypointMap.has(ai)
+            print("ERROR: AI is not in waypointmap!")
+            return null
+        let waypoints = aiWaypointMap.get(ai)
+        waypoints.sortWith(waypointComparator)
+        return waypoints.getFirst()
+
+    function waypointSorterFunction(Waypoint a, Waypoint b) returns int
+        var difference = 0
+
+        //Distance modifier
+        let troll = ai.getTroll()
+        if troll != null
+            let trollPos = troll.getPos()
+            let distanceA = trollPos.distanceTo(a.rct.getCenter())
+            let distanceB = trollPos.distanceTo(b.rct.getCenter())
+            let moveSpeed = troll.getDefaultMovespeed()
+            let extraTimeA = distanceA / (moveSpeed * 2)
+            let extraTimeB = distanceB / (moveSpeed * 2)
+
+            difference = ((a.lastVisitTimestamp+extraTimeA) - (b.lastVisitTimestamp+extraTimeB)).round()
+            return difference
+
+        difference = (a.lastVisitTimestamp - b.lastVisitTimestamp).round()
+        return difference
+
+    ondestroy
+        //Destroy the resumetask if this task is abruptly destroyed
+        if afterFinishResumeTask != null and not ranFinishFunction
+            destroy afterFinishResumeTask
+        destroy this.waypointComparator

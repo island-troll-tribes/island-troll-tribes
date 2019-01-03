@@ -1,0 +1,22 @@
+package WaitForPlayerOrdersTask
+
+import AITask
+import initlater AIPlayer
+import LinkedList
+import Waypoint
+import HashMap
+
+public class WaitForPlayerOrdersTask extends AITask
+
+    construct(AIPlayer ai, AITask afterFinishResumeTask)
+        super(ai, "Waiting for player orders", afterFinishResumeTask)
+
+    override function runActions()
+        if ai.runTime - ai.lastPlayerOrderReceivedTimestamp >= PLAYER_ORDER_PAUSE_DURATION
+            this.isCompleted = true
+            return
+
+    ondestroy
+        //Destroy the resumetask if this task is abruptly destroyed
+        if afterFinishResumeTask != null and not ranFinishFunction
+            destroy afterFinishResumeTask

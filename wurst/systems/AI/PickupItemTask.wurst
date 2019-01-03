@@ -1,0 +1,117 @@
+package PickupItemTask
+
+import AITask
+import initlater AIPlayer
+import LinkedList
+import Orders
+
+constant let WAYPOINT_RANGE_THRESHOLD = 150
+constant let STUCK_RANGE_THRESHOLD = 300
+constant let PANIC_MINIMUM_ENERGY = 80
+constant let TASK_EXPIRATION_TIME = 90
+constant let SUBTASK_CHECK_INTERVAL = 1
+
+
+public class PickupItemTask extends AITask
+    vec2 lastPos
+    item targetItem
+    real lastUnstuckTimestamp
+    real lastSubtaskCheckTimestamp
+
+    construct(AIPlayer ai, item targetItem, AITask afterFinishResumeTask)
+        super(ai, "Picking up " + targetItem.getName(), afterFinishResumeTask)
+        this.lastPos = ai.getTroll().getPos()
+        this.targetItem = targetItem
+        this.lastUnstuckTimestamp = 0
+        this.lastSubtaskCheckTimestamp = 0.
+
+    override function runActions()
+        //Expiration condition
+        if timeSinceCreation() >= TASK_EXPIRATION_TIME
+            this.isCompleted = true
+            return
+
+        //Exit conditions
+        if targetItemNotValid() or weHaveTargetItem() or ai.getTroll().isInventoryFull()
+            ai.memorizedGroundItems.remove(targetItem)
+            this.isCompleted = true
+            return
+
+        //Run stuck check every 5 seconds
+        if runTime - lastUnstuckTimestamp >= 5 and this.runTime >= 5
+            if(areWeStuck())
+                ai.memorizedGroundItems.remove(targetItem)
+                this.isCompleted = true
+                return
+
+        //Check subtasks every second
+        checkSubTasks()
+
+        let itemPos = targetItem.getPos()
+        if not IsVisibleToPlayer(itemPos.x, itemPos.y, ai.owner) or not areWeNearItem()
+            //If we cant see item or not close enough, move to item
+            maybePanic()
+            moveToItemPosition()
+        else
+            pickUpItemOrder()
+
+    function areWeNearItem() returns bool
+        return ai.getTroll().getPos().distanceToSq(targetItem.getPos()) <= WAYPOINT_RANGE_THRESHOLD*WAYPOINT_RANGE_THRESHOLD
+
+    function checkSubTasks()
+        if runTime - this.lastSubtaskCheckTimestamp < SUBTASK_CHECK_INTERVAL
+            return
+        this.lastSubtaskCheckTimestamp = runTime
+        checkForBetterItems()
+        checkForAnimalsToHunt()
+
+    function checkForBetterItems()
+        let maybeBetterItem = ai.getBestItemToPickup()
+        if maybeBetterItem.getTypeId() != targetItem.getTypeId()
+            ai.currentTask = new PickupItemTask(ai, maybeBetterItem, this)
+
+    function checkForAnimalsToHunt()
+        if ai.getTroll().getTypeId() == UNIT_HUNTER
+            ai.getBestAnimalToHunt()
+
+    function maybePanic()
+        if ai.getTroll().getMana() >= PANIC_MINIMUM_ENERGY
+            ai.tryToUsePanic()
+
+    function pickUpItemOrder()
+        ai.issueAIOrderTarget(Orders.smart, targetItem)
+
+    function moveToItemPosition()
+        ai.issueAIOrderPoint(Orders.move, targetItem.getPos())
+
+    function targetItemNotValid() returns bool
+        if not targetItem.isAlive() or targetItem == null
+            return true
+
+        for t in udg_trolls
+            if t != ai.getTroll() and t.hasItem(targetItem)
+                //Someone else has the item
+                return true
+
+        return false
+
+    function weHaveTargetItem() returns bool
+        if ai.getTroll().hasItem(targetItem)
+            return true
+        return false
+
+    function areWeStuck() returns bool
+        //If we are roughly in the same position as last checkstuck, assume we are stuck
+        let curPos = ai.getTroll().getPos()
+        if curPos.distanceToSq(lastPos) <= STUCK_RANGE_THRESHOLD*STUCK_RANGE_THRESHOLD
+            lastPos = curPos
+            this.lastUnstuckTimestamp = runTime
+            return true
+        lastPos = curPos
+        this.lastUnstuckTimestamp = runTime
+        return false
+
+    ondestroy
+        //Destroy the resumetask if this task is abruptly destroyed
+        if afterFinishResumeTask != null and not ranFinishFunction
+            destroy afterFinishResumeTask

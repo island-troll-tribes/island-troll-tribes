@@ -1,0 +1,66 @@
+package UseSleepBuildingTask
+import AITask
+import initlater AIPlayer
+import Orders
+
+constant let STUCK_RANGE_THRESHOLD = 150
+constant let NEAR_BUILDING_RANGE_THRESHOLD = 250
+constant let TASK_EXPIRATION_TIME = 15
+
+public class UseSleepBuildingTask extends AITask
+    unit targetBuilding
+    real lastUnstuckTimestamp
+    vec2 lastPos
+    construct(AIPlayer ai, unit targetBuilding, AITask afterFinishResumeTask)
+        super(ai, "Sleeping using " + targetBuilding.getName(), afterFinishResumeTask)
+        this.targetBuilding = targetBuilding
+        this.lastUnstuckTimestamp = 0
+
+    override function watchStats()
+        let troll = ai.getTroll()
+        if (troll.getHP() <= troll.getMaxHP() - EATING_LOST_HP_THRESHOLD)
+            ai.tryToEat()
+
+    override function runActions()
+        //Expiration condition
+        if timeSinceCreation() >= TASK_EXPIRATION_TIME
+            this.isCompleted = true
+            return
+
+        if not areWeNearTargetBuilding()
+            moveToTargetBuilding()
+        else if (tryToSleepWithBuilding())
+                this.isCompleted = true
+                return
+        else if runTime - lastUnstuckTimestamp >= 5 and this.runTime >= 5 and not areWeNearTargetBuilding()
+            if(areWeStuck())
+                this.isCompleted = true
+                return
+
+    function areWeNearTargetBuilding() returns bool
+        return targetBuilding.getPos().distanceToSq(ai.getTroll().getPos()) <= NEAR_BUILDING_RANGE_THRESHOLD*NEAR_BUILDING_RANGE_THRESHOLD
+
+    function tryToSleepWithBuilding() returns bool
+        return targetBuilding.issueTargetOrderById(Orders.sleep, ai.getTroll())
+
+    function moveToTargetBuilding()
+        ai.issueAIOrderPoint(Orders.move, targetBuilding.getPos())
+
+    function moveToBasePosition()
+        ai.issueAIOrderPoint(Orders.move, ai.getApproximateBasePos())
+
+    function areWeStuck() returns bool
+        //If we are roughly in the same position as last checkstuck, assume we are stuck
+        let curPos = ai.getTroll().getPos()
+        if curPos.distanceToSq(lastPos) <= STUCK_RANGE_THRESHOLD*STUCK_RANGE_THRESHOLD
+            lastPos = curPos
+            this.lastUnstuckTimestamp = runTime
+            return true
+        lastPos = curPos
+        this.lastUnstuckTimestamp = runTime
+        return false
+
+    ondestroy
+        //Destroy the resumetask if this task is abruptly destroyed
+        if afterFinishResumeTask != null and not ranFinishFunction
+            destroy afterFinishResumeTask

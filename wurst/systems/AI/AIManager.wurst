@@ -1,0 +1,67 @@
+package AIManager
+import LinkedList
+import AIPlayer
+import Game
+import GameMode
+import ClosureTimers
+import ExploreIslandTask
+import Commands
+import Tribe
+
+public constant let AI_UPDATE_PERIOD = 0.2
+public LinkedList<AIPlayer> AIs = null
+
+function createAIPlayers()
+    AIs = new LinkedList<AIPlayer>()
+    for i = 0 to bj_MAX_PLAYERS
+        let p = playerFromIndex(i)
+        if p != playerFromIndex(PLAYER_NEUTRAL_AGGRESSIVE) and p != playerFromIndex(PLAYER_NEUTRAL_PASSIVE) and p.getController() == MAP_CONTROL_COMPUTER
+            AIs.push(new AIPlayer(p))
+
+function removeAI(AIPlayer whichAI)
+    destroy whichAI
+    AIs.remove(whichAI)
+    let waypoints = aiWaypointMap.getAndRemove(whichAI)
+    for wp in waypoints
+        destroy wp
+    destroy waypoints
+
+function checkWinLoss(AIPlayer ai) returns bool
+    let tribe = Tribe.ofPlayer(ai.owner)
+    if tribe == null
+        return false
+    return tribe.isDefeated() or IsPlayerObserver(ai.owner)
+
+init
+    createAIPlayers()
+
+    for ai in AIs
+        initAIWaypointsLists(ai)
+
+    if AIs.size() > 0
+        registerGameStartEvent() ->
+            //Share control and set game start flag to true for AIs
+            let allianceArgs1 = new LinkedList<string>()
+            let allianceArgs2 = new LinkedList<string>()
+            allianceArgs1.push("sc")
+            allianceArgs2.push("ac")
+            for ai in AIs
+                ai.gameHasStarted = true
+                handlePlayerAllianceSettingToggle(ai.owner, allianceArgs1)
+                handlePlayerAllianceSettingToggle(ai.owner, allianceArgs2)
+
+            destroy allianceArgs1
+            destroy allianceArgs2
+
+        GameMode.onModeSelectionFinish() ->
+            doPeriodically(AI_UPDATE_PERIOD) cb ->
+                for ai in AIs
+                    if checkWinLoss(ai)
+                        print("Stopping AI due to tribe defeated / victorious")
+                        removeAI(ai)
+                    else
+                        ai.updateLoop()
+
+                if (AIs.size() == 0)
+                    destroy AIs
+                    destroy cb

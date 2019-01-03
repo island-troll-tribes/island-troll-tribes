@@ -1,0 +1,60 @@
+package AITask
+import initlater AIPlayer
+import initlater AIManager
+import initlater RestoreStatsTask
+
+public abstract class AITask
+    AIPlayer ai
+    bool isCompleted
+    real runTime
+    real creationTimestamp
+    bool ranFinishFunction
+    string description
+    AITask afterFinishResumeTask
+
+    construct(AIPlayer ai, string description, AITask afterFinishResumeTask)
+        this.ai = ai
+        this.isCompleted = false
+        this.runTime = 0
+        this.description = description
+        this.ranFinishFunction = false
+        this.afterFinishResumeTask = afterFinishResumeTask
+        this.creationTimestamp = ai.runTime
+        onCreation()
+
+    function isComplete() returns bool
+        return isCompleted
+
+    function onFinish()
+        this.ranFinishFunction = true
+        ai.currentTask = afterFinishResumeTask
+        destroy this
+
+    function onCreation()
+        ai.printMessageToTeam(this.description)
+
+    function run()
+        runActions()
+        this.runTime += AI_UPDATE_PERIOD
+        if (isComplete())
+            onFinish()
+
+    function watchStats()
+        let troll = ai.getTroll()
+        if (troll.getHP() <= troll.getMaxHP() - EATING_LOST_HP_THRESHOLD)
+            ai.tryToEat()
+        if (ai.owner.getGold() <= LOW_HEAT_THRESHOLD)
+            if not ai.currentTask.description.contains("heat")
+                ai.currentTask = new RestoreStatsTask(ai, ai.currentTask)
+        else if troll.getMana() <= SLEEP_ENERGY_THRESHOLD and ai.owner.getGold() >= MINIMUM_SLEEP_HEAT and not ai.currentTask.description.contains("heat")
+            ai.tryToSleepOutside()
+
+    function timeSinceCreation() returns real
+        return ai.runTime - this.creationTimestamp
+
+    abstract function runActions()
+
+    ondestroy
+        //Destroy the resumetask if this task is abruptly destroyed
+        if afterFinishResumeTask != null and not ranFinishFunction
+            destroy afterFinishResumeTask

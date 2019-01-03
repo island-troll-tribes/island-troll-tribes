@@ -1,0 +1,59 @@
+package TrollPickTask
+import AITask
+import Tribe
+import initlater AIPlayer
+import ClosureForGroups
+import PlayerExtensions
+import LinkedList
+import GameConfig
+
+public class TrollPickTask extends AITask
+    construct(AIPlayer ai)
+        super(ai, "Picking troll", null)
+
+    override function runActions()
+        //Give others time to pick first
+        if this.runTime >= (gameConfig.getSelectionTimeAllowed().toReal() * 0.5).ceil()
+            let maybeTroll = ai.owner.getTroll()
+            if maybeTroll == null
+                let tribe = Tribe.ofPlayer(ai.owner)
+                if tribe != null
+                    //Find totem
+                    forUnitsInRect(tribe.getSpawn()) u ->
+                        if u.getTypeId() == UNIT_TROLL_TOTEM
+                            pickTroll(u, tribe)
+            else
+                isCompleted = true
+
+    override function onCreation()
+        ai.printMessageToTeam("I would like to pick gatherer or hunter!")
+
+    function pickTroll(unit totem, Tribe tribe)
+        //See which trolls are picked and try to pick
+        LinkedList<int> pickedTrolls = new LinkedList<int>()
+        for p in tribe.getMembers()
+            if p.getTroll() != null
+                pickedTrolls.push(p.getTroll().getTypeId())
+
+        //Retarded decision tree
+        if not pickedTrolls.has(UNIT_GATHERER)
+            IssueNeutralImmediateOrderById(ai.owner, totem, UNIT_GATHERER)
+        else if not pickedTrolls.has(UNIT_HUNTER) and not pickedTrolls.has(UNIT_HUNTER_1)
+            IssueNeutralImmediateOrderById(ai.owner, totem, UNIT_HUNTER)
+        else if not pickedTrolls.has(UNIT_SCOUT)
+            IssueNeutralImmediateOrderById(ai.owner, totem, UNIT_SCOUT)
+        else if not pickedTrolls.has(UNIT_BEAST_MASTER) and not pickedTrolls.has(UNIT_BEAST_MASTER_1)
+            IssueNeutralImmediateOrderById(ai.owner, totem, UNIT_BEAST_MASTER)
+        else if not pickedTrolls.has(UNIT_THIEF)
+            IssueNeutralImmediateOrderById(ai.owner, totem, UNIT_THIEF)
+        else if not pickedTrolls.has(UNIT_MAGE) and not pickedTrolls.has(UNIT_MAGE_1)
+            IssueNeutralImmediateOrderById(ai.owner, totem, UNIT_MAGE)
+        else
+            IssueNeutralImmediateOrderById(ai.owner, totem, UNIT_PRIEST)
+
+        destroy pickedTrolls
+
+    ondestroy
+        //Destroy the resumetask if this task is abruptly destroyed
+        if afterFinishResumeTask != null and not ranFinishFunction
+            destroy afterFinishResumeTask

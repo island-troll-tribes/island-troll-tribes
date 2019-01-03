@@ -1,0 +1,131 @@
+package RestoreStatsTask
+
+
+import AITask
+import initlater AIPlayer
+import ClosureForGroups
+import Orders
+import UseSleepBuildingTask
+
+constant let STUCK_RANGE_THRESHOLD = 300
+constant let PANIC_MINIMUM_ENERGY = 80
+constant let CAMPFIRE_SLEEP_MAX_ENERGY = 140
+constant let CAMPFIRE_SLEEP_MINIMUM_HP = 100
+constant let MOVEMENT_SPAM_INTERVAL = 0.5
+
+public class RestoreStatsTask extends AITask
+    vec2 lastPos
+    real lastUnstuckTimestamp
+    construct(AIPlayer ai, AITask afterFinishResumeTask)
+        super(ai, "Recovering heat at campfire", afterFinishResumeTask)
+        this.lastPos = ai.getTroll().getPos()
+        this.lastUnstuckTimestamp = 0
+
+    override function watchStats()
+        let troll = ai.getTroll()
+        if (troll.getHP() <= troll.getMaxHP() - EATING_LOST_HP_THRESHOLD)
+            ai.tryToEat()
+
+    override function runActions()
+        //Stop if the task is too old
+        if timeSinceCreation() >= 60
+            this.isCompleted = true
+            return
+
+        //Run stuck check every 5 seconds
+        if runTime - lastUnstuckTimestamp >= 5 and this.runTime >= 5
+            if(areWeStuck())
+                this.isCompleted = true
+                return
+
+        let nearbyCampfire = getNearbyCampfire(230)
+        let sleepBuilding = getNearbySleepBuilding(BASE_BUILDINGS_RADIUS)
+
+        if ai.owner.getGold() >= 90
+            this.isCompleted = true
+            return
+        else if nearbyCampfire == null and not areWeInBaseRadius()
+            maybePanic()
+            if ai.timeSinceLastAIOrder() >= MOVEMENT_SPAM_INTERVAL
+                walkToCampfireOrBase()
+        else if (ai.getTroll().getMana()/ai.getTroll().getMaxMana()) <= 0.85 and sleepBuilding != null
+            //If we are in base and not at full-ish mana, might as well sleep
+            ai.currentTask = new UseSleepBuildingTask(ai, sleepBuilding, this)
+        else if nearbyCampfire != null
+            //Might as well use the heat ability manually
+            nearbyCampfire.issueTargetOrderById(Orders.faeriefire, ai.getTroll())
+
+            //Also use sleep outside near fires if necessary
+            if ai.getTroll().getMana() <= CAMPFIRE_SLEEP_MAX_ENERGY and ai.getTroll().getHP() >= CAMPFIRE_SLEEP_MINIMUM_HP
+                ai.tryToSleepOutside()
+
+    function walkToCampfireOrBase()
+        //Get fires in 1000 range
+        let campfire = getNearbyCampfire(1000)
+        if campfire == null
+            moveToBasePosition()
+        else
+            ai.issueAIOrderPoint(Orders.move, campfire.getPos())
+
+    function areWeInBaseRadius() returns bool
+        return ai.getTroll().getPos().distanceToSq(ai.getApproximateBasePos()) <= 300*300
+
+    function getNearbySleepBuilding(real radius) returns unit
+        let trollPos = ai.getTroll().getPos()
+        let owner = ai.owner
+        unit sleepBuilding = null
+        //Get fires in 1000 range
+        let tempGroup = CreateGroup()..enumUnitsInRange(trollPos, radius, Filter(-> GetFilterUnit().getTypeId() == UNIT_MUD_HUT or GetFilterUnit().getTypeId() == UNIT_TENT or GetFilterUnit().getTypeId() == UNIT_TROLL_HUT ))
+
+        //Remove buildings without an allied owner
+        tempGroup.forEachIn() u ->
+            if not u.getOwner().isAllyOf(owner)
+                tempGroup.removeUnit(u)
+
+        if tempGroup.size() >= 1
+            sleepBuilding = tempGroup.getRandomUnit()
+
+        return sleepBuilding
+
+    function getNearbyCampfire(real radius) returns unit
+        return getNearbyCampfireAlliedTo(ai.getTroll().getPos(), radius, ai.owner)
+
+    function getNearbySleepBuilding() returns unit
+        let trollPos = ai.getTroll().getPos()
+        let owner = ai.owner
+        unit sleepBuilding = null
+        //Get fires in 1000 range
+        let tempGroup = CreateGroup()..enumUnitsInRange(trollPos, BASE_ITEMS_RADIUS, Filter(-> GetFilterUnit().getTypeId() == UNIT_MUD_HUT or GetFilterUnit().getTypeId() == UNIT_TENT or GetFilterUnit().getTypeId() == UNIT_TROLL_HUT ))
+
+        //Remove buildings without an allied owner
+        tempGroup.forEachIn() u ->
+            if not u.getOwner().isAllyOf(owner)
+                tempGroup.removeUnit(u)
+
+        if tempGroup.size() >= 1
+            sleepBuilding = tempGroup.getRandomUnit()
+
+        return sleepBuilding
+
+    function maybePanic()
+        if ai.getTroll().getMana() >= PANIC_MINIMUM_ENERGY
+            ai.tryToUsePanic()
+
+    function moveToBasePosition()
+        ai.issueAIOrderPoint(Orders.move, ai.getApproximateBasePos())
+
+    function areWeStuck() returns bool
+        //If we are roughly in the same position as last checkstuck, assume we are stuck
+        let curPos = ai.getTroll().getPos()
+        if curPos.distanceToSq(lastPos) <= STUCK_RANGE_THRESHOLD*STUCK_RANGE_THRESHOLD
+            lastPos = curPos
+            this.lastUnstuckTimestamp = runTime
+            return true
+        lastPos = curPos
+        this.lastUnstuckTimestamp = runTime
+        return false
+
+    ondestroy
+        //Destroy the resumetask if this task is abruptly destroyed
+        if afterFinishResumeTask != null and not ranFinishFunction
+            destroy afterFinishResumeTask

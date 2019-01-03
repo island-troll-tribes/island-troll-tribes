@@ -1,0 +1,461 @@
+package AIPlayer
+import initlater AIManager
+import AITask
+import WaitForPlayerOrdersTask
+import PlayerExtensions
+import Tribe
+import Orders
+import LinkedList
+import ClosuresForItems
+import ClosureEvents
+import ClosureForGroups
+import HuntAnimalTask
+import PickupItemTask
+import TrollPickTask
+import ExploreIslandTask
+import HashMap
+import ID
+
+public constant let ITEM_MEMORIZATION_RANGE = 6000
+public constant let BASE_ITEMS_RADIUS = 800.
+public constant let BASE_BUILDINGS_RADIUS = 1200.
+public constant let SLEEP_ENERGY_THRESHOLD = 80
+public constant let MINIMUM_SLEEP_HEAT = 40
+public constant let LOW_HEAT_THRESHOLD = 30
+public constant let EATING_LOST_HP_THRESHOLD = 60
+public constant let BASE_APPROXIMATION_INTERVAL = 60.
+public constant let ITEM_MEMORIZATION_INTERVAL = 1.5
+public constant let PLAYER_ORDER_PAUSE_DURATION = 4.
+public constant let ITEM_PICKUP_RANGE = 3000.
+public constant let ANIMAL_HUNT_RANGE = 1400.
+constant let ENSNARE_ID = 'Aweb'
+constant let TRACK_ID = 'A01O'
+constant let ORDER_ID_MOVE = 851986
+constant let ORDER_ID_STUNNED = 851973
+public HashMap<int, real> itemEffortMap = null
+
+init
+    initItemPickupEffort()
+
+function initItemPickupEffort()
+    //Contains the extra distance that AI is willing to walk to prefer picking up item over another
+    itemEffortMap = new HashMap<int, real>()
+    itemEffortMap.put(ITEM_MANA_CRYSTAL, 1300)
+    itemEffortMap.put(ITEM_JUNGLE_BEAR_HIDE, 1200)
+    itemEffortMap.put(ITEM_STONE, 1100)
+    itemEffortMap.put(ITEM_FLINT, 1000)
+    itemEffortMap.put(ITEM_JUNGLE_WOLF_HIDE, 900)
+    itemEffortMap.put(ITEM_ELK_HIDE, 800)
+    itemEffortMap.put(ITEM_FIRE_KIT, -100)
+    itemEffortMap.put(ITEM_CLAY_BALL, -200)
+    itemEffortMap.put(ITEM_STICK, -500)
+    itemEffortMap.put(ITEM_TINDER, -900)
+    itemEffortMap.put(ITEM_BONE, -1300)
+    itemEffortMap.put(ITEM_MUSHROOM, -1400)
+
+public class AIPlayer
+    player owner
+    unit cachedTroll
+    AITask currentTask
+    texttag taskDisplayText
+    real runTime
+    real itemsMemorizedTimestamp
+    real lastPlayerOrderReceivedTimestamp
+    real lastAIOrderReceivedTimestamp
+    real timeBeforeNextOrder
+    real lastBaseApproximationTimestamp
+    bool gameHasStarted
+    LinkedList<item> memorizedGroundItems
+    EventListener orderListenerPoint
+    EventListener orderListenerTarget
+    bool orderListenersEnabled
+    vec2 cachedBaseLocation
+    vec2 averageClusterPos
+    int biggestClusterFound
+    Comparator<item> itemComparator
+    Comparator<unit> huntAnimalComparator
+    LinkedList<unit> carriedMeat
+    EventListener meatPickupListener
+
+    construct(player owner)
+        this.owner = owner
+        this.currentTask = null
+        this.cachedTroll = null
+        this.taskDisplayText = null
+        this.memorizedGroundItems = new LinkedList<item>()
+        this.itemsMemorizedTimestamp = 0
+        this.lastAIOrderReceivedTimestamp = 0
+        this.lastBaseApproximationTimestamp = -BASE_APPROXIMATION_INTERVAL
+        this.lastPlayerOrderReceivedTimestamp = -PLAYER_ORDER_PAUSE_DURATION
+        this.gameHasStarted = false
+        this.orderListenersEnabled = true
+        this.timeBeforeNextOrder = 0
+        this.carriedMeat = new LinkedList<unit>()
+        this.cachedBaseLocation = vec2(0,0)
+        this.averageClusterPos = vec2(0,0)
+        this.itemComparator = (a, b) -> itemSorterFunction(a,b)
+        this.huntAnimalComparator = (a, b) -> huntAnimalSorterFunction(a,b)
+        this.meatPickupListener = EventListener.add(EVENT_PLAYER_UNIT_LOADED) ->
+            if GetTransportUnit() == this.getTroll() and not this.carriedMeat.has(GetLoadedUnit())
+                this.carriedMeat.add(GetLoadedUnit())
+        StartMeleeAI(owner, "")
+        PauseCompAI(owner, true)
+
+        this.orderListenerPoint = EventListener.add(EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER) ->
+            let orderId = GetIssuedOrderId()
+            if GetOrderedUnit() == this.getTroll() and this.orderListenersEnabled and not orderId == ORDER_ID_STUNNED and not orderId == ORDER_ID_MOVE
+                print(OrderId2String(GetIssuedOrderId()) + " order received." + orderId.toString())
+                this.onPlayerOrder()
+
+        this.orderListenerTarget = EventListener.add(EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER) ->
+            let orderId = GetIssuedOrderId()
+            if GetOrderedUnit() == this.getTroll() and this.orderListenersEnabled and not orderId == ORDER_ID_STUNNED and not orderId == ORDER_ID_MOVE
+                print(OrderId2String(GetIssuedOrderId()) + " order received. ID: " + orderId.toString())
+                this.onPlayerOrder()
+
+        print("Initialized AI for player: " + owner.getColor().toColor().toColorString() + owner.getName() + " |r(Index " + owner.getId().toString() + ")")
+
+    function onPlayerOrder()
+        this.lastPlayerOrderReceivedTimestamp = this.runTime
+        if not this.currentTask.description.contains("player order")
+            this.currentTask = new WaitForPlayerOrdersTask(this, this.currentTask)
+
+    function updateLoop()
+        if getTroll() != null and this.runTime - itemsMemorizedTimestamp >= ITEM_MEMORIZATION_INTERVAL and this.gameHasStarted
+            itemsMemorizedTimestamp = this.runTime
+            cleanupMemorizedItems()
+            memorizeVisibleItems()
+
+        if this.gameHasStarted and this.runTime - lastPlayerOrderReceivedTimestamp >= PLAYER_ORDER_PAUSE_DURATION and this.currentTask != null
+            this.currentTask.watchStats()
+
+        if this.currentTask == null
+            getNextTask()
+        else
+            this.currentTask.run()
+
+        displayCurrentTaskText()
+        this.runTime += AI_UPDATE_PERIOD
+
+    function getTroll() returns unit
+        if this.cachedTroll == null
+            this.cachedTroll = owner.getTroll()
+
+        return this.cachedTroll
+
+    function getNextTask()
+        if getTroll() == null
+            currentTask = new TrollPickTask(this)
+        else if (getTroll() != null and getTroll().isAlive() and gameHasStarted)
+            currentTask = new ExploreIslandTask(this)
+        else
+            currentTask = null
+
+    function tryToSleepOutside() returns bool
+        let troll = getTroll()
+        let SLEEP_ID = 'A007'
+        if troll != null
+            if troll.hasAbility(SLEEP_ID) and troll.getAbilityCooldownRemaining(SLEEP_ID) == 0
+                return issueAIOrderTarget(Orders.sleep, troll)
+        return false
+
+    function isEnsnareReady() returns bool
+        let troll = getTroll()
+        return troll != null and troll.hasAbility(ENSNARE_ID) and troll.getAbilityCooldownRemaining(ENSNARE_ID) == 0
+
+    function tryToEnsnareTarget(unit target) returns bool
+        if isEnsnareReady()
+            return issueAIOrderTarget(Orders.web, target)
+        return false
+
+    function isTrackReady() returns bool
+        let troll = getTroll()
+        return troll != null and troll.hasAbility(TRACK_ID) and troll.getAbilityCooldownRemaining(TRACK_ID) == 0
+
+    function tryToTrackTarget(unit target) returns bool
+        if isTrackReady()
+            return issueAIOrderTarget(Orders.faeriefire, target)
+        return false
+
+    function tryToEat() returns bool
+        let troll = getTroll()
+        var food = troll.getItemById(ITEM_ACORN)
+        if food == null
+            food = troll.getItemById(ITEM_DISEASED_MEAT)
+        if food == null
+            food = troll.getItemById(ITEM_SMOKED_MEAT)
+        if food == null
+            food = troll.getItemById(ITEM_COOKED_MEAT)
+        if food == null
+            food = troll.getItemById(ITEM_MAGIC_ACORN)
+
+        if food != null
+            troll.useItem(food)
+            return true
+        else
+            return false
+
+    function tryToUsePanic() returns bool
+        let troll = getTroll()
+        let PANIC_ID = 'A010'
+        let PANIC_BUFF_ID = 'Bbsk'
+
+        if troll != null
+            if troll.hasAbility(PANIC_ID) and troll.getAbilityCooldownRemaining(PANIC_ID) == 0 and troll.getMana() >= troll.getAbilityManaCost(PANIC_ID, 1) and not troll.hasAbility(PANIC_BUFF_ID)
+                return issueAIOrderImmediate(Orders.berserk)
+        return false
+
+    function printMessageToTeam(string message)
+        let tribe = Tribe.ofPlayer(owner)
+        if tribe != null
+            for p in tribe.getMembers()
+                string name = owner.getName()
+                if getTroll() != null
+                    name = getTroll().getName()
+                printTimedToPlayer(owner.getColor().toColor().toColorString() + name + " (AI)|r: " + message, 10, p)
+
+    function displayCurrentTaskText()
+        let troll = getTroll()
+
+        string taskstring = "No task"
+        if currentTask != null
+            taskstring = currentTask.description
+        taskstring += "\nMemorized items: " + memorizedGroundItems.size().toString()
+
+        if taskDisplayText == null and troll != null
+            taskDisplayText = createTTEx(troll.getPos().withTerrainZ(75), "Task: " + taskstring, 9., colorA(255, 255, 255, 255))
+            taskDisplayText.setPermanent(true)
+        else if taskDisplayText != null and troll != null
+            taskDisplayText.setPos(troll.getPos().withTerrainZ(75))
+            taskDisplayText.setText( "Task: " + taskstring, 9)
+        else if troll == null and taskDisplayText != null
+            taskDisplayText.destr()
+            taskDisplayText = null
+
+    function memorizeVisibleItems()
+        let trollPos = getTroll().getPos()
+        let basePos = getApproximateBasePos()
+        forItemsInMap() itm ->
+            let itemPos = itm.getPos()
+            if itemPos.distanceToSq(trollPos) <= ITEM_MEMORIZATION_RANGE * ITEM_MEMORIZATION_RANGE and itm.isVisible() and IsVisibleToPlayer(itemPos.x, itemPos.y, owner) and itemPos.distanceToSq(basePos) > BASE_ITEMS_RADIUS*BASE_ITEMS_RADIUS
+                if not memorizedGroundItems.has(itm)
+                    memorizedGroundItems.add(itm)
+
+    function cleanupMemorizedItems()
+        let basePos = getApproximateBasePos()
+
+        for itm in memorizedGroundItems
+            if itm.getPos().distanceToSq(basePos) <= BASE_ITEMS_RADIUS*BASE_ITEMS_RADIUS
+                memorizedGroundItems.remove(itm)
+            else if not itm.isAlive()
+                memorizedGroundItems.remove(itm)
+            else
+                for troll in udg_trolls
+                    if troll.hasItem(itm)
+                        memorizedGroundItems.remove(itm)
+
+    function getApproximateBasePos() returns vec2
+        if (runTime - lastBaseApproximationTimestamp >= BASE_APPROXIMATION_INTERVAL)
+            lastBaseApproximationTimestamp = runTime
+
+            //Store cluster size in class variable for closure to modify
+            this.biggestClusterFound = 0
+            forUnitsAll() u ->
+                if u.isType(UNIT_TYPE_STRUCTURE) and u.getOwner().isAllyOf(owner) and not u.getOwner() == playerFromIndex(PLAYER_NEUTRAL_PASSIVE)
+                    let tempGroup = getNearbyBuildingsAlliedTo(u.getPos(), 1200, owner)
+                    if tempGroup.size() >= 2 and tempGroup.size() >= this.biggestClusterFound
+                        this.biggestClusterFound = tempGroup.size()
+                        this.averageClusterPos = vec2(0,0)
+                        tempGroup.forEachIn() u2 ->
+                            this.averageClusterPos = this.averageClusterPos + u2.getPos()
+                        this.averageClusterPos = this.averageClusterPos.op_div(this.biggestClusterFound.toReal())
+                    tempGroup.destr()
+
+            if this.biggestClusterFound >= 2
+                //Try to find campfire among buildings and return its position instead
+                let baseCampfire = getNearbyCampfireAlliedTo(this.averageClusterPos, BASE_BUILDINGS_RADIUS, owner)
+                if baseCampfire == null
+                    //Otherwise just return average pos of the building cluster
+                    this.cachedBaseLocation = this.averageClusterPos
+                    return this.cachedBaseLocation
+                else
+                    //If found campfire in base, treat that as base location
+                    this.cachedBaseLocation = baseCampfire.getPos()
+                    return cachedBaseLocation
+            else
+                //Otherwise return spawn if no building clusters found
+                this.cachedBaseLocation = Tribe.ofPlayer(owner).spawn.getCenter()
+                return this.cachedBaseLocation
+        else
+            return this.cachedBaseLocation
+
+    function issueAIOrderTarget(int orderId, widget target) returns bool
+        this.timeBeforeNextOrder = 0
+        this.lastAIOrderReceivedTimestamp = runTime
+        this.orderListenersEnabled = false
+        let retVal = getTroll().issueTargetOrderById(orderId, target)
+        this.orderListenersEnabled = true
+        return retVal
+
+    function issueAIOrderImmediate(int orderId) returns bool
+        this.timeBeforeNextOrder = 0
+        this.lastAIOrderReceivedTimestamp = runTime
+        this.orderListenersEnabled = false
+        let retVal = getTroll().issueImmediateOrderById(orderId)
+        this.orderListenersEnabled = true
+        return retVal
+
+    function issueAIOrderPoint(int orderId, vec2 targetPoint) returns bool
+        this.timeBeforeNextOrder = 0
+        this.lastAIOrderReceivedTimestamp = runTime
+        this.orderListenersEnabled = false
+        let retVal = getTroll().issuePointOrderById(orderId, targetPoint)
+        this.orderListenersEnabled = true
+        return retVal
+
+    function timeSinceLastAIOrder() returns real
+        return this.runTime - this.lastAIOrderReceivedTimestamp
+
+    function getBestItemToPickup() returns item
+        let trollPos = getTroll().getPos()
+        memorizedGroundItems.sortWith(itemComparator)
+
+        //Iterate sorted list from nearest to furthest and get first valid result
+        for itm in memorizedGroundItems
+            var extraDistance = 0.
+            if itemEffortMap.has(itm.getTypeId())
+                extraDistance = itemEffortMap.get(itm.getTypeId())
+
+            if isItemWorthLooting(itm) and itm.getPos().distanceToSq(trollPos) <= (ITEM_PICKUP_RANGE+extraDistance)*(ITEM_PICKUP_RANGE+extraDistance)
+                return itm
+        return null
+
+    function getBestAnimalToHunt() returns unit
+        //Get neutral aggressive units
+        let trollPos = getTroll().getPos()
+        unit huntTarget = null
+
+        //Find all animals
+        let tempGroup = CreateGroup()
+        ..enumUnitsInRange(getTroll().getPos(), ANIMAL_HUNT_RANGE, Filter(-> begin
+            return GetFilterUnit().getOwner() == playerFromIndex(PLAYER_NEUTRAL_AGGRESSIVE) and GetFilterUnit().isAlive()
+        end))
+
+        //Remove non-visible units
+        for u in tempGroup
+            if not IsUnitVisible(u, owner)
+                tempGroup.removeUnit(u)
+
+        //Sort by distance
+        let sortedByDistance = tempGroup.asList()
+        sortedByDistance.sortWith(huntAnimalComparator)
+
+        //Iterate from nearest towards furthest until we find a valid type
+        for animal in sortedByDistance
+            if (animal.getTypeId() == UNIT_ELK or animal.getTypeId() == UNIT_HAWK)
+                huntTarget = animal
+                break
+
+        tempGroup.destr()
+        destroy sortedByDistance
+        return huntTarget
+
+    function itemSorterFunction(item a, item b) returns int
+        let troll = getTroll()
+        let trollPos = troll.getPos()
+        let distanceA = a.getPos().distanceTo(trollPos)
+        let distanceB = b.getPos().distanceTo(trollPos)
+        var bonusEffortA = 0.
+        var bonusEffortB = 0.
+        if itemEffortMap.has(a.getTypeId())
+            bonusEffortA = itemEffortMap.get(a.getTypeId())
+        if itemEffortMap.has(b.getTypeId())
+            bonusEffortB = itemEffortMap.get(b.getTypeId())
+        return ((distanceA-bonusEffortA)-(distanceB-bonusEffortB)).round()
+
+    function isItemWorthLooting(item itm) returns boolean
+        let troll = getTroll()
+        let trollType = troll.getTypeId()
+        let itemType = itm.getTypeId()
+        if trollType == UNIT_HUNTER
+            if itm.getTypeId() == ITEM_ELK_HIDE or itm.getTypeId() == ITEM_STONE
+                or itm.getTypeId() == ITEM_FLINT or itm.getTypeId() == ITEM_MANA_CRYSTAL
+                or itm.getTypeId() == ITEM_JUNGLE_BEAR_HIDE or itm.getTypeId() == ITEM_JUNGLE_WOLF_HIDE
+                or itm.getTypeId() == ITEM_HAWK_EGG
+                return true
+            else
+                return false
+        else
+            return true
+
+    function checkAnimalsToKill() returns bool
+        let killUnit = getBestAnimalToHunt()
+        if killUnit != null
+            this.currentTask = new HuntAnimalTask(this, killUnit, this.currentTask)
+            return true
+        return false
+
+    function checkItemsToPickup() returns bool
+        let pickupItem = getBestItemToPickup()
+        if pickupItem != null
+            this.currentTask = new PickupItemTask(this, pickupItem, this.currentTask)
+            return true
+        return false
+
+    function huntAnimalSorterFunction(unit a, unit b) returns int
+        let trollPos = getTroll().getPos()
+        return (trollPos.distanceToSq(a.getPos())-trollPos.distanceToSq(b.getPos())).round()
+
+    ondestroy
+        destroy memorizedGroundItems
+        destroy orderListenerPoint
+        destroy orderListenerTarget
+        destroy itemComparator
+        destroy huntAnimalComparator
+        destroy meatPickupListener
+        destroy carriedMeat
+
+
+public function getNearbyCampfireAlliedTo(vec2 pos, real radius, player whoseAlly) returns unit
+    unit campFire = null
+
+    //Get fires within radius
+    let tempGroup = CreateGroup()..enumUnitsInRange(pos, radius, Filter(-> GetFilterUnit().getTypeId() == UNIT_FIRE or GetFilterUnit().getTypeId() == UNIT_MAGE_FIRE or GetFilterUnit().getTypeId() == UNIT_MAGE_FIRE_SUMMONED ))
+
+    //Remove buildings without an allied owner
+    tempGroup.forEachIn() u ->
+        if not u.getOwner().isAllyOf(whoseAlly) or u.getOwner() == playerFromIndex(PLAYER_NEUTRAL_PASSIVE)
+            tempGroup.removeUnit(u)
+
+    if tempGroup.size() >= 1
+        campFire = tempGroup.getRandomUnit()
+
+    tempGroup.destr()
+    return campFire
+
+function getNearbySleepBuildingAlliedTo(vec2 pos, real radius, player whoseAlly) returns unit
+    unit sleepBuilding = null
+
+    //Get sleeping buildings withing radius
+    let tempGroup = CreateGroup()..enumUnitsInRange(pos, radius, Filter(-> GetFilterUnit().getTypeId() == UNIT_MUD_HUT or GetFilterUnit().getTypeId() == UNIT_TENT or GetFilterUnit().getTypeId() == UNIT_TROLL_HUT ))
+
+    //Remove buildings without an allied owner
+    tempGroup.forEachIn() u ->
+        if not u.getOwner().isAllyOf(whoseAlly) or u.getOwner() == playerFromIndex(PLAYER_NEUTRAL_PASSIVE)
+            tempGroup.removeUnit(u)
+
+    if tempGroup.size() >= 1
+        sleepBuilding = tempGroup.getRandomUnit()
+    tempGroup.destr()
+    return sleepBuilding
+
+public function getNearbyBuildingsAlliedTo(vec2 pos, real radius, player whoseAlly) returns group
+    //Get buildings within radius
+    let tempGroup = CreateGroup()..enumUnitsInRange(pos, radius, Filter(-> GetFilterUnit().isType(UNIT_TYPE_STRUCTURE)))
+
+    //Remove buildings without an allied owner
+    tempGroup.forEachIn() u ->
+        if not u.getOwner().isAllyOf(whoseAlly) or u.getOwner() == playerFromIndex(PLAYER_NEUTRAL_PASSIVE)
+            tempGroup.removeUnit(u)
+
+    return tempGroup

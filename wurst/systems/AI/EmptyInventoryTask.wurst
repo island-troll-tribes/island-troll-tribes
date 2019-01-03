@@ -1,0 +1,125 @@
+package EmptyInventoryTask
+
+import AITask
+import initlater AIPlayer
+import ClosureEvents
+import TerrainUtils
+import Orders
+import ID
+
+constant let WAYPOINT_RANGE_THRESHOLD = 350
+constant let STUCK_RANGE_THRESHOLD = 300
+constant let RANDOM_DROPOFF_AREA_RADIUS = 250.
+constant let PANIC_MINIMUM_ENERGY = 80
+
+public class EmptyInventoryTask extends AITask
+    vec2 lastPos
+    vec2 basePos
+    real lastUnstuckTimestamp
+    real lastItemDropOrderTimestamp
+    real lastItemChecktimestamp
+    real lastItemDropTimestamp
+    EventListener dropItemListener
+
+
+    construct(AIPlayer ai, vec2 targetPos, AITask afterFinishResumeTask)
+        super(ai, "Emptying inventory", afterFinishResumeTask)
+        this.lastPos = ai.getTroll().getPos()
+        this.basePos = targetPos
+        this.lastItemDropOrderTimestamp = 0
+        this.lastItemDropTimestamp = 0
+        this.lastUnstuckTimestamp = 0
+        this.lastItemChecktimestamp = 0
+
+        dropItemListener = EventListener.add(EVENT_PLAYER_UNIT_DROP_ITEM) ->
+            if GetTriggerUnit() == ai.getTroll()
+                this.lastItemDropTimestamp = runTime
+
+    override function runActions()
+        //Run stuck check every 5 seconds
+        if this.runTime - this.lastUnstuckTimestamp >= 5 and this.runTime >= 5
+            if(areWeStuck())
+                this.isCompleted = true
+                return
+
+        checkSubtasks()
+
+        if ai.getTroll().itemCount() == 0
+            this.isCompleted = true
+            return
+        else if not areWeNearBase()
+            maybePanic()
+            moveToUnloadPosition()
+        else if areWeNearBase() and (this.runTime - lastItemDropOrderTimestamp >= 5 or this.lastItemDropTimestamp >= this.lastItemDropOrderTimestamp)
+            unloadInventoryToBase()
+
+    function checkSubtasks()
+        checkForAnimalsToHunt()
+        checkForBetterItems()
+
+    function checkForBetterItems() returns bool
+        if runTime - lastItemChecktimestamp >= 1
+        lastItemChecktimestamp = runTime
+        let pickupItem = ai.getBestItemToPickup()
+        /*
+        if pickupItem != null && is close enough && is better than some of our items
+            this.ai.currentTask = new PickupItemTask(ai, pickupItem, this)
+            return true
+            */
+        return false
+    function checkForAnimalsToHunt() returns bool
+        if ai.getTroll().getTypeId() == UNIT_HUNTER
+            if ai.checkAnimalsToKill()
+                return true
+        return false
+
+    function unloadInventoryToBase()
+        let troll = ai.getTroll()
+
+        for i = 0 to troll.inventorySize()-1
+            let itm = troll.itemInSlot(i)
+            if itm != null
+                troll.dropItemPoint(itm, getWalkablePosNearBase())
+                lastItemDropOrderTimestamp = runTime
+                return
+
+
+    function getWalkablePosNearBase() returns vec2
+        var pos = basePos.polarOffset(angle(GetRandomReal(-bj_PI, bj_PI)), GetRandomReal(RANDOM_DROPOFF_AREA_RADIUS/3, RANDOM_DROPOFF_AREA_RADIUS))
+
+        //Up to 20 attempts to re-random and find walkable pos
+        for i = 1 to 20
+            if not pos.isTerrainWalkable()
+                pos = basePos.polarOffset(angle(GetRandomReal(-bj_PI, bj_PI)), GetRandomReal(RANDOM_DROPOFF_AREA_RADIUS/3, RANDOM_DROPOFF_AREA_RADIUS))
+                if i == 20
+                    print("ERROR: Unable to find walkable spot to drop items!")
+                    this.isCompleted = true
+                    return basePos
+        return pos
+
+    function areWeNearBase() returns bool
+        return ai.getTroll().getPos().distanceToSq(basePos) <= WAYPOINT_RANGE_THRESHOLD*WAYPOINT_RANGE_THRESHOLD
+
+    function maybePanic()
+        if ai.getTroll().getMana() >= PANIC_MINIMUM_ENERGY
+            ai.tryToUsePanic()
+
+    function moveToUnloadPosition()
+        ai.issueAIOrderPoint(Orders.move, basePos)
+
+    function areWeStuck() returns bool
+        //If we are roughly in the same position as last checkstuck, assume we are stuck
+        let curPos = ai.getTroll().getPos()
+        if curPos.distanceToSq(lastPos) <= STUCK_RANGE_THRESHOLD*STUCK_RANGE_THRESHOLD
+            lastPos = curPos
+            this.lastUnstuckTimestamp = runTime
+            return true
+        lastPos = curPos
+        this.lastUnstuckTimestamp = runTime
+        return false
+
+    ondestroy
+        //Destroy the resumetask if this task is abruptly destroyed
+        if afterFinishResumeTask != null and not ranFinishFunction
+            destroy afterFinishResumeTask
+        destroy dropItemListener

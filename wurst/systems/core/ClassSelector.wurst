@@ -89,7 +89,7 @@ public class ClassSelector
         ..display(true)
 
         clock.doAfter(selectionTime.toReal()) ->
-            values(spawns).forEach(spawner -> spawner.endSelection())
+            values(spawns).each(spawner -> spawner.endSelection())
             gg_trg_boards.execute()
             generateMap()
             clockDialog.destr()
@@ -149,7 +149,7 @@ public class ClassSelector
 
     private function initializePickers()
         let pos = spawn.getCenter()
-        tribe.getMembers().forEach() member ->
+        for member in tribe.getMembers()
             pickers.push(createUnit(member, UNIT_HERO_PICKER, pos.polarOffset(angle(PI), 1200), angle(0)))
             member.setLumber(3)
             member.panCamToTimed(totem, 0)
@@ -161,7 +161,7 @@ public class ClassSelector
             let owner = tribe.getMembers().getFirst()
             createUnit(owner, UNIT_FIRE, spawn.getCenter(), angle(0))
 
-        tribe.getMembers().forEach() member ->
+        for member in tribe.getMembers()
             var troll = member.getTroll()
             if troll == null
                 troll = getRandomTroll(member)
@@ -173,9 +173,7 @@ public class ClassSelector
             ..unpause()
 
         totem.remove()
-
-        pickers.forEach(picker -> picker.remove())
-        destroy pickers
+        pickers.each(picker -> picker.remove())
 
     function getRandomTroll(player p) returns unit
         return pool.placeRandomUnit(p, spawn.randomPoint(), angle(0))

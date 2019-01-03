@@ -10,6 +10,7 @@ import Respawn
 import ShrinkingMap
 import ForcedDuel
 import ChatCommands
+import Commands
 
 let PERIOD = 1.0
 
@@ -48,8 +49,8 @@ class TribeBoard
 
     construct(Tribe tribe)
         this.tribe = tribe
-        this.cb = doPeriodically(PERIOD, cb -> updateBoard())
         createBoard()
+        this.cb = doPeriodically(PERIOD, cb -> updateBoard())
 
     function createBoard()
         let members = tribe.getMembers()
@@ -140,3 +141,14 @@ class TribeBoard
 init
     registerGameStartEvent() ->
         Tribe.getTribes().each(tribe -> new TribeBoard(tribe))
+
+    registerCommandAll("sharetest") (triggerPlayer, args)->
+        //Share control and set game start flag to true for AIs
+        let allianceArgs1 = new LinkedList<string>()
+        let allianceArgs2 = new LinkedList<string>()
+        allianceArgs1.push("sc")
+        allianceArgs2.push("ac")
+        handlePlayerAllianceSettingToggle(playerFromIndex(1), allianceArgs1)
+        handlePlayerAllianceSettingToggle(playerFromIndex(1), allianceArgs2)
+        destroy allianceArgs1
+        destroy allianceArgs2

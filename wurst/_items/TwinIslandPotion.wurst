@@ -23,7 +23,7 @@ import ID
     ..setDefenseReduction(1, 0)
     ..setHeroAbility(false)
     ..setItemAbility(false)
-    ..setCastRange(1, 90000)
+    ..setCastRange(1, 999999)
     ..setCastingTime(1, 0)
     ..setArtEffect("")
     ..setArtCaster("")
@@ -34,20 +34,20 @@ import ID
     ..setBuffs(1, "XTWB")
 
 function onCast()
-    var caster = GetSpellAbilityUnit()
-    var owner = caster.getOwner()
-
+    let caster = GetSpellAbilityUnit()
+    let owner = caster.getOwner()
+    let casterPos = caster.getPos()
     forUnitsAll() u ->
         if u.getOwner().isEnemyOf(owner) and u.isAlive()
             if udg_trolls.contains(u)
                 PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 8, bj_MINIMAPPINGSTYLE_ATTACK, 255, 0, 0)
 
                 //Temporary vision required by dummy
-                var vis = createVision(owner, u.getPos(), 300, true)
+                var vis = createVision(owner, u.getPos(), 200, true)
                 vis.start()
                 doAfter(0.2) ->
                     vis.destr()
-                new IttDummyCaster().castTarget(owner, 'XTWN', 1, Orders.faeriefire, u)
+                new IttDummyCaster().castTarget(owner, 'XTWN', 1, Orders.faeriefire, u, casterPos)
             else if u.getTypeId() == UNIT_SPIRIT_WARD
                 PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 8, bj_MINIMAPPINGSTYLE_SIMPLE, 0, 0, 255)
 

@@ -298,15 +298,25 @@ function onCast(int itemId)
         range = MAX_RANGE
 
     forItemsInMap() i ->
-        if i.getPos().distanceTo(casterPos) < range and i.getTypeId() == itemId
+        if i.getPos().distanceTo(casterPos) < range and i.getTypeId() == itemId and not areHostilesNearItem(owner, i)
             //Vision
-            var vis = createVision(owner, i.getPos(), 200, true)
+            var vis = createVision(owner, i.getPos(), 128, true)
             vis.start()
             doAfter(REVEAL_DURATION) ->
                 vis.destr()
 
             //Ping
-            PingMinimapForForceEx(GetPlayersAllies(owner), i.getPos().x, i.getPos().y, 10, bj_MINIMAPPINGSTYLE_ATTACK, 0, 255, 0)
+            PingMinimapForForceEx(GetPlayersAllies(owner), i.getPos().x, i.getPos().y, 10, bj_MINIMAPPINGSTYLE_SIMPLE, 0, 255, 0)
+
+function areHostilesNearItem(player p, item itm) returns bool
+    let g = CreateGroup()..enumUnitsInRange(itm.getPos(), 350)
+    for u in g
+        if u.getOwner() != playerFromIndex(PLAYER_NEUTRAL_AGGRESSIVE) and u.getOwner().isEnemyOf(p) and (u.isType(UNIT_TYPE_HERO) or u.isType(UNIT_TYPE_STRUCTURE))
+            g.destr()
+            return true
+    g.destr()
+    return false
+
 
 init
     registerSpellEffectEvent(ABILITY_ID_FINDSTONE, () -> onCast(ITEM_STONE))

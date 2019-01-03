@@ -118,26 +118,8 @@ function measureTime takes nothing returns nothing
 endfunction
 
 function updateBoards takes nothing returns nothing
-    local integer BOARD = 1
-    local integer PID = 0
-    local integer numTribes = gameConfig.getNumTribes()
-    call measureTime()
-    loop
-        exitwhen BOARD > numTribes
-        call MultiboardSetTitleText(BOARD_TEAM[BOARD], "Stats - " + gameTimeStr + gracePeriodStr + forcedDuelStr + forestFireStr)
-        loop
-            exitwhen PID > 11
-            if IsPlayerInForce(Player(PID),TEAM[BOARD]) then
-                call MultiboardSetItemValueBJ( BOARD_TEAM[BOARD], 2, PLAYER_INT_BOARD[PID], HEALTH_COLOR+I2S(R2I(GetUnitState(udg_PUnits[PID], UNIT_STATE_LIFE)))+"|r")
-                call MultiboardSetItemValueBJ( BOARD_TEAM[BOARD], 3, PLAYER_INT_BOARD[PID], ENERGY_COLOR+I2S(R2I(GetUnitState(udg_PUnits[PID], UNIT_STATE_MANA)))+"|r")
-                call MultiboardSetItemValueBJ( BOARD_TEAM[BOARD], 4, PLAYER_INT_BOARD[PID], GOLD_COLOR+I2S(GetPlayerState(Player(PID), PLAYER_STATE_RESOURCE_GOLD))+"|r")
-            endif
-            set PID = PID + 1
-        endloop
-        set PID = 0
-        set BOARD = BOARD + 1
-    endloop
     if OBSERVER_BOARD != null then
+        call measureTime()
         call MultiboardSetTitleText(OBSERVER_BOARD, gameTimeStr + gracePeriodStr + forcedDuelStr + forestFireStr)
     endif
 endfunction

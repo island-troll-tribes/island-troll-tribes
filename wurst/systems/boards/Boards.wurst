@@ -1,11 +1,144 @@
 package Boards
 import Game
 import ClosureTimers
-import LegacyTriggers
+import Tribe
+import LinkedList
+import Lodash
+import LegacyColors
+import PlayerExtensions
+import Respawn
+import ShrinkingMap
+import ForcedDuel
+import ChatCommands
 
 let PERIOD = 1.0
 
+let ICON_COOKED_MEAT = "ReplaceableTextures\\CommandButtons\\BTNMonsterLure.blp"
+let ICON_SLEEP = "ReplaceableTextures\\PassiveButtons\\PASBTNElunesBlessing.blp"
+let ICON_HEAT = "ReplaceableTextures\\CommandButtons\\BTNInnerFireOn.blp"
+
+function toTimeString(int numSecs) returns string
+    let sec = numSecs mod 60
+    let min = (numSecs div 60) mod 60
+    let hrs = numSecs div 3600
+    var str = ""
+
+    if hrs > 0
+        str += hrs.toString() + ":"
+
+    if min < 10
+        str += "0"
+    str += min.toString() + ":"
+
+    if sec < 10
+        str += "0"
+    str += sec.toString()
+
+    return str
+
+@Test function testToTimeString()
+    toTimeString(61).assertEquals("01:01")
+    toTimeString(81).assertEquals("01:21")
+    toTimeString(86300).assertEquals("23:58:20")
+
+class TribeBoard
+    Tribe tribe
+    multiboard board
+    CallbackPeriodic cb
+
+    construct(Tribe tribe)
+        this.tribe = tribe
+        this.cb = doPeriodically(PERIOD, cb -> updateBoard())
+        createBoard()
+
+    function createBoard()
+        let members = tribe.getMembers()
+        let shouldShow = tribe.getForce().containsPlayer(localPlayer)
+
+        board = CreateMultiboard()
+        ..setColumnCount(members.size())
+        ..setRowCount(4)
+        ..setTitle("Team Stats")
+
+        var row = 0
+        for member in members
+            board
+            .getItem(row, 0)
+            ..setValue(HIGHLIGHT_COLOR + member.getName())
+            ..setStyle(true, false)
+            ..setWidth(0.1)
+
+            board
+            .getItem(row, 1)
+            ..setIcon(ICON_COOKED_MEAT)
+            ..setStyle(true, true)
+            ..setWidth(0.04)
+
+            board
+            .getItem(row, 2)
+            ..setIcon(ICON_SLEEP)
+            ..setStyle(true, true)
+            ..setWidth(0.04)
+
+            board
+            .getItem(row, 2)
+            ..setIcon(ICON_HEAT)
+            ..setStyle(true, true)
+            ..setWidth(0.04)
+
+            row += 1
+
+            registerCommand(member, "reset-board") (triggerPlayer, args) ->
+                board
+                ..display(false)
+                ..display(shouldShow)
+
+            registerCommand(member, "recreate-board") (triggerPlayer, args) ->
+                board.destr()
+                createBoard()
+
+        board.display(shouldShow)
+
+        destroy members
+
+    function updateBoard()
+        let members = tribe.getMembers()
+
+        var row = 0
+        for member in members
+            let troll = member.getTroll()
+            board.getItem(row, 1).setValue(HEALTH_COLOR + troll.getHP().toInt().toString())
+            board.getItem(row, 2).setValue(ENERGY_COLOR + troll.getMana().toInt().toString())
+            board.getItem(row, 3).setValue(GOLD_COLOR + member.getGold().toString())
+
+            if not member.isIngame()
+                board.getItem(row, 0).setValue(GRAY_COLOR + member.getName())
+
+            row += 1
+
+        let time = GAME_TIMER.getElapsed().toInt()
+        let gpRemaining = GRACE_PERIOD_TIMER.getRemaining().toInt()
+        let fdRemaining = DUEL_TIMER.getRemaining().toInt()
+        let ffRemaining = FOREST_FIRE_TIMER.getRemaining().toInt()
+
+        var title = "Time[" + GENERAL_COLOR + toTimeString(time) + "|r]"
+
+        if gpRemaining > 0
+            title += " - Respawn[" + GREEN_COLOR + toTimeString(gpRemaining) + "|r]"
+
+        if fdRemaining > 0
+            title += " - Duel[" + ENERGY_COLOR + toTimeString(fdRemaining) + "|r]"
+
+        if ffRemaining > 0
+            title += " - Fire[" + RED_COLOR + toTimeString(ffRemaining) + "|r]"
+
+        board.setTitle(title)
+
+        destroy members
+
+
 init
     registerGameStartEvent() ->
-        doPeriodically(PERIOD) cb ->
-            gg_trg_update_boards.execute()
+        print("Initializing tribe boards")
+        Tribe.getTribes().each(tribe -> new TribeBoard(tribe))
+        print("Done initializing tribe boards")

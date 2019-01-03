@@ -53,53 +53,54 @@ class TribeBoard
 
     function createBoard()
         let members = tribe.getMembers()
-        let shouldShow = tribe.getForce().containsPlayer(localPlayer)
 
         board = CreateMultiboard()
-        ..setColumnCount(members.size())
-        ..setRowCount(4)
+        ..setColumnCount(4)
+        ..setRowCount(members.size())
         ..setTitle("Team Stats")
 
         var row = 0
         for member in members
             board
             .getItem(row, 0)
-            ..setValue(HIGHLIGHT_COLOR + member.getName())
             ..setStyle(true, false)
+            ..setValue(HIGHLIGHT_COLOR + member.getName())
             ..setWidth(0.1)
+            ..release()
 
             board
             .getItem(row, 1)
+            ..setStyle(true, true)
             ..setIcon(ICON_COOKED_MEAT)
-            ..setStyle(true, true)
             ..setWidth(0.04)
+            ..release()
 
             board
             .getItem(row, 2)
+            ..setStyle(true, true)
             ..setIcon(ICON_SLEEP)
-            ..setStyle(true, true)
             ..setWidth(0.04)
+            ..release()
 
             board
-            .getItem(row, 2)
-            ..setIcon(ICON_HEAT)
+            .getItem(row, 3)
             ..setStyle(true, true)
+            ..setIcon(ICON_HEAT)
             ..setWidth(0.04)
+            ..release()
+
+            board.display(member, true)
 
             row += 1
 
             registerCommand(member, "reset-board") (triggerPlayer, args) ->
                 board
-                ..display(false)
-                ..display(shouldShow)
+                ..display(member, false)
+                ..display(member, true)
 
             registerCommand(member, "recreate-board") (triggerPlayer, args) ->
                 board.destr()
                 createBoard()
-
-        board.display(shouldShow)
-
-        destroy members
 
     function updateBoard()
         let members = tribe.getMembers()
@@ -107,12 +108,26 @@ class TribeBoard
         var row = 0
         for member in members
             let troll = member.getTroll()
-            board.getItem(row, 1).setValue(HEALTH_COLOR + troll.getHP().toInt().toString())
-            board.getItem(row, 2).setValue(ENERGY_COLOR + troll.getMana().toInt().toString())
-            board.getItem(row, 3).setValue(GOLD_COLOR + member.getGold().toString())
+            board
+            .getItem(row, 1)
+            ..setValue(HEALTH_COLOR + troll.getHP().toInt().toString())
+            ..release()
+
+            board
+            .getItem(row, 2)
+            ..setValue(ENERGY_COLOR + troll.getMana().toInt().toString())
+            ..release()
+
+            board
+            .getItem(row, 3)
+            ..setValue(GOLD_COLOR + member.getGold().toString())
+            ..release()
 
             if not member.isIngame()
-                board.getItem(row, 0).setValue(GRAY_COLOR + member.getName())
+                board
+                .getItem(row, 0)
+                ..setValue(GRAY_COLOR + member.getName())
+                ..release()
 
             row += 1
 
@@ -134,11 +149,7 @@ class TribeBoard
 
         board.setTitle(title)
 
-        destroy members
-
 
 init
     registerGameStartEvent() ->
-        print("Initializing tribe boards")
         Tribe.getTribes().each(tribe -> new TribeBoard(tribe))
-        print("Done initializing tribe boards")

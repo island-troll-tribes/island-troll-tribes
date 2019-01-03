@@ -11,7 +11,6 @@ import TimerDialog
 import TimerUtils
 import RegisterEvents
 import GameMode
-import Game
 import Lodash
 import PublicLibrary
 
@@ -31,6 +30,11 @@ let spawnList = asList(
     gg_rct_revive_11,
     gg_rct_revive_12
 )
+
+let listeners = CreateTrigger()
+
+public function registerClassSelectionEndEvent(code listener)
+    listeners.addAction(listener)
 
 public class ClassSelector
     static let spawns = new IterableMap<unit, thistype>()
@@ -87,7 +91,7 @@ public class ClassSelector
         clock.doAfter(selectionTime.toReal()) ->
             values(spawns).each(spawner -> spawner.endSelection())
             gg_trg_boards.execute()
-            generateMap()
+            listeners.execute()
             clockDialog.destr()
 
     static function initialize()

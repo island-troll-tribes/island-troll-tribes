@@ -1,4 +1,5 @@
 package Boards
+import RegisterEvents
 import Game
 import ClosureTimers
 import Tribe
@@ -10,6 +11,7 @@ import Respawn
 import ShrinkingMap
 import ForcedDuel
 import ChatCommands
+import HashMap
 
 let PERIOD = 1.0
 
@@ -42,6 +44,11 @@ function toTimeString(int numSecs) returns string
     toTimeString(86300).assertEquals("23:58:20")
 
 class TribeBoard
+    static let boards = new HashMap<player, thistype>()
+
+    static function findForPlayer(player p) returns thistype
+        return boards.get(p)
+
     Tribe tribe
     multiboard board
     CallbackPeriodic cb
@@ -61,6 +68,8 @@ class TribeBoard
 
         var row = 0
         for member in members
+            boards.put(member, this)
+
             board
             .getItem(row, 0)
             ..setStyle(true, false)
@@ -92,15 +101,6 @@ class TribeBoard
             board.display(member, true)
 
             row += 1
-
-            registerCommand(member, "reset-board") (triggerPlayer, args) ->
-                board
-                ..display(member, false)
-                ..display(member, true)
-
-            registerCommand(member, "recreate-board") (triggerPlayer, args) ->
-                board.destr()
-                createBoard()
 
     function updateBoard()
         let members = tribe.getMembers()
@@ -149,7 +149,19 @@ class TribeBoard
 
         board.setTitle(title)
 
+    function fixDisplay()
+        nullTimer() ->
+            for member in tribe.getMembers()
+                board
+                ..display(member, false)
+                ..display(member, true)
+
 
 init
     registerGameStartEvent() ->
         Tribe.getTribes().each(tribe -> new TribeBoard(tribe))
+
+    registerPlayerEvent(EVENT_PLAYER_LEAVE) ->
+        TribeBoard
+            .findForPlayer(GetTriggerPlayer())
+            .fixDisplay()

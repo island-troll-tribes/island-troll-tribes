@@ -4,7 +4,7 @@ import HashMap
 import TribeUtils
 import Lodash
 import PlayerExtensions
-import OldBoards // TODO remove
+import LegacyColors
 
 public class Tribe
     static let playerToTribeMap = new HashMap<player, Tribe>()
@@ -32,7 +32,7 @@ public class Tribe
         let range = getPlayerIdRangeForTribe(tribeId)
         for pid = range.min to range.max
             let member = players[pid]
-            if member.isIngame() and not member.isObserver()
+            if (member.isIngame() or member.getController() == MAP_CONTROL_COMPUTER) and not member.isObserver()
                 tribePlayers.push(member)
                 playerToTribeMap.put(member, this)
                 tribe.addPlayer(member)
@@ -45,9 +45,6 @@ public class Tribe
                     SetPlayerAllianceStateBJ(a, b, bj_ALLIANCE_ALLIED_VISION)
 
         tribes.push(this)
-
-        // TODO remove legacy code here
-        TEAM[tribeId + 1] = tribe
 
     function getId() returns int
         return tribeId

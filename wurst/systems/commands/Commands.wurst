@@ -6,6 +6,10 @@ import StringExtensions
 import ChatUtils
 import PlayerExtensions
 import Game
+import GameMode
+import LegacyColors
+import PublicLibrary
+import ClassSelector
 
 class PlayerAllianceSetting
     string name
@@ -64,9 +68,10 @@ init
     registerCommandAll("obs") (triggerPlayer, args) ->
         SetPlayerState(triggerPlayer, PLAYER_STATE_OBSERVER, 1)
 
-    registerGameStartEvent() ->
+    GameMode.onModeSelectionFinish() ->
         deregisterCommandAll("obs")
 
+    registerGameStartEvent() ->
         registerCommandAll("ac", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))
         registerCommandAll("sc", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))
         registerCommandAll("p", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))

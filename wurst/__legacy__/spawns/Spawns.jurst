@@ -1,8 +1,32 @@
-library Spawns initializer onInit requires Game
+library Spawns initializer onInit requires Game, ID, TerrainPathability, LegacyTriggers
 
 globals
     boolean fishytrigger = false
 endglobals
+
+public function modStats takes nothing returns nothing
+    set udg_CLAYBALL_RATE = RMinBJ(1.85,udg_CLAYBALL_RATE+0.3)
+    if(udg_MORE_BADDIES==false) then
+        set udg_PANTHER_RATE = 1
+        set udg_BEAR_RATE = 1
+        set udg_SNAKE_RATE = 1
+        set udg_WOLF_RATE = 2
+    else
+        set udg_PANTHER_RATE = R2I(1*udg_BADDIE_BASE)
+        set udg_BEAR_RATE = R2I(1*udg_BADDIE_BASE)
+        set udg_SNAKE_RATE = R2I(1*udg_BADDIE_BASE)
+        set udg_WOLF_RATE = R2I(2*udg_BADDIE_BASE)
+    endif
+    set udg_FLINT_RATE = RMaxBJ(2.0,udg_FLINT_RATE-0.4)
+    set udg_MANACRYSTAL_RATE = RMinBJ(1.6,udg_MANACRYSTAL_RATE+0.5)
+    set udg_ROCK_RATE = RMinBJ(3.3,udg_ROCK_RATE+0.5)
+    set udg_MUSHROOM_RATE = RMinBJ(1.2,udg_MUSHROOM_RATE+0.4)
+    set udg_STICK_RATE = RMinBJ(4.5,udg_STICK_RATE+0.5)
+    set udg_TINDER_RATE = RMaxBJ(.7,udg_TINDER_RATE-0.6)
+
+    set udg_ITEM_BASE = RMaxBJ(.15,udg_ITEM_BASE-0.2)
+    set udg_FOOD_BASE = RMaxBJ(.15,udg_FOOD_BASE-0.2)
+endfunction
 
 function makeAFish takes rect loc returns nothing
     local integer t = GetRandomInt(1,13)

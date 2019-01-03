@@ -1,7 +1,7 @@
 package TwinIslandPotion
 import ClosureEvents
 import AbilityObjEditing
-import DummyCaster
+import IttDummyCaster
 import Orders
 import ClosureTimers
 import BuffObjEditing
@@ -38,12 +38,13 @@ function onCast()
     for u in udg_trolls
         if u.getOwner().isEnemyOf(owner) and u.isAlive()
             PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 8, bj_MINIMAPPINGSTYLE_ATTACK, 255, 0, 0)
-            
+
             //Temporary vision required by dummy
             var vis = createVision(owner, u.getPos(), 300, true)
-            doAfter(0.5) ->
+            vis.start()
+            doAfter(0.2) ->
                 vis.destr()
-            new DummyCaster().castTarget(owner, 'XTWN', 1, Orders.faeriefire, u)
+            new IttDummyCaster().castTarget(owner, 'XTWN', 1, Orders.faeriefire, u)
 
 
 init

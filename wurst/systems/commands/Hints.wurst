@@ -3,7 +3,8 @@ import ClosureTimers
 import LinkedList
 import ChatCommands
 import Game
-import Units
+import InitializeUnits
+import LegacyColors
 
 let TIME_BETWEEN_HINTS = 60.0
 let HINTS_OFF_MESSAGE = GENERAL_COLOR + "Your hints are now " + GOLD_COLOR + "off" + GENERAL_COLOR + "."
@@ -74,8 +75,6 @@ public function checkStat(unit troll)
     var health = troll.getHP()
     var heat = owner.getGold()
 
-    if localPlayer == owner
-        ClearTextMessages()
     if health <= 25
         printTimedToPlayerClear(COLOR_RED + "Your health is low, eat some meat!", 3, owner)
     if mana <= 25
@@ -107,7 +106,7 @@ init
 
         Hint.initialize()
         doPeriodicDisplay(hintList)
-        doPeriodically(1) cb ->
+        doPeriodically(3) cb ->
             for troll in udg_trolls
                 if IsPlayerInForce(troll.getOwner(), Hint.playersF)
                     checkStat(troll)

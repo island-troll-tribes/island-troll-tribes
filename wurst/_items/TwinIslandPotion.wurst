@@ -4,7 +4,9 @@ import AbilityObjEditing
 import IttDummyCaster
 import Orders
 import ClosureTimers
+import ClosureForGroups
 import BuffObjEditing
+import ID
 
 @compiletime function createBuff()
     new BuffDefinition('XTWB', 'Bult')
@@ -35,17 +37,19 @@ function onCast()
     var caster = GetSpellAbilityUnit()
     var owner = caster.getOwner()
 
-    for u in udg_trolls
+    forUnitsAll() u ->
         if u.getOwner().isEnemyOf(owner) and u.isAlive()
-            PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 8, bj_MINIMAPPINGSTYLE_ATTACK, 255, 0, 0)
+            if udg_trolls.contains(u)
+                PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 8, bj_MINIMAPPINGSTYLE_ATTACK, 255, 0, 0)
 
-            //Temporary vision required by dummy
-            var vis = createVision(owner, u.getPos(), 300, true)
-            vis.start()
-            doAfter(0.2) ->
-                vis.destr()
-            new IttDummyCaster().castTarget(owner, 'XTWN', 1, Orders.faeriefire, u)
-
+                //Temporary vision required by dummy
+                var vis = createVision(owner, u.getPos(), 300, true)
+                vis.start()
+                doAfter(0.2) ->
+                    vis.destr()
+                new IttDummyCaster().castTarget(owner, 'XTWN', 1, Orders.faeriefire, u)
+            else if u.getTypeId() == UNIT_SPIRIT_WARD
+                PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 8, bj_MINIMAPPINGSTYLE_SIMPLE, 0, 0, 255)
 
 init
     registerSpellEffectEvent('A03F', () -> onCast())

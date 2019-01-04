@@ -2,9 +2,8 @@ package Commands
 import LinkedList
 import ChatCommands
 import StringExtensions
-import ForceExtensions
-import ChatUtils
 import PlayerExtensions
+import ChatUtils
 import Game
 import GameMode
 import PublicLibrary
@@ -70,10 +69,7 @@ init
         printTimedToPlayer(msg, 5, triggerPlayer)
 
     registerCommandAll("obs") (triggerPlayer, args) ->
-        SetPlayerState(triggerPlayer, PLAYER_STATE_OBSERVER, 1)
-        let iter = bj_FORCE_ALL_PLAYERS.iterator()
-        for otherPlayer from iter
-            SetPlayerAllianceStateBJ(triggerPlayer, otherPlayer, bj_ALLIANCE_NEUTRAL_VISION)
+        triggerPlayer.makeObserver()
 
     GameMode.onModeSelectionFinish() ->
         deregisterCommandAll("obs")

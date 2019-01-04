@@ -1,6 +1,7 @@
 package PlayerExtensions
 import initlater Tribe
 import PublicLibrary
+import ForceExtensions
 
 public function player.getTribe() returns Tribe
     return Tribe.ofPlayer(this)
@@ -25,3 +26,9 @@ public function player.isObserver() returns bool
 
 public function player.getTroll() returns unit
     return GetPlayerTroll(this)
+
+public function player.makeObserver()
+    this.setState(PLAYER_STATE_OBSERVER, 1)
+    let iter = bj_FORCE_ALL_PLAYERS.iterator()
+    for otherPlayer from iter
+        SetPlayerAllianceStateBJ(this, otherPlayer, bj_ALLIANCE_NEUTRAL_VISION)

@@ -135,8 +135,11 @@ public function unit.setCreepGuard(bool value)
 public function unit.addOrStackItem(item itm) returns bool
     //Stackables
     if isItemStackable(itm.getTypeId())
-        if not this.isItemFullyStacked(itm.getTypeId())
+        if not this.isItemFullyStacked(itm.getTypeId()) and this.hasItemById(itm.getTypeId())
             this.stackItem(itm)
+            return true
+        else if not this.isInventoryFull()
+            this.addItemHandle(itm)
             return true
     else
         //Non-stackables
@@ -144,7 +147,7 @@ public function unit.addOrStackItem(item itm) returns bool
             this.addItemHandle(itm)
             return true
     return false
-    
+
 public function unit.isImmobilized() returns bool
     return (
         this.getAbilityLevel(BUFF_ENSNARE_AIR) > 0 or

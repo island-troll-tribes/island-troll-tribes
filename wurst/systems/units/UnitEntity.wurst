@@ -32,8 +32,8 @@ public abstract class UnitEntity
     static function register(int unitTypeId, Function<unit, thistype> factory)
         factories.put(unitTypeId, factory)
 
-    static function findForUnit(unit hostile) returns thistype
-        return instances[hostile.getIndex()]
+    static function findForUnit(unit whichUnit) returns thistype
+        return instances[whichUnit.getIndex()]
 
     private unit theUnit = null
 
@@ -72,6 +72,7 @@ public abstract class UnitEntity
         nullTimer(-> destroy this)
 
     ondestroy
+        instances[theUnit.getIndex()] = null
         removeUnit()
 
 init

@@ -2,6 +2,7 @@ package Hostile
 import ID
 import LinkedList
 import UnitEntity
+import Lodash
 
 
 public function createCorpse(player p, int unitId, vec2 pos, angle facing) returns unit
@@ -36,9 +37,6 @@ public abstract class Hostile extends UnitEntity
         for i = 1 to numCorpses
             createCorpse(players[PLAYER_NEUTRAL_AGGRESSIVE], UNIT_MEAT, pos, randomAngle())
 
-        let iter = drops.iterator()
-        for drop from iter
-            createItem(drop, pos)
-        iter.close()
+        drops.each(drop -> createItem(drop, pos))
 
         super.onDeath()

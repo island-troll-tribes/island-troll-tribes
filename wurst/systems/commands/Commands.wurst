@@ -1,15 +1,13 @@
 package Commands
-import HashMap
 import LinkedList
 import ChatCommands
 import StringExtensions
+import ForceExtensions
 import ChatUtils
 import PlayerExtensions
 import Game
 import GameMode
-import LegacyColors
 import PublicLibrary
-import ClassSelector
 
 class PlayerAllianceSetting
     string name
@@ -73,6 +71,9 @@ init
 
     registerCommandAll("obs") (triggerPlayer, args) ->
         SetPlayerState(triggerPlayer, PLAYER_STATE_OBSERVER, 1)
+        let iter = bj_FORCE_ALL_PLAYERS.iterator()
+        for otherPlayer from iter
+            SetPlayerAllianceStateBJ(triggerPlayer, otherPlayer, bj_ALLIANCE_NEUTRAL_VISION)
 
     GameMode.onModeSelectionFinish() ->
         deregisterCommandAll("obs")

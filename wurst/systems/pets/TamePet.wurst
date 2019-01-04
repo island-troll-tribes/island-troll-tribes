@@ -1,0 +1,57 @@
+package TamePet
+
+import AbilityObjEditing
+import ObjectIdGenerator
+import ClosureEvents
+import PetUtilities
+
+let TAME_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
+let TAME_ICON_PATH = "ReplaceableTextures\\CommandButtons\\BTNEtherealFormOn.blp"
+let TOOLTIP_NORMAL = "[|cffffd700E|r] - Tame"
+let TOOLTIP_EXT = "Tames the target baby animal."
+
+@compiletime function createTameAbility()
+    new AbilityDefinitionIllidanChannel(TAME_ABILITY_ID)
+    ..setTargetType(1, 0)
+    ..setAnimationNames("spell")
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setTargetAttachmentPoint1("")
+    ..setTargetAttachments(1)
+    ..setArtSpecial("")
+    ..setButtonPositionNormalX(3)
+    ..setButtonPositionNormalY(0)
+    ..setButtonPositionResearchX(3)
+    ..setButtonPositionResearchY(0)
+    ..setIconNormal(TAME_ICON_PATH)
+    ..setIconResearch(TAME_ICON_PATH)
+    ..setIconTurnOff(TAME_ICON_PATH)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setHotkeyNormal("E")
+    ..setName("Tame")
+    ..setTooltipNormal(1, TOOLTIP_NORMAL)
+    ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+    ..presetBaseOrderID(lvl -> "charm")
+    ..setOrderStringActivate("channel")
+    ..setOrderStringUseTurnOn("channel")
+    ..presetTargetsAllowed(lvl -> "neutral,nonhero,organic")
+    ..presetDisableOtherAbilities(lvl -> false)
+    ..presetOptions(lvl -> 1)
+    ..presetCooldown(lvl -> 10)
+    ..presetManaCost(lvl -> 0)
+    ..presetFollowThroughTime(lvl -> 0)
+    ..presetCastRange(lvl -> 600)
+    ..presetTargetType(lvl -> 1)
+
+function onCast()
+    let caster = GetSpellAbilityUnit()
+    let target = GetSpellTargetUnit()
+    let owner = caster.getOwner()
+    let pet = handleTamePet(owner, target)
+    flashEffect("Abilities\\Spells\\Human\\Resurrect\\ResurrectCaster.mdl", pet, "overhead")
+
+init
+    registerSpellEffectEvent(TAME_ABILITY_ID, () -> onCast())

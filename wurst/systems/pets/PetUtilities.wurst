@@ -19,6 +19,9 @@ public function releasePet(unit pet)
     if pet != null
         udg_pets.removeUnit(pet)
         pet.setOwner(playerFromIndex(PLAYER_NEUTRAL_AGGRESSIVE), true)
+        for itm in pet.inventory()
+            pet.dropItemPoint(itm, pet.getPos())
+        pet.remove()
 
 public function player.setPet(unit pet)
     this.releasePets()
@@ -49,6 +52,9 @@ public function handleTamePet(player owner, unit u) returns unit
     if petId != 0
         u.hide()
         let pet = createUnit(owner, petId, u.getPos(), u.getFacingAngle())
+        let oldPet = owner.getPet()
+        if oldPet != null and oldPet.isType(UNIT_TYPE_HERO)
+            pet.setLevel(oldPet.getLevel(), false)
         owner.setPet(pet)
         u.remove()
         return pet

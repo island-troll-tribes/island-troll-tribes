@@ -1,15 +1,12 @@
 package Commands
-import HashMap
 import LinkedList
 import ChatCommands
 import StringExtensions
-import ChatUtils
 import PlayerExtensions
+import ChatUtils
 import Game
 import GameMode
-import LegacyColors
 import PublicLibrary
-import ClassSelector
 
 class PlayerAllianceSetting
     string name
@@ -34,7 +31,7 @@ let settings = new HashMap<string, PlayerAllianceSetting>()
 function handlePlayerAllianceSettingToggle(player triggerPlayer, LinkedList<string> args)
     let setting = settings.get(args.get(0))
     let newValue = args.size() > 1 ? args.get(1).isConfirmation() : not setting.values.get(triggerPlayer)
-    let msg = "{0} has turned {1} {2}".format(triggerPlayer.getNameColored(), setting.name.color(SPECIAL_COLOR), newValue.toSwitch().color(ENERGY_COLOR))
+    let msg = "{0} has turned {1} {2}".format(triggerPlayer.getNameColored(), setting.name.color(SPECIAL_COLOR), newValue.toOnOff().color(ENERGY_COLOR))
     DisplayTimedTextToForce(triggerPlayer.getAllies(), 5, msg)
     setting.values.put(triggerPlayer, newValue)
     triggerPlayer.getTribe().getMembers().forEach() member ->
@@ -65,8 +62,15 @@ init
                 let msg = "{0} {1}".format((i + 1).toString().color(i.toPlayerColor().toColor()), players[i].getName())
                 printTimedToPlayer(msg, 10, triggerPlayer)
 
+    registerCommandAll("recipes") (triggerPlayer, args) ->
+        let msg = "{0}Ok, here are the build help locations.\nYou can see the recipe for every item and building by selecting the wards, take time to read".format(GENERAL_COLOR)
+        PingMinimapForPlayer(triggerPlayer, gg_rct_vision.getCenterX(), gg_rct_vision.getCenterY(), 5)
+        PanCameraToForPlayer(triggerPlayer, gg_rct_vision.getCenterX(), gg_rct_vision.getCenterY())
+        printTimedToPlayer(msg, 5, triggerPlayer)
+
     registerCommandAll("obs") (triggerPlayer, args) ->
-        SetPlayerState(triggerPlayer, PLAYER_STATE_OBSERVER, 1)
+        printTimedToPlayer(GENERAL_COLOR + "You are now an observer", 10, triggerPlayer)
+        triggerPlayer.makeObserver()
 
     GameMode.onModeSelectionFinish() ->
         deregisterCommandAll("obs")
@@ -87,9 +91,3 @@ init
             let msg = "Adjusted player color to {0}Player {1}|r".format(id.toPlayerColor().toColor().toColorString(), (id + 1).toString())
             printTimedToPlayer(msg, 5, triggerPlayer)
             triggerPlayer.setColor(ConvertPlayerColor(id), true)
-
-        registerCommandAll("recipes") (triggerPlayer, args) ->
-            let msg = "{0}Ok, here are the build help locations.\nYou can see the recipe for every item and building by selecting the wards, take time to read".format(GENERAL_COLOR)
-            PingMinimapForPlayer(triggerPlayer, gg_rct_vision.getCenterX(), gg_rct_vision.getCenterY(), 5)
-            PanCameraToForPlayer(triggerPlayer, gg_rct_vision.getCenterX(), gg_rct_vision.getCenterY())
-            printTimedToPlayer(msg, 5, triggerPlayer)

@@ -1,0 +1,54 @@
+package PetUtilities
+import ID
+
+function player.getPet() returns unit
+    for u in udg_pets
+        if u.getOwner() == this
+            return u
+    return null
+
+function unit.getPet() returns unit
+    return this.getOwner().getPet()
+
+function player.releasePets()
+    for u in udg_pets
+        if u.getOwner() == this
+            releasePet(u)
+
+function releasePet(unit pet)
+    if pet != null
+        udg_pets.removeUnit(pet)
+        pet.setOwner(playerFromIndex(PLAYER_NEUTRAL_AGGRESSIVE), true)
+
+function player.setPet(unit pet)
+    this.releasePets()
+    udg_pets.addUnit(pet)
+
+function getCorrespondingHeroPetId(int tamedID) returns int
+    switch tamedID
+        case UNIT_ELK
+            //TODO: Return corresponding pet ID
+        case UNIT_JUNGLE_BEAR
+            //TODO: Return corresponding pet ID
+        case UNIT_JUNGLE_WOLF
+            //TODO: Return corresponding pet ID
+        case UNIT_PANTHER
+            //TODO: Return corresponding pet ID
+        case UNIT_ELDER_PANTHER
+            //TODO: Return corresponding pet ID
+        case UNIT_HAWK
+            //TODO: Return corresponding pet ID
+
+    return 0
+
+function getCorrespondingHeroPetId(unit tamed) returns int
+    return getCorrespondingHeroPetId(tamed.getTypeId())
+
+function handleTamePet(player owner, unit u) returns bool
+    let petId = getCorrespondingHeroPetId(u)
+    if petId != 0
+        u.hide()
+        let pet = createUnit(owner, petId, u.getPos(), u.getFacingAngle())
+        owner.setPet(pet)
+        return true
+    return false

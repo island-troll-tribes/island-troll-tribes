@@ -7,6 +7,7 @@ import ChatUtils
 import Game
 import GameMode
 import PublicLibrary
+import TribeBoard
 
 class PlayerAllianceSetting
     string name
@@ -37,6 +38,9 @@ function handlePlayerAllianceSettingToggle(player triggerPlayer, LinkedList<stri
     triggerPlayer.getTribe().getMembers().forEach() member ->
         if member != triggerPlayer
             triggerPlayer.setPlayerAlliance(member, setting.setting, setting.invertSetting ? not newValue : newValue)
+
+    if setting.setting == ALLIANCE_SHARED_ADVANCED_CONTROL
+        TribeBoard.findForPlayer(triggerPlayer).fixDisplay()
 
 init
     settings

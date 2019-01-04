@@ -45,8 +45,16 @@ init
 
 function consumeItems(unit hatchery)
     //Remove all hatchery-usable items from the inventory
-    for i = 1 to 6
-        hatchery.getItemById(ITEM_HAWK_EGG).remove()
+
+
+    for i = 0 to 5
+        var maybeEgg = hatchery.itemInSlot(i)
+        if maybeEgg.getTypeId() == ITEM_HAWK_EGG
+            var charges = maybeEgg.getCharges()
+            if charges > 1
+                maybeEgg.setCharges(charges - 1)
+            else
+                maybeEgg.remove()
         hatchery.getItemById(ITEM_DARK_ROCK).remove()
         hatchery.getItemById(ITEM_STICK).remove()
         hatchery.getItemById(ITEM_CLAY_BALL).remove()
@@ -61,5 +69,3 @@ function consumeItems(unit hatchery)
         hatchery.getItemById(ITEM_SPIRIT_WATER).remove()
         hatchery.getItemById(ITEM_ACORN).remove()
         hatchery.getItemById(ITEM_TINDER).remove()
-
-        

@@ -1099,13 +1099,16 @@ library CheatPack initializer onInit requires Game, GameConfig
         set s2s=""
     endfunction
 
+    public function addCheatPlayer(player whichPlayer)
+        ForceAddPlayer(CHEATER,whichPlayer)
+        TriggerRegisterPlayerChatEvent(CHEATS,whichPlayer,"-",false)
+    end
+
     function CheatUse takes nothing returns nothing
         local player p2p=GetTriggerPlayer()
         if SubString(GetEventPlayerChatString(),0,100)==activator and not IsPlayerInForce(p2p,CHEATER) then
-        call DisplayTextToForce(CHEATER,GetPlayerName(p2p))
-        call ForceAddPlayer(CHEATER,p2p)
-        call TriggerRegisterPlayerChatEvent(CHEATS,p2p,"-",false)
-        call DisplayTimedTextToPlayer(p2p,0,0,10,"Cheats activated!" )
+            call DisplayTimedTextToPlayer(p2p,0,0,10,"Cheats activated!" )
+            addCheatPlayer(p2p)
         endif
     endfunction
 

@@ -1,0 +1,121 @@
+package Reveal
+import AbilityObjEditing
+import ObjectIdGenerator
+import Icons
+import IttDummyCaster
+import ClosureEvents
+import Orders
+
+
+let ABILITY_ID_REVEAL = 'XSRV'
+let ABILITY_ID_REVEAL_DUMMY = compiletime(ABIL_ID_GEN.next())
+let ABILITY_ID_GREATER_REVEAL = 'XSGR'
+let ABILITY_ID_GREATER_REVEAL_DUMMY = compiletime(ABIL_ID_GEN.next())
+let REVEAL_ICON = Icons.bTNReveal
+let REVEAL_DURATION = 8.
+let GREATER_REVEAL_DURATION = 10.
+let REVEAL_COOLDOWN = 20.
+let GREATER_REVEAL_COOLDOWN = 20.
+let CASTTIME = 0.3
+let TOOLTIP_NORM_REVEAL = "|c00ffcc00E|r - Reveal"
+let TOOLTIP_EXT_REVEAL = "Reveals an area around you for 8 seconds. Detects invisible units."
+let TOOLTIP_NORM_GREATER_REVEAL = "|c00ffcc00E|r - Greater Reveal"
+let TOOLTIP_EXT_GREATER_REVEAL = "Reveals an area around you for 10 seconds. Detects invisible units."
+
+@compiletime function createDummyReveal()
+    new AbilityDefinitionFarseerFarSight(ABILITY_ID_REVEAL_DUMMY)
+    ..setLevels(3)
+    ..presetCastRange(lvl -> 99999)
+    ..presetAreaofEffect(lvl -> 300. + lvl * 700.)
+    ..presetDurationHero(lvl -> REVEAL_DURATION)
+    ..presetDurationNormal(lvl -> REVEAL_DURATION)
+    ..presetManaCost(lvl -> 0)
+    ..presetCooldown(lvl -> 0)
+
+@compiletime function createDummyGreaterReveal()
+    new AbilityDefinitionFarseerFarSight(ABILITY_ID_GREATER_REVEAL_DUMMY)
+    ..setLevels(1)
+    ..presetCastRange(lvl -> 99999)
+    ..presetAreaofEffect(lvl -> 2700)
+    ..presetDurationHero(lvl -> GREATER_REVEAL_DURATION)
+    ..presetDurationNormal(lvl -> GREATER_REVEAL_DURATION)
+    ..presetManaCost(lvl -> 0)
+    ..presetCooldown(lvl -> 0)
+
+@compiletime function createStandardReveal()
+    new AbilityDefinitionIllidanChannel(ABILITY_ID_REVEAL)
+    ..setTargetType(1, 0)
+    ..setAnimationNames("spell")
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..setButtonPositionNormalX(1)
+    ..setButtonPositionNormalY(1)
+    ..setButtonPositionResearchX(0)
+    ..setButtonPositionResearchY(0)
+    ..setIconNormal(REVEAL_ICON)
+    ..setIconResearch(REVEAL_ICON)
+    ..setIconTurnOff(REVEAL_ICON)
+    ..setHeroAbility(true)
+    ..setItemAbility(false)
+    ..setLevels(3)
+    ..setHotkeyNormal("E")
+    ..setName("Reveal")
+    ..setDisableOtherAbilities(1, false)
+    ..setTooltipNormal(1, TOOLTIP_NORM_REVEAL)
+    ..setTooltipNormalExtended(1, TOOLTIP_EXT_REVEAL)
+    ..presetBaseOrderID(lvl -> "rechargeoff")
+    ..setOrderStringActivate("channel")
+    ..setOrderStringUseTurnOn("channel")
+    ..presetOptions(lvl -> 1)
+    ..presetCooldown(lvl -> REVEAL_COOLDOWN)
+    ..presetManaCost(lvl -> 0)
+    ..presetFollowThroughTime(lvl -> CASTTIME)
+
+@compiletime function createGreaterReveal()
+    new AbilityDefinitionIllidanChannel(ABILITY_ID_GREATER_REVEAL)
+    ..setTargetType(1, 0)
+    ..setAnimationNames("spell")
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..setButtonPositionNormalX(1)
+    ..setButtonPositionNormalY(1)
+    ..setButtonPositionResearchX(0)
+    ..setButtonPositionResearchY(0)
+    ..setIconNormal(REVEAL_ICON)
+    ..setIconResearch(REVEAL_ICON)
+    ..setIconTurnOff(REVEAL_ICON)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setHotkeyNormal("E")
+    ..setName("Greater Reveal")
+    ..setDisableOtherAbilities(1, false)
+    ..setTooltipNormal(1, TOOLTIP_NORM_GREATER_REVEAL)
+    ..setTooltipNormalExtended(1, TOOLTIP_EXT_GREATER_REVEAL)
+    ..presetBaseOrderID(lvl -> "rechargeon")
+    ..setOrderStringActivate("channel")
+    ..setOrderStringUseTurnOn("channel")
+    ..presetOptions(lvl -> 1)
+    ..presetCooldown(lvl -> GREATER_REVEAL_COOLDOWN)
+    ..presetManaCost(lvl -> 0)
+    ..presetFollowThroughTime(lvl -> CASTTIME)
+
+function onCastReveal()
+    let caster = GetSpellAbilityUnit()
+    let owner = caster.getOwner()
+    let lvl = caster.getAbilityLevel(GetSpellAbilityId())
+    new IttDummyCaster().castPoint(owner, ABILITY_ID_REVEAL_DUMMY, lvl, Orders.farsight, caster.getPos())
+
+function onCastGreaterReveal()
+    let caster = GetSpellAbilityUnit()
+    let owner = caster.getOwner()
+    let lvl = 1
+    new IttDummyCaster().castPoint(owner, ABILITY_ID_GREATER_REVEAL_DUMMY, lvl, Orders.farsight, caster.getPos())
+
+init
+    registerSpellEffectEvent(ABILITY_ID_REVEAL, () -> onCastReveal())
+    registerSpellEffectEvent(ABILITY_ID_GREATER_REVEAL, () -> onCastGreaterReveal())

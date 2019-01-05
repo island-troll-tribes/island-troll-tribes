@@ -24,9 +24,9 @@ public class GameMode
     static let listeners = CreateTrigger()
     static let modes = new HashMap<string, thistype>()
     static let clock = getTimer()
+    static var modePlayer = players[0]
 
     static function initialize()
-        var modePlayer = players[0]
         for i = 0 to bj_MAX_PLAYERS - 1
             if players[i].isIngame()
                 modePlayer = players[i]
@@ -35,7 +35,7 @@ public class GameMode
         print(modePlayer.getNameColored() + GENERAL_COLOR + " can choose game modes.|r")
         printTimedToPlayer(GENERAL_COLOR + "You can select modes|r", 10, modePlayer)
 
-        doAfter(0) ->
+        nullTimer() ->
             createModeBoard()
             registerAll(modePlayer)
 
@@ -89,7 +89,7 @@ public class GameMode
         ..setRowCount(displayableModes.size())
         ..setTitle("Modes - 00:{0}".format(MODES_TIME_LIMIT.toString(0)))
         ..setItemsStyle(true, false)
-        ..display(true)
+        ..display(modePlayer, true)
         ..minimalize(false)
 
         for row = 0 to displayableModes.size()

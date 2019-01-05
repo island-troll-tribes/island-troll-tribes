@@ -16,6 +16,7 @@ let REVEAL_DURATION = 8.
 let GREATER_REVEAL_DURATION = 10.
 let REVEAL_COOLDOWN = 20.
 let GREATER_REVEAL_COOLDOWN = 20.
+let CASTTIME = 0.3
 let TOOLTIP_NORM_REVEAL = "|c00ffcc00E|r - Reveal"
 let TOOLTIP_EXT_REVEAL = "Reveals an area around you for 8 seconds. Detects invisible units."
 let TOOLTIP_NORM_GREATER_REVEAL = "|c00ffcc00E|r - Greater Reveal"
@@ -70,7 +71,7 @@ let TOOLTIP_EXT_GREATER_REVEAL = "Reveals an area around you for 10 seconds. Det
     ..presetOptions(lvl -> 1)
     ..presetCooldown(lvl -> REVEAL_COOLDOWN)
     ..presetManaCost(lvl -> 0)
-    ..presetFollowThroughTime(lvl -> 0)
+    ..presetFollowThroughTime(lvl -> CASTTIME)
 
 @compiletime function createGreaterReveal()
     new AbilityDefinitionIllidanChannel(ABILITY_ID_GREATER_REVEAL)
@@ -101,13 +102,13 @@ let TOOLTIP_EXT_GREATER_REVEAL = "Reveals an area around you for 10 seconds. Det
     ..presetOptions(lvl -> 1)
     ..presetCooldown(lvl -> GREATER_REVEAL_COOLDOWN)
     ..presetManaCost(lvl -> 0)
-    ..presetFollowThroughTime(lvl -> 0)
+    ..presetFollowThroughTime(lvl -> CASTTIME)
 
 function onCastReveal()
     let caster = GetSpellAbilityUnit()
     let owner = caster.getOwner()
     let lvl = caster.getAbilityLevel(GetSpellAbilityId())
-    new IttDummyCaster().castPoint(owner, ABILITY_ID_REVEAL, lvl, Orders.farsight, caster.getPos())
+    new IttDummyCaster().castPoint(owner, ABILITY_ID_REVEAL_DUMMY, lvl, Orders.farsight, caster.getPos())
 
 function onCastGreaterReveal()
     let caster = GetSpellAbilityUnit()

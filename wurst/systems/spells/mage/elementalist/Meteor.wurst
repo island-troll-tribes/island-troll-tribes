@@ -12,11 +12,11 @@ constant let ABILITY_ID = 'XEMS'
 constant let DUMMY_STUN_ABILITY_ID = 'XEMD'
 constant let MANACOST = 30
 constant let COOLDOWN = 35.
-constant let IMPACT_DAMAGE = 45.
+constant let IMPACT_DAMAGE = 50.
 constant let CAST_RANGE = 800.
 constant let OVERCHARGE_GROUND_BURN_DPS = 15.
 constant let OVERCHARGE_GROUND_BURN_DURATION = 7.
-constant let IMPACT_BURN_DPS = 7.
+constant let IMPACT_BURN_DPS = 12.
 constant let IMPACT_BURN_DURATION = 5.
 constant let IMPACT_BURN_INTERVAL = 0.2
 constant let IMPACT_STUN_DURATION_HERO = 0.5
@@ -34,7 +34,7 @@ constant let BURN_EFFECT_PATH = "Abilities\\Spells\\Other\\BreathOfFire\\BreathO
 constant let GROUND_BURN_EFFECT_PATH = "Abilities\\Spells\\Other\\BreathOfFire\\BreathOfFireDamage.mdl"
 constant let ICON_PATH = "ReplaceableTextures\\CommandButtons\\BTNFlare.blp"
 constant let TOOLTIP_NORMAL = "|c00ffcc00W|r - Meteor"
-constant let TOOLTIP_NORMAL_EXT = "Calls down a meteor to impact on target point after 1 second. On impact, stuns and deals |c00ff000045|r damage and applies a burning effect on targets hit for another |c00ff000045|r damage over time."
+constant let TOOLTIP_NORMAL_EXT = "Calls down a meteor to impact on target point after 1 second. On impact, stuns and deals |c00ff000050|r damage and applies a burning effect on targets hit for another |c00ff000060|r damage over time."
 
 @compiletime function createSpell()
     new AbilityDefinitionRainofFire(ABILITY_ID)
@@ -103,7 +103,8 @@ function handleGroundBurning(unit caster, vec2 pos)
     doPeriodicallyTimed(IMPACT_BURN_INTERVAL, OVERCHARGE_GROUND_BURN_DURATION) burnAOE ->
         forUnitsInRange(pos, IMPACT_RADIUS_MAX) u ->
             if u.isAlive() and u.getOwner().isEnemyOf(owner) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isType(UNIT_TYPE_FLYING) and not u.isInvulnerable()
-                caster.damageTarget(u, OVERCHARGE_GROUND_BURN_DPS * IMPACT_BURN_INTERVAL)
+                UnitDamageTarget(caster, u, OVERCHARGE_GROUND_BURN_DPS * IMPACT_BURN_INTERVAL, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
+
 
 
 function callMeteor(unit caster, vec2 targetpos, bool isOvercharged)
@@ -172,10 +173,10 @@ function handleImpactUnitEffect(vec2 hitPosition, unit target, unit caster)
     //Calculate reduced damage for units away from center
     var distance = hitPosition.distanceTo(target.getPos())
     if (distance <= IMPACT_RADIUS_DAMAGEFALLOFF)
-        caster.damageTarget(target, IMPACT_DAMAGE, ATTACK_TYPE_NORMAL)
+        UnitDamageTarget(caster, target, IMPACT_DAMAGE, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
     else
         var reducedDamage = IMPACT_DAMAGE * (1 - ((distance - IMPACT_RADIUS_DAMAGEFALLOFF) / (IMPACT_RADIUS_MAX - IMPACT_RADIUS_DAMAGEFALLOFF)))
-        caster.damageTarget(target, reducedDamage, ATTACK_TYPE_NORMAL)
+        UnitDamageTarget(caster, target, reducedDamage, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
 
     //Apply stun
     new IttDummyCaster().castTarget(owner, DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, target, caster.getPos3Real())
@@ -187,7 +188,7 @@ function handleImpactUnitEffect(vec2 hitPosition, unit target, unit caster)
     //Burn damage loop
     doPeriodicallyTimed(IMPACT_BURN_INTERVAL, IMPACT_BURN_DURATION) burn ->
         if (not target.isInvulnerable() and target.isAlive())
-            caster.damageTarget(target, IMPACT_BURN_DPS * IMPACT_BURN_INTERVAL, ATTACK_TYPE_NORMAL)
+            UnitDamageTarget(caster, target, IMPACT_BURN_DPS * IMPACT_BURN_INTERVAL, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
         if (burn.isLast() or not target.isAlive())
             burnfx.destr()
 

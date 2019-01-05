@@ -29,7 +29,7 @@ constant let MAIN_DAMAGE = 20.
 constant let OVERCHARGE_FORK_AMOUNT = 3
 constant let OVERCHARGE_FORK_AOE = 400.
 constant let CHARGE_BOUNCE_RADIUS = 400.
-constant let CHARGE_DAMAGE = 30.
+constant let CHARGE_DAMAGE = 35.
 constant let CHARGE_REMOVE_TIME = 25.
 constant let CHARGE_AS_SLOW = 0.75
 constant let CHARGE_MS_SLOW = 0.75
@@ -38,7 +38,7 @@ constant let CHARGE_SLOW_DURATION_NORM = 3.
 constant let EFFECT_PATH = "Abilities\\Spells\\Orc\\Purge\\PurgeBuffTarget.mdl"
 constant let BOUNCE_IMPACT_EFFECT_PATH = "Abilities\\Weapons\\Bolt\\BoltImpact.mdl"
 constant let TOOLTIP_NORMAL = "|c00ffcc00Q|r - Zap"
-constant let TOOLTIP_NORMAL_EXT = "Zaps the target for |c00ff000020|r damage. Stacks charges on the target and on the third charge, they explode slowing movement and attack speed and dealing |c00ff000030|r bonus damage and causing another Zap to be cast on other units nearby."
+constant let TOOLTIP_NORMAL_EXT = "Zaps the target for |c00ff000020|r damage. Stacks charges on the target and on the third charge, they explode slowing movement and attack speed and dealing |c00ff000035|r bonus damage and causing another Zap to be cast on other units nearby."
 
 
 @compiletime function createBuffs()
@@ -179,15 +179,14 @@ function onCastEffects(unit caster, unit target, bool isOvercharged)
             handleOverchargeFork(caster, target)
 
         //Main target damage
-        caster.damageTarget(target, MAIN_DAMAGE, ATTACK_TYPE_NORMAL)
-
+        UnitDamageTarget(caster, target, MAIN_DAMAGE, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
         handleBuff(caster, target)
 
 function zapChargeExplosion(unit caster, unit target)
     //Main target bonus effects
     if (target.isAlive() and not target.isInvulnerable())
         new IttDummyCaster().castTarget(caster.getOwner(), SLOW_ABILITY_ID, 1, Orders.slow, target, caster.getPos3Real())
-        caster.damageTarget(target, CHARGE_DAMAGE, ATTACK_TYPE_NORMAL)
+        UnitDamageTarget(caster, target, CHARGE_DAMAGE, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
 
     //Charge explosion SFX
     var efx = AddSpecialEffectTargetUnitBJ("chest", target, EFFECT_PATH)

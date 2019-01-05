@@ -1,0 +1,426 @@
+/*
+*  StackNSplit v1.1.1.9
+*     by Bannar
+*
+*  Easy item charges stacking and splitting.
+*  Modified by Marsunpaisti
+*/
+
+package ITTStackNSplit
+import RegisterEvents
+import InventoryEvent
+import SmoothItemPickup
+import LinkedList
+
+tuple eventInfo(unit u, item itm, int charges)
+
+var eventState = eventInfo(null, null, -1)
+constant eventAddedTrigger = CreateTrigger()
+constant eventRemovedTrigger = CreateTrigger()
+
+constant table = InitHashtable()
+
+public enum EVENT_ITEM_CHARGES
+    ADDED
+    REMOVED
+
+/** Returns unit which manupilated event item. */
+public function getItemStackingUnit() returns unit
+    return eventState.u
+
+/** Returns manipulated event item. */
+public function getItemStackingItem() returns item
+    return eventState.itm
+
+/** Returns number of charges that has been added or removed. */
+public function getItemStackingCharges() returns int
+    return eventState.charges
+
+/** Returns trigger handle associated with specified item stacking event. */
+public function getItemStackingEventTrigger(EVENT_ITEM_CHARGES whichEvent) returns trigger
+    trigger result = null
+
+    switch whichEvent
+        case EVENT_ITEM_CHARGES.ADDED
+            result = eventAddedTrigger
+        case EVENT_ITEM_CHARGES.REMOVED
+            result = eventRemovedTrigger
+    return result
+
+/** Registers new event handler for specified item stacking event. */
+public function registerItemStackingEvent(EVENT_ITEM_CHARGES whichEvent, code func)
+    switch whichEvent
+        case EVENT_ITEM_CHARGES.ADDED
+            eventAddedTrigger.addCondition(Condition(func))
+        case EVENT_ITEM_CHARGES.REMOVED
+            eventRemovedTrigger.addCondition(Condition(func))
+
+/** Returns value indicating whether specifed item is stackable or not. */
+public function isItemContainer(int containerType) returns boolean
+    return table.hasInt(3, containerType)
+
+/** Returns maximum number of charges for specified container. */
+public function getItemContainerMaxStacks(int containerType) returns int
+    var result = -1
+    if isItemContainer(containerType)
+        result = table.loadInt(0, containerType)
+    return result
+
+/** Returns item type assigned to specified container as its elements. */
+public function getItemContainerSplitCount(int containerType) returns int
+    var result = -1
+    if isItemContainer(containerType)
+        result = table.loadInt(1, containerType)
+    return result
+
+/** Returns item type assigned to specified container as its elements. */
+public function getItemContainerItem(int containerType) returns int
+    var result = 0
+    if isItemContainer(containerType)
+        result = table.loadInt(3, containerType)
+    return result
+
+/** Number of charges that container cannot go below during split operation. */
+public function getItemContainerMinCharges(int containerType) returns int
+    var result = -1
+    if isItemContainer(containerType)
+        result = table.loadInt(4, containerType)
+    return result
+
+/** Returns value indicating whether specifed item is stackable or not. */
+public function isItemStackable(int elementType) returns boolean
+    return not isItemContainer(elementType) and table.hasInt(0, elementType)
+
+/** Retrieves maximum amount of stacks for specified item. */
+public function getItemMaxStacks(int elementType) returns int
+    var result = -1
+    if isItemStackable(elementType)
+        result = table.loadInt(0, elementType)
+    return result
+
+/** Returns number of charges lost by specified item per split. */
+public function getItemSplitCount(int elementType) returns int
+    var result = -1
+    if isItemStackable(elementType)
+        result = table.loadInt(1, elementType)
+    return result
+
+/** Indicates if specifed element type has container assigned to it. */
+public function itemHasContainer(int elementType) returns boolean
+    return table.hasInt(2, elementType)
+
+/** Returns list of item types assigned to specified element as its containers. */
+public function getItemContainers(int elementType) returns LinkedList<int>
+    LinkedList<int> result = null
+    if itemHasContainer(elementType)
+        result = table.loadInt(2, elementType) castTo LinkedList<int>
+    return result
+
+/** Unregisters specified item from being stackable. */
+public function makeItemUnstackable(int elementType)
+    if isItemStackable(elementType)
+        table.removeInt(0, elementType)
+        table.removeInt(1, elementType)
+
+/** Registers specified item as stackable. */
+public function makeItemStackable(int elementType, int stacks, int splits) returns boolean
+    var result = false
+    if not isItemContainer(elementType) and stacks > 0
+        table.saveInt(0, elementType, stacks)
+        table.saveInt(1, elementType, max(splits, 1))
+        result = true
+    return result
+
+/** Registers specified item as stackable. */
+public function makeItemStackable(int elementType, int stacks) returns boolean
+    return makeItemStackable(elementType, stacks, 1)
+
+/** Unsets any container related data related to specified element item type. */
+public function unsetItemContainer(int containerType)
+    var elementType = getItemContainerItem(containerType)
+    if elementType != 0
+        table.removeInt(0, containerType)
+        table.removeInt(1, containerType)
+        table.removeInt(3, containerType)
+        table.removeInt(4, containerType)
+
+        // Remove containerType from containers list
+        var containers = getItemContainers(elementType)
+        containers.remove(containerType)
+        if containers.isEmpty()
+            destroy containers
+            table.removeInt(2, elementType)
+
+/** Sets specified containerType item type as container for item type elementType.
+    Argument minCharges specifies number of charges that container item cannot
+    go below during split operation. */
+public function setItemContainer(int elementType, int containerType, int stacks, int splits, int minCharges) returns boolean
+    if elementType == 0 or containerType == 0
+        return false
+    else if stacks <= 0 or elementType == containerType
+        return false
+    else if isItemContainer(elementType) or isItemContainer(containerType)
+        return false
+    else if isItemStackable(containerType)
+        return false
+
+    var containers = getItemContainers(elementType)
+    if containers == null
+        containers = new LinkedList<int>()
+        table.saveInt(2, elementType, containers castTo int)
+    containers.push(containerType)
+
+    table.saveInt(0, containerType, stacks)
+    table.saveInt(1, containerType, max(splits, 1))
+    table.saveInt(3, containerType, elementType)
+    table.saveInt(4, containerType, max(minCharges, 0))
+    return true
+
+/** Sets specified containerType item type as container for item type elementType. */
+public function setItemContainer(int elementType, int containerType, int stacks) returns boolean
+    return setItemContainer(elementType, containerType, stacks, 1, 0)
+
+/** Checks if unit inventory is fully stacked and no charges can be added. */
+public function unit.isItemFullyStacked(int itemTypeId) returns boolean
+    if not this.isInventoryFull()
+        return false
+    else if isItemContainer(itemTypeId)
+        return true
+
+    var result = true
+    var last = this.inventorySize() - 1
+    if itemHasContainer(itemTypeId)
+        for containerType in getItemContainers(itemTypeId)
+            var max = getItemContainerMaxStacks(containerType)
+            if max > 0
+                for slot = 0 to last
+                    var itm = this.itemInSlot(slot)
+                    if itm.getTypeId() == containerType and itm.getCharges() < max
+                        result = false
+                        break
+
+    if result and isItemStackable(itemTypeId)
+        var max = getItemMaxStacks(itemTypeId)
+        if max > 0
+            for slot = 0 to last
+                var itm = this.itemInSlot(slot)
+                if itm.getTypeId() == itemTypeId and itm.getCharges() < max
+                    result = false
+                    break
+    return result
+
+function fireEvent(trigger evt, eventInfo currState)
+    var prevState = eventState
+    eventState = currState
+    evt.evaluate()
+    eventState = prevState
+
+function stackItem(unit u, item itm, item ignored, int withTypeId, int max) returns int
+    var charges = itm.getCharges()
+    var last = u.inventorySize() - 1
+
+    for slot = 0 to last
+        var with = u.itemInSlot(slot)
+        if with != ignored and with.getTypeId() == withTypeId
+            var withCharges = with.getCharges()
+
+            if withCharges < max
+                var diff = max - withCharges
+                if diff >= charges
+                    with.setCharges(withCharges + charges)
+                    itm.remove()
+                    fireEvent(eventAddedTrigger, eventInfo(u, with, charges))
+                    charges = 0
+                    break
+                else
+                    charges -= diff
+                    with.setCharges(max)
+                    itm.setCharges(charges)
+                    fireEvent(eventRemovedTrigger, eventInfo(u, itm, diff))
+                    fireEvent(eventAddedTrigger, eventInfo(u, with, diff))
+
+    return charges
+
+/** Attempts to stack provided item for specified unit. */
+public function unit.stackItem(item whichItem) returns boolean
+    var charges = whichItem.getCharges()
+    if charges == 0
+        return false
+
+    var result = false
+    var itemTypeId = whichItem.getTypeId()
+
+    if not isItemContainer(itemTypeId)
+        if itemHasContainer(itemTypeId)
+            for containerType in getItemContainers(itemTypeId)
+                charges = stackItem(this, whichItem, whichItem, containerType, getItemContainerMaxStacks(containerType))
+                if charges == 0
+                    break
+            result = true
+
+        if isItemStackable(itemTypeId) and charges > 0
+            stackItem(this, whichItem, whichItem, itemTypeId, getItemMaxStacks(itemTypeId))
+            result = true
+    else
+        charges = stackItem(this, whichItem, whichItem, getItemContainerItem(itemTypeId), getItemContainerMaxStacks(itemTypeId))
+        result = true
+
+    let maxStack = getItemMaxStacks(itemTypeId)
+    while charges > 0
+        if charges > maxStack
+            let newItemStack = createItem(itemTypeId, whichItem.getPos())
+            newItemStack.setCharges(maxStack)
+            if not this.isInventoryFull()
+                this.addItemHandle(newItemStack)
+            charges -= maxStack
+        else
+            whichItem.setCharges(charges)
+            if not this.isInventoryFull()
+                this.addItemHandle(whichItem)
+            charges = 0
+
+    return result
+
+/** Attempts to split provided item for specified unit. */
+public function unit.splitItem(item whichItem) returns boolean
+    var charges = whichItem.getCharges()
+    var itemTypeId = whichItem.getTypeId()
+    int elementType
+    int toSplit
+    var minCharges = 1
+
+    if isItemContainer(itemTypeId)
+        minCharges = getItemContainerMinCharges(itemTypeId)
+        if charges <= minCharges
+            return false
+
+        elementType = getItemContainerItem(itemTypeId)
+        toSplit = getItemContainerSplitCount(itemTypeId)
+    else if isItemStackable(itemTypeId) and charges > minCharges
+        elementType = itemTypeId
+        toSplit = getItemSplitCount(itemTypeId)
+    else
+        return false
+
+    if toSplit >= charges
+        toSplit = charges - minCharges
+    whichItem.setCharges(charges - toSplit)
+    fireEvent(eventRemovedTrigger, eventInfo(this, whichItem, toSplit))
+
+    var with = createItem(elementType, this.getPos())
+    with.setCharges(toSplit)
+    // Redistribute splitted stacks if possible
+    if itemHasContainer(elementType)
+        for containerType in getItemContainers(elementType)
+            toSplit = stackItem(this, with, whichItem, containerType, getItemContainerMaxStacks(containerType))
+            if toSplit == 0
+                break
+    if isItemStackable(elementType) and toSplit > 0
+        toSplit = stackItem(this, with, whichItem, elementType, getItemMaxStacks(elementType))
+
+    if toSplit > 0 // something is left
+        var t = getPlayerUnitEventTrigger(EVENT_PLAYER_UNIT_PICKUP_ITEM)
+        t.disable()
+        this.addItemHandle(with)
+        t.enable()
+    return true
+
+function pickupItem(unit u, item itm)
+    var itemTypeId = itm.getTypeId()
+
+    if isItemContainer(itemTypeId)
+        var max = getItemContainerMaxStacks(itemTypeId)
+        var elementType = getItemContainerItem(itemTypeId)
+        var charges = itm.getCharges()
+        var last = u.inventorySize() - 1
+
+        for slot = 0 to last
+            if charges >= max
+                break
+            var with = u.itemInSlot(slot)
+            var withCharges = with.getCharges()
+
+            if with != itm and withCharges > 0 and with.getTypeId() == elementType
+                if charges + withCharges > max
+                    int diff = max - charges
+                    itm.setCharges(max)
+                    with.setCharges(withCharges - diff)
+                    fireEvent(eventRemovedTrigger, eventInfo(u, with, diff))
+                    fireEvent(eventAddedTrigger, eventInfo(u, itm, diff))
+                    break
+                else
+                    charges += withCharges
+                    itm.setCharges(charges)
+                    with.remove()
+                    fireEvent(eventAddedTrigger, eventInfo(u, itm, withCharges))
+    else
+        u.stackItem(itm)
+
+function onPickup()
+    pickupItem(GetTriggerUnit(), GetManipulatedItem())
+
+function onMoved()
+    var slotFrom = getInventorySlotFrom()
+    if slotFrom == getInventorySlotTo() // splitting
+        getInventoryManipulatingUnit().splitItem(getInventoryManipulatedItem())
+        return
+
+    var u = getInventoryManipulatingUnit()
+    var itm = getInventoryManipulatedItem()
+    var itemTypeId = itm.getTypeId()
+    if not isItemContainer(itemTypeId)
+        var charges = itm.getCharges()
+        var swapped = getInventorySwappedItem()
+        var swappedTypeId = swapped.getTypeId()
+        var swappedCharges = swapped.getCharges()
+        var max = 0
+
+        if charges > 0
+            if swappedTypeId == itemTypeId and swappedCharges > 0
+                max = getItemMaxStacks(itemTypeId)
+            else if getItemContainerItem(swappedTypeId) == itemTypeId
+                max = getItemContainerMaxStacks(swappedTypeId)
+
+        if max > 0
+            var total = charges + swappedCharges
+            if total > max
+                if swappedCharges < max // if not met, allow for standard replacement action
+                    var t = getPlayerUnitEventTrigger(EVENT_PLAYER_UNIT_DROP_ITEM)
+                    t.disable()
+                    itm.remove() // Remove the item to prevent item swap from occurring
+                    t.enable()
+                    t = getPlayerUnitEventTrigger(EVENT_PLAYER_UNIT_PICKUP_ITEM)
+                    t.disable()
+                    u.addItemToSlot(itemTypeId, slotFrom) // Create and add new item replacing removed one
+                    t.enable()
+
+                    itm = u.itemInSlot(slotFrom)
+                    itm.setCharges(total - max)
+                    swapped.setCharges(max)
+                    var diff = max - charges
+                    fireEvent(eventRemovedTrigger, eventInfo(u, itm, diff))
+                    fireEvent(eventAddedTrigger, eventInfo(u, swapped, diff))
+            else
+                swapped.setCharges(total)
+                itm.remove()
+                fireEvent(eventAddedTrigger, eventInfo(u, swapped, charges))
+
+function onSmoothPickup()
+    pickupItem(getSmoothItemPickupUnit(), getSmoothItemPickupItem())
+
+class SmoothChargesStack implements SmoothPickupPredicate
+    override function canPickup(unit whichUnit, item whichItem) returns boolean
+        var itemTypeId = whichItem.getTypeId()
+        var result = false
+
+        if isItemContainer(itemTypeId)
+            result = not whichUnit.isItemFullyStacked(getItemContainerItem(itemTypeId))
+        else if isItemStackable(itemTypeId)
+            result = not whichUnit.isItemFullyStacked(itemTypeId)
+        return result
+
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM, () -> onPickup())
+    registerInventoryEvent(EVENT_ITEM_INVENTORY.MOVE, () -> onMoved())
+    registerSmoothItemPickupEvent(() -> onSmoothPickup())
+    addSmoothItemPickupCondition(new SmoothChargesStack())

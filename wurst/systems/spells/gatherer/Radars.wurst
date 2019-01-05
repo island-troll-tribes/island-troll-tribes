@@ -13,8 +13,10 @@ constant let CASTTIME = 1.
 constant let RADAR_RANGE_BASE = 3300.
 constant let RADAR_RANGE_PER_LEVEL = 200.
 constant let MAX_RANGE = 5000.
+constant let MAP_MAGIC_RANGE_BONUS = 1500.
 constant let REVEAL_DURATION = 10.
 constant let MANACOST = 15
+constant let MAP_MAGIC_BUFF_ID = 'BHbd'
 constant string array SPELLBOOKSPELLS = ["XGFT, XGFZ, XGFR, XGFC", "XGFT, XGFZ, XGFR, XGFC, XGFF, XGFS", "XGFT, XGFZ, XGFR, XGFC, XGFF, XGFS, XGFM"]
 constant let ABILITY_ID_FINDTINDER = 'XGFT'
 constant let ABILITY_ID_FINDSTICK = 'XGFZ'
@@ -293,9 +295,14 @@ function onCast(int itemId)
 
     //Calculate range
     var range = min(RADAR_RANGE_BASE + RADAR_RANGE_PER_LEVEL * caster.getLevel(), MAX_RANGE)
+
     if (caster.getTypeId() == UNIT_RADAR_GATHERER or caster.getTypeId() == UNIT_OMNIGATHERER)
         //Max range for subs
         range = MAX_RANGE
+
+    //Map magic bonus
+    if caster.hasAbility(MAP_MAGIC_BUFF_ID)
+        range += MAP_MAGIC_RANGE_BONUS
 
     forItemsInMap() i ->
         if i.getPos().distanceTo(casterPos) < range and i.getTypeId() == itemId and not areHostilesNearItem(owner, i)

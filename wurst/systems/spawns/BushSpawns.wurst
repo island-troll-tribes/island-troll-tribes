@@ -7,6 +7,7 @@ import LegacyTriggers
 import UnitExtensions
 
 let bushes = CreateGroup()
+let BUSH_SPAWW_PERIOD = 0.1
 
 class BushPool
     static let map = new HashMap<int, thistype>()
@@ -35,11 +36,13 @@ function addItemToBush(unit bush)
             herb.remove()
 
 function addItemsToBushes()
-    int i = 0
-    for bush in bushes
-        doAfter(i*0.1) ->
-            addItemToBush(bush)
-        i += 1
+    let iter = bushes.iterator()
+    doPeriodically(BUSH_SPAWW_PERIOD) cb ->
+        if iter.hasNext()
+            addItemToBush(iter.next())
+        else
+            iter.close()
+            destroy cb
 
 init
     gg_trg_add_items_to_plants = CreateTrigger()

@@ -139,25 +139,28 @@ public function unit.addOrStackItem(item itm) returns bool
     if isItemStackable(itemTypeId)
         let itemPos = itm.getPos()
         this.stackItem(itm)
-        if itm.isAlive()
-            //Add leftover stacks if they were left
-            var charges = itm.getCharges()
-            let maxStack = getItemMaxStacks(itemTypeId)
-            while charges > 0
-                if this.isInventoryFull()
-                    result = false
-                    break
-                if charges > maxStack
-                    let newItemStack = createItem(itemTypeId, itemPos)
-                    newItemStack.setCharges(maxStack)
-                    this.addItemHandle(newItemStack)
-                    charges -= maxStack
-                    result = true
-                else
-                    this.addItemHandle(itm)
-                    result = true
-                    break
-            itm.setCharges(charges)
+
+        if not itm.isAlive()
+            return false
+
+        //Add leftover stacks if they were left
+        var charges = itm.getCharges()
+        let maxStack = getItemMaxStacks(itemTypeId)
+        while charges > 0
+            if this.isInventoryFull()
+                result = false
+                break
+            if charges > maxStack
+                let newItemStack = createItem(itemTypeId, itemPos)
+                newItemStack.setCharges(maxStack)
+                this.addItemHandle(newItemStack)
+                charges -= maxStack
+            else
+                this.addItemHandle(itm)
+                result = true
+                break
+
+        itm.setCharges(charges)
     else
         //Non-stackables
         if not this.isInventoryFull()

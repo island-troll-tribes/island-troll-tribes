@@ -137,7 +137,9 @@ public function unit.addOrStackItem(item itm) returns bool
     var result = false
     let itemTypeId = itm.getTypeId()
     if isItemStackable(itemTypeId)
+        let itemPos = itm.getPos()
         this.stackItem(itm)
+
         if not itm.isAlive()
             return true
 
@@ -149,8 +151,9 @@ public function unit.addOrStackItem(item itm) returns bool
                 result = false
                 break
             if charges > maxStack
-                this.addItemById(itemTypeId)
-                    ..setCharges(maxStack)
+                let newItemStack = createItem(itemTypeId, itemPos)
+                newItemStack.setCharges(maxStack)
+                this.addItemHandle(newItemStack)
                 charges -= maxStack
             else
                 this.addItemHandle(itm)

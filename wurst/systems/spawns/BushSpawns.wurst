@@ -37,12 +37,10 @@ function addItemToBush(unit bush)
 
 function addItemsToBushes()
     let iter = bushes.iterator()
-    doPeriodically(BUSH_SPAWN_PERIOD) cb ->
-        if iter.hasNext()
-            addItemToBush(iter.next())
-        else
+    doPeriodicallyCounted(BUSH_SPAWN_PERIOD, bushes.size()) cb ->
+        addItemToBush(iter.next())
+        if cb.isLast() or not iter.hasNext()
             iter.close()
-            destroy cb
 
 init
     gg_trg_add_items_to_plants = CreateTrigger()

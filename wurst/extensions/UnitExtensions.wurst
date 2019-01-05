@@ -135,43 +135,34 @@ public function unit.setCreepGuard(bool value)
 public function unit.addOrStackItem(item itm) returns bool
     //Stackables
     var result = false
-    let itemPos = itm.getPos()
-    if isItemStackable(itm.getTypeId())
+    let itemTypeId = itm.getTypeId()
+    if isItemStackable(itemTypeId)
+        let itemPos = itm.getPos()
         this.stackItem(itm)
         if itm.isAlive()
             //Add leftover stacks if they were left
             var charges = itm.getCharges()
-            let itemTypeId = itm.getTypeId()
             let maxStack = getItemMaxStacks(itemTypeId)
-
             while charges > 0
+                if this.isInventoryFull()
+                    result = false
+                    break
                 if charges > maxStack
-                    if not this.isInventoryFull()
-                        let newItemStack = createItem(itemTypeId, itemPos)
-                        newItemStack.setCharges(maxStack)
-                        this.addItemHandle(newItemStack)
-                        charges -= maxStack
-                        itm.setCharges(charges)
-                        result = true
-                    else
-                        result = false
-                        break
+                    let newItemStack = createItem(itemTypeId, itemPos)
+                    newItemStack.setCharges(maxStack)
+                    this.addItemHandle(newItemStack)
+                    charges -= maxStack
+                    result = true
                 else
-                    itm.setCharges(charges)
-                    if not this.isInventoryFull()
-                        this.addItemHandle(itm)
-                        charges = 0
-                        result = true
-                        break
-                    else
-                        result = false
-                        break
+                    this.addItemHandle(itm)
+                    result = true
+                    break
+            itm.setCharges(charges)
     else
         //Non-stackables
         if not this.isInventoryFull()
             this.addItemHandle(itm)
             result = true
-
     return result
 
 public function unit.isImmobilized() returns bool

@@ -9,7 +9,9 @@ import GameConfig
 import ClosureForGroups
 
 public let DISEASE_HEALING_REDUCTION_FACTOR = 0.4
-let DURATION = 15.
+let DURATION = 45.
+let DAMAGE_TICK_INTERVAL = 0.5
+let DAMAGE_PER_SECOND = 5
 let EFFECT_PATH = "Abilities\\Spells\\Undead\\PlagueCloud\\PlagueCloudCaster.mdl"
 HashMap<unit, DiseaseInstance> diseaseInstances = new HashMap<unit,DiseaseInstance>()
 
@@ -19,26 +21,34 @@ public function isUnitDiseased(unit u) returns bool
 function onCastDisease()
     let caster = GetSpellAbilityUnit()
     let target = GetSpellTargetUnit()
-    applyDisease(target)
+    applyDisease(caster, target)
 
-function applyDisease(unit target)
+function applyDisease(unit caster, unit target)
     //Remove any old timers
     if diseaseInstances.has(target)
         destroy diseaseInstances.getAndRemove(target)
 
-    let diseaseTimer = CreateTimer()
-    let fx = addEffect(EFFECT_PATH, target, "origin")
-    diseaseInstances.put(target, new DiseaseInstance(diseaseTimer, fx))
-    diseaseTimer.doAfter(15) ->
-        if diseaseInstances.has(target)
-            destroy diseaseInstances.getAndRemove(target)
+    diseaseInstances.put(target, new DiseaseInstance(caster, target))
 
 class DiseaseInstance
+    unit owner
+    unit target
     timer t
     effect fx
-    construct(timer t, effect fx)
-        this.t = t
-        this.fx = fx
+
+    function tickDamage()
+        owner.damageTarget(target, DAMAGE_PER_SECOND * DAMAGE_TICK_INTERVAL)
+
+    construct(unit owner, unit target)
+        this.owner = owner
+        this.target = target
+        this.t = CreateTimer()
+        this.fx = addEffect(EFFECT_PATH, target, "origin")
+
+        t.doPeriodicallyTimed(DAMAGE_TICK_INTERVAL, 15) cb ->
+            this.tickDamage()
+            if cb.isLast() and diseaseInstances.has(target)
+                destroy diseaseInstances.getAndRemove(target)
 
     ondestroy
         t.destr()
@@ -50,6 +60,6 @@ init
             printTimedToPlayer("Added disease potion effect to any selected heroes", 5., triggerPlayer)
             forUnitsSelected(triggerPlayer) u ->
                 if (u.isType(UNIT_TYPE_HERO))
-                    applyDisease(u)
+                    applyDisease(u,u)
         else
             printTimedToPlayer("Requires test mode!", 5., triggerPlayer)

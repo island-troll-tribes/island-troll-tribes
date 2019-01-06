@@ -1,0 +1,15 @@
+package HealingSystem
+import DiseasePotion
+
+public function healUnit(unit u, real amount, bool allowModifiers)
+    if not allowModifiers
+        u.setHP(u.getHP() + amount)
+    else
+        let modifiedHealAmount = amount * getUnitHealingModifier(u)
+        u.setHP(u.getHP() + modifiedHealAmount)
+
+public function getUnitHealingModifier(unit u) returns real
+    var healingModifier = 1.
+    if isUnitDiseased(u)
+        healingModifier -= DISEASE_HEALING_REDUCTION_FACTOR
+    return healingModifier

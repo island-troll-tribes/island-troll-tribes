@@ -1,0 +1,50 @@
+package HealingItem
+
+import ID
+import HashMap
+import ClosureEvents
+import HealingSystem
+
+HashMap<int, real> itemSelfHealAmount = null
+HashMap<int, real> itemTargetedHealAmount = null
+
+let ABILITY_HEALPOTION_1 = 'A0DO'
+let ABILITY_HEALPOTION_2 = 'A0DN'
+let ABILITY_HEALPOTION_3 = 'A0DP'
+let ABILITY_HEALPOTION_4 = 'A0DQ'
+
+function initHealItemTable()
+    itemSelfHealAmount = new HashMap<int,real>()
+    itemSelfHealAmount.put(ITEM_COOKED_MEAT, 50.)
+    itemSelfHealAmount.put(ITEM_SMOKED_MEAT, 40.)
+    itemSelfHealAmount.put(ITEM_DISEASED_MEAT, 30.)
+    itemSelfHealAmount.put(ITEM_ACORN, 38.)
+    itemSelfHealAmount.put(ITEM_MAGIC_ACORN, 90.)
+
+function initHealAbilityTable()
+    itemTargetedHealAmount = new HashMap<int,real>()
+    itemTargetedHealAmount.put(ABILITY_HEALPOTION_1, 65)
+    itemTargetedHealAmount.put(ABILITY_HEALPOTION_2, 120)
+    itemTargetedHealAmount.put(ABILITY_HEALPOTION_3, 160)
+    itemTargetedHealAmount.put(ABILITY_HEALPOTION_4, 200)
+
+function onSelfHealItem()
+    let itm = GetManipulatedItem()
+    let itemId = itm.getTypeId()
+    let user = GetManipulatingUnit()
+    if itemSelfHealAmount.has(itemId)
+        healUnit(user, itemSelfHealAmount.get(itemId), true)
+
+function onSpellEffect()
+    let target = GetSpellTargetUnit()
+    let spellId = GetSpellAbilityId()
+
+    if itemTargetedHealAmount.has(spellId)
+        healUnit(target, itemTargetedHealAmount.get(spellId), true)
+
+init
+    initHealItemTable()
+    EventListener.add(EVENT_PLAYER_UNIT_USE_ITEM) ->
+        onSelfHealItem()
+    EventListener.add(EVENT_PLAYER_UNIT_SPELL_EFFECT) ->
+        onSpellEffect()

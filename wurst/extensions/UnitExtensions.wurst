@@ -134,19 +134,39 @@ public function unit.setCreepGuard(bool value)
 
 public function unit.addOrStackItem(item itm) returns bool
     //Stackables
-    if isItemStackable(itm.getTypeId())
-        if not this.isItemFullyStacked(itm.getTypeId()) and this.hasItemById(itm.getTypeId())
-            this.stackItem(itm)
+    var result = false
+    let itemTypeId = itm.getTypeId()
+    if isItemStackable(itemTypeId)
+        this.stackItem(itm)
+
+        if not itm.isAlive()
             return true
-        else if not this.isInventoryFull()
-            this.addItemHandle(itm)
-            return true
+
+        //Add leftover stacks if they were left
+        var charges = itm.getCharges()
+        let maxStack = getItemMaxStacks(itemTypeId)
+        while charges > 0
+            if this.isInventoryFull()
+                result = false
+                break
+            if charges > maxStack
+                let itemPos = itm.getPos()
+                let newItemStack = createItem(itemTypeId, itemPos)
+                newItemStack.setCharges(maxStack)
+                this.addItemHandle(newItemStack)
+                charges -= maxStack
+            else
+                this.addItemHandle(itm)
+                result = true
+                break
+
+        itm.setCharges(charges)
     else
         //Non-stackables
         if not this.isInventoryFull()
             this.addItemHandle(itm)
-            return true
-    return false
+            result = true
+    return result
 
 public function unit.isImmobilized() returns bool
     return (

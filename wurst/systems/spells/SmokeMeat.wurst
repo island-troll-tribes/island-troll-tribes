@@ -1,14 +1,14 @@
 package SmokeMeat
 import RegisterEvents
 import MathUtils
-import StackNSplit
+import UnitExtensions
 import ID
+import StackNSplit
 
 init
     registerSpellEffectEvent(SPELL_SMOKE_MEAT) ->
         let smoker = GetSpellAbilityUnit()
         if smoker.hasItemById(ITEM_FLINT) and smoker.hasItemById(ITEM_TINDER)
-            smoker.getItemById(ITEM_FLINT).remove()
             smoker.getItemById(ITEM_TINDER).remove()
 
             var charges = 0
@@ -21,11 +21,14 @@ init
                     case ITEM_DISEASED_MEAT
                         charges += floor(maybeMeat.getCharges() / 2)
 
-            if charges > 0
-                removeMeats(smoker)
+            //Spawn meat in appropriately sized stacks
+            removeMeats(smoker)
+            let maxStack = getItemMaxStacks(ITEM_SMOKED_MEAT)
+            while charges > 0
                 let meat = createItem(ITEM_SMOKED_MEAT, smoker.getPos())
-                ..setCharges(charges)
-                smoker.stackItem(meat)
+                    ..setCharges(min(charges, maxStack))
+                smoker.addOrStackItem(meat)
+                charges -= min(charges, maxStack)
 
 function removeMeats(unit smoker)
     for i = 1 to 6

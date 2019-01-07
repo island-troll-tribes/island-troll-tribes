@@ -3,7 +3,7 @@ import ID
 import ClosureForGroups
 import Classes
 import BonyAnimal
-
+import LinkedList
 
 public class Hawk extends BonyAnimal
     private static let unitTypeId = UNIT_HAWK
@@ -26,8 +26,9 @@ public class Hawk extends BonyAnimal
     override function getTypeId() returns int
         return unitTypeId
 
-    override function onDeath()
-        drops.add(ITEM_HAWK_EGG)
+    override function getDrops() returns LinkedList<int>
+        let drops = super.getDrops()
+            ..add(ITEM_HAWK_EGG)
 
         forNearestUnit(getPos(), 400, Filter(-> begin
             return getTrollBaseClass(GetFilterUnit()) == UNIT_BEAST_MASTER
@@ -36,7 +37,7 @@ public class Hawk extends BonyAnimal
                 drops.add(ITEM_HAWK_EGG)
         end)
 
-        super.onDeath()
+        return drops
 
 init
     Hawk.initialize()

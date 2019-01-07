@@ -9,8 +9,6 @@ public function createCorpse(player p, int unitId, vec2 pos, angle facing) retur
     return CreateCorpse(p, unitId, pos.x, pos.y, facing.degrees())
 
 public abstract class Hostile extends UnitEntity
-    protected LinkedList<int> drops
-
     construct(unit whichUnit)
         super(whichUnit)
 
@@ -20,15 +18,14 @@ public abstract class Hostile extends UnitEntity
     construct(player whichPlayer, vec2 pos, angle facing)
         super(whichPlayer, pos, facing)
 
-    function addDrop(int itemId)
-        drops.add(itemId)
+    function getDrops() returns LinkedList<int>
+        return new LinkedList<int>()
 
     function getNumCorpses() returns int
         return 1
 
     override function postCreate()
         super.postCreate()
-        drops = new LinkedList<int>()
 
     override function onDeath()
         let pos = getPos()
@@ -37,6 +34,7 @@ public abstract class Hostile extends UnitEntity
         for i = 1 to numCorpses
             createCorpse(players[PLAYER_NEUTRAL_AGGRESSIVE], UNIT_MEAT, pos, randomAngle())
 
+        let drops = getDrops()
         drops.each(drop -> createItem(drop, pos))
 
         super.onDeath()

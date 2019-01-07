@@ -1,0 +1,114 @@
+package BattleglovesCritical
+
+import AbilityObjEditing
+import ObjectIdGenerator
+import ObjectIds
+import HashMap
+import ClosureEvents
+import ClosureTimers
+import DamageType
+import ID
+
+let CRITICAL_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
+let SPELLBOOK_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
+let COOLDOWN = 6.
+let COOLDOWN_SKIP_PER_ATTACK = 1.
+let MULTIPLIER = 1.6
+let CLOCK_TICK_INTERVAL = 0.05
+
+@compiletime function createCriticalAbility()
+    new AbilityDefinitionBladeMasterCriticalStrike(CRITICAL_ABILITY_ID)
+    ..setItemAbility(false)
+    ..setHeroAbility(false)
+    ..presetDamageMultiplier(lvl -> MULTIPLIER)
+    ..presetDamageBonus(lvl -> 0)
+    ..presetChancetoCriticalStrike(lvl -> 100)
+    ..presetChancetoEvade(lvl -> 0)
+    ..presetCooldown(lvl -> 0)
+    ..presetNeverMiss(lvl -> true)
+
+@compiletime function createHiddenSpellbook()
+    new AbilityDefinitionSpellBook(SPELLBOOK_ABILITY_ID)
+    ..setButtonPositionNormalX(0)
+    ..setButtonPositionNormalY(0)
+    ..setButtonPositionResearchX(0)
+    ..setButtonPositionResearchY(0)
+    ..setIconNormal("")
+    ..setIconResearch("")
+    ..setIconTurnOff("")
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..presetBaseOrderID(lvl -> "decouple")
+    ..setHotkeyLearn("")
+    ..setHotkeyNormal("")
+    ..setName("Hidden Battlegloves Critical Spellbook")
+    ..setTooltipLearn("You are not supposed to be seeing this")
+    ..setTooltipLearnExtended("You are not supposed to be seeing this")
+    ..presetMaximumSpells(lvl -> 11)
+    ..presetMinimumSpells(lvl -> 11)
+    ..presetSpellList(lvl -> toRawCode(CRITICAL_ABILITY_ID))
+    ..presetCooldown(lvl -> 0)
+    ..presetTooltipNormal(lvl -> "You are not supposed to be seeing this")
+    ..presetTooltipNormalExtended(lvl -> "You are not supposed to be seeing this")
+    ..presetSharedSpellCooldown(lvl -> false)
+
+class BattleGlovesInstance
+    private unit wearer
+    private real lastCritTimestamp
+    private real baseClock
+
+    construct(unit wearer)
+        this.wearer = wearer
+        this.baseClock = 0
+        this.lastCritTimestamp = 0
+        print("Instance created")
+
+    function updateTick()
+        this.baseClock += CLOCK_TICK_INTERVAL
+        if this.baseClock - this.lastCritTimestamp >= COOLDOWN and not wearer.hasAbility(SPELLBOOK_ABILITY_ID)
+            wearer.addAbility(SPELLBOOK_ABILITY_ID)
+            wearer.getOwner().setAbilityAvailable(SPELLBOOK_ABILITY_ID, false)
+
+    function onEnemyAttackDamage()
+        if wearer.hasAbility(SPELLBOOK_ABILITY_ID)
+            wearer.removeAbility(SPELLBOOK_ABILITY_ID)
+            this.lastCritTimestamp = this.baseClock
+        else
+            this.baseClock += COOLDOWN_SKIP_PER_ATTACK
+
+    ondestroy
+        print("Instance removed")
+        wearer.removeAbility(SPELLBOOK_ABILITY_ID)
+
+function onPickupItem()
+    if GetManipulatedItem().getTypeId() == ITEM_BATTLE_GLOVES
+        let u = GetManipulatingUnit()
+        if not instances.has(u)
+            instances.put(u, new BattleGlovesInstance(u))
+
+function onDropItem()
+    if GetManipulatedItem().getTypeId() == ITEM_BATTLE_GLOVES
+        let u = GetManipulatingUnit()
+        if instances.has(u)
+            destroy instances.getAndRemove(u)
+
+IterableMap<unit, BattleGlovesInstance> instances = new IterableMap<unit, BattleGlovesInstance>()
+
+init
+    EventListener.add(EVENT_UNIT_DAMAGED) ->
+        if getDamageType() == DamageType.ATTACK
+            let victim = GetTriggerUnit()
+            let attacker = GetEventDamageSource()
+            if instances.has(attacker) and not victim.isType(UNIT_TYPE_STRUCTURE) and not victim.getOwner().isAllyOf(attacker.getOwner())
+                instances.get(attacker).onEnemyAttackDamage()
+
+    doPeriodically(CLOCK_TICK_INTERVAL) cb ->
+        for i in instances
+            instances.get(i).updateTick()
+
+    EventListener.add(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
+        onPickupItem()
+
+    EventListener.add(EVENT_PLAYER_UNIT_DROP_ITEM) ->
+        onDropItem()

@@ -1,15 +1,41 @@
 package HealingSystem
-import DiseasePotion
 
-public function healUnit(unit u, real amount, bool allowModifiers)
-    if not allowModifiers
-        u.setHP(u.getHP() + amount)
-    else
-        let modifiedHealAmount = amount * getUnitHealingModifier(u)
-        u.setHP(u.getHP() + modifiedHealAmount)
+trigger eventTrigger = CreateTrigger()
+HealingInstance eventHealing = null
 
-public function getUnitHealingModifier(unit u) returns real
-    var healingModifier = 1.
-    if isUnitDiseased(u)
-        healingModifier -= DISEASE_HEALING_REDUCTION_FACTOR
-    return healingModifier
+public function getHealingInstance() returns HealingInstance
+    return eventHealing
+
+public function getHealingAmount() returns real
+    return eventHealing.amount
+
+public function getHealingMultiplier() returns real
+    return eventHealing.multiplier
+
+public function getHealingTarget() returns unit
+    return eventHealing.target
+
+public function onUnitHealed(code c) returns triggeraction
+    return eventTrigger.addAction(c)
+
+public class HealingInstance
+    real amount
+    real multiplier
+    unit target
+
+    construct(unit target, real amount)
+        this.amount = amount
+        this.multiplier = 1
+        this.target = target
+        execute()
+
+    private function fireHealingEvent()
+        let prev = eventHealing
+        eventHealing = this
+        eventTrigger.evaluate()
+        eventHealing = prev
+
+    private function execute()
+        this.fireHealingEvent()
+        let modifiedHealAmount = this.amount * this.multiplier
+        target.setHP(target.getHP() + modifiedHealAmount)

@@ -7,6 +7,7 @@ import ClosureTimers
 import ChatCommands
 import GameConfig
 import ClosureForGroups
+import HealingSystem
 
 public let DISEASE_HEALING_REDUCTION_FACTOR = 0.4
 let DURATION = 45.
@@ -29,6 +30,11 @@ function applyDisease(unit caster, unit target)
         destroy diseaseInstances.getAndRemove(target)
 
     diseaseInstances.put(target, new DiseaseInstance(caster, target))
+
+function onHealed()
+    let instance = getHealingInstance()
+    if isUnitDiseased(instance.target)
+        instance.multiplier -= DISEASE_HEALING_REDUCTION_FACTOR
 
 class DiseaseInstance
     unit owner
@@ -54,7 +60,12 @@ class DiseaseInstance
         t.destr()
         fx.destr()
 init
-    registerSpellEffectEvent(SPELL_DISEASE, () -> onCastDisease())
+    registerSpellEffectEvent(SPELL_DISEASE) ->
+        onCastDisease()
+
+    onUnitHealed() ->
+        onHealed()
+
     registerCommandAll("disease") (triggerPlayer, args) ->
         if (gameConfig.isTestModeEnabled())
             printTimedToPlayer("Added disease potion effect to any selected heroes", 5., triggerPlayer)

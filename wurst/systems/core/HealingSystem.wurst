@@ -3,6 +3,8 @@ package HealingSystem
 trigger eventTrigger = CreateTrigger()
 HealingInstance eventHealing = null
 
+/** Gets the class instance uof the current healing event.
+Can be modified during the event to change the healing done via multiplier or amount.*/
 public function getHealingInstance() returns HealingInstance
     return eventHealing
 
@@ -15,21 +17,23 @@ public function getHealingMultiplier() returns real
 public function getHealingTarget() returns unit
     return eventHealing.target
 
+/** Only supports healing done by HealingSystem package. So no support stock WC3 healing abilities. */
 public function onUnitHealed(code c) returns triggercondition
     return eventTrigger.addCondition(Condition(c))
 
-public enum HealingSource
+public enum HealingType
     ITEM
     ABILITY
 
 public class HealingInstance
-    HealingSource sourceType
+    HealingType healingType
     real amount
     real multiplier
     unit target
 
-    construct(unit target, real amount, HealingSource sourceType)
-        this.sourceType = sourceType
+    /** Creates a new HealingInstance, fires onUnitHealed events for it and applies the healing after possible event modifications */
+    construct(unit target, real amount, HealingType healingType)
+        this.healingType = healingType
         this.amount = amount
         this.multiplier = 1
         this.target = target
@@ -45,6 +49,7 @@ public class HealingInstance
         this.fireHealingEvent()
         let modifiedHealAmount = this.amount * this.multiplier
         target.setHP(target.getHP() + modifiedHealAmount)
+        destroy this
 
     function reduceHealAmount(real reduction) returns real
         this.amount = max(0, this.amount-reduction)

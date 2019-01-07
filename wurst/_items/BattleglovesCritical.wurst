@@ -8,9 +8,10 @@ import ClosureEvents
 import ClosureTimers
 import DamageType
 import ID
+import AbilityObjectCreationUtils
 
 let CRITICAL_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
-let SPELLBOOK_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
+let SPELLBOOK_ABILITY_ID = compiletime(createHiddenSpellbookWithAbilities(toRawCode(CRITICAL_ABILITY_ID)))
 let COOLDOWN = 6.
 let COOLDOWN_SKIP_PER_ATTACK = 1.
 let MULTIPLIER = 1.6
@@ -26,32 +27,6 @@ let CLOCK_TICK_INTERVAL = 0.05
     ..presetChancetoEvade(lvl -> 0)
     ..presetCooldown(lvl -> 0)
     ..presetNeverMiss(lvl -> true)
-
-@compiletime function createHiddenSpellbook()
-    new AbilityDefinitionSpellBook(SPELLBOOK_ABILITY_ID)
-    ..setButtonPositionNormalX(0)
-    ..setButtonPositionNormalY(0)
-    ..setButtonPositionResearchX(0)
-    ..setButtonPositionResearchY(0)
-    ..setIconNormal("")
-    ..setIconResearch("")
-    ..setIconTurnOff("")
-    ..setHeroAbility(false)
-    ..setItemAbility(false)
-    ..setLevels(1)
-    ..presetBaseOrderID(lvl -> "decouple")
-    ..setHotkeyLearn("")
-    ..setHotkeyNormal("")
-    ..setName("Hidden Battlegloves Critical Spellbook")
-    ..setTooltipLearn("You are not supposed to be seeing this")
-    ..setTooltipLearnExtended("You are not supposed to be seeing this")
-    ..presetMaximumSpells(lvl -> 11)
-    ..presetMinimumSpells(lvl -> 11)
-    ..presetSpellList(lvl -> toRawCode(CRITICAL_ABILITY_ID))
-    ..presetCooldown(lvl -> 0)
-    ..presetTooltipNormal(lvl -> "You are not supposed to be seeing this")
-    ..presetTooltipNormalExtended(lvl -> "You are not supposed to be seeing this")
-    ..presetSharedSpellCooldown(lvl -> false)
 
 class BattleGlovesInstance
     private unit wearer

@@ -1,5 +1,4 @@
 package Blowgun
-
 import LinkedList
 import HashMap
 import ClosureEvents
@@ -12,12 +11,12 @@ import Orders
 import InventoryEvent
 import SimError
 import ErrorHandling
-import UnitExtensions
 import ID
+import UnitExtensions
 
 constant let ICON = Icons.bTNAlleriaFlute
 constant let ITEM_TOOLTIP = "Purchase |cffffcc00B|rlow Gun"
-constant let ITEM_TOOLTIP_EXT = "Used for shooting small things. Can be loaded with thistles or bones. Drag and drop items on the blow gun to load, click and use on your own troll to unload."
+constant let ITEM_TOOLTIP_EXT = "Used for shooting small things. Can be loaded with thistles or bones. Drag and drop items on the blowgun to load, click and use on your own troll to unload."
 constant let ITEM_DESCRIPTION = "A hollowed out piece of wood. If blown through, could be used to fire small projectiles such as thistles."
 constant let GROUND_MODEL_PATH = "Doodads\\Northrend\\Water\\FloatingPlank\\FloatingPlank.mdl"
 constant let ABILITY_ID = 'XBPA'
@@ -104,37 +103,34 @@ class Blowpipe
 
     ondestroy
         emptyContents()
-        //Destroy list
         destroy contents
 
     function emptyContents()
-        print("Emptying to ground at itempos")
-        for iterItem in this.contents
-            iterItem.setVisible(true)
+        for iterItem in contents
             iterItem.setPos(this.i.getPos())
+            iterItem.setVisible(true)
             contents.remove(iterItem)
         this.i.setCharges(0)
         updateTooltip()
 
     function emptyContentsToUnit(unit u)
-        print("Emptying to unit: " + u.getName())
-        for iterItem in this.contents
-            iterItem.setVisible(true)
-            contents.remove(iterItem)
+        for iterItem in contents
             if not u.addOrStackItem(iterItem)
                 iterItem.setPos(u.getPos())
+            iterItem.setVisible(true)
+            contents.remove(iterItem)
         this.i.setCharges(0)
         updateTooltip()
 
     function onFire(unit caster)
         if this.target == caster
-            print("Self-target detected")
             //Empty blowpipe on self-target
             caster.endAbilityCooldown(ABILITY_ID)
             emptyContentsToUnit(caster)
             return
 
         item ammo = contents.get(0)
+
         if ammo == null
             simError(caster.getOwner(), "No ammo!")
             return
@@ -147,11 +143,11 @@ class Blowpipe
                 case ITEM_DARK_THISTLES
                     new IttDummyCaster(2).castTarget(caster.getOwner(), DARKTHISTLE_ABILITY_ID, 1, Orders.shadowstrike, this.target, caster.getPos())
                 default
-                    error("ERROR: Invalid blowgun ammo!")
+                    error("ERROR: Invalid blowgun ammo type fired!")
+
             caster.damageTarget(this.target, 10., ATTACK_TYPE_NORMAL)
 
             int charges = ammo.getCharges()
-
             //Reduce ammo
             if (charges > 1)
                 ammo.setCharges(charges - 1)
@@ -160,10 +156,8 @@ class Blowpipe
                 ammo.remove()
 
             updateTooltip()
-            print("Finished firing blowgun")
 
     function loadAmmo(unit owner, item itm)
-        print("load ammo")
         int charges = itm.getCharges()
         //Treat non-charge items as 1 charge
         if charges == 0
@@ -202,7 +196,6 @@ class Blowpipe
         updateTooltip()
 
     function updateTooltip()
-        print("updatetooltip")
         string ammoString = "\n\n|cffadff2fLoaded Ammo:|r"
         if (this.contents.size() == 0)
             ammoString = ammoString + "\nNone"
@@ -249,6 +242,7 @@ function onCast()
             else
                 error("ERROR: Tried to target blowgun with no instance!")
 
+
 function onUse()
     //Triggers after onCast, used for actually firing the blowgun at the target specified in onCast
     var itm = GetManipulatedItem()
@@ -262,6 +256,7 @@ function onPickup()
     //Create blowpipe instance when new blowpipe is acquired
     var itm = GetManipulatedItem()
     var itemId = itm.getTypeId()
+    var trigUnit =  GetTriggerUnit()
 
     if itemId == ITEM_ID
         if not instances.has(itm)

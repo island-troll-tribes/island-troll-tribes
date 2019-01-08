@@ -11,7 +11,7 @@ public function randomAngle() returns angle
 
 
 public abstract class UnitEntity
-    static HashMap<unit, thistype> instances = new HashMap<unit,thistype>()
+    static thistype array instances
     static let factories = new HashMap<int, Function<unit, thistype>>()
 
     static function initialize()
@@ -33,10 +33,7 @@ public abstract class UnitEntity
         factories.put(unitTypeId, factory)
 
     static function findForUnit(unit whichUnit) returns thistype
-        if instances.has(whichUnit)
-            return instances.get(whichUnit)
-        else
-            return null
+        return instances[whichUnit.getIndex()]
 
     private unit theUnit = null
 
@@ -53,7 +50,7 @@ public abstract class UnitEntity
         postCreate()
 
     function postCreate()
-        instances.put(theUnit, this)
+        instances[theUnit.getIndex()] = this
 
     function getUnit() returns unit
         return theUnit
@@ -75,7 +72,7 @@ public abstract class UnitEntity
         nullTimer(-> destroy this)
 
     ondestroy
-        instances.remove(theUnit)
+        instances[theUnit.getIndex()] = null
         removeUnit()
 
 init

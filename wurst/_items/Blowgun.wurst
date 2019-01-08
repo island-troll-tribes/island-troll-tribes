@@ -1,4 +1,4 @@
-package Blowpipe
+package Blowgun
 
 import LinkedList
 import HashMap
@@ -12,11 +12,12 @@ import Orders
 import InventoryEvent
 import SimError
 import ErrorHandling
+import UnitExtensions
 import ID
 
 constant let ICON = Icons.bTNAlleriaFlute
 constant let ITEM_TOOLTIP = "Purchase |cffffcc00B|rlow Gun"
-constant let ITEM_TOOLTIP_EXT = "Used for shooting small things. Can be loaded with thistles or bones. Drag and drop items on the blowpipe to load, click and use on your own troll to unload."
+constant let ITEM_TOOLTIP_EXT = "Used for shooting small things. Can be loaded with thistles or bones. Drag and drop items on the blow gun to load, click and use on your own troll to unload."
 constant let ITEM_DESCRIPTION = "A hollowed out piece of wood. If blown through, could be used to fire small projectiles such as thistles."
 constant let GROUND_MODEL_PATH = "Doodads\\Northrend\\Water\\FloatingPlank\\FloatingPlank.mdl"
 constant let ABILITY_ID = 'XBPA'
@@ -70,9 +71,6 @@ constant let MAX_SLOTS = 15
     ..setTooltipBasic(ITEM_TOOLTIP)
     ..setTooltipExtended(ITEM_TOOLTIP_EXT)
 
-
-
-
 IterableMap<item, Blowpipe> instances
 trigger cleanupTrigger
 HashMap<int, int> slotsPerItem
@@ -96,65 +94,60 @@ class Blowpipe
     item i
     LinkedList<item> contents
     unit target
-    bool loadingEnabled
 
     construct(item i)
         this.i = i
         this.contents = new LinkedList<item>()
         this.target = null
-        this.loadingEnabled = true
         TriggerRegisterDeathEvent(cleanupTrigger, this.i)
         updateTooltip()
 
     ondestroy
         emptyContents()
-
         //Destroy list
         destroy contents
 
-
     function emptyContents()
-        for iterItem in contents
-            iterItem.setPos(this.i.getPos())
+        print("Emptying to ground at itempos")
+        for iterItem in this.contents
             iterItem.setVisible(true)
+            iterItem.setPos(this.i.getPos())
             contents.remove(iterItem)
         this.i.setCharges(0)
         updateTooltip()
 
     function emptyContentsToUnit(unit u)
-        //Temporarily disable loading to prevent infinite loop
-        this.loadingEnabled = false
-        for iterItem in contents
-            if u.inventorySize()-u.itemCount() > 0
-                u.addItemHandle(iterItem)
-            else
-                iterItem.setPos(this.i.getPos())
+        print("Emptying to unit: " + u.getName())
+        for iterItem in this.contents
             iterItem.setVisible(true)
             contents.remove(iterItem)
-        this.loadingEnabled = true
+            if not u.addOrStackItem(iterItem)
+                iterItem.setPos(u.getPos())
         this.i.setCharges(0)
         updateTooltip()
 
     function onFire(unit caster)
         if this.target == caster
+            print("Self-target detected")
             //Empty blowpipe on self-target
             caster.endAbilityCooldown(ABILITY_ID)
             emptyContentsToUnit(caster)
             return
 
         item ammo = contents.get(0)
-
         if ammo == null
             simError(caster.getOwner(), "No ammo!")
             return
         else
-            if (ammo.getTypeId() == ITEM_THISTLES)
-                new IttDummyCaster(2).castTarget(caster.getOwner(), THISTLE_ABILITY_ID, 1, Orders.shadowstrike, this.target, caster.getPos())
-            else if (ammo.getTypeId() == ITEM_BONE)
-                new IttDummyCaster(2).castTarget(caster.getOwner(), BONE_ABILITY_ID, 1, Orders.creepthunderbolt, this.target, caster.getPos())
-            else if (ammo.getTypeId() == ITEM_DARK_THISTLES)
-                new IttDummyCaster(2).castTarget(caster.getOwner(), DARKTHISTLE_ABILITY_ID, 1, Orders.shadowstrike, this.target, caster.getPos())
-
+            switch ammo.getTypeId()
+                case ITEM_THISTLES
+                    new IttDummyCaster(2).castTarget(caster.getOwner(), THISTLE_ABILITY_ID, 1, Orders.shadowstrike, this.target, caster.getPos())
+                case ITEM_BONE
+                    new IttDummyCaster(2).castTarget(caster.getOwner(), BONE_ABILITY_ID, 1, Orders.creepthunderbolt, this.target, caster.getPos())
+                case ITEM_DARK_THISTLES
+                    new IttDummyCaster(2).castTarget(caster.getOwner(), DARKTHISTLE_ABILITY_ID, 1, Orders.shadowstrike, this.target, caster.getPos())
+                default
+                    error("ERROR: Invalid blowgun ammo!")
             caster.damageTarget(this.target, 10., ATTACK_TYPE_NORMAL)
 
             int charges = ammo.getCharges()
@@ -167,13 +160,12 @@ class Blowpipe
                 ammo.remove()
 
             updateTooltip()
+            print("Finished firing blowgun")
 
     function loadAmmo(unit owner, item itm)
-        if not this.loadingEnabled
-            return
-
+        print("load ammo")
         int charges = itm.getCharges()
-        //Tread non-charge items as 1 charge
+        //Treat non-charge items as 1 charge
         if charges == 0
             charges = 1
 
@@ -210,6 +202,7 @@ class Blowpipe
         updateTooltip()
 
     function updateTooltip()
+        print("updatetooltip")
         string ammoString = "\n\n|cffadff2fLoaded Ammo:|r"
         if (this.contents.size() == 0)
             ammoString = ammoString + "\nNone"
@@ -255,7 +248,6 @@ function onCast()
                 instances.get(itm).setTarget(target)
             else
                 error("ERROR: Tried to target blowgun with no instance!")
-
 
 function onUse()
     //Triggers after onCast, used for actually firing the blowgun at the target specified in onCast

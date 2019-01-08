@@ -18,11 +18,8 @@ if u == null then
     set u = CreateUnit(Player(PLAYER_NEUTRAL_PASSIVE), UNIT_MASTER_CASTER, spawn_x, spawn_y, 0)
     call SetUnitInvulnerable(u, true)
     call SetUnitPathing(u, false)
-    // debug call DisplayText("DUMMY: Create")
 else
     call GroupRemoveUnit(dummyCast, u)
-    //call PauseUnit(u, false)
-    // debug call DisplayText("DUMMY: Allocate")
 endif
 call UnitResetCooldown(u)
 call SetUnitUserDataEx(u, 1)
@@ -43,18 +40,11 @@ call SetUnitX(u, spawn_x)
 call SetUnitY(u, spawn_y)
 call SetUnitUserDataEx(u, -1)
 call GroupAddUnit(dummyCast, u)
-//call PauseUnit(u, true)
-// Pause caused problems with blowgun abilities..
-// debug if u == null then
-// debug call DisplayText("DUMMY: NULL???")
-// debug endif
-// debug call DisplayText("DUMMY: Returned")
 set u = null
 endfunction
 
 public function returnCastTimed takes unit u, integer i, real sec returns nothing
 local timer t = NewTimer()
-// debug call DisplayText("DUMMY: Return Initialized")
 call SaveUnitHandle(udg_GameHash, GetHandleId(t), StringHash("dumc"), u)
 call SaveInteger(udg_GameHash, GetHandleId(t), StringHash("dumcabil"), i)
 call TimerStart(t, sec, false, function returnCast)

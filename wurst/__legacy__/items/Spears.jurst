@@ -28,21 +28,16 @@ library Spears initializer onInit requires PublicLibrary, LegacyCastingDummies, 
 
     private function spearResist takes unit u returns nothing
         call SetPlayerAbilityAvailableBJ( false, ABILITY_SPEAR_RESIST, GetOwningPlayer(u) )
-        debug call DisplayTextToForce( GetPlayersAll(), GetUnitName(u) )
         if(GetUnitAbilityLevelSwapped(ABILITY_SPEAR_RESIST, u) == 0) then
             call UnitAddAbilityBJ(ABILITY_SPEAR_RESIST, u)
-            debug call DisplayTextToForce( GetPlayersAll(), "Spear resistance added " + I2S(GetUnitAbilityLevelSwapped(ABILITY_SPEAR_RESIST, u)))
         elseif(GetUnitAbilityLevelSwapped(ABILITY_SPEAR_RESIST, u) < 6 and GetUnitAbilityLevelSwapped(ABILITY_SPEAR_RESIST, u) != 0) then
             call IncUnitAbilityLevelSwapped(ABILITY_SPEAR_RESIST, u)
-            debug call DisplayTextToForce( GetPlayersAll(), "Spear resistance upgraded to " + I2S(GetUnitAbilityLevelSwapped(ABILITY_SPEAR_RESIST, u)))
         endif
         call PolledWait(1.00)
         if(GetUnitAbilityLevelSwapped(ABILITY_SPEAR_RESIST, u) > 1) then
             call DecUnitAbilityLevelSwapped(ABILITY_SPEAR_RESIST, u)
-            debug call DisplayTextToForce( GetPlayersAll(), "Spear resistance degraded to " + I2S(GetUnitAbilityLevelSwapped(ABILITY_SPEAR_RESIST, u)) + " for " + GetUnitName(u))
         else
             call UnitRemoveAbilityBJ(ABILITY_SPEAR_RESIST, u)
-            debug call DisplayTextToForce( GetPlayersAll(), "Spear resistance removed for " + GetUnitName(u))
         endif
     endfunction
 

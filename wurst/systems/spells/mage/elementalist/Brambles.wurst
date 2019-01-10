@@ -22,7 +22,7 @@ constant let DUMMY_SLOW_SPELL_ID = compiletime(ABIL_ID_GEN.next())
 constant let DUMMY_ENTANGLE_SPELL_ID = compiletime(ABIL_ID_GEN.next())
 constant let DUMMY_VISION_BONUS_ID = compiletime(ABIL_ID_GEN.next())
 constant let DUMMY_SLOW_BUFF = compiletime(BUFF_ID_GEN.next())
-constant let DUMMY_ENTANGLE_BUFF = compiletime(BUFF_ID_GEN.next())
+public constant let BUFF_ENTANGLE_BRAMBLES_ID = compiletime(BUFF_ID_GEN.next())
 constant let COOLDOWN = 40.
 constant let MANACOST = 20
 constant let RANGE = 700.
@@ -57,7 +57,7 @@ constant let TOOLTIP_EXT = "Causes brambles to surface from underground in a str
     ..setArtSpecial(1, "")
 
 @compiletime function createEntangleBuff()
-    new BuffDefinition(DUMMY_ENTANGLE_BUFF, 'Bfro')
+    new BuffDefinition(BUFF_ENTANGLE_BRAMBLES_ID, 'Bfro')
     ..setTooltipNormal(1, "Brambles")
     ..setTooltipNormalExtended(1, "Rooted by brambles.")
     ..setIcon(SPELL_ICON)
@@ -136,7 +136,7 @@ constant let TOOLTIP_EXT = "Causes brambles to surface from underground in a str
     ..setArtSpecial("")
     ..setTargetAttachmentPoint("")
     ..setTargetAttachments(0)
-    ..presetBuffs(lvl -> toRawCode(DUMMY_ENTANGLE_BUFF))
+    ..presetBuffs(lvl -> toRawCode(BUFF_ENTANGLE_BRAMBLES_ID))
     ..presetCastingTime(lvl -> 0)
     ..presetDamageperSecond(lvl -> 0)
     ..presetCastRange(lvl -> 9999)
@@ -199,7 +199,7 @@ class BramblesInstance
                             new IttDummyCaster(0.2).castTarget(owner, DUMMY_ENTANGLE_SPELL_ID, 1, Orders.entanglingroots, u, ownerUnit.getPos())
                             snaredTargets.push(u)
                         if not loopDamagedTargets.has(u)
-                            ownerUnit.damageTarget(u, DAMAGE_PER_SECOND*UPDATE_LOOP_INTERVAL, ATTACK_TYPE_NORMAL)
+                            UnitDamageTarget(ownerUnit, u, DAMAGE_PER_SECOND*UPDATE_LOOP_INTERVAL, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
                             loopDamagedTargets.push(u)
 
             destroy loopDamagedTargets
@@ -227,7 +227,12 @@ class BramblesInstance
         DummyRecycler.recycle(dummy)
 
     function isValidTarget(unit target) returns bool
-        return target.getOwner().isEnemyOf(owner) and not target.isInvulnerable() and not target.isType(UNIT_TYPE_FLYING) and target.isAlive() and not target.isHidden()
+        return target.getOwner().isEnemyOf(owner)
+            and not target.isInvulnerable()
+            and not target.isType(UNIT_TYPE_FLYING)
+            and target.isAlive()
+            and not target.isHidden()
+            and not target.isType(UNIT_TYPE_STRUCTURE)
 
     ondestroy
         for dummy in rootDummies

@@ -2,11 +2,12 @@ package BushSpawns
 import HashMap
 import ItemPoolExtensions
 import ClosureTimers
-import StackNSplit
 import ID
 import LegacyTriggers
+import UnitExtensions
 
 let bushes = CreateGroup()
+let BUSH_SPAWN_PERIOD = 0.1
 
 class BushPool
     static let map = new HashMap<int, thistype>()
@@ -31,13 +32,15 @@ function addItemToBush(unit bush)
     .getItem(bush.getPos())
 
     if herb != null
-        if not bush.isItemFullyStacked(herb.getTypeId())
-            bush.stackItem(herb)
+        if not bush.addOrStackItem(herb)
+            herb.remove()
 
 function addItemsToBushes()
-    for bush in bushes
-        doAfter(GetRandomReal(0, 1)) ->
-            addItemToBush(bush)
+    let iter = bushes.iterator()
+    doPeriodicallyCounted(BUSH_SPAWN_PERIOD, bushes.size()) cb ->
+        addItemToBush(iter.next())
+        if cb.isLast()
+            iter.close()
 
 init
     gg_trg_add_items_to_plants = CreateTrigger()

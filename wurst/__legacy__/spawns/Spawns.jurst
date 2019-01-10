@@ -1,22 +1,11 @@
-library Spawns initializer onInit requires Game, ID, TerrainPathability, LegacyTriggers
-
-globals
-    boolean fishytrigger = false
-endglobals
+library Spawns initializer onInit requires Game, ID, TerrainPathability, LegacyTriggers, Elk, Panther, Wolf, Bear, Snake, TerrainUtils, Hawk, GreenFish, Fish
 
 public function modStats takes nothing returns nothing
     set udg_CLAYBALL_RATE = RMinBJ(1.85,udg_CLAYBALL_RATE+0.3)
-    if(udg_MORE_BADDIES==false) then
-        set udg_PANTHER_RATE = 1
-        set udg_BEAR_RATE = 1
-        set udg_SNAKE_RATE = 1
-        set udg_WOLF_RATE = 2
-    else
-        set udg_PANTHER_RATE = R2I(1*udg_BADDIE_BASE)
-        set udg_BEAR_RATE = R2I(1*udg_BADDIE_BASE)
-        set udg_SNAKE_RATE = R2I(1*udg_BADDIE_BASE)
-        set udg_WOLF_RATE = R2I(2*udg_BADDIE_BASE)
-    endif
+    set udg_PANTHER_RATE = R2I(1*udg_BADDIE_BASE)
+    set udg_BEAR_RATE = R2I(1*udg_BADDIE_BASE)
+    set udg_SNAKE_RATE = R2I(1*udg_BADDIE_BASE)
+    set udg_WOLF_RATE = R2I(2*udg_BADDIE_BASE)
     set udg_FLINT_RATE = RMaxBJ(2.0,udg_FLINT_RATE-0.4)
     set udg_MANACRYSTAL_RATE = RMinBJ(1.6,udg_MANACRYSTAL_RATE+0.5)
     set udg_ROCK_RATE = RMinBJ(3.3,udg_ROCK_RATE+0.5)
@@ -29,28 +18,15 @@ public function modStats takes nothing returns nothing
 endfunction
 
 function makeAFish takes rect loc returns nothing
-    local integer t = GetRandomInt(1,13)
-    local integer i = GetRandomInt(0,20000)
-    local real x
-    local real y
+    let t = GetRandomInt(1,13)
     if udg_FISH_CURRENT<udg_FISH_MAX or udg_ITEM_LIMIT_MODE==false then
-        set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
-        set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
-        if i == 0 and not fishytrigger then
-            set i = GetRandomInt(0,10000)
-            if i == 0 then
-                set i = GetRandomInt(0,1000)
-                if i == 0 then
-                    set fishytrigger = true
-                    call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_MAGENTA_FISH, x, y, 270 )
-                endif
-            endif
-        elseif t <= 4 then
-            CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_HAWK, x, y, 270 )
+        let pos = loc.randomPoint()
+        if t <= 4 then
+            new Hawk(pos)
         elseif t <= 6 then
-            CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_GREEN_FISH, x, y, 270 )
+            new GreenFish(pos)
         else
-            CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_FISH, x, y, 270 )
+            new Fish(pos)
         endif
     endif
     set udg_FISH_CURRENT=udg_FISH_CURRENT+1
@@ -275,27 +251,25 @@ function spawnItems takes nothing returns nothing
 endfunction
 
 function makeAnimal takes rect loc returns nothing
-    local integer t = GetRandomInt(1, udg_ELK_RATE+udg_WOLF_RATE+udg_BEAR_RATE+udg_PANTHER_RATE+udg_SNAKE_RATE)
-    local real x
-    local real y
+    let t = GetRandomInt(1, udg_ELK_RATE+udg_WOLF_RATE+udg_BEAR_RATE+udg_PANTHER_RATE+udg_SNAKE_RATE)
     if udg_ANIMAL_CURRENT<udg_ANIMAL_MAX or udg_ITEM_LIMIT_MODE==false then
+        vec2 pos
         loop
-            set x = GetRandomReal(GetRectMinX(loc), GetRectMaxX(loc))
-            set y = GetRandomReal(GetRectMinY(loc), GetRectMaxY(loc))
-            exitwhen IsTerrainLand(x, y) and IsTerrainWalkable(x, y)
+            pos = loc.randomPoint()
+            exitwhen pos.isTerrainLand() and pos.isTerrainWalkable()
         endloop
         if t<=udg_PANTHER_RATE then
-            call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_PANTHER, x, y, 270 )
+            new Panther(pos)
         elseif t<=udg_BEAR_RATE+udg_PANTHER_RATE then
-            call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_SNAKE, x, y, 270 )
+            new Snake(pos)
         elseif t<=udg_BEAR_RATE+udg_PANTHER_RATE+udg_SNAKE_RATE then
-            call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_JUNGLE_BEAR, x, y, 270 )
+            new Bear(pos)
         elseif t<=udg_BEAR_RATE+udg_WOLF_RATE+udg_PANTHER_RATE+udg_SNAKE_RATE then
-            call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_JUNGLE_WOLF, x, y, 270 )
+            new Wolf(pos)
         else
-            call CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), UNIT_ELK, x, y, 270 )
+            new Elk(pos)
         endif
-        set udg_ANIMAL_CURRENT = udg_ANIMAL_CURRENT + 1
+        udg_ANIMAL_CURRENT += 1
     endif
 endfunction
 

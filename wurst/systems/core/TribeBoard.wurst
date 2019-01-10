@@ -1,0 +1,143 @@
+package TribeBoard
+import RegisterEvents
+import Game
+import ClosureTimers
+import Tribe
+import LinkedList
+import Lodash
+import LegacyColors
+import PlayerExtensions
+import Respawn
+import ShrinkingMap
+import ForcedDuel
+import HashMap
+import TimeUtils
+
+let PERIOD = 1.0
+
+let ICON_COOKED_MEAT = "ReplaceableTextures\\CommandButtons\\BTNMonsterLure.blp"
+let ICON_SLEEP = "ReplaceableTextures\\PassiveButtons\\PASBTNElunesBlessing.blp"
+let ICON_HEAT = "ReplaceableTextures\\CommandButtons\\BTNInnerFireOn.blp"
+
+class TribeBoard
+    static let boards = new HashMap<player, thistype>()
+
+    static function findForPlayer(player p) returns thistype
+        return boards.get(p)
+
+    Tribe tribe
+    multiboard board
+    CallbackPeriodic cb
+
+    construct(Tribe tribe)
+        this.tribe = tribe
+        this.cb = doPeriodically(PERIOD, cb -> updateBoard())
+        createBoard()
+
+    function createBoard()
+        let members = tribe.getMembers()
+
+        board = CreateMultiboard()
+        ..setColumnCount(4)
+        ..setRowCount(members.size())
+        ..setTitle("Team Stats")
+
+        var row = 0
+        for member in members
+            boards.put(member, this)
+
+            board
+            .getItem(row, 0)
+            ..setStyle(true, false)
+            ..setValue(HIGHLIGHT_COLOR + member.getName())
+            ..setWidth(0.1)
+            ..release()
+
+            board
+            .getItem(row, 1)
+            ..setStyle(true, true)
+            ..setIcon(ICON_COOKED_MEAT)
+            ..setWidth(0.04)
+            ..release()
+
+            board
+            .getItem(row, 2)
+            ..setStyle(true, true)
+            ..setIcon(ICON_SLEEP)
+            ..setWidth(0.04)
+            ..release()
+
+            board
+            .getItem(row, 3)
+            ..setStyle(true, true)
+            ..setIcon(ICON_HEAT)
+            ..setWidth(0.04)
+            ..release()
+
+            board.display(member, true)
+
+            row += 1
+
+    function updateBoard()
+        let members = tribe.getMembers()
+
+        var row = 0
+        for member in members
+            let troll = member.getTroll()
+            board
+            .getItem(row, 1)
+            ..setValue(HEALTH_COLOR + troll.getHP().toInt().toString())
+            ..release()
+
+            board
+            .getItem(row, 2)
+            ..setValue(ENERGY_COLOR + troll.getMana().toInt().toString())
+            ..release()
+
+            board
+            .getItem(row, 3)
+            ..setValue(GOLD_COLOR + member.getGold().toString())
+            ..release()
+
+            if not member.isIngame()
+                board
+                .getItem(row, 0)
+                ..setValue(GRAY_COLOR + member.getName())
+                ..release()
+
+            row += 1
+
+        let time = GAME_TIMER.getElapsed().toInt()
+        let gpRemaining = GRACE_PERIOD_TIMER.getRemaining().toInt()
+        let fdRemaining = DUEL_TIMER.getRemaining().toInt()
+        let ffRemaining = FOREST_FIRE_TIMER.getRemaining().toInt()
+
+        var title = "Time[" + GENERAL_COLOR + toTimeString(time) + "|r]"
+
+        if gpRemaining > 0
+            title += " - Respawn[" + GREEN_COLOR + toTimeString(gpRemaining) + "|r]"
+
+        if fdRemaining > 0
+            title += " - Duel[" + ENERGY_COLOR + toTimeString(fdRemaining) + "|r]"
+
+        if ffRemaining > 0
+            title += " - Fire[" + RED_COLOR + toTimeString(ffRemaining) + "|r]"
+
+        board.setTitle(title)
+
+    function fixDisplay()
+        doAfter(0.5) ->
+            for member in tribe.getMembers()
+                board
+                ..display(member, false)
+                ..display(member, true)
+
+
+init
+    registerGameStartEvent() ->
+        Tribe.getTribes().each(tribe -> new TribeBoard(tribe))
+
+        registerPlayerEvent(EVENT_PLAYER_LEAVE) ->
+            TribeBoard
+                .findForPlayer(GetTriggerPlayer())
+                .fixDisplay()

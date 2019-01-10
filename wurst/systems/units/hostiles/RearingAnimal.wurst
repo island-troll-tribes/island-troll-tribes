@@ -1,11 +1,15 @@
 package RearingAnimal
 import PublicLibrary
 import BonyAnimal
+import LinkedList
 
 
 public abstract class RearingAnimal extends BonyAnimal
     construct(unit whichUnit)
         super(whichUnit)
+
+    construct(player whichPlayer, vec2 pos)
+        super(whichPlayer, pos)
 
     abstract function getHideTypeId() returns int
 
@@ -13,7 +17,11 @@ public abstract class RearingAnimal extends BonyAnimal
 
     override function postCreate()
         super.postCreate()
-        drops.add(getHideTypeId())
+
+    override function getDrops() returns LinkedList<int>
+        let drops = super.getDrops()
+            ..add(getHideTypeId())
+        return drops
 
     override function onDeath()
         if getAnimalGreenLight(getUnit())

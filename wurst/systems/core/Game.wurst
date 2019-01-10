@@ -1,11 +1,9 @@
 package Game
 import UnitExtensions
 import ClosureTimers
-import Units
-import LegacyColors
 import PublicLibrary
 import InitializeUnits
-import LegacyTriggers
+import ClassSelector
 
 public constant GAME_TIMER = CreateTimer()
 
@@ -16,7 +14,6 @@ public function registerGameStartEvent(code handler)
 
 public function generateMap()
     gg_trg_spawn_call_first.execute()
-    gg_trg_ShowPlayers.execute()
     listeners.execute()
     SetTimeOfDay(6)
     print(GENERAL_COLOR + "Game has begun!|r")
@@ -35,6 +32,8 @@ init
     udg_GameHash = InitHashtable()
     prepareSpells()
 
+    registerClassSelectionEndEvent(function generateMap)
+
     nullTimer() ->
         ForForce(bj_FORCE_ALL_PLAYERS) ->
             let enumPlayer = GetEnumPlayer()
@@ -43,6 +42,5 @@ init
             resetBMSkill(enumPlayer)
 
         OMINOUS_ALTAR.addItemToStock(ITEM_HYDRA_HINT, 1, 1)
-
         MAMMOTH_GATE.setInvulnerable(true)
         MAMMOTH.setOwner(players[PLAYER_NEUTRAL_AGGRESSIVE], true)

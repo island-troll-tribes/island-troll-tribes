@@ -8,13 +8,15 @@ import ClosureTimers
 import ID
 
 constant let SPELL_ICON = Icons.bTNSpy
-constant let COOLDOWN = 60.
+constant let COOLDOWN = 50.
 constant let CASTTIME = 1.
 constant let RADAR_RANGE_BASE = 3300.
 constant let RADAR_RANGE_PER_LEVEL = 200.
 constant let MAX_RANGE = 5000.
+constant let MAP_MAGIC_RANGE_BONUS = 1500.
 constant let REVEAL_DURATION = 10.
 constant let MANACOST = 15
+constant let MAP_MAGIC_BUFF_ID = 'BHbd'
 constant string array SPELLBOOKSPELLS = ["XGFT, XGFZ, XGFR, XGFC", "XGFT, XGFZ, XGFR, XGFC, XGFF, XGFS", "XGFT, XGFZ, XGFR, XGFC, XGFF, XGFS, XGFM"]
 constant let ABILITY_ID_FINDTINDER = 'XGFT'
 constant let ABILITY_ID_FINDSTICK = 'XGFZ'
@@ -25,19 +27,19 @@ constant let ABILITY_ID_FINDSTONE = 'XGFS'
 constant let ABILITY_ID_FINDMANA = 'XGFM'
 constant let ABILITY_ID_SPELLBOOK = 'XGRB'
 constant let TOOLTIP_NORM_FINDTINDER = "|c00ffcc00Q|r - Find Tinder"
-constant let TOOLTIP_EXT_FINDTINDER = "Pings all nearby tinder in the minimap and reveals them for a short duration."
+constant let TOOLTIP_EXT_FINDTINDER = "Pings all nearby tinder in the minimap and reveals them for a short duration. Ignores items near enemies."
 constant let TOOLTIP_NORM_FINDSTICK = "|c00ffcc00W|r - Find Stick"
-constant let TOOLTIP_EXT_FINDSTICK = "Pings all nearby sticks in the minimap and reveals them for a short duration."
+constant let TOOLTIP_EXT_FINDSTICK = "Pings all nearby sticks in the minimap and reveals them for a short duration. Ignores items near enemies."
 constant let TOOLTIP_NORM_FINDMUSHROOM = "|c00ffcc00E|r - Find Mushroom"
-constant let TOOLTIP_EXT_FINDMUSHROOM = "Pings all nearby mushrooms in the minimap and reveals them for a short duration."
+constant let TOOLTIP_EXT_FINDMUSHROOM = "Pings all nearby mushrooms in the minimap and reveals them for a short duration. Ignores items near enemies."
 constant let TOOLTIP_NORM_FINDCLAYBALL = "|c00ffcc00R|r - Find Clay Ball"
-constant let TOOLTIP_EXT_FINDCLAYBALL = "Pings all nearby clay balls in the minimap and reveals them for a short duration."
+constant let TOOLTIP_EXT_FINDCLAYBALL = "Pings all nearby clay balls in the minimap and reveals them for a short duration. Ignores items near enemies."
 constant let TOOLTIP_NORM_FINDFLINT = "|c00ffcc00A|r - Find Flint"
-constant let TOOLTIP_EXT_FINDFLINT = "Pings all nearby flints in the minimap and reveals them for a short duration."
+constant let TOOLTIP_EXT_FINDFLINT = "Pings all nearby flints in the minimap and reveals them for a short duration. Ignores items near enemies."
 constant let TOOLTIP_NORM_FINDSTONE = "|c00ffcc00S|r - Find Stone"
-constant let TOOLTIP_EXT_FINDSTONE = "Pings all nearby stones in the minimap and reveals them for a short duration."
-constant let TOOLTIP_NORM_FINDMANA = "|c00ffcc00D|r - Find Mana Crystals"
-constant let TOOLTIP_EXT_FINDMANA = "Pings all nearby mana crystals in the minimap and reveals them for a short duration."
+constant let TOOLTIP_EXT_FINDSTONE = "Pings all nearby stones in the minimap and reveals them for a short duration. Ignores items near enemies."
+constant let TOOLTIP_NORM_FINDMANA = "|c00ffcc00D|r - Find Mana Crystal"
+constant let TOOLTIP_EXT_FINDMANA = "Pings all nearby mana crystals in the minimap and reveals them for a short duration. Ignores items near enemies."
 
 @compiletime function createFindStone()
     new AbilityDefinitionIllidanChannel(ABILITY_ID_FINDSTONE)
@@ -293,20 +295,35 @@ function onCast(int itemId)
 
     //Calculate range
     var range = min(RADAR_RANGE_BASE + RADAR_RANGE_PER_LEVEL * caster.getLevel(), MAX_RANGE)
+
     if (caster.getTypeId() == UNIT_RADAR_GATHERER or caster.getTypeId() == UNIT_OMNIGATHERER)
         //Max range for subs
         range = MAX_RANGE
 
+    //Map magic bonus
+    if caster.hasAbility(MAP_MAGIC_BUFF_ID)
+        range += MAP_MAGIC_RANGE_BONUS
+
     forItemsInMap() i ->
-        if i.getPos().distanceTo(casterPos) < range and i.getTypeId() == itemId
+        if i.getPos().distanceTo(casterPos) < range and i.getTypeId() == itemId and not areHostilesNearItem(owner, i)
             //Vision
-            var vis = createVision(owner, i.getPos(), 200, true)
+            var vis = createVision(owner, i.getPos(), 128, true)
             vis.start()
             doAfter(REVEAL_DURATION) ->
                 vis.destr()
 
             //Ping
-            PingMinimapForForceEx(GetPlayersAllies(owner), i.getPos().x, i.getPos().y, 10, bj_MINIMAPPINGSTYLE_ATTACK, 0, 0, 255)
+            PingMinimapForForceEx(GetPlayersAllies(owner), i.getPos().x, i.getPos().y, 10, bj_MINIMAPPINGSTYLE_SIMPLE, 0, 255, 0)
+
+function areHostilesNearItem(player p, item itm) returns bool
+    let g = CreateGroup()..enumUnitsInRange(itm.getPos(), 350)
+    for u in g
+        if u.getOwner() != playerFromIndex(PLAYER_NEUTRAL_AGGRESSIVE) and u.getOwner().isEnemyOf(p) and (u.isType(UNIT_TYPE_HERO) or u.isType(UNIT_TYPE_STRUCTURE))
+            g.destr()
+            return true
+    g.destr()
+    return false
+
 
 init
     registerSpellEffectEvent(ABILITY_ID_FINDSTONE, () -> onCast(ITEM_STONE))

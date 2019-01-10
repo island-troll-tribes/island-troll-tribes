@@ -9,7 +9,7 @@ import GeometryUtils
 import TerrainUtils
 
 let HIVE_SPAWN_INTERVAL = 10.0
-let LOCATION_RETRY_ATTEMPTS = 20
+let LOCATION_ATTEMPTS = 20
 let HIVE_SPAWN_MIN_RADIUS = 0.
 let HIVE_SPAWN_MAX_RADIUS = 200.
 let BEEHIVE_ABILITY_ID = 'A02C'
@@ -25,20 +25,14 @@ function onEobEnter(unit hive)
             destroy spawnerLoop
 
 function spawnChildHive(player owner, vec2 hivePos)
-    var randomAngle = randomAngle()
-    var randomDistance = GetRandomReal(HIVE_SPAWN_MIN_RADIUS, HIVE_SPAWN_MAX_RADIUS)
-    var spawnPos = hivePos.polarOffset(randomAngle, randomDistance)
-
     //Attempt multiple times to get a walkable pos
-    for i = 1 to LOCATION_RETRY_ATTEMPTS
+    for i = 1 to LOCATION_ATTEMPTS
+        var randomAngle = randomAngle()
+        var randomDistance = GetRandomReal(HIVE_SPAWN_MIN_RADIUS, HIVE_SPAWN_MAX_RADIUS)
+        var spawnPos = hivePos.polarOffset(randomAngle, randomDistance)
         if spawnPos.isTerrainWalkable()
+            new IttDummyCaster.castPoint(owner, BEEHIVE_ABILITY_ID, 1, Orders.summonfactory, spawnPos)
             break
-        else
-            randomAngle = randomAngle()
-            randomDistance = GetRandomReal(HIVE_SPAWN_MIN_RADIUS, HIVE_SPAWN_MAX_RADIUS)
-            spawnPos = hivePos.polarOffset(randomAngle, randomDistance)
-
-    new IttDummyCaster.castPoint(owner, BEEHIVE_ABILITY_ID, 1, Orders.summonfactory, spawnPos)
 
 init
     onEnter() ->

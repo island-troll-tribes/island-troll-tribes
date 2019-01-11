@@ -1,15 +1,50 @@
 package Depress
 import RegisterEvents
 import ClosureTimers
+import AbilityObjEditing
+import ObjectIdGenerator
+import BuffObjEditing
+import ObjectIds
+import Orders
+import IttDummyCaster
 
 @configurable constant int ABILITY_ID = 'A025'
+let BUFF_ID = compiletime(BUFF_ID_GEN.next())
+let DUMMY_SLOW_ID = compiletime(ABIL_ID_GEN.next())
+let MS_SLOW = 0.7
+let AS_SLOW = 0.1
+
+@compiletime function createBuffs()
+    new BuffDefinition(BUFF_ID, 'Bfro')
+        ..setTooltipNormal(1, "Depress Slow")
+        ..setTooltipNormalExtended(1, "Slowed by Depress")
+        ..setIconNormal(1, "ReplaceableTextures\\CommandButtons\\BTNShadowPact.blp")
+        ..setIcon("ReplaceableTextures\\CommandButtons\\BTNShadowPact.blp")
+        ..setArtTarget(1, "")
+
+@compiletime function createSlowDummySpell()
+    new AbilityDefinitionSlowCreep(DUMMY_SLOW_ID)
+        ..setAttackSpeedFactor(1, AS_SLOW)
+        ..setMovementSpeedFactor(1, MS_SLOW)
+        ..setBuffs(1, toRawCode(BUFF_ID))
+        ..setCastRange(1, 2500)
+        ..setCastingTime(1, 0)
+        ..setCooldown(1, 0)
+        ..setDurationHero(1, 20)
+        ..setDurationNormal(1, 20)
+        ..setManaCost(1, 0)
+        ..setTargetsAllowed(1, "air,allies,enemies,ground")
+        ..setName("Depress dummy slow")
 
 function onCast()
-    var target = GetSpellTargetUnit()
-    if target.getMana() < 40
-        return
-    target.subMana(10)
-    doPeriodicallyCounted(2.00, 4, (cb) -> target.subMana(5))
+    let target = GetSpellTargetUnit()
+    let caster = GetSpellAbilityUnit()
+    let owner = caster.getOwner()
+    doAfter(0.2) ->
+        new IttDummyCaster().castTarget(owner, DUMMY_SLOW_ID, 1, Orders.slow, target, caster.getPos())
+        if target.getMana() >= 40
+            target.subMana(10)
+            doPeriodicallyCounted(2.00, 4, (cb) -> target.subMana(5))
 
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())

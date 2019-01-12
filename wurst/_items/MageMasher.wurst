@@ -1,0 +1,62 @@
+package MageMasher
+
+import AbilityObjEditing
+import ObjectIdGenerator
+import ClosureEvents
+import DamageType
+import ID
+import IttDummyCaster
+import Orders
+import StandardTextTags
+import LinkedList
+
+let MANABURN_ID = compiletime(ABIL_ID_GEN.next())
+LinkedList<int> MASHER_TARGET_CLASSES = asList(
+                            UNIT_MAGE,
+                            UNIT_MAGE_1,
+                            UNIT_ELEMENTALIST,
+                            UNIT_ELEMENTALIST_1,
+                            UNIT_ELEMENTALIST_NEW,
+                            UNIT_HYPNOTIST,
+                            UNIT_DEMENTIA_MASTER,
+                            UNIT_PRIEST,
+                            UNIT_BOOSTER,
+                            UNIT_BOOSTER_1,
+                            UNIT_MASTER_HEALER,
+                            UNIT_MASTER_HEALER_1,
+                            UNIT_SAGE)
+
+@compiletime function createDummyManaburn()
+    new AbilityDefinitionManaBurndemon(MANABURN_ID)
+    ..setAnimationNames("")
+    ..presetCastRange(lvl -> 99999)
+    ..presetCastingTime(lvl -> 0)
+    ..presetMaxManaDrained(lvl -> 6)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..presetCooldown(lvl -> 0)
+    ..presetBoltDelay(lvl -> 0.1)
+    ..presetBoltLifetime(lvl -> 0.4)
+
+function mageMasherHit(unit attacker, unit target)
+    let owner = attacker.getOwner()
+    if isValidMasherTarget(owner, target)
+        new IttDummyCaster().castTarget(owner, MANABURN_ID, 1, Orders.manaburn, target, attacker.getPos())
+
+function isValidMasherTarget(player attackOwner, unit target) returns bool
+    if not target.getOwner().isEnemyOf(attackOwner) and target.isAlive()
+        return false
+
+    let targetType = target.getTypeId()
+    for id in MASHER_TARGET_CLASSES
+        if targetType == id
+            return true
+
+    return false
+
+init
+    EventListener.add(EVENT_UNIT_DAMAGED) ->
+        let attacker = GetEventDamageSource()
+        if attacker.hasItemById(ITEM_MAGE_MASHER) and getDamageType() == DamageType.ATTACK
+            mageMasherHit(attacker, GetTriggerUnit())

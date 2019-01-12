@@ -45,15 +45,9 @@ function mageMasherHit(unit attacker, unit target)
         new IttDummyCaster().castTarget(owner, MANABURN_ID, 1, Orders.manaburn, target, attacker.getPos())
 
 function isValidMasherTarget(player attackOwner, unit target) returns bool
-    if not target.getOwner().isEnemyOf(attackOwner) and target.isAlive()
-        return false
-
-    let targetType = target.getTypeId()
-    for id in MASHER_TARGET_CLASSES
-        if targetType == id
-            return true
-
-    return false
+    return target.getOwner().isEnemyOf(attackOwner)
+        and target.isAlive()
+        and MASHER_TARGET_CLASSES.has(target.getTypeId())
 
 init
     EventListener.add(EVENT_UNIT_DAMAGED) ->

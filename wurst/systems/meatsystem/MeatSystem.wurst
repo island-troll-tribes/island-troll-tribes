@@ -18,7 +18,7 @@ IterableMap<unit, MeatInventory> instances = new IterableMap<unit, MeatInventory
         ..setModelUsed("Heart.mdx")
         ..setAbilities("")
         ..setInterfaceIcon("ReplaceableTextures\\CommandButtons\\BTNCorpseExplode.blp")
-        ..setScalingValue(0.4)
+        ..setScalingValue(0.45)
         ..setClassification("Miscellaneous")
         ..setGoldCost(0)
         ..setLumberCost(0)
@@ -38,10 +38,10 @@ IterableMap<unit, MeatInventory> instances = new IterableMap<unit, MeatInventory
         ..setArtEffect("")
         ..setArtTarget("")
         ..setArtSpecial("")
-        ..setButtonPositionNormalX(3)
-        ..setButtonPositionNormalY(0)
-        ..setButtonPositionResearchX(3)
-        ..setButtonPositionResearchY(0)
+        ..setButtonPositionNormalX(0)
+        ..setButtonPositionNormalY(2)
+        ..setButtonPositionResearchX(0)
+        ..setButtonPositionResearchY(2)
         ..setIconNormal("ReplaceableTextures\\CommandButtons\\BTNUnLoad.blp")
         ..setIconResearch("ReplaceableTextures\\CommandButtons\\BTNUnLoad.blp")
         ..setIconTurnOff("ReplaceableTextures\\CommandButtons\\BTNUnLoad.blp")
@@ -51,7 +51,7 @@ IterableMap<unit, MeatInventory> instances = new IterableMap<unit, MeatInventory
         ..setHotkeyNormal("C")
         ..setName("Drop Raw Meat")
         ..setDisableOtherAbilities(1, false)
-        ..setTooltipNormal(1, "C - Drop Raw Meat")
+        ..setTooltipNormal(1, "|c00ffcc00C|r - Drop Raw Meat")
         ..setTooltipNormalExtended(1, "Drops all carried raw meat")
         ..presetBaseOrderID(lvl -> "unburrow")
         ..setOrderStringActivate("unburrow")
@@ -110,10 +110,11 @@ class MeatInventory
             this.floatingText.setPos(owner.getPos().withTerrainZ() + MEAT_POS_OFFSET)
 
     private function getMeatFloatText() returns string
-        string txt = ""
+        string txt = "Raw meat: " + meats.getSize().toString()
+        /*
         for m in meats
             txt = txt + "||||||||||||||| "
-
+        */
         return txt
 
     ondestroy
@@ -145,6 +146,11 @@ init
         let dying = GetTriggerUnit()
         if instances.has(dying)
             instances.get(dying).onOwnerDeath()
+
+    registerSpellEffectEvent(ABILITY_ID_DROPMEAT) ->
+        let caster = GetSpellAbilityUnit()
+        if instances.has(caster)
+            instances.get(caster).emptyToGround()
 
     doPeriodically(ANIMATION_PERIOD) updaterLoop ->
         for k in instances

@@ -64,26 +64,28 @@ IterableMap<unit, MeatInventory> instances = new IterableMap<unit, MeatInventory
         ..presetFollowThroughTime(lvl -> 0)
 
 class MeatInventory
-    unit owner
+    player ownerPlayer
+    unit ownerUnit
     LinkedList<item> meats
     texttag floatingText
     CallbackPeriodic smartPickupCallback
     item smartPickupTarget
 
     construct(unit owner)
-        this.owner = owner
+        this.ownerUnit = owner
+        this.ownerPlayer = ownerUnit.getOwner()
         this.meats = new LinkedList<item>()
         this.floatingText = null
 
     function emptyToGround()
-        let ownerPos = owner.getPos()
+        let ownerPos = ownerUnit.getPos()
         for meat in meats
             meat.setVisible(true)
             meat.setPos(ownerPos)
             meats.remove(meat)
 
     function tryPickupMeat(item meat)
-        owner.removeItem(meat)
+        ownerUnit.removeItem(meat)
         if canPickupMeat()
             meat.setVisible(false)
             meat.setPos(boundMax)
@@ -96,10 +98,10 @@ class MeatInventory
         return meats.size() < MAX_MEAT_COUNT
 
     function setOwner(unit owner)
-        this.owner = owner
+        this.ownerUnit = owner
 
     function onSmartPickupMeat(item meat)
-        owner.issuePointOrderById(Orders.move, meat.getPos())
+        ownerUnit.issuePointOrderById(Orders.move, meat.getPos())
         this.smartPickupTarget = meat
 
         //Remove old callback if it exists
@@ -108,40 +110,47 @@ class MeatInventory
             this.smartPickupCallback = null
 
         this.smartPickupCallback = doPeriodically(ANIMATION_PERIOD) cb ->
-            let collisionSize = owner.getCollisionSize()
+            let collisionSize = ownerUnit.getCollisionSize()
             let rangeSq = (PICK_UP_RANGE + collisionSize) * (PICK_UP_RANGE + collisionSize)
             //See if meat is gone already
-            if not this.smartPickupTarget.isPickupable() or owner.getCurrentOrder() != Orders.move or not owner.isAlive()
-                if owner.isAlive()
+            if not this.smartPickupTarget.isPickupable() or ownerUnit.getCurrentOrder() != Orders.move or not ownerUnit.isAlive()
+                if ownerUnit.isAlive()
                     //Double checking that unit is alive before ordering
-                    owner.issueImmediateOrderById(Orders.stop)
+                    ownerUnit.issueImmediateOrderById(Orders.stop)
                 destroy this.smartPickupCallback
                 this.smartPickupCallback = null
-            else if owner.getPos().distanceToSq(this.smartPickupTarget.getPos()) <= rangeSq
+            else if ownerUnit.getPos().distanceToSq(this.smartPickupTarget.getPos()) <= rangeSq
                 //Otherwise, if in range, pick up meat
                 this.tryPickupMeat(this.smartPickupTarget)
-                owner.issueImmediateOrderById(Orders.stop)
+                ownerUnit.issueImmediateOrderById(Orders.stop)
                 destroy this.smartPickupCallback
                 this.smartPickupCallback = null
 
+    function updateDisplays()
+        updateFloatingText()
+        updateFoodResource()
 
-    function updateFloatingText()
+    private function updateFloatingText()
         //Draw ascii-style text to show the meats carried by unit
-        if (not owner.isAlive() or owner.isHidden()) and this.floatingText != null
+        if (not ownerUnit.isAlive() or ownerUnit.isHidden()) and this.floatingText != null
             this.floatingText.destr()
             this.floatingText = null
             return
 
         if this.floatingText == null
             let text = getMeatFloatText()
-            this.floatingText = createTTEx(owner.getPos().withTerrainZ() + MEAT_POS_OFFSET, text, 7, colorA(255,0,0,255))
-                ..setVisibility(localPlayer == this.owner.getOwner())
+            this.floatingText = createTTEx(ownerUnit.getPos().withTerrainZ() + MEAT_POS_OFFSET, text, 7, colorA(255,0,0,255))
+                ..setVisibility(localPlayer == this.ownerPlayer)
         else
             this.floatingText.setText(getMeatFloatText(), 7)
-            this.floatingText.setPos(owner.getPos().withTerrainZ() + MEAT_POS_OFFSET)
+            this.floatingText.setPos(ownerUnit.getPos().withTerrainZ() + MEAT_POS_OFFSET)
+
+    private function updateFoodResource()
+        SetPlayerState(ownerPlayer, PLAYER_STATE_RESOURCE_FOOD_USED, meats.size())
+        SetPlayerState(ownerPlayer, PLAYER_STATE_RESOURCE_FOOD_CAP, MAX_MEAT_COUNT)
 
     private function getMeatFloatText() returns string
-        let size = meats.getSize()
+        let size = meats.size()
         if size == 0
             return ""
         else
@@ -212,4 +221,8 @@ init
 
     doPeriodically(ANIMATION_PERIOD) updaterLoop ->
         for k in instances
-            instances.get(k).updateFloatingText()
+            instances.get(k).updateDisplays()
+
+    for i = 0 to bj_MAX_PLAYER_SLOTS-1
+        SetPlayerState(players[i], PLAYER_STATE_RESOURCE_FOOD_USED, 0)
+        SetPlayerState(players[i], PLAYER_STATE_RESOURCE_FOOD_CAP, MAX_MEAT_COUNT)

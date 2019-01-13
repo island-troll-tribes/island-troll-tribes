@@ -20,7 +20,7 @@ IterableMap<unit, MeatInventory> instances = new IterableMap<unit, MeatInventory
         ..setModelUsed("Heart.mdx")
         ..setAbilities("")
         ..setInterfaceIcon("ReplaceableTextures\\CommandButtons\\BTNCorpseExplode.blp")
-        ..setScalingValue(0.45)
+        ..setScalingValue(0.55)
         ..setClassification("Miscellaneous")
         ..setGoldCost(0)
         ..setLumberCost(0)
@@ -109,15 +109,18 @@ class MeatInventory
 
         this.smartPickupCallback = doPeriodically(ANIMATION_PERIOD) cb ->
             let collisionSize = owner.getCollisionSize()
-            let rangeSq = (PICK_UP_RANGE + collisionSize) + (PICK_UP_RANGE + collisionSize)
+            let rangeSq = (PICK_UP_RANGE + collisionSize) * (PICK_UP_RANGE + collisionSize)
             //See if meat is gone already
             if not this.smartPickupTarget.isPickupable() or owner.getCurrentOrder() != Orders.move or not owner.isAlive()
+                if owner.isAlive()
+                    //Double checking that unit is alive before ordering
+                    owner.issueImmediateOrderById(Orders.stop)
                 destroy this.smartPickupCallback
                 this.smartPickupCallback = null
             else if owner.getPos().distanceToSq(this.smartPickupTarget.getPos()) <= rangeSq
                 //Otherwise, if in range, pick up meat
-                nullTimer() ->
-                    this.tryPickupMeat(this.smartPickupTarget)
+                this.tryPickupMeat(this.smartPickupTarget)
+                owner.issueImmediateOrderById(Orders.stop)
                 destroy this.smartPickupCallback
                 this.smartPickupCallback = null
 
@@ -131,19 +134,24 @@ class MeatInventory
 
         if this.floatingText == null
             let text = getMeatFloatText()
-            this.floatingText = createTTEx(owner.getPos().withTerrainZ() + MEAT_POS_OFFSET, text, 5, colorA(255,0,0,255))
+            this.floatingText = createTTEx(owner.getPos().withTerrainZ() + MEAT_POS_OFFSET, text, 7, colorA(255,0,0,255))
                 ..setVisibility(localPlayer == this.owner.getOwner())
         else
-            this.floatingText.setText(getMeatFloatText(), 5)
+            this.floatingText.setText(getMeatFloatText(), 7)
             this.floatingText.setPos(owner.getPos().withTerrainZ() + MEAT_POS_OFFSET)
 
     private function getMeatFloatText() returns string
-        string txt = "Raw meat: " + meats.getSize().toString()
+        let size = meats.getSize().toString()
+        if size == 0
+            return ""
+        else
+            return "Raw meat: " + meats.getSize().toString()
         /*
+        string txt = ""
         for m in meats
             txt = txt + "||||||||||||||| "
-        */
         return txt
+        */
 
     ondestroy
         if this.floatingText != null
@@ -167,7 +175,7 @@ function onTargetOrder()
 
     let target = GetOrderTargetItem()
 
-    if target != null and target.getTypeId() == ITEM_RAW_MEAT and not u.isInventoryFull() and udg_trolls.contains(u)
+    if target != null and target.getTypeId() == ITEM_RAW_MEAT and u.isInventoryFull() and udg_trolls.contains(u)
         if instances.has(u)
             let instance = instances.get(u)
             let meatCount = instance.meats.size()

@@ -3,10 +3,10 @@ import ID
 import LinkedList
 import UnitEntity
 import Lodash
-import GeometryUtils
+import ExpiringRawMeat
 
-public function createCorpse(vec2 pos) returns item
-    return createItem(ITEM_RAW_MEAT, pos)
+public function spawnRawMeat(vec2 pos) returns ExpiringRawMeat
+    return new ExpiringRawMeat(pos, MEAT_EXPIRATION_DEFAULT_DURATION)
 
 public abstract class Hostile extends UnitEntity
     construct(unit whichUnit)
@@ -32,7 +32,7 @@ public abstract class Hostile extends UnitEntity
         let numCorpses = (getNumCorpses() * udg_FOOD_FOR_KILL_PROPORTION).round()
 
         for i = 1 to numCorpses
-            createCorpse(pos)
+            spawnRawMeat(pos)
 
         let drops = getDrops()
         drops.each(drop -> createItem(drop, pos))

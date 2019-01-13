@@ -1,4 +1,4 @@
-library TrollUpgrade initializer onInit requires ID, PublicLibrary, LegacyTriggers
+library TrollUpgrade initializer onInit requires ID, PublicLibrary, LegacyTriggers, MeatSystem
   private function ReplaceUnitEx takes unit whichUnit, integer newUnitId, integer unitStateMethod returns unit
     local unit    oldUnit = whichUnit
     local unit    newUnit
@@ -50,6 +50,10 @@ library TrollUpgrade initializer onInit requires ID, PublicLibrary, LegacyTrigge
     set udg_PUnits[GetPlayerId(PLAYER)] = REPLACING_UNIT
     call SetHeroLevelBJ(REPLACING_UNIT, 1, false)
     call UnitModifySkillPoints(REPLACING_UNIT, 0)
+
+    //Transfer raw meat inventory
+    if meatInventoryInstances.has(REPLACED_UNIT)
+        meatInventoryInstances.get(REPLACED_UNIT).transferMeatInventoryToUnit(REPLACING_UNIT)
 
     // Copy previous attributes
     call SetHeroStr(REPLACING_UNIT, strength, true)

@@ -14,7 +14,7 @@ let MAX_MEAT_COUNT = 8
 let MEAT_POS_OFFSET = vec3(-45, 0, 50)
 let ABILITY_ID_DROPMEAT = 'XDRP'
 let PICK_UP_RANGE = 150.0
-IterableMap<unit, MeatInventory> instances = new IterableMap<unit, MeatInventory>()
+public IterableMap<unit, MeatInventory> meatInventoryInstances = new IterableMap<unit, MeatInventory>()
 
 @compiletime function createRawMeatObject()
     new ItemDefinition(ITEM_RAW_MEAT, 'shrs')
@@ -100,8 +100,12 @@ class MeatInventory
     function canPickupMeat() returns bool
         return carriedMeat.size() < MAX_MEAT_COUNT
 
-    function setOwner(unit owner)
-        this.ownerUnit = owner
+    function transferMeatInventoryToUnit(unit newOwner)
+        meatInventoryInstances.remove(this.ownerUnit)
+        this.ownerUnit = newOwner
+        if meatInventoryInstances.has(newOwner)
+            destroy meatInventoryInstances.getAndRemove(newOwner)
+        meatInventoryInstances.put(newOwner, this)
 
     function onSmartPickupMeat(item meat)
         ownerUnit.issuePointOrderById(Orders.move, meat.getPos())
@@ -170,19 +174,22 @@ class MeatInventory
         */
 
     ondestroy
+        emptyToGround()
         if this.smartPickupCallback != null
             destroy this.smartPickupCallback
         if this.meatAmountText != null
             this.meatAmountText.destr()
+        if meatInventoryInstances.has(this.ownerUnit)
+            meatInventoryInstances.remove(this.ownerUnit)
         destroy carriedMeat
 
 function onTrollMeatPickup(unit troll, item meat)
     //Call meatpickup func for instance, or create one first and then call
-    if instances.has(troll)
-        instances.get(troll).tryPickupMeat(meat)
+    if meatInventoryInstances.has(troll)
+        meatInventoryInstances.get(troll).tryPickupMeat(meat)
     else
         let instance = new MeatInventory(troll)
-        instances.put(troll, instance)
+        meatInventoryInstances.put(troll, instance)
         instance.tryPickupMeat(meat)
 
 function onTargetOrder()
@@ -194,14 +201,14 @@ function onTargetOrder()
     let target = GetOrderTargetItem()
 
     if target != null and target.getTypeId() == ITEM_RAW_MEAT and u.isInventoryFull() and udg_trolls.contains(u)
-        if instances.has(u)
-            let instance = instances.get(u)
+        if meatInventoryInstances.has(u)
+            let instance = meatInventoryInstances.get(u)
             let meatCount = instance.carriedMeat.size()
             if meatCount < MAX_MEAT_COUNT
                 instance.onSmartPickupMeat(target)
         else
             let instance = new MeatInventory(u)
-            instances.put(u, instance)
+            meatInventoryInstances.put(u, instance)
             instance.onSmartPickupMeat(target)
 
 init
@@ -217,20 +224,20 @@ init
 
     EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
         let dying = GetTriggerUnit()
-        if instances.has(dying)
-            instances.get(dying).onOwnerDeath()
+        if meatInventoryInstances.has(dying)
+            meatInventoryInstances.get(dying).onOwnerDeath()
 
     EventListener.add(EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER) ->
         onTargetOrder()
 
     registerSpellEffectEvent(ABILITY_ID_DROPMEAT) ->
         let caster = GetSpellAbilityUnit()
-        if instances.has(caster)
-            instances.get(caster).emptyToGround()
+        if meatInventoryInstances.has(caster)
+            meatInventoryInstances.get(caster).emptyToGround()
 
     doPeriodically(ANIMATION_PERIOD) updaterLoop ->
-        for k in instances
-            instances.get(k).updateDisplays()
+        for k in meatInventoryInstances
+            meatInventoryInstances.get(k).updateDisplays()
 
     for i = 0 to bj_MAX_PLAYER_SLOTS-1
         SetPlayerState(players[i], PLAYER_STATE_RESOURCE_FOOD_USED, 0)

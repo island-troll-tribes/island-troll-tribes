@@ -21,7 +21,7 @@ public IterableMap<unit, MeatInventory> meatInventoryInstances = new IterableMap
         ..setModelUsed("Heart.mdx")
         ..setAbilities("")
         ..setInterfaceIcon("ReplaceableTextures\\CommandButtons\\BTNCorpseExplode.blp")
-        ..setScalingValue(0.55)
+        ..setScalingValue(0.6)
         ..setClassification("Miscellaneous")
         ..setGoldCost(0)
         ..setLumberCost(0)
@@ -84,6 +84,7 @@ class MeatInventory
             meat.setVisible(true)
             meat.setPos(ownerPos)
             carriedMeat.remove(meat)
+        updateFoodResource()
 
     function tryPickupMeat(item meat)
         ownerUnit.removeItem(meat)
@@ -91,8 +92,11 @@ class MeatInventory
             meat.setPos(boundMax)
             meat.setVisible(false)
             carriedMeat.add(meat)
+            updateFoodResource()
         else
             simError(ownerPlayer, "Raw meat capacity full!")
+
+
 
     function onOwnerDeath()
         this.emptyToGround()
@@ -134,11 +138,7 @@ class MeatInventory
                 destroy this.smartPickupCallback
                 this.smartPickupCallback = null
 
-    function updateDisplays()
-        updateFloatingText()
-        updateFoodResource()
-
-    private function updateFloatingText()
+    function updateFloatingText()
         //Draw ascii-style text to show the meats carried by unit
         if (not ownerUnit.isAlive() or ownerUnit.isHidden()) and this.meatAmountText != null
             this.meatAmountText.destr()
@@ -237,7 +237,7 @@ init
 
     doPeriodically(ANIMATION_PERIOD) updaterLoop ->
         for k in meatInventoryInstances
-            meatInventoryInstances.get(k).updateDisplays()
+            meatInventoryInstances.get(k).updateFloatingText()
 
     for i = 0 to bj_MAX_PLAYER_SLOTS-1
         SetPlayerState(players[i], PLAYER_STATE_RESOURCE_FOOD_USED, 0)

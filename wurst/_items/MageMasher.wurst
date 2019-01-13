@@ -7,26 +7,12 @@ import DamageType
 import ID
 import IttDummyCaster
 import Orders
-import StandardTextTags
-import LinkedList
+import Priest
+import Mage
+import UnitEntity
 
 let MANABURN_ID = compiletime(ABIL_ID_GEN.next())
 let DRAIN_AMOUNT = 6.
-
-LinkedList<int> MASHER_TARGET_CLASSES = asList(
-                            UNIT_MAGE,
-                            UNIT_MAGE_1,
-                            UNIT_ELEMENTALIST,
-                            UNIT_ELEMENTALIST_1,
-                            UNIT_ELEMENTALIST_NEW,
-                            UNIT_HYPNOTIST,
-                            UNIT_DEMENTIA_MASTER,
-                            UNIT_PRIEST,
-                            UNIT_BOOSTER,
-                            UNIT_BOOSTER_1,
-                            UNIT_MASTER_HEALER,
-                            UNIT_MASTER_HEALER_1,
-                            UNIT_SAGE)
 
 @compiletime function createDummyManaburn()
     new AbilityDefinitionManaBurndemon(MANABURN_ID)
@@ -47,9 +33,10 @@ function mageMasherHit(unit attacker, unit target)
         new IttDummyCaster(0.45).castTarget(owner, MANABURN_ID, 1, Orders.manaburn, target, attacker.getPos())
 
 function isValidMasherTarget(player attackOwner, unit target) returns bool
+    let ent = UnitEntity.findForUnit(target)
     return target.getOwner().isEnemyOf(attackOwner)
         and target.isAlive()
-        and MASHER_TARGET_CLASSES.has(target.getTypeId())
+        and (ent instanceof Mage or ent instanceof Priest)
 
 init
     EventListener.add(EVENT_UNIT_DAMAGED) ->

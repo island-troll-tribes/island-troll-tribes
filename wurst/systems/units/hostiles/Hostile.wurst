@@ -5,8 +5,8 @@ import UnitEntity
 import Lodash
 import GeometryUtils
 
-public function createCorpse(player p, int unitId, vec2 pos, angle facing) returns unit
-    return CreateCorpse(p, unitId, pos.x, pos.y, facing.degrees())
+public function createCorpse(vec2 pos) returns item
+    return createItem(ITEM_RAW_MEAT, pos)
 
 public abstract class Hostile extends UnitEntity
     construct(unit whichUnit)
@@ -32,7 +32,7 @@ public abstract class Hostile extends UnitEntity
         let numCorpses = (getNumCorpses() * udg_FOOD_FOR_KILL_PROPORTION).round()
 
         for i = 1 to numCorpses
-            createCorpse(players[PLAYER_NEUTRAL_AGGRESSIVE], UNIT_MEAT, pos, randomAngle())
+            createCorpse(pos)
 
         let drops = getDrops()
         drops.each(drop -> createItem(drop, pos))

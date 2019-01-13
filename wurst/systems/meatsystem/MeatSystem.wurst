@@ -1,0 +1,121 @@
+package MeatSystem
+import ItemObjEditing
+import ClosureEvents
+import LinkedList
+import MapBounds
+import HashMap
+import ClosureTimers
+import AbilityObjEditing
+
+let ITEM_RAW_MEAT = 'IRAW'
+let MAX_MEAT_COUNT = 8
+IterableMap<unit, MeatInventory> instances = new IterableMap<unit, MeatInventory>()
+
+@compiletime function createRawMeatObject()
+    new ItemDefinition(ITEM_RAW_MEAT, 'shrs')
+        ..setModelUsed("Heart.mdx")
+        ..setAbilities("")
+        ..setInterfaceIcon("ReplaceableTextures\\CommandButtons\\BTNCorpseExplode.blp")
+        ..setScalingValue(0.8)
+        ..setClassification("Miscellaneous")
+        ..setGoldCost(0)
+        ..setLumberCost(0)
+        ..setDroppedWhenCarrierDies(true)
+        ..setLevel(1)
+        ..setNumberofCharges(1)
+        ..setName("Raw Meat")
+        ..setDescription("Raw meat that needs to be cooked at a campfire")
+        ..setTooltipBasic("Trade for raw meat")
+        ..setTooltipExtended("Raw meat that needs to be cooked at a campfire")
+
+@compiletime function createDropMeatAbility()
+
+
+class MeatInventory
+    unit owner
+    LinkedList<item> meats
+    texttag floatingText
+
+    construct(unit owner)
+        this.owner = owner
+        this.meats = new LinkedList<item>()
+        this.floatingText = null
+
+    function emptyToGround()
+        let ownerPos = owner.getPos()
+        for meat in meats
+            meat.setVisible(true)
+            meat.setPos(ownerPos)
+            meats.remove(meat)
+
+    function onPickupMeat(item meat)
+        owner.removeItem(meat)
+        if canPickupMeat()
+            meat.setVisible(false)
+            meat.setPos(boundMax)
+            meats.add(meat)
+
+    function onOwnerDeath()
+        this.emptyToGround()
+
+    function canPickupMeat() returns bool
+        return meats.size() < MAX_MEAT_COUNT
+
+    function setOwner(unit owner)
+        this.owner = owner
+
+    function updateFloatingText()
+        //Draw ascii-style text to show the meats carried by unit
+        if not owner.isAlive() and this.floatingText != null
+            this.floatingText.destr()
+            this.floatingText = null
+            return
+
+        if this.floatingText == null
+            let text = getMeatFloatText()
+            this.floatingText = createTTEx(owner.getPos3Real(), text, 5, colorA(255,0,0,255))
+                ..setVisibility(localPlayer == this.owner.getOwner())
+        else
+            this.floatingText.setText(getMeatFloatText(), 5)
+            this.floatingText.setPos(owner.getPos3Real())
+
+    private function getMeatFloatText() returns string
+        string txt = ""
+        for m in meats
+            txt = txt + "||||||||||||||| "
+
+        return txt
+
+    ondestroy
+        if this.floatingText != null
+            this.floatingText.destr()
+        destroy meats
+
+function onTrollMeatPickup(unit troll, item meat)
+    //Call meatpickup func for instance, or create one first and then call
+    if instances.has(troll)
+        instances.get(troll).onPickupMeat(meat)
+    else
+        let instance = new MeatInventory(troll)
+        instances.put(troll, instance)
+        instance.onPickupMeat(meat)
+
+init
+    EventListener.add(EVENT_UNIT_PICKUP_ITEM) ->
+        let maybeMeat = GetManipulatedItem()
+        let u = GetTriggerUnit()
+        if maybeMeat.getTypeId() == ITEM_RAW_MEAT
+            if udg_trolls.contains(u)
+                onTrollMeatPickup(u, maybeMeat)
+            else
+                //Disable meat pickup for any non-troll
+                u.removeItem(maybeMeat)
+
+    EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
+        let dying = GetTriggerUnit()
+        if instances.has(dying)
+            instances.get(dying).onOwnerDeath()
+
+    doPeriodically(ANIMATION_PERIOD) updaterLoop ->
+        for k in instances
+            instances.get(k).updateFloatingText()

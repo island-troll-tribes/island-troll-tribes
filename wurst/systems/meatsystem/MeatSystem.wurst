@@ -6,11 +6,13 @@ import MapBounds
 import HashMap
 import ClosureTimers
 import AbilityObjEditing
+import Orders
 
 let ITEM_RAW_MEAT = 'IRAW'
 let MAX_MEAT_COUNT = 8
 let MEAT_POS_OFFSET = vec3(-45, 0, 50)
 let ABILITY_ID_DROPMEAT = 'XDRP'
+let PICK_UP_RANGE = 150.0
 IterableMap<unit, MeatInventory> instances = new IterableMap<unit, MeatInventory>()
 
 @compiletime function createRawMeatObject()
@@ -65,6 +67,8 @@ class MeatInventory
     unit owner
     LinkedList<item> meats
     texttag floatingText
+    CallbackPeriodic smartPickupCallback
+    item smartPickupTarget
 
     construct(unit owner)
         this.owner = owner
@@ -78,7 +82,7 @@ class MeatInventory
             meat.setPos(ownerPos)
             meats.remove(meat)
 
-    function onPickupMeat(item meat)
+    function tryPickupMeat(item meat)
         owner.removeItem(meat)
         if canPickupMeat()
             meat.setVisible(false)
@@ -93,6 +97,30 @@ class MeatInventory
 
     function setOwner(unit owner)
         this.owner = owner
+
+    function onSmartPickupMeat(item meat)
+        owner.issuePointOrderById(Orders.move, meat.getPos())
+        this.smartPickupTarget = meat
+
+        //Remove old callback if it exists
+        if this.smartPickupCallback != null
+            destroy this.smartPickupCallback
+            this.smartPickupCallback = null
+
+        this.smartPickupCallback = doPeriodically(ANIMATION_PERIOD) cb ->
+            let collisionSize = owner.getCollisionSize()
+            let rangeSq = (PICK_UP_RANGE + collisionSize) + (PICK_UP_RANGE + collisionSize)
+            //See if meat is gone already
+            if not this.smartPickupTarget.isPickupable() or owner.getCurrentOrder() != Orders.move or not owner.isAlive()
+                destroy this.smartPickupCallback
+                this.smartPickupCallback = null
+            else if owner.getPos().distanceToSq(this.smartPickupTarget.getPos()) <= rangeSq
+                //Otherwise, if in range, pick up meat
+                nullTimer() ->
+                    this.tryPickupMeat(this.smartPickupTarget)
+                destroy this.smartPickupCallback
+                this.smartPickupCallback = null
+
 
     function updateFloatingText()
         //Draw ascii-style text to show the meats carried by unit
@@ -125,11 +153,30 @@ class MeatInventory
 function onTrollMeatPickup(unit troll, item meat)
     //Call meatpickup func for instance, or create one first and then call
     if instances.has(troll)
-        instances.get(troll).onPickupMeat(meat)
+        instances.get(troll).tryPickupMeat(meat)
     else
         let instance = new MeatInventory(troll)
         instances.put(troll, instance)
-        instance.onPickupMeat(meat)
+        instance.tryPickupMeat(meat)
+
+function onTargetOrder()
+    let order = GetIssuedOrderId()
+    let u = GetOrderedUnit()
+    if order != Orders.smart
+        return
+
+    let target = GetOrderTargetItem()
+
+    if target != null and target.getTypeId() == ITEM_RAW_MEAT and not u.isInventoryFull() and udg_trolls.contains(u)
+        if instances.has(u)
+            let instance = instances.get(u)
+            let meatCount = instance.meats.size()
+            if meatCount < MAX_MEAT_COUNT
+                instance.onSmartPickupMeat(target)
+        else
+            let instance = new MeatInventory(u)
+            instances.put(u, instance)
+            instance.onSmartPickupMeat(target)
 
 init
     EventListener.add(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
@@ -146,6 +193,9 @@ init
         let dying = GetTriggerUnit()
         if instances.has(dying)
             instances.get(dying).onOwnerDeath()
+
+    EventListener.add(EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER) ->
+        onTargetOrder()
 
     registerSpellEffectEvent(ABILITY_ID_DROPMEAT) ->
         let caster = GetSpellAbilityUnit()

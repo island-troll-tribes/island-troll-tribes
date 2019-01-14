@@ -1,9 +1,17 @@
 package Fawn
 import ID
 import BonyAnimal
+import TimerUtils
+import ClosuresForItems
+import ClosureTimers
+import DummyCasterFixed
+import ElkCritter
+import Orders
 
 
 public class Fawn extends BonyAnimal
+    use TimedLoop
+
     private static let unitTypeId = UNIT_FAWN
 
     static function initialize()
@@ -15,9 +23,32 @@ public class Fawn extends BonyAnimal
     construct(player whichPlayer, vec2 pos)
         super(whichPlayer, pos)
 
+    override function postCreate()
+        super.postCreate()
+        nullTimer(-> startTimedLoop())
+
     override function getTypeId() returns int
         return unitTypeId
 
+    override function onTimedLoop()
+        let pos = getPos()
+        let acorn = findNearestItem(pos, 300, i -> i.getTypeId() == ITEM_ACORN)
+        if acorn == null
+            return
+
+        let acornPos = acorn.getPos()
+        if acornPos.distanceTo(pos) < 50
+            acorn.remove()
+            new DummyCaster
+            ..owner(players[0])
+            ..origin(acornPos.add(-100, 0))
+            ..castImmediate(SPELL_ELK_CRITTER_ID, 1, Orders.mechanicalcritter)
+            stopTimedLoopAndDestroy()
+        else
+            getUnit().issuePointOrderById(Orders.move, acornPos)
+
+    override function postDeath()
+        stopTimedLoopAndDestroy()
 
 init
     Fawn.initialize()

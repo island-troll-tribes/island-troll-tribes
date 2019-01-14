@@ -14,8 +14,8 @@ import ClosuresForItems
 let ITEM_RAW_MEAT = 'IRAW'
 let MAX_MEAT_COUNT = 8
 let MEAT_POS_OFFSET = vec3(-45, 0, 50)
-let ABILITY_ID_DROPMEAT = 'XDRP'
 let ABILITY_ID_PICKUPMEAT = 'XMPU'
+let ABILITY_IDS_DROPMEAT = ['XDRA', 'XDRB', 'XDRC', 'XDRD', 'XDRE', 'XDRF', 'XDRG', 'XDRH']
 let SMOOTH_PICKUP_RANGE = 150.0
 let AOE_PICKUP_RADIUS = 200.
 public IterableMap<unit, MeatInventory> meatInventoryInstances = new IterableMap<unit, MeatInventory>()
@@ -37,32 +37,64 @@ public IterableMap<unit, MeatInventory> meatInventoryInstances = new IterableMap
         ..setTooltipBasic("Trade for raw meat")
         ..setTooltipExtended("Raw meat that needs to be cooked at a campfire")
 
-@compiletime function createDropMeatAbility()
-    new AbilityDefinitionIllidanChannel(ABILITY_ID_DROPMEAT)
+@compiletime function createDropMeatAbilities()
+    for i = 0 to 7
+        new AbilityDefinitionIllidanChannel(ABILITY_IDS_DROPMEAT[i])
+            ..setTargetType(1, 0)
+            ..setAnimationNames("")
+            ..setArtCaster("")
+            ..setArtEffect("")
+            ..setArtTarget("")
+            ..setArtSpecial("")
+            ..setButtonPositionNormalX(0)
+            ..setButtonPositionNormalY(2)
+            ..setButtonPositionResearchX(0)
+            ..setButtonPositionResearchY(2)
+            ..setIconNormal("ReplaceableTextures\\CommandButtons\\BTNUnLoad.blp")
+            ..setIconResearch("ReplaceableTextures\\CommandButtons\\BTNUnLoad.blp")
+            ..setIconTurnOff("ReplaceableTextures\\CommandButtons\\BTNUnLoad.blp")
+            ..setHeroAbility(false)
+            ..setItemAbility(false)
+            ..setLevels(3)
+            ..setHotkeyNormal("C")
+            ..setName("Drop Raw Meat")
+            ..setDisableOtherAbilities(1, false)
+            ..setTooltipNormal(1, "|c00ffcc00C|r - Drop Raw Meat")
+            ..setTooltipNormalExtended(1, "Drops all carried raw meat. \n|cffadff2fCurrently carrying " + (i+1).toString() + " / 8 raw meat.|r")
+            ..presetBaseOrderID(lvl -> "unburrow")
+            ..setOrderStringActivate("unburrow")
+            ..setOrderStringUseTurnOn("unburrow")
+            ..presetOptions(lvl -> 1)
+            ..presetCooldown(lvl -> 0)
+            ..presetManaCost(lvl -> 0)
+            ..presetFollowThroughTime(lvl -> 0)
+
+@compiletime function createPickupMeatAbility()
+    new AbilityDefinitionIllidanChannel(ABILITY_ID_PICKUPMEAT)
         ..setTargetType(1, 0)
         ..setAnimationNames("")
         ..setArtCaster("")
         ..setArtEffect("")
         ..setArtTarget("")
         ..setArtSpecial("")
-        ..setButtonPositionNormalX(0)
+        ..setButtonPositionNormalX(1)
         ..setButtonPositionNormalY(2)
-        ..setButtonPositionResearchX(0)
+        ..setButtonPositionResearchX(1)
         ..setButtonPositionResearchY(2)
-        ..setIconNormal("ReplaceableTextures\\CommandButtons\\BTNUnLoad.blp")
-        ..setIconResearch("ReplaceableTextures\\CommandButtons\\BTNUnLoad.blp")
-        ..setIconTurnOff("ReplaceableTextures\\CommandButtons\\BTNUnLoad.blp")
+        ..setIconNormal("ReplaceableTextures\\CommandButtons\\BTNLoad.blp")
+        ..setIconResearch("ReplaceableTextures\\CommandButtons\\BTNLoad.blp")
+        ..setIconTurnOff("ReplaceableTextures\\CommandButtons\\BTNLoad.blp")
         ..setHeroAbility(false)
         ..setItemAbility(false)
         ..setLevels(3)
-        ..setHotkeyNormal("C")
-        ..setName("Drop Raw Meat")
+        ..setHotkeyNormal("G")
+        ..setName("Get Raw Meat")
         ..setDisableOtherAbilities(1, false)
-        ..setTooltipNormal(1, "|c00ffcc00C|r - Drop Raw Meat")
-        ..setTooltipNormalExtended(1, "Drops all carried raw meat")
-        ..presetBaseOrderID(lvl -> "unburrow")
-        ..setOrderStringActivate("unburrow")
-        ..setOrderStringUseTurnOn("unburrow")
+        ..setTooltipNormal(1, "|c00ffcc00G|r - Pick Up Raw Meat")
+        ..setTooltipNormalExtended(1, "Picks up nearby raw meat.")
+        ..presetBaseOrderID(lvl -> "burrow")
+        ..setOrderStringActivate("burrow")
+        ..setOrderStringUseTurnOn("burrow")
         ..presetOptions(lvl -> 1)
         ..presetCooldown(lvl -> 0)
         ..presetManaCost(lvl -> 0)
@@ -90,6 +122,7 @@ class MeatInventory
             meat.setPos(ownerPos)
             carriedMeat.remove(meat)
         updateFoodResource()
+        updateDropMeatAbility()
 
     function tryPickupMeat(item meat)
         ownerUnit.removeItem(meat)
@@ -98,6 +131,7 @@ class MeatInventory
             meat.setVisible(false)
             carriedMeat.add(meat)
             updateFoodResource()
+            updateDropMeatAbility()
         else
             simError(ownerPlayer, "Raw meat capacity full!")
 
@@ -161,6 +195,13 @@ class MeatInventory
     private function updateFoodResource()
         SetPlayerState(ownerPlayer, PLAYER_STATE_RESOURCE_FOOD_USED, carriedMeat.size())
         SetPlayerState(ownerPlayer, PLAYER_STATE_RESOURCE_FOOD_CAP, MAX_MEAT_COUNT)
+
+    private function updateDropMeatAbility()
+        for i = 0 to 7
+            ownerUnit.removeAbility(ABILITY_IDS_DROPMEAT[i])
+        let meatCount = carriedMeat.size()
+        if meatCount != 0
+            ownerUnit.addAbility(ABILITY_IDS_DROPMEAT[meatCount - 1])
 
     private function getMeatFloatText() returns string
         //Generate floating text to draw on meat carrier unit
@@ -241,10 +282,11 @@ init
     EventListener.add(EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER) ->
         onTargetOrder()
 
-    registerSpellEffectEvent(ABILITY_ID_DROPMEAT) ->
-        let caster = GetSpellAbilityUnit()
-        if meatInventoryInstances.has(caster)
-            meatInventoryInstances.get(caster).emptyToGround()
+    for i = 0 to 7
+        registerSpellEffectEvent(ABILITY_IDS_DROPMEAT[i]) ->
+            let caster = GetSpellAbilityUnit()
+            if meatInventoryInstances.has(caster)
+                meatInventoryInstances.get(caster).emptyToGround()
 
     registerSpellEffectEvent(ABILITY_ID_PICKUPMEAT) ->
         let caster = GetSpellAbilityUnit()

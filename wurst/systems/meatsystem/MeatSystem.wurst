@@ -8,12 +8,16 @@ import ClosureTimers
 import AbilityObjEditing
 import Orders
 import SimError
+import ID
+import ClosuresForItems
 
 let ITEM_RAW_MEAT = 'IRAW'
 let MAX_MEAT_COUNT = 8
 let MEAT_POS_OFFSET = vec3(-45, 0, 50)
 let ABILITY_ID_DROPMEAT = 'XDRP'
-let PICK_UP_RANGE = 150.0
+let ABILITY_ID_PICKUPMEAT = 'XMPU'
+let SMOOTH_PICKUP_RANGE = 150.0
+let AOE_PICKUP_RADIUS = 200.
 public IterableMap<unit, MeatInventory> meatInventoryInstances = new IterableMap<unit, MeatInventory>()
 
 @compiletime function createRawMeatObject()
@@ -122,7 +126,7 @@ class MeatInventory
         //Start polling for when we reach the pickup target
         this.smartPickupCallback = doPeriodically(ANIMATION_PERIOD) cb ->
             let collisionSize = ownerUnit.getCollisionSize()
-            let rangeSq = (PICK_UP_RANGE + collisionSize) * (PICK_UP_RANGE + collisionSize)
+            let rangeSq = (SMOOTH_PICKUP_RANGE + collisionSize) * (SMOOTH_PICKUP_RANGE + collisionSize)
             //See if meat is gone already
             if not this.smartPickupTarget.isPickupable() or ownerUnit.getCurrentOrder() != Orders.move or not ownerUnit.isAlive()
                 if ownerUnit.isAlive()
@@ -182,14 +186,19 @@ class MeatInventory
             meatInventoryInstances.remove(this.ownerUnit)
         destroy carriedMeat
 
-function onTrollMeatPickup(unit troll, item meat)
+function tryPickupMeat(unit u, item meat)
     //Call meatpickup func for instance, or create one first and then call
-    if meatInventoryInstances.has(troll)
-        meatInventoryInstances.get(troll).tryPickupMeat(meat)
+    if meatInventoryInstances.has(u)
+        meatInventoryInstances.get(u).tryPickupMeat(meat)
     else
-        let instance = new MeatInventory(troll)
-        meatInventoryInstances.put(troll, instance)
+        let instance = new MeatInventory(u)
+        meatInventoryInstances.put(u, instance)
         instance.tryPickupMeat(meat)
+
+function tryPickupMeatArea(unit u)
+    forItemsInRect(u.getPos().withRadiusRect(AOE_PICKUP_RADIUS)) maybeMeat ->
+        if maybeMeat.getTypeId() == ITEM_RAW_MEAT
+            tryPickupMeat(u, maybeMeat)
 
 function onTargetOrder()
     let order = GetIssuedOrderId()
@@ -210,13 +219,16 @@ function onTargetOrder()
             meatInventoryInstances.put(u, instance)
             instance.onSmartPickupMeat(target)
 
+function isUnitMeatCarrier(unit u) returns bool
+    return udg_trolls.contains(u) or u.getTypeId() == UNIT_ENSNARE_TRAP
+
 init
     EventListener.add(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
         let maybeMeat = GetManipulatedItem()
         let u = GetTriggerUnit()
         if maybeMeat.getTypeId() == ITEM_RAW_MEAT
-            if udg_trolls.contains(u)
-                onTrollMeatPickup(u, maybeMeat)
+            if isUnitMeatCarrier(u)
+                tryPickupMeat(u, maybeMeat)
             else
                 //Disable meat pickup for any non-troll
                 u.removeItem(maybeMeat)
@@ -234,11 +246,10 @@ init
         if meatInventoryInstances.has(caster)
             meatInventoryInstances.get(caster).emptyToGround()
 
-    /*
-    doPeriodically(ANIMATION_PERIOD) updaterLoop ->
-        for k in meatInventoryInstances
-            meatInventoryInstances.get(k).updateFloatingText()
-    */
+    registerSpellEffectEvent(ABILITY_ID_PICKUPMEAT) ->
+        let caster = GetSpellAbilityUnit()
+        if isUnitMeatCarrier(caster)
+            tryPickupMeatArea(caster)
 
     for i = 0 to bj_MAX_PLAYER_SLOTS-1
         SetPlayerState(players[i], PLAYER_STATE_RESOURCE_FOOD_USED, 0)

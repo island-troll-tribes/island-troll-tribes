@@ -38,11 +38,14 @@ public abstract class Hostile extends UnitEntity
 
         doAfter(LOOT_SPAWN_PERIOD * numCorpses) ->
             let drops = getDrops()
-            let dropsIter = drops.iterator()
-            doPeriodicallyCounted(LOOT_SPAWN_PERIOD, drops.size()) cb ->
-                createItem(dropsIter.next(), pos)
-                if cb.isLast()
-                    dropsIter.close()
-                    destroy drops
+            if drops.size() != 0
+                let dropsIter = drops.iterator()
+                doPeriodicallyCounted(LOOT_SPAWN_PERIOD, drops.size()) cb ->
+                    createItem(dropsIter.next(), pos)
+                    if cb.isLast()
+                        dropsIter.close()
+                        destroy drops
+            else
+                destroy drops
 
         super.onDeath()

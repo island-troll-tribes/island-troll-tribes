@@ -14,6 +14,7 @@ import ClosuresForItems
 let ITEM_RAW_MEAT = 'IRAW'
 let MAX_MEAT_COUNT = 8
 let MEAT_POS_OFFSET = vec3(-45, 0, 50)
+let ABILITY_IDS_SHAPESHIFTER = asList('A0EI',' A0EN', 'A0EO')
 let ABILITY_ID_PICKUPMEAT = 'XMPU'
 let ABILITY_IDS_DROPMEAT = ['XDRA', 'XDRB', 'XDRC', 'XDRD', 'XDRE', 'XDRF', 'XDRG', 'XDRH']
 let ICON_PATHS_DROPMEAT = [ "Unload_1.tga",
@@ -125,7 +126,7 @@ class MeatInventory
         this.ownerPlayer = ownerUnit.getOwner()
         this.carriedMeat = new LinkedList<item>()
         this.meatAmountText = null
-        updateFoodResource()
+        updateDropMeatAbility()
 
     function emptyToGround()
         let ownerPos = ownerUnit.getPos()
@@ -133,7 +134,6 @@ class MeatInventory
             meat.setVisible(true)
             meat.setPos(ownerPos)
             carriedMeat.remove(meat)
-        updateFoodResource()
         updateDropMeatAbility()
 
     function tryPickupMeat(item meat)
@@ -142,7 +142,6 @@ class MeatInventory
             meat.setPos(boundMax)
             meat.setVisible(false)
             carriedMeat.add(meat)
-            updateFoodResource()
             updateDropMeatAbility()
         else
             simError(ownerPlayer, "Raw meat capacity full!")
@@ -205,11 +204,7 @@ class MeatInventory
             this.meatAmountText.setText(getMeatFloatText(), 7)
             this.meatAmountText.setPos(ownerUnit.getPos().withTerrainZ() + MEAT_POS_OFFSET)
 
-    private function updateFoodResource()
-        SetPlayerState(ownerPlayer, PLAYER_STATE_RESOURCE_FOOD_USED, carriedMeat.size())
-        SetPlayerState(ownerPlayer, PLAYER_STATE_RESOURCE_FOOD_CAP, MAX_MEAT_COUNT)
-
-    private function updateDropMeatAbility()
+    function updateDropMeatAbility()
         for i = 0 to 7
             ownerUnit.removeAbility(ABILITY_IDS_DROPMEAT[i])
         let meatCount = carriedMeat.size()
@@ -223,12 +218,6 @@ class MeatInventory
             return ""
         else
             return "Raw meat: " + size.toString()
-        /*
-        string txt = ""
-        for m in meats
-            txt = txt + "||||||||||||||| "
-        return txt
-        */
 
     ondestroy
         emptyToGround()
@@ -306,6 +295,8 @@ init
         if isUnitMeatCarrier(caster)
             tryPickupMeatArea(caster)
 
-    for i = 0 to bj_MAX_PLAYER_SLOTS-1
-        SetPlayerState(players[i], PLAYER_STATE_RESOURCE_FOOD_USED, 0)
-        SetPlayerState(players[i], PLAYER_STATE_RESOURCE_FOOD_CAP, MAX_MEAT_COUNT)
+    for s in ABILITY_IDS_SHAPESHIFTER
+        registerSpellEffectEvent(s) ->
+            let caster = GetSpellAbilityUnit()
+            if meatInventoryInstances.has(caster)
+                meatInventoryInstances.get(caster).updateDropMeatAbility()

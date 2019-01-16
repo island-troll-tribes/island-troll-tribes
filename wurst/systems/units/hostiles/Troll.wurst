@@ -16,4 +16,12 @@ public abstract class Troll extends BonyAnimal
 
     override function postCreate()
         super.postCreate()
-        getUnit().addAbility(ABILITY_ID_PICKUPMEAT_TROLL)
+
+        //Set up meat inventory
+        let u = getUnit()
+        if meatInventoryInstances.has(u)
+            meatInventoryInstances.get(u).updateDropMeatAbility()
+        else
+            let instance = new MeatInventory(u)
+            meatInventoryInstances.put(u, instance)
+            instance.updateDropMeatAbility()

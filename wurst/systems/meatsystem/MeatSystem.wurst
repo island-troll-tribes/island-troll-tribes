@@ -152,7 +152,6 @@ public class MeatInventory
     player ownerPlayer
     unit ownerUnit
     LinkedList<item> carriedMeat
-    texttag meatAmountText
     CallbackPeriodic smartPickupCallback
     item smartPickupTarget
     bool isTrollInventory
@@ -161,7 +160,6 @@ public class MeatInventory
         this.ownerUnit = owner
         this.ownerPlayer = ownerUnit.getOwner()
         this.carriedMeat = new LinkedList<item>()
-        this.meatAmountText = null
         this.isTrollInventory = UnitEntity.findForUnit(ownerUnit) instanceof Troll
         updateDropMeatAbility()
 
@@ -196,6 +194,7 @@ public class MeatInventory
         return carriedMeat.size() < MAX_MEAT_COUNT
 
     function transferMeatInventoryToUnit(unit newOwner)
+        //Nulltimer to let the Troll-entity run the postCreate first and avoid creating both the drop meat and get meat abilities
         nullTimer() ->
             meatInventoryInstances.remove(this.ownerUnit)
             this.ownerUnit = newOwner
@@ -232,55 +231,29 @@ public class MeatInventory
                 destroy this.smartPickupCallback
                 this.smartPickupCallback = null
 
-    function updateFloatingText()
-        //Draw ascii-style text to show the meats carried by unit
-        if (not ownerUnit.isAlive() or ownerUnit.isHidden()) and this.meatAmountText != null
-            this.meatAmountText.destr()
-            this.meatAmountText = null
-            return
-
-        //Create new text if none exists
-        if this.meatAmountText == null
-            let text = getMeatFloatText()
-            this.meatAmountText = createTTEx(ownerUnit.getPos().withTerrainZ() + MEAT_POS_OFFSET, text, 7, colorA(255,0,0,255))
-                ..setVisibility(localPlayer == this.ownerPlayer)
-        else
-            //Otherwise update pos and text for existing text
-            this.meatAmountText.setText(getMeatFloatText(), 7)
-            this.meatAmountText.setPos(ownerUnit.getPos().withTerrainZ() + MEAT_POS_OFFSET)
-
     function updateDropMeatAbility()
+        //Swaps pick up meat / drop ability for corresponding meat amount
         for i = 0 to 7
             ownerUnit.removeAbility(ABILITY_IDS_DROPMEAT[i])
 
         let meatCount = carriedMeat.size()
         if meatCount != 0
-            if this.isTrollInventory
+            if this.isTrollInventory //Avoid doing pickup ability swap for traps, which have both abilities at all times
                 ownerUnit.removeAbility(ABILITY_ID_PICKUPMEAT_TROLL)
             ownerUnit.addAbility(ABILITY_IDS_DROPMEAT[meatCount - 1])
         else
             if this.isTrollInventory
                 ownerUnit.addAbility(ABILITY_ID_PICKUPMEAT_TROLL)
 
-    private function getMeatFloatText() returns string
-        //Generate floating text to draw on meat carrier unit
-        let size = carriedMeat.size()
-        if size == 0
-            return ""
-        else
-            return "Raw meat: " + size.toString()
-
     ondestroy
         emptyToGround()
         if this.smartPickupCallback != null
             destroy this.smartPickupCallback
-        if this.meatAmountText != null
-            this.meatAmountText.destr()
         if meatInventoryInstances.has(this.ownerUnit)
             meatInventoryInstances.remove(this.ownerUnit)
         destroy carriedMeat
 
-function tryPickupMeat(unit u, item meat) returns bool
+function unitTryPickupMeat(unit u, item meat) returns bool
     //Call meatpickup func for instance, or create one first and then call
     if meatInventoryInstances.has(u)
         return meatInventoryInstances.get(u).tryPickupMeat(meat)
@@ -289,8 +262,8 @@ function tryPickupMeat(unit u, item meat) returns bool
         meatInventoryInstances.put(u, instance)
         return instance.tryPickupMeat(meat)
 
-function tryPickupMeatArea(unit u)
-    //Call meatpickup func for instance, or create one first and then call
+function unitTryPickupMeatArea(unit u)
+    //Call areapickup func for instance, or create one first and then call
     if meatInventoryInstances.has(u)
         meatInventoryInstances.get(u).tryPickupMeatArea()
     else
@@ -306,7 +279,8 @@ function onTargetOrder()
 
     let target = GetOrderTargetItem()
 
-    if target != null and target.getTypeId() == ITEM_RAW_MEAT and u.isInventoryFull() and UnitEntity.findForUnit(u) instanceof Troll
+    //Smart pickup system -> simulate picking up meat like an item if full inventory, like in Bannars StackNSplit system
+    if target != null and target.getTypeId() == ITEM_RAW_MEAT and u.isInventoryFull() and isUnitMeatCarrier(u)
         if meatInventoryInstances.has(u)
             let instance = meatInventoryInstances.get(u)
             let meatCount = instance.carriedMeat.size()
@@ -321,22 +295,26 @@ function isUnitMeatCarrier(unit u) returns bool
     return UnitEntity.findForUnit(u) instanceof Troll or u.getTypeId() == UNIT_ENSNARE_TRAP
 
 init
+    //Handle picking up meat normally to inventory
     EventListener.add(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
         let maybeMeat = GetManipulatedItem()
         let u = GetTriggerUnit()
         if maybeMeat.getTypeId() == ITEM_RAW_MEAT
             u.removeItem(maybeMeat)
             if isUnitMeatCarrier(u)
-                tryPickupMeat(u, maybeMeat)
+                unitTryPickupMeat(u, maybeMeat)
 
+    //Setup smooth pickup event (ability to pick up raw meat with full inventory)
+    EventListener.add(EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER) ->
+        onTargetOrder()
+
+    //Death event
     EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
         let dying = GetTriggerUnit()
         if meatInventoryInstances.has(dying)
             meatInventoryInstances.get(dying).onOwnerDeath()
 
-    EventListener.add(EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER) ->
-        onTargetOrder()
-
+    //Setup pickup and drop abilities
     for i = 0 to 7
         registerSpellEffectEvent(ABILITY_IDS_DROPMEAT[i]) ->
             let caster = GetSpellAbilityUnit()
@@ -346,13 +324,14 @@ init
     registerSpellEffectEvent(ABILITY_ID_PICKUPMEAT) ->
         let caster = GetSpellAbilityUnit()
         if isUnitMeatCarrier(caster)
-            tryPickupMeatArea(caster)
+            unitTryPickupMeatArea(caster)
 
     registerSpellEffectEvent(ABILITY_ID_PICKUPMEAT_TROLL) ->
         let caster = GetSpellAbilityUnit()
         if isUnitMeatCarrier(caster)
-            tryPickupMeatArea(caster)
+            unitTryPickupMeatArea(caster)
 
+    //Special fix for beastmaster to get his abilities back after transforming
     for s in ABILITY_IDS_SHAPESHIFTER
         registerSpellEffectEvent(s) ->
             let caster = GetSpellAbilityUnit()

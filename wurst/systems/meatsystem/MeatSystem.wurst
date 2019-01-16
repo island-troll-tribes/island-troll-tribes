@@ -10,12 +10,14 @@ import Orders
 import SimError
 import ID
 import ClosuresForItems
+import ObjectIdGenerator
 
 let ITEM_RAW_MEAT = 'IRAW'
 let MAX_MEAT_COUNT = 8
 let MEAT_POS_OFFSET = vec3(-45, 0, 50)
 let ABILITY_IDS_SHAPESHIFTER = asList('A0EI','A0EN', 'A0EO')
 let ABILITY_ID_PICKUPMEAT = 'XMPU'
+public let ABILITY_ID_PICKUPMEAT_TROLL = compiletime(ABIL_ID_GEN.next())
 let ABILITY_IDS_DROPMEAT = ['XDRA', 'XDRB', 'XDRC', 'XDRD', 'XDRE', 'XDRF', 'XDRG', 'XDRH']
 let ICON_PATHS_DROPMEAT = [ "Unload_1.tga",
                             "Unload_2.tga",
@@ -93,6 +95,37 @@ public IterableMap<unit, MeatInventory> meatInventoryInstances = new IterableMap
         ..setButtonPositionNormalX(1)
         ..setButtonPositionNormalY(2)
         ..setButtonPositionResearchX(1)
+        ..setButtonPositionResearchY(2)
+        ..setIconNormal("ReplaceableTextures\\CommandButtons\\BTNLoad.blp")
+        ..setIconResearch("ReplaceableTextures\\CommandButtons\\BTNLoad.blp")
+        ..setIconTurnOff("ReplaceableTextures\\CommandButtons\\BTNLoad.blp")
+        ..setHeroAbility(false)
+        ..setItemAbility(false)
+        ..setLevels(3)
+        ..setHotkeyNormal("G")
+        ..setName("Get Raw Meat")
+        ..setDisableOtherAbilities(1, false)
+        ..setTooltipNormal(1, "|c00ffcc00G|r - Pick Up Raw Meat")
+        ..setTooltipNormalExtended(1, "Picks up nearby raw meat.")
+        ..presetBaseOrderID(lvl -> "burrow")
+        ..setOrderStringActivate("burrow")
+        ..setOrderStringUseTurnOn("burrow")
+        ..presetOptions(lvl -> 1)
+        ..presetCooldown(lvl -> 0)
+        ..presetManaCost(lvl -> 0)
+        ..presetFollowThroughTime(lvl -> 0)
+
+@compiletime function createTrollPickupMeatAbility()
+    new AbilityDefinitionIllidanChannel(ABILITY_ID_PICKUPMEAT_TROLL)
+        ..setTargetType(1, 0)
+        ..setAnimationNames("")
+        ..setArtCaster("")
+        ..setArtEffect("")
+        ..setArtTarget("")
+        ..setArtSpecial("")
+        ..setButtonPositionNormalX(0)
+        ..setButtonPositionNormalY(2)
+        ..setButtonPositionResearchX(0)
         ..setButtonPositionResearchY(2)
         ..setIconNormal("ReplaceableTextures\\CommandButtons\\BTNLoad.blp")
         ..setIconResearch("ReplaceableTextures\\CommandButtons\\BTNLoad.blp")
@@ -212,10 +245,12 @@ class MeatInventory
 
         let meatCount = carriedMeat.size()
         if meatCount != 0
-            ownerUnit.removeAbility(ABILITY_ID_PICKUPMEAT)
+            if udg_trolls.contains(ownerUnit)
+                ownerUnit.removeAbility(ABILITY_ID_PICKUPMEAT_TROLL)
             ownerUnit.addAbility(ABILITY_IDS_DROPMEAT[meatCount - 1])
         else
-            ownerUnit.addAbility(ABILITY_ID_PICKUPMEAT)
+            if udg_trolls.contains(ownerUnit)
+                ownerUnit.addAbility(ABILITY_ID_PICKUPMEAT_TROLL)
 
 
     private function getMeatFloatText() returns string

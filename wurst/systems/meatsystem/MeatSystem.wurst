@@ -136,15 +136,17 @@ class MeatInventory
             carriedMeat.remove(meat)
         updateDropMeatAbility()
 
-    function tryPickupMeat(item meat)
+    function tryPickupMeat(item meat) returns bool
         ownerUnit.removeItem(meat)
         if canPickupMeat()
             meat.setPos(boundMax)
             meat.setVisible(false)
             carriedMeat.add(meat)
             updateDropMeatAbility()
+            return true
         else
             simError(ownerPlayer, "Raw meat capacity full!")
+            return false
 
     function onOwnerDeath()
         destroy this
@@ -207,9 +209,14 @@ class MeatInventory
     function updateDropMeatAbility()
         for i = 0 to 7
             ownerUnit.removeAbility(ABILITY_IDS_DROPMEAT[i])
+
         let meatCount = carriedMeat.size()
         if meatCount != 0
+            ownerUnit.removeAbility(ABILITY_ID_PICKUPMEAT)
             ownerUnit.addAbility(ABILITY_IDS_DROPMEAT[meatCount - 1])
+        else
+            ownerUnit.addAbility(ABILITY_ID_PICKUPMEAT)
+
 
     private function getMeatFloatText() returns string
         //Generate floating text to draw on meat carrier unit
@@ -229,14 +236,14 @@ class MeatInventory
             meatInventoryInstances.remove(this.ownerUnit)
         destroy carriedMeat
 
-function tryPickupMeat(unit u, item meat)
+function tryPickupMeat(unit u, item meat) returns bool
     //Call meatpickup func for instance, or create one first and then call
     if meatInventoryInstances.has(u)
-        meatInventoryInstances.get(u).tryPickupMeat(meat)
+        return meatInventoryInstances.get(u).tryPickupMeat(meat)
     else
         let instance = new MeatInventory(u)
         meatInventoryInstances.put(u, instance)
-        instance.tryPickupMeat(meat)
+        return instance.tryPickupMeat(meat)
 
 function tryPickupMeatArea(unit u)
     forItemsInRect(u.getPos().withRadiusRect(AOE_PICKUP_RADIUS)) maybeMeat ->

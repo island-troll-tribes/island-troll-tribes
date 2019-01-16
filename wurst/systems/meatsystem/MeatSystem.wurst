@@ -148,7 +148,7 @@ class MeatInventory
             simError(ownerPlayer, "Raw meat capacity full!")
 
     function onOwnerDeath()
-        this.emptyToGround()
+        destroy this
 
     function canPickupMeat() returns bool
         return carriedMeat.size() < MAX_MEAT_COUNT
@@ -159,6 +159,7 @@ class MeatInventory
         if meatInventoryInstances.has(newOwner)
             destroy meatInventoryInstances.getAndRemove(newOwner)
         meatInventoryInstances.put(newOwner, this)
+        updateDropMeatAbility()
 
     function onSmartPickupMeat(item meat)
         ownerUnit.issuePointOrderById(Orders.move, meat.getPos())

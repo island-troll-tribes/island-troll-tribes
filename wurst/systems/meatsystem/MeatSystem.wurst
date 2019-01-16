@@ -153,12 +153,14 @@ class MeatInventory
     texttag meatAmountText
     CallbackPeriodic smartPickupCallback
     item smartPickupTarget
+    bool isTrollInventory
 
     construct(unit owner)
         this.ownerUnit = owner
         this.ownerPlayer = ownerUnit.getOwner()
         this.carriedMeat = new LinkedList<item>()
         this.meatAmountText = null
+        this.isTrollInventory = udg_trolls.contains(ownerUnit)
         updateDropMeatAbility()
 
     function emptyToGround()
@@ -245,11 +247,11 @@ class MeatInventory
 
         let meatCount = carriedMeat.size()
         if meatCount != 0
-            if udg_trolls.contains(ownerUnit)
+            if this.isTrollInventory
                 ownerUnit.removeAbility(ABILITY_ID_PICKUPMEAT_TROLL)
             ownerUnit.addAbility(ABILITY_IDS_DROPMEAT[meatCount - 1])
         else
-            if udg_trolls.contains(ownerUnit)
+            if this.isTrollInventory
                 ownerUnit.addAbility(ABILITY_ID_PICKUPMEAT_TROLL)
 
 

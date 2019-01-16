@@ -70,7 +70,7 @@ public IterableMap<unit, MeatInventory> meatInventoryInstances = new IterableMap
             ..setIconTurnOff(ICON_PATHS_DROPMEAT[i])
             ..setHeroAbility(false)
             ..setItemAbility(false)
-            ..setLevels(3)
+            ..setLevels(1)
             ..setHotkeyNormal("C")
             ..setName("Drop Raw Meat")
             ..setDisableOtherAbilities(1, false)
@@ -101,7 +101,7 @@ public IterableMap<unit, MeatInventory> meatInventoryInstances = new IterableMap
         ..setIconTurnOff("ReplaceableTextures\\CommandButtons\\BTNLoad.blp")
         ..setHeroAbility(false)
         ..setItemAbility(false)
-        ..setLevels(3)
+        ..setLevels(1)
         ..setHotkeyNormal("G")
         ..setName("Get Raw Meat")
         ..setDisableOtherAbilities(1, false)
@@ -132,11 +132,11 @@ public IterableMap<unit, MeatInventory> meatInventoryInstances = new IterableMap
         ..setIconTurnOff("ReplaceableTextures\\CommandButtons\\BTNLoad.blp")
         ..setHeroAbility(false)
         ..setItemAbility(false)
-        ..setLevels(3)
-        ..setHotkeyNormal("G")
+        ..setLevels(1)
+        ..setHotkeyNormal("C")
         ..setName("Get Raw Meat")
         ..setDisableOtherAbilities(1, false)
-        ..setTooltipNormal(1, "|c00ffcc00G|r - Pick Up Raw Meat")
+        ..setTooltipNormal(1, "|c00ffcc00C|r - Pick Up Raw Meat")
         ..setTooltipNormalExtended(1, "Picks up nearby raw meat.")
         ..presetBaseOrderID(lvl -> "burrow")
         ..setOrderStringActivate("burrow")
@@ -172,7 +172,6 @@ class MeatInventory
         updateDropMeatAbility()
 
     function tryPickupMeat(item meat) returns bool
-        ownerUnit.removeItem(meat)
         if canPickupMeat()
             meat.setPos(boundMax)
             meat.setVisible(false)
@@ -182,6 +181,11 @@ class MeatInventory
         else
             simError(ownerPlayer, "Raw meat capacity full!")
             return false
+
+    function tryPickupMeatArea()
+        forItemsInRect(ownerUnit.getPos().withRadiusRect(AOE_PICKUP_RADIUS)) maybeMeat ->
+            if maybeMeat.getTypeId() == ITEM_RAW_MEAT
+                tryPickupMeat(maybeMeat)
 
     function onOwnerDeath()
         destroy this
@@ -284,9 +288,13 @@ function tryPickupMeat(unit u, item meat) returns bool
         return instance.tryPickupMeat(meat)
 
 function tryPickupMeatArea(unit u)
-    forItemsInRect(u.getPos().withRadiusRect(AOE_PICKUP_RADIUS)) maybeMeat ->
-        if maybeMeat.getTypeId() == ITEM_RAW_MEAT
-            tryPickupMeat(u, maybeMeat)
+    //Call meatpickup func for instance, or create one first and then call
+    if meatInventoryInstances.has(u)
+        meatInventoryInstances.get(u).tryPickupMeatArea()
+    else
+        let instance = new MeatInventory(u)
+        meatInventoryInstances.put(u, instance)
+        instance.tryPickupMeatArea()
 
 function onTargetOrder()
     let order = GetIssuedOrderId()
@@ -315,11 +323,9 @@ init
         let maybeMeat = GetManipulatedItem()
         let u = GetTriggerUnit()
         if maybeMeat.getTypeId() == ITEM_RAW_MEAT
+            u.removeItem(maybeMeat)
             if isUnitMeatCarrier(u)
                 tryPickupMeat(u, maybeMeat)
-            else
-                //Disable meat pickup for any non-troll
-                u.removeItem(maybeMeat)
 
     EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
         let dying = GetTriggerUnit()

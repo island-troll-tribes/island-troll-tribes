@@ -11,6 +11,8 @@ import SimError
 import ID
 import ClosuresForItems
 import ObjectIdGenerator
+import UnitEntity
+import initlater Troll
 
 let ITEM_RAW_MEAT = 'IRAW'
 let MAX_MEAT_COUNT = 8
@@ -160,7 +162,7 @@ class MeatInventory
         this.ownerPlayer = ownerUnit.getOwner()
         this.carriedMeat = new LinkedList<item>()
         this.meatAmountText = null
-        this.isTrollInventory = udg_trolls.contains(ownerUnit)
+        this.isTrollInventory = UnitEntity.findForUnit(ownerUnit) instanceof Troll
         updateDropMeatAbility()
 
     function emptyToGround()
@@ -199,7 +201,7 @@ class MeatInventory
         if meatInventoryInstances.has(newOwner)
             destroy meatInventoryInstances.getAndRemove(newOwner)
         meatInventoryInstances.put(newOwner, this)
-        this.isTrollInventory = udg_trolls.contains(newOwner)
+        this.isTrollInventory = UnitEntity.findForUnit(newOwner) instanceof Troll
         updateDropMeatAbility()
 
     function onSmartPickupMeat(item meat)
@@ -304,7 +306,7 @@ function onTargetOrder()
 
     let target = GetOrderTargetItem()
 
-    if target != null and target.getTypeId() == ITEM_RAW_MEAT and u.isInventoryFull() and udg_trolls.contains(u)
+    if target != null and target.getTypeId() == ITEM_RAW_MEAT and u.isInventoryFull() and UnitEntity.findForUnit(u) instanceof Troll
         if meatInventoryInstances.has(u)
             let instance = meatInventoryInstances.get(u)
             let meatCount = instance.carriedMeat.size()
@@ -316,7 +318,7 @@ function onTargetOrder()
             instance.onSmartPickupMeat(target)
 
 function isUnitMeatCarrier(unit u) returns bool
-    return udg_trolls.contains(u) or u.getTypeId() == UNIT_ENSNARE_TRAP
+    return UnitEntity.findForUnit(u) instanceof Troll or u.getTypeId() == UNIT_ENSNARE_TRAP
 
 init
     EventListener.add(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->

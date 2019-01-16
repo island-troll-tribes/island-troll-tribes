@@ -196,13 +196,14 @@ public class MeatInventory
         return carriedMeat.size() < MAX_MEAT_COUNT
 
     function transferMeatInventoryToUnit(unit newOwner)
-        meatInventoryInstances.remove(this.ownerUnit)
-        this.ownerUnit = newOwner
-        if meatInventoryInstances.has(newOwner)
-            destroy meatInventoryInstances.getAndRemove(newOwner)
-        meatInventoryInstances.put(newOwner, this)
-        this.isTrollInventory = UnitEntity.findForUnit(newOwner) instanceof Troll
-        updateDropMeatAbility()
+        nullTimer() ->
+            meatInventoryInstances.remove(this.ownerUnit)
+            this.ownerUnit = newOwner
+            if meatInventoryInstances.has(newOwner)
+                destroy meatInventoryInstances.getAndRemove(newOwner)
+            meatInventoryInstances.put(newOwner, this)
+            this.isTrollInventory = UnitEntity.findForUnit(newOwner) instanceof Troll
+            updateDropMeatAbility()
 
     function onSmartPickupMeat(item meat)
         ownerUnit.issuePointOrderById(Orders.move, meat.getPos())
@@ -260,7 +261,6 @@ public class MeatInventory
         else
             if this.isTrollInventory
                 ownerUnit.addAbility(ABILITY_ID_PICKUPMEAT_TROLL)
-
 
     private function getMeatFloatText() returns string
         //Generate floating text to draw on meat carrier unit

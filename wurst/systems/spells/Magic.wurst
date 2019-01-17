@@ -1,10 +1,11 @@
 package Magic
 import RegisterEvents
-import IttDummyCaster
+import DummyCaster
 import TheOneSpawn
 import Mammoth
 import DiscoDuck
 import PublicLibrary
+import Orders
 
 init
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_USE_ITEM) ->
@@ -29,7 +30,10 @@ init
             else if chance < 0.4
                 user.removeLevels(1)
             else if chance < 0.6
-                new IttDummyCaster(3).castTarget(user.getOwner(), 'ANfs', 1, "flamestrike", user)
+                new DummyCaster()
+                    ..delay(3)
+                    ..owner(user.getOwner())
+                    ..castTarget('ANfs', 1, Orders.flamestrike, user)
             else if chance < 0.7
                 user.addXp(500, true)
             else if chance < 0.9

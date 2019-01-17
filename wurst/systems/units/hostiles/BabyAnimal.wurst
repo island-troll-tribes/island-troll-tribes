@@ -1,0 +1,24 @@
+package BabyAnimal
+import BonyAnimal
+import Orders
+import GeometryUtils
+import ClosureTimers
+
+let SPAWN_WANDER_DISTANCE = 100.
+
+public abstract class BabyAnimal extends BonyAnimal
+    construct(unit whichUnit)
+        super(whichUnit)
+
+    construct(player whichPlayer, vec2 pos)
+        super(whichPlayer, pos)
+
+    construct(player whichPlayer, vec2 pos, angle facing)
+        super(whichPlayer, pos, facing)
+
+    override function postCreate()
+        super.postCreate()
+        getUnit().issuePointOrderById(Orders.move, getPos().polarOffset(randomAngle(), SPAWN_WANDER_DISTANCE))
+        getUnit().addAbility(GHOST_VIS_ID)
+        doAfter(1) ->
+            getUnit().issueImmediateOrderById(Orders.stop)

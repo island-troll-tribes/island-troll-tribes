@@ -4,15 +4,14 @@ import ID
 import ClosureEvents
 import HashMap
 import ClosureTimers
-import ChatCommands
-import GameConfig
 import ClosureForGroups
 import HealingSystem
 
-public let DISEASE_HEALING_REDUCTION_FACTOR = 0.4
-let DURATION = 45.
+public let DISEASE_HEALING_REDUCTION_FACTOR = 0.3
+let DURATION = 25.
 let DAMAGE_TICK_INTERVAL = 0.5
-let DAMAGE_PER_SECOND = 5
+let DAMAGE_PER_SECOND = 3
+let AOE = 200.
 let EFFECT_PATH = "Abilities\\Spells\\Undead\\PlagueCloud\\PlagueCloudCaster.mdl"
 HashMap<unit, DiseaseInstance> diseaseInstances = new HashMap<unit,DiseaseInstance>()
 
@@ -22,7 +21,15 @@ public function isUnitDiseased(unit u) returns bool
 function onCastDisease()
     let caster = GetSpellAbilityUnit()
     let target = GetSpellTargetUnit()
-    applyDisease(caster, target)
+    forUnitsInRange(target.getPos(), AOE) u ->
+        if isValidTarget(caster.getOwner(), u)
+            applyDisease(caster, u)
+
+function isValidTarget(player attacker, unit u) returns bool
+    return u.getOwner().isEnemyOf(attacker)
+    and not u.isType(UNIT_TYPE_STRUCTURE)
+    and not u.isType(UNIT_TYPE_MECHANICAL)
+    and u.isAlive()
 
 function applyDisease(unit caster, unit target)
     //Remove any old timers
@@ -59,18 +66,10 @@ class DiseaseInstance
     ondestroy
         t.destr()
         fx.destr()
+
 init
     registerSpellEffectEvent(SPELL_DISEASE) ->
         onCastDisease()
 
     onUnitHealed() ->
         onHealed()
-
-    registerCommandAll("disease") (triggerPlayer, args) ->
-        if (gameConfig.isTestModeEnabled())
-            printTimedToPlayer("Added disease potion effect to any selected heroes", 5., triggerPlayer)
-            forUnitsSelected(triggerPlayer) u ->
-                if (u.isType(UNIT_TYPE_HERO))
-                    applyDisease(u,u)
-        else
-            printTimedToPlayer("Requires test mode!", 5., triggerPlayer)

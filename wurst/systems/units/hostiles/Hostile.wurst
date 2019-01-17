@@ -4,6 +4,7 @@ import LinkedList
 import UnitEntity
 import Lodash
 import GeometryUtils
+import ClosureTimers
 
 public function createCorpse(player p, int unitId, vec2 pos, angle facing) returns unit
     return CreateCorpse(p, unitId, pos.x, pos.y, facing.degrees())
@@ -31,10 +32,20 @@ public abstract class Hostile extends UnitEntity
         let pos = getPos()
         let numCorpses = (getNumCorpses() * udg_FOOD_FOR_KILL_PROPORTION).round()
 
-        for i = 1 to numCorpses
+        //Smooth spawn loot to avoid lag/desyncs
+        doPeriodicallyCounted(ANIMATION_PERIOD, numCorpses) cb ->
             createCorpse(players[PLAYER_NEUTRAL_AGGRESSIVE], UNIT_MEAT, pos, randomAngle())
 
         let drops = getDrops()
-        drops.each(drop -> createItem(drop, pos))
+        doAfter(ANIMATION_PERIOD * numCorpses) ->
+            if drops.size() != 0
+                let dropsIter = drops.iterator()
+                doPeriodicallyCounted(ANIMATION_PERIOD, drops.size()) cb ->
+                    createItem(dropsIter.next(), pos)
+                    if cb.isLast()
+                        dropsIter.close()
+                        destroy drops
+            else
+                destroy drops
 
         super.onDeath()

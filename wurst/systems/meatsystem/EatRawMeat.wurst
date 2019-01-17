@@ -1,0 +1,99 @@
+package EatRawMeat
+
+import AbilityObjEditing
+import Assets
+import ClosureEvents
+import ClosureTimers
+import MeatSystem
+import HashMap
+
+public let ABILITY_ID_EAT_RAW_MEAT = 'XERW'
+let CHANNEL_TIME = 2.
+let HP_PER_SECOND = 12.5
+let SFX_PATH = "Objects\\Spawnmodels\\Human\\HumanBlood\\BloodElfSpellThiefBlood.mdl"
+
+@compiletime function createSpell()
+    new AbilityDefinitionIllidanChannel(ABILITY_ID_EAT_RAW_MEAT)
+    ..setTargetType(1, 0)
+    ..setAnimationNames("")
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..setButtonPositionNormalX(1)
+    ..setButtonPositionNormalY(2)
+    ..setButtonPositionResearchX(1)
+    ..setButtonPositionResearchY(2)
+    ..setIconNormal(Icons.bTNCannibalize)
+    ..setIconResearch(Icons.bTNCannibalize)
+    ..setIconTurnOff(Icons.bTNCannibalize)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setHotkeyNormal("D")
+    ..setName("Eat Raw Meat")
+    ..setDisableOtherAbilities(1, false)
+    ..setFollowThroughTime(1, CHANNEL_TIME)
+    ..setCastingTime(1, 0)
+    ..setTooltipNormal(1, "|c00ffcc00D|r - Eat Raw Meat")
+    ..setTooltipNormalExtended(1, "Eats a raw meat from your meat inventory. Restores 25 hp over 2 seconds. Moving cancels this effect.")
+    ..setBaseOrderID(1, "cannibalize")
+    ..setOrderStringUseTurnOn("cannibalize")
+    ..setOrderStringActivate("cannibalize")
+    ..setOrderStringDeactivate("cannibalize")
+    ..setOrderStringTurnOff("cannibalize")
+    ..setOptions(1, 1)
+    ..setCooldown(1, CHANNEL_TIME)
+    ..setManaCost(1, 0)
+
+let eatRawMeatInstances = new HashMap<unit, EatRawMeatInstance>()
+
+class EatRawMeatInstance
+    unit caster
+    bool isChanneling
+
+    function healthLoop()
+        doPeriodicallyTimed(ANIMATION_PERIOD, CHANNEL_TIME) cb ->
+            if this.isChanneling and caster.isAlive()
+                caster.setHP(caster.getHP() + HP_PER_SECOND * ANIMATION_PERIOD)
+            else
+                cb.stop()
+
+            if cb.isLast() or not (this.isChanneling and caster.isAlive())
+                destroy this
+
+    construct(unit casterUnit)
+        caster = casterUnit
+        this.isChanneling = true
+        healthLoop()
+
+    ondestroy
+        if (eatRawMeatInstances.has(caster))
+            if (eatRawMeatInstances.get(caster) == this)
+                eatRawMeatInstances.remove(caster)
+
+function onCast()
+    var caster = GetSpellAbilityUnit()
+
+    //Exit if no meat inventory to begin with
+    if not meatInventoryInstances.has(caster)
+        return
+
+    //Try consuming a meat if we have one and do effects if succesful
+    if meatInventoryInstances.get(caster).tryRemoveOneMeat()
+        if eatRawMeatInstances.has(caster)
+            destroy eatRawMeatInstances.getAndRemove(caster)
+
+        eatRawMeatInstances.put(caster, new EatRawMeatInstance(caster))
+        let efx = caster.addEffect(SFX_PATH, "origin")
+        efx.destr()
+
+function onEndCast()
+    if GetSpellAbilityId() == ABILITY_ID_EAT_RAW_MEAT
+        var caster = GetSpellAbilityUnit()
+        if (eatRawMeatInstances.has(caster))
+            eatRawMeatInstances.get(caster).isChanneling = false
+
+init
+    registerSpellEffectEvent(ABILITY_ID_EAT_RAW_MEAT, () -> onCast())
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST, () -> onEndCast())

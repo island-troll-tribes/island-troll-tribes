@@ -10,15 +10,19 @@ public class TradeShipCoordinator
     var ships = new LinkedList<TradeShipSupervisor>()
 
     function swap()
-        routes.forEach(route -> route.swap())
+        for route in routes
+            route.swap()
 
     function spawn()
-        ships.forEach(ship -> destroy ship)
+        for ship in ships
+            destroy ship
         destroy ships
 
         ships = routes
         .map(route -> new TradeShipSupervisor(route.getFirst(), nextShip.getId()))
-        ..forEach(ship -> ship.addListener(ship -> handleEvent(ship)))
+
+        for ship in ships
+            ship.addListener(ship -> handleEvent(ship))
 
         swap()
         nextShip = nextShip.getNext()

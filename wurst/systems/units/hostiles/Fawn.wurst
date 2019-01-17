@@ -3,10 +3,12 @@ import ID
 import BonyAnimal
 import TimerUtils
 import ClosuresForItems
+import UnitUtils
 import ClosureTimers
 import DummyCasterFixed
 import ElkCritter
 import Orders
+import UnitExtensions
 
 
 public class Fawn extends BonyAnimal
@@ -37,15 +39,23 @@ public class Fawn extends BonyAnimal
             return
 
         let acornPos = acorn.getPos()
-        if acornPos.distanceTo(pos) < 50
-            acorn.remove()
-            new DummyCaster
-            ..owner(players[0])
+        if acornPos.distanceTo(pos) > 50
+            getUnit().issuePointOrderById(Orders.move, acornPos)
+            return
+
+        let troll = findNearestUnit(acornPos, 500, Filter(-> GetFilterUnit().isTroll()))
+        if troll == null
+            return
+
+        let owner = troll.getOwner()
+
+        new DummyCaster
+            ..owner(owner)
             ..origin(acornPos.add(-100, 0))
             ..castImmediate(SPELL_ELK_CRITTER_ID, 1, Orders.mechanicalcritter)
-            stopTimedLoopAndDestroy()
-        else
-            getUnit().issuePointOrderById(Orders.move, acornPos)
+
+        acorn.remove()
+        stopTimedLoopAndDestroy()
 
     override function postDeath()
         stopTimedLoopAndDestroy()

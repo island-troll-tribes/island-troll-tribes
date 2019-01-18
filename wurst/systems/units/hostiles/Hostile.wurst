@@ -35,6 +35,15 @@ public abstract class Hostile extends UnitEntity
             spawnRawMeat(pos)
 
         let drops = getDrops()
-        drops.each(drop -> createItem(drop, pos))
+        doAfter(ANIMATION_PERIOD * numCorpses) ->
+            if drops.size() != 0
+                let dropsIter = drops.iterator()
+                doPeriodicallyCounted(ANIMATION_PERIOD, drops.size()) cb ->
+                    createItem(dropsIter.next(), pos)
+                    if cb.isLast()
+                        dropsIter.close()
+                        destroy drops
+            else
+                destroy drops
 
         super.onDeath()

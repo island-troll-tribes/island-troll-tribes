@@ -27,18 +27,18 @@ private function PullItem takes nothing returns nothing
     local real xloc = GetUnitX(d.caster)
     local real yloc = GetUnitY(d.caster)
     local real ang = Atan2(yloc-y,xloc-x)
-    
+
     local real dx = xloc - x
     local real dy = yloc - y
-    
+
     set d.x = d.speed*Cos(ang)
     set d.y = d.speed*Sin(ang)
-    
+
     if d.ticks <= 4 or d.ticks >= d.ticksMax or d.valid == false then
         call PauseTimer(d.t)
         call DestroyTimer(d.t)
         call RemoveUnit(d.it)
-        call SetItemPosition(d.i, x, y) 
+        call SetItemPosition(d.i, x, y)
         call SetItemVisible(d.i, true)
         destroy d
     else
@@ -50,46 +50,49 @@ private function PullItem takes nothing returns nothing
 endfunction
 
 private function PullItemsSetup takes nothing returns nothing
-    local WarpData d = new WarpData()
-    local unit u = GetSpellAbilityUnit()
-    //local location loc = GetUnitLoc(u)
     local item i = GetEnumItem()
-    local integer itype = GetItemTypeId(i)
-    //local location iloc = GetItemLoc(i)
-    local real x = GetItemX(i) //GetLocationX(iloc)
-    local real y = GetItemY(i) //GetLocationY(iloc)
-    local unit it = CreateUnit(GetOwningPlayer(u), UNIT_DUMMY, x , y, 270)
-    local real xloc = GetUnitX(u) //GetLocationX(loc)
-    local real yloc = GetUnitY(u) //GetLocationY(loc)
-    local real ang = Atan2(yloc-y,xloc-x)
-    local real dx = y - yloc
-    local real dy = x - xloc
-    local real dist = SquareRoot(dx * dx + dy * dy) //DistanceBetweenPoints(loc, iloc)
-    local real speed = 15
-    //6 * GetUnitAbilityLevelSwapped('A06W', u)
-    set d.speed = speed
-    set d.t = CreateTimer()
-    set d.caster = u
-    set d.x = speed*Cos(ang)
-    set d.y = speed*Sin(ang)
-    set d.ticks = R2I(dist/speed)
-    set d.ticksMax = GetUnitAbilityLevel(u,'A06W') * 60
-    set d.it = it
-    set d.i = i
-    
-    set d.valid = true
-    //set d.sfx = AddSpecialEffectTarget("Doodads\\Cinematic\\EyeOfSargeras\\EyeOfSargeras.mdl",it,"origin")
-    set d.sfx = AddSpecialEffectTarget("Abilities\\Spells\\Undead\\DevourMagic\\DevourMagicBirthMissile.mdl",it,"origin")
-        
-    call SetItemVisible(i, false)
-    
-    //call SetHandleInt(d.t,"struct",d)
-    call SaveInteger(udg_GameHash,GetHandleId(d.t),StringHash("struct"),d castTo int)   
-    call TimerStart(d.t, .03, true, function PullItem)
-    
-    set i = null
-    set u = null
-    set it = null
+    //local location loc = GetUnitLoc(u)
+
+    if i.getTypeId() != ITEM_RAW_MEAT
+        local unit u = GetSpellAbilityUnit()
+        local WarpData d = new WarpData()
+        local integer itype = GetItemTypeId(i)
+        //local location iloc = GetItemLoc(i)
+        local real x = GetItemX(i) //GetLocationX(iloc)
+        local real y = GetItemY(i) //GetLocationY(iloc)
+        local unit it = CreateUnit(GetOwningPlayer(u), UNIT_DUMMY, x , y, 270)
+        local real xloc = GetUnitX(u) //GetLocationX(loc)
+        local real yloc = GetUnitY(u) //GetLocationY(loc)
+        local real ang = Atan2(yloc-y,xloc-x)
+        local real dx = y - yloc
+        local real dy = x - xloc
+        local real dist = SquareRoot(dx * dx + dy * dy) //DistanceBetweenPoints(loc, iloc)
+        local real speed = 15
+        //6 * GetUnitAbilityLevelSwapped('A06W', u)
+        set d.speed = speed
+        set d.t = CreateTimer()
+        set d.caster = u
+        set d.x = speed*Cos(ang)
+        set d.y = speed*Sin(ang)
+        set d.ticks = R2I(dist/speed)
+        set d.ticksMax = GetUnitAbilityLevel(u,'A06W') * 60
+        set d.it = it
+        set d.i = i
+
+        set d.valid = true
+        //set d.sfx = AddSpecialEffectTarget("Doodads\\Cinematic\\EyeOfSargeras\\EyeOfSargeras.mdl",it,"origin")
+        set d.sfx = AddSpecialEffectTarget("Abilities\\Spells\\Undead\\DevourMagic\\DevourMagicBirthMissile.mdl",it,"origin")
+
+        call SetItemVisible(i, false)
+
+        //call SetHandleInt(d.t,"struct",d)
+        call SaveInteger(udg_GameHash,GetHandleId(d.t),StringHash("struct"),d castTo int)
+        call TimerStart(d.t, .03, true, function PullItem)
+
+        set i = null
+        set u = null
+        set it = null
+    endif
 endfunction
 
 
@@ -101,7 +104,7 @@ private function Actions takes nothing returns nothing
     //local rect r = RectFromCenterSizeBJ(loc, 900.00 * I2R(GetUnitAbilityLevelSwapped('A06W', u)), 900.00 * I2R(GetUnitAbilityLevelSwapped('A06W', u)))
     local real hw = 900.00 * I2R(GetUnitAbilityLevel(u,'A06W'))
     local rect r = Rect( x - hw, y - hw, x + hw, y + hw )
-    
+
     call EnumItemsInRect( r, null, function PullItemsSetup )
 
     call RemoveRect(r)

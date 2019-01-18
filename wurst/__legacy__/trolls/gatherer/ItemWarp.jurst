@@ -54,44 +54,46 @@ private function PullItemsSetup takes nothing returns nothing
     //local location loc = GetUnitLoc(u)
 
     if i.getTypeId() != ITEM_RAW_MEAT
-        local unit u = GetSpellAbilityUnit()
-        local WarpData d = new WarpData()
-        local integer itype = GetItemTypeId(i)
-        //local location iloc = GetItemLoc(i)
-        local real x = GetItemX(i) //GetLocationX(iloc)
-        local real y = GetItemY(i) //GetLocationY(iloc)
-        local unit it = CreateUnit(GetOwningPlayer(u), UNIT_DUMMY, x , y, 270)
-        local real xloc = GetUnitX(u) //GetLocationX(loc)
-        local real yloc = GetUnitY(u) //GetLocationY(loc)
-        local real ang = Atan2(yloc-y,xloc-x)
-        local real dx = y - yloc
-        local real dy = x - xloc
-        local real dist = SquareRoot(dx * dx + dy * dy) //DistanceBetweenPoints(loc, iloc)
-        local real speed = 15
-        //6 * GetUnitAbilityLevelSwapped('A06W', u)
-        set d.speed = speed
-        set d.t = CreateTimer()
-        set d.caster = u
-        set d.x = speed*Cos(ang)
-        set d.y = speed*Sin(ang)
-        set d.ticks = R2I(dist/speed)
-        set d.ticksMax = GetUnitAbilityLevel(u,'A06W') * 60
-        set d.it = it
-        set d.i = i
+        return
 
-        set d.valid = true
-        //set d.sfx = AddSpecialEffectTarget("Doodads\\Cinematic\\EyeOfSargeras\\EyeOfSargeras.mdl",it,"origin")
-        set d.sfx = AddSpecialEffectTarget("Abilities\\Spells\\Undead\\DevourMagic\\DevourMagicBirthMissile.mdl",it,"origin")
+    local unit u = GetSpellAbilityUnit()
+    local WarpData d = new WarpData()
+    local integer itype = GetItemTypeId(i)
+    //local location iloc = GetItemLoc(i)
+    local real x = GetItemX(i) //GetLocationX(iloc)
+    local real y = GetItemY(i) //GetLocationY(iloc)
+    local unit it = CreateUnit(GetOwningPlayer(u), UNIT_DUMMY, x , y, 270)
+    local real xloc = GetUnitX(u) //GetLocationX(loc)
+    local real yloc = GetUnitY(u) //GetLocationY(loc)
+    local real ang = Atan2(yloc-y,xloc-x)
+    local real dx = y - yloc
+    local real dy = x - xloc
+    local real dist = SquareRoot(dx * dx + dy * dy) //DistanceBetweenPoints(loc, iloc)
+    local real speed = 15
+    //6 * GetUnitAbilityLevelSwapped('A06W', u)
+    set d.speed = speed
+    set d.t = CreateTimer()
+    set d.caster = u
+    set d.x = speed*Cos(ang)
+    set d.y = speed*Sin(ang)
+    set d.ticks = R2I(dist/speed)
+    set d.ticksMax = GetUnitAbilityLevel(u,'A06W') * 60
+    set d.it = it
+    set d.i = i
 
-        call SetItemVisible(i, false)
+    set d.valid = true
+    //set d.sfx = AddSpecialEffectTarget("Doodads\\Cinematic\\EyeOfSargeras\\EyeOfSargeras.mdl",it,"origin")
+    set d.sfx = AddSpecialEffectTarget("Abilities\\Spells\\Undead\\DevourMagic\\DevourMagicBirthMissile.mdl",it,"origin")
 
-        //call SetHandleInt(d.t,"struct",d)
-        call SaveInteger(udg_GameHash,GetHandleId(d.t),StringHash("struct"),d castTo int)
-        call TimerStart(d.t, .03, true, function PullItem)
+    call SetItemVisible(i, false)
 
-        set i = null
-        set u = null
-        set it = null
+    //call SetHandleInt(d.t,"struct",d)
+    call SaveInteger(udg_GameHash,GetHandleId(d.t),StringHash("struct"),d castTo int)
+    call TimerStart(d.t, .03, true, function PullItem)
+
+    set i = null
+    set u = null
+    set it = null
     endif
 endfunction
 

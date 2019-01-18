@@ -1,0 +1,31 @@
+package TeamGoldSharing
+import GameConfig
+import GameMode
+import LegacyColors
+import ChatUtils
+import Game
+import RegisterEvents
+import ClosureTimers
+import Tribe
+
+function distributeGold(unit whichUnit)
+    nullTimer() ->
+        let owner = whichUnit.getOwner()
+        let tribe = Tribe.ofPlayer(owner)
+        let gold = owner.getLumber()
+        for member in tribe.getMembers()
+            member.setLumber(gold)
+
+function initializeTeamGold()
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SELL_ITEM, -> distributeGold(GetTriggerUnit()))
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SELL, -> distributeGold(GetBuyingUnit()))
+
+init
+    new GameMode("team-gold", "tg", "Players on a team share gold in the same pool") (mode, args) ->
+        let enabled = args.size() > 1 ? args.get(0).isConfirmation() : true
+        gameConfig.setTeamGoldEnabled(enabled)
+        mode.message(GOLD_COLOR + "Team gold|r " + enabled.toOnOff() + "!")
+
+    registerGameStartEvent() ->
+        if gameConfig.isTeamGoldEnabled()
+            initializeTeamGold()

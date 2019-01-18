@@ -9,10 +9,10 @@ import ObjectIdGenerator
 import ChatCommands
 import GameConfig
 import ClosureForGroups
-import IttDummyCaster
 import Orders
 import BuffObjEditing
 import ObjectIds
+import DummyCaster
 
 constant let ABILITY_ID = 'ESFB'
 constant let DUMMY_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
@@ -181,7 +181,10 @@ class FrostBlastProjectile
                 if effectScalingValue >= 0.7
                     flashEffect(IMPACT_EFFECT_PATH, u, "chest")
                 UnitDamageTarget(ownerUnit, u, damage, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
-                new IttDummyCaster().castTarget(this.ownerUnit.getOwner(), DUMMY_ABILITY_ID, slowTier, Orders.slow, u)
+                new DummyCaster()
+                    ..owner(this.ownerUnit.getOwner())
+                    ..origin(this.efx.getPos())
+                    ..castTarget(DUMMY_ABILITY_ID, slowTier, Orders.slow, u)
         this.exploded = true
         this.efx.destr()
         this.efx = null

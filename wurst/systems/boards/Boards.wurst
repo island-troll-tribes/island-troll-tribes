@@ -1,0 +1,26 @@
+package Boards
+import Game
+import Respawn
+import ShrinkingMap
+import ForcedDuel
+import TimeUtils
+import LegacyColors
+
+public function getGameTimersBoardTitle() returns string
+    let time = GAME_TIMER.getElapsed().toInt()
+    let gpRemaining = GRACE_PERIOD_TIMER.getRemaining().toInt()
+    let fdRemaining = DUEL_TIMER.getRemaining().toInt()
+    let ffRemaining = FOREST_FIRE_TIMER.getRemaining().toInt()
+
+    var title = "Time[" + GENERAL_COLOR + toTimeString(time) + "|r]"
+
+    if gpRemaining > 0
+        title += " - Respawn[" + GREEN_COLOR + toTimeString(gpRemaining) + "|r]"
+
+    if fdRemaining > 0
+        title += " - Duel[" + ENERGY_COLOR + toTimeString(fdRemaining) + "|r]"
+
+    if ffRemaining > 0
+        title += " - Fire[" + RED_COLOR + toTimeString(ffRemaining) + "|r]"
+
+    return title

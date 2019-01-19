@@ -1,0 +1,120 @@
+package ObserverBoard
+import LinkedList
+import Tribe
+import GameMode
+import PlayerExtensions
+import PublicLibrary
+import StringUtils
+
+abstract class ObserverBoardControl
+    string name
+    player whichPlayer
+
+    construct(string name, player whichPlayer)
+        this.name = name
+        this.whichPlayer = whichPlayer
+
+    function getName() returns string
+        return name
+
+    abstract function getInitialValue() returns string
+    abstract function onRight(string value) returns string
+    abstract function onLeft(string value) returns string
+
+class ObserverBoardVisionControl extends ObserverBoardControl
+    LinkedList<string> options
+    LLIterator<string> iterator
+    var currentValue = "players"
+
+    construct(player whichPlayer)
+        super("Vision", whichPlayer)
+        options
+            ..add("players")
+            ..add("all")
+
+        iterator = options.iterator()
+
+        for tribe in Tribe.getTribes()
+            options.add("tribe " + (tribe.getId() + 1).toString())
+
+    function onSelect()
+        switch currentValue
+            case "players"
+                for i = 0 to bj_MAX_PLAYERS - 1
+                    whichPlayer.setPlayerAlliance(players[i], ALLIANCE_SHARED_VISION, true)
+            case "all"
+                for i = 0 to bj_MAX_PLAYERS - 1
+                    whichPlayer.setPlayerAlliance(players[i], ALLIANCE_SHARED_VISION, true)
+            default
+                let tribeId = currentValue.split(" ").get(1).toInt()
+                for i = 0 to bj_MAX_PLAYERS - 1
+                    let tribe = Tribe.ofPlayer(players[i])
+                    let share = tribe != null and tribe.getId() == tribeId
+                    whichPlayer.setPlayerAlliance(players[i], ALLIANCE_SHARED_VISION, share)
+
+    override function getInitialValue() returns string
+        return iterator.next()
+
+    override function onRight(string value) returns string
+        if not iterator.hasNext()
+            iterator.reset()
+        currentValue = iterator.next()
+        return currentValue
+
+    override function onLeft(string value) returns string
+        return currentValue
+
+class ObserverBoardZoomControl extends ObserverBoardControl
+    static let MAX = 1500
+
+    var currentValue = 0
+
+    construct(player whichPlayer)
+        super("Zoom", whichPlayer)
+        currentValue = ZOOM_DISTANCE[whichPlayer.getId()].toInt()
+
+    function onSelect()
+        ZOOM_DISTANCE[whichPlayer.getId()] = currentValue.toReal()
+
+    override function getInitialValue() returns string
+        return currentValue.toString()
+
+    override function onRight(string value) returns string
+        currentValue = (currentValue + 100) mod MAX
+        return currentValue.toString()
+
+    override function onLeft(string value) returns string
+        currentValue = (currentValue + MAX - 100) mod MAX
+        onSelect()
+        return currentValue.toString()
+
+class ObserverBoard
+    player observer
+    let board = CreateMultiboard()
+    let row = 0
+
+    construct(player observer, LinkedList<ObserverBoardControl> options)
+        this.observer = observer
+        board
+            ..setColumnCount(2)
+            ..setRowCount(options.size())
+            ..display(observer, true)
+
+function getObservers() returns LinkedList<player>
+    let observers = new LinkedList<player>()
+    for i = 0 to bj_MAX_PLAYERS - 1
+        let current = players[i]
+        if current.isObserver() and current.isIngame()
+            observers.add(current)
+    return observers
+
+init
+    GameMode.onModeSelectionFinish() ->
+        let observers = getObservers()
+        for observer in observers
+            let options = asList<ObserverBoardControl>(
+                new ObserverBoardVisionControl(observer),
+                new ObserverBoardZoomControl(observer)
+            )
+            new ObserverBoard(observer, options)
+        destroy observers

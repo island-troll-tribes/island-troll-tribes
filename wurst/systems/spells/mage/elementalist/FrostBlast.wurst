@@ -6,8 +6,6 @@ import AbilityObjEditing
 import OverCharge
 import Assets
 import ObjectIdGenerator
-import ChatCommands
-import GameConfig
 import ClosureForGroups
 import IttDummyCaster
 import Orders
@@ -241,12 +239,3 @@ function isValidTarget(unit caster, unit target) returns bool
 
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())
-
-    registerCommandAll("fblast") (triggerPlayer, args) ->
-        if (gameConfig.isTestModeEnabled())
-            printTimedToPlayer("Added frost blast to any selected heroes", 5., triggerPlayer)
-            forUnitsSelected(triggerPlayer) u ->
-                if (u.isType(UNIT_TYPE_HERO))
-                    u.addAbility(ABILITY_ID)
-        else
-            printTimedToPlayer("Requires test mode!", 5., triggerPlayer)

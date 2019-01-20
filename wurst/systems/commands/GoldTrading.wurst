@@ -6,16 +6,15 @@ import PlayerExtensions
 import PlayerUtils
 import Game
 import LegacyColors
+import GameConfig
 
 CommandHandler giveGold = (player giver, LinkedList<string> args) -> begin
     let tribeId = giver.getTribe().getId()
     let playerId = findPlayerIdByStringMatchingTribe(args.get(1), tribeId)
     let currentGold = giver.getLumber()
     let target = players[playerId]
-    var amount = args.get(2).toInt()
-  
-    if amount <= 0
-        amount = currentGold
+    var amount = args.size() > 2 ? args.get(2).toInt() : currentGold
+
     if playerId < 0 or playerId > 11
         simError(giver, "Command: -g player amount")
     else if amount > currentGold
@@ -37,5 +36,6 @@ end
 
 init
     registerGameStartEvent() () ->
-        registerCommandAll("g", giveGold)
-        registerCommandAll("gold", giveGold)
+        if not gameConfig.isTeamGoldEnabled()
+            registerCommandAll("g", giveGold)
+            registerCommandAll("gold", giveGold)

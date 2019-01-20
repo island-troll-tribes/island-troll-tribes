@@ -2,8 +2,8 @@ package SplittingFlame
 import RegisterEvents
 import ClosureTimers
 import ClosureForGroups
-import IttDummyCaster
 import Orders
+import DummyCaster
 
 @configurable constant int ABILITY_ID = 'A04T'
 @configurable constant int DUMMY_ABILITY_ID = 'A01T'
@@ -16,7 +16,10 @@ function onCast()
     doAfter(1) ->
         forUnitsInRange(caster.getPos(), RADIUS) u ->
             if u.isAlive() and u.getOwner().isEnemyOf(owner) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isType(UNIT_TYPE_FLYING)
-                new IttDummyCaster().castImmediate(owner, DUMMY_ABILITY_ID, 1, Orders.fanofknives, u.getPos())
+                new DummyCaster()
+                    ..owner(owner)
+                    ..origin(u.getPos())
+                    ..castImmediate(DUMMY_ABILITY_ID, 1, Orders.fanofknives)
 
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())

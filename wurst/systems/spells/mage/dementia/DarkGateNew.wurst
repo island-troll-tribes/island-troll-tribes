@@ -5,7 +5,7 @@ import LinkedList
 import ClosureTimers
 import Orders
 import ClosureForGroups
-import IttDummyCaster
+import DummyCaster
 import AbilityObjEditing
 import GroupExtensions
 
@@ -169,9 +169,16 @@ class PortalOrb
             randomSpell = spellList.get( GetRandomInt(0, spellList.size() - 1))
 
         if (randomSpell.name == "Crushingwave")
-            new IttDummyCaster(2.5).castTarget(owner, randomSpell.spellId, 1, randomSpell.orderId, t, this.pos)
+            new DummyCaster()
+                ..owner(owner)
+                ..origin(this.pos.toVec2())
+                ..delay(2.5)
+                ..castTarget(randomSpell.spellId, 1, randomSpell.orderId, t)
         else
-            new IttDummyCaster().castTarget(owner, randomSpell.spellId, 1, randomSpell.orderId, t, this.pos)
+            new DummyCaster()
+                ..owner(owner)
+                ..origin(this.pos.toVec2())
+                ..castTarget(randomSpell.spellId, 1, randomSpell.orderId, t)
         addEffect(SPELLCAST_EFFECT_PATH, this.pos).destr()
 
     ondestroy

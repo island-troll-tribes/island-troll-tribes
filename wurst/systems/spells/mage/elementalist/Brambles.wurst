@@ -9,13 +9,13 @@ import ObjectIdGenerator
 import ChatCommands
 import GameConfig
 import ClosureForGroups
-import IttDummyCaster
 import Orders
 import DummyRecycler
 import BuffObjEditing
 import ObjectIds
 import LinkedList
 import MapBounds
+import DummyCaster
 
 constant let ABILITY_ID = 'ESBR'
 constant let DUMMY_SLOW_SPELL_ID = compiletime(ABIL_ID_GEN.next())
@@ -194,9 +194,16 @@ class BramblesInstance
                 forUnitsInRange(rootPos, EFFECT_AOE) u ->
                     if isValidTarget(u)
                         if not u.hasAbility(DUMMY_SLOW_BUFF)
-                            new IttDummyCaster().castTarget(owner, DUMMY_SLOW_SPELL_ID, 1, Orders.slow, u, ownerUnit.getPos())
+                            new DummyCaster()
+                                ..owner(owner)
+                                ..origin(ownerUnit.getPos())
+                                ..castTarget(DUMMY_SLOW_SPELL_ID, 1, Orders.slow, u)
                         if not snaredTargets.has(u) and isOvercharged
-                            new IttDummyCaster(0.2).castTarget(owner, DUMMY_ENTANGLE_SPELL_ID, 1, Orders.entanglingroots, u, ownerUnit.getPos())
+                            new DummyCaster()
+                                ..owner(owner)
+                                ..delay(0.2)
+                                ..origin(ownerUnit.getPos())
+                                ..castTarget(DUMMY_SLOW_SPELL_ID, 1, Orders.slow, u)
                             snaredTargets.push(u)
                         if not loopDamagedTargets.has(u)
                             UnitDamageTarget(ownerUnit, u, DAMAGE_PER_SECOND*UPDATE_LOOP_INTERVAL, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)

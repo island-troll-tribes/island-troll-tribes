@@ -18,18 +18,9 @@ function syncTribeToOwnerGold(unit whichUnit)
         for member in members
             member.setLumber(gold)
 
-function syncTribesToLowestGold()
-    nullTimer() ->
-        for tribe in Tribe.tribes
-            let members = tribe.getMembers()
-            members.sortWith((a,b) -> a.getLumber() - b.getLumber())
-            let lowestLumber = members.getFirst().getLumber()
-            for m in members
-                m.setLumber(lowestLumber)
-
 function initializeTeamGold()
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SELL_ITEM) ->
-        syncTribesToLowestGold()
+        syncTribeToOwnerGold(GetBuyingUnit())
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PAWN_ITEM) ->
         syncTribeToOwnerGold(GetTriggerUnit())

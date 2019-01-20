@@ -3,10 +3,10 @@ package EssenceOfBees
 import OnUnitEnterLeave
 import ID
 import ClosureTimers
-import IttDummyCaster
 import Orders
 import GeometryUtils
 import TerrainUtils
+import DummyCaster
 
 let HIVE_SPAWN_INTERVAL = 10.0
 let LOCATION_ATTEMPTS = 20
@@ -31,7 +31,10 @@ function spawnChildHive(player owner, vec2 hivePos)
         var randomDistance = GetRandomReal(HIVE_SPAWN_MIN_RADIUS, HIVE_SPAWN_MAX_RADIUS)
         var spawnPos = hivePos.polarOffset(randomAngle, randomDistance)
         if spawnPos.isTerrainWalkable()
-            new IttDummyCaster.castPoint(owner, BEEHIVE_ABILITY_ID, 1, Orders.summonfactory, spawnPos)
+            new DummyCaster()
+                ..owner(owner)
+                ..origin(spawnPos)
+                ..castPoint(BEEHIVE_ABILITY_ID, 1, Orders.summonfactory, spawnPos)
             break
 
 init

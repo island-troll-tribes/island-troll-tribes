@@ -1,8 +1,8 @@
 package Seizures
 import RegisterEvents
 import ClosureTimers
-import IttDummyCaster
 import Orders
+import DummyCaster
 
 @configurable constant int ABILITY_ID = 'A05T'
 @configurable constant int DUMMY_ABILITY_ID = 'A05U'
@@ -10,7 +10,10 @@ import Orders
 function startPeriodicAction(player owner, unit target, real timeout, int chance)
     doPeriodicallyTimed(0.1, timeout) cb ->
         if GetRandomInt(1, 100) <= chance
-            new IttDummyCaster().castTarget(owner, DUMMY_ABILITY_ID, 1, Orders.thunderbolt, target)
+            new DummyCaster()
+                ..owner(owner)
+                ..origin(target.getPos()+vec2(100, 0))
+                ..castTarget(DUMMY_ABILITY_ID, 1, Orders.thunderbolt, target)
 
 function onCast()
     var target = GetSpellTargetUnit()

@@ -13,6 +13,7 @@ import BuffObjEditing
 import ObjectIds
 import LinkedList
 import MapBounds
+import InstantDummyCaster
 import DummyCaster
 
 constant let ABILITY_ID = 'ESBR'
@@ -192,15 +193,12 @@ class BramblesInstance
                 forUnitsInRange(rootPos, EFFECT_AOE) u ->
                     if isValidTarget(u)
                         if not u.hasAbility(DUMMY_SLOW_BUFF)
-                            new DummyCaster()
-                                ..owner(owner)
-                                ..origin(ownerUnit.getPos())
-                                ..castTarget(DUMMY_SLOW_SPELL_ID, 1, Orders.slow, u)
+                            InstantDummyCaster.castTarget(owner, DUMMY_SLOW_SPELL_ID, 1, Orders.slow, u)
                         if not snaredTargets.has(u) and isOvercharged
                             let dummy = new DummyCaster()
                                 ..owner(owner)
                                 ..origin(ownerUnit.getPos())
-                            if dummy.castTarget(DUMMY_ENTANGLE_SPELL_ID, 1, Orders.slow, u)
+                            if dummy.castTarget(DUMMY_ENTANGLE_SPELL_ID, 1, Orders.entanglingroots, u)
                                 snaredTargets.push(u)
                         if not loopDamagedTargets.has(u)
                             UnitDamageTarget(ownerUnit, u, DAMAGE_PER_SECOND*UPDATE_LOOP_INTERVAL, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)

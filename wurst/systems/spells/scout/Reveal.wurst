@@ -2,9 +2,9 @@ package Reveal
 import AbilityObjEditing
 import ObjectIdGenerator
 import Icons
-import IttDummyCaster
 import ClosureEvents
 import Orders
+import DummyCaster
 
 
 let ABILITY_ID_REVEAL = 'XSRV'
@@ -108,13 +108,19 @@ function onCastReveal()
     let caster = GetSpellAbilityUnit()
     let owner = caster.getOwner()
     let lvl = caster.getAbilityLevel(GetSpellAbilityId())
-    new IttDummyCaster().castPoint(owner, ABILITY_ID_REVEAL_DUMMY, lvl, Orders.farsight, caster.getPos())
+    new DummyCaster()
+        ..owner(owner)
+        ..origin(caster.getPos() + vec2(100,0))
+        ..castPoint(ABILITY_ID_REVEAL_DUMMY, lvl, Orders.farsight, caster.getPos())
 
 function onCastGreaterReveal()
     let caster = GetSpellAbilityUnit()
     let owner = caster.getOwner()
     let lvl = 1
-    new IttDummyCaster().castPoint(owner, ABILITY_ID_GREATER_REVEAL_DUMMY, lvl, Orders.farsight, caster.getPos())
+    new DummyCaster()
+        ..owner(owner)
+        ..origin(caster.getPos() + vec2(100,0))
+        ..castPoint(ABILITY_ID_GREATER_REVEAL_DUMMY, lvl, Orders.farsight, caster.getPos())
 
 init
     registerSpellEffectEvent(ABILITY_ID_REVEAL, () -> onCastReveal())

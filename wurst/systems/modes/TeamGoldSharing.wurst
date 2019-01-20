@@ -13,12 +13,27 @@ function distributeGold(unit whichUnit)
         let owner = whichUnit.getOwner()
         let tribe = Tribe.ofPlayer(owner)
         let gold = owner.getLumber()
-        for member in tribe.getMembers()
+        let members = tribe.getMembers()
+        for member in members
             member.setLumber(gold)
+        destroy members
+
+function syncTribesToLowestGold()
+    nullTimer() ->
+        for tribe in Tribe.tribes
+            let members = tribe.getMembers()
+            members.sortWith((a,b) -> a.getLumber() - b.getLumber())
+            let lowestLumber = members.getFirst().getLumber()
+            for m in members
+                m.setLumber(lowestLumber)
+            destroy members
 
 function initializeTeamGold()
-    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SELL_ITEM, -> distributeGold(GetTriggerUnit()))
-    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SELL, -> distributeGold(GetBuyingUnit()))
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SELL_ITEM) ->
+        syncTribesToLowestGold()
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PAWN_ITEM) ->
+        distributeGold(GetTriggerUnit())
 
 init
     new GameMode("team-gold", "tg", "Players on a team share gold in the same pool") (mode, args) ->

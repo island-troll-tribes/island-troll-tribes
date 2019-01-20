@@ -14,6 +14,8 @@ import ObjectIdGenerator
 import UnitEntity
 import initlater EatRawMeat
 import initlater Troll
+import Hostile
+import TerrainUtils
 
 let ITEM_RAW_MEAT = 'IRAW'
 let MAX_MEAT_COUNT = 8
@@ -165,10 +167,17 @@ public class MeatInventory
         updateMeatAbilities()
 
     function emptyToGround()
-        let ownerPos = ownerUnit.getPos()
+        let pos = ownerUnit.getPos()
         for meat in carriedMeat
             meat.setVisible(true)
-            meat.setPos(ownerPos)
+            meat.setPos(pos)
+            carriedMeat.remove(meat)
+        updateMeatAbilities()
+
+    function emptyToGround(vec2 pos)
+        for meat in carriedMeat
+            meat.setVisible(true)
+            meat.setPos(pos)
             carriedMeat.remove(meat)
         updateMeatAbilities()
 
@@ -196,6 +205,16 @@ public class MeatInventory
         return false
 
     function onOwnerDeath()
+        //Find an offset position for the meat so items are separated on drop
+        let pos = ownerUnit.getPos()
+        for angleIndex = 0 to 3
+            let meatPos = pos.polarOffset((angleIndex * 90.).fromDeg(), MEAT_DROP_OFFSET_DISTANCE)
+            if meatPos.isTerrainWalkable()
+                emptyToGround(meatPos)
+                break
+            else if angleIndex == 3
+                emptyToGround(pos)
+
         destroy this
 
     function canPickupMeat() returns bool
@@ -333,12 +352,12 @@ init
 
     registerSpellEffectEvent(ABILITY_ID_PICKUPMEAT) ->
         let caster = GetSpellAbilityUnit()
-        if isUnitMeatCarrier(caster)
+        if meatInventoryInstances.has(caster) or isUnitMeatCarrier(caster)
             unitTryPickupMeatArea(caster)
 
     registerSpellEffectEvent(ABILITY_ID_PICKUPMEAT_TROLL) ->
         let caster = GetSpellAbilityUnit()
-        if isUnitMeatCarrier(caster)
+        if meatInventoryInstances.has(caster) or isUnitMeatCarrier(caster)
             unitTryPickupMeatArea(caster)
 
     //Special fix for beastmaster to get his abilities back after transforming

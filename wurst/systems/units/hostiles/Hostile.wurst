@@ -5,10 +5,11 @@ import ExpiringRawMeat
 import TerrainUtils
 import ClosureTimers
 
-let MEAT_OFFSET_DISTANCE = 65.
+public let MEAT_DROP_OFFSET_DISTANCE = 85.
 
-public function spawnRawMeat(vec2 pos) returns ExpiringRawMeat
-    return new ExpiringRawMeat(pos, MEAT_EXPIRATION_DEFAULT_DURATION)
+public function spawnRawMeat(vec2 pos, int count)
+    for i = 1 to count
+        new ExpiringRawMeat(pos, MEAT_EXPIRATION_DEFAULT_DURATION)
 
 public abstract class Hostile extends UnitEntity
     construct(unit whichUnit)
@@ -34,16 +35,14 @@ public abstract class Hostile extends UnitEntity
         let numCorpses = (getNumCorpses() * udg_FOOD_FOR_KILL_PROPORTION).round()
 
         //Find an offset position for the meat so items are separated on drop
-        vec2 meatPos
         for angleIndex = 0 to 3
-            meatPos = pos.polarOffset((angleIndex * 90.).fromDeg(), MEAT_OFFSET_DISTANCE)
+            let meatPos = pos.polarOffset((angleIndex * 90.).fromDeg(), MEAT_DROP_OFFSET_DISTANCE)
             if meatPos.isTerrainWalkable()
+                spawnRawMeat(meatPos, numCorpses)
                 break
             else if angleIndex == 3
-                meatPos = pos
-
-        for i = 1 to numCorpses
-            spawnRawMeat(pos)
+                spawnRawMeat(pos, numCorpses)
+                break
 
         let drops = getDrops()
         doAfter(ANIMATION_PERIOD * numCorpses) ->

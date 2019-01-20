@@ -9,7 +9,7 @@ import ClosureTimers
 import Tribe
 import ID
 
-function distributeGold(unit whichUnit)
+function syncTribeToOwnerGold(unit whichUnit)
     nullTimer() ->
         let owner = whichUnit.getOwner()
         let tribe = Tribe.ofPlayer(owner)
@@ -32,11 +32,11 @@ function initializeTeamGold()
         syncTribesToLowestGold()
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PAWN_ITEM) ->
-        distributeGold(GetTriggerUnit())
+        syncTribeToOwnerGold(GetTriggerUnit())
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
         if GetManipulatedItem().getTypeId() == ITEM_ALIGATOR_GOLD
-            distributeGold(GetTriggerUnit())
+            syncTribeToOwnerGold(GetTriggerUnit())
 
 init
     new GameMode("team-gold", "tg", "Players on a team share gold in the same pool") (mode, args) ->

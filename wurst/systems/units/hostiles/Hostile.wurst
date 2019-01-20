@@ -1,9 +1,11 @@
 package Hostile
-import ID
 import LinkedList
 import UnitEntity
-import Lodash
 import ExpiringRawMeat
+import TerrainUtils
+import ClosureTimers
+
+let MEAT_OFFSET_DISTANCE = 65.
 
 public function spawnRawMeat(vec2 pos) returns ExpiringRawMeat
     return new ExpiringRawMeat(pos, MEAT_EXPIRATION_DEFAULT_DURATION)
@@ -30,6 +32,13 @@ public abstract class Hostile extends UnitEntity
     override function onDeath()
         let pos = getPos()
         let numCorpses = (getNumCorpses() * udg_FOOD_FOR_KILL_PROPORTION).round()
+
+        vec2 meatPos
+        for angleIndex = 0 to 3
+            meatPos = pos.polarOffset((angleIndex * 90.).fromDeg(), MEAT_OFFSET_DISTANCE)
+            if not meatPos.isTerrainWalkable() and angleIndex == 3
+                meatPos = pos
+
 
         for i = 1 to numCorpses
             spawnRawMeat(pos)

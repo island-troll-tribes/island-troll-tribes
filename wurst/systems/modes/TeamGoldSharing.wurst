@@ -7,6 +7,7 @@ import Game
 import RegisterEvents
 import ClosureTimers
 import Tribe
+import ID
 
 function distributeGold(unit whichUnit)
     nullTimer() ->
@@ -34,6 +35,10 @@ function initializeTeamGold()
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PAWN_ITEM) ->
         distributeGold(GetTriggerUnit())
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
+        if GetManipulatedItem().getTypeId() == ITEM_ALIGATOR_GOLD
+            distributeGold(GetTriggerUnit())
 
 init
     new GameMode("team-gold", "tg", "Players on a team share gold in the same pool") (mode, args) ->

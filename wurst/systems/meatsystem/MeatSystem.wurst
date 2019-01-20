@@ -232,7 +232,10 @@ public class MeatInventory
             updateMeatAbilities()
 
     function onSmartPickupMeat(item meat)
+        let t = getPlayerUnitEventTrigger(EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER)
+        t.disable()
         ownerUnit.issuePointOrderById(Orders.move, meat.getPos())
+        t.enable()
         this.smartPickupTarget = meat
 
         //Remove old callback if it exists
@@ -246,15 +249,11 @@ public class MeatInventory
             let rangeSq = (SMART_PICKUP_RANGE + collisionSize) * (SMART_PICKUP_RANGE + collisionSize)
             //See if meat is gone already
             if not this.smartPickupTarget.isPickupable() or ownerUnit.getCurrentOrder() != Orders.move or not ownerUnit.isAlive()
-                if ownerUnit.isAlive()
-                    //Double checking that unit is alive before ordering
-                    ownerUnit.issueImmediateOrderById(Orders.stop)
                 destroy this.smartPickupCallback
                 this.smartPickupCallback = null
             else if ownerUnit.getPos().distanceToSq(this.smartPickupTarget.getPos()) <= rangeSq
                 //Otherwise, if in range, pick up meat
                 this.tryPickupMeat(this.smartPickupTarget)
-                ownerUnit.issueImmediateOrderById(Orders.stop)
                 destroy this.smartPickupCallback
                 this.smartPickupCallback = null
 
@@ -309,7 +308,12 @@ function onTargetOrder()
     let target = GetOrderTargetItem()
 
     //Smart pickup system -> simulate picking up meat like an item if full inventory, like in Bannars StackNSplit system
-    if target != null and target.getTypeId() == ITEM_RAW_MEAT and u.isInventoryFull() and isUnitMeatCarrier(u)
+    if (target != null
+        and target.isPickupable()
+        and target.getTypeId() == ITEM_RAW_MEAT
+        and u.isInventoryFull()
+        and (meatInventoryInstances.has(u) or isUnitMeatCarrier(u)))
+
         if meatInventoryInstances.has(u)
             let instance = meatInventoryInstances.get(u)
             let meatCount = instance.carriedMeat.size()

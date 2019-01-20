@@ -7,8 +7,8 @@ import AbilityObjEditing
 import BuffObjEditing
 import OverCharge
 import Orders
+import IttDummyCaster
 import ITTKnockback
-import DummyCaster
 
 constant let ABILITY_ID = 'XFPS'
 constant let DUMMY_STUN_ABILITY_ID = 'XFPD'
@@ -102,10 +102,7 @@ function onCast()
                 ITTKnockback.add(u, KNOCKBACK_SPEED, pos.angleTo(u.getPos()), angle( bj_PI / 2))
             else if isOvercharged
                 ITTKnockback.add(u, KNOCKBACK_SPEED * OVERCHARGE_KNOCKBACK_MULTIPLIER, pos.angleTo(u.getPos()), angle( bj_PI / 2))
-                new DummyCaster()
-                    ..owner(owner)
-                    ..origin(caster.getPos())
-                    ..castTarget(DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, u)
+                new IttDummyCaster().castTarget(owner, DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, u, caster.getPos3Real())
 
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())

@@ -4,11 +4,11 @@ import LesserHydra
 import ClosureTimers
 import ClosureForGroups
 import UnitExtensions
+import IttDummyCaster
 import ClosureEvents
 import DiscoDuck
 import PublicLibrary
-import DummyCaster
-import Orders
+
 
 constant SPELL_NETHER = 'A037'
 constant BUFF_NETHER = 'BHbn'
@@ -83,10 +83,13 @@ public class AncientHydra extends Hostile
     function onSpellEffect()
         if GetSpellAbilityId() == SPELL_NETHER
             getUnit().removeAbility(BUFF_NETHER)
-            new DummyCaster()
-                ..owner(players[PLAYER_NEUTRAL_AGGRESSIVE])
-                ..origin(GetSpellAbilityUnit().getPos())
-                ..castTarget(SPELL_NETHER, 1, Orders.banish, GetSpellAbilityUnit())
+            new IttDummyCaster().castTarget(
+                players[PLAYER_NEUTRAL_AGGRESSIVE],
+                SPELL_NETHER,
+                1,
+                "banish",
+                GetSpellAbilityUnit()
+            )
 
 
 init

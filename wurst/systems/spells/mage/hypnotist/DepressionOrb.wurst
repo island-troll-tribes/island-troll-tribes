@@ -1,11 +1,11 @@
 package DepressionOrb
 import RegisterEvents
 import Orders
+import IttDummyCaster
 import ClosureTimers
 import ClosureForGroups
 import EventHelper
 import ID
-import DummyCaster
 
 @configurable constant int ABILITY_ID = 'A04R'
 @configurable constant int DUMMY_ABILITY_ID = 'A025'
@@ -40,10 +40,7 @@ function onCast()
         if (cb.getCount() mod 7 == 0)
             forUnitsInRange(dummy.getPos(), RADIUS) u ->
                 if not u.hasAbility(BUFF_ID)
-                    new DummyCaster()
-                        ..owner(owner)
-                        ..origin(dpos)
-                        ..castTarget(DUMMY_ABILITY_ID, 1, Orders.acidbomb, u)
+                    new IttDummyCaster().castTarget(owner, DUMMY_ABILITY_ID, 1, Orders.acidbomb, u, dpos)
         if cb.isLast()
             dummy.kill()
 

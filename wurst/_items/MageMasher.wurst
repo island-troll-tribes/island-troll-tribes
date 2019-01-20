@@ -5,11 +5,11 @@ import ObjectIdGenerator
 import ClosureEvents
 import DamageType
 import ID
+import IttDummyCaster
 import Orders
 import Priest
 import Mage
 import UnitEntity
-import DummyCaster
 
 let MANABURN_ID = compiletime(ABIL_ID_GEN.next())
 let DRAIN_AMOUNT = 6.
@@ -30,11 +30,7 @@ let DRAIN_AMOUNT = 6.
 function mageMasherHit(unit attacker, unit target)
     let owner = attacker.getOwner()
     if isValidMasherTarget(owner, target)
-        new DummyCaster()
-            ..delay(0.45)
-            ..owner(owner)
-            ..origin(attacker.getPos())
-            ..castTarget(MANABURN_ID, 1, Orders.manaburn, target)
+        new IttDummyCaster(0.45).castTarget(owner, MANABURN_ID, 1, Orders.manaburn, target, attacker.getPos())
 
 function isValidMasherTarget(player attackOwner, unit target) returns bool
     let ent = UnitEntity.findForUnit(target)

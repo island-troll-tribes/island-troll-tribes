@@ -2,6 +2,7 @@ package Zap
 
 import RegisterEvents
 import ClosureTimers
+import IttDummyCaster
 import Orders
 import AbilityObjEditing
 import BuffObjEditing
@@ -9,7 +10,6 @@ import ClosureForGroups
 import TimerUtils
 import HashMap
 import OverCharge
-import DummyCaster
 
 constant let ABILITY_ID = 'XEZS'
 constant let SLOW_ABILITY_ID = 'XEZD'
@@ -103,8 +103,6 @@ constant let TOOLTIP_NORMAL_EXT = "Zaps the target for |c00ff000020|r damage. St
 
 @compiletime function createSlowDummySpell()
     new AbilityDefinitionSlowCreep('XEZD')
-    ..setArtTarget("")
-    ..setArtCaster("")
     ..setAttackSpeedFactor(1, CHARGE_AS_SLOW)
     ..setMovementSpeedFactor(1, CHARGE_MS_SLOW)
     ..setBuffs(1, BUFF_ZAP_SLOW)
@@ -186,10 +184,7 @@ function onCastEffects(unit caster, unit target, bool isOvercharged)
 function zapChargeExplosion(unit caster, unit target)
     //Main target bonus effects
     if (target.isAlive() and not target.isInvulnerable())
-        new DummyCaster()
-            ..owner(caster.getOwner())
-            ..origin(caster.getPos())
-            ..castTarget(SLOW_ABILITY_ID, 1, Orders.slow, target)
+        new IttDummyCaster().castTarget(caster.getOwner(), SLOW_ABILITY_ID, 1, Orders.slow, target, caster.getPos3Real())
         UnitDamageTarget(caster, target, CHARGE_DAMAGE, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
 
     //Charge explosion SFX

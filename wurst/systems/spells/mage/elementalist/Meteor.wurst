@@ -5,8 +5,8 @@ import ClosureTimers
 import ClosureForGroups
 import Orders
 import OverCharge
+import IttDummyCaster
 import AbilityObjEditing
-import DummyCaster
 
 constant let ABILITY_ID = 'XEMS'
 constant let DUMMY_STUN_ABILITY_ID = 'XEMD'
@@ -183,10 +183,7 @@ function handleImpactUnitEffect(vec2 hitPosition, unit target, unit caster)
         UnitDamageTarget(caster, target, reducedDamage, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
 
     //Apply stun
-    new DummyCaster()
-        ..owner(owner)
-        ..origin(caster.getPos())
-        ..castTarget(DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, target)
+    new IttDummyCaster().castTarget(owner, DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, target, caster.getPos3Real())
 
     //Apply burn on units
     var burnfx = AddSpecialEffectTargetUnitBJ("chest", target, BURN_EFFECT_PATH)

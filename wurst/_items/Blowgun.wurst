@@ -136,6 +136,9 @@ class Blowpipe
             simError(caster.getOwner(), "No ammo!")
             return
         else
+            //Flat 10 damage + ammo specific effect
+            UnitDamageTarget(caster, this.target, 10, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
+
             switch ammo.getTypeId()
                 case ITEM_THISTLES
                     new DummyCaster()
@@ -157,8 +160,6 @@ class Blowpipe
                         ..castTarget(DARKTHISTLE_ABILITY_ID, 1, Orders.shadowstrike, this.target)
                 default
                     error("ERROR: Invalid blowgun ammo type fired!")
-
-            caster.damageTarget(this.target, 10., ATTACK_TYPE_NORMAL)
 
             int charges = ammo.getCharges()
             //Reduce ammo

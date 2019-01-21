@@ -15,7 +15,7 @@ let ABILITY_ID_OMNI_TELEGATHER = 'A06V'
 let ABILITY_ID_CASTER_BUFF = 'A056'
 let CASTER_BUFF_ID = 'B00H'
 let TARGET_BUFF_ID = 'B00I'
-let SORT_DISTANCE_INCREMENT = 120.
+let SORT_DISTANCE_INCREMENT = 150.
 let SORT_ANGLE_INCREMENT = 45
 
 HashMap<unit, TeleGatherInstance> instances = new HashMap<unit, TeleGatherInstance>()
@@ -50,7 +50,6 @@ class TeleGatherInstance
             if this.lifetime >= this.duration
                 or not caster.hasAbility(CASTER_BUFF_ID)
                 or not teleTarget.hasAbility(TARGET_BUFF_ID)
-                print("Instance removed")
                 destroy this
 
     function canGatherItem(int itemType) returns bool
@@ -76,13 +75,11 @@ class TeleGatherInstance
         let itemType = itm.getTypeId()
 
         if not canGatherItem(itemType)
-            print("Ungatherable type")
             return
 
         let sortingPos = this.getSortingPos(itemType)
         this.caster.removeItem(itm)
         itm.setPos(sortingPos.pos)
-        print("Item moved")
 
     function getSortingPos(int itemType) returns SortingPosition
         let targetPos = teleTarget.getPos()

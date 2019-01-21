@@ -1,0 +1,150 @@
+package TeleGathering
+import HashMap
+import ClosureTimers
+import ClosureEvents
+import InstantDummyCaster
+import ID
+import HerbMaster
+import Omnigatherer
+import UnitEntity
+import ClosuresForItems
+import TerrainUtils
+
+let ABILITY_ID_TELEGATHER = 'A057'
+let ABILITY_ID_OMNI_TELEGATHER = 'A06V'
+let ABILITY_ID_CASTER_BUFF = 'A056'
+let CASTER_BUFF_ID = 'B00H'
+let TARGET_BUFF_ID = 'B00I'
+let SORT_DISTANCE_INCREMENT = 100.
+let SORT_ANGLE_INCREMENT = 30
+
+HashMap<unit, TeleGatherInstance> instances = new HashMap<unit, TeleGatherInstance>()
+
+class SortingPosition
+    vec2 pos
+    construct(vec2 pos)
+        this.pos = pos
+
+class TeleGatherInstance
+    unit caster
+    unit teleTarget
+    real duration
+    real lifetime = 0
+    UnitEntity casterEntity
+    CallbackPeriodic pollingLoop
+    IterableMap<int, SortingPosition> sortingPositions
+    real nextSortAngle = 0
+    real sortDistanceOffset = SORT_DISTANCE_INCREMENT
+
+    construct(unit caster, unit teleTarget, real duration)
+        InstantDummyCaster.castTarget(caster.getOwner(), ABILITY_ID_CASTER_BUFF, 1, "curse", caster, caster.getPos() + vec2(100,0))
+        this.caster = caster
+        this.casterEntity = UnitEntity.findForUnit(this.caster)
+        this.teleTarget = teleTarget
+        this.sortingPositions = new IterableMap<int, SortingPosition>()
+        startBuffPolling()
+
+    function startBuffPolling()
+        this.pollingLoop = doPeriodically(1) cb ->
+            this.lifetime += 1
+            if this.lifetime >= this.duration 
+                or not caster.hasAbility(CASTER_BUFF_ID) 
+                or not teleTarget.hasAbility(TARGET_BUFF_ID)
+                destroy this
+
+    function canGatherItem(int itemType) returns bool
+        if itemType == 'XRAW' //Raw meat
+            return false
+
+        //Skip herbs if not herb-gatherer
+        if not this.casterEntity instanceof HerbMaster 
+            and not this.casterEntity instanceof Omnigatherer
+                if itemType == ITEM_RIVER_ROOT
+                    or itemType == ITEM_RIVER_STEM
+                    or itemType == ITEM_BUTSU
+                    or itemType == ITEM_BLUE_HERB
+                    or itemType == ITEM_ORANGE_HERB
+                    or itemType == ITEM_YELLOW_HERB
+                    or itemType == ITEM_PURPLE_HERB
+                    or itemType == ITEM_MUSHROOM
+                    return false
+        return true
+
+    function handleTeleGather(item itm)
+        let itemType = itm.getTypeId()
+
+        if not canGatherItem(itemType)        
+            return
+
+        let sortingPos = this.getSortingPos(itemType)
+
+    function getSortingPos(int itemType) returns SortingPosition
+        let targetPos = teleTarget.getPos()
+
+        //If a sorting position exists for type, return that
+        if this.sortingPositions.has(itemType)
+            return this.sortingPositions.get(itemType)
+
+        //If a nearby item of the same type is found, set up sorting position there
+        let nearest = findNearestItem(targetPos, sortDistanceOffset * 2, i -> i.getTypeId() == itemType)
+        if nearest != null
+            let pos = new SortingPosition(nearest.getPos())
+            sortingPositions.put(itemType, pos)
+            return pos
+
+        //Otherwise set up sorting position in a radius around the fire
+        var maybeTargetPos = targetPos.polarOffset(this.nextSortAngle.fromDeg(), this.sortDistanceOffset)
+        while not maybeTargetPos.isTerrainWalkable()
+            this.nextSortAngle += SORT_ANGLE_INCREMENT
+
+            //Exit condition if no position found -> default to target pos
+            if this.nextSortAngle >= 360 and this.sortDistanceOffset >= 2*SORT_DISTANCE_INCREMENT
+                let pos = new SortingPosition(targetPos)
+                sortingPositions.put(itemType, pos)
+                return pos
+        
+            //Increment distance and reset angle if we havent reached the above exit condition yet
+            if this.nextSortAngle >= 360
+                this.nextSortAngle = 0
+                this.sortDistanceOffset += SORT_DISTANCE_INCREMENT
+
+            maybeTargetPos = targetPos.polarOffset(this.nextSortAngle.fromDeg(), this.sortDistanceOffset)
+
+        let loopPos = new SortingPosition(maybeTargetPos)
+        sortingPositions.put(itemType, loopPos)
+        return loopPos
+
+    ondestroy
+        destroy this.pollingLoop
+
+        for key in this.sortingPositions
+            this.sortingPositions.getAndRemove(key)
+        destroy this.sortingPositions
+
+        if instances.has(this.caster)
+            if instances.get(this.caster) == this
+                instances.remove(this.caster)
+
+function onTeleGatherCast()
+    let caster = GetSpellAbilityUnit()
+    let target = GetSpellTargetUnit()
+    var duration = 0.
+    switch GetSpellAbilityId()
+        case ABILITY_ID_OMNI_TELEGATHER
+            duration = 120.
+        case ABILITY_ID_TELEGATHER
+            duration = 30. + 20. * caster.getAbilityLevel(ABILITY_ID_TELEGATHER)
+
+    if instances.has(caster)
+        destroy instances.getAndRemove(caster)
+
+    instances.put(caster, new TeleGatherInstance(caster, target, duration))
+
+init
+    registerSpellEffectEvent(ABILITY_ID_TELEGATHER) ->
+        onTeleGatherCast()
+    registerSpellEffectEvent(ABILITY_ID_OMNI_TELEGATHER) ->
+        onTeleGatherCast()
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
+        if instances.has(GetTriggerUnit())
+            instances.get(GetTriggerUnit()).handleTeleGather(GetManipulatedItem())

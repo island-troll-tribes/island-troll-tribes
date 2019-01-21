@@ -18,6 +18,7 @@ let TARGET_BUFF_ID = 'B00I'
 let SORT_DISTANCE_INCREMENT = 150
 let SORT_ANGLE_INCREMENT = 45
 let MAX_SORTING_SEARCH_LOOPS = 2
+let TELEGATHER_DISABLE_DISTANCE_SQ = 700*700
 
 HashMap<unit, TeleGatherInstance> instances = new HashMap<unit, TeleGatherInstance>()
 class SortingPosition
@@ -76,6 +77,7 @@ class TeleGatherInstance
         let itemType = itm.getTypeId()
 
         if not canGatherItem(itemType)
+            or caster.getPos().distanceToSq(teleTarget.getPos()) <= TELEGATHER_DISABLE_DISTANCE_SQ //Disable gathering near target fire
             return
 
         let sortingPos = this.getSortingPos(itemType)
@@ -97,21 +99,22 @@ class TeleGatherInstance
     function findPosForItem(int itemType) returns vec2
         let defaultPos = teleTarget.getPos()
 
-        //Look for similar nearby item
+        //Look for similar nearby item, multiply range by 1.1 to account for items grouping and spilling over
         let nearest = findNearestItem(defaultPos, sortDistanceOffset * MAX_SORTING_SEARCH_LOOPS * 1.1, i -> i.getTypeId() == itemType)
         if nearest != null
             return nearest.getPos()
 
         //Look for a new position around the fire
         for distanceOffset = this.sortDistanceOffset to MAX_SORTING_SEARCH_LOOPS * SORT_DISTANCE_INCREMENT step SORT_DISTANCE_INCREMENT
-            for angleOffset = this.nextSortAngle to 360 step SORT_ANGLE_INCREMENT
-                this.sortDistanceOffset = angleOffset
+            for angleOffset = this.nextSortAngle to 360-SORT_ANGLE_INCREMENT step SORT_ANGLE_INCREMENT
+                this.sortDistanceOffset = distanceOffset
                 this.nextSortAngle = angleOffset
                 let maybeTargetPos = defaultPos.polarOffset(angleOffset.toReal().fromDeg(), distanceOffset.toReal())
 
                 if maybeTargetPos.isTerrainWalkable()
                     this.nextSortAngle += SORT_ANGLE_INCREMENT
                     return maybeTargetPos
+
             this.nextSortAngle = 0
 
         return defaultPos

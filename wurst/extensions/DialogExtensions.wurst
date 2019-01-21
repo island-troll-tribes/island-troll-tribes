@@ -1,0 +1,40 @@
+package DialogExtensions
+import Lodash
+import HashMap
+
+public function dialog.destr()
+    DialogDestroy(this)
+
+public function dialog.clear()
+    DialogClear(this)
+
+public function dialog.setMessage(string messageText)
+    DialogSetMessage(this, messageText)
+
+public function dialog.addButton(string buttonText, integer hotkey) returns button
+    return DialogAddButton(this, buttonText, hotkey)
+
+public function dialog.addQuitButton(boolean doScoreScreen, string buttonText, integer hotkey) returns button
+    return DialogAddQuitButton(this, doScoreScreen, buttonText, hotkey)
+
+public function dialog.display(player whichPlayer, boolean flag)
+    DialogDisplay(whichPlayer, this, flag)
+
+let buttonToActionMap = new HashMap<button, VoidFunction<button>>()
+
+public function button.onClick(VoidFunction<button> callback) returns trigger
+    let trigg = CreateTrigger()
+    ..registerDialogButtonEvent(this)
+    ..addAction() ->
+        let trig = GetTriggeringTrigger()
+        let btn = GetClickedButton()
+        let diag = GetClickedDialog()
+        let cb = buttonToActionMap.get(btn)
+        cb.call(btn)
+        destroy cb
+        trig.destr()
+        diag.destr()
+
+    buttonToActionMap.put(this, callback)
+
+    return trigg

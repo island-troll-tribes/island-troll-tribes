@@ -5,13 +5,14 @@ import GameMode
 import PlayerExtensions
 import PublicLibrary
 import StringUtils
-import RegisterEvents
 import Boards
 import ClosureTimers
+import Lodash
+import DialogExtensions
+import RegisterEvents
 
 let OPTION_NAME_COLOR = colorA(180, 180, 180, 255)
 let OPTION_VALUE_COLOR = colorA(115, 152, 255, 255)
-let OPTION_VALUE_SELECTED_COLOR = colorA(47, 32, 255, 255)
 
 abstract class ObserverBoardControl
     string name
@@ -25,35 +26,33 @@ abstract class ObserverBoardControl
         return name
 
     abstract function getInitialValue() returns string
-    abstract function onRight() returns string
-    abstract function onLeft() returns string
+    abstract function onSelect(VoidFunction<string> callback)
 
 class ObserverBoardVisionControl extends ObserverBoardControl
-    LinkedList<string> options
+    let options = new LinkedList<string>()
     LLIterator<string> iterator
-    var currentValue = "players"
 
     construct(player whichPlayer)
         super("Vision", whichPlayer)
         options
-            ..add("players")
-            ..add("all")
+            ..add("Players")
+            ..add("All")
 
         iterator = options.iterator()
 
         for tribe in Tribe.getTribes()
-            options.add("tribe " + (tribe.getId() + 1).toString())
+            options.add("Tribe " + (tribe.getId() + 1).toString())
 
-    function onSelect()
-        switch currentValue
-            case "players"
+    function setVision(string toWhat)
+        switch toWhat
+            case "Players"
                 for i = 0 to bj_MAX_PLAYERS - 1
                     whichPlayer.setPlayerAlliance(players[i], ALLIANCE_SHARED_VISION, true)
-            case "all"
+            case "All"
                 for i = 0 to bj_MAX_PLAYERS - 1
                     whichPlayer.setPlayerAlliance(players[i], ALLIANCE_SHARED_VISION, true)
             default
-                let tribeId = currentValue.split(" ").get(1).toInt()
+                let tribeId = toWhat.split(" ").get(1).toInt()
                 for i = 0 to bj_MAX_PLAYERS - 1
                     let tribe = Tribe.ofPlayer(players[i])
                     let share = tribe != null and tribe.getId() == tribeId
@@ -62,14 +61,16 @@ class ObserverBoardVisionControl extends ObserverBoardControl
     override function getInitialValue() returns string
         return iterator.next()
 
-    override function onRight() returns string
-        if not iterator.hasNext()
-            iterator.reset()
-        currentValue = iterator.next()
-        return currentValue
+    override function onSelect(VoidFunction<string> callback)
+        let diag = DialogCreate()
+        for option in options
+            diag
+            .addButton(option, 0)
+            .onClick() btn ->
+                setVision(option)
+                callback.call(option)
 
-    override function onLeft() returns string
-        return currentValue
+        diag.display(whichPlayer, true)
 
 class ObserverBoardZoomControl extends ObserverBoardControl
     static let MAX = 1500
@@ -80,57 +81,44 @@ class ObserverBoardZoomControl extends ObserverBoardControl
         super("Zoom", whichPlayer)
         currentValue = ZOOM_DISTANCE[whichPlayer.getId()].toInt()
 
-    function onSelect()
-        ZOOM_DISTANCE[whichPlayer.getId()] = currentValue.toReal()
+    function setZoom(int amt)
+        ZOOM_DISTANCE[whichPlayer.getId()] = amt.toReal()
 
     override function getInitialValue() returns string
         return currentValue.toString()
 
-    override function onRight() returns string
-        currentValue = (currentValue + 100) mod MAX
-        return currentValue.toString()
+    override function onSelect(VoidFunction<string> callback)
+        let diag = DialogCreate()
+        for zoom = 0 to MAX step 100
+            let zoomStr = zoom.toString()
+            diag
+            .addButton(zoomStr, 0)
+            .onClick() btn ->
+                setZoom(zoom)
+                callback.call(zoomStr)
 
-    override function onLeft() returns string
-        currentValue = (currentValue + MAX - 100) mod MAX
-        onSelect()
-        return currentValue.toString()
+        diag.display(whichPlayer, true)
 
 class ObserverBoard
     static let boards = new HashMap<player, thistype>()
-
-    static function onDown()
-        let p = GetTriggerPlayer()
-        if boards.has(p)
-            boards.get(p).onArrowDown()
-
-    static function onUp()
-        let p = GetTriggerPlayer()
-        if boards.has(p)
-            boards.get(p).onArrowUp()
-
-    static function onRight()
-        let p = GetTriggerPlayer()
-        if boards.has(p)
-            boards.get(p).onArrowRight()
-
-    static function onLeft()
-        let p = GetTriggerPlayer()
-        if boards.has(p)
-            boards.get(p).onArrowLeft()
 
     player observer
     LinkedList<ObserverBoardControl> options
     let board = CreateMultiboard()
     var selected = 0
+    var minimized = false
 
     construct(player observer, LinkedList<ObserverBoardControl> options)
         this.observer = observer
         this.options = options
 
+        boards.put(observer, this)
+
         board
             ..setColumnCount(2)
             ..setRowCount(options.size())
             ..display(observer, true)
+            ..setItemsWidth(0.1)
 
         var row = 0
         for option in options
@@ -138,57 +126,45 @@ class ObserverBoard
                 .getItem(row, 0)
                 ..setValue(option.getName())
                 ..setValueColor(OPTION_NAME_COLOR)
+                ..setStyle(true, false)
                 ..release()
 
             board
                 .getItem(row, 1)
                 ..setValue(option.getInitialValue())
                 ..setValueColor(OPTION_VALUE_COLOR)
+                ..setStyle(true, false)
                 ..release()
 
-        board
-            .getItem(0, 1)
-            ..setValueColor(OPTION_VALUE_SELECTED_COLOR)
+            row += 1
 
-        doPeriodically(1, cb -> board.setTitle(getGameTimersBoardTitle()))
+        doPeriodically(0.25) cb ->
+            board.setTitle(getGameTimersBoardTitle())
+            let isMinimized = board.isMinimized()
+            if minimized and not isMinimized
+                displayOptions()
+            minimized = isMinimized
 
-    function onArrowLeft()
-        options
-            .get(selected)
-            .onLeft()
+    function displayOptions()
+        let diag = DialogCreate()
+        for option in options
+            diag
+            .addButton(option.getName(), 0)
+            .onClick(btn -> begin
+                let row = options.indexOf(option)
+                option.onSelect(value -> begin
+                    board
+                        .getItem(row, 1)
+                        ..setValue(value)
+                        ..release()
+                end)
+            end)
 
-    function onArrowRight()
-        options
-            .get(selected)
-            .onRight()
+        diag
+            .addButton("Quit", 0)
+            .onClick(btn -> skip)
 
-    function onArrowUp()
-        board
-            .getItem(selected, 1)
-            ..setValueColor(OPTION_VALUE_COLOR)
-            ..release()
-
-        let size = options.size()
-        selected = (selected - 1 + size) mod size
-
-        board
-            .getItem(selected, 1)
-            ..setValueColor(OPTION_VALUE_SELECTED_COLOR)
-            ..release()
-
-    function onArrowDown()
-        board
-            .getItem(selected, 1)
-            ..setValueColor(OPTION_VALUE_COLOR)
-            ..release()
-
-        let size = options.size()
-        selected = (selected + 1) mod size
-
-        board
-            .getItem(selected, 1)
-            ..setValueColor(OPTION_VALUE_SELECTED_COLOR)
-            ..release()
+        diag.display(observer, true)
 
 function getObservers() returns LinkedList<player>
     let observers = new LinkedList<player>()
@@ -208,10 +184,7 @@ init
             )
             new ObserverBoard(observer, options)
 
-        if observers.size() > 0
-            registerPlayerEvent(EVENT_PLAYER_ARROW_DOWN_DOWN, function ObserverBoard.onDown)
-            registerPlayerEvent(EVENT_PLAYER_ARROW_UP_DOWN, function ObserverBoard.onUp)
-            registerPlayerEvent(EVENT_PLAYER_ARROW_RIGHT_DOWN, function ObserverBoard.onRight)
-            registerPlayerEvent(EVENT_PLAYER_ARROW_LEFT_DOWN, function ObserverBoard.onLeft)
-
         destroy observers
+
+        registerPlayerEvent(EVENT_PLAYER_END_CINEMATIC) ->
+            print("EVENT_PLAYER_END_CINEMATIC")

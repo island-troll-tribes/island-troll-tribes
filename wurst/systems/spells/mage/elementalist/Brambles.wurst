@@ -6,8 +6,6 @@ import AbilityObjEditing
 import OverCharge
 import Assets
 import ObjectIdGenerator
-import ChatCommands
-import GameConfig
 import ClosureForGroups
 import Orders
 import DummyRecycler
@@ -15,6 +13,7 @@ import BuffObjEditing
 import ObjectIds
 import LinkedList
 import MapBounds
+import InstantDummyCaster
 import DummyCaster
 
 constant let ABILITY_ID = 'ESBR'
@@ -38,11 +37,11 @@ constant let UPDATE_LOOP_INTERVAL = 0.03125
 constant let SPELL_ICON = Icons.bTNEntanglingRoots
 constant let ROOTS_EFFECT_PATH = "Abilities\\Spells\\NightElf\\EntanglingRoots\\EntanglingRootsTarget.mdl"
 constant let TOOLTIP_NORM = "|c00ffcc00S|r - Brambles"
-constant let TOOLTIP_EXT = "Causes brambles to surface from underground in a straight line, and units who stand in the brambles receive |c00ff00008|r damage per second and have their movement speed slowed by 75%, attack speed slowed by 25%"
+constant let TOOLTIP_EXT = "Causes brambles to surface from underground in a straight line, and units who stand in the brambles receive |c00ff00008|r damage per second and have their movement speed slowed by 75%, attack speed slowed by 25%. The brambles last 6 seconds."
 
 @compiletime function createDummyVisionAbility()
     new AbilityDefinitionSightBonus(DUMMY_VISION_BONUS_ID)
-    ..setSightRangeBonus(1, 250)
+    ..setSightRangeBonus(1, 256)
     ..setHeroAbility(false)
     ..setItemAbility(false)
     ..setLevels(1)
@@ -194,17 +193,13 @@ class BramblesInstance
                 forUnitsInRange(rootPos, EFFECT_AOE) u ->
                     if isValidTarget(u)
                         if not u.hasAbility(DUMMY_SLOW_BUFF)
-                            new DummyCaster()
-                                ..owner(owner)
-                                ..origin(ownerUnit.getPos())
-                                ..castTarget(DUMMY_SLOW_SPELL_ID, 1, Orders.slow, u)
+                            InstantDummyCaster.castTarget(owner, DUMMY_SLOW_SPELL_ID, 1, Orders.slow, u)
                         if not snaredTargets.has(u) and isOvercharged
-                            new DummyCaster()
+                            let dummy = new DummyCaster()
                                 ..owner(owner)
-                                ..delay(0.2)
                                 ..origin(ownerUnit.getPos())
-                                ..castTarget(DUMMY_SLOW_SPELL_ID, 1, Orders.slow, u)
-                            snaredTargets.push(u)
+                            if dummy.castTarget(DUMMY_ENTANGLE_SPELL_ID, 1, Orders.entanglingroots, u)
+                                snaredTargets.push(u)
                         if not loopDamagedTargets.has(u)
                             UnitDamageTarget(ownerUnit, u, DAMAGE_PER_SECOND*UPDATE_LOOP_INTERVAL, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
                             loopDamagedTargets.push(u)
@@ -266,12 +261,3 @@ function onCast()
 
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())
-
-    registerCommandAll("brambles") (triggerPlayer, args) ->
-        if (gameConfig.isTestModeEnabled())
-            printTimedToPlayer("Added brambles to any selected heroes", 5., triggerPlayer)
-            forUnitsSelected(triggerPlayer) u ->
-                if (u.isType(UNIT_TYPE_HERO))
-                    u.addAbility(ABILITY_ID)
-        else
-            printTimedToPlayer("Requires test mode!", 5., triggerPlayer)

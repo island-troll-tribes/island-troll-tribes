@@ -15,7 +15,7 @@ let ABILITY_ID_OMNI_TELEGATHER = 'A06V'
 let ABILITY_ID_CASTER_BUFF = 'A056'
 let CASTER_BUFF_ID = 'B00H'
 let TARGET_BUFF_ID = 'B00I'
-let SORT_DISTANCE_INCREMENT = 150.
+let SORT_DISTANCE_INCREMENT = 150
 let SORT_ANGLE_INCREMENT = 45
 let MAX_SORTING_SEARCH_LOOPS = 2
 
@@ -33,8 +33,8 @@ class TeleGatherInstance
     UnitEntity casterEntity
     CallbackPeriodic pollingLoop
     IterableMap<int, SortingPosition> sortingPositions
-    real nextSortAngle = 0
-    real sortDistanceOffset = SORT_DISTANCE_INCREMENT
+    int nextSortAngle = 0
+    int sortDistanceOffset = SORT_DISTANCE_INCREMENT
 
     construct(unit caster, unit teleTarget, real duration)
         InstantDummyCaster.castTarget(caster.getOwner(), ABILITY_ID_CASTER_BUFF, 1, "curse", caster, caster.getPos() + vec2(100,0))
@@ -85,39 +85,34 @@ class TeleGatherInstance
     function getSortingPos(int itemType) returns SortingPosition
         let targetPos = teleTarget.getPos()
 
-        //If a sorting position exists for type, return that
+        //If a cached pos exists, return it
         if this.sortingPositions.has(itemType)
             return this.sortingPositions.get(itemType)
 
-        //If a nearby item of the same type is found, set up sorting position there
-        let nearest = findNearestItem(targetPos, sortDistanceOffset * MAX_SORTING_SEARCH_LOOPS * 1.1, i -> i.getTypeId() == itemType)
+        //Otherwise find and create a new pos for item type
+        let newPos = new SortingPosition(findPosForItem(itemType))
+        sortingPositions.put(itemType, newPos)
+        return newPos
+
+    function findPosForItem(int itemType) returns vec2
+        let defaultPos = teleTarget.getPos()
+
+        //Look for similar nearby item
+        let nearest = findNearestItem(defaultPos, sortDistanceOffset * MAX_SORTING_SEARCH_LOOPS * 1.1, i -> i.getTypeId() == itemType)
         if nearest != null
-            let pos = new SortingPosition(nearest.getPos())
-            sortingPositions.put(itemType, pos)
-            return pos
+            return nearest.getPos()
 
-        //Otherwise set up sorting position in a radius around the fire
-        var maybeTargetPos = targetPos.polarOffset(this.nextSortAngle.fromDeg(), this.sortDistanceOffset)
-        while not maybeTargetPos.isTerrainWalkable()
-            this.nextSortAngle += SORT_ANGLE_INCREMENT
+        //Look for a new position around the fire
+        for distanceOffset = this.sortDistanceOffset to MAX_SORTING_SEARCH_LOOPS * SORT_DISTANCE_INCREMENT step SORT_DISTANCE_INCREMENT
+            for angleOffset = this.nextSortAngle to 360 step SORT_ANGLE_INCREMENT
+                this.sortDistanceOffset = angleOffset
+                this.nextSortAngle = angleOffset
+                let maybeTargetPos = defaultPos.polarOffset(angleOffset.toReal().fromDeg(), distanceOffset.toReal())
 
-            //Exit condition if no position found -> default to target pos
-            if this.nextSortAngle >= 360 and this.sortDistanceOffset >= MAX_SORTING_SEARCH_LOOPS * SORT_DISTANCE_INCREMENT
-                let pos = new SortingPosition(targetPos)
-                sortingPositions.put(itemType, pos)
-                return pos
+                if maybeTargetPos.isTerrainWalkable()
+                    return maybeTargetPos
 
-            //Increment distance and reset angle if we havent reached the above exit condition yet
-            if this.nextSortAngle >= 360
-                this.nextSortAngle = 0
-                this.sortDistanceOffset += SORT_DISTANCE_INCREMENT
-
-            maybeTargetPos = targetPos.polarOffset(this.nextSortAngle.fromDeg(), this.sortDistanceOffset)
-
-        let loopPos = new SortingPosition(maybeTargetPos)
-        sortingPositions.put(itemType, loopPos)
-        this.nextSortAngle += SORT_ANGLE_INCREMENT
-        return loopPos
+        return defaultPos
 
     ondestroy
         if this.caster.hasAbility(CASTER_BUFF_ID)

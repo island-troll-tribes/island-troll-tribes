@@ -17,6 +17,7 @@ let CASTER_BUFF_ID = 'B00H'
 let TARGET_BUFF_ID = 'B00I'
 let SORT_DISTANCE_INCREMENT = 150.
 let SORT_ANGLE_INCREMENT = 45
+let MAX_SORTING_LOOPS = 2
 
 HashMap<unit, TeleGatherInstance> instances = new HashMap<unit, TeleGatherInstance>()
 class SortingPosition
@@ -89,7 +90,7 @@ class TeleGatherInstance
             return this.sortingPositions.get(itemType)
 
         //If a nearby item of the same type is found, set up sorting position there
-        let nearest = findNearestItem(targetPos, sortDistanceOffset * 2.2, i -> i.getTypeId() == itemType)
+        let nearest = findNearestItem(targetPos, sortDistanceOffset * MAX_SORTING_LOOPS * 1.1, i -> i.getTypeId() == itemType)
         if nearest != null
             let pos = new SortingPosition(nearest.getPos())
             sortingPositions.put(itemType, pos)
@@ -101,7 +102,7 @@ class TeleGatherInstance
             this.nextSortAngle += SORT_ANGLE_INCREMENT
 
             //Exit condition if no position found -> default to target pos
-            if this.nextSortAngle >= 360 and this.sortDistanceOffset >= 2*SORT_DISTANCE_INCREMENT
+            if this.nextSortAngle >= 360 and this.sortDistanceOffset >= MAX_SORTING_LOOPS * SORT_DISTANCE_INCREMENT
                 let pos = new SortingPosition(targetPos)
                 sortingPositions.put(itemType, pos)
                 return pos

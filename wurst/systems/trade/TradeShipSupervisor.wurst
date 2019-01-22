@@ -84,11 +84,15 @@ public class TradeShipSupervisor
             return
 
         state = TradeShipSupervisorState.MOVING
+        this.orderListenerEnabled = false
         ship.issuePointOrder("move", nextStop.getPos())
+        this.orderListenerEnabled = true
         destroyCallback()
 
         callback = doPeriodically(1.0) cb ->
+            this.orderListenerEnabled = false
             ship.issuePointOrder("move", nextStop.getPos())
+            this.orderListenerEnabled = true
 
     function pause(real duration)
         if state == TradeShipSupervisorState.STOPPED

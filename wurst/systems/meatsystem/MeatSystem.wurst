@@ -1,0 +1,377 @@
+package MeatSystem
+import ItemObjEditing
+import ClosureEvents
+import LinkedList
+import MapBounds
+import HashMap
+import ClosureTimers
+import AbilityObjEditing
+import Orders
+import SimError
+import ID
+import ClosuresForItems
+import ObjectIdGenerator
+import UnitEntity
+import initlater EatRawMeat
+import initlater Troll
+import Hostile
+import TerrainUtils
+
+let ITEM_RAW_MEAT = 'IRAW'
+let MAX_MEAT_COUNT = 8
+let MEAT_POS_OFFSET = vec3(-45, 0, 50)
+let ABILITY_IDS_SHAPESHIFTER = asList('A0EI','A0EN', 'A0EO')
+let ABILITY_ID_PICKUPMEAT = 'XMPU'
+public let ABILITY_ID_PICKUPMEAT_TROLL = compiletime(ABIL_ID_GEN.next())
+let ABILITY_IDS_DROPMEAT = ['XDRA', 'XDRB', 'XDRC', 'XDRD', 'XDRE', 'XDRF', 'XDRG', 'XDRH']
+let ICON_PATHS_DROPMEAT = [ "Unload_1.tga",
+                            "Unload_2.tga",
+                            "Unload_3.tga",
+                            "Unload_4.tga",
+                            "Unload_5.tga",
+                            "Unload_6.tga",
+                            "Unload_7.tga",
+                            "Unload_8.tga"]
+
+let SMART_PICKUP_RANGE = 150.0
+let AOE_PICKUP_RADIUS = 200.
+public IterableMap<unit, MeatInventory> meatInventoryInstances = new IterableMap<unit, MeatInventory>()
+
+@compiletime function createRawMeatObject()
+    new ItemDefinition(ITEM_RAW_MEAT, 'shrs')
+        ..setModelUsed("Heart.mdx")
+        ..setAbilities("")
+        ..setTintingColor1Red(230)
+        ..setTintingColor2Green(150)
+        ..setTintingColor3Blue(150)
+        ..setInterfaceIcon("ReplaceableTextures\\CommandButtons\\BTNCorpseExplode.blp")
+        ..setScalingValue(0.5)
+        ..setClassification("Miscellaneous")
+        ..setGoldCost(0)
+        ..setLumberCost(0)
+        ..setDroppedWhenCarrierDies(true)
+        ..setLevel(1)
+        ..setNumberofCharges(1)
+        ..setName("Raw Meat")
+        ..setDescription("Raw meat that needs to be cooked at a campfire")
+        ..setTooltipBasic("Trade for raw meat")
+        ..setTooltipExtended("Raw meat that needs to be cooked at a campfire")
+
+@compiletime function createDropMeatAbilities()
+    for i = 0 to 7
+        new AbilityDefinitionIllidanChannel(ABILITY_IDS_DROPMEAT[i])
+            ..setTargetType(1, 0)
+            ..setAnimationNames("")
+            ..setArtCaster("")
+            ..setArtEffect("")
+            ..setArtTarget("")
+            ..setArtSpecial("")
+            ..setButtonPositionNormalX(0)
+            ..setButtonPositionNormalY(2)
+            ..setButtonPositionResearchX(0)
+            ..setButtonPositionResearchY(2)
+            ..setIconNormal(ICON_PATHS_DROPMEAT[i])
+            ..setIconResearch(ICON_PATHS_DROPMEAT[i])
+            ..setIconTurnOff(ICON_PATHS_DROPMEAT[i])
+            ..setHeroAbility(false)
+            ..setItemAbility(false)
+            ..setLevels(1)
+            ..setHotkeyNormal("C")
+            ..setName("Drop Raw Meat")
+            ..setDisableOtherAbilities(1, false)
+            ..setTooltipNormal(1, "|c00ffcc00C|r - Drop Raw Meat")
+            ..setTooltipNormalExtended(1, "Drops all carried raw meat. \n|cffadff2fCurrently carrying " + (i+1).toString() + " / 8 raw meat.|r")
+            ..presetBaseOrderID(lvl -> "unburrow")
+            ..setOrderStringActivate("unburrow")
+            ..setOrderStringUseTurnOn("unburrow")
+            ..presetOptions(lvl -> 1)
+            ..presetCooldown(lvl -> 0)
+            ..presetManaCost(lvl -> 0)
+            ..presetFollowThroughTime(lvl -> 0)
+
+@compiletime function createPickupMeatAbility()
+    new AbilityDefinitionIllidanChannel(ABILITY_ID_PICKUPMEAT)
+        ..setTargetType(1, 0)
+        ..setAnimationNames("")
+        ..setArtCaster("")
+        ..setArtEffect("")
+        ..setArtTarget("")
+        ..setArtSpecial("")
+        ..setButtonPositionNormalX(1)
+        ..setButtonPositionNormalY(2)
+        ..setButtonPositionResearchX(1)
+        ..setButtonPositionResearchY(2)
+        ..setIconNormal("ReplaceableTextures\\CommandButtons\\BTNLoad.blp")
+        ..setIconResearch("ReplaceableTextures\\CommandButtons\\BTNLoad.blp")
+        ..setIconTurnOff("ReplaceableTextures\\CommandButtons\\BTNLoad.blp")
+        ..setHeroAbility(false)
+        ..setItemAbility(false)
+        ..setLevels(1)
+        ..setHotkeyNormal("G")
+        ..setName("Get Raw Meat")
+        ..setDisableOtherAbilities(1, false)
+        ..setTooltipNormal(1, "|c00ffcc00G|r - Pick Up Raw Meat")
+        ..setTooltipNormalExtended(1, "Picks up nearby raw meat.")
+        ..presetBaseOrderID(lvl -> "burrow")
+        ..setOrderStringActivate("burrow")
+        ..setOrderStringUseTurnOn("burrow")
+        ..presetOptions(lvl -> 1)
+        ..presetCooldown(lvl -> 0)
+        ..presetManaCost(lvl -> 0)
+        ..presetFollowThroughTime(lvl -> 0)
+
+@compiletime function createTrollPickupMeatAbility()
+    new AbilityDefinitionIllidanChannel(ABILITY_ID_PICKUPMEAT_TROLL)
+        ..setTargetType(1, 0)
+        ..setAnimationNames("")
+        ..setArtCaster("")
+        ..setArtEffect("")
+        ..setArtTarget("")
+        ..setArtSpecial("")
+        ..setButtonPositionNormalX(0)
+        ..setButtonPositionNormalY(2)
+        ..setButtonPositionResearchX(0)
+        ..setButtonPositionResearchY(2)
+        ..setIconNormal("ReplaceableTextures\\CommandButtons\\BTNLoad.blp")
+        ..setIconResearch("ReplaceableTextures\\CommandButtons\\BTNLoad.blp")
+        ..setIconTurnOff("ReplaceableTextures\\CommandButtons\\BTNLoad.blp")
+        ..setHeroAbility(false)
+        ..setItemAbility(false)
+        ..setLevels(1)
+        ..setHotkeyNormal("C")
+        ..setName("Get Raw Meat")
+        ..setDisableOtherAbilities(1, false)
+        ..setTooltipNormal(1, "|c00ffcc00C|r - Pick Up Raw Meat")
+        ..setTooltipNormalExtended(1, "Picks up nearby raw meat.")
+        ..presetBaseOrderID(lvl -> "burrow")
+        ..setOrderStringActivate("burrow")
+        ..setOrderStringUseTurnOn("burrow")
+        ..presetOptions(lvl -> 1)
+        ..presetCooldown(lvl -> 0)
+        ..presetManaCost(lvl -> 0)
+        ..presetFollowThroughTime(lvl -> 0)
+
+public class MeatInventory
+    player ownerPlayer
+    unit ownerUnit
+    LinkedList<item> carriedMeat
+    CallbackPeriodic smartPickupCallback
+    item smartPickupTarget
+    bool isTrollInventory
+
+    construct(unit owner)
+        this.ownerUnit = owner
+        this.ownerPlayer = ownerUnit.getOwner()
+        this.carriedMeat = new LinkedList<item>()
+        this.isTrollInventory = UnitEntity.findForUnit(ownerUnit) instanceof Troll
+        updateMeatAbilities()
+
+    function emptyToGround()
+        let pos = ownerUnit.getPos()
+        for meat in carriedMeat
+            meat.setVisible(true)
+            meat.setPos(pos)
+            carriedMeat.remove(meat)
+        updateMeatAbilities()
+
+    function emptyToGround(vec2 pos)
+        for meat in carriedMeat
+            meat.setVisible(true)
+            meat.setPos(pos)
+            carriedMeat.remove(meat)
+        updateMeatAbilities()
+
+    function tryPickupMeat(item meat, bool updateAbilities) returns bool
+        if canPickupMeat()
+            meat.setPos(boundMax)
+            meat.setVisible(false)
+            carriedMeat.add(meat)
+            if updateAbilities
+                updateMeatAbilities()
+            return true
+        else
+            simError(ownerPlayer, "Raw meat capacity full!")
+            return false
+
+    function tryPickupMeatArea()
+        forItemsInRect(ownerUnit.getPos().withRadiusRect(AOE_PICKUP_RADIUS)) maybeMeat ->
+            if maybeMeat.getTypeId() == ITEM_RAW_MEAT
+                tryPickupMeat(maybeMeat, false)
+        updateMeatAbilities()
+
+    function tryRemoveOneMeat() returns boolean
+        if carriedMeat.size() >= 0
+            carriedMeat.pop()
+            updateMeatAbilities()
+            return true
+        return false
+
+    function onOwnerDeath()
+        //Find an offset position for the meat so items are separated on drop
+        let pos = ownerUnit.getPos()
+        for angleIndex = 0 to 3
+            let meatPos = pos.polarOffset((angleIndex * 90.).fromDeg(), MEAT_DROP_OFFSET_DISTANCE)
+            if meatPos.isTerrainWalkable()
+                emptyToGround(meatPos)
+                break
+            else if angleIndex == 3
+                emptyToGround(pos)
+
+        destroy this
+
+    function canPickupMeat() returns bool
+        return carriedMeat.size() < MAX_MEAT_COUNT
+
+    function transferMeatInventoryToUnit(unit newOwner)
+        //Nulltimer to let the Troll-entity run the postCreate first and avoid creating both the drop meat and get meat abilities
+        nullTimer() ->
+            meatInventoryInstances.remove(this.ownerUnit)
+            this.ownerUnit = newOwner
+            if meatInventoryInstances.has(newOwner)
+                destroy meatInventoryInstances.getAndRemove(newOwner)
+            meatInventoryInstances.put(newOwner, this)
+            this.isTrollInventory = UnitEntity.findForUnit(newOwner) instanceof Troll
+            updateMeatAbilities()
+
+    function onSmartPickupMeat(item meat)
+        let t = getPlayerUnitEventTrigger(EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER)
+        t.disable()
+        ownerUnit.issuePointOrderById(Orders.move, meat.getPos())
+        t.enable()
+        this.smartPickupTarget = meat
+
+        //Remove old callback if it exists
+        if this.smartPickupCallback != null
+            destroy this.smartPickupCallback
+            this.smartPickupCallback = null
+
+        //Start polling for when we reach the pickup target
+        this.smartPickupCallback = doPeriodically(ANIMATION_PERIOD) cb ->
+            let collisionSize = ownerUnit.getCollisionSize()
+            let rangeSq = (SMART_PICKUP_RANGE + collisionSize) * (SMART_PICKUP_RANGE + collisionSize)
+            //See if meat is gone already
+            if not this.smartPickupTarget.isPickupable() or ownerUnit.getCurrentOrder() != Orders.move or not ownerUnit.isAlive()
+                destroy this.smartPickupCallback
+                this.smartPickupCallback = null
+            else if ownerUnit.getPos().distanceToSq(this.smartPickupTarget.getPos()) <= rangeSq
+                //Otherwise, if in range, pick up meat
+                this.tryPickupMeat(this.smartPickupTarget, true)
+                destroy this.smartPickupCallback
+                this.smartPickupCallback = null
+
+    function updateMeatAbilities()
+        //Swaps pick up meat / drop ability for corresponding meat amount
+        for i = 0 to 7
+            ownerUnit.removeAbility(ABILITY_IDS_DROPMEAT[i])
+
+        let meatCount = carriedMeat.size()
+        if meatCount != 0
+            if this.isTrollInventory //Avoid swapping pickup ability swap for traps, which must have both abilities at all times
+                ownerUnit.removeAbility(ABILITY_ID_PICKUPMEAT_TROLL)
+                ownerUnit.addAbility(ABILITY_ID_EAT_RAW_MEAT)
+                ownerUnit.removeAbility(ABILITY_ID_EAT_RAW_MEAT_DISABLED)
+            ownerUnit.addAbility(ABILITY_IDS_DROPMEAT[meatCount - 1])
+        else
+            if this.isTrollInventory
+                ownerUnit.removeAbility(ABILITY_ID_EAT_RAW_MEAT)
+                ownerUnit.addAbility(ABILITY_ID_EAT_RAW_MEAT_DISABLED)
+                ownerUnit.addAbility(ABILITY_ID_PICKUPMEAT_TROLL)
+
+    ondestroy
+        emptyToGround()
+        if this.smartPickupCallback != null
+            destroy this.smartPickupCallback
+        if meatInventoryInstances.has(this.ownerUnit)
+            meatInventoryInstances.remove(this.ownerUnit)
+        destroy carriedMeat
+
+function unitTryPickupMeat(unit u, item meat) returns bool
+    //Call meatpickup func for instance, or create one first and then call
+    if meatInventoryInstances.has(u)
+        return meatInventoryInstances.get(u).tryPickupMeat(meat, true)
+    else
+        let instance = new MeatInventory(u)
+        meatInventoryInstances.put(u, instance)
+        return instance.tryPickupMeat(meat, true)
+
+function unitTryPickupMeatArea(unit u)
+    //Call areapickup func for instance, or create one first and then call
+    if meatInventoryInstances.has(u)
+        meatInventoryInstances.get(u).tryPickupMeatArea()
+    else
+        let instance = new MeatInventory(u)
+        meatInventoryInstances.put(u, instance)
+        instance.tryPickupMeatArea()
+
+function onTargetOrder()
+    let order = GetIssuedOrderId()
+    let u = GetOrderedUnit()
+    if order != Orders.smart
+        return
+
+    let target = GetOrderTargetItem()
+
+    //Smart pickup system -> simulate picking up meat like an item if full inventory, like in Bannars StackNSplit system
+    if (target != null
+        and target.isPickupable()
+        and target.getTypeId() == ITEM_RAW_MEAT
+        and u.isInventoryFull()
+        and (meatInventoryInstances.has(u) or isUnitMeatCarrier(u)))
+
+        if meatInventoryInstances.has(u)
+            let instance = meatInventoryInstances.get(u)
+            let meatCount = instance.carriedMeat.size()
+            if meatCount < MAX_MEAT_COUNT
+                instance.onSmartPickupMeat(target)
+        else
+            let instance = new MeatInventory(u)
+            meatInventoryInstances.put(u, instance)
+            instance.onSmartPickupMeat(target)
+
+function isUnitMeatCarrier(unit u) returns bool
+    return UnitEntity.findForUnit(u) instanceof Troll or u.getTypeId() == UNIT_ENSNARE_TRAP
+
+init
+    //Handle picking up meat normally to inventory
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
+        let maybeMeat = GetManipulatedItem()
+        let u = GetTriggerUnit()
+        if maybeMeat.getTypeId() == ITEM_RAW_MEAT
+            u.removeItem(maybeMeat)
+            if isUnitMeatCarrier(u)
+                unitTryPickupMeat(u, maybeMeat)
+
+    //Setup smooth pickup event (ability to pick up raw meat with full inventory)
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER) ->
+        onTargetOrder()
+
+    //Death event
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
+        let dying = GetTriggerUnit()
+        if meatInventoryInstances.has(dying)
+            meatInventoryInstances.get(dying).onOwnerDeath()
+
+    //Setup pickup and drop abilities
+    for i = 0 to 7
+        registerSpellEffectEvent(ABILITY_IDS_DROPMEAT[i]) ->
+            let caster = GetSpellAbilityUnit()
+            if meatInventoryInstances.has(caster)
+                meatInventoryInstances.get(caster).emptyToGround()
+
+    registerSpellEffectEvent(ABILITY_ID_PICKUPMEAT) ->
+        let caster = GetSpellAbilityUnit()
+        if meatInventoryInstances.has(caster) or isUnitMeatCarrier(caster)
+            unitTryPickupMeatArea(caster)
+
+    registerSpellEffectEvent(ABILITY_ID_PICKUPMEAT_TROLL) ->
+        let caster = GetSpellAbilityUnit()
+        if meatInventoryInstances.has(caster) or isUnitMeatCarrier(caster)
+            unitTryPickupMeatArea(caster)
+
+    //Special fix for beastmaster to get his abilities back after transforming
+    for s in ABILITY_IDS_SHAPESHIFTER
+        registerSpellEffectEvent(s) ->
+            let caster = GetSpellAbilityUnit()
+            doAfter(1.2) ->
+                if meatInventoryInstances.has(caster)
+                    meatInventoryInstances.get(caster).updateMeatAbilities()

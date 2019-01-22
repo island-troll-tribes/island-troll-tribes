@@ -5,6 +5,7 @@ import ClosureEvents
 import GameConfig
 import ID
 import LegacyTriggers
+import MeatSystem
 
 function replaceUnit(unit whichUnit, integer newUnitId) returns unit
     var oldUnit = whichUnit
@@ -37,6 +38,10 @@ public function trollUpgrade(unit whichUnit, integer newUnitId)
     int agility = GetHeroAgi(oldUnit, false)
     int intelligence = GetHeroInt(oldUnit, false)
     unit newUnit = replaceUnit(whichUnit, newUnitId)
+
+    //Transfer raw meat inventory
+    if meatInventoryInstances.has(oldUnit)
+        meatInventoryInstances.get(oldUnit).transferMeatInventoryToUnit(newUnit)
 
     //Change globals to new unit
     udg_trolls.removeUnit(oldUnit)

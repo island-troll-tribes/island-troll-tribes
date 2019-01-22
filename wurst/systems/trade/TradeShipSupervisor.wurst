@@ -3,6 +3,7 @@ import TradeShipStop
 import HashMap
 import LinkedList
 import ClosureTimers
+import ClosureEvents
 import ErrorHandling
 
 let TRADE_SHIP_PAUSE_TIME_DEST = 0
@@ -19,8 +20,8 @@ public enum TradeShipSupervisorState
 public class TradeShipSupervisor
     static let ships = new HashMap<unit, thistype>()
     static let whenEnterRegion = CreateTrigger()
-    ..registerEnterRegion(TradeShipStop.tradeStops, null)
-    ..addAction(function TradeShipSupervisor.handleEnterRegion)
+        ..registerEnterRegion(TradeShipStop.tradeStops, null)
+        ..addAction(function TradeShipSupervisor.handleEnterRegion)
 
     unit ship
     TradeShipStop firstStop
@@ -42,6 +43,22 @@ public class TradeShipSupervisor
         nextStop = firstStop.getNext()
         ships.put(ship, this)
         moveToNextStop()
+        EventListener.add(ship, EVENT_UNIT_ISSUED_TARGET_ORDER, -> onIssuedOrder())
+        EventListener.add(ship, EVENT_UNIT_ISSUED_POINT_ORDER, -> onIssuedOrder())
+        EventListener.add(ship, EVENT_UNIT_ISSUED_ORDER, -> onIssuedOrder())
+
+    function onIssuedOrder()
+        switch state
+            case MOVING
+                let orderId = GetIssuedOrderId()
+                let targetPos = getOrderPos()
+                let nextStopPos = nextStop.getPos()
+                if orderId != Orders.move or targetPos.distanceToSq(nextStopPos) > compiletime((100.0).squared())
+                    ship.issuePointOrder("move", nextStopPos)
+            case STOPPED
+                ship.issueImmediateOrder("stop")
+            case EXITED
+                skip
 
     function getState() returns TradeShipSupervisorState
         return state

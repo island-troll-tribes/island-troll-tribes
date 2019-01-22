@@ -8,6 +8,8 @@ import Game
 import GameMode
 import PublicLibrary
 import TribeBoard
+import Tribe
+import StringUtils
 
 class PlayerAllianceSetting
     string name
@@ -61,10 +63,13 @@ init
         printTimedToPlayer(msg, 5, triggerPlayer)
 
     registerCommandAll("rn") (triggerPlayer, args) ->
-        for i = 0 to PLAYER_NEUTRAL_AGGRESSIVE - 1
-            if udg_RealNames[i] != ""
-                let msg = "{0} {1}".format((i + 1).toString().color(i.toPlayerColor().toColor()), players[i].getName())
-                printTimedToPlayer(msg, 10, triggerPlayer)
+        for tribe in Tribe.getTribes()
+            let names = tribe
+                .getMembers()
+                .map(member -> member.getNameColored())
+                .joinBy(", ")
+
+            printTimedToPlayer(GENERAL_COLOR + "Tribe " + (tribe.getId() + 1).toString() + ": " + names, 10, triggerPlayer)
 
     registerCommandAll("recipes") (triggerPlayer, args) ->
         let msg = "{0}Ok, here are the build help locations.\nYou can see the recipe for every item and building by selecting the wards, take time to read".format(GENERAL_COLOR)
@@ -76,8 +81,13 @@ init
         printTimedToPlayer(GENERAL_COLOR + "You are now an observer", 10, triggerPlayer)
         triggerPlayer.makeObserver()
 
+    registerCommandAll("obs-new") (triggerPlayer, args) ->
+        printTimedToPlayer(GENERAL_COLOR + "You are now an observer", 10, triggerPlayer)
+        triggerPlayer.makeObserverNew()
+
     GameMode.onModeSelectionFinish() ->
         deregisterCommandAll("obs")
+        deregisterCommandAll("obs-new")
 
     registerGameStartEvent() ->
         registerCommandAll("ac", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))

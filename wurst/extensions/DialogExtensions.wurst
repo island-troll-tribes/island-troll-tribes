@@ -20,7 +20,7 @@ public function dialog.addQuitButton(boolean doScoreScreen, string buttonText, i
 public function dialog.display(player whichPlayer, boolean flag)
     DialogDisplay(whichPlayer, this, flag)
 
-let buttonToActionMap = new HashMap<button, VoidFunction<button>>()
+let actionMap = new HashMap<trigger, VoidFunction<button>>()
 
 public function button.onClick(VoidFunction<button> callback) returns trigger
     let trigg = CreateTrigger()
@@ -29,12 +29,12 @@ public function button.onClick(VoidFunction<button> callback) returns trigger
         let trig = GetTriggeringTrigger()
         let btn = GetClickedButton()
         let diag = GetClickedDialog()
-        let cb = buttonToActionMap.get(btn)
+        let cb = actionMap.getAndRemove(trig)
         cb.call(btn)
         destroy cb
         trig.destr()
         diag.destr()
 
-    buttonToActionMap.put(this, callback)
+    actionMap.put(trigg, callback)
 
     return trigg

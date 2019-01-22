@@ -30,36 +30,38 @@ abstract class ObserverBoardControl
 
 class ObserverBoardVisionControl extends ObserverBoardControl
     let options = new LinkedList<string>()
-    LLIterator<string> iterator
 
     construct(player whichPlayer)
         super("Vision", whichPlayer)
         options
             ..add("Players")
-            ..add("All")
+            ..add("Neutral")
+            ..add("Players + Neutral")
 
-        iterator = options.iterator()
-
-        for tribe in Tribe.getTribes()
-            options.add("Tribe " + (tribe.getId() + 1).toString())
+        if whichPlayer.isObserverNew()
+            for tribe in Tribe.getTribes()
+                options.add("Tribe " + (tribe.getId() + 1).toString())
 
     function setVision(string toWhat)
         switch toWhat
             case "Players"
-                for i = 0 to bj_MAX_PLAYERS - 1
-                    whichPlayer.setPlayerAlliance(players[i], ALLIANCE_SHARED_VISION, true)
-            case "All"
-                for i = 0 to bj_MAX_PLAYERS - 1
-                    whichPlayer.setPlayerAlliance(players[i], ALLIANCE_SHARED_VISION, true)
+                for i = 0 to bj_MAX_PLAYER_SLOTS - 1
+                    players[i].setPlayerAlliance(whichPlayer, ALLIANCE_SHARED_VISION, i < bj_MAX_PLAYERS)
+            case "Neutral"
+                for i = 0 to bj_MAX_PLAYER_SLOTS - 1
+                    players[i].setPlayerAlliance(whichPlayer, ALLIANCE_SHARED_VISION, i >= bj_MAX_PLAYERS)
+            case "Players + Neutral"
+                for i = 0 to bj_MAX_PLAYER_SLOTS - 1
+                    players[i].setPlayerAlliance(whichPlayer, ALLIANCE_SHARED_VISION, true)
             default
-                let tribeId = toWhat.split(" ").get(1).toInt()
-                for i = 0 to bj_MAX_PLAYERS - 1
+                let tribeId = toWhat.split(" ").get(1).toInt() - 1
+                for i = 0 to bj_MAX_PLAYER_SLOTS - 1
                     let tribe = Tribe.ofPlayer(players[i])
                     let share = tribe != null and tribe.getId() == tribeId
-                    whichPlayer.setPlayerAlliance(players[i], ALLIANCE_SHARED_VISION, share)
+                    players[i].setPlayerAlliance(whichPlayer, ALLIANCE_SHARED_VISION, share)
 
     override function getInitialValue() returns string
-        return iterator.next()
+        return options.get(0)
 
     override function onSelect(VoidFunction<string> callback)
         let diag = DialogCreate()
@@ -73,7 +75,7 @@ class ObserverBoardVisionControl extends ObserverBoardControl
         diag.display(whichPlayer, true)
 
 class ObserverBoardZoomControl extends ObserverBoardControl
-    static let MAX = 1500
+    static let MAX = 1000
 
     var currentValue = 0
 
@@ -127,6 +129,7 @@ class ObserverBoard
                 ..setValue(option.getName())
                 ..setValueColor(OPTION_NAME_COLOR)
                 ..setStyle(true, false)
+                ..setWidth(0.05)
                 ..release()
 
             board
@@ -138,7 +141,7 @@ class ObserverBoard
 
             row += 1
 
-        doPeriodically(0.25) cb ->
+        doPeriodically(0.1) cb ->
             board.setTitle(getGameTimersBoardTitle())
             let isMinimized = board.isMinimized()
             if minimized and not isMinimized
@@ -186,5 +189,14 @@ init
 
         destroy observers
 
-        registerPlayerEvent(EVENT_PLAYER_END_CINEMATIC) ->
-            print("EVENT_PLAYER_END_CINEMATIC")
+    registerPlayerEvent(EVENT_PLAYER_END_CINEMATIC) ->
+        let observer = GetTriggerPlayer()
+        if observer.isObserverNew()
+            ObserverBoard.boards.get(observer).displayOptions()
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SELECTED) ->
+        let observer = GetTriggerPlayer()
+        if observer.isObserverNew()
+            let owner = GetTriggerUnit().getOwner()
+            observer.setGold(owner.getGold())
+            observer.setLumber(owner.getLumber())

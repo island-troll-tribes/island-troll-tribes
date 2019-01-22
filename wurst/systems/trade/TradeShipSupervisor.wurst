@@ -52,7 +52,7 @@ public class TradeShipSupervisor
     function onIssuedOrder()
         if not this.orderListenerEnabled
             return
-        if GetIssuedOrderId() != Orders.smart and GetIssuedOrderId() != Orders.
+        if GetIssuedOrderId() != Orders.smart and GetIssuedOrderId() != Orders.move
             return
         switch state
             case MOVING
@@ -84,11 +84,15 @@ public class TradeShipSupervisor
             return
 
         state = TradeShipSupervisorState.MOVING
+        this.orderListenerEnabled = false
         ship.issuePointOrder("move", nextStop.getPos())
+        this.orderListenerEnabled = true
         destroyCallback()
 
         callback = doPeriodically(1.0) cb ->
+            this.orderListenerEnabled = false
             ship.issuePointOrder("move", nextStop.getPos())
+            this.orderListenerEnabled = true
 
     function pause(real duration)
         if state == TradeShipSupervisorState.STOPPED

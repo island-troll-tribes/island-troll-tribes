@@ -596,6 +596,36 @@ public function fromPairs<S, T>(LinkedList<Pair<S, T>> lst) returns IterableMap<
 public function LinkedList<Pair<S, T>>.fromPairs<S, T>() returns IterableMap<S, T>
     return fromPairs(this)
 
+public function chunk<T>(LinkedList<T> lst, int size) returns LinkedList<LinkedList<T>>
+    let chunked = new LinkedList<LinkedList<T>>()
+    let iter = lst.iterator()
+    while iter.hasNext()
+        let chunk = new LinkedList<T>()
+        for i = 0 to size - 1
+            chunk.add(iter.next())
+            if not iter.hasNext()
+                break
+        chunked.add(chunk)
+    iter.close()
+    lst.maybeFree()
+    return chunked
+
+public function LinkedList<T>.chunk<T>(int size) returns LinkedList<LinkedList<T>>
+    return chunk(this, size)
+
+public function pull<T>(LinkedList<T> lst, T pull) returns LinkedList<T>
+    let ret = lst.copy()
+    let iter = lst.iterator()
+    for elem from iter
+        if elem == pull
+            iter.remove()
+    iter.close()
+    lst.maybeFree()
+    return ret
+
+public function LinkedList<T>.pull<T>(T pull) returns LinkedList<T>
+    return pull(this, pull)
+
 @Test
 function testIntersection()
     let lstA = asList(1, 2, 3)

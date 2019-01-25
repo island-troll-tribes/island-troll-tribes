@@ -488,19 +488,20 @@ public function LinkedList<T>.intersection<T>(LinkedList<T> lst) returns LinkedL
     return intersection(this, lst)
 
 public function difference<T>(LinkedList<T> a, LinkedList<T> b) returns LinkedList<T>
-    T array occurences
+    let store = new HashSet<T>()
     let lst = new LinkedList<T>()
     let iterA = a.iterator()
     let iterB = b.iterator()
     for elem from iterB
-        occurences[elem castTo int] = elem
+        store.add(elem)
     for elem from iterA
-        if occurences[elem castTo int] == null
+        if not store.has(elem)
             lst.push(elem)
     iterA.close()
     iterB.close()
     a.maybeFree()
     b.maybeFree()
+    destroy store
     return lst
 
 public function LinkedList<T>.difference<T>(LinkedList<T> lst) returns LinkedList<T>

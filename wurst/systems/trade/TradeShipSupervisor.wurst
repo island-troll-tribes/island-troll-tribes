@@ -25,6 +25,7 @@ public class TradeShipSupervisor
         ..addAction(function TradeShipSupervisor.handleEnterRegion)
 
     unit ship
+    bool orderListenerEnabled = true
     TradeShipStop firstStop
     TradeShipStop nextStop
     CallbackPeriodic callback
@@ -44,11 +45,17 @@ public class TradeShipSupervisor
         nextStop = firstStop.getNext()
         ships.put(ship, this)
         moveToNextStop()
-        EventListener.add(ship, EVENT_UNIT_ISSUED_TARGET_ORDER, -> onIssuedOrder())
-        EventListener.add(ship, EVENT_UNIT_ISSUED_POINT_ORDER, -> onIssuedOrder())
-        EventListener.add(ship, EVENT_UNIT_ISSUED_ORDER, -> onIssuedOrder())
+        EventListener.add(ship, EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, -> onIssuedOrder())
+        EventListener.add(ship, EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER, -> onIssuedOrder())
+        EventListener.add(ship, EVENT_PLAYER_UNIT_ISSUED_ORDER, -> onIssuedOrder())
 
     function onIssuedOrder()
+        if not this.orderListenerEnabled
+            return
+        if GetIssuedOrderId() != Orders.smart and GetIssuedOrderId() != Orders.move
+            return
+
+        this.orderListenerEnabled = false
         switch state
             case MOVING
                 let orderId = GetIssuedOrderId()
@@ -60,6 +67,7 @@ public class TradeShipSupervisor
                 ship.issueImmediateOrder("stop")
             case EXITED
                 skip
+        this.orderListenerEnabled = true
 
     function getState() returns TradeShipSupervisorState
         return state
@@ -75,11 +83,17 @@ public class TradeShipSupervisor
             return
 
         state = TradeShipSupervisorState.MOVING
+        this.orderListenerEnabled = false
         ship.issuePointOrder("move", nextStop.getPos())
+        this.orderListenerEnabled = true
         destroyCallback()
 
+        //Possibly deprecated now that we have an order listener to stop controlling the boat
+        //its here just in case make sure nothing mysterious can stop the boats
         callback = doPeriodically(1.0) cb ->
+            this.orderListenerEnabled = false
             ship.issuePointOrder("move", nextStop.getPos())
+            this.orderListenerEnabled = true
 
     function pause(real duration)
         if state == TradeShipSupervisorState.STOPPED

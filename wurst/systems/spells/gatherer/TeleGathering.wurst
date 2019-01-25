@@ -15,16 +15,43 @@ let ABILITY_ID_OMNI_TELEGATHER = 'A06V'
 let ABILITY_ID_CASTER_BUFF = 'A056'
 let CASTER_BUFF_ID = 'B00H'
 let TARGET_BUFF_ID = 'B00I'
-let SORT_DISTANCE_INCREMENT = 150
+let SORT_DISTANCE_INCREMENT = 110
+let SORT_DISTANCE_BASE = 30
 let SORT_ANGLE_INCREMENT = 45
 let MAX_SORTING_SEARCH_LOOPS = 2
 let TELEGATHER_DISABLE_DISTANCE_SQ = 700*700
 
 HashMap<unit, TeleGatherInstance> instances = new HashMap<unit, TeleGatherInstance>()
+HashMap<unit, SortingCache> cachedSortingPositions = new HashMap<unit, SortingCache>()
+
+function IterableMap<int, SortingPosition>.deepCopy() returns IterableMap<int, SortingPosition>
+    let map = new IterableMap<int, SortingPosition>
+    for key in this
+        map.put(key, this.get(key).copy())
+    return map
+
+class SortingCache
+    IterableMap<int, SortingPosition> sortingPositions
+    int nextSortAngle
+    int sortDistanceOffset
+
+    construct(IterableMap<int, SortingPosition> sortingPositions, int nextSortAngle, int sortDistanceOffset)
+        this.sortingPositions = sortingPositions.deepCopy()
+        this.nextSortAngle = nextSortAngle
+        this.sortDistanceOffset = sortDistanceOffset
+
+    ondestroy
+        for k in this.sortingPositions
+            destroy this.sortingPositions.get(k)
+        destroy this.sortingPositions
+
 class SortingPosition
     vec2 pos
     construct(vec2 pos)
         this.pos = pos
+
+    function copy() returns SortingPosition
+        return new SortingPosition(this.pos)
 
 class TeleGatherInstance
     unit caster
@@ -43,7 +70,15 @@ class TeleGatherInstance
         this.casterEntity = UnitEntity.findForUnit(this.caster)
         this.duration = duration
         this.teleTarget = teleTarget
-        this.sortingPositions = new IterableMap<int, SortingPosition>()
+        if cachedSortingPositions.has(this.teleTarget)
+            let cache = cachedSortingPositions.get(this.teleTarget)
+            this.sortingPositions = cache.sortingPositions.deepCopy()
+            this.nextSortAngle = cache.nextSortAngle
+            this.sortDistanceOffset = cache.sortDistanceOffset
+        else
+            this.nextSortAngle = 0
+            this.sortDistanceOffset = SORT_DISTANCE_INCREMENT
+            this.sortingPositions = new IterableMap<int, SortingPosition>()
         startBuffPolling()
 
     function startBuffPolling()
@@ -109,7 +144,7 @@ class TeleGatherInstance
             for angleOffset = this.nextSortAngle to 360-SORT_ANGLE_INCREMENT step SORT_ANGLE_INCREMENT
                 this.sortDistanceOffset = distanceOffset
                 this.nextSortAngle = angleOffset
-                let maybeTargetPos = defaultPos.polarOffset(angleOffset.toReal().fromDeg(), distanceOffset.toReal())
+                let maybeTargetPos = defaultPos.polarOffset(angleOffset.toReal().fromDeg(), SORT_DISTANCE_BASE + distanceOffset.toReal())
 
                 if maybeTargetPos.isTerrainWalkable()
                     this.nextSortAngle += SORT_ANGLE_INCREMENT
@@ -120,6 +155,11 @@ class TeleGatherInstance
         return defaultPos
 
     ondestroy
+        if this.teleTarget.isAlive()
+            if cachedSortingPositions.has(this.teleTarget)
+                destroy cachedSortingPositions.getAndRemove(this.teleTarget)
+            cachedSortingPositions.put(teleTarget, new SortingCache(this.sortingPositions, this.nextSortAngle, this.sortDistanceOffset))
+
         if this.caster.hasAbility(CASTER_BUFF_ID)
             this.caster.removeAbility(CASTER_BUFF_ID)
         if this.teleTarget.hasAbility(TARGET_BUFF_ID)
@@ -134,6 +174,7 @@ class TeleGatherInstance
         if instances.has(this.caster)
             if instances.get(this.caster) == this
                 instances.remove(this.caster)
+        print("Instance destroyed")
 
 function onTeleGatherCast()
     let caster = GetSpellAbilityUnit()
@@ -156,6 +197,11 @@ init
 
     registerSpellEffectEvent(ABILITY_ID_OMNI_TELEGATHER) ->
         onTeleGatherCast()
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
+        let dying = GetTriggerUnit()
+        if dying.isType(UNIT_TYPE_STRUCTURE) and cachedSortingPositions.has(dying)
+            destroy cachedSortingPositions.getAndRemove(dying)
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
         if instances.has(GetManipulatingUnit())

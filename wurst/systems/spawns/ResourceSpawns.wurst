@@ -8,6 +8,7 @@ import Interpolation
 import ErrorHandling
 import TerrainUtils
 import SpawnRateAdjustment
+import ClosureTimers
 
 let itemSpawnInfoMap = new IterableMap<int, ItemSpawnInfo>()
 let islandSpawnList = new LinkedList<IslandSpawner>()
@@ -40,9 +41,12 @@ class WeightedSpawnRegion
         this.weight = weight
 
 class IslandSpawner
-    private LinkedList<WeightedSpawnRegion> spawnRegionsList = new LinkedList<WeightedSpawnRegion>()
+    private let spawnRegionsList = new LinkedList<WeightedSpawnRegion>()
+    private let spawnsPerType = new HashMap<int, int>()
     int itemsSpawnCount
     int animalsSpawnCount
+    int spawnedTotal = 0
+    itempool itemPool = null
     real totalRegionsWeight = 0
 
     construct(int itemsSpawnCount, int animalsSpawnCount, LinkedList<WeightedSpawnRegion> spawnRegionsList)
@@ -53,13 +57,56 @@ class IslandSpawner
             totalRegionsWeight += r.weight
         islandSpawnList.push(this)
 
-    function spawnItemFromPool(itempool itemPool)
+    function spawnItemFromPool()
+        if this.itemPool == null
+            error("ERROR: spawnItemFromPool tried to spawn without having a generated pool!")
+            return
+
         rect spawnRect = pickWeightedSpawnRect()
         while true
             vec2 spawnPoint = spawnRect.randomPoint()
             if spawnPoint.isTerrainLand() and spawnPoint.isTerrainWalkable()
-                PlaceRandomItem(itemPool, spawnPoint.x, spawnPoint.y)
+                let spawnedItem = PlaceRandomItem(itemPool, spawnPoint.x, spawnPoint.y)
+
+                //Keep track of spawned total & spawned item type total to balance out spawning
+                this.spawnedTotal += 1
+                let spawnedType = spawnedItem.getTypeId()
+                if not this.spawnsPerType.has(spawnedType)
+                    this.spawnsPerType.put(spawnedType, 1)
+                else
+                    this.spawnsPerType.put(spawnedType, this.spawnsPerType.get(spawnedType) + 1)
+
                 break
+
+    function generateItemPool()
+        /*
+        This function generates an island-specific itempool with adjusted weights according to how much current state of spawned items
+        differs from what the adjusted weights are.
+
+        For example, if there is less flints than the amount of flints that the spawn ratios try to aim for, we increase flint spawns by up to 50% depending on how much behind the spawns are
+        */
+        if this.itemPool != null
+            DestroyItemPool(this.itemPool)
+
+        this.itemPool = CreateItemPool()
+        var totalWeight = 0.
+        for i in itemSpawnInfoMap
+            totalWeight += itemSpawnInfoMap.get(i).getTimeAdjustedSpawnWeight()
+
+        for itm in itemSpawnInfoMap
+            let spawnInfo = itemSpawnInfoMap.get(itm)
+            let itemWeight = spawnInfo.getTimeAdjustedSpawnWeight()
+            let weightRatio = itemWeight / totalWeight
+            var adjustmentRatio = 1.
+            if this.spawnedTotal != 0
+                let itemRatio = this.spawnsPerType.get(itm) / this.spawnedTotal
+                let difference = (weightRatio-itemRatio).abs()
+                if itemRatio < weightRatio
+                    adjustmentRatio = linear(1, 1.5, max(1, (difference / 0.5)))
+                else if itemRatio > weightRatio
+                    adjustmentRatio = linear(1, 0.5, max(1, (difference / 0.5)))
+
+            ItemPoolAddItemType(itemPool, spawnInfo.itemId, itemWeight * adjustmentRatio)
 
     function pickWeightedSpawnRect() returns rect
         real random = GetRandomReal(0, this.totalRegionsWeight)
@@ -77,34 +124,34 @@ class IslandSpawner
         for r in this.spawnRegionsList
             destroy r
         destroy this.spawnRegionsList
+        destroy this.spawnsPerType
 
 public function handleItemSpawning()
-    let itemPool = CreateItemPool()
-    for itm in itemSpawnInfoMap
-        let spawnInfo = itemSpawnInfoMap.get(itm)
-        ItemPoolAddItemType(itemPool, spawnInfo.itemId, spawnInfo.getTimeAdjustedSpawnWeight())
+    for island in islandSpawnList
+        island.generateItemPool()
 
     let spawnedCount = new HashMap<IslandSpawner, int>()
-    while true
+    doPeriodically(ANIMATION_PERIOD) spawnLoop ->
         //Spawn one item on each island until they all reached the max count
         bool loopDidSpawn = false
         for island in islandSpawnList
             //Abruptly stop loop if item limit reached
             if (udg_ITEM_LIMIT_MODE and udg_ITEM_CURRENT >= udg_ITEM_MAX)
                 loopDidSpawn = false
-                break
+                destroy spawnLoop //Break
 
             //Spawn item if island-specific spawn count is not yet achieved
             if not spawnedCount.has(island) or (spawnedCount.get(island) < island.itemsSpawnCount * udg_ITEM_BASE)
-                island.spawnItemFromPool(itemPool)
+                island.spawnItemFromPool()
                 udg_ITEM_CURRENT += 1
+                spawnedCount.put(island, spawnedCount.get(island) + 1)
                 loopDidSpawn = true
+                PolledWait(ANIMATION_PERIOD)
 
         //Return when all islandSpawners iterated without any spawns (or abrupt stop condition reached)
         if not loopDidSpawn
-            break
+            destroy spawnLoop //Break
 
-    DestroyItemPool(itemPool)
 
 function initItemSpawnInfo()
     new ItemSpawnInfo(ITEM_TINDER, 5, .7, 860)
@@ -124,21 +171,21 @@ function initIslandSpawners()
     new IslandSpawner(udg_NORTH_LEFT_ITEM, udg_NORTH_LEFT_FOOD, NWSpawns)
 
     let NESpawns = new LinkedList<WeightedSpawnRegion>()
-    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_2_1, udg_ISLAND2_1))
-    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_2_2, udg_ISLAND2_2))
-    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_2_3, udg_ISLAND2_3))
+    NESpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_2_1, udg_ISLAND2_1))
+    NESpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_2_2, udg_ISLAND2_2))
+    NESpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_2_3, udg_ISLAND2_3))
     new IslandSpawner(udg_NORTH_RIGHT_ITEM, udg_NORTH_RIGHT_FOOD, NESpawns)
 
     let SESpawns = new LinkedList<WeightedSpawnRegion>()
-    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_3_1, udg_ISLAND3_1))
-    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_3_2, udg_ISLAND3_2))
-    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_3_3, udg_ISLAND3_3))
+    SESpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_3_1, udg_ISLAND3_1))
+    SESpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_3_2, udg_ISLAND3_2))
+    SESpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_3_3, udg_ISLAND3_3))
     new IslandSpawner(udg_SOUTH_RIGHT_ITEM, udg_SOUTH_RIGHT_FOOD, SESpawns)
 
     let SWSpawns = new LinkedList<WeightedSpawnRegion>()
-    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_4_1, udg_ISLAND4_1))
-    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_4_2, udg_ISLAND4_2))
-    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_4_3, udg_ISLAND4_3))
+    SWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_4_1, udg_ISLAND4_1))
+    SWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_4_2, udg_ISLAND4_2))
+    SWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_4_3, udg_ISLAND4_3))
     new IslandSpawner(udg_SOUTH_LEFT_ITEM, udg_SOUTH_LEFT_FOOD, SWSpawns)
 
 init

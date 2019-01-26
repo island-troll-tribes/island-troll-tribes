@@ -8,7 +8,6 @@ import HashMap
 import ObjectIds
 import MeatSystem
 import SimError
-import ClosureTimers
 
 let FORM_IDS = [UNIT_SHAPESHIFTER_WOLF, UNIT_SHAPESHIFTER_BEAR, UNIT_SHAPESHIFTER_PANTHER, UNIT_SHAPESHIFTER_TIGER]
 let FORM_MAP = new HashMap<string, integer>()
@@ -24,6 +23,7 @@ let ABILITY_ID_WOLF_FORM_DUMMY = 'A00H'
 let ABILITY_ID_BEAR_FORM_DUMMY = 'A0GN'
 let ABILITY_ID_PANTHER_FORM_DUMMY = 'A0GO'
 let ABILITY_ID_TIGER_FORM_DUMMY = 'A0GP'
+let TRANSFORM_FX_PATH = "Abilities\\Spells\\Undead\\DeathPact\\DeathPactCaster.mdl"
 
 @compiletime function formChanger()
     var i = 0
@@ -55,6 +55,8 @@ function onCast(int newFormId)
     var changeAbility = FORM_MAP.get(changeKey)
     caster.addAbility(changeAbility)
     caster.removeAbility(changeAbility)
+    let FX = caster.addEffect(TRANSFORM_FX_PATH, "origin")
+    FX.destr()
 
     updateNewFormAbilities(owner, newFormId)
 

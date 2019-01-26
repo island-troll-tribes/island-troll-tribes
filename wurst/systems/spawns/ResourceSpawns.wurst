@@ -140,7 +140,7 @@ public function handleItemSpawning()
             //Abruptly stop loop if item limit reached
             if (udg_ITEM_LIMIT_MODE and udg_ITEM_CURRENT >= udg_ITEM_MAX)
                 loopDidSpawn = false
-                destroy spawnLoop //Break
+                break
 
             //Spawn item if island-specific spawn count is not yet achieved
             if not spawnedCount.has(island) or (spawnedCount.get(island) < island.itemsSpawnCount * udg_ITEM_BASE)
@@ -151,9 +151,8 @@ public function handleItemSpawning()
 
         //Return when all islandSpawners iterated without any spawns (or abrupt stop condition reached)
         if not loopDidSpawn
+            destroy spawnedCount
             destroy spawnLoop //Break
-
-    destroy spawnedCount
 
 function initItemSpawnInfo()
     new ItemSpawnInfo(ITEM_TINDER, 5, .7, 860)

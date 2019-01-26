@@ -1,0 +1,22 @@
+package DialogExtensions
+import Lodash
+import HashMap
+import Dialog
+let actionMap = new HashMap<trigger, VoidFunction<button>>()
+
+public function button.onClick(VoidFunction<button> callback) returns trigger
+    let trigg = CreateTrigger()
+    ..registerDialogButtonEvent(this)
+    ..addAction() ->
+        let trig = GetTriggeringTrigger()
+        let btn = GetClickedButton()
+        let diag = GetClickedDialog()
+        let cb = actionMap.getAndRemove(trig)
+        cb.call(btn)
+        destroy cb
+        trig.destr()
+        diag.destr()
+
+    actionMap.put(trigg, callback)
+
+    return trigg

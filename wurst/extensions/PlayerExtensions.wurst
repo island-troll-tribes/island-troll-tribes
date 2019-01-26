@@ -2,6 +2,9 @@ package PlayerExtensions
 import initlater Tribe
 import PublicLibrary
 import ForceExtensions
+import HashSet
+
+let newObs = new HashSet<player>()
 
 public function player.getTribe() returns Tribe
     return Tribe.ofPlayer(this)
@@ -22,13 +25,25 @@ public function player.setColor(playercolor color, bool changeExisting)
     SetPlayerColorBJ(this, color, changeExisting)
 
 public function player.isObserver() returns bool
-    return IsPlayerObserver(this)
+    return IsPlayerObserver(this) or newObs.has(this)
 
 public function player.getTroll() returns unit
     return GetPlayerTroll(this)
 
 public function player.makeObserver()
     this.setState(PLAYER_STATE_OBSERVER, 1)
+    this.setupObs()
+
+public function player.makeObserverNew()
+    newObs.add(this)
+    this.setupObs()
+
+public function player.isObserverNew() returns boolean
+    return newObs.has(this)
+
+public function player.setupObs()
     let iter = bj_FORCE_ALL_PLAYERS.iterator()
     for otherPlayer from iter
-        SetPlayerAllianceStateBJ(this, otherPlayer, bj_ALLIANCE_NEUTRAL_VISION)
+        SetPlayerAllianceStateBJ(otherPlayer, this, bj_ALLIANCE_NEUTRAL_VISION)
+
+    SetPlayerAllianceStateBJ(this, players[PLAYER_NEUTRAL_AGGRESSIVE], bj_ALLIANCE_NEUTRAL)

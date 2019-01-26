@@ -131,7 +131,9 @@ public function handleItemSpawning()
         island.generateItemPool()
 
     let spawnedCount = new HashMap<IslandSpawner, int>()
-    doPeriodically(ANIMATION_PERIOD) spawnLoop ->
+
+    //Use animation period * 2 since the old system was WAY slower than this
+    doPeriodically(ANIMATION_PERIOD*2) spawnLoop ->
         //Spawn one item on each island until they all reached the max count
         bool loopDidSpawn = false
         for island in islandSpawnList
@@ -146,12 +148,12 @@ public function handleItemSpawning()
                 udg_ITEM_CURRENT += 1
                 spawnedCount.put(island, spawnedCount.get(island) + 1)
                 loopDidSpawn = true
-                PolledWait(ANIMATION_PERIOD)
 
         //Return when all islandSpawners iterated without any spawns (or abrupt stop condition reached)
         if not loopDidSpawn
             destroy spawnLoop //Break
 
+    destroy spawnedCount
 
 function initItemSpawnInfo()
     new ItemSpawnInfo(ITEM_TINDER, 5, .7, 860)
@@ -188,6 +190,23 @@ function initIslandSpawners()
     SWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_4_3, udg_ISLAND4_3))
     new IslandSpawner(udg_SOUTH_LEFT_ITEM, udg_SOUTH_LEFT_FOOD, SWSpawns)
 
+function startSpawnCycle()
+    doPeriodically(120) spawnerCallback ->
+        handleItemSpawning()
+        adjustBaseSpawnrates()
+
+function adjustBaseSpawnrates()
+    //Replacement for modStats function of the legacy system.
+    //Dynamically adjust overall item & animal amounts (and specific item type amounts but that is handled by the itemSpawnInfo class now)
+    udg_ITEM_BASE = max(.15,udg_ITEM_BASE-0.2)
+    udg_FOOD_BASE = max(.15,udg_FOOD_BASE-0.2)
+
+    // This part actually doesnt do anythin since udg_BADDIE_BASE is always 1.00 - Keeping it for now to be safe
+    udg_PANTHER_RATE = R2I(1*udg_BADDIE_BASE)
+    udg_BEAR_RATE = R2I(1*udg_BADDIE_BASE)
+    udg_SNAKE_RATE = R2I(1*udg_BADDIE_BASE)
+    udg_WOLF_RATE = R2I(2*udg_BADDIE_BASE)
+
 init
     initIslandWeights()
     initSpawnRegionWeights()
@@ -195,3 +214,10 @@ init
     initIslandSpawners()
     registerGameStartEvent() ->
         gameStartTime = getElapsedGameTime()
+
+        //First spawns. Do twice to retain original amounts after  halving the items per spawn and doubling cycle frequency.
+        handleItemSpawning()
+        doAfter(30) ->
+            handleItemSpawning()
+
+        startSpawnCycle()

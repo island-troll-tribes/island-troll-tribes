@@ -8,6 +8,8 @@ import HashMap
 import ObjectIds
 import MeatSystem
 import SimError
+import LastOrder
+import ClosureTimers
 
 let FORM_IDS = [UNIT_SHAPESHIFTER_WOLF, UNIT_SHAPESHIFTER_BEAR, UNIT_SHAPESHIFTER_PANTHER, UNIT_SHAPESHIFTER_TIGER]
 let FORM_MAP = new HashMap<string, integer>()
@@ -19,6 +21,7 @@ public let ABILITY_ID_VICIOUS_STRIKES_ACTIVE = 'A0GH'
 public let ABILITY_ID_BEARS_BULWARK = 'A0GE'
 public let ABILITY_ID_WOLFS_HUNGER = 'A0GD'
 public let ABILITY_ID_PROWL = 'A0GF'
+let FORM_SPELLBOOK = 'A0EP'
 let ABILITY_ID_WOLF_FORM_DUMMY = 'A00H'
 let ABILITY_ID_BEAR_FORM_DUMMY = 'A0GN'
 let ABILITY_ID_PANTHER_FORM_DUMMY = 'A0GO'
@@ -64,8 +67,23 @@ function onCast(int newFormId)
     FX.setScale(2)
     FX.destr()
 
+    //Close spellbook
+    for index = 0 to bj_MAX_PLAYERS
+        let p = players[index]
+        if p.isAllyOf(owner)
+            //If players have the unit selected, send esc button to close spellbook. Iteration required to also work with share control
+            let selected = CreateGroup()
+                ..enumUnitsSelected(p, null)
+            if selected.contains(caster) and GetLocalPlayer() == p
+                ForceUICancel()
+            selected.destr()
+
     updateNewFormAbilities(owner, newFormId)
-    caster.setAnimation("stand")
+
+    //Re-issue whatever order we had previously
+    let previousOrder = caster.getLastOrder().prev
+    if previousOrder != null and (previousOrder.orderType == OrderType.POINT or previousOrder.orderType == OrderType.TARGET)
+        previousOrder.issue()
 
     //Make sure new form has meat abilities
     if meatInventoryInstances.has(caster)

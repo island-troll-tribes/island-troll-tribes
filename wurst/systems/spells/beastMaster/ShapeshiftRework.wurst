@@ -11,7 +11,7 @@ import SimError
 
 let FORM_IDS = [UNIT_SHAPESHIFTER_WOLF, UNIT_SHAPESHIFTER_BEAR, UNIT_SHAPESHIFTER_PANTHER, UNIT_SHAPESHIFTER_TIGER]
 let FORM_MAP = new HashMap<string, integer>()
-let ABILITY_IDS = [compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()),
+let TRANSFORM_ABILITY_IDS = [compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()),
 compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()),
 compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next())]
 public let ABILITY_ID_VICIOUS_STRIKES1 = 'A0GG'
@@ -23,14 +23,14 @@ let ABILITY_ID_WOLF_FORM_DUMMY = 'A00H'
 let ABILITY_ID_BEAR_FORM_DUMMY = 'A0GN'
 let ABILITY_ID_PANTHER_FORM_DUMMY = 'A0GO'
 let ABILITY_ID_TIGER_FORM_DUMMY = 'A0GP'
-let TRANSFORM_FX_PATH = "Abilities\\Spells\\Undead\\DeathPact\\DeathPactCaster.mdl"
+let TRANSFORM_FX_PATH = "Abilities\\Spells\\Human\\Polymorph\\PolyMorphDoneGround.mdl"
 
 @compiletime function formChanger()
     var i = 0
     for oldForm = 0 to 3
         for newForm = 0 to 3
             if newForm != oldForm
-                new AbilityDefinitionBearform(ABILITY_IDS[i])
+                new AbilityDefinitionBearform(TRANSFORM_ABILITY_IDS[i])
                 ..setName(FORM_IDS[oldForm].toRawCode() + " to " + FORM_IDS[newForm].toRawCode())
                 ..presetAlternateFormUnit(lvl -> FORM_IDS[oldForm].toRawCode())
                 ..presetNormalFormUnit(lvl -> FORM_IDS[newForm].toRawCode())
@@ -56,6 +56,7 @@ function onCast(int newFormId)
     caster.addAbility(changeAbility)
     caster.removeAbility(changeAbility)
     let FX = caster.addEffect(TRANSFORM_FX_PATH, "origin")
+    FX.setScale(2)
     FX.destr()
 
     updateNewFormAbilities(owner, newFormId)
@@ -103,5 +104,5 @@ init
         for newForm = 0 to 3
             if newForm != oldForm
                 let abiKey = FORM_IDS[oldForm].toRawCode() + FORM_IDS[newForm].toRawCode()
-                FORM_MAP.put(abiKey, ABILITY_IDS[i])
+                FORM_MAP.put(abiKey, TRANSFORM_ABILITY_IDS[i])
                 i++

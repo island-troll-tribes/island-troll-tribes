@@ -14,8 +14,8 @@ let FORM_MAP = new HashMap<string, integer>()
 let TRANSFORM_ABILITY_IDS = [compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()),
 compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()),
 compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next())]
-public let ABILITY_ID_VICIOUS_STRIKES1 = 'A0GG'
-public let ABILITY_ID_VICIOUS_STRIKES2 = 'A0GH'
+public let ABILITY_ID_VICIOUS_STRIKES_ORB = 'A0GG'
+public let ABILITY_ID_VICIOUS_STRIKES_ACTIVE = 'A0GH'
 public let ABILITY_ID_BEARS_BULWARK = 'A0GE'
 public let ABILITY_ID_WOLFS_HUNGER = 'A0GD'
 public let ABILITY_ID_PROWL = 'A0GF'
@@ -45,11 +45,16 @@ function onCast(int newFormId)
         simError(owner, "You already are in that form.")
         return
 
-    //Make the form abilities in the spellbook permanent so they wont disappear
-    caster.makeAbilityPermanent('A00H', true)
-    caster.makeAbilityPermanent('A0GN', true)
-    caster.makeAbilityPermanent('A0GO', true)
-    caster.makeAbilityPermanent('A0GP', true)
+    //Make the abilities permanent so they wont disappear
+    caster.makeAbilityPermanent(ABILITY_ID_BEAR_FORM_DUMMY, true)
+    caster.makeAbilityPermanent(ABILITY_ID_WOLF_FORM_DUMMY, true)
+    caster.makeAbilityPermanent(ABILITY_ID_PANTHER_FORM_DUMMY, true)
+    caster.makeAbilityPermanent(ABILITY_ID_TIGER_FORM_DUMMY, true)
+    caster.makeAbilityPermanent(ABILITY_ID_VICIOUS_STRIKES_ACTIVE, true)
+    caster.makeAbilityPermanent(ABILITY_ID_VICIOUS_STRIKES_ORB, true)
+    caster.makeAbilityPermanent(ABILITY_ID_WOLFS_HUNGER, true)
+    caster.makeAbilityPermanent(ABILITY_ID_BEARS_BULWARK, true)
+    caster.makeAbilityPermanent(ABILITY_ID_PROWL, true)
 
     //Add / remove bear form ability to transform unit
     var changeAbility = FORM_MAP.get(changeKey)
@@ -60,6 +65,7 @@ function onCast(int newFormId)
     FX.destr()
 
     updateNewFormAbilities(owner, newFormId)
+    caster.setAnimation("stand")
 
     //Make sure new form has meat abilities
     if meatInventoryInstances.has(caster)
@@ -71,26 +77,26 @@ function updateNewFormAbilities(player owner, int newFormId)
             owner.setAbilityAvailable(ABILITY_ID_WOLFS_HUNGER, true)
             owner.setAbilityAvailable(ABILITY_ID_BEARS_BULWARK, false)
             owner.setAbilityAvailable(ABILITY_ID_PROWL, false)
-            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES1, false)
-            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES2, false)
+            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES_ORB, false)
+            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES_ACTIVE, false)
         case FORM_IDS[1]
             owner.setAbilityAvailable(ABILITY_ID_WOLFS_HUNGER, false)
             owner.setAbilityAvailable(ABILITY_ID_BEARS_BULWARK, true)
             owner.setAbilityAvailable(ABILITY_ID_PROWL, false)
-            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES1, false)
-            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES2, false)
+            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES_ORB, false)
+            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES_ACTIVE, false)
         case FORM_IDS[2]
             owner.setAbilityAvailable(ABILITY_ID_WOLFS_HUNGER, false)
             owner.setAbilityAvailable(ABILITY_ID_BEARS_BULWARK, false)
             owner.setAbilityAvailable(ABILITY_ID_PROWL, true)
-            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES1, false)
-            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES2, false)
+            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES_ORB, false)
+            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES_ACTIVE, false)
         case FORM_IDS[3]
             owner.setAbilityAvailable(ABILITY_ID_WOLFS_HUNGER, false)
             owner.setAbilityAvailable(ABILITY_ID_BEARS_BULWARK, false)
             owner.setAbilityAvailable(ABILITY_ID_PROWL, false)
-            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES1, true)
-            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES2, true)
+            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES_ORB, true)
+            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES_ACTIVE, true)
 
 init
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_CAST) ->

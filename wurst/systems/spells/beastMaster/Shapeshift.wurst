@@ -1,5 +1,4 @@
-package ShapeshiftRework
-
+package Shapeshift
 import AbilityObjEditing
 import ObjectIdGenerator
 import ID
@@ -44,6 +43,13 @@ function onCast(int newFormId)
     var owner = caster.getOwner()
     var oldF = caster.getTypeId()
     var changeKey = oldF.toRawCode() + newFormId.toRawCode()
+
+    //Re-issue whatever order we had previously
+    nullTimer() ->
+        let previousOrder = caster.getLastOrder().prev
+        if previousOrder != null and (previousOrder.orderType == OrderType.POINT or previousOrder.orderType == OrderType.TARGET)
+            previousOrder.issue()
+
     if not FORM_MAP.has(changeKey)
         simError(owner, "You already are in that form.")
         return
@@ -79,11 +85,6 @@ function onCast(int newFormId)
             selected.destr()
 
     updateNewFormAbilities(owner, newFormId)
-
-    //Re-issue whatever order we had previously
-    let previousOrder = caster.getLastOrder().prev
-    if previousOrder != null and (previousOrder.orderType == OrderType.POINT or previousOrder.orderType == OrderType.TARGET)
-        previousOrder.issue()
 
     //Make sure new form has meat abilities
     if meatInventoryInstances.has(caster)

@@ -5,7 +5,8 @@ import Assets
 import ClosureEvents
 import ClosuresForItems
 import ClosureTimers
-import ID
+import IsTypeThing
+import Tribe
 
 constant let SPELL_ICON = Icons.bTNSpy
 constant let COOLDOWN = 50.
@@ -40,6 +41,17 @@ constant let TOOLTIP_NORM_FINDSTONE = "|c00ffcc00S|r - Find Stone"
 constant let TOOLTIP_EXT_FINDSTONE = "Pings all nearby stones in the minimap and reveals them for a short duration. Ignores items near enemies."
 constant let TOOLTIP_NORM_FINDMANA = "|c00ffcc00D|r - Find Mana Crystal"
 constant let TOOLTIP_EXT_FINDMANA = "Pings all nearby mana crystals in the minimap and reveals them for a short duration. Ignores items near enemies."
+constant let DUMMY_IDS = ['d000', 'd001', 'd002', 'd003', 'd004', 'd005', 'd006']
+constant let DUMMY_MODELS = ["Doodads\\Ruins\\Plants\\Ruins_Shrub\\Ruins_Shrub1.mdl",
+                             "Doodads\\Felwood\\Props\\FelwoodLogStraight\\FelwoodLogStraight.mdl",
+                             "Doodads\\Underground\\Plants\\ShroomsBlue\\ShroomsBlue.mdl",
+                             "Objects\\InventoryItems\\ThunderLizardEgg\\ThunderLizardEgg.mdl",
+                             "Doodads\\Outland\\Rocks\\RubbleRock\\RubbleRock5.mdl",
+                             "Doodads\\LordaeronSummer\\Rocks\\Lords_Rock\\Lords_Rock6.mdl",
+                             "Doodads\\Cinematic\\EyeOfSargeras\\EyeOfSargeras.mdl"]
+constant let DUMMY_SCALING = [0.80, 0.40, 0.50, 1.50, 0.50, 0.33, 0.25]
+constant let dummyDictionary = new HashMap<integer, integer>()
+public constant let item2radarDummy = new HashMap<widget, unit>()
 
 @compiletime function createFindStone()
     new AbilityDefinitionIllidanChannel(ABILITY_ID_FINDSTONE)
@@ -284,6 +296,37 @@ constant let TOOLTIP_EXT_FINDMANA = "Pings all nearby mana crystals in the minim
     ..presetTooltipNormalExtended(lvl -> "Contains various item radar abilities for more efficient gathering.")
     ..presetSharedSpellCooldown(lvl -> true)
 
+@compiletime function radarDummies()
+    for i = 0 to 6
+        new UnitDefinition(DUMMY_IDS[i], 'hfoo')
+        ..setName("Radar Dummy")
+        ..setModelFile(DUMMY_MODELS[i])
+        ..setScalingValue(DUMMY_SCALING[i])
+        ..setMovementHeight(0)
+        ..setCollisionSize(0.0)
+        ..setSightRadiusDay(0)
+        ..setSightRadiusNight(0)
+        ..setSpeedBase(1)
+        ..setHideMinimapDisplay(true)
+        ..setShadowImageHeight(0.0)
+        ..setShadowImageWidth(0.0)
+        ..setFoodCost(0)
+        ..setNormalAbilities("Aloc,Avul,Aeth")
+        ..setAttacksEnabled(0)
+        ..setIsaBuilding(true)
+
+let radarDummyDeath = CreateTrigger()
+    ..addAction(-> removeRadarDummy(GetTriggerWidget()))
+
+let radarDummyPickup = CreateTrigger()
+    ..registerAnyUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM)
+    ..addAction(-> removeRadarDummy(GetManipulatedItem()))
+
+function removeRadarDummy(widget w)
+    if item2radarDummy.has(w)
+        let dummy = item2radarDummy.getAndRemove(w)
+        dummy.remove()
+
 function onCast(int itemId)
     var caster = GetSpellAbilityUnit()
     var casterPos = caster.getPos()
@@ -305,20 +348,39 @@ function onCast(int itemId)
         range += MAP_MAGIC_RANGE_BONUS
 
     forItemsInMap() i ->
-        if i.getPos().distanceTo(casterPos) < range and i.getTypeId() == itemId and not areHostilesNearItem(owner, i)
-            //Vision
-            var vis = createVision(owner, i.getPos(), 128, true)
-            vis.start()
-            doAfter(REVEAL_DURATION) ->
-                vis.destr()
+        if i.getPos().distanceTo(casterPos) < range and i.getTypeId() == itemId and i.isPickupable()
+            //Fog Dummy
+            if not item2radarDummy.has(i)
+                let dummy = createUnit(players[PLAYER_NEUTRAL_PASSIVE], dummyDictionary.get(i.getTypeId()), i.getPos(), (270.0).asAngleDegrees())
+                dummy.setVertexColor(255, 255, 255, 0)
+                radarDummyDeath.registerDeathEvent(i)
+                item2radarDummy.put(i, dummy)
+                dummy.addAbility('Amrf')
+                dummy.removeAbility('Amrf')
+                let team = Tribe.ofPlayer(owner).getMembers()
+                for teammate in team
+                    if teammate == GetLocalPlayer()
+                        dummy.setVertexColor(255, 255, 255, 255)
+            else
+                let team = Tribe.ofPlayer(owner).getMembers()
+                for teammate in team
+                    if teammate == GetLocalPlayer()
+                        item2radarDummy.get(i).setVertexColor(255, 255, 255, 255)
 
-            //Ping
-            PingMinimapForForceEx(GetPlayersAllies(owner), i.getPos().x, i.getPos().y, 10, bj_MINIMAPPINGSTYLE_SIMPLE, 0, 255, 0)
+            if not areHostilesNearItem(owner, i)
+                //Vision
+                var vis = createVision(owner, i.getPos(), 128, true)
+                vis.start()
+                doAfter(REVEAL_DURATION) ->
+                    vis.destr()
+
+                //Ping
+                PingMinimapForForceEx(GetPlayersAllies(owner), i.getPos().x, i.getPos().y, 10, bj_MINIMAPPINGSTYLE_SIMPLE, 0, 255, 0)
 
 function areHostilesNearItem(player p, item itm) returns bool
     let g = CreateGroup()..enumUnitsInRange(itm.getPos(), 350)
     for u in g
-        if u.getOwner() != playerFromIndex(PLAYER_NEUTRAL_AGGRESSIVE) and u.getOwner().isEnemyOf(p) and (u.isType(UNIT_TYPE_HERO) or u.isType(UNIT_TYPE_STRUCTURE))
+        if (u.getOwner().isEnemyOf(p) and (u.isType(UNIT_TYPE_HERO) or u.isType(UNIT_TYPE_STRUCTURE))) or IsUnitBoss(u)
             g.destr()
             return true
     g.destr()
@@ -333,3 +395,10 @@ init
     registerSpellEffectEvent(ABILITY_ID_FINDCLAYBALL, () -> onCast(ITEM_CLAY_BALL))
     registerSpellEffectEvent(ABILITY_ID_FINDMUSHROOM, () -> onCast(ITEM_MUSHROOM))
     registerSpellEffectEvent(ABILITY_ID_FINDMANA, () -> onCast(ITEM_MANA_CRYSTAL))
+    dummyDictionary.put(ITEM_TINDER, 'd000')
+    dummyDictionary.put(ITEM_STICK, 'd001')
+    dummyDictionary.put(ITEM_MUSHROOM, 'd002')
+    dummyDictionary.put(ITEM_CLAY_BALL, 'd003')
+    dummyDictionary.put(ITEM_FLINT, 'd004')
+    dummyDictionary.put(ITEM_STONE, 'd005')
+    dummyDictionary.put(ITEM_MANA_CRYSTAL, 'd006')

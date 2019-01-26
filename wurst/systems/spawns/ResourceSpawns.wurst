@@ -1,0 +1,146 @@
+package ResourceSpawns
+import ID
+import HashMap
+import LinkedList
+import GameTimer
+import Game
+import Interpolation
+import ErrorHandling
+import TerrainUtils
+
+let itemSpawnInfoMap = new IterableMap<int, ItemSpawnInfo>()
+let islandSpawnList = new LinkedList<IslandSpawner>()
+var gameStartTime = 0.
+
+class ItemSpawnInfo
+    int itemId
+    real initialSpawnWeight
+    real finalSpawnWeight
+    real weightChangeTime
+    int spawnedCount = 0
+    construct(int itemId, real initialSpawnWeight, real finalSpawnWeight, real weightChangeTime)
+        this.itemId = itemId
+        this.initialSpawnWeight = initialSpawnWeight
+        this.finalSpawnWeight = finalSpawnWeight
+        this.weightChangeTime = weightChangeTime
+        itemSpawnInfoMap.put(itemId, this)
+
+    function getTimeAdjustedSpawnWeight() returns real
+        var ratio = max(1, (getElapsedGameTime() - gameStartTime) / this.weightChangeTime)
+        let spawnWeightAdjusted = linear(initialSpawnWeight, finalSpawnWeight, ratio)
+        return spawnWeightAdjusted
+
+class WeightedSpawnRegion
+    rect reg
+    int weight
+    construct(rect reg, int weight)
+        this.reg = reg
+        this.weight = weight
+
+class IslandSpawner
+    private LinkedList<WeightedSpawnRegion> spawnRegionsList = new LinkedList<WeightedSpawnRegion>()
+    int itemsSpawnCount
+    int animalsSpawnCount
+    real totalRegionsWeight = 0
+
+    construct(int itemsSpawnCount, int animalsSpawnCount, LinkedList<WeightedSpawnRegion> spawnRegionsList)
+        this.itemsSpawnCount = itemsSpawnCount
+        this.animalsSpawnCount = animalsSpawnCount
+        this.spawnRegionsList = spawnRegionsList
+        for r in this.spawnRegionsList
+            totalRegionsWeight += r.weight
+        islandSpawnList.push(this)
+
+    function spawnItemFromPool(itempool itemPool)
+        rect spawnRect = pickWeightedSpawnRect()
+        while true
+            vec2 spawnPoint = spawnRect.randomPoint()
+            if spawnPoint.isTerrainLand() and spawnPoint.isTerrainWalkable()
+                PlaceRandomItem(itemPool, spawnPoint.x, spawnPoint.y)
+                break
+
+    function pickWeightedSpawnRect() returns rect
+        real random = GetRandomReal(0, this.totalRegionsWeight)
+        real randomPickTemporary = 0
+        for r in this.spawnRegionsList
+            randomPickTemporary += r.weight
+            if random <= randomPickTemporary
+                return r.reg
+
+        //Should never end up here
+        error("ERROR: pickWeightedSpawnRect returned null!")
+        return null
+
+    ondestroy
+        for r in this.spawnRegionsList
+            destroy r
+        destroy this.spawnRegionsList
+
+public function handleItemSpawning()
+    let itemPool = CreateItemPool()
+    for itm in itemSpawnInfoMap
+        let spawnInfo = itemSpawnInfoMap.get(itm)
+        ItemPoolAddItemType(itemPool, spawnInfo.itemId, spawnInfo.getTimeAdjustedSpawnWeight())
+
+    let spawnedCount = new HashMap<IslandSpawner, int>()
+    while true
+        //Spawn one item on each island until they all reached the max count
+        bool loopDidSpawn = false
+        for island in islandSpawnList
+            //Abruptly stop loop if item limit reached
+            if (udg_ITEM_LIMIT_MODE and udg_ITEM_CURRENT >= udg_ITEM_MAX)
+                loopDidSpawn = false
+                break
+
+            //Spawn item if island-specific spawn count is not yet achieved
+            if not spawnedCount.has(island) or (spawnedCount.get(island) < island.itemsSpawnCount * udg_ITEM_BASE)
+                island.spawnItemFromPool(itemPool)
+                udg_ITEM_CURRENT += 1
+                loopDidSpawn = true
+
+        //Return when all islandSpawners iterated without any spawns (or abrupt stop condition reached)
+        if not loopDidSpawn
+            break
+
+    DestroyItemPool(itemPool)
+
+function initItemSpawnInfo()
+    new ItemSpawnInfo(ITEM_TINDER, 5, .7, 860)
+    new ItemSpawnInfo(ITEM_CLAY_BALL, 1, 1.85, 340)
+    new ItemSpawnInfo(ITEM_STICK, 3, 4.5, 360)
+    new ItemSpawnInfo(ITEM_FLINT, 3, 2, 300)
+    new ItemSpawnInfo(ITEM_MANA_CRYSTAL, 0, 1.6, 384)
+    new ItemSpawnInfo(ITEM_STONE, 1, 3.3, 552)
+    new ItemSpawnInfo(ITEM_MUSHROOM, 0, 1.2, 360)
+    new ItemSpawnInfo(ITEM_MAGIC, 0.25, 0.25, 1)
+
+function initIslandSpawners()
+    let NWSpawns = new LinkedList<WeightedSpawnRegion>()
+    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_1_1, udg_ISLAND1_1))
+    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_1_2, udg_ISLAND1_2))
+    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_1_3, udg_ISLAND1_3))
+    new IslandSpawner(udg_NORTH_LEFT_ITEM, udg_NORTH_LEFT_FOOD, NWSpawns)
+
+    let NESpawns = new LinkedList<WeightedSpawnRegion>()
+    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_2_1, udg_ISLAND2_1))
+    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_2_2, udg_ISLAND2_2))
+    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_2_3, udg_ISLAND2_3))
+    new IslandSpawner(udg_NORTH_RIGHT_ITEM, udg_NORTH_RIGHT_FOOD, NESpawns)
+
+    let SESpawns = new LinkedList<WeightedSpawnRegion>()
+    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_3_1, udg_ISLAND3_1))
+    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_3_2, udg_ISLAND3_2))
+    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_3_3, udg_ISLAND3_3))
+    new IslandSpawner(udg_SOUTH_RIGHT_ITEM, udg_SOUTH_RIGHT_FOOD, SESpawns)
+
+    let SWSpawns = new LinkedList<WeightedSpawnRegion>()
+    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_4_1, udg_ISLAND4_1))
+    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_4_2, udg_ISLAND4_2))
+    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_4_3, udg_ISLAND4_3))
+    new IslandSpawner(udg_SOUTH_LEFT_ITEM, udg_SOUTH_LEFT_FOOD, SWSpawns)
+
+init
+    initItemSpawnInfo()
+    initIslandSpawners()
+    registerGameStartEvent() ->
+        gameStartTime = getElapsedGameTime()

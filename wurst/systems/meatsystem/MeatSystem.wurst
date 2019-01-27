@@ -205,11 +205,11 @@ public class MeatInventory
         //Find an offset position for the meat so items are separated on drop
         var targetPos = ownerUnit.getPos()
         for angleIndex = 0 to 3
-            let meatPos = pos.polarOffset((angleIndex * 90.).fromDeg(), MEAT_DROP_OFFSET_DISTANCE)
+            let meatPos = targetPos.polarOffset((angleIndex * 90.).fromDeg(), MEAT_DROP_OFFSET_DISTANCE)
             if meatPos.isTerrainWalkable()
                 targetPos = meatPos
                 break
-        emptyToGround(pos)
+        emptyToGround(targetPos)
         destroy this
 
     function canPickupMeat() returns bool
@@ -318,10 +318,11 @@ function onTargetOrder()
         and u.isInventoryFull()
         and (meatInventoryInstances.has(u) or isUnitMeatCarrier(u)))
 
+        MeatInventory instance = null
         if meatInventoryInstances.has(u)
-            let instance = meatInventoryInstances.get(u)
+            instance = meatInventoryInstances.get(u)
         else
-            let instance = new MeatInventory(u)
+            instance = new MeatInventory(u)
             meatInventoryInstances.put(u, instance)
 
         let meatCount = instance.carriedMeat.size()

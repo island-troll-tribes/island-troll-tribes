@@ -9,6 +9,7 @@ import ErrorHandling
 import TerrainUtils
 import SpawnRateAdjustment
 import ClosureTimers
+import GameConfig
 import BushSpawns
 import Pool
 import Elk
@@ -68,7 +69,7 @@ class AnimalSpawnInfo
 
 class IslandSpawner
     private constant Pool<rect> spawnRegionsPool = null
-    private Pool<int> unitPool = null
+    private Pool<int> animalPool = null
     private let spawnsPerType = new HashMap<int, int>()
     int itemsSpawnCount
     int animalsSpawnCount
@@ -108,13 +109,13 @@ class IslandSpawner
             this.spawnsPerType.put(spawnedType, this.spawnsPerType.get(spawnedType) + 1)
 
     function spawnAnimalFromPool()
-        if this.unitPool == null
+        if this.animalPool == null
             error("ERROR: spawnAnimalFromPool tried to spawn without having a generated pool!")
             return
 
         let spawnPoint = randomSpawnPoint()
 
-        let id = this.unitPool.get()
+        let id = this.animalPool.get()
         switch id
             case UNIT_ELK
                 new Elk(spawnPoint)
@@ -128,13 +129,13 @@ class IslandSpawner
                 new Panther(spawnPoint)
 
     function generateAnimalPool()
-        if this.unitPool != null
-            destroy this.unitPool
+        if this.animalPool != null
+            destroy this.animalPool
 
-        this.unitPool = new Pool<int>()
+        this.animalPool = new Pool<int>()
         for key in animalSpawnInfoMap
             let animalInfo = animalSpawnInfoMap.get(key)
-            this.unitPool.add(animalInfo.unitId, animalInfo.getTimeAdjustedSpawnWeight())
+            this.animalPool.add(animalInfo.unitId, animalInfo.getTimeAdjustedSpawnWeight() * gameConfig.getHostileSpawnRate())
 
     function generateItemPool()
         /*
@@ -280,8 +281,9 @@ function startSpawnCycle()
 
     //Another loop because 1 spawned fish per area per 240 seconds is hard to cut in half
     doPeriodically(240) fishHawkCallback ->
+        //Delays so these dont happen exactly at the same time as the 120 second interval actions
         doAfter(10) ->
-            gg_trg_add_items_to_plants.execute()
+            addItemsToBushes()
             doAfter(5) ->
                 spawnFishAndHawks()
 

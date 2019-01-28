@@ -32,8 +32,10 @@ init
                     let pos = troll.getPos().polarOffset(troll.getFacingAngle(), 100)
 
                     if idStr.startsWith("UNIT_")
-                        createUnit(owner, id, pos, angle(0))
+                        if createUnit(owner, id, pos, angle(0)) == null
+                            simError(triggerPlayer, "{0} not found".format(idStr))
                     else if idStr.startsWith("ITEM_")
-                        createItem(id, pos)
+                        if createItem(id, pos) == null
+                            simError(triggerPlayer, "{0} not found".format(idStr))
                     else
                         simError(triggerPlayer, "Cannot spawn {0}".format(idStr))

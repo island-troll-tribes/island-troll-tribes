@@ -9,6 +9,7 @@ import ErrorHandling
 import TerrainUtils
 import SpawnRateAdjustment
 import ClosureTimers
+import BushSpawns
 import Pool
 import Elk
 import Panther
@@ -89,7 +90,7 @@ class IslandSpawner
 
         error("ERROR: randomSpawnPoint() returned null!")
         return vec2(0,0)
-    
+
     function spawnItemFromPool()
         if this.itemPool == null
             error("ERROR: spawnItemFromPool tried to spawn without having a generated pool!")
@@ -109,7 +110,7 @@ class IslandSpawner
     function spawnAnimalFromPool()
         if this.unitPool == null
             error("ERROR: spawnAnimalFromPool tried to spawn without having a generated pool!")
-            return  
+            return
 
         let spawnPoint = randomSpawnPoint()
 
@@ -129,7 +130,7 @@ class IslandSpawner
     function generateAnimalPool()
         if this.unitPool != null
             destroy this.unitPool
-            
+
         this.unitPool = new Pool<int>()
         for key in animalSpawnInfoMap
             let animalInfo = animalSpawnInfoMap.get(key)
@@ -198,7 +199,7 @@ public function handleItemSpawning()
             destroy spawnedCount
             destroy spawnLoop //Break
 
-            
+
 public function handleAnimalSpawning()
     for island in islandSpawnList
         island.generateAnimalPool()
@@ -276,9 +277,9 @@ function startSpawnCycle()
         doAfter(5) ->
             handleItemSpawning()
         adjustBaseSpawnrates()
-    
+
     //Another loop because 1 spawned fish per area per 240 seconds is hard to cut in half
-    doPeriodically(240) fishHawkCallback -> 
+    doPeriodically(240) fishHawkCallback ->
         doAfter(10) ->
             gg_trg_add_items_to_plants.execute()
             doAfter(5) ->
@@ -300,7 +301,7 @@ function spawnFishOrHawk(rect spawnRect)
             new GreenFish(spawnPoint)
         else
             new Fish(spawnPoint)
-        
+
 function spawnFishAndHawks()
     doPeriodicallyCounted(ANIMATION_PERIOD * 2, FISH_PER_AREA) fishHawkLoop ->
         spawnFishOrHawk(gg_rct_out_1_1)
@@ -340,10 +341,8 @@ init
                 doAfter(5) ->
                     handleItemSpawning()
                     doAfter(5) ->
-                        gg_trg_add_items_to_plants.execute()
+                        spawnFishAndHawks()
                         doAfter(5) ->
-                            spawnFishAndHawks()
-                            doAfter(5) ->
-                                spawnFishAndHawks()
+                            addItemsToBushes()
 
         startSpawnCycle()

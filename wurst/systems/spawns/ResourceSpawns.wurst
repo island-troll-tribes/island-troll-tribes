@@ -273,10 +273,8 @@ function startSpawnCycle()
     //Another loop because 1 spawned fish per area per 240 seconds is hard to cut in half
     doPeriodically(240) fishHawkCallback ->
         //Delays so these dont happen exactly at the same time as the 120 second interval actions
-        doAfter(10) ->
-            addItemsToBushes()
-            doAfter(5) ->
-                spawnFishAndHawks()
+        doAfter(10, -> addItemsToBushes())
+        doAfter(15, -> spawnFishAndHawks())
 
 function adjustBaseSpawnrates()
     //Replacement for modStats function of the legacy system.
@@ -328,15 +326,10 @@ init
 
         //First spawns. Do twice to retain original amounts after halving the items per spawn and doubling cycle frequency.
         handleAnimalSpawning()
-        doAfter(5) ->
-            handleAnimalSpawning()
-            doAfter(5) ->
-                handleItemSpawning()
-                doAfter(5) ->
-                    handleItemSpawning()
-                    doAfter(5) ->
-                        spawnFishAndHawks()
-                        doAfter(5) ->
-                            addItemsToBushes()
-
+        doAfter(5, -> handleAnimalSpawning())
+        doAfter(10, -> handleAnimalSpawning())
+        doAfter(15, -> handleItemSpawning())
+        doAfter(20, -> handleItemSpawning())
+        doAfter(25, -> spawnFishAndHawks())
+        doAfter(30, -> addItemsToBushes())
         startSpawnCycle()

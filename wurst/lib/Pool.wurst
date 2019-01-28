@@ -3,34 +3,29 @@ import HashMap
 import ErrorHandling
 
 public class Pool<T>
-    var totalWeight = 0.0
-    let options = new IterableMap<T, real>()
+    var totalWeight = 0
+    let options = new IterableMap<T, int>()
 
-    function add(T t, real weight)
+    function add(int weight, T t)
         totalWeight += weight
         options.put(t, weight)
 
-    function add(T t, int weight)
-        let realWeight = weight.toReal()
-        totalWeight += realWeight
-        options.put(t, realWeight)
-
     function add(T t)
-        add(t, 1.0)
+        add(1, t)
 
     function random() returns T
-        var rand = GetRandomReal(0, totalWeight)
+        var rand = GetRandomInt(1, totalWeight)
         let iter = options.iterator()
         for key from iter
             let weight = options.get(key)
             rand -= weight
-            if rand <= 0.001
+            if rand <= 0
                 iter.close()
                 return key
 
         // we shouldn't reach here...
+        error("ERROR: pool.random() returned null!")
         iter.close()
-        error("ERROR: Pool<T>.random() returned null! Rand: " + rand.toString(2) + " totalweight: " + totalWeight.toString(2))
         return null
 
     function remove(T t)
@@ -41,7 +36,7 @@ public class Pool<T>
         totalWeight -= value
         options.remove(t)
 
-    function modify(T t, real weight)
+    function update(int weight, T t)
         if not options.has(t)
             error("Invalid pool access")
 
@@ -49,8 +44,12 @@ public class Pool<T>
         totalWeight -= value
         options.put(t, weight)
 
-    ondestroy
-        destroy options
+    function get(T t) returns int
+        if not options.has(t)
+            error("Invalid pool access")
+
+        return options.get(t)
+
 
 @Test
 function test()

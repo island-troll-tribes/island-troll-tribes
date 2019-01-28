@@ -1,0 +1,53 @@
+package Pool
+import HashMap
+import ErrorHandling
+
+public class Pool<T>
+    var totalWeight = 0.0
+    let options = new IterableMap<T, real>()
+
+    function add(T t, real weight)
+        totalWeight += weight
+        options.put(t, weight)
+
+    function add(T t)
+        add(t, 1.0)
+
+    function get() returns T
+        var rand = GetRandomReal(0, totalWeight)
+        let iter = options.iterator()
+        for key from iter
+            let weight = options.get(key)
+            rand -= weight
+            if rand <= 0
+                iter.close()
+                return key
+        // we shouldn't reach here...
+        iter.close()
+        return null
+
+    function remove(T t)
+        if not options.has(t)
+            error("Invalid pool access")
+
+        let value = options.get(t)
+        totalWeight -= value
+        options.remove(t)
+
+    function modify(T t, real weight)
+        if not options.has(t)
+            error("Invalid pool access")
+
+        let value = options.get(t)
+        totalWeight -= value
+        options.put(t, weight)
+
+@Test
+function test()
+    let pool = new Pool<int>()
+        ..add(1)
+        ..add(2)
+        ..add(3)
+
+    pool.get().assertGreaterThan(0)
+    pool.get().assertLessThan(4)

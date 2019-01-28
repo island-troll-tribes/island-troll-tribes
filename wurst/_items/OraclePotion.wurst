@@ -16,9 +16,8 @@ import ItemObjEditing
 constant let ABILITY_ID = compiletime(ABIL_ID_GEN.next())
 constant let ABILITY_DUMMY_ID = compiletime(ABIL_ID_GEN.next())
 constant let BUFF_ID = compiletime(BUFF_ID_GEN.next())
-constant let BUFF_STR_ID = compiletime(ABIL_ID_GEN.next())
 constant let BUFF_AURA_ID = compiletime(ABIL_ID_GEN.next())
-constant let SPELLBOOK_ABILITY_ID = compiletime(createHiddenSpellbookWithAbilities(toRawCode(ABILITY_ID)))
+constant let SPELLBOOK_ABILITY_ID = compiletime(createHiddenSpellbookWithAbilities("{0},{1}".format(toRawCode(ABILITY_ID), toRawCode(BUFF_AURA_ID))))
 
 constant let SPELL_ICON = "ReplaceableTextures\\CommandButtons\\BTNCharm.blp"
 constant let DURATION = 20.
@@ -102,10 +101,7 @@ function onCast()
     var caster = GetSpellAbilityUnit()
 
     if removalTimers.has(caster)
-        caster.removeAbility(SPELLBOOK_ABILITY_ID)
-        caster.removeAbility(BUFF_AURA_ID)
         removalTimers.getAndRemove(caster).release()
-    caster.addAbility(BUFF_AURA_ID)
     caster.addAbility(SPELLBOOK_ABILITY_ID)
     caster.getOwner().setAbilityAvailable(SPELLBOOK_ABILITY_ID, false)
 

@@ -242,10 +242,12 @@ function initItemSpawnInfo()
 
 function initAnimalSpawnInfo()
     new AnimalSpawnInfo(UNIT_ELK, 10, 10, 0)
-    new AnimalSpawnInfo(UNIT_SNAKE, 1, 1, 0)
-    new AnimalSpawnInfo(UNIT_JUNGLE_WOLF, 2, 2, 0)
-    new AnimalSpawnInfo(UNIT_JUNGLE_BEAR, 1, 1, 0)
-    new AnimalSpawnInfo(UNIT_PANTHER, 1, 1, 0)
+
+    //Hostiles dont spawn during first wave, therefore we have the change time for them
+    new AnimalSpawnInfo(UNIT_SNAKE, 0, 1, 110)
+    new AnimalSpawnInfo(UNIT_JUNGLE_WOLF, 0, 2, 110)
+    new AnimalSpawnInfo(UNIT_JUNGLE_BEAR, 0, 1, 110)
+    new AnimalSpawnInfo(UNIT_PANTHER, 0, 1, 110)
 
 function initIslandSpawners()
     let NWSpawns = new Pool<rect>()
@@ -277,7 +279,7 @@ function startSpawnCycle()
         handleAnimalSpawning()
         doAfter(5) ->
             handleItemSpawning()
-        adjustBaseSpawnrates()
+            adjustBaseSpawnrates()
 
     //Another loop because 1 spawned fish per area per 240 seconds is hard to cut in half
     doPeriodically(240) fishHawkCallback ->
@@ -289,7 +291,7 @@ function startSpawnCycle()
 
 function adjustBaseSpawnrates()
     //Replacement for modStats function of the legacy system.
-    //Dynamically adjust overall item & animal amounts (and specific item type amounts but that is handled by the itemSpawnInfo class now)
+    //Dynamically adjust overall item & animal amounts (and specific item type amounts but thats handles by spawnInfo classes now)
     udg_ITEM_BASE = max(.15,udg_ITEM_BASE-0.2)
     udg_FOOD_BASE = max(.15,udg_FOOD_BASE-0.2)
 

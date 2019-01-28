@@ -10,6 +10,11 @@ public class Pool<T>
         totalWeight += weight
         options.put(t, weight)
 
+    function add(T t, int weight)
+        let realWeight = weight.toReal()
+        totalWeight += realWeight
+        options.put(t, realWeight)
+
     function add(T t)
         add(t, 1.0)
 
@@ -22,8 +27,10 @@ public class Pool<T>
             if rand <= 0
                 iter.close()
                 return key
+        
         // we shouldn't reach here...
         iter.close()
+        error("ERROR: Pool<T>.get() returned null!")
         return null
 
     function remove(T t)

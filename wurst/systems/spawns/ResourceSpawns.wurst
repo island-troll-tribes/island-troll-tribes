@@ -9,10 +9,20 @@ import ErrorHandling
 import TerrainUtils
 import SpawnRateAdjustment
 import ClosureTimers
+import Pool
+import Elk
+import Panther
+import Bear
+import Wolf
+import Snake
+import Hawk
+import GreenFish
+import Fish
 
 let itemSpawnInfoMap = new IterableMap<int, ItemSpawnInfo>()
 let animalSpawnInfoMap = new IterableMap<int, AnimalSpawnInfo>()
 let islandSpawnList = new LinkedList<IslandSpawner>()
+let FISH_PER_AREA = 1
 var gameStartTime = 0.
 
 class ItemSpawnInfo
@@ -20,12 +30,12 @@ class ItemSpawnInfo
     real initialSpawnWeight
     real finalSpawnWeight
     real weightChangeTime
-    construct(int itemId, real initialSpawnWeight, real finalSpawnWeight, real weightChangeTime)
-        this.itemId = itemId
+    construct(int unitId, real initialSpawnWeight, real finalSpawnWeight, real weightChangeTime)
+        this.itemId = unitId
         this.initialSpawnWeight = initialSpawnWeight
         this.finalSpawnWeight = finalSpawnWeight
         this.weightChangeTime = weightChangeTime
-        itemSpawnInfoMap.put(itemId, this)
+        itemSpawnInfoMap.put(unitId, this)
 
     function getTimeAdjustedSpawnWeight() returns real
         if this.weightChangeTime == 0
@@ -55,53 +65,75 @@ class AnimalSpawnInfo
         let spawnWeightAdjusted = linear(initialSpawnWeight, finalSpawnWeight, ratio)
         return spawnWeightAdjusted
 
-class WeightedSpawnRegion
-    rect reg
-    int weight
-    construct(rect reg, int weight)
-        this.reg = reg
-        this.weight = weight
-
 class IslandSpawner
-    private let spawnRegionsList = new LinkedList<WeightedSpawnRegion>()
+    private constant Pool<rect> spawnRegionsPool = null
+    private Pool<int> unitPool = null
     private let spawnsPerType = new HashMap<int, int>()
     int itemsSpawnCount
     int animalsSpawnCount
-    int spawnedTotal = 0
-    itempool itemPool = null
-    real totalRegionsWeight = 0
+    private int itemsSpawnedTotal = 0
+    private itempool itemPool = null
 
-    construct(int itemsSpawnCount, int animalsSpawnCount, LinkedList<WeightedSpawnRegion> spawnRegionsList)
+    construct(int itemsSpawnCount, int animalsSpawnCount, Pool<rect> spawnRegionsPool)
         this.itemsSpawnCount = itemsSpawnCount
         this.animalsSpawnCount = animalsSpawnCount
-        this.spawnRegionsList = spawnRegionsList
-        for r in this.spawnRegionsList
-            totalRegionsWeight += r.weight
+        this.spawnRegionsPool = spawnRegionsPool
         islandSpawnList.push(this)
 
+    function randomSpawnPoint() returns vec2
+        rect spawnRect = this.spawnRegionsPool.get()
+        while true
+            vec2 spawnPoint = spawnRect.randomPoint()
+            if spawnPoint.isTerrainLand() and spawnPoint.isTerrainWalkable()
+                return spawnPoint
+
+        error("ERROR: randomSpawnPoint() returned null!")
+        return vec2(0,0)
+    
     function spawnItemFromPool()
         if this.itemPool == null
             error("ERROR: spawnItemFromPool tried to spawn without having a generated pool!")
             return
 
-        rect spawnRect = pickWeightedSpawnRect()
-        while true
-            vec2 spawnPoint = spawnRect.randomPoint()
-            if spawnPoint.isTerrainLand() and spawnPoint.isTerrainWalkable()
-                let spawnedItem = PlaceRandomItem(itemPool, spawnPoint.x, spawnPoint.y)
+        let spawnPoint = randomSpawnPoint()
+        let spawnedItem = PlaceRandomItem(itemPool, spawnPoint.x, spawnPoint.y)
 
-                //Keep track of spawned total & spawned item type total to balance out spawning
-                this.spawnedTotal += 1
-                let spawnedType = spawnedItem.getTypeId()
-                if not this.spawnsPerType.has(spawnedType)
-                    this.spawnsPerType.put(spawnedType, 1)
-                else
-                    this.spawnsPerType.put(spawnedType, this.spawnsPerType.get(spawnedType) + 1)
-
-                break
+        //Keep track of spawned total & spawned item type total to balance out spawning
+        this.itemsSpawnedTotal += 1
+        let spawnedType = spawnedItem.getTypeId()
+        if not this.spawnsPerType.has(spawnedType)
+            this.spawnsPerType.put(spawnedType, 1)
+        else
+            this.spawnsPerType.put(spawnedType, this.spawnsPerType.get(spawnedType) + 1)
 
     function spawnAnimalFromPool()
-        
+        if this.unitPool == null
+            error("ERROR: spawnAnimalFromPool tried to spawn without having a generated pool!")
+            return  
+
+        let spawnPoint = randomSpawnPoint()
+
+        let id = this.unitPool.get()
+        switch id
+            case UNIT_ELK
+                new Elk(spawnPoint)
+            case UNIT_SNAKE
+                new Snake(spawnPoint)
+            case UNIT_JUNGLE_WOLF
+                new Wolf(spawnPoint)
+            case UNIT_JUNGLE_BEAR
+                new Bear(spawnPoint)
+            case UNIT_PANTHER
+                new Panther(spawnPoint)
+
+    function generateAnimalPool()
+        if this.unitPool != null
+            destroy this.unitPool
+            
+        this.unitPool = new Pool<int>()
+        for key in animalSpawnInfoMap
+            let animalInfo = animalSpawnInfoMap.get(key)
+            this.unitPool.add(animalInfo.unitId, animalInfo.getTimeAdjustedSpawnWeight())
 
     function generateItemPool()
         /*
@@ -123,8 +155,8 @@ class IslandSpawner
             let itemWeight = spawnInfo.getTimeAdjustedSpawnWeight()
             let weightRatio = itemWeight / totalWeight
             var adjustmentRatio = 1.
-            if this.spawnedTotal != 0
-                let itemRatio = this.spawnsPerType.get(itm) / this.spawnedTotal
+            if this.itemsSpawnedTotal != 0
+                let itemRatio = this.spawnsPerType.get(itm) / this.itemsSpawnedTotal
                 let difference = (weightRatio-itemRatio).abs()
                 if itemRatio < weightRatio
                     adjustmentRatio = linear(1, 1.5, max(1, (difference / 0.5)))
@@ -133,22 +165,9 @@ class IslandSpawner
 
             ItemPoolAddItemType(itemPool, spawnInfo.itemId, itemWeight * adjustmentRatio)
 
-    function pickWeightedSpawnRect() returns rect
-        real random = GetRandomReal(0, this.totalRegionsWeight)
-        real randomPickTemporary = 0
-        for r in this.spawnRegionsList
-            randomPickTemporary += r.weight
-            if random <= randomPickTemporary
-                return r.reg
-
-        //Should never end up here
-        error("ERROR: pickWeightedSpawnRect returned null!")
-        return null
-
     ondestroy
-        for r in this.spawnRegionsList
-            destroy r
-        destroy this.spawnRegionsList
+        if this.spawnRegionsPool != null
+            destroy this.spawnRegionsPool
         destroy this.spawnsPerType
 
 public function handleItemSpawning()
@@ -179,6 +198,36 @@ public function handleItemSpawning()
             destroy spawnedCount
             destroy spawnLoop //Break
 
+            
+public function handleAnimalSpawning()
+    for island in islandSpawnList
+        island.generateAnimalPool()
+
+    let spawnedCount = new HashMap<IslandSpawner, int>()
+
+    //Use animation period * 2 since the old system was WAY slower than this
+    doPeriodically(ANIMATION_PERIOD*2) spawnLoop ->
+        //Spawn one animal on each island until they all reached the max count
+        bool loopDidSpawn = false
+        for island in islandSpawnList
+            //Abruptly stop loop if unit limit reached
+            //The check uses udg_item_limit_mode too
+            if (udg_ITEM_LIMIT_MODE and udg_ANIMAL_CURRENT >= udg_ANIMAL_MAX)
+                loopDidSpawn = false
+                break
+
+            //Spawn item if island-specific spawn count is not yet achieved
+            if not spawnedCount.has(island) or (spawnedCount.get(island) < island.animalsSpawnCount * udg_FOOD_BASE)
+                island.spawnAnimalFromPool()
+                udg_ANIMAL_CURRENT += 1
+                spawnedCount.put(island, spawnedCount.get(island) + 1)
+                loopDidSpawn = true
+
+        //Return when all islandSpawners iterated without any spawns (or abrupt stop condition reached)
+        if not loopDidSpawn
+            destroy spawnedCount
+            destroy spawnLoop //Break
+
 function initItemSpawnInfo()
     new ItemSpawnInfo(ITEM_TINDER, 5, .7, 860)
     new ItemSpawnInfo(ITEM_CLAY_BALL, 1, 1.85, 340)
@@ -190,41 +239,50 @@ function initItemSpawnInfo()
     new ItemSpawnInfo(ITEM_MAGIC, 0.25, 0.25, 1)
 
 function initAnimalSpawnInfo()
-    new ItemSpawnInfo(UNIT_ELK, 1, 1, 1)
-    new ItemSpawnInfo(UNIT_SNAKE, 1, 1, 1)
-    new ItemSpawnInfo(UNIT_JUNGLE_WOLF, 2, 2, 1)
-    new ItemSpawnInfo(UNIT_JUNGLE_BEAR, 1, 1, 1)
-    new ItemSpawnInfo(UNIT_PANTHER, 1, 1, 1)
+    new AnimalSpawnInfo(UNIT_ELK, 10, 10, 0)
+    new AnimalSpawnInfo(UNIT_SNAKE, 1, 1, 0)
+    new AnimalSpawnInfo(UNIT_JUNGLE_WOLF, 2, 2, 0)
+    new AnimalSpawnInfo(UNIT_JUNGLE_BEAR, 1, 1, 0)
+    new AnimalSpawnInfo(UNIT_PANTHER, 1, 1, 0)
 
 function initIslandSpawners()
-    let NWSpawns = new LinkedList<WeightedSpawnRegion>()
-    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_1_1, udg_ISLAND1_1))
-    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_1_2, udg_ISLAND1_2))
-    NWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_1_3, udg_ISLAND1_3))
+    let NWSpawns = new Pool<rect>()
+    NWSpawns.add(gg_rct_spawn_area_1_1, udg_ISLAND1_1)
+    NWSpawns.add(gg_rct_spawn_area_1_2, udg_ISLAND1_2)
+    NWSpawns.add(gg_rct_spawn_area_1_3, udg_ISLAND1_3)
     new IslandSpawner(udg_NORTH_LEFT_ITEM, udg_NORTH_LEFT_FOOD, NWSpawns)
 
-    let NESpawns = new LinkedList<WeightedSpawnRegion>()
-    NESpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_2_1, udg_ISLAND2_1))
-    NESpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_2_2, udg_ISLAND2_2))
-    NESpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_2_3, udg_ISLAND2_3))
+    let NESpawns = new Pool<rect>()
+    NESpawns.add(gg_rct_spawn_area_2_1, udg_ISLAND2_1)
+    NESpawns.add(gg_rct_spawn_area_2_2, udg_ISLAND2_2)
+    NESpawns.add(gg_rct_spawn_area_2_3, udg_ISLAND2_3)
     new IslandSpawner(udg_NORTH_RIGHT_ITEM, udg_NORTH_RIGHT_FOOD, NESpawns)
 
-    let SESpawns = new LinkedList<WeightedSpawnRegion>()
-    SESpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_3_1, udg_ISLAND3_1))
-    SESpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_3_2, udg_ISLAND3_2))
-    SESpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_3_3, udg_ISLAND3_3))
+    let SESpawns = new Pool<rect>()
+    SESpawns.add(gg_rct_spawn_area_3_1, udg_ISLAND3_1)
+    SESpawns.add(gg_rct_spawn_area_3_2, udg_ISLAND3_2)
+    SESpawns.add(gg_rct_spawn_area_3_3, udg_ISLAND3_3)
     new IslandSpawner(udg_SOUTH_RIGHT_ITEM, udg_SOUTH_RIGHT_FOOD, SESpawns)
 
-    let SWSpawns = new LinkedList<WeightedSpawnRegion>()
-    SWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_4_1, udg_ISLAND4_1))
-    SWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_4_2, udg_ISLAND4_2))
-    SWSpawns.add(new WeightedSpawnRegion(gg_rct_spawn_area_4_3, udg_ISLAND4_3))
+    let SWSpawns = new Pool<rect>()
+    SWSpawns.add(gg_rct_spawn_area_4_1, udg_ISLAND4_1)
+    SWSpawns.add(gg_rct_spawn_area_4_2, udg_ISLAND4_2)
+    SWSpawns.add(gg_rct_spawn_area_4_3, udg_ISLAND4_3)
     new IslandSpawner(udg_SOUTH_LEFT_ITEM, udg_SOUTH_LEFT_FOOD, SWSpawns)
 
 function startSpawnCycle()
     doPeriodically(120) spawnerCallback ->
-        handleItemSpawning()
+        handleAnimalSpawning()
+        doAfter(5) ->
+            handleItemSpawning()
         adjustBaseSpawnrates()
+    
+    //Another loop because 1 spawned fish per area per 240 seconds is hard to cut in half
+    doPeriodically(240) fishHawkCallback -> 
+        doAfter(10) ->
+            gg_trg_add_items_to_plants.execute()
+            doAfter(5) ->
+                spawnFishAndHawks()
 
 function adjustBaseSpawnrates()
     //Replacement for modStats function of the legacy system.
@@ -232,23 +290,60 @@ function adjustBaseSpawnrates()
     udg_ITEM_BASE = max(.15,udg_ITEM_BASE-0.2)
     udg_FOOD_BASE = max(.15,udg_FOOD_BASE-0.2)
 
-    // This part actually doesnt do anythin since udg_BADDIE_BASE is always 1.00 - Keeping it for now to be safe
-    udg_PANTHER_RATE = R2I(1*udg_BADDIE_BASE)
-    udg_BEAR_RATE = R2I(1*udg_BADDIE_BASE)
-    udg_SNAKE_RATE = R2I(1*udg_BADDIE_BASE)
-    udg_WOLF_RATE = R2I(2*udg_BADDIE_BASE)
+function spawnFishOrHawk(rect spawnRect)
+    if udg_ITEM_LIMIT_MODE and udg_FISH_CURRENT < udg_FISH_MAX
+        let rand = GetRandomInt(1, 13)
+        let spawnPoint = spawnRect.randomPoint()
+        if rand <= 4
+            new Hawk(spawnPoint)
+        else if rand <= 6
+            new GreenFish(spawnPoint)
+        else
+            new Fish(spawnPoint)
+        
+function spawnFishAndHawks()
+    doPeriodicallyCounted(ANIMATION_PERIOD * 2, FISH_PER_AREA) fishHawkLoop ->
+        spawnFishOrHawk(gg_rct_out_1_1)
+        spawnFishOrHawk(gg_rct_out_3_2)
+        spawnFishOrHawk(gg_rct_out_1_2)
+        spawnFishOrHawk(gg_rct_out_5_2)
+        spawnFishOrHawk(gg_rct_out_2_2)
+        spawnFishOrHawk(gg_rct_out_3_1)
+        spawnFishOrHawk(gg_rct_out_4_1)
+        spawnFishOrHawk(gg_rct_out_4_2)
+        spawnFishOrHawk(gg_rct_our_5_1)
+        spawnFishOrHawk(gg_rct_out_2_1)
+        spawnFishOrHawk(gg_rct_fish_new_2)
+        spawnFishOrHawk(gg_rct_fish_new_3)
+        spawnFishOrHawk(gg_rct_fish_new_1)
+        spawnFishOrHawk(gg_rct_fish_new_4)
+        spawnFishOrHawk(gg_rct_fish_new_6)
+        spawnFishOrHawk(gg_rct_fish_new_5)
+        spawnFishOrHawk(gg_rct_fish_new_7)
+        spawnFishOrHawk(gg_rct_fish_new_8)
 
 init
     initIslandWeights()
     initSpawnRegionWeights()
     initItemSpawnInfo()
+    initAnimalSpawnInfo()
     initIslandSpawners()
     registerGameStartEvent() ->
         gameStartTime = getElapsedGameTime()
 
-        //First spawns. Do twice to retain original amounts after  halving the items per spawn and doubling cycle frequency.
-        handleItemSpawning()
-        doAfter(10) ->
-            handleItemSpawning()
+        //First spawns. Do twice to retain original amounts after halving the items per spawn and doubling cycle frequency.
+        handleAnimalSpawning()
+        doAfter(5) ->
+            handleAnimalSpawning()
+            doAfter(5) ->
+                handleItemSpawning()
+                doAfter(5) ->
+                    handleItemSpawning()
+                    doAfter(5) ->
+                        gg_trg_add_items_to_plants.execute()
+                        doAfter(5) ->
+                            spawnFishAndHawks()
+                            doAfter(5) ->
+                                spawnFishAndHawks()
 
         startSpawnCycle()

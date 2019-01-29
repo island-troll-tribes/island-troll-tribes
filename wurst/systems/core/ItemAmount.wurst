@@ -1,0 +1,29 @@
+package ItemAmount
+
+import ClosureEvents
+import StackNSplit
+
+function onDrop(item itm)
+    if isItemStackable(itm.getTypeId())
+        var name = itm.getName()
+        int foundIndex = name.lastIndexOf(" (x")
+        if foundIndex != -1
+            name = name.substring(0, foundIndex)
+
+        name = name + " (x" + itm.getCharges().toString() + ")"
+        itm.setName(name)
+
+function onPickup(item itm)
+    if isItemStackable(itm.getTypeId())
+        var name = itm.getName()
+        int foundIndex = name.lastIndexOf(" (x")
+        if foundIndex != -1
+            name = name.substring(0, foundIndex)
+            itm.setName(name)
+
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
+        onPickup(GetManipulatedItem())
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DROP_ITEM) ->
+        onDrop(GetManipulatedItem())

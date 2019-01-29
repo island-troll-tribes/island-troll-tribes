@@ -1,7 +1,7 @@
 package Lodash
 import LinkedList
 import HashMap
-import ClosureTimers
+import HashSet
 
 public class OwnedLinkedList<T> extends LinkedList<T>
 
@@ -17,30 +17,21 @@ public abstract class Callable
         if cleanup
             destroy this
 
-    function destroyNextTick()
-        nullTimer(-> destroy this)
+public abstract class EmptyVoidFunction extends Callable
+    static function owned(EmptyVoidFunction func) returns EmptyVoidFunction
+        return func..own()
 
+    abstract function call()
 
+public abstract class EmptyFunction<T> extends Callable
+    static function owned<T>(EmptyFunction<T> func) returns EmptyFunction<T>
+        return func..own()
 
-public function equals<T>(LinkedList<T> a, LinkedList<T> b) returns bool
-    if a == null or b == null or a.size() != b.size()
-        return false
-    let iter = b.staticItr()
-    for elemA in a
-        let elemB = iter.next()
-        if elemA != elemB
-            return false
-    return true
-
-public function LinkedList<T>.equals<T>(LinkedList<T> b) returns bool
-    return equals(this, b)
+    abstract function call() returns T
 
 public abstract class VoidFunction<T> extends Callable
     static function owned<T>(VoidFunction<T> func) returns VoidFunction<T>
         return func..own()
-
-    static function autoDestroy<T>(VoidFunction<T> func) returns VoidFunction<T>
-        return func..destroyNextTick()
 
     abstract function call(T t)
 
@@ -48,17 +39,11 @@ public abstract class Function<S, R> extends Callable
     static function owned<S, R>(Function<S, R> func) returns Function<S, R>
         return func..own()
 
-    static function autoDestroy<S, R>(Function<S, R> func) returns Function<S, R>
-        return func..destroyNextTick()
-
     abstract function call(S s) returns R
 
 public abstract class Predicate<S> extends Callable
     static function owned<S>(Predicate<S> func) returns Predicate<S>
         return func..own()
-
-    static function autoDestroy<S, R>(Function<S, R> func) returns Function<S, R>
-        return func..destroyNextTick()
 
     abstract function call(S s) returns bool
 
@@ -66,22 +51,19 @@ public abstract class BiFunction<S, T, R> extends Callable
     static function owned<S, T, R>(BiFunction<S, T, R> func) returns BiFunction<S, T, R>
         return func..own()
 
-    static function autoDestroy<S, T, R>(BiFunction<S, T, R> func) returns BiFunction<S, T, R>
-        return func..destroyNextTick()
-
     abstract function call(S s, T t) returns R
 
 public abstract class TriFunction<S, T, U, R> extends Callable
     static function owned<S, T, U, R>(TriFunction<S, T, U, R> func) returns TriFunction<S, T, U, R>
         return func..own()
 
-    static function autoDestroy<S, T, U, R>(TriFunction<S, T, U, R> func) returns TriFunction<S, T, U, R>
-        return func..destroyNextTick()
-
     abstract function call(S s, T t, U u) returns R
 
-public function LinkedList<T>.destroyNextTick<T>()
-    nullTimer(-> destroy this)
+public abstract class QuadFunction<S, T, U, V, R> extends Callable
+    static function owned<S, T, U, V, R>(QuadFunction<S, T, U, V, R> func) returns QuadFunction<S, T, U, V, R>
+        return func..own()
+
+    abstract function call(S s, T t, U u, V v) returns R
 
 public function LinkedList<T>.maybeFree<T>()
     if not this instanceof OwnedLinkedList<T>
@@ -96,6 +78,19 @@ public function asOwnedList<T>(vararg T ts) returns OwnedLinkedList<T>
     for t in ts
         ll.add(t)
     return ll
+
+public function equals<T>(LinkedList<T> a, LinkedList<T> b) returns bool
+    if a == null or b == null or a.size() != b.size()
+        return false
+    let iter = b.staticItr()
+    for elemA in a
+        let elemB = iter.next()
+        if elemA != elemB
+            return false
+    return true
+
+public function LinkedList<T>.equals<T>(LinkedList<T> b) returns bool
+    return equals(this, b)
 
 public function takeWhile<T>(TriFunction<T, int, LinkedList<T>, bool> predicate, LinkedList<T> list) returns LinkedList<T>
     let result = new LinkedList<T>()
@@ -161,6 +156,22 @@ public function foldl<Q, T>(Q startValue, BiFunction<T, Q, Q> transform) returns
 
 public function LinkedList<T>.foldl<Q, T>(Q startValue, BiFunction<T, Q, Q> transform) returns Q
     return foldl(startValue, transform, this)
+
+public function foldr<Q, T>(Q startValue, BiFunction<T, Q, Q> transform, LinkedList<T> list) returns Q
+    var result = startValue
+    let iter = list.backiterator()
+    for elem from iter
+        result = transform.call(elem, result)
+    iter.close()
+    transform.maybeFree()
+    list.maybeFree()
+    return result
+
+public function foldr<Q, T>(Q startValue, BiFunction<T, Q, Q> transform) returns Function<LinkedList<T>, Q>
+    return list -> foldr(startValue, transform, list)
+
+public function LinkedList<T>.foldr<Q, T>(Q startValue, BiFunction<T, Q, Q> transform) returns Q
+    return foldr(startValue, transform, this)
 
 public function every<T>(Predicate<T> predicate, LinkedList<T> list) returns bool
     let iter = list.iterator()
@@ -304,6 +315,342 @@ public function each<T>(VoidFunction<T> func, LinkedList<T> list)
 
 public function LinkedList<T>.each<T>(VoidFunction<T> func)
     each(func, this)
+
+public function zipObject<A, B>(LinkedList<A> a, LinkedList<B> b) returns IterableMap<A, B>
+    let map = new IterableMap<A, B>()
+    let iterA = a.iterator()
+    let iterB = b.iterator()
+    while iterA.hasNext()
+        let val =  iterB.hasNext()
+            ? iterB.next()
+            : null
+        map.put(iterA.next(), val)
+    iterA.close()
+    iterB.close()
+    a.maybeFree()
+    b.maybeFree()
+    return map
+
+public function LinkedList<A>.zipObject<A, B>(LinkedList<B> lst) returns IterableMap<A, B>
+    return zipObject(this, lst)
+
+public class Pair<A, B>
+    A a
+    B b
+
+    construct(A a, B b)
+        this.a = a
+        this.b = b
+
+public function pair<A, B>(A a, B b) returns Pair<A, B>
+    return new Pair(a, b)
+
+public function zip<A, B>(LinkedList<A> a, LinkedList<B> b) returns LinkedList<Pair<A, B>>
+    let lst = new LinkedList<Pair<A, B>>()
+    let iterA = a.iterator()
+    let iterB = b.iterator()
+    while iterA.hasNext() and iterB.hasNext()
+        lst.add(pair(iterA.next(), iterB.next()))
+    iterA.close()
+    iterB.close()
+    a.maybeFree()
+    b.maybeFree()
+    return lst
+
+public function LinkedList<A>.zip<A, B>(LinkedList<B> lst) returns LinkedList<Pair<A, B>>
+    return zip(this, lst)
+
+public class Range
+    let incr = 1
+    let start = 0
+    let finish = INT_MAX
+    var curr = start
+
+    construct()
+
+    construct(int start, int finish, int incr)
+        this.start = start
+        this.finish = finish
+        this.incr = incr
+        curr = start
+
+    function hasNext() returns bool
+        return incr > 0 ? curr < finish : curr > finish
+
+    function next() returns int
+        let ret = curr
+        curr += incr
+        return ret
+
+    function close()
+        destroy this
+
+    function iterator() returns Range
+        return new Range(start, finish, incr)
+
+    function toList() returns LinkedList<int>
+        let lst = new LinkedList<int>()
+        for x from this
+            lst.add(x)
+        close()
+        return lst
+
+public function range(int min, int max, int incr) returns Range
+    return new Range(min, max, incr)
+
+public function range(int min, int max) returns Range
+    return new Range(min, max, 1)
+
+public function range(int max) returns Range
+    return new Range(0, max, 1)
+
+public function range() returns Range
+    return new Range()
+
+public function rangeStep(int max, int incr) returns Range
+    return new Range(0, max, incr)
+
+public function uniq<T>(LinkedList<T> lst) returns LinkedList<T>
+    let stored = new HashSet<T>()
+    let uniqLst = new LinkedList<T>()
+    let iter = lst.iterator()
+    for elem from iter
+        if not stored.has(elem)
+            uniqLst.push(elem)
+            stored.add(elem)
+    iter.close()
+    lst.maybeFree()
+    destroy stored
+    return uniqLst
+
+public function LinkedList<T>.uniq<T>() returns LinkedList<T>
+    return uniq(this)
+
+public function uniqBy<T, R>(LinkedList<T> lst, Function<T, R> func) returns LinkedList<T>
+    let stored = new HashSet<R>()
+    let uniqLst = new LinkedList<T>()
+    let iter = lst.iterator()
+    for elem from iter
+        let res = func.call(elem)
+        if not stored.has(res)
+            stored.add(res)
+            uniqLst.push(elem)
+    iter.close()
+    lst.maybeFree()
+    func.maybeFree()
+    destroy stored
+    return uniqLst
+
+public function LinkedList<T>.uniqBy<T, R>(Function<T, R> func) returns LinkedList<T>
+    return uniqBy(this, func)
+
+public function union<T>(LinkedList<T> a, LinkedList<T> b) returns LinkedList<T>
+    let stored = new HashSet<T>()
+    let lst = new LinkedList<T>()
+    let iterA = a.iterator()
+    let iterB = b.iterator()
+    for elem from iterA
+        if not stored.has(elem)
+            stored.add(elem)
+            lst.push(elem)
+    for elem from iterB
+        if not stored.has(elem)
+            stored.add(elem)
+            lst.push(elem)
+    iterA.close()
+    iterB.close()
+    a.maybeFree()
+    b.maybeFree()
+    destroy stored
+    return lst
+
+public function LinkedList<T>.union<T>(LinkedList<T> lst) returns LinkedList<T>
+    return union(this, lst)
+
+public function intersection<T>(LinkedList<T> a, LinkedList<T> b) returns LinkedList<T>
+    let stored = new HashSet<T>()
+    let lst = new LinkedList<T>()
+    let iterA = a.iterator()
+    let iterB = b.iterator()
+    for elem from iterA
+        stored.add(elem)
+    for elem from iterB
+        if stored.has(elem)
+            lst.push(elem)
+    iterA.close()
+    iterB.close()
+    a.maybeFree()
+    b.maybeFree()
+    destroy stored
+    return lst
+
+public function LinkedList<T>.intersection<T>(LinkedList<T> lst) returns LinkedList<T>
+    return intersection(this, lst)
+
+public function difference<T>(LinkedList<T> a, LinkedList<T> b) returns LinkedList<T>
+    let store = new HashSet<T>()
+    let lst = new LinkedList<T>()
+    let iterA = a.iterator()
+    let iterB = b.iterator()
+    for elem from iterB
+        store.add(elem)
+    for elem from iterA
+        if not store.has(elem)
+            lst.push(elem)
+    iterA.close()
+    iterB.close()
+    a.maybeFree()
+    b.maybeFree()
+    destroy store
+    return lst
+
+public function LinkedList<T>.difference<T>(LinkedList<T> lst) returns LinkedList<T>
+    return difference(this, lst)
+
+public function indexBy<T, R>(LinkedList<T> lst, Function<T, R> idx) returns IterableMap<R, T>
+    let map = new IterableMap<R, T>()
+    let iter = lst.iterator()
+    for elem from iter
+        map.put(idx.call(elem), elem)
+    iter.close()
+    lst.maybeFree()
+    idx.maybeFree()
+    return map
+
+public function LinkedList<T>.indexBy<T, R>(Function<T, R> idx) returns IterableMap<R, T>
+    return indexBy(this, idx)
+
+public function groupBy<T, R>(LinkedList<T> lst, Function<T, R> idx) returns IterableMap<R, LinkedList<T>>
+    let map = new IterableMap<R, LinkedList<T>>()
+    let iter = lst.iterator()
+    for elem from iter
+        let val = idx.call(elem)
+        if not map.has(val)
+            map.put(val, new LinkedList<T>())
+        map.get(val).add(elem)
+    iter.close()
+    lst.maybeFree()
+    idx.maybeFree()
+    return map
+
+public function LinkedList<T>.groupBy<T, R>(Function<T, R> idx) returns IterableMap<R, LinkedList<T>>
+    return groupBy(this, idx)
+
+public function map<S, T, R>(IterableMap<S, T> map, BiFunction<S, T, R> transform) returns LinkedList<R>
+    let res = new LinkedList<R>()
+    let iter = map.iterator()
+    for key from iter
+        let val = transform.call(key, map.get(key))
+        res.add(val)
+    iter.close()
+    map.maybeFree()
+    return res
+
+public function IterableMap<S, T>.map<S, T, R>(BiFunction<S, T, R> transform) returns LinkedList<R>
+    return map(this, transform)
+
+public function mapValues<S, T, R>(IterableMap<S, T> map, BiFunction<S, T, R> transform) returns IterableMap<S, R>
+    let res = new IterableMap<S, R>()
+    let iter = map.iterator()
+    for key from iter
+        let val = transform.call(key, map.get(key))
+        res.put(key, val)
+    iter.close()
+    map.maybeFree()
+    return res
+
+public function IterableMap<S, T>.mapValues<S, T, R>(BiFunction<S, T, R> transform) returns IterableMap<S, R>
+    return mapValues(this, transform)
+
+public function mapKeys<S, T, R>(IterableMap<S, T> map, BiFunction<S, T, R> transform) returns IterableMap<R, T>
+    let res = new IterableMap<R, T>()
+    let iter = map.iterator()
+    for key from iter
+        let val = map.get(key)
+        let newKey = transform.call(key, map.get(key))
+        res.put(newKey, val)
+    iter.close()
+    map.maybeFree()
+    return res
+
+public function IterableMap<S, T>.mapKeys<S, T, R>(BiFunction<S, T, R> transform) returns IterableMap<R, T>
+    return mapKeys(this, transform)
+
+public function toPairs<S, T>(IterableMap<S, T> map) returns LinkedList<Pair<S, T>>
+    let lst = new LinkedList<Pair<S, T>>()
+    let iter = map.iterator()
+    for key from iter
+        lst.add(pair(key, map.get(key)))
+    iter.close()
+    map.maybeFree()
+    return lst
+
+public function IterableMap<S, T>.toPairs<S, T>() returns LinkedList<Pair<S, T>>
+    return toPairs(this)
+
+public function fromPairs<S, T>(LinkedList<Pair<S, T>> lst) returns IterableMap<S, T>
+    let map = new IterableMap<S, T>()
+    let iter = lst.iterator()
+    for elem from iter
+        map.put(elem.a, elem.b)
+    iter.close()
+    lst.maybeFree()
+    return map
+
+public function LinkedList<Pair<S, T>>.fromPairs<S, T>() returns IterableMap<S, T>
+    return fromPairs(this)
+
+public function chunk<T>(LinkedList<T> lst, int size) returns LinkedList<LinkedList<T>>
+    let chunked = new LinkedList<LinkedList<T>>()
+    let iter = lst.iterator()
+    while iter.hasNext()
+        let chunk = new LinkedList<T>()
+        for i = 0 to size - 1
+            chunk.add(iter.next())
+            if not iter.hasNext()
+                break
+        chunked.add(chunk)
+    iter.close()
+    lst.maybeFree()
+    return chunked
+
+public function LinkedList<T>.chunk<T>(int size) returns LinkedList<LinkedList<T>>
+    return chunk(this, size)
+
+public function pull<T>(LinkedList<T> lst, T pull) returns LinkedList<T>
+    let ret = lst.copy()
+    let iter = lst.iterator()
+    for elem from iter
+        if elem == pull
+            iter.remove()
+    iter.close()
+    lst.maybeFree()
+    return ret
+
+public function LinkedList<T>.pull<T>(T pull) returns LinkedList<T>
+    return pull(this, pull)
+
+@Test
+function testIntersection()
+    let lstA = asOwnedList(1, 2, 3)
+    let lstB = asOwnedList(2, 3, 4)
+    intersection(lstA, lstB).equals(asList(2, 3)).assertTrue()
+
+@Test
+function testRange()
+    let range = range(10)
+    range.hasNext().assertTrue()
+    range.next().assertEquals(0)
+    range.next().assertEquals(1)
+    range.next().assertEquals(2)
+    range.next().assertEquals(3)
+    range.next().assertEquals(4)
+    range.next().assertEquals(5)
+    range.next().assertEquals(6)
+    range.next().assertEquals(7)
+    range.next().assertEquals(8)
+    range.next().assertEquals(9)
+    range.hasNext().assertFalse()
 
 @Test
 public function testMapValues()

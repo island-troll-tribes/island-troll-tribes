@@ -20,9 +20,12 @@ import Snake
 import Hawk
 import GreenFish
 import Fish
+import Lodash
+import UnitEntity
 
 let itemSpawnInfoMap = new IterableMap<int, SpawnInfo>()
 let animalSpawnInfoMap = new IterableMap<int, SpawnInfo>()
+let animalSpawnFunctions = new HashMap<int, BiFunction<real, real, UnitEntity>>()
 let islandSpawnList = new LinkedList<IslandSpawner>()
 let FISH_PER_AREA = 1
 var gameStartTime = 0.
@@ -58,7 +61,7 @@ class ItemSpawnInfo extends SpawnInfo
 
 class IslandSpawner
     private constant Pool<rect> spawnRegionsPool = null
-    private Pool<int> animalPool = null
+    private Pool<BiFunction<real, real, UnitEntity>> animalPool = null
     private let spawnsPerType = new HashMap<int, int>()
     int itemsSpawnCount
     int animalsSpawnCount
@@ -103,28 +106,17 @@ class IslandSpawner
             return
 
         let spawnPoint = randomSpawnPoint()
-
-        let id = this.animalPool.random()
-        switch id
-            case UNIT_ELK
-                new Elk(spawnPoint)
-            case UNIT_SNAKE
-                new Snake(spawnPoint)
-            case UNIT_JUNGLE_WOLF
-                new Wolf(spawnPoint)
-            case UNIT_JUNGLE_BEAR
-                new Bear(spawnPoint)
-            case UNIT_PANTHER
-                new Panther(spawnPoint)
+        let spawnFunc = this.animalPool.random()
+        spawnFunc.call(spawnPoint.x, spawnPoint.y)
 
     function generateAnimalPool()
         if this.animalPool != null
             destroy this.animalPool
 
-        this.animalPool = new Pool<int>()
-        for key in animalSpawnInfoMap
-            let spawnInfo = animalSpawnInfoMap.get(key)
-            this.animalPool.add((spawnInfo.getTimeAdjustedSpawnWeight() * gameConfig.getHostileSpawnRate()).round(), spawnInfo.id)
+        this.animalPool = new Pool<BiFunction<real, real, UnitEntity>>
+        for id in animalSpawnInfoMap
+            let spawnInfo = animalSpawnInfoMap.get(id)
+            this.animalPool.add((spawnInfo.getTimeAdjustedSpawnWeight() * gameConfig.getHostileSpawnRate()).round(), animalSpawnFunctions.get(id))
 
     function generateItemPool()
         /*
@@ -238,6 +230,12 @@ function initAnimalSpawnInfo()
     new AnimalSpawnInfo(UNIT_JUNGLE_BEAR, 0, 100, 115)
     new AnimalSpawnInfo(UNIT_PANTHER, 0, 100, 115)
 
+    animalSpawnFunctions.put(UNIT_ELK, (x, y) -> new Elk(vec2(x,y)))
+    animalSpawnFunctions.put(UNIT_SNAKE, (x, y) -> new Snake(vec2(x,y)))
+    animalSpawnFunctions.put(UNIT_JUNGLE_WOLF, (x, y) -> new Wolf(vec2(x,y)))
+    animalSpawnFunctions.put(UNIT_JUNGLE_BEAR, (x, y) -> new Bear(vec2(x,y)))
+    animalSpawnFunctions.put(UNIT_PANTHER, (x, y) -> new Panther(vec2(x,y)))
+
 function initIslandSpawners()
     let NWSpawns = new Pool<rect>()
     NWSpawns.add(udg_ISLAND1_1, gg_rct_spawn_area_1_1)
@@ -321,6 +319,7 @@ init
     initItemSpawnInfo()
     initAnimalSpawnInfo()
     initIslandSpawners()
+
     registerGameStartEvent() ->
         gameStartTime = getElapsedGameTime()
 

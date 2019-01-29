@@ -54,21 +54,20 @@ public class TradeShipSupervisor
             return
         if GetIssuedOrderId() != Orders.smart and GetIssuedOrderId() != Orders.move
             return
+        this.orderListenerEnabled = false
         switch state
             case MOVING
                 let orderId = GetIssuedOrderId()
                 let targetPos = getOrderPos()
                 let nextStopPos = nextStop.getPos()
                 if orderId != Orders.move or targetPos.distanceToSq(nextStopPos) > 10000.0
-                    this.orderListenerEnabled = false
                     ship.issuePointOrder("move", nextStopPos)
-                    this.orderListenerEnabled = true
             case STOPPED
-                this.orderListenerEnabled = false
                 ship.issueImmediateOrder("stop")
-                this.orderListenerEnabled = true
             case EXITED
                 skip
+        this.orderListenerEnabled = true
+
 
     function getState() returns TradeShipSupervisorState
         return state

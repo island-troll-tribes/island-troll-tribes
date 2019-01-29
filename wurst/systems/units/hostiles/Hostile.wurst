@@ -1,13 +1,15 @@
 package Hostile
-import ID
 import LinkedList
 import UnitEntity
-import Lodash
-import GeometryUtils
+import ExpiringRawMeat
+import TerrainUtils
 import ClosureTimers
 
-public function createCorpse(player p, int unitId, vec2 pos, angle facing) returns unit
-    return CreateCorpse(p, unitId, pos.x, pos.y, facing.degrees())
+public let MEAT_DROP_OFFSET_DISTANCE = 85.
+
+public function spawnRawMeat(vec2 pos, int count)
+    for i = 1 to count
+        new ExpiringRawMeat(pos, MEAT_EXPIRATION_DEFAULT_DURATION)
 
 public abstract class Hostile extends UnitEntity
     construct(unit whichUnit)
@@ -32,9 +34,15 @@ public abstract class Hostile extends UnitEntity
         let pos = getPos()
         let numCorpses = (getNumCorpses() * udg_FOOD_FOR_KILL_PROPORTION).round()
 
-        //Smooth spawn loot to avoid lag/desyncs
-        doPeriodicallyCounted(ANIMATION_PERIOD, numCorpses) cb ->
-            createCorpse(players[PLAYER_NEUTRAL_AGGRESSIVE], UNIT_MEAT, pos, randomAngle())
+        //Find an offset position for the meat so items are separated on drop
+        for angleIndex = 0 to 3
+            let meatPos = pos.polarOffset((angleIndex * 90.).fromDeg(), MEAT_DROP_OFFSET_DISTANCE)
+            if meatPos.isTerrainWalkable()
+                spawnRawMeat(meatPos, numCorpses)
+                break
+            else if angleIndex == 3
+                spawnRawMeat(pos, numCorpses)
+                break
 
         let drops = getDrops()
         doAfter(ANIMATION_PERIOD * numCorpses) ->

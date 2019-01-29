@@ -1,7 +1,9 @@
 package HydraSpawn
 import RegisterEvents
 import AncientHydra
+import ClosuresForItems
 import ID
+import LinkedList
 
 
 constant let hydraAltarSfx = "Units\\NightElf\\Wisp\\WispExplode.mdl"
@@ -38,18 +40,20 @@ function maybeSummonHydra()
         default
             return
 
-    let meats = CreateGroup()..enumUnitsInRange(altar.getPos(), 600, Filter(-> begin
-        return GetFilterUnit().getTypeId() == UNIT_MEAT
-    end))
-    let count = meats.size()
+    let meats = new LinkedList<item>()
+    forItemsInMap() itm ->
+        if itm.getTypeId() == ITEM_RAW_MEAT and itm.getPos().distanceToSq(altar.getPos()) <= 600*600
+            meats.push(itm)
 
-    if count < 4
-        meats.destr()
+    if meats.size() < 4
+        destroy meats
         return
 
-    for meat from meats
+    for meat in meats
         createItem(ITEM_COOKED_MEAT, meat.getPos())
         meat.remove()
+
+    destroy meats
 
     mushroom.remove()
     riverRoot.remove()

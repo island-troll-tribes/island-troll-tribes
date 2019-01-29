@@ -54,6 +54,8 @@ public class TradeShipSupervisor
             return
         if GetIssuedOrderId() != Orders.smart and GetIssuedOrderId() != Orders.move
             return
+
+        this.orderListenerEnabled = false
         switch state
             case MOVING
                 let orderId = GetIssuedOrderId()
@@ -69,6 +71,7 @@ public class TradeShipSupervisor
                 this.orderListenerEnabled = true
             case EXITED
                 skip
+        this.orderListenerEnabled = true
 
     function getState() returns TradeShipSupervisorState
         return state
@@ -89,6 +92,8 @@ public class TradeShipSupervisor
         this.orderListenerEnabled = true
         destroyCallback()
 
+        //Possibly deprecated now that we have an order listener to stop controlling the boat
+        //its here just in case make sure nothing mysterious can stop the boats
         callback = doPeriodically(1.0) cb ->
             this.orderListenerEnabled = false
             ship.issuePointOrder("move", nextStop.getPos())

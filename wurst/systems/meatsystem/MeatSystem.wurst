@@ -34,7 +34,7 @@ let ICON_PATHS_DROPMEAT = [ "Unload_1.tga",
                             "Unload_8.tga"]
 
 let SMART_PICKUP_RANGE = 150.0
-let AOE_PICKUP_RADIUS = 200.
+let AOE_PICKUP_RADIUS = 250.
 public IterableMap<unit, MeatInventory> meatInventoryInstances = new IterableMap<unit, MeatInventory>()
 
 @compiletime function createRawMeatObject()
@@ -167,12 +167,7 @@ public class MeatInventory
         updateMeatAbilities()
 
     function emptyToGround()
-        let pos = ownerUnit.getPos()
-        for meat in carriedMeat
-            meat.setVisible(true)
-            meat.setPos(pos)
-            carriedMeat.remove(meat)
-        updateMeatAbilities()
+        emptyToGround(ownerUnit.getPos())
 
     function emptyToGround(vec2 pos)
         for meat in carriedMeat
@@ -208,15 +203,13 @@ public class MeatInventory
 
     function onOwnerDeath()
         //Find an offset position for the meat so items are separated on drop
-        let pos = ownerUnit.getPos()
+        var targetPos = ownerUnit.getPos()
         for angleIndex = 0 to 3
-            let meatPos = pos.polarOffset((angleIndex * 90.).fromDeg(), MEAT_DROP_OFFSET_DISTANCE)
+            let meatPos = targetPos.polarOffset((angleIndex * 90.).fromDeg(), MEAT_DROP_OFFSET_DISTANCE)
             if meatPos.isTerrainWalkable()
-                emptyToGround(meatPos)
+                targetPos = meatPos
                 break
-            else if angleIndex == 3
-                emptyToGround(pos)
-
+        emptyToGround(targetPos)
         destroy this
 
     function canPickupMeat() returns bool
@@ -227,6 +220,7 @@ public class MeatInventory
         nullTimer() ->
             meatInventoryInstances.remove(this.ownerUnit)
             this.ownerUnit = newOwner
+            this.ownerPlayer = newOwner.getOwner()
             if meatInventoryInstances.has(newOwner)
                 destroy meatInventoryInstances.getAndRemove(newOwner)
             meatInventoryInstances.put(newOwner, this)
@@ -248,7 +242,7 @@ public class MeatInventory
         //Start polling for when we reach the pickup target
         this.smartPickupCallback = doPeriodically(ANIMATION_PERIOD) cb ->
             let collisionSize = ownerUnit.getCollisionSize()
-            let rangeSq = (SMART_PICKUP_RANGE + collisionSize) * (SMART_PICKUP_RANGE + collisionSize)
+            let rangeSq = (SMART_PICKUP_RANGE + collisionSize).pow(2)
             //See if meat is gone already
             if not this.smartPickupTarget.isPickupable() or ownerUnit.getCurrentOrder() != Orders.move or not ownerUnit.isAlive()
                 destroy this.smartPickupCallback
@@ -271,16 +265,19 @@ public class MeatInventory
             if this.isTrollInventory //Avoid swapping pickup ability swap for traps, which must have both abilities at all times
                 ownerUnit.removeAbility(ABILITY_ID_PICKUPMEAT_TROLL)
                 ownerUnit.addAbility(ABILITY_ID_EAT_RAW_MEAT)
+                ownerUnit.makeAbilityPermanent(ABILITY_ID_EAT_RAW_MEAT, true)
                 ownerUnit.removeAbility(ABILITY_ID_EAT_RAW_MEAT_DISABLED)
             ownerUnit.addAbility(ABILITY_IDS_DROPMEAT[meatCount - 1])
+            ownerUnit.makeAbilityPermanent(ABILITY_IDS_DROPMEAT[meatCount - 1], true)
         else
             if this.isTrollInventory
                 ownerUnit.removeAbility(ABILITY_ID_EAT_RAW_MEAT)
                 ownerUnit.addAbility(ABILITY_ID_EAT_RAW_MEAT_DISABLED)
+                ownerUnit.makeAbilityPermanent(ABILITY_ID_EAT_RAW_MEAT_DISABLED, true)
                 ownerUnit.addAbility(ABILITY_ID_PICKUPMEAT_TROLL)
+                ownerUnit.makeAbilityPermanent(ABILITY_ID_PICKUPMEAT_TROLL, true)
 
     ondestroy
-        emptyToGround()
         if this.smartPickupCallback != null
             destroy this.smartPickupCallback
         if meatInventoryInstances.has(this.ownerUnit)
@@ -320,14 +317,15 @@ function onTargetOrder()
         and u.isInventoryFull()
         and (meatInventoryInstances.has(u) or isUnitMeatCarrier(u)))
 
+        MeatInventory instance = null
         if meatInventoryInstances.has(u)
-            let instance = meatInventoryInstances.get(u)
-            let meatCount = instance.carriedMeat.size()
-            if meatCount < MAX_MEAT_COUNT
-                instance.onSmartPickupMeat(target)
+            instance = meatInventoryInstances.get(u)
         else
-            let instance = new MeatInventory(u)
+            instance = new MeatInventory(u)
             meatInventoryInstances.put(u, instance)
+
+        let meatCount = instance.carriedMeat.size()
+        if meatCount < MAX_MEAT_COUNT
             instance.onSmartPickupMeat(target)
 
 function isUnitMeatCarrier(unit u) returns bool
@@ -369,11 +367,3 @@ init
         let caster = GetSpellAbilityUnit()
         if meatInventoryInstances.has(caster) or isUnitMeatCarrier(caster)
             unitTryPickupMeatArea(caster)
-
-    //Special fix for beastmaster to get his abilities back after transforming
-    for s in ABILITY_IDS_SHAPESHIFTER
-        registerSpellEffectEvent(s) ->
-            let caster = GetSpellAbilityUnit()
-            doAfter(1.2) ->
-                if meatInventoryInstances.has(caster)
-                    meatInventoryInstances.get(caster).updateMeatAbilities()

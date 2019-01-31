@@ -29,7 +29,7 @@ constant let OVERCHARGE_FORK_AMOUNT = 3
 constant let OVERCHARGE_FORK_AOE = 400.
 constant let CHARGE_BOUNCE_RADIUS = 400.
 constant let CHARGE_DAMAGE = 35.
-constant let CHARGE_REMOVE_TIME = 25.
+constant let CHARGE_REMOVE_TIME = 15.
 constant let CHARGE_AS_SLOW = 0.75
 constant let CHARGE_MS_SLOW = 0.75
 constant let CHARGE_SLOW_DURATION_HERO = 2.
@@ -199,16 +199,18 @@ function zapChargeExplosion(unit caster, unit target)
         efx.destr()
 
     //Also zap nearby targets in radius
-    zapTargetsInRadius(caster, target, CHARGE_BOUNCE_RADIUS)
+    zapTargetsInRadius(caster, target, CHARGE_BOUNCE_RADIUS, 2)
 
 function isValidTarget(unit target, unit caster) returns bool
     unit u = target
     return u.isAlive() and u.getOwner().isEnemyOf(caster.getOwner()) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isInvulnerable()
 
-function zapTargetsInRadius(unit caster, unit originalTarget, real radius)
+function zapTargetsInRadius(unit caster, unit originalTarget, real radius, int maxTargets)
     vec3 targetPos = originalTarget.getPos3Real()
+    let targetsHit = new IntObject(0)
     forUnitsInRange(targetPos.toVec2(), radius) u ->
-        if (isValidTarget(u, caster) and not u == originalTarget)
+        if (isValidTarget(u, caster) and not u == originalTarget and targetsHit.value < 2)
+            targetsHit.value += 1
             onCastEffects(caster, u, false)
             var targetFX = AddSpecialEffectTargetUnitBJ("origin", u, BOUNCE_IMPACT_EFFECT_PATH)
             var lightningFX = addLightning(LIGHTNING_CHAIN_LIGHTNING_SEECONDARY, true, originalTarget.getPos3Real(), u.getPos3Real())

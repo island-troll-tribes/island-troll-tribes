@@ -25,6 +25,7 @@ constant let CAST_RANGE = 800.
 constant let COOLDOWN = 3.
 constant let MANACOST = 10
 constant let MAIN_DAMAGE = 20.
+constant let EXPLOSION_FORK_AMOUNT = 2
 constant let OVERCHARGE_FORK_AMOUNT = 3
 constant let OVERCHARGE_FORK_AOE = 400.
 constant let CHARGE_BOUNCE_RADIUS = 400.
@@ -199,7 +200,7 @@ function zapChargeExplosion(unit caster, unit target)
         efx.destr()
 
     //Also zap nearby targets in radius
-    zapTargetsInRadius(caster, target, CHARGE_BOUNCE_RADIUS, 2)
+    zapTargetsInRadius(caster, target, CHARGE_BOUNCE_RADIUS, EXPLOSION_FORK_AMOUNT)
 
 function isValidTarget(unit target, unit caster) returns bool
     unit u = target
@@ -219,6 +220,7 @@ function zapTargetsInRadius(unit caster, unit originalTarget, real radius, int m
                 if fxUpdater.isLast()
                     lightningFX.destr()
                     targetFX.destr()
+    destroy targetsHit
 
 class IntObject
     int value

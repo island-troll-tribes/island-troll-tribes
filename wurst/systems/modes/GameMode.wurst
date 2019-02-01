@@ -5,11 +5,12 @@ import ChatCommands
 import ClosureTimers
 import GameConfig
 import Classes
-import StringUtils
 import TimerUtils
 import LegacyColors
 import IDUtils
 import ChatUtils
+import Lodash
+import StringUtils
 import initlater CheatPack
 
 
@@ -19,7 +20,7 @@ public interface GameModeHandler
     function run(GameMode mode, LinkedList<string> args)
 
 public class GameMode
-    static let list = new LinkedList<thistype>()
+    static let list = new OwnedLinkedList<thistype>()
     static let modeboard = CreateMultiboard()
     static let listeners = CreateTrigger()
     static let modes = new HashMap<string, thistype>()
@@ -48,7 +49,7 @@ public class GameMode
 
     static function getEnabledModes() returns string
         return list
-        .filter(mode -> mode.enabled)
+        .lfilter(mode -> mode.enabled)
         .map(mode -> mode.message)
         .joinBy("\n")
 
@@ -224,17 +225,19 @@ init
         GameMode.find("el").enable()
 
     new GameMode("all", "ar", "Each player is given the same or a random troll, eg: \"-all random\" or \"-all mage\"") (mode, args) ->
-        if args.size() > 1 and args.get(1) != "random"
-            let klass = "UNIT_" + args.joinBy("_").toUpperCase()
-            let uid = S2ID(klass)
-            if getTrollClassType(uid) != ClassType.BASE_CLASS
+        let classArgs = args.drop(1)
+        if classArgs.size() > 0 and args.get(0) != "random"
+            let trollClass = "UNIT_" + classArgs.joinBy("_").toUpperCase()
+            let uid = S2ID(trollClass)
+            if uid == 0 or getTrollClassType(uid) != ClassType.BASE_CLASS
                 mode.error("Invalid class selection")
             else
                 gameConfig.setAllTrollEnabled(uid)
-                mode.message(ENERGY_COLOR + "All " + args.joinBy(" ") + "|r enabled")
+                mode.message(ENERGY_COLOR + "All " + classArgs.joinBy(" ") + "|r enabled")
         else
             gameConfig.setAllTrollEnabled(0)
             mode.message(ENERGY_COLOR + "All random|r enabled")
+        destroy classArgs
 
     new GameMode("hot-mode", "hm", "Increase the amount of heat a fire gives per cast, defaults to 22, eg: \"-hm 30\"") (mode, args) ->
         var amount = 22

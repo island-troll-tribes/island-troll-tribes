@@ -7,11 +7,8 @@ import LinkedList
 import Lodash
 import LegacyColors
 import PlayerExtensions
-import Respawn
-import ShrinkingMap
-import ForcedDuel
 import HashMap
-import TimeUtils
+import Boards
 
 let PERIOD = 1.0
 
@@ -80,6 +77,9 @@ class TribeBoard
 
     function updateBoard()
         let members = tribe.getMembers()
+        let title = getGameTimersBoardTitle()
+
+        board.setTitle(title)
 
         var row = 0
         for member in members
@@ -106,24 +106,6 @@ class TribeBoard
                 ..release()
 
             row += 1
-
-        let time = GAME_TIMER.getElapsed().toInt()
-        let gpRemaining = GRACE_PERIOD_TIMER.getRemaining().toInt()
-        let fdRemaining = DUEL_TIMER.getRemaining().toInt()
-        let ffRemaining = FOREST_FIRE_TIMER.getRemaining().toInt()
-
-        var title = "Time[" + GENERAL_COLOR + toTimeString(time) + "|r]"
-
-        if gpRemaining > 0
-            title += " - Respawn[" + GREEN_COLOR + toTimeString(gpRemaining) + "|r]"
-
-        if fdRemaining > 0
-            title += " - Duel[" + ENERGY_COLOR + toTimeString(fdRemaining) + "|r]"
-
-        if ffRemaining > 0
-            title += " - Fire[" + RED_COLOR + toTimeString(ffRemaining) + "|r]"
-
-        board.setTitle(title)
 
     function fixDisplay()
         doAfter(0.5) ->

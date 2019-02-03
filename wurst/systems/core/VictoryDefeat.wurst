@@ -17,11 +17,11 @@ init
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
         if not gameOver and GetDyingUnit().isTroll() and not isGracePeriod()
             Tribe.getTribes()
-                .filter(Tribe.isNotDefeated)
-                .filter(Tribe.hasNoAliveMembers)
+                .lfilter(Tribe.isNotDefeated)
+                .lfilter(Tribe.hasNoAliveMembers)
                 .each(tribe -> tribe.wasDefeated())
 
-            let aliveTribes = Tribe.getTribes().filter(Tribe.isNotDefeated)
+            let aliveTribes = Tribe.getTribes().lfilter(Tribe.isNotDefeated)
             if aliveTribes.size() == 1
                 gameOver = true
                 aliveTribes.getFirst().wasVictorious()

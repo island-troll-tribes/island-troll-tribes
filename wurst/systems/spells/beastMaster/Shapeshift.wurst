@@ -1,0 +1,141 @@
+package Shapeshift
+import AbilityObjEditing
+import ObjectIdGenerator
+import ID
+import ClosureEvents
+import HashMap
+import ObjectIds
+import MeatSystem
+import SimError
+import LastOrder
+import ClosureTimers
+
+let FORM_IDS = [UNIT_SHAPESHIFTER_WOLF, UNIT_SHAPESHIFTER_BEAR, UNIT_SHAPESHIFTER_PANTHER, UNIT_SHAPESHIFTER_TIGER]
+let FORM_MAP = new HashMap<string, integer>()
+let TRANSFORM_ABILITY_IDS = [compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()),
+compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()),
+compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next()), compiletime(ABIL_ID_GEN.next())]
+public let ABILITY_ID_VICIOUS_STRIKES_ORB = 'A0GG'
+public let ABILITY_ID_VICIOUS_STRIKES_ACTIVE = 'A0GH'
+public let ABILITY_ID_BEARS_BULWARK = 'A0GE'
+public let ABILITY_ID_WOLFS_HUNGER = 'A0GD'
+public let ABILITY_ID_PROWL = 'A0GF'
+let FORM_SPELLBOOK = 'A0EP'
+let ABILITY_ID_WOLF_FORM_DUMMY = 'A00H'
+let ABILITY_ID_BEAR_FORM_DUMMY = 'A0GN'
+let ABILITY_ID_PANTHER_FORM_DUMMY = 'A0GO'
+let ABILITY_ID_TIGER_FORM_DUMMY = 'A0GP'
+let TRANSFORM_FX_PATH = "Abilities\\Spells\\Human\\Polymorph\\PolyMorphDoneGround.mdl"
+
+@compiletime function formChanger()
+    var i = 0
+    for oldForm = 0 to 3
+        for newForm = 0 to 3
+            if newForm != oldForm
+                new AbilityDefinitionBearform(TRANSFORM_ABILITY_IDS[i])
+                ..setName(FORM_IDS[oldForm].toRawCode() + " to " + FORM_IDS[newForm].toRawCode())
+                ..presetAlternateFormUnit(lvl -> FORM_IDS[oldForm].toRawCode())
+                ..presetNormalFormUnit(lvl -> FORM_IDS[newForm].toRawCode())
+                i++
+
+function onCast(int newFormId)
+    var caster = GetSpellAbilityUnit()
+    var owner = caster.getOwner()
+    var oldF = caster.getTypeId()
+    var changeKey = oldF.toRawCode() + newFormId.toRawCode()
+
+    //Re-issue whatever order we had previously
+    nullTimer() ->
+        let previousOrder = caster.getLastOrder().prev
+        if previousOrder != null and (previousOrder.orderType == OrderType.POINT or previousOrder.orderType == OrderType.TARGET)
+            previousOrder.issue()
+
+    if not FORM_MAP.has(changeKey)
+        simError(owner, "You already are in that form.")
+        return
+
+    //Make the abilities permanent so they wont disappear
+    caster.makeAbilityPermanent(ABILITY_ID_BEAR_FORM_DUMMY, true)
+    caster.makeAbilityPermanent(ABILITY_ID_WOLF_FORM_DUMMY, true)
+    caster.makeAbilityPermanent(ABILITY_ID_PANTHER_FORM_DUMMY, true)
+    caster.makeAbilityPermanent(ABILITY_ID_TIGER_FORM_DUMMY, true)
+    caster.makeAbilityPermanent(ABILITY_ID_VICIOUS_STRIKES_ACTIVE, true)
+    caster.makeAbilityPermanent(ABILITY_ID_VICIOUS_STRIKES_ORB, true)
+    caster.makeAbilityPermanent(ABILITY_ID_WOLFS_HUNGER, true)
+    caster.makeAbilityPermanent(ABILITY_ID_BEARS_BULWARK, true)
+    caster.makeAbilityPermanent(ABILITY_ID_PROWL, true)
+
+    //Add / remove bear form ability to transform unit
+    var changeAbility = FORM_MAP.get(changeKey)
+    caster.addAbility(changeAbility)
+    caster.removeAbility(changeAbility)
+    let FX = caster.addEffect(TRANSFORM_FX_PATH, "origin")
+    FX.setScale(2)
+    FX.destr()
+
+    //Close spellbook
+    for index = 0 to bj_MAX_PLAYERS
+        let p = players[index]
+        if p.isAllyOf(owner)
+            //If players have the unit selected, send esc button to close spellbook. Iteration required to also work with share control
+            let selected = CreateGroup()
+                ..enumUnitsSelected(p, null)
+            if selected.contains(caster) and GetLocalPlayer() == p
+                ForceUICancel()
+            selected.destr()
+
+    updateNewFormAbilities(owner, newFormId)
+
+    //Make sure new form has meat abilities
+    if meatInventoryInstances.has(caster)
+        meatInventoryInstances.get(caster).updateMeatAbilities()
+
+function updateNewFormAbilities(player owner, int newFormId)
+    switch newFormId
+        case FORM_IDS[0]
+            owner.setAbilityAvailable(ABILITY_ID_WOLFS_HUNGER, true)
+            owner.setAbilityAvailable(ABILITY_ID_BEARS_BULWARK, false)
+            owner.setAbilityAvailable(ABILITY_ID_PROWL, false)
+            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES_ORB, false)
+            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES_ACTIVE, false)
+        case FORM_IDS[1]
+            owner.setAbilityAvailable(ABILITY_ID_WOLFS_HUNGER, false)
+            owner.setAbilityAvailable(ABILITY_ID_BEARS_BULWARK, true)
+            owner.setAbilityAvailable(ABILITY_ID_PROWL, false)
+            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES_ORB, false)
+            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES_ACTIVE, false)
+        case FORM_IDS[2]
+            owner.setAbilityAvailable(ABILITY_ID_WOLFS_HUNGER, false)
+            owner.setAbilityAvailable(ABILITY_ID_BEARS_BULWARK, false)
+            owner.setAbilityAvailable(ABILITY_ID_PROWL, true)
+            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES_ORB, false)
+            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES_ACTIVE, false)
+        case FORM_IDS[3]
+            owner.setAbilityAvailable(ABILITY_ID_WOLFS_HUNGER, false)
+            owner.setAbilityAvailable(ABILITY_ID_BEARS_BULWARK, false)
+            owner.setAbilityAvailable(ABILITY_ID_PROWL, false)
+            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES_ORB, true)
+            owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES_ACTIVE, true)
+
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_CAST) ->
+        if GetSpellAbilityId() == ABILITY_ID_WOLF_FORM_DUMMY
+            onCast(FORM_IDS[0])
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_CAST) ->
+        if GetSpellAbilityId() == ABILITY_ID_BEAR_FORM_DUMMY
+            onCast(FORM_IDS[1])
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_CAST) ->
+        if GetSpellAbilityId() == ABILITY_ID_PANTHER_FORM_DUMMY
+            onCast(FORM_IDS[2])
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_CAST) ->
+        if GetSpellAbilityId() == ABILITY_ID_TIGER_FORM_DUMMY
+            onCast(FORM_IDS[3])
+
+    //Initialize form map
+    var i = 0
+    for oldForm = 0 to 3
+        for newForm = 0 to 3
+            if newForm != oldForm
+                let abiKey = FORM_IDS[oldForm].toRawCode() + FORM_IDS[newForm].toRawCode()
+                FORM_MAP.put(abiKey, TRANSFORM_ABILITY_IDS[i])
+                i++

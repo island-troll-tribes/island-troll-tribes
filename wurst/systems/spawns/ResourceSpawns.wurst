@@ -170,7 +170,7 @@ public function handleItemSpawning()
                 break
 
             //Spawn item if island-specific spawn count is not yet achieved
-            if not spawnedCount.has(island) or (spawnedCount.get(island) < island.itemsSpawnCount * udg_ITEM_BASE)
+            if not spawnedCount.has(island) or (spawnedCount.get(island) < (island.itemsSpawnCount * udg_ITEM_BASE).round())
                 island.spawnItemFromPool()
                 udg_ITEM_CURRENT += 1
                 spawnedCount.put(island, spawnedCount.get(island) + 1)
@@ -195,12 +195,12 @@ public function handleAnimalSpawning()
         for island in islandSpawnList
             //Abruptly stop loop if unit limit reached
             //The check uses udg_item_limit_mode too
-            if (udg_ITEM_LIMIT_MODE and udg_ANIMAL_CURRENT >= udg_ANIMAL_MAX)
+            if (udg_ITEM_LIMIT_MODE and udg_ANIMAL_CURRENT >= gameConfig.MAX_ANIMALS)
                 loopDidSpawn = false
                 break
 
             //Spawn item if island-specific spawn count is not yet achieved
-            if not spawnedCount.has(island) or (spawnedCount.get(island) < island.animalsSpawnCount * udg_FOOD_BASE)
+            if not spawnedCount.has(island) or (spawnedCount.get(island) < (island.animalsSpawnCount * udg_FOOD_BASE).round())
                 island.spawnAnimalFromPool()
                 udg_ANIMAL_CURRENT += 1
                 spawnedCount.put(island, spawnedCount.get(island) + 1)
@@ -225,10 +225,10 @@ function initAnimalSpawnInfo()
     new AnimalSpawnInfo(UNIT_ELK, 1000, 1000, 0)
 
     //Hostiles dont spawn during first wave, therefore we have the change time for them
-    new AnimalSpawnInfo(UNIT_SNAKE, 0, 100, 240)
-    new AnimalSpawnInfo(UNIT_JUNGLE_WOLF, 0, 200, 240)
-    new AnimalSpawnInfo(UNIT_JUNGLE_BEAR, 0, 100, 240)
-    new AnimalSpawnInfo(UNIT_PANTHER, 0, 100, 240)
+    new AnimalSpawnInfo(UNIT_SNAKE, 0, 85, 240)
+    new AnimalSpawnInfo(UNIT_JUNGLE_WOLF, 0, 170, 240)
+    new AnimalSpawnInfo(UNIT_JUNGLE_BEAR, 0, 85, 240)
+    new AnimalSpawnInfo(UNIT_PANTHER, 0, 85, 240)
 
     animalSpawnFunctions.put(UNIT_ELK, (x, y) -> new Elk(vec2(x,y)))
     animalSpawnFunctions.put(UNIT_SNAKE, (x, y) -> new Snake(vec2(x,y)))
@@ -237,29 +237,29 @@ function initAnimalSpawnInfo()
     animalSpawnFunctions.put(UNIT_PANTHER, (x, y) -> new Panther(vec2(x,y)))
 
 function initIslandSpawners()
-    let NWSpawns = new Pool<rect>()
-    NWSpawns.add(udg_ISLAND1_1, gg_rct_spawn_area_1_1)
-    NWSpawns.add(udg_ISLAND1_2, gg_rct_spawn_area_1_2)
-    NWSpawns.add(udg_ISLAND1_3, gg_rct_spawn_area_1_3)
-    new IslandSpawner(udg_NORTH_LEFT_ITEM, udg_NORTH_LEFT_FOOD, NWSpawns)
+    let nwSpawns = new Pool<rect>()
+    nwSpawns.add(udg_ISLAND1_1, gg_rct_spawn_area_1_1)
+    nwSpawns.add(udg_ISLAND1_2, gg_rct_spawn_area_1_2)
+    nwSpawns.add(udg_ISLAND1_3, gg_rct_spawn_area_1_3)
+    new IslandSpawner(udg_NORTH_LEFT_ITEM, udg_NORTH_LEFT_FOOD, nwSpawns)
 
-    let NESpawns = new Pool<rect>()
-    NESpawns.add(udg_ISLAND2_1, gg_rct_spawn_area_2_1)
-    NESpawns.add(udg_ISLAND2_2, gg_rct_spawn_area_2_2)
-    NESpawns.add(udg_ISLAND2_3, gg_rct_spawn_area_2_3)
-    new IslandSpawner(udg_NORTH_RIGHT_ITEM, udg_NORTH_RIGHT_FOOD, NESpawns)
+    let neSpawns = new Pool<rect>()
+    neSpawns.add(udg_ISLAND2_1, gg_rct_spawn_area_2_1)
+    neSpawns.add(udg_ISLAND2_2, gg_rct_spawn_area_2_2)
+    neSpawns.add(udg_ISLAND2_3, gg_rct_spawn_area_2_3)
+    new IslandSpawner(udg_NORTH_RIGHT_ITEM, udg_NORTH_RIGHT_FOOD, neSpawns)
 
-    let SESpawns = new Pool<rect>()
-    SESpawns.add(udg_ISLAND3_1, gg_rct_spawn_area_3_1)
-    SESpawns.add(udg_ISLAND3_2, gg_rct_spawn_area_3_2)
-    SESpawns.add(udg_ISLAND3_3, gg_rct_spawn_area_3_3)
-    new IslandSpawner(udg_SOUTH_RIGHT_ITEM, udg_SOUTH_RIGHT_FOOD, SESpawns)
+    let seSpawns = new Pool<rect>()
+    seSpawns.add(udg_ISLAND3_1, gg_rct_spawn_area_3_1)
+    seSpawns.add(udg_ISLAND3_2, gg_rct_spawn_area_3_2)
+    seSpawns.add(udg_ISLAND3_3, gg_rct_spawn_area_3_3)
+    new IslandSpawner(udg_SOUTH_RIGHT_ITEM, udg_SOUTH_RIGHT_FOOD, seSpawns)
 
-    let SWSpawns = new Pool<rect>()
-    SWSpawns.add(udg_ISLAND4_1, gg_rct_spawn_area_4_1)
-    SWSpawns.add(udg_ISLAND4_2, gg_rct_spawn_area_4_2)
-    SWSpawns.add(udg_ISLAND4_3, gg_rct_spawn_area_4_3)
-    new IslandSpawner(udg_SOUTH_LEFT_ITEM, udg_SOUTH_LEFT_FOOD, SWSpawns)
+    let swSpawns = new Pool<rect>()
+    swSpawns.add(udg_ISLAND4_1, gg_rct_spawn_area_4_1)
+    swSpawns.add(udg_ISLAND4_2, gg_rct_spawn_area_4_2)
+    swSpawns.add(udg_ISLAND4_3, gg_rct_spawn_area_4_3)
+    new IslandSpawner(udg_SOUTH_LEFT_ITEM, udg_SOUTH_LEFT_FOOD, swSpawns)
 
 function startSpawnCycle()
     doPeriodically(120) spawnerCallback ->
@@ -278,7 +278,7 @@ function adjustBaseSpawnrates()
     //Replacement for modStats function of the legacy system.
     //Dynamically adjust overall item & animal amounts (and specific item type amounts but thats handles by spawnInfo classes now)
     udg_ITEM_BASE = max(.15,udg_ITEM_BASE-0.2)
-    udg_FOOD_BASE = max(.15,udg_FOOD_BASE-0.2)
+    udg_FOOD_BASE = max(.15,udg_FOOD_BASE-0.3)
 
 function spawnFishOrHawk(rect spawnRect)
     if udg_ITEM_LIMIT_MODE and udg_FISH_CURRENT < udg_FISH_MAX

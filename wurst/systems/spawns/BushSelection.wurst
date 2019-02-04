@@ -10,14 +10,36 @@ let MAX_DIST = 300
 let MAX_DIST_SQ = compiletime(MAX_DIST * MAX_DIST)
 
 let map = new HashMap<int, int>()
-..put(UNIT_THIEFS_BUSH, UNIT_THIEF)
-..put(UNIT_SCOUTS_BUSH, UNIT_SCOUT)
+    ..put(UNIT_THIEFS_BUSH, UNIT_THIEF)
+    ..put(UNIT_SCOUTS_BUSH, UNIT_SCOUT)
+
+function transferItems(unit u, player p)
+    let id = map.get(u.getTypeId())
+    print(id)
+
+    // Exit if the selection unit is not a bush.
+    if id == 0
+        return
+
+    // Enumerate all units that may be close enough to receive items.
+    GroupEnumUnitsInRange(
+        ENUM_GROUP,
+        u.getPos().x,
+        u.getPos().y,
+        MAX_DIST.toReal(),
+        Filter(-> true)
+    )
+
+    // Filter the units as appropriate, passing items to the first match.
+    for target from ENUM_GROUP
+        if target.getOwner().isAllyOf(GetTriggerPlayer())
+            and id == getTrollBaseClass(target)
+            and target.getPos().distanceToSq(u.getPos()) < MAX_DIST_SQ
+            u.transferItems(target)
+        break
+
 
 init
+    print("running test map 2")
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SELECTED) ->
-        let bush = GetTriggerUnit()
-        let hero = GetTriggerPlayer().getTroll()
-        let id = bush.getTypeId()
-
-        if map.has(id) and map.get(id) == getTrollBaseClass(hero) and hero.getPos().distanceToSq(bush.getPos()) < MAX_DIST_SQ
-            bush.transferItems(hero)
+        transferItems(GetTriggerUnit(), GetTriggerPlayer())

@@ -92,15 +92,15 @@ class IslandSpawner
             return
 
         let spawnPoint = randomSpawnPoint()
-        let spawnedItem = createItem(itemPool.random(), spawnPoint)
+        let spawnItemId = itemPool.random()
+        createItem(spawnItemId, spawnPoint)
 
         //Keep track of spawned total & spawned item type total to balance out spawning
         this.itemsSpawnedTotal += 1
-        let spawnedType = spawnedItem.getTypeId()
-        if not this.spawnsPerType.has(spawnedType)
-            this.spawnsPerType.put(spawnedType, 1)
+        if not this.spawnsPerType.has(spawnItemId)
+            this.spawnsPerType.put(spawnItemId, 1)
         else
-            this.spawnsPerType.put(spawnedType, this.spawnsPerType.get(spawnedType) + 1)
+            this.spawnsPerType.put(spawnItemId, this.spawnsPerType.get(spawnItemId) + 1)
 
     function spawnAnimalFromPool()
         if this.animalPool == null
@@ -140,8 +140,8 @@ class IslandSpawner
             let spawnInfo = itemSpawnInfoMap.get(itm)
             let itemWeight = spawnInfo.getTimeAdjustedSpawnWeight()
             var adjustmentRatio = 1.
-            if this.itemsSpawnedTotal != 0 and desiredSpawnsPerType.has(spawnInfo.id)
-                let itemRatio = this.spawnsPerType.get(itm) / desiredSpawnsPerType.get(spawnInfo.id)
+            if this.itemsSpawnedTotal != 0 and desiredSpawnsPerType.has(spawnInfo.id) and spawnsPerType.has(spawnInfo.id)
+                let itemRatio = this.spawnsPerType.get(spawnInfo.id) / desiredSpawnsPerType.get(spawnInfo.id)
                 let difference = itemRatio - 1
                 if difference > 0
                     adjustmentRatio = linear(1, 1.3, max(1, (difference / 0.5)))

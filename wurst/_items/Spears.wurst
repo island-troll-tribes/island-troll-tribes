@@ -1,6 +1,6 @@
 package Spears
 import ClosureEvents
-import ITTDummyCaster
+import DummyCaster
 import Orders
 import ClosureTimers
 import PublicLibrary
@@ -17,26 +17,26 @@ enum SpearType
     Spear
 
 let spellToSpearType = new HashMap<int, SpearType>
-let spearListeners = new HashMap<ITTDummyCaster, EventListener>()
+let spearListeners = new HashMap<unit, EventListener>()
 
 function onSpear(unit caster, unit target, SpearType spearType)
-    let dummy = new ITTDummyCaster
+    let dummyCaster = new DummyCaster()
         ..delay(8)
         ..owner(caster.getOwner())
         ..origin(caster.getPos())
-        ..castTarget(ABILITY_SPEAR_HIT_DETECTION, 1, Orders.creepthunderbolt, target)
+    let dummy = dummyCaster.castTarget(ABILITY_SPEAR_HIT_DETECTION, 1, Orders.creepthunderbolt, target)
 
     bindSpearDamageListener(dummy, target, spearType)
 
-function bindSpearDamageListener(ITTDummyCaster dummyCaster, unit target, SpearType spearType)
+function bindSpearDamageListener(unit dummy, unit target, SpearType spearType)
     let listener = EventListener.add(EVENT_UNIT_DAMAGED) ->
         let damaged = GetTriggerUnit()
-        if damaged == target and GetEventDamageSource() == dummyCaster.getDummy()
-            if spearListeners.has(dummyCaster)
-                destroy spearListeners.getAndRemove(dummyCaster)
+        if damaged == target and GetEventDamageSource() == dummy
+            if spearListeners.has(dummy)
+                destroy spearListeners.getAndRemove(dummy)
                 onSpearImpact(target, spearType)
 
-    spearListeners.put(dummyCaster, listener)
+    spearListeners.put(dummy, listener)
 
 function onSpearImpact(unit target, SpearType spearType)
     switch spearType

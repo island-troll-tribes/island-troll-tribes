@@ -1,0 +1,20 @@
+package ScrollOfCyclone
+
+import ClosureEvents
+import ClosureTimers
+
+let ABILITY_SCROLL_OF_CYCLONE = 'S000'
+let BUFF_CYCLONE = 'Bcyc'
+let BUFF_CYCLONE_EXTRA = 'Bcy2'
+
+function onCyclone()
+    let target = GetSpellTargetUnit()
+    target.addAbility(GHOST_VIS_ID)
+    doPeriodicallyTimed(0.1, 15) buffPoller ->
+        if not target.hasAbility(BUFF_CYCLONE) and not target.hasAbility(BUFF_CYCLONE_EXTRA)
+            target.removeAbility(GHOST_VIS_ID)
+            buffPoller.stop()
+
+init
+    registerSpellEffectEvent(ABILITY_SCROLL_OF_CYCLONE) ->
+        onCyclone()

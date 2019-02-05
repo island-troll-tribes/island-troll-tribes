@@ -22,6 +22,7 @@ import GreenFish
 import Fish
 import Lodash
 import UnitEntity
+import ObjectIds
 
 let itemSpawnInfoMap = new IterableMap<int, SpawnInfo>()
 let animalSpawnInfoMap = new IterableMap<int, SpawnInfo>()
@@ -63,6 +64,7 @@ class IslandSpawner
     private constant Pool<rect> spawnRegionsPool = null
     private Pool<BiFunction<real, real, UnitEntity>> animalPool = null
     private let spawnsPerType = new HashMap<int, int>()
+    private let desiredSpawnsPerType = new HashMap<int,int>()
     int itemsSpawnCount
     int animalsSpawnCount
     private int itemsSpawnedTotal = 0
@@ -134,24 +136,37 @@ class IslandSpawner
             totalWeight += itemSpawnInfoMap.get(i).getTimeAdjustedSpawnWeight()
 
         for itm in itemSpawnInfoMap
+            //Get adjusted spawn weights based on desired item counts from previous spawning round
             let spawnInfo = itemSpawnInfoMap.get(itm)
             let itemWeight = spawnInfo.getTimeAdjustedSpawnWeight()
-            let weightRatio = itemWeight / totalWeight
             var adjustmentRatio = 1.
-            if this.itemsSpawnedTotal != 0
-                let itemRatio = this.spawnsPerType.get(itm) / this.itemsSpawnedTotal
-                let difference = (weightRatio-itemRatio).abs()
-                if itemRatio < weightRatio
-                    adjustmentRatio = linear(1, 1.5, max(1, (difference / 0.5)))
-                else if itemRatio > weightRatio
-                    adjustmentRatio = linear(1, 0.5, max(1, (difference / 0.5)))
+            if this.itemsSpawnedTotal != 0 and desiredSpawnsPerType.has(spawnInfo.id)
+                let itemRatio = this.spawnsPerType.get(itm) / desiredSpawnsPerType.get(spawnInfo.id)
+                let difference = itemRatio - 1
+                if difference > 0
+                    adjustmentRatio = linear(1, 1.3, max(1, (difference / 0.5)))
+                else
+                    adjustmentRatio = linear(1, 0.7, max(1, (difference / 0.5)))
 
             this.itemPool.add((itemWeight * adjustmentRatio).round(), spawnInfo.id)
+
+            //Update desired item counts for next spawning round
+            //Basically keeping count of the sum that the total items of that type should be at on average at the end of this spawn cycle
+            let weightRatio = itemWeight / totalWeight
+            if desiredSpawnsPerType.has(spawnInfo.id)
+                desiredSpawnsPerType.put(spawnInfo.id, desiredSpawnsPerType.get(spawnInfo.id) + ((this.itemsSpawnCount * udg_ITEM_BASE).round() * weightRatio).round())
+            else
+                desiredSpawnsPerType.put(spawnInfo.id, ((this.itemsSpawnCount * udg_ITEM_BASE).round() * weightRatio).round())
+
+            print("Desired amount for id: " + spawnInfo.id.toRawCode() + " is " + desiredSpawnsPerType.get(spawnInfo.id).toString())
 
     ondestroy
         if this.spawnRegionsPool != null
             destroy this.spawnRegionsPool
         destroy this.spawnsPerType
+        destroy this.desiredSpawnsPerType
+        destroy this.animalPool
+        destroy this.itemPool
 
 public function handleItemSpawning()
     for island in islandSpawnList

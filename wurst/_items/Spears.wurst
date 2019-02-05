@@ -17,7 +17,7 @@ enum SpearType
     Spear
 
 let spellToSpearType = new HashMap<int, SpearType>
-let spearListenerTable = new HashMap<ITTDummyCaster, EventListener>()
+let spearListeners = new HashMap<ITTDummyCaster, EventListener>()
 
 function onSpear(unit caster, unit target, SpearType spearType)
     let dummy = new ITTDummyCaster
@@ -32,11 +32,11 @@ function bindSpearDamageListener(ITTDummyCaster dummyCaster, unit target, SpearT
     let listener = EventListener.add(EVENT_UNIT_DAMAGED) ->
         let damaged = GetTriggerUnit()
         if damaged == target and GetEventDamageSource() == dummyCaster.getDummy()
-            if spearListenerTable.has(dummyCaster)
-                destroy spearListenerTable.getAndRemove(dummyCaster)
+            if spearListeners.has(dummyCaster)
+                destroy spearListeners.getAndRemove(dummyCaster)
                 onSpearImpact(target, spearType)
 
-    spearListenerTable.put(dummyCaster, listener)
+    spearListeners.put(dummyCaster, listener)
 
 function onSpearImpact(unit target, SpearType spearType)
     switch spearType

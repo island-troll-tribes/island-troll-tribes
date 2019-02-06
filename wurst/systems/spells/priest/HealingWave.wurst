@@ -69,10 +69,11 @@ class HealingWaveInstance
         waveBounce(target, caster, true)
 
     function waveBounce(unit target, unit previousTarget, bool isFirstBounce)
-        var lightningFxPath = isFirstBounce ? LIGHTNING_HEALING_WAWE_PRIMARY : LIGHTNING_HEALING_WAWE_SEECONDARY
-
         new HealingInstance(target, this.healingAmount, HealingType.ABILITY)
+
+        var lightningFxPath = isFirstBounce ? LIGHTNING_HEALING_WAWE_PRIMARY : LIGHTNING_HEALING_WAWE_SEECONDARY
         attachLightningFX(previousTarget, target, lightningFxPath, 1.5)
+
         let fx1 = addEffect(HEALING_WAVE_HIT_FX, target.getPos3Real())
         let fx2 = target.addEffect(HEAL_HIT_FX, "origin")
         doPeriodicallyTimed(ANIMATION_PERIOD, 1.5) fxUpdater ->
@@ -85,7 +86,6 @@ class HealingWaveInstance
         this.healingAmount *= 1 - HEAL_REDUCTION_BOUNCE_FACTOR
         this.bouncesLeft -= 1
         this.targetsHit.add(target)
-
         if this.bouncesLeft > 0
             doAfter(0.3) ->
                 let nextTarget = findBounceTarget(target)

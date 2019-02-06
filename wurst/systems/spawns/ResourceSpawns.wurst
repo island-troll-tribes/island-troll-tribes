@@ -22,6 +22,7 @@ import GreenFish
 import Fish
 import Lodash
 import UnitEntity
+import ChatCommands
 
 let itemSpawnInfoMap = new IterableMap<int, SpawnInfo>()
 let animalSpawnInfoMap = new IterableMap<int, SpawnInfo>()
@@ -139,13 +140,16 @@ class IslandSpawner
             let spawnInfo = itemSpawnInfoMap.get(itm)
             let itemWeight = spawnInfo.getTimeAdjustedSpawnWeight()
             var adjustmentRatio = 1.
+
             if this.itemsSpawnedTotal != 0 and desiredSpawnsPerType.has(spawnInfo.id) and spawnsPerType.has(spawnInfo.id)
-                let itemRatio = this.spawnsPerType.get(spawnInfo.id) / desiredSpawnsPerType.get(spawnInfo.id)
-                let difference = itemRatio - 1
-                if difference > 0
-                    adjustmentRatio = linear(1, 1.3, max(1, (difference / 0.3)))
-                else
-                    adjustmentRatio = linear(1, 0.7, max(1, (difference / 0.3)))
+                let desiredAmount = desiredSpawnsPerType.get(spawnInfo.id)
+                if desiredAmount != 0
+                    let itemRatio = this.spawnsPerType.get(spawnInfo.id) / desiredAmount
+                    let difference = itemRatio - 1
+                    if difference > 0
+                        adjustmentRatio = linear(1, 1.2, min(1, (difference.abs() / 0.5)))
+                    else
+                        adjustmentRatio = linear(1, 0.8, min(1, (difference.abs() / 0.5)))
 
             this.itemPool.add((itemWeight * adjustmentRatio).round(), spawnInfo.id)
 
@@ -170,15 +174,15 @@ public function handleItemSpawning()
     for island in islandSpawnList
         island.generateItemPool()
 
-    let spawnedCount = new HashMap<IslandSpawner, int>()
+    let spawnedCount = new IterableMap<IslandSpawner, int>()
 
     //Use animation period * 2 since the old system was WAY slower than this
-    doPeriodically(ANIMATION_PERIOD*2) spawnLoop ->
+    doPeriodically(ANIMATION_PERIOD*2) itemLoop ->
         //Spawn one item on each island until they all reached the max count
         bool loopDidSpawn = false
         for island in islandSpawnList
             //Abruptly stop loop if item limit reached
-            if (udg_ITEM_LIMIT_MODE and udg_ITEM_CURRENT >= udg_ITEM_MAX)
+            if udg_ITEM_CURRENT >= udg_ITEM_MAX
                 loopDidSpawn = false
                 break
 
@@ -192,7 +196,7 @@ public function handleItemSpawning()
         //Return when all islandSpawners iterated without any spawns (or abrupt stop condition reached)
         if not loopDidSpawn
             destroy spawnedCount
-            destroy spawnLoop //Break
+            destroy itemLoop //Break
 
 
 public function handleAnimalSpawning()
@@ -202,13 +206,12 @@ public function handleAnimalSpawning()
     let spawnedCount = new HashMap<IslandSpawner, int>()
 
     //Use animation period * 2 since the old system was WAY slower than this
-    doPeriodically(ANIMATION_PERIOD*2) spawnLoop ->
+    doPeriodically(ANIMATION_PERIOD*2) animalLoop ->
         //Spawn one animal on each island until they all reached the max count
         bool loopDidSpawn = false
         for island in islandSpawnList
-            //Abruptly stop loop if unit limit reached
-            //The check uses udg_item_limit_mode too
-            if (udg_ITEM_LIMIT_MODE and udg_ANIMAL_CURRENT >= gameConfig.getMaxAnimals())
+            //Abruptly stop loop if animal limit reached
+            if (udg_ANIMAL_CURRENT >= gameConfig.MAX_ANIMALS)
                 loopDidSpawn = false
                 break
 
@@ -222,7 +225,7 @@ public function handleAnimalSpawning()
         //Return when all islandSpawners iterated without any spawns (or abrupt stop condition reached)
         if not loopDidSpawn
             destroy spawnedCount
-            destroy spawnLoop //Break
+            destroy animalLoop //Break
 
 function initItemSpawnInfo()
     new ItemSpawnInfo(ITEM_TINDER, 450, 90, 860)
@@ -249,28 +252,28 @@ function initAnimalSpawnInfo()
 
 function initIslandSpawners()
     let nwSpawns = new Pool<rect>()
-    nwSpawns.add(udg_ISLAND1_1, gg_rct_spawn_area_1_1)
-    nwSpawns.add(udg_ISLAND1_2, gg_rct_spawn_area_1_2)
-    nwSpawns.add(udg_ISLAND1_3, gg_rct_spawn_area_1_3)
-    new IslandSpawner(udg_NORTH_LEFT_ITEM, udg_NORTH_LEFT_FOOD, nwSpawns)
+    nwSpawns.add(65, gg_rct_spawn_area_1_1)
+    nwSpawns.add(22, gg_rct_spawn_area_1_2)
+    nwSpawns.add(13, gg_rct_spawn_area_1_3)
+    new IslandSpawner(15, 4, nwSpawns)
 
     let neSpawns = new Pool<rect>()
-    neSpawns.add(udg_ISLAND2_1, gg_rct_spawn_area_2_1)
-    neSpawns.add(udg_ISLAND2_2, gg_rct_spawn_area_2_2)
-    neSpawns.add(udg_ISLAND2_3, gg_rct_spawn_area_2_3)
-    new IslandSpawner(udg_NORTH_RIGHT_ITEM, udg_NORTH_RIGHT_FOOD, neSpawns)
+    neSpawns.add(66, gg_rct_spawn_area_2_1)
+    neSpawns.add(16, gg_rct_spawn_area_2_2)
+    neSpawns.add(18, gg_rct_spawn_area_2_3)
+    new IslandSpawner(16, 4, neSpawns)
 
     let seSpawns = new Pool<rect>()
-    seSpawns.add(udg_ISLAND3_1, gg_rct_spawn_area_3_1)
-    seSpawns.add(udg_ISLAND3_2, gg_rct_spawn_area_3_2)
-    seSpawns.add(udg_ISLAND3_3, gg_rct_spawn_area_3_3)
-    new IslandSpawner(udg_SOUTH_RIGHT_ITEM, udg_SOUTH_RIGHT_FOOD, seSpawns)
+    seSpawns.add(54, gg_rct_spawn_area_3_1)
+    seSpawns.add(13, gg_rct_spawn_area_3_2)
+    seSpawns.add(33, gg_rct_spawn_area_3_3)
+    new IslandSpawner(16, 4, seSpawns)
 
     let swSpawns = new Pool<rect>()
-    swSpawns.add(udg_ISLAND4_1, gg_rct_spawn_area_4_1)
-    swSpawns.add(udg_ISLAND4_2, gg_rct_spawn_area_4_2)
-    swSpawns.add(udg_ISLAND4_3, gg_rct_spawn_area_4_3)
-    new IslandSpawner(udg_SOUTH_LEFT_ITEM, udg_SOUTH_LEFT_FOOD, swSpawns)
+    swSpawns.add(88, gg_rct_spawn_area_4_1)
+    swSpawns.add(7, gg_rct_spawn_area_4_2)
+    swSpawns.add(8, gg_rct_spawn_area_4_3)
+    new IslandSpawner(23, 6, swSpawns)
 
 function startSpawnCycle()
     doPeriodically(120) spawnerCallback ->
@@ -325,8 +328,6 @@ function spawnFishAndHawks()
         spawnFishOrHawk(gg_rct_fish_new_8)
 
 init
-    initIslandWeights()
-    initSpawnRegionWeights()
     initItemSpawnInfo()
     initAnimalSpawnInfo()
     initIslandSpawners()

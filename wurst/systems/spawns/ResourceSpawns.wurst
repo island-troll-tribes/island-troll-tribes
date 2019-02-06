@@ -64,7 +64,7 @@ class IslandSpawner
     private constant Pool<rect> spawnRegionsPool = null
     private Pool<BiFunction<real, real, UnitEntity>> animalPool = null
     private let spawnsPerType = new HashMap<int, int>()
-    private let desiredSpawnsPerType = new HashMap<int,int>()
+    private let referenceItemCount = new HashMap<int,real>()
     int itemsSpawnCount
     int animalsSpawnCount
     private int itemsSpawnedTotal = 0
@@ -141,8 +141,8 @@ class IslandSpawner
             let itemWeight = spawnInfo.getTimeAdjustedSpawnWeight()
             var adjustmentRatio = 1.
 
-            if this.itemsSpawnedTotal != 0 and desiredSpawnsPerType.has(spawnInfo.id) and spawnsPerType.has(spawnInfo.id)
-                let desiredAmount = desiredSpawnsPerType.get(spawnInfo.id)
+            if this.itemsSpawnedTotal != 0 and referenceItemCount.has(spawnInfo.id) and spawnsPerType.has(spawnInfo.id)
+                let desiredAmount = referenceItemCount.get(spawnInfo.id).round()
                 if desiredAmount != 0
                     let itemRatio = this.spawnsPerType.get(spawnInfo.id) / desiredAmount
                     let difference = itemRatio - 1
@@ -157,16 +157,16 @@ class IslandSpawner
             //Basically keeping count of the sum that the total items of that type should be at on average at the end of this spawn cycle
             let weightRatio = itemWeight / totalWeight
             let itemTotalThisRound = (this.itemsSpawnCount * udg_ITEM_BASE).round()
-            if desiredSpawnsPerType.has(spawnInfo.id)
-                desiredSpawnsPerType.put(spawnInfo.id, desiredSpawnsPerType.get(spawnInfo.id) + (itemTotalThisRound * weightRatio).round())
+            if referenceItemCount.has(spawnInfo.id)
+                referenceItemCount.put(spawnInfo.id, referenceItemCount.get(spawnInfo.id) + (itemTotalThisRound * weightRatio))
             else
-                desiredSpawnsPerType.put(spawnInfo.id, (itemTotalThisRound * weightRatio).round())
+                referenceItemCount.put(spawnInfo.id, (itemTotalThisRound * weightRatio))
 
     ondestroy
         if this.spawnRegionsPool != null
             destroy this.spawnRegionsPool
         destroy this.spawnsPerType
-        destroy this.desiredSpawnsPerType
+        destroy this.referenceItemCount
         destroy this.animalPool
         destroy this.itemPool
 

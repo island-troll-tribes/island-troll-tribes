@@ -116,7 +116,7 @@ class IslandSpawner
         this.animalPool = new Pool<BiFunction<real, real, UnitEntity>>
         for id in animalSpawnInfoMap
             let spawnInfo = animalSpawnInfoMap.get(id)
-            this.animalPool.add((spawnInfo.getTimeAdjustedSpawnWeight() * gameConfig.getHostileSpawnRate()).round(), animalSpawnFunctions.get(id))
+            this.animalPool.add((spawnInfo.getTimeAdjustedSpawnWeight() * gameConfig.getHostileSpawnRate()).ceil(), animalSpawnFunctions.get(id))
 
     function generateItemPool()
         /*
@@ -139,10 +139,11 @@ class IslandSpawner
             let itemWeight = spawnInfo.getTimeAdjustedSpawnWeight()
             var adjustmentRatio = 1.
 
-            if this.itemsSpawnedTotal != 0 and referenceItemCount.has(spawnInfo.id) and spawnsPerType.has(spawnInfo.id)
-                let desiredAmount = referenceItemCount.get(spawnInfo.id).round()
-                if desiredAmount != 0
-                    let itemRatio = this.spawnsPerType.get(spawnInfo.id) / desiredAmount
+            if referenceItemCount.has(spawnInfo.id) and spawnsPerType.has(spawnInfo.id)
+                let desiredAmount = referenceItemCount.get(spawnInfo.id)
+                let currentAmount = this.spawnsPerType.get(spawnInfo.id)
+                if desiredAmount != 0 and currentAmount != 0
+                    let itemRatio = currentAmount / desiredAmount
                     let difference = itemRatio - 1
                     if difference > 0
                         adjustmentRatio = linear(1, 1.2, min(1, (difference.abs() / 0.5)))
@@ -154,7 +155,7 @@ class IslandSpawner
             //Update desired item counts for next spawning round
             //Basically keeping count of the sum that the total items of that type should be at on average at the end of this spawn cycle
             let weightRatio = itemWeight / totalWeight
-            let itemTotalThisRound = (this.itemsSpawnCount * udg_ITEM_BASE).round()
+            let itemTotalThisRound = (this.itemsSpawnCount * udg_ITEM_BASE).ceil()
             if referenceItemCount.has(spawnInfo.id)
                 referenceItemCount.put(spawnInfo.id, referenceItemCount.get(spawnInfo.id) + (itemTotalThisRound * weightRatio))
             else
@@ -185,7 +186,7 @@ public function handleItemSpawning()
                 break
 
             //Spawn item if island-specific spawn count is not yet achieved
-            if not spawnedCount.has(island) or (spawnedCount.get(island) < (island.itemsSpawnCount * udg_ITEM_BASE).round())
+            if not spawnedCount.has(island) or (spawnedCount.get(island) < (island.itemsSpawnCount * udg_ITEM_BASE).ceil())
                 island.spawnItemFromPool()
                 udg_ITEM_CURRENT += 1
                 spawnedCount.put(island, spawnedCount.get(island) + 1)
@@ -214,7 +215,7 @@ public function handleAnimalSpawning()
                 break
 
             //Spawn item if island-specific spawn count is not yet achieved
-            if not spawnedCount.has(island) or (spawnedCount.get(island) < (island.animalsSpawnCount * udg_FOOD_BASE).round())
+            if not spawnedCount.has(island) or (spawnedCount.get(island) < (island.animalsSpawnCount * udg_FOOD_BASE).ceil())
                 island.spawnAnimalFromPool()
                 udg_ANIMAL_CURRENT += 1
                 spawnedCount.put(island, spawnedCount.get(island) + 1)

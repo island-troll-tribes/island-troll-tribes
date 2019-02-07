@@ -97,22 +97,20 @@ class HealingWaveInstance
             destroy this
 
     function findBounceTarget(unit bounceOrigin) returns unit
-        unit found = null
         let units = CreateGroup()
             ..enumUnitsInRange(bounceOrigin.getPos(), BOUNCE_SEARCH_RANGE)
 
+        unit nearest = null
+        var closestDistance = 0.
         for u in units
-            if not isValidTarget(u)
-                units.removeUnit(u)
-
-        if units.size() > 0
-            let unitsList = units.toLinkedList()
-            unitsList.sortWith((a,b) -> (a.getPos().distanceToSq(bounceOrigin.getPos()) - b.getPos().distanceToSq(bounceOrigin.getPos())).round())
-            found = unitsList.getFirst()
-            destroy unitsList
+            if isValidTarget(u)
+                let distance = u.getPos().distanceTo(bounceOrigin.getPos())
+                if nearest == null or distance < closestDistance
+                    nearest = u
+                    closestDistance = distance
 
         units.destr()
-        return found
+        return nearest
 
     function isValidTarget(unit target) returns bool
         return target.isAlive()

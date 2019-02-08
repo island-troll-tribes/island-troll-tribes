@@ -1,7 +1,8 @@
 package SteelCoatCureAll
-import IttDummyCaster
 import RegisterEvents
 import AbilityObjEditing
+import DummyCaster
+import Orders
 
 public constant ABILITY_ID = 'XSCC'
 public constant SPELL_CURE = 'A02H'
@@ -38,7 +39,10 @@ public constant SPELL_CURE = 'A02H'
 
 function onCast()
     let caster = GetSpellAbilityUnit()
-    new IttDummyCaster().castTarget(caster.getOwner(), SPELL_CURE, 1, "autodispel", caster)
+    new DummyCaster()
+        ..owner(caster.getOwner())
+        ..origin(caster.getPos() + vec2(100,0))
+        ..castTarget(SPELL_CURE, 1, Orders.autodispel, caster)
 
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())

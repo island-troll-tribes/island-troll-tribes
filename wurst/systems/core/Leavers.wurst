@@ -2,6 +2,7 @@ package Leavers
 import RegisterEvents
 import PlayerExtensions
 import Game
+import GameConfig
 import LegacyColors
 
 function handlePlayerLeave()
@@ -11,9 +12,9 @@ function handlePlayerLeave()
         return
 
     let allies = leaver.getTribe().getMembers()
-
     let alliesInGame = allies.filter(member -> member != leaver and member.isIngame())
     let alliesInGameCount = alliesInGame.size()
+
     if alliesInGameCount == 0
         allies
         .map(member -> member.getTroll())
@@ -21,22 +22,28 @@ function handlePlayerLeave()
         .forEach(troll -> troll.kill())
         return
 
-    let gold = leaver.getLumber()
-    let goldPerPlayer = (gold / alliesInGameCount).floor()
-    let goldLeftover = gold mod alliesInGameCount
-
-    alliesInGame.forEach() member ->
-        var goldGiven = goldPerPlayer
-        if goldLeftover > 0 and member == alliesInGame.getFirst()
-            goldGiven += goldLeftover
-        let msg = "{0}They left you {1}{2}{3} gold|r".format(GENERAL_COLOR, GOLD_COLOR, goldGiven.toString(), GENERAL_COLOR)
-        printTimedToPlayer(msg, DEBUG_MSG_DURATION, member)
-        member.addLumber(goldPerPlayer)
-
+    for member in alliesInGame
         leaver
         ..setPlayerAlliance(member, ALLIANCE_SHARED_VISION, true)
         ..setPlayerAlliance(member, ALLIANCE_SHARED_CONTROL, true)
         ..setPlayerAlliance(member, ALLIANCE_SHARED_ADVANCED_CONTROL, true)
+
+    if gameConfig.isTeamGoldEnabled()
+        return
+
+    let gold = leaver.getLumber()
+    let goldPerPlayer = gold div alliesInGameCount
+    var goldLeftover = gold mod alliesInGameCount
+
+    for member in alliesInGame
+        var goldGiven = goldPerPlayer
+        if goldLeftover > 0
+            goldGiven += 1
+            goldLeftover -= 1
+        if goldGiven > 0
+            let msg = "{0}They left you {1}{2}{3} gold|r".format(GENERAL_COLOR, GOLD_COLOR, goldGiven.toString(), GENERAL_COLOR)
+            printTimedToPlayer(msg, DEBUG_MSG_DURATION, member)
+            member.addLumber(goldPerPlayer)
 
 init
     registerPlayerEvent(EVENT_PLAYER_LEAVE) ->

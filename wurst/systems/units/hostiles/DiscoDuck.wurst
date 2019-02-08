@@ -2,6 +2,7 @@ package DiscoDuck
 import Hostile
 import ItemPoolExtensions
 import PublicLibrary
+import LinkedList
 
 
 public constant string TELEPORT_MODEL = "Abilities\\Spells\\Human\\MassTeleport\\MassTeleportCaster.mdl"
@@ -16,9 +17,9 @@ public class DiscoDuck extends Hostile
         register(unitTypeId, duck -> new DiscoDuck(duck))
 
         pinions
-        ..addItemType(ITEM_DD_PINION_FIRE, 100)
-        ..addItemType(ITEM_DD_PINION_SHADOW, 100)
-        ..addItemType(ITEM_DD_PINION_PAIN, 100)
+            ..addItemType(ITEM_DD_PINION_FIRE, 100)
+            ..addItemType(ITEM_DD_PINION_SHADOW, 100)
+            ..addItemType(ITEM_DD_PINION_PAIN, 100)
 
     static function getInstance() returns thistype
         return instance
@@ -30,6 +31,7 @@ public class DiscoDuck extends Hostile
         super(players[PLAYER_NEUTRAL_AGGRESSIVE], gg_rct_discoduck.getCenter(), (315.0).asAngleDegrees())
 
         HornSound()
+        printTimed(COLOR_RED + "The disco duck has been summoned!", 5)
         flashEffect(TELEPORT_MODEL, getUnit(), "overhead")
 
         if instance == null
@@ -37,12 +39,15 @@ public class DiscoDuck extends Hostile
 
     override function postCreate()
         super.postCreate()
-        drops
-        ..add(ITEM_BONE)
-        ..add(ITEM_BONE)
-        ..add(ITEM_STEEL_INGOT)
-        ..add(ITEM_STEEL_INGOT)
-        ..add(ITEM_MEDALLION_COURAGE)
+
+    override function getDrops() returns LinkedList<int>
+        let drops = super.getDrops()
+                ..add(ITEM_BONE)
+                ..add(ITEM_BONE)
+                ..add(ITEM_STEEL_INGOT)
+                ..add(ITEM_STEEL_INGOT)
+                ..add(ITEM_MEDALLION_COURAGE)
+        return drops
 
     override function getNumCorpses() returns int
         return 13

@@ -1,0 +1,207 @@
+package TeleGathering
+import HashMap
+import ClosureTimers
+import ClosureEvents
+import InstantDummyCaster
+import ID
+import HerbMaster
+import Omnigatherer
+import UnitEntity
+import ClosuresForItems
+import TerrainUtils
+
+let ABILITY_ID_TELEGATHER = 'A057'
+let ABILITY_ID_OMNI_TELEGATHER = 'A06V'
+let ABILITY_ID_CASTER_BUFF = 'A056'
+let CASTER_BUFF_ID = 'B00H'
+let TARGET_BUFF_ID = 'B00I'
+let SORT_DISTANCE_INCREMENT = 110
+let SORT_DISTANCE_BASE = 30
+let SORT_ANGLE_INCREMENT = 45
+let MAX_SORTING_SEARCH_LOOPS = 2
+let TELEGATHER_DISABLE_DISTANCE_SQ = 700*700
+
+HashMap<unit, TeleGatherInstance> instances = new HashMap<unit, TeleGatherInstance>()
+HashMap<unit, SortingCache> cachedSortingPositions = new HashMap<unit, SortingCache>()
+
+function IterableMap<int, SortingPosition>.deepCopy() returns IterableMap<int, SortingPosition>
+    let map = new IterableMap<int, SortingPosition>
+    for key in this
+        map.put(key, this.get(key).copy())
+    return map
+
+class SortingCache
+    IterableMap<int, SortingPosition> sortingPositions
+    int nextSortAngle
+    int sortDistanceOffset
+
+    construct(IterableMap<int, SortingPosition> sortingPositions, int nextSortAngle, int sortDistanceOffset)
+        this.sortingPositions = sortingPositions.deepCopy()
+        this.nextSortAngle = nextSortAngle
+        this.sortDistanceOffset = sortDistanceOffset
+
+    ondestroy
+        for k in this.sortingPositions
+            destroy this.sortingPositions.get(k)
+        destroy this.sortingPositions
+
+class SortingPosition
+    vec2 pos
+    construct(vec2 pos)
+        this.pos = pos
+
+    function copy() returns SortingPosition
+        return new SortingPosition(this.pos)
+
+class TeleGatherInstance
+    unit caster
+    unit teleTarget
+    real duration
+    real lifetime = 0
+    UnitEntity casterEntity
+    CallbackPeriodic pollingLoop
+    IterableMap<int, SortingPosition> sortingPositions
+    int nextSortAngle = 0
+    int sortDistanceOffset = SORT_DISTANCE_INCREMENT
+
+    construct(unit caster, unit teleTarget, real duration)
+        InstantDummyCaster.castTarget(caster.getOwner(), ABILITY_ID_CASTER_BUFF, 1, "curse", caster, caster.getPos() + vec2(100,0))
+        this.caster = caster
+        this.casterEntity = UnitEntity.findForUnit(this.caster)
+        this.duration = duration
+        this.teleTarget = teleTarget
+        if cachedSortingPositions.has(this.teleTarget)
+            let cache = cachedSortingPositions.get(this.teleTarget)
+            this.sortingPositions = cache.sortingPositions.deepCopy()
+            this.nextSortAngle = cache.nextSortAngle
+            this.sortDistanceOffset = cache.sortDistanceOffset
+        else
+            this.nextSortAngle = 0
+            this.sortDistanceOffset = SORT_DISTANCE_INCREMENT
+            this.sortingPositions = new IterableMap<int, SortingPosition>()
+        startBuffPolling()
+
+    function startBuffPolling()
+        this.pollingLoop = doPeriodically(1) cb ->
+            this.lifetime += 1
+            if this.lifetime >= this.duration
+                or not caster.hasAbility(CASTER_BUFF_ID)
+                or not teleTarget.hasAbility(TARGET_BUFF_ID)
+                destroy this
+
+    function canGatherItem(int itemType) returns bool
+        if itemType == 'XRAW' //Raw meat
+            return false
+
+        //Skip herbs if not herb-gatherer
+        if not this.casterEntity instanceof HerbMaster
+            and not this.casterEntity instanceof Omnigatherer
+                if itemType == ITEM_RIVER_ROOT
+                    or itemType == ITEM_RIVER_STEM
+                    or itemType == ITEM_BUTSU
+                    or itemType == ITEM_BLUE_HERB
+                    or itemType == ITEM_ORANGE_HERB
+                    or itemType == ITEM_YELLOW_HERB
+                    or itemType == ITEM_PURPLE_HERB
+                    or itemType == ITEM_MUSHROOM
+                    return false
+
+        return true
+
+    function handleTeleGather(item itm)
+        let itemType = itm.getTypeId()
+
+        if not canGatherItem(itemType)
+            or caster.getPos().distanceToSq(teleTarget.getPos()) <= TELEGATHER_DISABLE_DISTANCE_SQ //Disable gathering near target fire
+            return
+
+        let sortingPos = this.getSortingPos(itemType)
+        this.caster.removeItem(itm)
+        itm.setPos(sortingPos.pos)
+
+    function getSortingPos(int itemType) returns SortingPosition
+        let targetPos = teleTarget.getPos()
+
+        //If a cached pos exists, return it
+        if this.sortingPositions.has(itemType)
+            return this.sortingPositions.get(itemType)
+
+        //Otherwise find and create a new pos for item type
+        let newPos = new SortingPosition(findPosForItem(itemType))
+        sortingPositions.put(itemType, newPos)
+        return newPos
+
+    function findPosForItem(int itemType) returns vec2
+        let defaultPos = teleTarget.getPos()
+
+        //Look for similar nearby item, multiply range by 1.1 to account for items grouping and spilling over
+        let nearest = findNearestItem(defaultPos, (SORT_DISTANCE_BASE + sortDistanceOffset * MAX_SORTING_SEARCH_LOOPS * 1.1), i -> i.getTypeId() == itemType)
+        if nearest != null
+            return nearest.getPos()
+
+        //Look for a new position around the fire
+        for distanceOffset = this.sortDistanceOffset to MAX_SORTING_SEARCH_LOOPS * SORT_DISTANCE_INCREMENT step SORT_DISTANCE_INCREMENT
+            for angleOffset = this.nextSortAngle to 360-SORT_ANGLE_INCREMENT step SORT_ANGLE_INCREMENT
+                this.sortDistanceOffset = distanceOffset
+                this.nextSortAngle = angleOffset
+                let maybeTargetPos = defaultPos.polarOffset(angleOffset.toReal().fromDeg(), SORT_DISTANCE_BASE + distanceOffset.toReal())
+
+                if maybeTargetPos.isTerrainWalkable()
+                    this.nextSortAngle += SORT_ANGLE_INCREMENT
+                    return maybeTargetPos
+
+            this.nextSortAngle = 0
+
+        return defaultPos
+
+    ondestroy
+        if this.teleTarget.isAlive()
+            if cachedSortingPositions.has(this.teleTarget)
+                destroy cachedSortingPositions.getAndRemove(this.teleTarget)
+            cachedSortingPositions.put(teleTarget, new SortingCache(this.sortingPositions, this.nextSortAngle, this.sortDistanceOffset))
+
+        if this.caster.hasAbility(CASTER_BUFF_ID)
+            this.caster.removeAbility(CASTER_BUFF_ID)
+        if this.teleTarget.hasAbility(TARGET_BUFF_ID)
+            this.teleTarget.removeAbility(TARGET_BUFF_ID)
+
+        destroy this.pollingLoop
+
+        for key in this.sortingPositions
+            this.sortingPositions.getAndRemove(key)
+        destroy this.sortingPositions
+
+        if instances.has(this.caster)
+            if instances.get(this.caster) == this
+                instances.remove(this.caster)
+
+function onTeleGatherCast()
+    let caster = GetSpellAbilityUnit()
+    let target = GetSpellTargetUnit()
+    var duration = 0.
+    switch GetSpellAbilityId()
+        case ABILITY_ID_OMNI_TELEGATHER
+            duration = 120.
+        case ABILITY_ID_TELEGATHER
+            duration = 30. + 20. * caster.getAbilityLevel(ABILITY_ID_TELEGATHER)
+
+    if instances.has(caster)
+        destroy instances.getAndRemove(caster)
+
+    instances.put(caster, new TeleGatherInstance(caster, target, duration))
+
+init
+    registerSpellEffectEvent(ABILITY_ID_TELEGATHER) ->
+        onTeleGatherCast()
+
+    registerSpellEffectEvent(ABILITY_ID_OMNI_TELEGATHER) ->
+        onTeleGatherCast()
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
+        let dying = GetTriggerUnit()
+        if dying.isType(UNIT_TYPE_STRUCTURE) and cachedSortingPositions.has(dying)
+            destroy cachedSortingPositions.getAndRemove(dying)
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
+        if instances.has(GetManipulatingUnit())
+            instances.get(GetManipulatingUnit()).handleTeleGather(GetManipulatedItem())

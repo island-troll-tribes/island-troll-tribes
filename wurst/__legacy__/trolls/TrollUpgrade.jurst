@@ -1,4 +1,4 @@
-library TrollUpgrade initializer onInit requires ID, PublicLibrary, LegacyTriggers
+library TrollUpgrade initializer onInit requires ID, PublicLibrary, LegacyTriggers, MeatSystem, Shapeshift
   private function ReplaceUnitEx takes unit whichUnit, integer newUnitId, integer unitStateMethod returns unit
     local unit    oldUnit = whichUnit
     local unit    newUnit
@@ -51,6 +51,11 @@ library TrollUpgrade initializer onInit requires ID, PublicLibrary, LegacyTrigge
     call SetHeroLevelBJ(REPLACING_UNIT, 1, false)
     call UnitModifySkillPoints(REPLACING_UNIT, 0)
 
+    //Transfer raw meat inventory
+    if meatInventoryInstances.has(REPLACED_UNIT)
+        meatInventoryInstances.get(REPLACED_UNIT).transferMeatInventoryToUnit(REPLACING_UNIT)
+    endif
+
     // Copy previous attributes
     call SetHeroStr(REPLACING_UNIT, strength, true)
     call SetHeroAgi(REPLACING_UNIT, agility, true)
@@ -61,6 +66,12 @@ library TrollUpgrade initializer onInit requires ID, PublicLibrary, LegacyTrigge
         set udg_parameterUnit=REPLACING_UNIT
         call TriggerExecute(gg_trg_Release_Pets)
         call SetPlayerTechResearched(PLAYER, 'Roch', 1)
+        PLAYER.setAbilityAvailable(ABILITY_ID_WOLFS_HUNGER, true)
+        PLAYER.setAbilityAvailable(ABILITY_ID_BEARS_BULWARK, false)
+        PLAYER.setAbilityAvailable(ABILITY_ID_PROWL, false)
+        PLAYER.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES_ACTIVE, false)
+        PLAYER.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES_ORB, false)
+
     elseif UNIT_ID_REPLACE == UNIT_TRUE_FORM or UNIT_ID_REPLACE == UNIT_ULTIMATE_FORM then
         set udg_parameterUnit = REPLACING_UNIT
         call TriggerExecute(gg_trg_Rest_BM_SKills)

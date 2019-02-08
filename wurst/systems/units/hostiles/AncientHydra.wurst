@@ -4,11 +4,11 @@ import LesserHydra
 import ClosureTimers
 import ClosureForGroups
 import UnitExtensions
-import IttDummyCaster
 import ClosureEvents
 import DiscoDuck
 import PublicLibrary
-
+import DummyCaster
+import Orders
 
 constant SPELL_NETHER = 'A037'
 constant BUFF_NETHER = 'BHbn'
@@ -32,10 +32,11 @@ public class AncientHydra extends Hostile
     override function postCreate()
         super.postCreate()
         let hydra = getUnit()
-        ..addSleep(false)
-        ..setCreepGuard(false)
+            ..addSleep(false)
+            ..setCreepGuard(false)
 
         HornSound()
+        printTimed(COLOR_RED + "The ancient hydra has been summoned!", 5)
         flashEffect(TELEPORT_MODEL, hydra, "overhead")
         callback = doPeriodically(4, cb -> attackCenter())
 
@@ -73,6 +74,8 @@ public class AncientHydra extends Hostile
         for i = 0 to 1
             new LesserHydra(pos)
 
+        super.onDeath()
+
     function onAttacked()
         let attacker = GetEventDamageSource()
         if attacker.getTypeId() == UNIT_BEE
@@ -81,13 +84,10 @@ public class AncientHydra extends Hostile
     function onSpellEffect()
         if GetSpellAbilityId() == SPELL_NETHER
             getUnit().removeAbility(BUFF_NETHER)
-            new IttDummyCaster().castTarget(
-                players[PLAYER_NEUTRAL_AGGRESSIVE],
-                SPELL_NETHER,
-                1,
-                "banish",
-                GetSpellAbilityUnit()
-            )
+            new DummyCaster()
+                ..owner(players[PLAYER_NEUTRAL_AGGRESSIVE])
+                ..origin(GetSpellAbilityUnit().getPos())
+                ..castTarget(SPELL_NETHER, 1, Orders.banish, GetSpellAbilityUnit())
 
 
 init

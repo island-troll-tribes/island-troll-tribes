@@ -5,11 +5,11 @@ import LinkedList
 import ClosureForGroups
 import ClosureTimers
 import AbilityObjEditing
-import IttDummyCaster
 import OverCharge
 import Orders
 import BuffObjEditing
 import Icons
+import DummyCaster
 
 
 constant let ABILITY_ID = 'ESEF'
@@ -188,22 +188,29 @@ class SEFOrb
                         targetUnit = u
 
     function isValidTarget(unit u) returns boolean
-        return IsUnitVisible(u, ownerUnit.getOwner()) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isHidden() and u.isAlive() and not u.isInvulnerable() and u.getOwner().isEnemyOf(ownerUnit.getOwner())
-
+        return IsUnitVisible(u, ownerUnit.getOwner())
+            and not u.isType(UNIT_TYPE_STRUCTURE)
+            and not u.isHidden() and u.isAlive()
+            and not u.isInvulnerable()
+            and u.getOwner().isEnemyOf(ownerUnit.getOwner())
 
     function updateLoop()
         updateTarget()
         moveTowardTargetPos()
 
-
     function onImpactEffect()
         if (targetUnit.isAlive() and not targetUnit.isInvulnerable())
             if (targetUnit.hasAbility('XSFB')) //If hit previously by another orb
-                ownerUnit.damageTarget(targetUnit, ORB_IMPACT_DAMAGE_SAMETARGET, ATTACK_TYPE_NORMAL)
+                UnitDamageTarget(ownerUnit, targetUnit, ORB_IMPACT_DAMAGE_SAMETARGET, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
             else
-                ownerUnit.damageTarget(targetUnit, ORB_IMPACT_DAMAGE, ATTACK_TYPE_NORMAL)
-            new IttDummyCaster().castTarget(ownerUnit.getOwner(), DUMMY_STUN_SPELL_ID, 1, Orders.firebolt, targetUnit, ownerUnit.getPos3Real())
-            new IttDummyCaster().castTarget(ownerUnit.getOwner(), DUMMY_BUFF_SPELL_ID, 1, Orders.acidbomb, targetUnit, ownerUnit.getPos3Real())
+                UnitDamageTarget(ownerUnit, targetUnit, ORB_IMPACT_DAMAGE, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
+            new DummyCaster()
+                ..owner(ownerUnit.getOwner())
+                ..origin(ownerUnit.getPos())
+                ..castTarget(DUMMY_STUN_SPELL_ID, 1, Orders.firebolt, targetUnit)
+            new DummyCaster()                 ..owner(ownerUnit.getOwner())
+                ..origin(ownerUnit.getPos())
+                ..castTarget(DUMMY_BUFF_SPELL_ID, 1, Orders.acidbomb, targetUnit)
 
         var efx = addEffect(ORB_IMPACT_EFFECT, projectile.getPos3())
         efx.setScale(1)

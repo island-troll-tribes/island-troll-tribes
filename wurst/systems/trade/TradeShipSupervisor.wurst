@@ -3,7 +3,9 @@ import TradeShipStop
 import HashMap
 import LinkedList
 import ClosureTimers
+import ClosureEvents
 import ErrorHandling
+import Orders
 
 let TRADE_SHIP_PAUSE_TIME_DEST = 0
 let TRADE_SHIP_PAUSE_TIME_SELL = 0
@@ -19,10 +21,11 @@ public enum TradeShipSupervisorState
 public class TradeShipSupervisor
     static let ships = new HashMap<unit, thistype>()
     static let whenEnterRegion = CreateTrigger()
-    ..registerEnterRegion(TradeShipStop.tradeStops, null)
-    ..addAction(function TradeShipSupervisor.handleEnterRegion)
+        ..registerEnterRegion(TradeShipStop.tradeStops, null)
+        ..addAction(function TradeShipSupervisor.handleEnterRegion)
 
     unit ship
+    bool orderListenerEnabled = true
     TradeShipStop firstStop
     TradeShipStop nextStop
     CallbackPeriodic callback
@@ -34,12 +37,36 @@ public class TradeShipSupervisor
         let enteringUnit = GetEnteringUnit()
         if ships.has(enteringUnit)
             ships.get(enteringUnit).processEnterRegion()
-            
+
     construct(TradeShipStop firstStop, int shipId)
         ship = createUnit(players[PLAYER_NEUTRAL_PASSIVE], shipId, firstStop.getPos(), angle(0))
+        ship.setPathing(false)
+        ship.addAbility(GHOST_VIS_ID)
         nextStop = firstStop.getNext()
         ships.put(ship, this)
         moveToNextStop()
+        EventListener.add(ship, EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, -> onIssuedOrder())
+        EventListener.add(ship, EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER, -> onIssuedOrder())
+        EventListener.add(ship, EVENT_PLAYER_UNIT_ISSUED_ORDER, -> onIssuedOrder())
+
+    function onIssuedOrder()
+        if not this.orderListenerEnabled
+            return
+        if GetIssuedOrderId() != Orders.smart and GetIssuedOrderId() != Orders.move
+            return
+        this.orderListenerEnabled = false
+        switch state
+            case MOVING
+                let orderId = GetIssuedOrderId()
+                let targetPos = getOrderPos()
+                let nextStopPos = nextStop.getPos()
+                if orderId != Orders.move or targetPos.distanceToSq(nextStopPos) > 10000.0
+                    ship.issuePointOrder("move", nextStopPos)
+            case STOPPED
+                ship.issueImmediateOrder("stop")
+            case EXITED
+                skip
+        this.orderListenerEnabled = true
 
     function getState() returns TradeShipSupervisorState
         return state
@@ -55,11 +82,17 @@ public class TradeShipSupervisor
             return
 
         state = TradeShipSupervisorState.MOVING
+        this.orderListenerEnabled = false
         ship.issuePointOrder("move", nextStop.getPos())
+        this.orderListenerEnabled = true
         destroyCallback()
 
+        //Possibly deprecated now that we have an order listener to stop controlling the boat
+        //its here just in case make sure nothing mysterious can stop the boats
         callback = doPeriodically(1.0) cb ->
+            this.orderListenerEnabled = false
             ship.issuePointOrder("move", nextStop.getPos())
+            this.orderListenerEnabled = true
 
     function pause(real duration)
         if state == TradeShipSupervisorState.STOPPED
@@ -102,7 +135,8 @@ public class TradeShipSupervisor
             callback = null
 
     ondestroy
-        listeners.forEach(listener -> destroy listener)
+        for listener in listeners
+            destroy listener
         destroy listeners
 
         if callback != null

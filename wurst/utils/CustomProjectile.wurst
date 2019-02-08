@@ -1,0 +1,72 @@
+package CustomProjectile
+import ClosureTimers
+
+public abstract class CustomProjectile
+    real groundSpeed
+    real verticalSpeed
+    vec3 targetPos
+    widget targetWidget
+    bool homing
+    real gravity
+    real originalDistance
+    effect missileFx
+    CallbackPeriodic updaterLoop
+
+    construct(vec3 startPos, vec3 targetPos, real groundSpeed, real gravity, string effectPath)
+        this.targetPos = targetPos
+        this.targetWidget = null
+        this.groundSpeed = groundSpeed
+        this.gravity = -gravity
+        this.homing = false
+        this.missileFx = addEffect(effectPath, startPos)
+        this.originalDistance = startPos.toVec2().distanceTo(targetPos.toVec2())
+        this.postCreation()
+
+    construct(vec3 startPos, widget targetWidget, real groundSpeed, real gravity, string effectPath)
+        this.targetWidget = targetWidget
+        this.targetPos = targetWidget.getPos().withTerrainZ()
+        this.groundSpeed = groundSpeed
+        this.gravity = -gravity
+        this.homing = true
+        this.missileFx = addEffect(effectPath, startPos)
+        this.originalDistance = startPos.toVec2().distanceTo(targetPos.toVec2())
+        this.postCreation()
+
+    function updateTick()
+        if this.targetWidget != null and this.homing
+            this.targetPos = this.targetWidget.getPos().withTerrainZ()
+
+        let curPos3D = this.missileFx.getPos3()
+        let curPos2D = curPos3D.toVec2()
+        let targetPos3D = this.targetPos
+        let targetPos2D = targetPos3D.toVec2()
+        let distance2D = curPos2D.distanceTo(targetPos2D)
+
+        //Update vertical speed for appropriate flight arc
+        let flightTime = distance2D / this.groundSpeed
+        real heightDifference = (this.targetPos - missileFx.getPos3()).z
+        this.verticalSpeed = (heightDifference / flightTime) - (0.5 * this.gravity * flightTime)
+
+        //Update position
+        if this.groundSpeed * ANIMATION_PERIOD >= distance2D
+            this.missileFx.setPos(this.targetPos)
+            this.onImpact()
+            this.postImpact()
+            return
+        else
+            let newPos3D = curPos3D.offset2d(curPos2D.angleTo(targetPos2D), this.groundSpeed * ANIMATION_PERIOD) + vec3(0, 0, this.verticalSpeed * ANIMATION_PERIOD)
+            this.missileFx.setPos(newPos3D)
+
+    function postCreation()
+        this.updaterLoop = doPeriodically(ANIMATION_PERIOD) cb ->
+            this.updateTick()
+
+    abstract function onImpact()
+
+    function postImpact()
+        destroy this
+
+    ondestroy
+        this.missileFx.destr()
+        if this.updaterLoop != null
+            destroy this.updaterLoop

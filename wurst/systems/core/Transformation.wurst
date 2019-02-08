@@ -1,10 +1,11 @@
 package Transformation
-
+import Shapeshift
 import Classes
 import ClosureEvents
 import GameConfig
 import ID
 import LegacyTriggers
+import MeatSystem
 
 function replaceUnit(unit whichUnit, integer newUnitId) returns unit
     var oldUnit = whichUnit
@@ -38,6 +39,10 @@ public function trollUpgrade(unit whichUnit, integer newUnitId)
     int intelligence = GetHeroInt(oldUnit, false)
     unit newUnit = replaceUnit(whichUnit, newUnitId)
 
+    //Transfer raw meat inventory
+    if meatInventoryInstances.has(oldUnit)
+        meatInventoryInstances.get(oldUnit).transferMeatInventoryToUnit(newUnit)
+
     //Change globals to new unit
     udg_trolls.removeUnit(oldUnit)
     udg_trolls.addUnit(newUnit)
@@ -58,6 +63,11 @@ public function trollUpgrade(unit whichUnit, integer newUnitId)
         udg_parameterUnit = newUnit
         TriggerExecute(gg_trg_Release_Pets)
         SetPlayerTechResearched(owner, 'Roch', 1)
+        owner.setAbilityAvailable(ABILITY_ID_WOLFS_HUNGER, true)
+        owner.setAbilityAvailable(ABILITY_ID_BEARS_BULWARK, false)
+        owner.setAbilityAvailable(ABILITY_ID_PROWL, false)
+        owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES_ORB, false)
+        owner.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES_ACTIVE, false)
     else if newUnitId == UNIT_TRUE_FORM or newUnitId == UNIT_ULTIMATE_FORM
         udg_parameterUnit = newUnit
         TriggerExecute(gg_trg_Rest_BM_SKills)

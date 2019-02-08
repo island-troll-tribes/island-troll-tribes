@@ -5,11 +5,12 @@ import ChatCommands
 import ClosureTimers
 import GameConfig
 import Classes
-import StringUtils
 import TimerUtils
-import TimerExtensions
 import LegacyColors
 import IDUtils
+import ChatUtils
+import Lodash
+import StringUtils
 import initlater CheatPack
 
 
@@ -19,14 +20,14 @@ public interface GameModeHandler
     function run(GameMode mode, LinkedList<string> args)
 
 public class GameMode
-    static let list = new LinkedList<thistype>()
+    static let list = new OwnedLinkedList<thistype>()
     static let modeboard = CreateMultiboard()
     static let listeners = CreateTrigger()
     static let modes = new HashMap<string, thistype>()
     static let clock = getTimer()
+    static var modePlayer = players[0]
 
     static function initialize()
-        var modePlayer = players[0]
         for i = 0 to bj_MAX_PLAYERS - 1
             if players[i].isIngame()
                 modePlayer = players[i]
@@ -35,7 +36,7 @@ public class GameMode
         print(modePlayer.getNameColored() + GENERAL_COLOR + " can choose game modes.|r")
         printTimedToPlayer(GENERAL_COLOR + "You can select modes|r", 10, modePlayer)
 
-        doAfter(0) ->
+        nullTimer() ->
             createModeBoard()
             registerAll(modePlayer)
 
@@ -48,7 +49,7 @@ public class GameMode
 
     static function getEnabledModes() returns string
         return list
-        .filter(mode -> mode.enabled)
+        .lfilter(mode -> mode.enabled)
         .map(mode -> mode.message)
         .joinBy("\n")
 
@@ -90,20 +91,20 @@ public class GameMode
         ..setTitle("Modes - 00:{0}".format(MODES_TIME_LIMIT.toString(0)))
         ..setItemsStyle(true, false)
         ..display(true)
-        ..minimalize(false)
+        ..minimalize(localPlayer != modePlayer)
 
         for row = 0 to displayableModes.size()
             let mode = displayableModes.get(row)
 
             modeboard.getItem(row, 1)
             ..setValue(mode.description)
-            ..setWidth(.75)
+            ..setWidth(.60)
             ..release()
 
             let name = "{0}-{1}|r {2}(|r{3}{4}|r{5})|r".format(GOLD_COLOR, mode.name, GRAY_COLOR, SPECIAL_COLOR, mode.abbrev, GRAY_COLOR)
             modeboard.getItem(row, 0)
             ..setValue(name)
-            ..setWidth(.25)
+            ..setWidth(.15)
             ..release()
 
         doPeriodically(1.0) cb ->
@@ -224,17 +225,19 @@ init
         GameMode.find("el").enable()
 
     new GameMode("all", "ar", "Each player is given the same or a random troll, eg: \"-all random\" or \"-all mage\"") (mode, args) ->
-        if args.size() > 1 and args.get(1) != "random"
-            let klass = "UNIT_" + args.joinBy("_").toUpperCase()
-            let uid = S2ID(klass)
-            if getTrollClassType(uid) != ClassType.BASE_CLASS
+        let classArgs = args.drop(1)
+        if classArgs.size() > 0 and args.get(0) != "random"
+            let trollClass = "UNIT_" + classArgs.joinBy("_").toUpperCase()
+            let uid = S2ID(trollClass)
+            if uid == 0 or getTrollClassType(uid) != ClassType.BASE_CLASS
                 mode.error("Invalid class selection")
             else
                 gameConfig.setAllTrollEnabled(uid)
-                mode.message(ENERGY_COLOR + "All " + args.joinBy(" ") + "|r enabled")
+                mode.message(ENERGY_COLOR + "All " + classArgs.joinBy(" ") + "|r enabled")
         else
             gameConfig.setAllTrollEnabled(0)
             mode.message(ENERGY_COLOR + "All random|r enabled")
+        destroy classArgs
 
     new GameMode("hot-mode", "hm", "Increase the amount of heat a fire gives per cast, defaults to 22, eg: \"-hm 30\"") (mode, args) ->
         var amount = 22
@@ -440,3 +443,8 @@ init
         GameMode.find("qp").enable()
         GameMode.find("tm").enable()
         GameMode.find("st").enable()
+
+    new GameMode("tameable-fawn", "tf", "Tame fawns with acorns") (mode, args) ->
+        let value = args.size() > 1 ? args.get(0).isConfirmation() : true
+        gameConfig.setTameableFawnEnabled(value)
+        mode.message(ENERGY_COLOR + "Taming fawns enabled by placing acorns near them")

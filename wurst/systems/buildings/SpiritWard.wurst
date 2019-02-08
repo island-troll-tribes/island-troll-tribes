@@ -49,8 +49,10 @@ init
     registerGameStartEvent() ->
         registerPlayerEvent(EVENT_PLAYER_LEAVE) ->
             let leaver = GetTriggerPlayer()
-            let wards = GetUnitsOfPlayerAndTypeId(leaver, UNIT_SPIRIT_WARD)
-            let newOwner = leaver.getTribe().getForce().getRandomPlayer()
+            let tribe = leaver.getTribe()
+            if tribe != null
+                let wards = GetUnitsOfPlayerAndTypeId(leaver, UNIT_SPIRIT_WARD)
+                let newOwner = tribe.getForce().getRandomPlayer()
 
-            for ward from wards
-                ward.setOwner(newOwner, true)
+                for ward from wards
+                    ward.setOwner(newOwner, true)

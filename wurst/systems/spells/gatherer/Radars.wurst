@@ -5,7 +5,9 @@ import Assets
 import ClosureEvents
 import ClosuresForItems
 import ClosureTimers
-import ID
+import IsTypeThing
+import Tribe
+import ObjectIdGenerator
 
 constant let SPELL_ICON = Icons.bTNSpy
 constant let COOLDOWN = 50.
@@ -13,8 +15,10 @@ constant let CASTTIME = 1.
 constant let RADAR_RANGE_BASE = 3300.
 constant let RADAR_RANGE_PER_LEVEL = 200.
 constant let MAX_RANGE = 5000.
+constant let MAP_MAGIC_RANGE_BONUS = 1500.
 constant let REVEAL_DURATION = 10.
 constant let MANACOST = 15
+constant let MAP_MAGIC_BUFF_ID = 'BHbd'
 constant string array SPELLBOOKSPELLS = ["XGFT, XGFZ, XGFR, XGFC", "XGFT, XGFZ, XGFR, XGFC, XGFF, XGFS", "XGFT, XGFZ, XGFR, XGFC, XGFF, XGFS, XGFM"]
 constant let ABILITY_ID_FINDTINDER = 'XGFT'
 constant let ABILITY_ID_FINDSTICK = 'XGFZ'
@@ -38,6 +42,23 @@ constant let TOOLTIP_NORM_FINDSTONE = "|c00ffcc00S|r - Find Stone"
 constant let TOOLTIP_EXT_FINDSTONE = "Pings all nearby stones in the minimap and reveals them for a short duration. Ignores items near enemies."
 constant let TOOLTIP_NORM_FINDMANA = "|c00ffcc00D|r - Find Mana Crystal"
 constant let TOOLTIP_EXT_FINDMANA = "Pings all nearby mana crystals in the minimap and reveals them for a short duration. Ignores items near enemies."
+constant let DUMMY_IDS = [  compiletime(UNIT_ID_GEN.next()),
+                            compiletime(UNIT_ID_GEN.next()),
+                            compiletime(UNIT_ID_GEN.next()),
+                            compiletime(UNIT_ID_GEN.next()),
+                            compiletime(UNIT_ID_GEN.next()),
+                            compiletime(UNIT_ID_GEN.next()),
+                            compiletime(UNIT_ID_GEN.next())]
+constant let DUMMY_MODELS = ["Doodads\\Ruins\\Plants\\Ruins_Shrub\\Ruins_Shrub1.mdl",
+                             "Doodads\\Felwood\\Props\\FelwoodLogStraight\\FelwoodLogStraight.mdl",
+                             "Doodads\\Underground\\Plants\\ShroomsBlue\\ShroomsBlue.mdl",
+                             "Objects\\InventoryItems\\ThunderLizardEgg\\ThunderLizardEgg.mdl",
+                             "Doodads\\Outland\\Rocks\\RubbleRock\\RubbleRock5.mdl",
+                             "Doodads\\LordaeronSummer\\Rocks\\Lords_Rock\\Lords_Rock6.mdl",
+                             "Doodads\\Cinematic\\EyeOfSargeras\\EyeOfSargeras.mdl"]
+constant let DUMMY_SCALING = [0.80, 0.40, 0.50, 1.50, 0.50, 0.33, 0.25]
+constant let dummyDictionary = new HashMap<integer, integer>()
+constant let itemToRadarDummy = new HashMap<widget, unit>()
 
 @compiletime function createFindStone()
     new AbilityDefinitionIllidanChannel(ABILITY_ID_FINDSTONE)
@@ -282,6 +303,42 @@ constant let TOOLTIP_EXT_FINDMANA = "Pings all nearby mana crystals in the minim
     ..presetTooltipNormalExtended(lvl -> "Contains various item radar abilities for more efficient gathering.")
     ..presetSharedSpellCooldown(lvl -> true)
 
+@compiletime function radarDummies()
+    for i = 0 to 6
+        new UnitDefinition(DUMMY_IDS[i], 'hfoo')
+        ..setName("Radar Dummy")
+        ..setModelFile(DUMMY_MODELS[i])
+        ..setScalingValue(DUMMY_SCALING[i])
+        ..setMovementHeight(0)
+        ..setCollisionSize(0.0)
+        ..setSightRadiusDay(0)
+        ..setSightRadiusNight(0)
+        ..setSpeedBase(1)
+        ..setHideMinimapDisplay(true)
+        ..setShadowImageHeight(0.0)
+        ..setShadowImageWidth(0.0)
+        ..setFoodCost(0)
+        ..setNormalAbilities("Aloc,Avul,Aeth")
+        ..setAttacksEnabled(0)
+        ..setIsaBuilding(true)
+
+let radarDummyDeath = CreateTrigger()
+    ..addAction(-> removeRadarDummy(GetTriggerWidget()))
+
+let radarDummyPickup = CreateTrigger()
+    ..registerAnyUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM)
+    ..addAction(-> removeRadarDummy(GetManipulatedItem()))
+
+public function removeRadarDummy(widget w)
+    if itemToRadarDummy.has(w)
+        let dummy = itemToRadarDummy.getAndRemove(w)
+        dummy.remove()
+
+public function revealDummytoTeam(unit dummy, player whoseTeam)
+    let team = Tribe.ofPlayer(whoseTeam).getMembers()
+    if team.contains(GetLocalPlayer())
+        dummy.setVertexColor(255, 255, 255, 255)
+
 function onCast(int itemId)
     var caster = GetSpellAbilityUnit()
     var casterPos = caster.getPos()
@@ -293,30 +350,46 @@ function onCast(int itemId)
 
     //Calculate range
     var range = min(RADAR_RANGE_BASE + RADAR_RANGE_PER_LEVEL * caster.getLevel(), MAX_RANGE)
+
     if (caster.getTypeId() == UNIT_RADAR_GATHERER or caster.getTypeId() == UNIT_OMNIGATHERER)
         //Max range for subs
         range = MAX_RANGE
 
-    forItemsInMap() i ->
-        if i.getPos().distanceTo(casterPos) < range and i.getTypeId() == itemId and not areHostilesNearItem(owner, i)
-            //Vision
-            var vis = createVision(owner, i.getPos(), 128, true)
-            vis.start()
-            doAfter(REVEAL_DURATION) ->
-                vis.destr()
+    //Map magic bonus
+    if caster.hasAbility(MAP_MAGIC_BUFF_ID)
+        range += MAP_MAGIC_RANGE_BONUS
 
-            //Ping
-            PingMinimapForForceEx(GetPlayersAllies(owner), i.getPos().x, i.getPos().y, 10, bj_MINIMAPPINGSTYLE_SIMPLE, 0, 255, 0)
+    forItemsInMap() i ->
+        if i.getPos().distanceTo(casterPos) < range and i.getTypeId() == itemId and i.isPickupable()
+            if not itemToRadarDummy.has(i)
+                //Make a new dummy item structure to show through fog
+                let dummy = createUnit(players[PLAYER_NEUTRAL_PASSIVE], dummyDictionary.get(i.getTypeId()), i.getPos(), (270.0).asAngleDegrees())
+                dummy.setVertexColor(255, 255, 255, 0)
+                radarDummyDeath.registerDeathEvent(i)
+                itemToRadarDummy.put(i, dummy)
+                revealDummytoTeam(dummy, owner)
+            else
+                //Make existing dummy visible instead of making doubles
+                revealDummytoTeam(itemToRadarDummy.get(i), owner)
+
+            if not areHostilesNearItem(owner, i)
+                //Vision
+                var vis = createVision(owner, i.getPos(), 128, true)
+                vis.start()
+                doAfter(REVEAL_DURATION) ->
+                    vis.destr()
+
+                //Ping
+                PingMinimapForForceEx(GetPlayersAllies(owner), i.getPos().x, i.getPos().y, 10, bj_MINIMAPPINGSTYLE_SIMPLE, 0, 255, 0)
 
 function areHostilesNearItem(player p, item itm) returns bool
     let g = CreateGroup()..enumUnitsInRange(itm.getPos(), 350)
     for u in g
-        if u.getOwner() != playerFromIndex(PLAYER_NEUTRAL_AGGRESSIVE) and u.getOwner().isEnemyOf(p) and (u.isType(UNIT_TYPE_HERO) or u.isType(UNIT_TYPE_STRUCTURE))
+        if (u.getOwner().isEnemyOf(p) and (u.isType(UNIT_TYPE_HERO) or u.isType(UNIT_TYPE_STRUCTURE))) or IsUnitBoss(u)
             g.destr()
             return true
     g.destr()
     return false
-
 
 init
     registerSpellEffectEvent(ABILITY_ID_FINDSTONE, () -> onCast(ITEM_STONE))
@@ -326,3 +399,10 @@ init
     registerSpellEffectEvent(ABILITY_ID_FINDCLAYBALL, () -> onCast(ITEM_CLAY_BALL))
     registerSpellEffectEvent(ABILITY_ID_FINDMUSHROOM, () -> onCast(ITEM_MUSHROOM))
     registerSpellEffectEvent(ABILITY_ID_FINDMANA, () -> onCast(ITEM_MANA_CRYSTAL))
+    dummyDictionary.put(ITEM_TINDER, DUMMY_IDS[0])
+    dummyDictionary.put(ITEM_STICK, DUMMY_IDS[1])
+    dummyDictionary.put(ITEM_MUSHROOM, DUMMY_IDS[2])
+    dummyDictionary.put(ITEM_CLAY_BALL, DUMMY_IDS[3])
+    dummyDictionary.put(ITEM_FLINT, DUMMY_IDS[4])
+    dummyDictionary.put(ITEM_STONE, DUMMY_IDS[5])
+    dummyDictionary.put(ITEM_MANA_CRYSTAL, DUMMY_IDS[6])

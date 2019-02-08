@@ -1,9 +1,6 @@
 package SpellBook
 
 import AbilityObjEditing
-import ClosureForGroups
-import GameConfig
-import ChatCommands
 
 //With darkgate and runes "XEZS, XEMS, XFPS, ESEF, ESOC, ESMD, A076, A06S, A079, A07A"
 constant string array SPELLS = ["XEZS, ESEF", "XEZS, ESFB, ESEF, ESMD", "XEZS, XEMS, ESFB, ESEF, ESOC, ESBR, ESMD"]
@@ -21,8 +18,8 @@ constant string array SPELLS = ["XEZS, ESEF", "XEZS, ESFB, ESEF, ESMD", "XEZS, X
     ..setItemAbility(false)
     ..setLevels(3)
     ..presetBaseOrderID(lvl -> "spellbook")
-    ..setHotkeyLearn("Z")
-    ..setHotkeyNormal("Z")
+    ..setHotkeyLearn("W")
+    ..setHotkeyNormal("W")
     ..setName("New Elementalist")
     ..setTooltipLearn("Learn Spells of The Elementalist")
     ..setTooltipLearnExtended("Harness the elements to do your bidding")
@@ -30,16 +27,6 @@ constant string array SPELLS = ["XEZS, ESEF", "XEZS, ESFB, ESEF, ESMD", "XEZS, X
     ..presetMinimumSpells(lvl -> 11)
     ..presetSpellList(lvl -> SPELLS[lvl-1])
     ..presetCooldown(lvl -> 0)
-    ..presetTooltipNormal(lvl -> "Look up elemental spell (|cffffcc00Z|r)")
+    ..presetTooltipNormal(lvl -> "(|cffffcc00W|r) - Look up elemental spell")
     ..presetTooltipNormalExtended(lvl -> "Contains various spells n such")
     ..presetSharedSpellCooldown(lvl -> false)
-init
-
-    registerCommandAll("spells") (triggerPlayer, args) ->
-        if (gameConfig.isTestModeEnabled() == true)
-            printTimedToPlayer("Added elementalist test spellbook to any selected heroes", 5., triggerPlayer)
-            forUnitsSelected(triggerPlayer) u ->
-                if (u.isType(UNIT_TYPE_HERO))
-                    u.addAbility('XESB')
-        else
-            printTimedToPlayer("Requires test mode!", 5., triggerPlayer)

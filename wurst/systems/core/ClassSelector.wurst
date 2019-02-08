@@ -4,7 +4,6 @@ import LinkedList
 import ClosureTimers
 import TimerUtils
 import TimerDialog
-import TimerExtensions
 import UnitExtensions
 import PlayerExtensions
 import UnitPoolExtensions
@@ -37,10 +36,10 @@ public function registerClassSelectionEndEvent(code listener)
     listeners.addAction(listener)
 
 public class ClassSelector
-    static let spawns = new IterableMap<unit, thistype>()
+    static let spawners = new IterableMap<unit, thistype>()
 
     static function findByTotem(unit totem) returns thistype
-        return spawns.get(totem)
+        return spawners.get(totem)
 
     static function resetAllianceState()
         for i = 0 to PLAYER_NEUTRAL_AGGRESSIVE - 1
@@ -55,20 +54,17 @@ public class ClassSelector
 
     static function initializeSpawns()
         let randomSpawns = gameConfig.getRandomSpawns()
-        let numUndefeatedTribes = Tribe
-            .getTribes()
-            .filter(Tribe.isNotDefeated)
-            .length()
-        let numTribes = max(numUndefeatedTribes, randomSpawns)
+        let tribes = Tribe.getTribes()
+        let numTribes = max(tribes.length(), randomSpawns)
 
         let spawns = spawnList.take(numTribes)
         if randomSpawns > 0
             spawns.shuffle()
 
-        Tribe.getTribes().map() tribe ->
-            let spawn = spawns.get(tribe.getId())
+        for tribe in tribes
+            let spawn = spawns.dequeue()
             tribe.setSpawn(spawn)
-            return new ClassSelector(tribe)
+            new ClassSelector(tribe)
 
     static function startClassSelection()
         resetAllianceState()
@@ -89,7 +85,7 @@ public class ClassSelector
         ..display(true)
 
         clock.doAfter(selectionTime.toReal()) ->
-            values(spawns).each(spawner -> spawner.endSelection())
+            values(spawners).each(spawner -> spawner.endSelection())
             listeners.execute()
             clockDialog.destr()
 
@@ -116,7 +112,7 @@ public class ClassSelector
             initializePool()
             initializePickers()
 
-            spawns.put(totem, this)
+            spawners.put(totem, this)
 
     private function initializeTotem()
         let pos = spawn.getCenter()

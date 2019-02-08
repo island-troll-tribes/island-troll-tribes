@@ -1,22 +1,24 @@
-package Blowpipe
-
+package Blowgun
 import LinkedList
 import HashMap
 import ClosureEvents
 import ItemObjEditing
 import AbilityObjEditing
 import Assets
-import IttDummyCaster
+import DummyCaster
 import MathUtils
 import Orders
 import InventoryEvent
 import SimError
 import ErrorHandling
 import ID
+import UnitExtensions
+import ObjectIds
+import ClosureTimers
 
 constant let ICON = Icons.bTNAlleriaFlute
 constant let ITEM_TOOLTIP = "Purchase |cffffcc00B|rlow Gun"
-constant let ITEM_TOOLTIP_EXT = "Used for shooting small things. Can be loaded with thistles or bones. Drag and drop items on the blowpipe to load, click and use on your own troll to unload."
+constant let ITEM_TOOLTIP_EXT = "Used for shooting small things. Can be loaded with thistles or bones. Drag and drop items on the blowgun to load, click and use on your own troll to unload."
 constant let ITEM_DESCRIPTION = "A hollowed out piece of wood. If blown through, could be used to fire small projectiles such as thistles."
 constant let GROUND_MODEL_PATH = "Doodads\\Northrend\\Water\\FloatingPlank\\FloatingPlank.mdl"
 constant let ABILITY_ID = 'XBPA'
@@ -51,7 +53,7 @@ constant let MAX_SLOTS = 15
 
 @compiletime function createBlowpipeItem()
     new ItemDefinition(ITEM_ID, 'schl')
-    ..setAbilities("XBPA")
+    ..setAbilities(toRawCode(ABILITY_ID))
     ..setModelUsed(GROUND_MODEL_PATH)
     ..setScalingValue(0.6)
     ..setButtonPositionX(3)
@@ -69,9 +71,6 @@ constant let MAX_SLOTS = 15
     ..setName("Blow Gun")
     ..setTooltipBasic(ITEM_TOOLTIP)
     ..setTooltipExtended(ITEM_TOOLTIP_EXT)
-
-
-
 
 IterableMap<item, Blowpipe> instances
 trigger cleanupTrigger
@@ -96,22 +95,17 @@ class Blowpipe
     item i
     LinkedList<item> contents
     unit target
-    bool loadingEnabled
 
     construct(item i)
         this.i = i
         this.contents = new LinkedList<item>()
         this.target = null
-        this.loadingEnabled = true
         TriggerRegisterDeathEvent(cleanupTrigger, this.i)
         updateTooltip()
 
     ondestroy
         emptyContents()
-
-        //Destroy list
         destroy contents
-
 
     function emptyContents()
         for iterItem in contents
@@ -122,16 +116,11 @@ class Blowpipe
         updateTooltip()
 
     function emptyContentsToUnit(unit u)
-        //Temporarily disable loading to prevent infinite loop
-        this.loadingEnabled = false
         for iterItem in contents
-            if u.inventorySize()-u.itemCount() > 0
-                u.addItemHandle(iterItem)
-            else
-                iterItem.setPos(this.i.getPos())
+            if not u.addOrStackItem(iterItem)
+                iterItem.setPos(u.getPos())
             iterItem.setVisible(true)
             contents.remove(iterItem)
-        this.loadingEnabled = true
         this.i.setCharges(0)
         updateTooltip()
 
@@ -148,17 +137,32 @@ class Blowpipe
             simError(caster.getOwner(), "No ammo!")
             return
         else
-            if (ammo.getTypeId() == ITEM_THISTLES)
-                new IttDummyCaster(2).castTarget(caster.getOwner(), THISTLE_ABILITY_ID, 1, Orders.shadowstrike, this.target, caster.getPos())
-            else if (ammo.getTypeId() == ITEM_BONE)
-                new IttDummyCaster(2).castTarget(caster.getOwner(), BONE_ABILITY_ID, 1, Orders.creepthunderbolt, this.target, caster.getPos())
-            else if (ammo.getTypeId() == ITEM_DARK_THISTLES)
-                new IttDummyCaster(2).castTarget(caster.getOwner(), DARKTHISTLE_ABILITY_ID, 1, Orders.shadowstrike, this.target, caster.getPos())
+            //Flat 10 damage + ammo specific effect
+            UnitDamageTarget(caster, this.target, 10, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
 
-            caster.damageTarget(this.target, 10., ATTACK_TYPE_NORMAL)
+            switch ammo.getTypeId()
+                case ITEM_THISTLES
+                    new DummyCaster()
+                        ..delay(2)
+                        ..owner(caster.getOwner())
+                        ..origin(caster.getPos())
+                        ..castTarget(THISTLE_ABILITY_ID, 1, Orders.shadowstrike, this.target)
+                case ITEM_BONE
+                    new DummyCaster()
+                        ..delay(2)
+                        ..owner(caster.getOwner())
+                        ..origin(caster.getPos())
+                        ..castTarget(BONE_ABILITY_ID, 1, Orders.creepthunderbolt, this.target)
+                case ITEM_DARK_THISTLES
+                    new DummyCaster()
+                        ..delay(2)
+                        ..owner(caster.getOwner())
+                        ..origin(caster.getPos())
+                        ..castTarget(DARKTHISTLE_ABILITY_ID, 1, Orders.shadowstrike, this.target)
+                default
+                    error("ERROR: Invalid blowgun ammo type fired!")
 
             int charges = ammo.getCharges()
-
             //Reduce ammo
             if (charges > 1)
                 ammo.setCharges(charges - 1)
@@ -169,13 +173,8 @@ class Blowpipe
             updateTooltip()
 
     function loadAmmo(unit owner, item itm)
-        if not this.loadingEnabled
-            return
-
-        int charges = itm.getCharges()
-        //Tread non-charge items as 1 charge
-        if charges == 0
-            charges = 1
+        //Treat non-charge items as 1 charge
+        int charges = max(itm.getCharges(), 1)
 
         //Calculate how many full charges can be loaded considering max slots in blowgun and item 'size'
         int slotsLeft = this.getAmmoSlotsLeft()
@@ -185,7 +184,8 @@ class Blowpipe
         if _chargesToLoad == 0
             //Bounce item to stop slot swap from happening
             owner.removeItem(itm)
-            owner.addItemHandle(itm)
+            nullTimer() ->
+                owner.addItemHandle(itm)
             return
 
         //Load the appropriate amount of charges
@@ -205,7 +205,8 @@ class Blowpipe
 
             //Bounce item to stop slot swap from happening
             owner.removeItem(itm)
-            owner.addItemHandle(itm)
+            nullTimer() ->
+                owner.addItemHandle(itm)
 
         updateTooltip()
 
@@ -218,7 +219,7 @@ class Blowpipe
                 var charges = itm.getCharges()
                 if (charges == 0)
                     charges = 1
-                ammoString = ammoString + "\n" + itm.getName() + " x" + charges.toString() + "|r"
+                ammoString = ammoString + "\n" + itm.getName() + "|r"
 
         this.i.setExtendedTooltip(ITEM_TOOLTIP_EXT + ammoString)
 

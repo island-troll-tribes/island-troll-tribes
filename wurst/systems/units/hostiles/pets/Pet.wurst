@@ -1,0 +1,32 @@
+package Pet
+import BonyAnimal
+import ClosureEvents
+import UnitEntity
+
+public abstract class Pet extends BonyAnimal
+    construct(unit whichUnit)
+        super(whichUnit)
+
+    construct(player whichPlayer, vec2 pos)
+        super(whichPlayer, pos)
+
+    construct(player whichPlayer, vec2 pos, angle facing)
+        super(whichPlayer, pos, facing)
+
+    override function postDeath()
+
+    override function postCreate()
+        super.postCreate()
+
+    abstract function getLevelModelScale(int level) returns real
+
+    function onLevelUp()
+        let u = getUnit()
+        u.setScale(getLevelModelScale(u.getLevel()))
+
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_HERO_LEVEL) ->
+        let u = GetTriggerUnit()
+        let entity = UnitEntity.findForUnit(u)
+        if entity instanceof Pet
+            (entity castTo Pet).onLevelUp()

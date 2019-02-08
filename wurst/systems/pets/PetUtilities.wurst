@@ -1,5 +1,6 @@
 package PetUtilities
 import ID
+import UnitEntity
 
 public function player.getPet() returns unit
     for u in udg_pets
@@ -18,10 +19,17 @@ public function player.releasePets()
 public function releasePet(unit pet)
     if pet != null
         udg_pets.removeUnit(pet)
-        pet.setOwner(playerFromIndex(PLAYER_NEUTRAL_AGGRESSIVE), true)
+
+        //Clear inventory
         for itm in pet.inventory()
-            pet.dropItemPoint(itm, pet.getPos())
-        pet.remove()
+            pet.removeItem(itm)
+
+        //Remove unit
+        let entity = UnitEntity.findForUnit(pet)
+        if entity != null
+            destroy entity
+        else
+            pet.remove()
 
 public function player.setPet(unit pet)
     this.releasePets()
@@ -29,15 +37,12 @@ public function player.setPet(unit pet)
 
 public function getCorrespondingHeroPetId(int tamedID) returns int
     switch tamedID
-        case UNIT_ELK
+        case UNIT_FAWN
+            return UNIT_ELK_PET
+        case UNIT_BEAR_CUB
             //TODO: Return corresponding pet ID
-        case UNIT_JUNGLE_BEAR
+        case UNIT_WOLF_PUP
             //TODO: Return corresponding pet ID
-        case UNIT_JUNGLE_WOLF
-            //TODO: Return corresponding pet ID
-        case UNIT_HAWK_HATCHLING
-            //TODO: Return corresponding pet ID
-
     return 0
 
 public function getCorrespondingHeroPetId(unit tamed) returns int
@@ -45,13 +50,21 @@ public function getCorrespondingHeroPetId(unit tamed) returns int
 
 public function handleTamePet(player owner, unit u) returns unit
     let petId = getCorrespondingHeroPetId(u)
-    if petId != 0
-        u.hide()
-        let pet = createUnit(owner, petId, u.getPos(), u.getFacingAngle())
-        let oldPet = owner.getPet()
-        if oldPet != null and oldPet.isType(UNIT_TYPE_HERO)
-            pet.setLevel(oldPet.getLevel(), false)
-        owner.setPet(pet)
+    if petId == 0
+        return null
+
+    u.hide()
+    let pet = createUnit(owner, petId, u.getPos(), u.getFacingAngle())
+    let oldPet = owner.getPet()
+    if oldPet != null and oldPet.isType(UNIT_TYPE_HERO)
+        pet.setLevel(oldPet.getLevel(), false)
+    owner.setPet(pet)
+
+    //Remove tamed unit
+    let entity = UnitEntity.findForUnit(u)
+    if entity != null
+        destroy entity
+    else
         u.remove()
-        return pet
-    return null
+
+    return pet

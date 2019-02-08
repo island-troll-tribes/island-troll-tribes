@@ -1,6 +1,7 @@
 package PetUtilities
 import ID
 import UnitEntity
+import SimError
 
 public function player.getPet() returns unit
     for u in udg_pets
@@ -51,6 +52,11 @@ public function getCorrespondingHeroPetId(unit tamed) returns int
 public function handleTamePet(player owner, unit u) returns unit
     let petId = getCorrespondingHeroPetId(u)
     if petId == 0
+        simError(owner, "You cannot tame that!")
+        return null
+
+    if owner.getPet().getTypeId() == petId
+        simError(owner, "You already have a pet of that type!")
         return null
 
     u.hide()

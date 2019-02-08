@@ -6,6 +6,7 @@ import ClosureTimers
 import PublicLibrary
 
 let ABILITY_SPEAR_HIT_DETECTION = 'A0EH'
+let DARK_SPEAR_CONSECUTIVE_REDUCTION_FACTOR = 0.6666
 
 enum SpearType
     DarkSpear
@@ -18,6 +19,7 @@ enum SpearType
 
 let spellToSpearType = new HashMap<int, SpearType>
 let spearListeners = new HashMap<unit, EventListener>()
+let darkSpearCounters = new HashMap<unit, int>()
 
 function onSpear(unit caster, unit target, SpearType spearType)
     let dummyCaster = new DummyCaster()
@@ -48,7 +50,15 @@ function onSpearImpact(unit target, SpearType spearType)
             spawnItemChance(0.5, ITEM_POISON_SPEAR, target.getPos())
         case DarkSpear
             spawnItemChance(0.4, ITEM_DARK_SPEAR, target.getPos())
-            ManaBurn(target, GetRandomReal(45, 55))
+            real burnAmount = GetRandomReal(45, 55)
+
+            //Reduction for consecutive spears
+            let currentCounters = getAndIncreaseDarkSpearCounter(target)
+            burnAmount *= DARK_SPEAR_CONSECUTIVE_REDUCTION_FACTOR.pow(currentCounters.toReal())
+            doAfter(1.00) ->
+                removeDarkSpearCounter(target)
+
+            ManaBurn(target, burnAmount)
         case SteelSpear
             spawnItemChance(0.666, ITEM_STEEL_SPEAR, target.getPos())
         case IronSpear
@@ -56,8 +66,27 @@ function onSpearImpact(unit target, SpearType spearType)
         case Spear
             spawnItemChance(0.666, ITEM_SPEAR, target.getPos())
 
-    if target.isType(UNIT_TYPE_HERO)
+    if target.isType(UNIT_TYPE_HERO) and not spearType == SpearType.DarkSpear
         addSpearResistance(target)
+
+function getAndIncreaseDarkSpearCounter(unit target) returns int
+    //We return the old counter and increase by 1 here
+    if darkSpearCounters.has(target)
+        let currentCounters = darkSpearCounters.get(target)
+        darkSpearCounters.put(target, currentCounters + 1)
+        return currentCounters
+    else
+        darkSpearCounters.put(target, 1)
+        return 0
+
+function removeDarkSpearCounter(unit target)
+    //Deduct counters by 1 or remove from map if they go to 0
+    if darkSpearCounters.has(target)
+        let currentCounters = darkSpearCounters.get(target)
+        if currentCounters > 1
+            darkSpearCounters.put(target, currentCounters - 1)
+        else
+            darkSpearCounters.remove(target)
 
 function addSpearResistance(unit u)
     SetPlayerAbilityAvailable(u.getOwner(), ABILITY_SPEAR_RESIST, false)

@@ -1,12 +1,14 @@
 package UnitUtils
+import Lodash
 
-public function findNearestUnit(vec2 pos, real range, filterfunc filter) returns unit
-    GroupEnumUnitsInRange(ENUM_GROUP, pos.x, pos.y, range, filter)
+public function findNearestUnit(vec2 pos, real range, Predicate<unit> predicate) returns unit
+    GroupEnumUnitsInRange(ENUM_GROUP, pos.x, pos.y, range, null)
     unit nearest = null
     var bestDist = REAL_MAX
     for u from ENUM_GROUP
         let distSq = pos.distanceToSq(u.getPos())
-        if distSq < bestDist
+        if distSq < bestDist and predicate.call(u)
             nearest = u
             bestDist = distSq
+    predicate.maybeFree()
     return nearest

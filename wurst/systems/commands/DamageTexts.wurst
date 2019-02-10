@@ -1,0 +1,44 @@
+package DamageTexts
+import ClosureEvents
+import LinkedList
+import ChatCommands
+
+LinkedList<player> damageTextPlayers = new LinkedList<player>()
+
+public function damageTextTag(unit u, real damage) returns texttag
+    let text = damage.round().toString()
+    let xOffset = GetRandomReal(-20, 20)
+    let yOffset = GetRandomReal(-7.5, 7.5)
+    let angle = (90. - (xOffset/2)).fromDeg()
+    let vel = angle.toVec(0.04)
+    let scalingFactor = min(1.4, max(1, SquareRoot(SquareRoot(damage / 20))))
+    let fontSize = 8 * scalingFactor
+    let pos = u.getPos() + vec2(xOffset, yOffset)
+    let tag = CreateTextTag()..setText(text, fontSize)
+        ..setColor(255, 0, 0, 255)
+        ..setPos(pos.x, pos.y, 0.)
+        ..setFadepoint(0.7 * scalingFactor)
+        ..setLifespan(2 * scalingFactor)
+        ..setVelocity(vel.x, vel.y)
+        ..setPermanent(false)
+        ..setVisibility(canPlayerSeeDamageText(GetLocalPlayer(), u))
+    return tag
+
+public function canPlayerSeeDamageText(player p, unit target) returns boolean
+    return damageTextPlayers.has(p) and IsUnitVisible(target, p)
+
+init
+    EventListener.add(EVENT_UNIT_DAMAGED) ->
+        var damage = GetEventDamage().abs()
+        let attacker = GetEventDamageSource()
+        let target = GetTriggerUnit()
+        if damage >= 2 and damage <= 300 and attacker.getOwner().getId() != PLAYER_NEUTRAL_AGGRESSIVE and attacker.getOwner().getId() != PLAYER_NEUTRAL_PASSIVE
+            damageTextTag(target, damage)
+
+    registerCommandAll("showdamage") (triggerPlayer, args) ->
+        if damageTextPlayers.has(triggerPlayer)
+            damageTextPlayers.remove(triggerPlayer)
+            printTimedToPlayer("Disabled damage display!", 5, triggerPlayer)
+        else
+            damageTextPlayers.add(triggerPlayer)
+            printTimedToPlayer("Enabled damage display!", 5, triggerPlayer)

@@ -3,6 +3,7 @@ import LinkedList
 import ChatCommands
 import StringExtensions
 import PlayerExtensions
+import UnitExtensions
 import ChatUtils
 import Game
 import GameMode
@@ -95,11 +96,19 @@ init
         registerCommandAll("p", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))
 
         registerCommandAll("ms") (triggerPlayer, args) ->
-            let hero = triggerPlayer.getTroll()
-            if hero.isAlive()
-                let msg = "Your movement speed is {0}".format(hero.getMoveSpeed().toString().color(ENERGY_COLOR))
+            let units = CreateGroup()..enumUnitsSelected(triggerPlayer, null)
+            if units.isEmpty()
+                let hero = triggerPlayer.getTroll()
+                if hero.isAlive()
+                let msg = "{0} the {1} movement speed is {2}".format(hero.getProperName().color(HIGHLIGHT_COLOR), hero.getName().color(SPECIAL_COLOR), hero.getMoveSpeed().toString().color(HIGHLIGHT_COLOR))
                 printTimedToPlayer(msg, 5, triggerPlayer)
-
+            else
+                for u in units
+                    if u.isTroll()
+                        let msg = "{0} the {1} movement speed is {2}".format(u.getProperName().color(HIGHLIGHT_COLOR), u.getName().color(SPECIAL_COLOR), u.getMoveSpeed().toString().color(HIGHLIGHT_COLOR))
+                        printTimedToPlayer(msg, 5, triggerPlayer)
+            units.destr()
+                
         registerCommandAll("cc") (triggerPlayer, args) ->
             let id = args.get(1).toInt() mod 12
             let msg = "Adjusted player color to {0}Player {1}|r".format(id.toPlayerColor().toColor().toColorString(), (id + 1).toString())

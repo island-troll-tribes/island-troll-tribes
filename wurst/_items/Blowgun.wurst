@@ -15,14 +15,16 @@ import ID
 import UnitExtensions
 import ObjectIds
 import ClosureTimers
+import ObjectIdGenerator
 
 constant let ICON = Icons.bTNAlleriaFlute
 constant let ITEM_TOOLTIP = "Purchase |cffffcc00B|rlow Gun"
 constant let ITEM_TOOLTIP_EXT = "Used for shooting small things. Can be loaded with thistles or bones. Drag and drop items on the blowgun to load, click and use on your own troll to unload."
 constant let ITEM_DESCRIPTION = "A hollowed out piece of wood. If blown through, could be used to fire small projectiles such as thistles."
 constant let GROUND_MODEL_PATH = "Doodads\\Northrend\\Water\\FloatingPlank\\FloatingPlank.mdl"
-constant let ABILITY_ID = 'XBPA'
+constant let ABILITY_ID = compiletime(ABIL_ID_GEN.next())
 constant let THISTLE_ABILITY_ID = 'A01K'
+constant let THISTLE_HERO_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
 constant let DARKTHISTLE_ABILITY_ID = 'A01L'
 constant let BONE_ABILITY_ID = 'A015'
 constant let ITEM_ID = 'XIBP'
@@ -30,47 +32,68 @@ constant let MAX_SLOTS = 15
 
 @compiletime function createBlowpipeAbility()
     new AbilityDefinitionIllidanChannel(ABILITY_ID)
-    ..setArtTarget("")
-    ..setArtCaster("")
-    ..setArtSpecial("")
-    ..setArtEffect("")
-    ..setAnimationNames("")
-    ..setFollowThroughTime(1, 0)
-    ..setAreaofEffect(1, 0.01)
-    ..setCastRange(1, 450)
-    ..setDurationHero(1, 0.01)
-    ..setDurationNormal(1, 0.01)
-    ..setHeroAbility(false)
-    ..setItemAbility(true)
-    ..setLevels(1)
-    ..setManaCost(1, 0)
-    ..setName("Blow Gun Ability")
-    ..setOptions(1, 1)
-    ..setTargetsAllowed(1, "air,ground,enemy,neutral,organic,self")
-    ..setDisableOtherAbilities(1, false)
-    ..setTargetType(1, 1)
-    ..setCooldown(1, 6)
+        ..setArtTarget("")
+        ..setArtCaster("")
+        ..setArtSpecial("")
+        ..setArtEffect("")
+        ..setAnimationNames("")
+        ..setFollowThroughTime(1, 0)
+        ..setAreaofEffect(1, 0.01)
+        ..setCastRange(1, 450)
+        ..setDurationHero(1, 0.01)
+        ..setDurationNormal(1, 0.01)
+        ..setHeroAbility(false)
+        ..setItemAbility(true)
+        ..setLevels(1)
+        ..setManaCost(1, 0)
+        ..setName("Blow Gun Ability")
+        ..setOptions(1, 1)
+        ..setTargetsAllowed(1, "air,ground,enemy,neutral,organic,self")
+        ..setDisableOtherAbilities(1, false)
+        ..setTargetType(1, 1)
+        ..setCooldown(1, 6)
 
 @compiletime function createBlowpipeItem()
     new ItemDefinition(ITEM_ID, 'schl')
-    ..setAbilities(toRawCode(ABILITY_ID))
-    ..setModelUsed(GROUND_MODEL_PATH)
-    ..setScalingValue(0.6)
-    ..setButtonPositionX(3)
-    ..setButtonPositionY(1)
-    ..setClassification("Charged")
-    ..setInterfaceIcon(ICON)
-    ..setCooldownGroup("A01K")
-    ..setDroppedWhenCarrierDies(true)
-    ..setGoldCost(0)
-    ..setHitPoints(75)
-    ..setLumberCost(5)
-    ..setStockReplenishInterval(30)
-    ..setDescription(ITEM_DESCRIPTION)
-    ..setHotkey("B")
-    ..setName("Blow Gun")
-    ..setTooltipBasic(ITEM_TOOLTIP)
-    ..setTooltipExtended(ITEM_TOOLTIP_EXT)
+        ..setAbilities(toRawCode(ABILITY_ID))
+        ..setModelUsed(GROUND_MODEL_PATH)
+        ..setScalingValue(0.6)
+        ..setButtonPositionX(3)
+        ..setButtonPositionY(1)
+        ..setClassification("Charged")
+        ..setInterfaceIcon(ICON)
+        ..setCooldownGroup("A01K")
+        ..setDroppedWhenCarrierDies(true)
+        ..setGoldCost(0)
+        ..setHitPoints(75)
+        ..setLumberCost(5)
+        ..setStockReplenishInterval(30)
+        ..setDescription(ITEM_DESCRIPTION)
+        ..setHotkey("B")
+        ..setName("Blow Gun")
+        ..setTooltipBasic(ITEM_TOOLTIP)
+        ..setTooltipExtended(ITEM_TOOLTIP_EXT)
+
+@compiletime function createThistleHeroAbility()
+    new AbilityDefinitionWardenShadowStrike(THISTLE_HERO_ABILITY_ID)
+        ..presetManaCost(lvl -> 0)
+        ..presetCooldown(lvl -> 0)
+        ..presetBuffs(lvl -> "B001")
+        ..presetCastRange(lvl -> 99999)
+        ..presetTargetsAllowed(lvl -> "air,enemies,ground,neutral,organic,terrain")
+        ..setHeroAbility(false)
+        ..setItemAbility(false)
+        ..setLevels(1)
+        ..setCheckDependencies(false)
+        ..setMissileArt(Abilities.bristleBackMissile)
+        ..setMissileSpeed(2100)
+        ..setMissileHomingEnabled(false)
+        ..presetAttackSpeedFactor(lvl -> 0.15)
+        ..presetMovementSpeedFactor(lvl -> 0.3)
+        ..presetDecayingDamage(lvl -> 1)
+        ..presetInitialDamage(lvl -> 10)
+        ..presetDurationHero(lvl -> 6.5)
+        ..presetDurationNormal(lvl -> 16)
 
 IterableMap<item, Blowpipe> instances
 trigger cleanupTrigger
@@ -142,11 +165,12 @@ class Blowpipe
 
             switch ammo.getTypeId()
                 case ITEM_THISTLES
+                    var thistleAbility = this.target.isType(UNIT_TYPE_HERO) ? THISTLE_HERO_ABILITY_ID : THISTLE_ABILITY_ID
                     new DummyCaster()
                         ..delay(2)
                         ..owner(caster.getOwner())
                         ..origin(caster.getPos())
-                        ..castTarget(THISTLE_ABILITY_ID, 1, Orders.shadowstrike, this.target)
+                        ..castTarget(thistleAbility, 1, Orders.shadowstrike, this.target)
                 case ITEM_BONE
                     new DummyCaster()
                         ..delay(2)

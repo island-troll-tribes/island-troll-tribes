@@ -1,0 +1,62 @@
+package QuickMakeSpell
+import AbilityObjEditing
+import ID
+import LinkedList
+
+constant let COOLDOWN = 0.
+
+
+public class QuickMakeSpell
+    let name = "Quick make "
+    let toolTip = "Sample"
+    let iconPath = "ReplaceableTextures\\CommandButtons\\"
+    let id = '0'
+    let btnPositionX = 0
+    let btnPositionY = 0
+
+    construct(string itemName, string toolTip, string iconPath, int ID, int x, int y)
+        this.name += itemName
+        this.toolTip = toolTip
+        this.iconPath += iconPath
+        this.id = ID
+        this.btnPositionX = x
+        this.btnPositionY = y
+    
+    function buildSpell()
+        new AbilityDefinitionIllidanChannel(id)
+        ..setName(name)
+        ..setIconNormal(iconPath)
+        ..setTooltipNormal(1, name)
+        ..setTooltipNormalExtended(1, toolTip)
+        ..setCooldown(1, COOLDOWN)
+        ..setLevels(1)
+        ..setHeroAbility(false)
+        ..setItemAbility(false)
+        ..setButtonPositionNormalX(btnPositionX)
+        ..setButtonPositionNormalY(btnPositionY)
+        ..setAnimationNames("")
+        ..setArtCaster("")
+        ..setArtEffect("")
+        ..setArtTarget("")
+        ..setArtSpecial("")
+        ..setDisableOtherAbilities(1, false)
+        ..setFollowThroughTime(1, 0.0)
+        ..setCastingTime(1, 0)
+        ..setBaseOrderID(1, "name")
+        ..setOrderStringUseTurnOn("name")
+        ..setOrderStringActivate("name")
+        ..setOrderStringDeactivate("name")
+        ..setOrderStringTurnOff("name")
+        ..setOptions(1, 1)
+        ..setManaCost(1, 0)
+
+function getSpells() returns LinkedList<QuickMakeSpell>
+    return asList(
+      new QuickMakeSpell("Hp pot", "1 root 1 butsu", "BTNLesserRejuvPotion.blp", SPELL_QM_HP_POTION, 0, 2),
+      new QuickMakeSpell("Mana pot", "1 stem 1 butsu", "BTNPotionBlueSmall.blp", SPELL_QM_MA_POTION, 1, 2),
+      new QuickMakeSpell("Hp pot", "1 root 1 butsu", "BTNLesserClarityPotion.blp", SPELL_QM_CURE_ALL, 2, 2)
+    )
+
+@compiletime
+function buildSpells()
+    getSpells().forEach(spell -> spell.buildSpell())

@@ -1,0 +1,143 @@
+package Mixing
+import HashMap
+import LinkedList
+import UnitExtensions
+import ID
+
+public function mixIt(LinkedList<item> inv)
+    inv.forEach() items -> 
+        if items.getTypeId() == ITEM_RIVER_ROOT
+            items.remove()
+        if items.getTypeId() == ITEM_BUTSU
+            items.remove()
+
+
+public function mix(unit u)
+    let count = u.getInventoryItemCountMap()
+    let inventory = u.getInventory()
+    int specCount = 0
+    int specTypes = 0
+
+    int blue = count.get(ITEM_BLUE_HERB)
+    int oran = count.get(ITEM_ORANGE_HERB)
+    int purp = count.get(ITEM_PURPLE_HERB)
+    int yell = count.get(ITEM_YELLOW_HERB)
+
+    int root = count.get(ITEM_RIVER_ROOT)
+    int stem = count.get(ITEM_RIVER_STEM)
+    int butsu = count.get(ITEM_BUTSU)
+
+    specCount = blue + oran + blue + yell
+
+    if count.get(ITEM_BLUE_HERB) > 0
+        specTypes += 1
+    if count.get(ITEM_ORANGE_HERB) > 0
+        specTypes += 1
+    if count.get(ITEM_PURPLE_HERB) > 0
+        specTypes += 1
+    if count.get(ITEM_YELLOW_HERB) > 0
+        specTypes += 1
+    
+    // Eob
+    if specTypes > 2  and specCount > 3
+        mixIt(inventory)
+        u.addItemById(ITEM_ESSENCE_BEES)
+
+    // Twin Islands
+    if ((yell>2 and blue >2)) or (oran > 2 and purp > 2)
+        mixIt(inventory)
+        u.addItemById(ITEM_POTION_TWIN_ISLANDS)
+
+    // Nether
+    if specCount > 0 and stem > 1 and butsu > 1
+        mixIt(inventory)
+        u.addItemById(ITEM_NETHER_POTION)
+
+    // Drunk
+    if specCount > 1 and root > 1 and butsu > 1
+        mixIt(inventory)
+        u.addItemById(ITEM_DRUNKS_POTION)
+ 
+    // Fervor
+    if specCount > 2 and specTypes > 1 and butsu > 0
+        mixIt(inventory)
+        u.addItemById(ITEM_FERVER_POTION)
+
+    // Disease Potion
+    if specTypes > 1 and specCount > 3 and root > 0
+        mixIt(inventory)
+        u.addItemById(ITEM_DISEASE_POTION)
+
+    // Acid Bomb
+    if specTypes > 1 and specCount > 3 and stem > 1
+        mixIt(inventory)
+        u.addItemById(ITEM_ACID_BOMB)
+
+    // Bee Hive
+    if specCount > 0 and stem > 1
+        mixIt(inventory)
+        u.addItemById(ITEM_BEE_HIVE)
+
+    // Dark Rock
+    if stem > 0 and root > 0 and butsu == 2
+        mixIt(inventory)
+        u.addItemById(ITEM_DARK_ROCK)
+
+    // Anabolic Potion
+    if stem > 3
+        mixIt(inventory)
+        u.addItemById(ITEM_ANABOLIC_POTION)
+
+    // Elemental Shield Potion
+    if stem > 0 and butsu > 0 and specCount > 0
+        mixIt(inventory)
+        u.addItemById(ITEM_ELEMENTAL_SHIELD_POTION)
+    
+    // Omnicure
+    if butsu > 1 and specTypes > 1
+        mixIt(inventory)
+        u.addItemById(ITEM_OMNICURE)
+    
+    // Oracle
+    if butsu > 1 and specCount > 0
+        mixIt(inventory)
+        u.addItemById(ITEM_ORACLE_POTION)
+    
+    // Mana
+    if stem > 0 and butsu > 0
+        mixIt(inventory)
+        u.addItemById(ITEM_MANA_POTION_I)
+    
+    // Healing
+    if stem > 0 and butsu > 0
+        mixIt(inventory)
+        u.addItemById(ITEM_HEALING_POTION_I)
+    
+    // Gem Of Knowledge
+    if specTypes >= 2 and specCount >= 4
+        mixIt(inventory)
+        u.addItemById(ITEM_GEM_OF_KNOWLEDGE)
+    
+    // Anti Magic Potion
+    if specCount > 0 and butsu > 0
+        mixIt(inventory)
+        u.addItemById(ITEM_ANTI_MAGIC_POTION)
+    
+    // Wind
+    if stem > 1
+        mixIt(inventory)
+        u.addItemById(ITEM_SPIRIT_WIND)
+    
+    // Water
+    if root > 1
+        mixIt(inventory)
+        u.addItemById(ITEM_SPIRIT_WATER)
+    
+    // Cure All
+    if butsu > 2
+        mixIt(inventory)
+        u.addItemById(ITEM_CURE_ALL)
+
+    
+
+    

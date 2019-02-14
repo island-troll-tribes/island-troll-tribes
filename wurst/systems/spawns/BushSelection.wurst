@@ -3,21 +3,31 @@ import HashMap
 import RegisterEvents
 import InventoryUtils
 import Classes
-import PlayerExtensions
+import UnitUtils
 import ID
 
 let MAX_DIST = 300
-let MAX_DIST_SQ = compiletime(MAX_DIST * MAX_DIST)
 
 let map = new HashMap<int, int>()
-..put(UNIT_THIEFS_BUSH, UNIT_THIEF)
-..put(UNIT_SCOUTS_BUSH, UNIT_SCOUT)
+    ..put(UNIT_THIEFS_BUSH, UNIT_THIEF)
+    ..put(UNIT_SCOUTS_BUSH, UNIT_SCOUT)
+
+function transferItems(unit u, player p)
+    let id = map.get(u.getTypeId())
+
+    // Exit if the selection unit is not a bush.
+    if id == 0
+        return
+
+    // Retrieve the nearest unit able to be transfered to.
+    let match = findNearestUnit(u.getPos(), MAX_DIST.toReal()) target ->
+        return target.getOwner().isAllyOf(p) and id == getTrollBaseClass(target)
+
+    // Deliver the items
+    if match != null
+        u.transferItems(match)
+
 
 init
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SELECTED) ->
-        let bush = GetTriggerUnit()
-        let hero = GetTriggerPlayer().getTroll()
-        let id = bush.getTypeId()
-
-        if map.has(id) and map.get(id) == getTrollBaseClass(hero) and hero.getPos().distanceToSq(bush.getPos()) < MAX_DIST_SQ
-            bush.transferItems(hero)
+        transferItems(GetTriggerUnit(), GetTriggerPlayer())

@@ -2,25 +2,33 @@ package QuickMakeSpell
 import AbilityObjEditing
 import ID
 import LinkedList
+import LegacyColors
 
 constant let COOLDOWN = 0.
+constant let QM_TOOLIP = "Quick Make ability will find the nearest material and craft the said item, "+
+                         "material have to be either on the ground or inside the building/unit inventory. "+
+                         "For more information abouts item, type "+GOLD_COLOR+"-recipes"+COLOR_LIGHT_BLUE+", all the items are listed there."
 
-
+constant let HEALING_POTION_RECIPE = "a Healing Potion, restore 65 hp to the target unit :\n" + COLOR_GREEN + "Butsu, River Root"
+constant let MANA_POTION_RECIPE = "a Mana Potion, restore 65 mana to the consumer :\n" + COLOR_GREEN + "Butsu, River Stem"
 public class QuickMakeSpell
+    let hotkey = ""
     let name = "Quick make "
-    let toolTip = "Sample"
+    let toolTip = "Mix those Herb together to get "
     let iconPath = "ReplaceableTextures\\CommandButtons\\"
     let id = '0'
     let btnPositionX = 0
     let btnPositionY = 0
 
-    construct(string itemName, string toolTip, string iconPath, int ID, int x, int y)
-        this.name += itemName
-        this.toolTip = toolTip
+    construct(string itemName, string toolTip, string iconPath, int ID, int x, int y, string hotkey, string color)
+        this.hotkey = GENERAL_COLOR+"[" + color + hotkey + GENERAL_COLOR + "] - "
+        this.name = this.hotkey + this.name + itemName + "|r"
+        this.toolTip += toolTip + "|r\n\n" + COLOR_LIGHT_BLUE + QM_TOOLIP
         this.iconPath += iconPath
         this.id = ID
         this.btnPositionX = x
         this.btnPositionY = y
+        print(this.hotkey.charAt(2))
     
     function buildSpell()
         new AbilityDefinitionIllidanChannel(id)
@@ -30,6 +38,7 @@ public class QuickMakeSpell
         ..setTooltipNormalExtended(1, toolTip)
         ..setCooldown(1, COOLDOWN)
         ..setLevels(1)
+        ..setHotkeyNormal(hotkey.charAt(2))
         ..setHeroAbility(false)
         ..setItemAbility(false)
         ..setButtonPositionNormalX(btnPositionX)
@@ -52,9 +61,9 @@ public class QuickMakeSpell
 
 function getSpells() returns LinkedList<QuickMakeSpell>
     return asList(
-      new QuickMakeSpell("Hp pot", "1 root 1 butsu", "BTNLesserRejuvPotion.blp", SPELL_QM_HP_POTION, 0, 2),
-      new QuickMakeSpell("Mana pot", "1 stem 1 butsu", "BTNPotionBlueSmall.blp", SPELL_QM_MA_POTION, 1, 2),
-      new QuickMakeSpell("Hp pot", "1 root 1 butsu", "BTNLesserClarityPotion.blp", SPELL_QM_CURE_ALL, 2, 2)
+      new QuickMakeSpell("Healing Potion", HEALING_POTION_RECIPE, "BTNLesserRejuvPotion.blp", SPELL_QM_HEALING_POTION, 0, 0, "Q", SPECIAL_COLOR),
+      new QuickMakeSpell("Mana Potion", MANA_POTION_RECIPE, "BTNPotionBlueSmall.blp", SPELL_QM_MANA_POTION, 1, 0, "W", SPECIAL_COLOR),
+      new QuickMakeSpell("Hp pot", QM_TOOLIP, "BTNLesserClarityPotion.blp", SPELL_QM_CURE_ALL, 2, 2, "E", SPECIAL_COLOR)
     )
 
 @compiletime

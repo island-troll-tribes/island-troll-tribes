@@ -1,16 +1,62 @@
 package QuickMakeSpell
 import AbilityObjEditing
+import ObjectIds
 import ID
 import LinkedList
 import LegacyColors
+import Icons
 
-constant let COOLDOWN = 0.
+constant let COOLDOWN = 0.1
+constant let MIXING_POT_SPELLBOOK = SPELL_QM_ACID_BOMB.toRawCode()+","+SPELL_QM_ESSENCE_BEES.toRawCode()+","+SPELL_QM_DISEASE_POTION.toRawCode()+","+SPELL_QM_BEE_HIVE.toRawCode()+
+                                    ","+SPELL_QM_GEM_OF_KNOWLEDGE.toRawCode()+","+SPELL_QM_NETHER_POTION.toRawCode()+","+SPELL_QM_DRUNKS_POTION.toRawCode()+","+
+                                    SPELL_QM_TWIN_ISLANDS.toRawCode()+","+SPELL_QM_OMNICURE.toRawCode()+","+SPELL_QM_FERVOR_POTION.toRawCode()
+
+constant let MIXING_SPELLBOOK_TOOLTIP = "Contains Quick Make spell for special herb recipe"
+
 constant let QM_TOOLIP = "Quick Make ability will find the nearest material and craft the said item, "+
                          "material have to be either on the ground or inside the building/unit inventory. "+
                          "For more information abouts item, type "+GOLD_COLOR+"-recipes"+COLOR_LIGHT_BLUE+", all the items are listed there."
 
-constant let HEALING_POTION_RECIPE = "a Healing Potion, restore 65 hp to the target unit :\n" + COLOR_GREEN + "Butsu, River Root"
-constant let MANA_POTION_RECIPE = "a Mana Potion, restore 65 mana to the consumer :\n" + COLOR_GREEN + "Butsu, River Stem"
+constant let HEALING_POTION_RECIPE          = "a Healing Potion, restore 65 hp to the target unit :\n" + COLOR_GREEN + "Butsu + River Root"
+constant let MANA_POTION_RECIPE             = "a Mana Potion, restore 65 mana to the consumer :\n" + COLOR_GREEN + "Butsu + River Stem"
+constant let CURE_ALL_RECIPE                = "a Cure All, remove positive/negative buff & effect on the target ally :\n" + COLOR_GREEN + "2 Butsu"
+constant let ESSENCE_BEES_RECIPE            = "an Essence of Bees, spawn multiple Bee Hive who attack your enemies :\n" + COLOR_GREEN + 
+                                              "2 Special Herb 1 + Special Herb 2/3\nOr\n Special Herb 1/2/3/4"
+constant let TWIN_ISLANDS_POTION_RECIPE     = "a Twin Islands Potion, reveals the enemies Troll for 30 seconds :\n" + COLOR_GREEN + "3 Yellow Herb + 3 Blue Herb\n"+
+                                              "Or\n3 Purple Herb + 3 Orange Herb"
+
+constant let NETHER_POTION_RECIPE           = "a Nether Potion, cause the target to become immune to physical damage but amplify magic damage done to it. "+
+                                              makeDurationTips(15, 40, 20) + " :\n" + COLOR_GREEN + "Special Herb + 2 River Stem + 2 Butsu"
+
+constant let DRUNKS_POTION_RECIPE           = "a Drunk Potion, cause the target to become drunk, silencing it, giving it 50% chance to miss, reduce attack speed by 10% and "+
+                                              "movement speed by 25%. " + makeDurationTips(7, 13, 25) + " :\n" + COLOR_GREEN + "Special Herb 1 + Special Herb 2 + 2 Butsu"
+
+constant let FERVER_POTION_RECIPE           = "a Ferver Potion, consumer gain 30% attack speed and 8 armor. "+makeDurationTips(20, 20, 5)+
+                                              " :\n" + COLOR_GREEN + "2 Special 1, Special 2, Butsu"
+
+constant let DISEASE_POTION_RECIPE          = "a Disease Potion, Biological warfare! Throw at an enemy to give him and all units in a 200 radius of them a disease."+
+                                              "Last 25 seconds dealing 3 damage per second. Reduces healing received from items and potions by 30%:\n" + COLOR_GREEN +
+                                              "2 Special 1 + 2 Special 2 + River Root\nOr\n3 Special 1 + Special 2 + River Root"
+                                              
+constant let ANTI_MAGIC_POTION_RECIPE       = "an Anti-Magic Potion, cast anti-magic shield on target, blocking some spell cast & 100 magic damage. "+
+                                               makeDurationTips(25, 25, 1)+  " :\n" + COLOR_GREEN + "Special Herb + Butsu"
+
+constant let ANABOLIC_POTION_RECIPE         = "an Anabolic Potion, increase consumer movement speed. "+makeDurationTips(10, 10, 60)+" :\n" + COLOR_GREEN + "4 River Stem"
+constant let ORACLE_POTION_RECIPE           = "a Oracle Potion, grant true sight to the consumer. "+makeDurationTips(20, 20, 20)+" :\n" + COLOR_GREEN + "1 Special, 2 Butsu"
+constant let ELEMENTAL_SHIELD_POTION_RECIPE = "an Elemental Shield Potion, grant lighting shield to the consumer, dealing 4 damage per second. "+
+                                              makeDurationTips(10, 10, 30)+ " :\n" + COLOR_GREEN + "Special Herb, Butsu, River Stem"
+
+constant let ACID_BOMB_RECIPE               = "an Acid Bomb, reduce 8 armor in a 200 radius area on target"+
+                                              makeDurationTips(50, 50, 10)+ " :\n" + COLOR_GREEN + "2 Special Herb 1 + 2 Special Herb 2 + 2 River Stem\nOr\n"+
+                                              "3Special Herb 1 + Special Herb 2 + 2 River Stem"
+constant let BEE_HIVE_RECIPE                = "a Bee Hive, spawn a Bee Hive who attack your enemies :\n" + COLOR_GREEN + "Special Herb + 2 River Stem"
+constant let DARK_ROCK_RECIPE               = "a Dark Rock, dark essence used to create ominous artefact :\n" + COLOR_GREEN + "River Root + River Stem + 2 Butsu"
+constant let OMNICURE_RECIPE                = "an Omicure, remove positive/negative buff & effect on all allied Trolls :\n" + COLOR_GREEN + "Butsu, River Stem"
+constant let GEM_OF_KNOWLEDGE_RECIPE        = "a Gem Of Knowledge, magical artifact increasing experience gained by 50%, doesn't work on hunter & beast master classes"+
+                                              " :\n" + COLOR_GREEN + "2 Special Herb 1 + 2 Special Herb 2\nOr\n3 Special Herb 1 + Special Herb 2"
+constant let SPIRIT_WIND_RECIPE             = "a Spirit Of Wind, used to craft quality gear, gives your hero +1 all attributes :\n" + COLOR_GREEN + "2 River Stem"
+constant let SPIRIT_WATER_RECIPE            = "a Spirit Of Water, used to craft quality gear, gives your hero +1 all attributes :\n" + COLOR_GREEN + "2 River Root"
+
 public class QuickMakeSpell
     let hotkey = ""
     let name = "Quick make "
@@ -19,16 +65,17 @@ public class QuickMakeSpell
     let id = '0'
     let btnPositionX = 0
     let btnPositionY = 0
+    let baseOrderID = "avatar"
 
-    construct(string itemName, string toolTip, string iconPath, int ID, int x, int y, string hotkey, string color)
+    construct(string itemName, string toolTip, string iconPath, int id, int x, int y, string hotkey, string color, string baseOrderId)
         this.hotkey = GENERAL_COLOR+"[" + color + hotkey + GENERAL_COLOR + "] - "
         this.name = this.hotkey + this.name + itemName + "|r"
         this.toolTip += toolTip + "|r\n\n" + COLOR_LIGHT_BLUE + QM_TOOLIP
         this.iconPath += iconPath
-        this.id = ID
+        this.id = id
         this.btnPositionX = x
         this.btnPositionY = y
-        print(this.hotkey.charAt(2))
+        this.baseOrderID = baseOrderId
     
     function buildSpell()
         new AbilityDefinitionIllidanChannel(id)
@@ -51,21 +98,84 @@ public class QuickMakeSpell
         ..setDisableOtherAbilities(1, false)
         ..setFollowThroughTime(1, 0.0)
         ..setCastingTime(1, 0)
-        ..setBaseOrderID(1, "name")
-        ..setOrderStringUseTurnOn("name")
-        ..setOrderStringActivate("name")
-        ..setOrderStringDeactivate("name")
-        ..setOrderStringTurnOff("name")
+        ..presetBaseOrderID(lvl -> baseOrderID)
+        ..setOrderStringUseTurnOn("channel")
+        ..setOrderStringActivate("channel")
         ..setOptions(1, 1)
         ..setManaCost(1, 0)
 
-function getSpells() returns LinkedList<QuickMakeSpell>
+public class QuickMakeSpellBook
+    let id = '0'
+    let name = "Page"
+    let hotkey = "Q"
+    let toolTip = ""
+    let abilityList = ""
+
+    construct(int id, string name, string hotkey, string toolTip, string abilityList)
+        this.id = id
+        this.name = name
+        this.hotkey = hotkey
+        this.toolTip = toolTip
+        this.abilityList = abilityList
+
+
+    function buildSpellBook()
+        new AbilityDefinitionSpellBook(id)
+        ..setButtonPositionNormalX(3)
+        ..setButtonPositionNormalY(1)
+        ..setButtonPositionResearchX(0)
+        ..setButtonPositionResearchY(0)
+        ..setIconNormal(Icons.bTNSkillz)
+        ..setHeroAbility(true)
+        ..setItemAbility(false)
+        ..setLevels(3)
+        ..presetBaseOrderID(lvl -> "spellbook")
+        ..setHotkeyNormal(hotkey)
+        ..setName(name)
+        ..presetMaximumSpells(lvl -> 11)
+        ..presetMinimumSpells(lvl -> 11)
+        ..presetSpellList(lvl -> abilityList)
+        ..presetCooldown(lvl -> COOLDOWN)
+        ..presetTooltipNormal(lvl -> name)
+        ..presetTooltipNormalExtended(lvl -> toolTip)
+        ..presetSharedSpellCooldown(lvl -> false)
+
+function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
     return asList(
-      new QuickMakeSpell("Healing Potion", HEALING_POTION_RECIPE, "BTNLesserRejuvPotion.blp", SPELL_QM_HEALING_POTION, 0, 0, "Q", SPECIAL_COLOR),
-      new QuickMakeSpell("Mana Potion", MANA_POTION_RECIPE, "BTNPotionBlueSmall.blp", SPELL_QM_MANA_POTION, 1, 0, "W", SPECIAL_COLOR),
-      new QuickMakeSpell("Hp pot", QM_TOOLIP, "BTNLesserClarityPotion.blp", SPELL_QM_CURE_ALL, 2, 2, "E", SPECIAL_COLOR)
+       new QuickMakeSpell("Healing Potion", HEALING_POTION_RECIPE, "BTNLesserRejuvPotion.blp", SPELL_QM_HEALING_POTION, 0, 0, "H", SPECIAL_COLOR, "dismount"),
+       new QuickMakeSpell("Mana Potion", MANA_POTION_RECIPE, "BTNPotionBlueSmall.blp", SPELL_QM_MANA_POTION, 1, 0, "M", SPECIAL_COLOR, "doom"),
+       new QuickMakeSpell("Cure All", CURE_ALL_RECIPE, "BTNLesserClarityPotion.blp", SPELL_QM_CURE_ALL, 2, 0, "C", SPECIAL_COLOR, "drain"),
+       new QuickMakeSpell("Anabolic Potion", ANABOLIC_POTION_RECIPE, "BTNPotionRed.blp", SPELL_QM_ANABOLIC_POTION, 1, 1, "A", SPECIAL_COLOR, "avatar"),
+       new QuickMakeSpell("Anti-Magic Potion", ANTI_MAGIC_POTION_RECIPE, "BTNPotionOfClarity.blp", SPELL_QM_ANTI_MAGIC_POTION, 0, 1, "R", SPECIAL_COLOR, "farsight"),
+       new QuickMakeSpell("Oracle Potion", ORACLE_POTION_RECIPE, "BTNCharm.blp", SPELL_QM_ORACLE_POTION, 2, 1, "O", SPECIAL_COLOR, "burrow"),
+       new QuickMakeSpell("Spirit Of Wind", SPIRIT_WIND_RECIPE, "BTNOrbOfLightning.blp", SPELL_QM_SPIRIT_WIND, 0, 2, "W", SPECIAL_COLOR, "ward"),
+       new QuickMakeSpell("Spirit Of Water", SPIRIT_WATER_RECIPE, "BTNOrbOfFrost.blp", SPELL_QM_SPIRIT_WATER, 1, 2, "X", SPECIAL_COLOR, "unsummon"),
+       new QuickMakeSpell("Dark Rock", DARK_ROCK_RECIPE, "BTNOrbOfVenom.blp", SPELL_QM_DARK_ROCK, 2, 2, "V", SPECIAL_COLOR, "unroot"),
+
+       new QuickMakeSpell("Disease Potion", DISEASE_POTION_RECIPE, "BTNPotionGreen.blp", SPELL_QM_DISEASE_POTION, 0, 0, "D", SPECIAL_COLOR, "frostarmoroff"),
+       new QuickMakeSpell("Acid Bomb", ACID_BOMB_RECIPE, "BTNAcidBomb.blp", SPELL_QM_ACID_BOMB, 1, 0, "A", SPECIAL_COLOR, "ancestralspirit"),
+       new QuickMakeSpell("Bee Hive", BEE_HIVE_RECIPE, "BTNCrate.blp", SPELL_QM_BEE_HIVE, 2, 0, "B", SPECIAL_COLOR, "wispharvest"),
+       new QuickMakeSpell("Essences Of Bees", ESSENCE_BEES_RECIPE, "BTNCrate.blp", SPELL_QM_ESSENCE_BEES, 3, 0, "E", SPECIAL_COLOR, "web"),
+       new QuickMakeSpell("Gem Of Knowledge", GEM_OF_KNOWLEDGE_RECIPE, "BTNEnchantedGemstone.blp", SPELL_QM_GEM_OF_KNOWLEDGE, 0, 1, "G", SPECIAL_COLOR, "blink"),
+       new QuickMakeSpell("Omnicure", OMNICURE_RECIPE, "BTNMinorRejuvPotion.blp", SPELL_QM_OMNICURE, 1, 1, "O", SPECIAL_COLOR, "cripple"),
+       new QuickMakeSpell("Twin Islands Potion", TWIN_ISLANDS_POTION_RECIPE, "BTNPotionGreenSmall.blp", SPELL_QM_TWIN_ISLANDS, 2, 1, "T", SPECIAL_COLOR, "curseon"),
+       new QuickMakeSpell("Nether Potion", NETHER_POTION_RECIPE, "BTNPotionOfOmniscience.blp", SPELL_QM_NETHER_POTION, 0, 2, "N", SPECIAL_COLOR, "cyclone"),
+       new QuickMakeSpell("Fervor Potion", FERVER_POTION_RECIPE, "BTNGreaterInvulneralbility.blp", SPELL_QM_FERVOR_POTION, 1, 2, "F", SPECIAL_COLOR, "curseof"),
+       new QuickMakeSpell("Drunks Potion", DRUNKS_POTION_RECIPE, "BTNLesserInvulneralbility.blp", SPELL_QM_DRUNKS_POTION, 2, 2, "G", SPECIAL_COLOR, "curseon")
     )
+
+function getQuickMakeSpellBookSpells() returns LinkedList<QuickMakeSpellBook>
+    return asList(
+        new QuickMakeSpellBook(SPELL_MIXING_POT_SPELLBOOK_ID, "Special Herb Quick Make Page", "N", MIXING_SPELLBOOK_TOOLTIP, MIXING_POT_SPELLBOOK)
+    )
+public function makeDurationTips(int durationHero, int durationNormal, int cooldown) returns string
+    let tips = "Last for {0}({1}) seconds, has {2} seconds cooldown".format(durationHero.toString(), durationNormal.toString(), cooldown.toString())
+    return tips
 
 @compiletime
 function buildSpells()
-    getSpells().forEach(spell -> spell.buildSpell())
+    getQuickMakeSpells().forEach(spell -> spell.buildSpell())
+    getQuickMakeSpellBookSpells().forEach(spell -> spell.buildSpellBook())
+
+init
+    print(MIXING_POT_SPELLBOOK)

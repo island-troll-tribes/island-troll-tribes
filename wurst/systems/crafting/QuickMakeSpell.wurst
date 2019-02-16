@@ -8,28 +8,24 @@ import LegacyColors
 import Icons
 
 constant let COOLDOWN = 1.
-constant let MIXING_POT_SPELLBOOK = SPELL_QM_ACID_BOMB.toRawCode()+","+SPELL_QM_ESSENCE_BEES.toRawCode()+","+SPELL_QM_DISEASE_POTION.toRawCode()+","+SPELL_QM_BEE_HIVE.toRawCode()+
-                                    ","+SPELL_QM_GEM_OF_KNOWLEDGE.toRawCode()+","+SPELL_QM_NETHER_POTION.toRawCode()+","+SPELL_QM_DRUNKS_POTION.toRawCode()+","+
-                                    SPELL_QM_TWIN_ISLANDS.toRawCode()+","+SPELL_QM_OMNICURE.toRawCode()+","+SPELL_QM_FERVOR_POTION.toRawCode()
+constant let MIXING_POT_SPELLBOOK = commaList(SPELL_QM_ACID_BOMB, SPELL_QM_ESSENCE_BEES, SPELL_QM_DISEASE_POTION,SPELL_QM_BEE_HIVE,
+                                    SPELL_QM_GEM_OF_KNOWLEDGE, SPELL_QM_NETHER_POTION, SPELL_QM_DRUNKS_POTION,
+                                    SPELL_QM_TWIN_ISLANDS, SPELL_QM_OMNICURE, SPELL_QM_FERVOR_POTION, SPELL_QM_ELEMENTAL_SHIELD_POTION)
 
-constant let ARMOR_SPELLBOOK =  SPELL_QM_BONE_BOOTS.toRawCode()+","+SPELL_QM_BONE_GLOVES.toRawCode()+","+SPELL_QM_BONE_COAT.toRawCode()+","+
-                                SPELL_QM_IRON_BOOTS.toRawCode()+","+SPELL_QM_IRON_GLOVES.toRawCode()+","+SPELL_QM_IRON_COAT.toRawCode()+","+
-                                SPELL_QM_STEEL_BOOTS.toRawCode()+","+SPELL_QM_STEEL_GLOVES.toRawCode()+","+SPELL_QM_STEEL_COAT.toRawCode()
+constant let ARMOR_SPELLBOOK =  commaList(SPELL_QM_BONE_BOOTS,SPELL_QM_BONE_GLOVES,SPELL_QM_BONE_COAT,
+                                SPELL_QM_IRON_BOOTS,SPELL_QM_IRON_GLOVES,SPELL_QM_IRON_COAT,
+                                SPELL_QM_STEEL_BOOTS,SPELL_QM_STEEL_GLOVES,SPELL_QM_STEEL_COAT)
 
+constant let ARMORY_SPELLBOOK = commaList(SPELL_QM_SHIELD, SPELL_QM_BONE_SHIELD, SPELL_QM_IRON_SHIELD, SPELL_QM_STEEL_SHIELD, SPELL_QM_ENSNARE_TRAP)
 
-constant let ARMORY_SPELLBOOK = SPELL_QM_SHIELD.toRawCode()+","+SPELL_QM_BONE_SHIELD.toRawCode()+","+SPELL_QM_IRON_SHIELD.toRawCode()+","
-                                +SPELL_QM_STEEL_SHIELD.toRawCode()+","+SPELL_QM_ENSNARE_TRAP.toRawCode()+","
+constant let WDH_SPELLBOOK = commaList(SPELL_QM_SCROLL_FIREBALL, SPELL_QM_SCROLL_CYCLONE, SPELL_QM_SCROLL_SWIFTNESS, SPELL_QM_LIVING_CLAY, SPELL_QM_MAGIC_SEED, SPELL_QM_SPIRIT_WARD)
 
-constant let WDH_SPELLBOOK = SPELL_QM_SCROLL_FIREBALL.toRawCode()+","+SPELL_QM_SCROLL_CYCLONE.toRawCode()+","+SPELL_QM_SCROLL_SWIFTNESS.toRawCode()+","+SPELL_QM_LIVING_CLAY.toRawCode()+","+
-                             SPELL_QM_MAGIC_SEED.toRawCode()+","+SPELL_QM_SPIRIT_WARD.toRawCode()
-
-constant let WORKSHOP_SPELLBOOK = SPELL_QM_SMOKE_BOMB.toRawCode()+","+SPELL_QM_FIRE_BOMB.toRawCode()+","+SPELL_QM_EMP.toRawCode()+","+SPELL_QM_TRANSPORT_SHIP.toRawCode()+","+
-                                  SPELL_QM_SONAR_COMPASS.toRawCode()+","+SPELL_QM_DARK_THISTLES.toRawCode()                             
+constant let WORKSHOP_SPELLBOOK = commaList(SPELL_QM_SMOKE_BOMB,SPELL_QM_FIRE_BOMB,SPELL_QM_EMP,SPELL_QM_TRANSPORT_SHIP, SPELL_QM_SONAR_COMPASS,SPELL_QM_DARK_THISTLES)                             
 
 public class QuickMakeSpell
     let hotkey = ""
     let name = "Quick make "
-    let toolTip = "Mix those Herb together to get "
+    let toolTip = ""
     let iconPath = "ReplaceableTextures\\CommandButtons\\"
     let id = '0'
     let btnPositionX = 0
@@ -85,7 +81,7 @@ public class QuickMakeSpellBook
 
     construct(int id, string name, string hotkey, string toolTip, string abilityList, int x, int y, string baseOrderId)
         this.id = id
-        this.name = name
+        this.name = GENERAL_COLOR+"[" + SPECIAL_COLOR + hotkey + GENERAL_COLOR + "] - " + name + "|r"
         this.hotkey = hotkey
         this.toolTip = toolTip
         this.abilityList = abilityList
@@ -119,26 +115,27 @@ public class QuickMakeSpellBook
 function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
     return asList(
         //Mixing Pot
-        new QuickMakeSpell("Healing Potion", MIX_TOOLTIP+HEALING_POTION_RECIPE, "BTNLesserRejuvPotion.blp", SPELL_QM_HEALING_POTION, 0, 0, "S", SPECIAL_COLOR, "dismount"),
-        new QuickMakeSpell("Mana Potion", MIX_TOOLTIP+MANA_POTION_RECIPE, "BTNPotionBlueSmall.blp", SPELL_QM_MANA_POTION, 1, 0, "Q", SPECIAL_COLOR, "doom"),
-        new QuickMakeSpell("Cure All", MIX_TOOLTIP+CURE_ALL_RECIPE, "BTNLesserClarityPotion.blp", SPELL_QM_CURE_ALL, 2, 0, "C", SPECIAL_COLOR, "drain"),
-        new QuickMakeSpell("Anabolic Potion", MIX_TOOLTIP+ANABOLIC_POTION_RECIPE, "BTNPotionRed.blp", SPELL_QM_ANABOLIC_POTION, 1, 1, "A", SPECIAL_COLOR, "avatar"),
-        new QuickMakeSpell("Anti-Magic Potion", MIX_TOOLTIP+ANTI_MAGIC_POTION_RECIPE, "BTNPotionOfClarity.blp", SPELL_QM_ANTI_MAGIC_POTION, 0, 1, "R", SPECIAL_COLOR, "farsight"),
-        new QuickMakeSpell("Oracle Potion", MIX_TOOLTIP+ORACLE_POTION_RECIPE, "BTNCharm.blp", SPELL_QM_ORACLE_POTION, 2, 1, "Z", SPECIAL_COLOR, "burrow"),
+        new QuickMakeSpell("Healing Potion", MIX_TOOLTIP+HEALING_POTION_RECIPE, "BTNLesserRejuvPotion.blp", SPELL_QM_HEALING_POTION, 0, 0, "Q", SPECIAL_COLOR, "dismount"),
+        new QuickMakeSpell("Mana Potion", MIX_TOOLTIP+MANA_POTION_RECIPE, "BTNPotionBlueSmall.blp", SPELL_QM_MANA_POTION, 1, 0, "W", SPECIAL_COLOR, "doom"),
+        new QuickMakeSpell("Cure All", MIX_TOOLTIP+CURE_ALL_RECIPE, "BTNLesserClarityPotion.blp", SPELL_QM_CURE_ALL, 2, 0, "E", SPECIAL_COLOR, "drain"),
+        new QuickMakeSpell("Anti-Magic Potion", MIX_TOOLTIP+ANTI_MAGIC_POTION_RECIPE, "BTNPotionOfClarity.blp", SPELL_QM_ANTI_MAGIC_POTION, 0, 1, "A", SPECIAL_COLOR, "farsight"),
+        new QuickMakeSpell("Anabolic Potion", MIX_TOOLTIP+ANABOLIC_POTION_RECIPE, "BTNPotionRed.blp", SPELL_QM_ANABOLIC_POTION, 1, 1, "S", SPECIAL_COLOR, "avatar"),
+        new QuickMakeSpell("Oracle Potion", MIX_TOOLTIP+ORACLE_POTION_RECIPE, "BTNCharm.blp", SPELL_QM_ORACLE_POTION, 2, 1, "D", SPECIAL_COLOR, "burrow"),
         new QuickMakeSpell("Spirit Of Wind", MIX_TOOLTIP+SPIRIT_WIND_RECIPE, "BTNOrbOfLightning.blp", SPELL_QM_SPIRIT_WIND, 0, 2, "W", SPECIAL_COLOR, "ward"),
-        new QuickMakeSpell("Spirit Of Water", MIX_TOOLTIP+SPIRIT_WATER_RECIPE, "BTNOrbOfFrost.blp", SPELL_QM_SPIRIT_WATER, 1, 2, "E", SPECIAL_COLOR, "unsummon"),
-        new QuickMakeSpell("Dark Rock", MIX_TOOLTIP+DARK_ROCK_RECIPE, "BTNOrbOfVenom.blp", SPELL_QM_DARK_ROCK, 2, 2, "D", SPECIAL_COLOR, "unroot"),
+        new QuickMakeSpell("Spirit Of Water", MIX_TOOLTIP+SPIRIT_WATER_RECIPE, "BTNOrbOfFrost.blp", SPELL_QM_SPIRIT_WATER, 1, 2, "X", SPECIAL_COLOR, "unsummon"),
+        new QuickMakeSpell("Dark Rock", MIX_TOOLTIP+DARK_ROCK_RECIPE, "BTNOrbOfVenom.blp", SPELL_QM_DARK_ROCK, 2, 2, "C", SPECIAL_COLOR, "unroot"),
 
-        new QuickMakeSpell("Disease Potion", MIX_TOOLTIP+DISEASE_POTION_RECIPE, "BTNPotionGreen.blp", SPELL_QM_DISEASE_POTION, 0, 0, "D", SPECIAL_COLOR, "frostarmoroff"),
-        new QuickMakeSpell("Acid Bomb", MIX_TOOLTIP+ACID_BOMB_RECIPE, "BTNAcidBomb.blp", SPELL_QM_ACID_BOMB, 1, 0, "A", SPECIAL_COLOR, "ancestralspirit"),
-        new QuickMakeSpell("Bee Hive", MIX_TOOLTIP+BEE_HIVE_RECIPE, "BTNCrate.blp", SPELL_QM_BEE_HIVE, 2, 0, "W", SPECIAL_COLOR, "wispharvest"),
-        new QuickMakeSpell("Essences Of Bees", MIX_TOOLTIP+ESSENCE_BEES_RECIPE, "BTNCrate.blp", SPELL_QM_ESSENCE_BEES, 3, 0, "E", SPECIAL_COLOR, "web"),
-        new QuickMakeSpell("Gem Of Knowledge", MIX_TOOLTIP+GEM_OF_KNOWLEDGE_RECIPE, "BTNEnchantedGemstone.blp", SPELL_QM_GEM_OF_KNOWLEDGE, 0, 1, "G", SPECIAL_COLOR, "blink"),
-        new QuickMakeSpell("Omnicure", MIX_TOOLTIP+OMNICURE_RECIPE, "BTNMinorRejuvPotion.blp", SPELL_QM_OMNICURE, 1, 1, "C", SPECIAL_COLOR, "cripple"),
-        new QuickMakeSpell("Twin Islands Potion", MIX_TOOLTIP+TWIN_ISLANDS_POTION_RECIPE, "BTNPotionGreenSmall.blp", SPELL_QM_TWIN_ISLANDS, 2, 1, "R", SPECIAL_COLOR, "curseon"),
-        new QuickMakeSpell("Nether Potion", MIX_TOOLTIP+NETHER_POTION_RECIPE, "BTNPotionOfOmniscience.blp", SPELL_QM_NETHER_POTION, 0, 2, "N", SPECIAL_COLOR, "cyclone"),
-        new QuickMakeSpell("Fervor Potion", MIX_TOOLTIP+FERVER_POTION_RECIPE, "BTNGreaterInvulneralbility.blp", SPELL_QM_FERVOR_POTION, 1, 2, "F", SPECIAL_COLOR, "curseof"),
+        new QuickMakeSpell("Disease Potion", MIX_TOOLTIP+DISEASE_POTION_RECIPE, "BTNPotionGreen.blp", SPELL_QM_DISEASE_POTION, 0, 0, "Q", SPECIAL_COLOR, "frostarmoroff"),
+        new QuickMakeSpell("Acid Bomb", MIX_TOOLTIP+ACID_BOMB_RECIPE, "BTNAcidBomb.blp", SPELL_QM_ACID_BOMB, 1, 0, "W", SPECIAL_COLOR, "ancestralspirit"),
+        new QuickMakeSpell("Bee Hive", MIX_TOOLTIP+BEE_HIVE_RECIPE, "BTNCrate.blp", SPELL_QM_BEE_HIVE, 2, 0, "E", SPECIAL_COLOR, "wispharvest"),
+        new QuickMakeSpell("Essences Of Bees", MIX_TOOLTIP+ESSENCE_BEES_RECIPE, "BTNCrate.blp", SPELL_QM_ESSENCE_BEES, 3, 0, "R", SPECIAL_COLOR, "web"),
+        new QuickMakeSpell("Gem Of Knowledge", MIX_TOOLTIP+GEM_OF_KNOWLEDGE_RECIPE, "BTNEnchantedGemstone.blp", SPELL_QM_GEM_OF_KNOWLEDGE, 0, 1, "A", SPECIAL_COLOR, "blink"),
+        new QuickMakeSpell("Omnicure", MIX_TOOLTIP+OMNICURE_RECIPE, "BTNMinorRejuvPotion.blp", SPELL_QM_OMNICURE, 1, 1, "S", SPECIAL_COLOR, "cripple"),
+        new QuickMakeSpell("Twin Islands Potion", MIX_TOOLTIP+TWIN_ISLANDS_POTION_RECIPE, "BTNPotionGreenSmall.blp", SPELL_QM_TWIN_ISLANDS, 2, 1, "D", SPECIAL_COLOR, "curseon"),
+        new QuickMakeSpell("Nether Potion", MIX_TOOLTIP+NETHER_POTION_RECIPE, "BTNPotionOfOmniscience.blp", SPELL_QM_NETHER_POTION, 0, 2, "F", SPECIAL_COLOR, "cyclone"),
+        new QuickMakeSpell("Fervor Potion", MIX_TOOLTIP+FERVER_POTION_RECIPE, "BTNGreaterInvulneralbility.blp", SPELL_QM_FERVOR_POTION, 1, 2, "W", SPECIAL_COLOR, "curseof"),
         new QuickMakeSpell("Drunks Potion", MIX_TOOLTIP+DRUNKS_POTION_RECIPE, "BTNLesserInvulneralbility.blp", SPELL_QM_DRUNKS_POTION, 2, 2, "X", SPECIAL_COLOR, "doom"),
+        new QuickMakeSpell("Elemental Shield Potion", MIX_TOOLTIP+ELEMENTAL_SHIELD_POTION_RECIPE, "BTNPotionOfRestoration.blp", SPELL_QM_ELEMENTAL_SHIELD_POTION, 2, 2, "C", SPECIAL_COLOR, "blizzard"),
 
         //Armory
         // new QuickMakeSpell("Stone Axe", TRANSMUTE_TOOLTIP+STONE_AXE_RECIPE, "BTNOrcMeleeUpOne.blp", SPELL_QM_STONE_AXE, 0, 0, "F", SPECIAL_COLOR, "dismount"),    
@@ -200,28 +197,25 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
         new QuickMakeSpell("Blow Gun", TRANSMUTE_TOOLTIP+BLOW_GUN_RECIPE, "BTNAlleriaFlute.blp", SPELL_QM_BLOW_GUN, 0, 2, "Z", SPECIAL_COLOR, "banish"),
         new QuickMakeSpell("Anabolic Boots", TRANSMUTE_TOOLTIP+ANABOLIC_BOOTS_RECIPE, "BTNWirtsOtherLeg.blp", SPELL_QM_ANABOLIC_BOOTS, 1, 2, "X", SPECIAL_COLOR, "cyclone"),
         
-        new QuickMakeSpell("Smoke Bomb", TRANSMUTE_TOOLTIP+SMOKE_BOMB_RECIPE, "BTNOrbOfDarkness.blp", SPELL_QM_SMOKE_BOMB, 0, 0, "Q", SPECIAL_COLOR, "windwalk"),
-        new QuickMakeSpell("Fire Bomb", TRANSMUTE_TOOLTIP+FIRE_BOMB_RECIPE, "BTNOrbOfFire.blp", SPELL_QM_FIRE_BOMB, 1, 0, "W", SPECIAL_COLOR, "blink"),
-        new QuickMakeSpell("EMP", TRANSMUTE_TOOLTIP+EMP_RECIPE, "BTNWispSplode.blp", SPELL_QM_EMP, 2, 0, "E", SPECIAL_COLOR, "acidbomb"),
-        new QuickMakeSpell("Transport Ship", TRANSMUTE_TOOLTIP+TRANSPORT_SHIP_RECIPE, "BTNNightElfTransport.blp", SPELL_QM_TRANSPORT_SHIP, 3, 0, "R", SPECIAL_COLOR, "web"),
-        new QuickMakeSpell("Sonar Compass", TRANSMUTE_TOOLTIP+SONAR_COMPASS_RECIPE, "BTNShip.blp", SPELL_QM_SONAR_COMPASS, 0, 1, "A", SPECIAL_COLOR, "cripple"),
-        new QuickMakeSpell("Dark Thistles", TRANSMUTE_TOOLTIP+DARK_THISTLES_RECIPE, "BTNQuillSpray.blp", SPELL_QM_DARK_THISTLES, 1, 2, "X", SPECIAL_COLOR, "curseon")
+        new QuickMakeSpell("Smoke Bomb", TRANSMUTE_TOOLTIP+SMOKE_BOMB_RECIPE, "BTNOrbOfDarkness.blp", SPELL_QM_SMOKE_BOMB, 0, 0, "Q", SPECIAL_COLOR, "burrow"),
+        new QuickMakeSpell("Fire Bomb", TRANSMUTE_TOOLTIP+FIRE_BOMB_RECIPE, "BTNOrbOfFire.blp", SPELL_QM_FIRE_BOMB, 1, 0, "W", SPECIAL_COLOR, "berserk"),
+        new QuickMakeSpell("EMP", TRANSMUTE_TOOLTIP+EMP_RECIPE, "BTNWispSplode.blp", SPELL_QM_EMP, 2, 0, "E", SPECIAL_COLOR, "blizzard"),
+        new QuickMakeSpell("Transport Ship", TRANSMUTE_TOOLTIP+TRANSPORT_SHIP_RECIPE, "BTNNightElfTransport.blp", SPELL_QM_TRANSPORT_SHIP, 3, 0, "R", SPECIAL_COLOR, "devour"),
+        new QuickMakeSpell("Sonar Compass", TRANSMUTE_TOOLTIP+SONAR_COMPASS_RECIPE, "BTNShip.blp", SPELL_QM_SONAR_COMPASS, 0, 1, "A", SPECIAL_COLOR, "charm"),
+        new QuickMakeSpell("Dark Thistles", TRANSMUTE_TOOLTIP+DARK_THISTLES_RECIPE, "BTNQuillSpray.blp", SPELL_QM_DARK_THISTLES, 1, 2, "X", SPECIAL_COLOR, "detonate")
 
     )
 
 function getQuickMakeSpellBookSpells() returns LinkedList<QuickMakeSpellBook>
     return asList(
-        new QuickMakeSpellBook(SPELL_MIXING_POT_SPELLBOOK_ID, "Special Herb Quick Make Page", "N", MIXING_SPELLBOOK_TOOLTIP, MIXING_POT_SPELLBOOK, 3, 1, "spellbook"),
+        new QuickMakeSpellBook(SPELL_MIXING_POT_SPELLBOOK_ID, "Special Herb Quick Make Page", "G", MIXING_SPELLBOOK_TOOLTIP, MIXING_POT_SPELLBOOK, 3, 1, "spellbook"),
         new QuickMakeSpellBook(SPELL_ARMOR_SPELLBOOK_ID, "Armor Quick Make Page", "N", ARMOR_SPELLBOOK_TOOLTIP, ARMOR_SPELLBOOK, 3, 1 , "blink"),
         new QuickMakeSpellBook(SPELL_ARMORY_SPELLBOOK_ID, "More Armory Quick Make Page", "G", ARMORY_SPELLBOOK_TOOLTIP, ARMORY_SPELLBOOK, 2,2, "farsight"),
         new QuickMakeSpellBook(SPELL_WDH_SPELLBOOK_ID, "More Witch Doctors Hut Quick Make Page", "G", WDH_SPELLBOOK_TOOLTIP, WDH_SPELLBOOK, 2,2, "farsight"),
         new QuickMakeSpellBook(SPELL_WORKSHOP_SPELLBOOK_ID, "More Workshop Quick Make Page", "G", WORKSHOP_SPELLBOOK_TOOLTIP, WORKSHOP_SPELLBOOK, 2,2, "farsight")
     )
 
-
 @compiletime
 function buildSpells()
     getQuickMakeSpells().forEach(spell -> spell.buildSpell())
     getQuickMakeSpellBookSpells().forEach(spell -> spell.buildSpellBook())
-
-init

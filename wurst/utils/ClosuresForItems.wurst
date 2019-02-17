@@ -51,10 +51,11 @@ public function findNearestItem(vec2 pos, real range, Predicate<item> predicate)
 	let search = Rect(pos.x - range, pos.y - range, pos.x + range, pos.y + range)
 	forItemsInRect(search) filter ->
 		let dist = pos.distanceToSq(filter.getPos())
-		if dist < ctx.nearestDist and predicate != null and filter.isAlive() and filter.isVisible() and predicate.call(filter)
+		if dist < ctx.nearestDist and filter.isAlive() and filter.isVisible() and (predicate == null or predicate.call(filter))
 			ctx.nearestDist = dist
 			ctx.nearest = filter
 	let nearest = ctx.nearest
-	destroy predicate
+	if predicate != null
+		destroy predicate
 	destroy ctx
 	return nearest

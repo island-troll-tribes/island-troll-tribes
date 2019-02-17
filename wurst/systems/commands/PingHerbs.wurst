@@ -1,11 +1,25 @@
 package PingHerbs
+
+// Standard-library imports:
+import ClosureTimers
+import ForceExtensions
 import HashMap
-import ChatCommands
-import PlayerExtensions
-import StringExtensions
 import SimError
+
+// Local imports:
+import ChatCommands
 import ID
 import LegacyColors
+import PlayerExtensions
+import StringExtensions
+
+// The duration for the help message.
+constant MSG_DURATION = 10.
+
+// The duration for the minimap pings.
+constant PING_DURATION = 4.
+
+
 
 public class Pingable
     integer id
@@ -18,18 +32,19 @@ public class Pingable
 Pingable pinger
 
 let pingers = new IterableMap<string, Pingable>()
-..put("purple", new Pingable(UNIT_PURPLE_HERB_BUSH, color(255, 0, 255)))
-..put("blue", new Pingable(UNIT_BLUE_HERB_BUSH, color(0, 0, 255)))
-..put("orange", new Pingable(UNIT_ORANGE_HERB_BUSH, color(255, 155, 0)))
-..put("yellow", new Pingable(UNIT_YELLOW_HERB_BUSH, color(255, 255, 0)))
-..put("butsu", new Pingable(UNIT_HAISETSU_BUSH, color(255, 255, 255)))
-..put("mushroom", new Pingable(UNIT_MUSHROOM_COLONY, color(165, 42, 42)))
-..put("thistle", new Pingable(UNIT_THISTLE_SHRUB, color(100, 100, 100)))
-..put("thief", new Pingable(UNIT_THIEFS_BUSH, color(153, 50, 204)))
-..put("scout", new Pingable(UNIT_SCOUTS_BUSH, color(255, 215, 0)))
-..put("water", new Pingable(UNIT_WATER_HERB_BUSH, color(135, 206, 235)))
-..put("merchant", new Pingable(UNIT_TROLL_MERCHANT, color(0, 255, 0)))
-..put("stash", new Pingable(UNIT_HIDDEN_STASH, color(0, 255, 0)))
+    ..put("purple",   new Pingable(UNIT_PURPLE_HERB_BUSH, color(255,   0, 255)))
+    ..put("blue",     new Pingable(UNIT_BLUE_HERB_BUSH,   color(  0,   0, 255)))
+    ..put("orange",   new Pingable(UNIT_ORANGE_HERB_BUSH, color(255, 155,   0)))
+    ..put("yellow",   new Pingable(UNIT_YELLOW_HERB_BUSH, color(255, 255,   0)))
+    ..put("butsu",    new Pingable(UNIT_HAISETSU_BUSH,    color(255, 255, 255)))
+    ..put("mushroom", new Pingable(UNIT_MUSHROOM_COLONY,  color(165,  42,  42)))
+    ..put("thistle",  new Pingable(UNIT_THISTLE_SHRUB,    color(100, 100, 100)))
+    ..put("thief",    new Pingable(UNIT_THIEFS_BUSH,      color(153,  50, 204)))
+    ..put("scout",    new Pingable(UNIT_SCOUTS_BUSH,      color(255, 215,   0)))
+    ..put("water",    new Pingable(UNIT_WATER_HERB_BUSH,  color(135, 206, 235)))
+    ..put("merchant", new Pingable(UNIT_TROLL_MERCHANT,   color(  0, 255,   0)))
+    ..put("stash",    new Pingable(UNIT_HIDDEN_STASH,     color(  0, 255,   0)))
+
 
 init
     registerCommandAll("ping") (triggerPlayer, args) ->
@@ -37,20 +52,30 @@ init
         if query == ""
             printTimedToPlayer("Usage: '-ping type' where type is one of:".color(GENERAL_COLOR), 10, triggerPlayer)
             for iter in pingers
-                let c = pingers.get(iter).itsColor
-                printTimedToPlayer(DASH + iter.color(c), 10, triggerPlayer)
+                let msg = DASH + iter.color(pingers.get(iter).itsColor)
+                printTimedToPlayer(msg, MSG_DURATION, triggerPlayer)
         else if pingers.has(query)
             pinger = pingers.get(query)
             let units = CreateGroup()
-                ..enumUnitsInRect(GetWorldBounds(), Filter(() -> begin
-                    return pinger.id == GetFilterUnit().getTypeId()
-                end))
-
-            let r = pinger.itsColor.red.toReal()
-            let g = pinger.itsColor.green.toReal()
-            let b = pinger.itsColor.blue.toReal()
-
-            for pingUnit from units
-                PingMinimapForForceEx(triggerPlayer.getAllies(), pingUnit.getX(), pingUnit.getY(), 4, bj_MINIMAPPINGSTYLE_SIMPLE, r, g, b)
+                ..enumUnitsInRect(
+                    GetWorldBounds(),
+                    Filter(() -> pinger.id == GetFilterUnit().getTypeId())
+                )
+            print(units.size())
+            doPeriodically(PING_DURATION / 16) cb ->
+                if units.hasNext()
+                    let target = units.next()
+                    triggerPlayer.getAllies().pingUnitsForForce(
+                        target.getPos(), PING_DURATION, bj_MINIMAPPINGSTYLE_SIMPLE, pinger.itsColor)
+                else
+                    units.close()
         else
             simError(triggerPlayer, "Cannot ping {0}".format(query))
+
+
+@Test
+function testPingersValues()
+    print("Running testPingersValues.")
+    for iter in pingers
+        print("Testing " + iter)
+        iter.assertEquals(iter.toUpperCase())

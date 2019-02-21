@@ -1,0 +1,150 @@
+package ScoutRadars
+
+import AbilityObjEditing
+import Assets
+import LegacyColors
+import LinkedList
+import ClosureEvents
+import ClosureForGroups
+import ObjectIdGenerator
+import ObjectIds
+import ID
+import UnitExtensions
+
+constant let SPELL_PING_ELK= compiletime(ABIL_ID_GEN.next())
+constant let SPELL_PING_HAWK= compiletime(ABIL_ID_GEN.next())
+constant let SPELL_PING_HOSTILE_ANIMALS= compiletime(ABIL_ID_GEN.next())
+constant let SPELL_PING_TROLL= compiletime(ABIL_ID_GEN.next())
+constant let SPELL_PING_BUILDING= compiletime(ABIL_ID_GEN.next())
+constant let SPELL_PING_TRADESHIP= compiletime(ABIL_ID_GEN.next())
+
+constant let IMPROVED_RADAR_SPELLBOOK = commaList(SPELL_PING_ELK, SPELL_PING_HAWK, SPELL_PING_HOSTILE_ANIMALS, SPELL_PING_BUILDING, SPELL_PING_TRADESHIP)
+
+constant let HOSTILE_ANIMALS_LIST = asList(UNIT_SNAKE, UNIT_JUNGLE_WOLF, UNIT_JUNGLE_BEAR, UNIT_PANTHER,
+                                    UNIT_ALIGATOR_MAN, UNIT_ONE, UNIT_MAMMOTH, UNIT_DISCO_DUCK, UNIT_ANCIENT_HYDRA,
+                                    UNIT_ADULT_ELK, UNIT_ADULT_JUNGLE_BEAR, UNIT_ADULT_JUNGLE_WOLF, UNIT_ELK_ADOLESCENT,
+                                    UNIT_HAWK_ADOLESCENT, UNIT_FOREST_DRAGON_HATCHLING, UNIT_RED_DRAGON_HATCHLING,
+                                    UNIT_BRONZE_DRAGON_HATCHLING, UNIT_NETHER_DRAGON_HATCHLING, UNIT_ALPHA_HAWK,
+                                    UNIT_FOREST_DRAGON, UNIT_GREATER_FOREST_DRAGON, UNIT_BRONZE_DRAGON, UNIT_GREATER_BRONZE_DRAGON,
+                                    UNIT_RED_DRAGON, UNIT_GREATER_RED_DRAGON, UNIT_NETHER_DRAGON, UNIT_GREATER_NETHER_DRAGON)
+
+constant let BUILDING_LIST        = asList(UNIT_FIRE, UNIT_SMOKE_HOUSE, UNIT_STORAGE_HUT, UNIT_MUD_HUT, UNIT_ARMORY, UNIT_TELEPORTATION_BEACON,
+                                           UNIT_WORKSHOP, UNIT_WITCH_DOCTORS_HUT, UNIT_POT, UNIT_TANNERY, UNIT_ENSNARE_TRAP, UNIT_OMNITOWER,
+                                           UNIT_MAGE_FIRE, UNIT_TROLL_HUT, UNIT_HATCHERY, UNIT_SPIRIT_WARD)
+
+constant let TRADESHIP_LIST       = asList(UNIT_TRADE_SHIP_1, UNIT_TRADE_SHIP_2, UNIT_TRADE_SHIP_3, UNIT_TRADE_SHIP_4, UNIT_TRADE_SHIP_5, UNIT_TRADE_SHIP_6)
+
+constant let COOLDOWN = 50.
+constant let MANACOST = 10
+constant let RADAR_RANGE = 3500.
+
+public class RadarSpell
+    let hotkey = ""
+    let name = "Locate "
+    let toolTip = "Ping "
+    let iconPath = "ReplaceableTextures\\CommandButtons\\"
+    let id = '0'
+    let btnPositionX = 0
+    let btnPositionY = 0
+    let baseOrderId = "avatar"
+    let cooldown = COOLDOWN
+    let manaCost = 0
+
+    construct(string unitToPing, string toolTip, string iconPath, int id, int btnX, int btnY, string hotkey, string baseOrderId, int manaCost, string color)
+        this.name = GENERAL_COLOR+"[" + SPECIAL_COLOR + hotkey + GENERAL_COLOR + "] - " + this.name + unitToPing + "|r"
+        this.toolTip += color+unitToPing + "|r  surrounding your position." + toolTip
+        this.iconPath += iconPath
+        this.id = id
+        this.btnPositionX = btnX
+        this.btnPositionY = btnY
+        this.baseOrderId = baseOrderId
+        this.hotkey = hotkey
+        this.manaCost = manaCost
+
+    function buildSpell()
+        new AbilityDefinitionIllidanChannel(id)
+            ..setTargetType(1, 0)
+            ..setAnimationNames("spell,slam")
+            ..setArtCaster("")
+            ..setArtEffect("")
+            ..setArtTarget("")
+            ..setArtSpecial("")
+            ..setButtonPositionNormalX(btnPositionX)
+            ..setButtonPositionNormalY(btnPositionY)
+            ..setButtonPositionResearchX(3)
+            ..setButtonPositionResearchY(0)
+            ..setIconNormal(iconPath)
+            ..setIconResearch(iconPath)
+            ..setIconTurnOff(iconPath)
+            ..setHeroAbility(false)
+            ..setItemAbility(false)
+            ..setLevels(3)
+            ..setHotkeyNormal(hotkey)
+            ..setName(name)
+            ..setDisableOtherAbilities(1, false)
+            ..setTooltipNormal(1, name)
+            ..setTooltipNormalExtended(1, toolTip)
+            ..presetBaseOrderID(lvl -> baseOrderId)
+            ..setOrderStringActivate("channel")
+            ..setOrderStringUseTurnOn("channel")
+            ..presetOptions(lvl -> 1)
+            ..presetCooldown(lvl -> cooldown)
+            ..presetManaCost(lvl -> manaCost)
+            ..presetFollowThroughTime(lvl -> 1.)
+
+function getRadarSpells() returns LinkedList<RadarSpell>
+    return asList(
+        new RadarSpell("Elk"             , "", "BTNSpy.blp" , SPELL_PING_ELK            , 0, 0, "Q", "bloodlust", MANACOST, COLOR_BLUE  ),
+        new RadarSpell("Hawk"            , "", "BTNSpy.blp" , SPELL_PING_HAWK           , 0, 0, "W", "curseon"  , MANACOST, COLOR_TEAL  ),
+        new RadarSpell("Hostile Animals" , "", "BTNSpy.blp" , SPELL_PING_HOSTILE_ANIMALS, 0, 0, "E", "curseoff" , MANACOST, COLOR_RED   ),
+        new RadarSpell("Hostile Building", "", "BTNSpy.blp" , SPELL_PING_BUILDING       , 0, 0, "R", "blizzard" , MANACOST, COLOR_ORANGE),
+        new RadarSpell("Trade Ship"      , "", "BTNSpy.blp" , SPELL_PING_TRADESHIP      , 0, 0, "A", "cripple"  , MANACOST, GOLD_COLOR  )
+    )
+
+function onCast(LinkedList<int> unitId, real red, real green, real blue)
+    var caster = GetSpellAbilityUnit()
+    var casterPos = caster.getPos()
+    var owner = caster.getOwner()
+    var efx = addEffect("Abilities\\Spells\\Human\\Thunderclap\\ThunderClapCaster.mdl", casterPos)
+    efx.setScale(1.5)
+    efx.setTimeScale(1.5)
+    efx.destr()
+
+    forUnitsInRange(caster.getPos(), RADAR_RANGE) u ->
+        if unitId.has(u.getTypeId())
+            if u.getOwner().isEnemyOf(caster.getOwner()) or TRADESHIP_LIST.has(u.getTypeId())
+                PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 5, bj_MINIMAPPINGSTYLE_SIMPLE, red, green, blue)
+            
+
+@compiletime
+function buildSpells()
+    getRadarSpells().forEach(spell -> spell.buildSpell())
+
+@compiletime function createSpellBook() 
+    new AbilityDefinitionSpellBook(SPELL_IMPROVED_RADAR_SPELLBOOK_ID)
+        ..setButtonPositionNormalX(0)
+        ..setButtonPositionNormalY(1)
+        ..setButtonPositionResearchX(0)
+        ..setButtonPositionResearchY(0)
+        ..setIconNormal(Icons.bTNSpellBookBLS)
+        ..setHeroAbility(true)
+        ..setItemAbility(false)
+        ..setLevels(1)
+        ..setTargetAttachmentPoint1("")
+        ..setCasterAttachmentPoint1("")
+        ..presetBaseOrderID(lvl -> "stormbolt")
+        ..setHotkeyNormal("D")
+        ..setName("Improved Radar")
+        ..presetMaximumSpells(lvl -> 11)
+        ..presetMinimumSpells(lvl -> 11)
+        ..presetSpellList(lvl -> IMPROVED_RADAR_SPELLBOOK)
+        ..presetCooldown(lvl -> COOLDOWN)
+        ..presetTooltipNormal(lvl -> GOLD_COLOR+"Improved Radar|r")
+        ..presetTooltipNormalExtended(lvl -> "Trapper got a better radar to locate unit around him")
+        ..presetSharedSpellCooldown(lvl -> false)
+init 
+    registerSpellEffectEvent(SPELL_PING_ELK, () -> onCast(asList(UNIT_ELK), 0, 0, 255))
+    registerSpellEffectEvent(SPELL_PING_HAWK, () -> onCast(asList(UNIT_HAWK), 0, 255, 255))
+    registerSpellEffectEvent(SPELL_PING_HOSTILE_ANIMALS, () -> onCast(HOSTILE_ANIMALS_LIST, 255, 128, 0))
+    registerSpellEffectEvent(SPELL_PING_BUILDING, () -> onCast(BUILDING_LIST, 255, 102, 102))
+    registerSpellEffectEvent(SPELL_PING_TRADESHIP, () -> onCast(TRADESHIP_LIST, 255, 255, 0))

@@ -1,0 +1,110 @@
+package Trap
+
+import AbilityObjEditing
+import BuffObjEditing
+import RegisterEvents
+import UnitExtensions
+import UnitObjEditing
+import ClosureForGroups
+import ObjectIdGenerator
+import Orders
+import DummyCaster
+import ObjectIds
+import ID
+import LegacyColors
+import Icons
+
+constant let ABILITY_TRAP_EXPLOSION = compiletime(ABIL_ID_GEN.next())
+constant let ABILITY_SPIKED_TRAP_SLOW = compiletime(ABIL_ID_GEN.next())
+constant let BUFF_SPIKED_TRAP_SLOW = compiletime(BUFF_ID_GEN.next())
+
+@compile function createSpikedTrapBuff()
+    new BuffDefinition(BUFF_SPIKED_TRAP_SLOW, 'Bcri')
+        ..setArtTarget(1, "Objects\\Spawnmodels\\Other\\HumanBloodCinematicEffect\\HumanBloodCinematicEffect.mdl")
+        ..setTargetAttachmentPoint1(1, "chest")
+        ..setIcon(Icons.bTNImpale)
+        ..setTooltipNormal(1, "Spike Trap Slow")
+        ..setTooltipNormalExtended(1, "This unit has been crippled by an spiked trap, it's movement speed has been greatly reduced.")
+
+@compiletime function createSpikedTrapDebuffSpell()
+    new AbilityDefinitionCripple(ABILITY_SPIKED_TRAP_SLOW)
+        ..setIconNormal(Icons.bTNSpikedBarricades)
+        ..setManaCost(1, 0)
+        ..setDurationHero(1, 5)
+        ..setDamageReduction(1, 0)
+        ..setMovementSpeedReduction(1, 0.90)
+        ..setRequirements("")
+        ..setBuffs(1, "B027")
+
+
+@compiletime function createTrap()
+    new UnitDefinition(UNIT_TRAP, 'otot')
+        ..setNormalAbilities(commaList("Aeth",  ABILITY_TRAP_EXPLOSION.toRawCode(), "Atru"))
+        ..setName("Trapper Track Trap")
+        ..setModelFile("units\\orc\\StasisTotem\\StasisTotem.mdx")
+        ..setHitPointsMaximumBase(15)
+
+@compiletime function createSpikedTrap()
+    new UnitDefinition(UNIT_SPIKED_TRAP, 'otot')
+        ..setNormalAbilities(commaList("Aeth",  ABILITY_TRAP_EXPLOSION.toRawCode(), "Atru"))
+        ..setName("Trapper Spiked Trap")
+        ..setModelFile("Models\\SpikedTrap2.mdx")
+        ..setScalingValue(1)
+        ..setDeathTimeseconds(3)
+        ..setHitPointsMaximumBase(15)
+
+@compiletime function createTrapSpell()
+    new AbilityDefinitionStasisTrap(SPELL_TRAP)
+        ..setRequirements("")
+        ..setButtonPositionNormalX(1)
+        ..setButtonPositionNormalY(1)
+        ..setIconNormal(Icons.bTNStasisTrap)
+        ..setManaCost(1, 10)
+        ..setName("Tracking Trap")
+        ..setTooltipNormal(1, GENERAL_COLOR+"["+SPECIAL_COLOR+"W"+GENERAL_COLOR+"] - Tracking Trap")
+        ..setTooltipNormalExtended(1, "Troll walking through this trap will get tracked, havint their position revealed and armor reduced by 4.")
+        ..setHotkeyNormal("W")
+        ..setWardUnitType(1, UNIT_TRAP.toRawCode())
+    
+@compiletime function createSpikedTrapSpell()
+    new AbilityDefinitionItemPlaceMine(SPELL_SPIKED_TRAP)
+        ..setRequirements("")
+        ..setButtonPositionNormalX(0)
+        ..setButtonPositionNormalY(1)
+        ..setIconNormal(Icons.bTNSpikedBarricades)
+        ..setManaCost(1, 10)
+        ..setName("Spiked Trap")
+        ..setTooltipNormal(1, GENERAL_COLOR+"["+SPECIAL_COLOR+"Q"+GENERAL_COLOR+"] - Spiked Trap")
+        ..setTooltipNormalExtended(1, "An itchy trap, troll who walks on this trap will get slowed.")
+        ..setHotkeyNormal("Q")
+        ..setUnitType(1, UNIT_SPIKED_TRAP.toRawCode())
+
+@compiletime function createTrapExplosionSpell()
+    new AbilityDefinitionMine(ABILITY_TRAP_EXPLOSION)
+        ..setButtonPositionNormalX(0)
+        ..setButtonPositionNormalY(1)
+        ..setActivationDelay(1, 5)
+        ..setTargetsAllowed(1, "Hero,Ground,Enemy")
+
+function onCast(unit trap)
+
+    forUnitsInRange(trap.getPos(), 400) u ->
+        if u.getOwner().isEnemyOf(trap.getOwner()) and u.isTroll() and trap.getTypeId() == UNIT_TRAP
+            new DummyCaster()
+            ..owner(trap.getOwner())
+            ..origin(trap.getPos() + vec2(100, 0))
+            ..castTarget('A05P', 1, Orders.faeriefire, u)
+        else if u.getOwner().isEnemyOf(trap.getOwner()) and u.isTroll() and trap.getTypeId() == UNIT_SPIKED_TRAP
+            new DummyCaster()
+            ..owner(trap.getOwner())
+            ..origin(trap.getPos() + vec2(100, 0))
+            ..castTarget(ABILITY_SPIKED_TRAP_SLOW, 1, Orders.cripple, u)
+    
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
+        let dyingUnit = GetDyingUnit()
+
+        if dyingUnit.getTypeId() == UNIT_TRAP
+            onCast(dyingUnit)
+        else if dyingUnit.getTypeId() == UNIT_SPIKED_TRAP
+            onCast(dyingUnit)

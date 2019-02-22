@@ -4,7 +4,6 @@ import AbilityObjEditing
 import BuffObjEditing
 import RegisterEvents
 import UnitExtensions
-import UnitObjEditing
 import ClosureForGroups
 import ObjectIdGenerator
 import Orders
@@ -17,8 +16,10 @@ import Icons
 constant let ABILITY_TRAP_EXPLOSION = compiletime(ABIL_ID_GEN.next())
 constant let ABILITY_SPIKED_TRAP_SLOW = compiletime(ABIL_ID_GEN.next())
 constant let BUFF_SPIKED_TRAP_SLOW = compiletime(BUFF_ID_GEN.next())
+constant let TRAP_EFFECT_RADIUS = 200.
+constant let COOLDOWN = 50.
 
-@compile function createSpikedTrapBuff()
+@compiletime function createSpikedTrapBuff()
     new BuffDefinition(BUFF_SPIKED_TRAP_SLOW, 'Bcri')
         ..setArtTarget(1, "Objects\\Spawnmodels\\Other\\HumanBloodCinematicEffect\\HumanBloodCinematicEffect.mdl")
         ..setTargetAttachmentPoint1(1, "chest")
@@ -32,73 +33,97 @@ constant let BUFF_SPIKED_TRAP_SLOW = compiletime(BUFF_ID_GEN.next())
         ..setManaCost(1, 0)
         ..setDurationHero(1, 5)
         ..setDamageReduction(1, 0)
-        ..setMovementSpeedReduction(1, 0.90)
+        ..setAttackSpeedReduction(1, 0)
+        ..setMovementSpeedReduction(1, 0.80)
         ..setRequirements("")
-        ..setBuffs(1, "B027")
+        ..setBuffs(1, BUFF_SPIKED_TRAP_SLOW.toRawCode())
 
-
-@compiletime function createTrap()
+@compiletime function createTrapUnit()
     new UnitDefinition(UNIT_TRAP, 'otot')
-        ..setNormalAbilities(commaList("Aeth",  ABILITY_TRAP_EXPLOSION.toRawCode(), "Atru"))
+        ..setNormalAbilities(commaList("Aeth",  ABILITY_TRAP_EXPLOSION.toRawCode()))
         ..setName("Trapper Track Trap")
         ..setModelFile("units\\orc\\StasisTotem\\StasisTotem.mdx")
         ..setHitPointsMaximumBase(15)
+        ..setDeathTimeseconds(3)
+        ..setSightRadiusDay(200)
+        ..setSightRadiusNight(200)
 
-@compiletime function createSpikedTrap()
+@compiletime function createSpikedTrapUnit()
     new UnitDefinition(UNIT_SPIKED_TRAP, 'otot')
-        ..setNormalAbilities(commaList("Aeth",  ABILITY_TRAP_EXPLOSION.toRawCode(), "Atru"))
+        ..setNormalAbilities(commaList("Aeth",  ABILITY_TRAP_EXPLOSION.toRawCode()))
         ..setName("Trapper Spiked Trap")
-        ..setModelFile("Models\\SpikedTrap2.mdx")
+        ..setModelFile("Models\\SpikedTrap.mdx")
         ..setScalingValue(1)
         ..setDeathTimeseconds(3)
         ..setHitPointsMaximumBase(15)
 
-@compiletime function createTrapSpell()
-    new AbilityDefinitionStasisTrap(SPELL_TRAP)
+@compiletime function createTrackTrapSpell()
+    new AbilityDefinitionStasisTrap(SPELL_TRACK_TRAP)
         ..setRequirements("")
+        ..setAnimationNames("spell,throw")
         ..setButtonPositionNormalX(1)
         ..setButtonPositionNormalY(1)
         ..setIconNormal(Icons.bTNStasisTrap)
+        ..setIconResearch(Icons.bTNStasisTrap)
         ..setManaCost(1, 10)
         ..setName("Tracking Trap")
         ..setTooltipNormal(1, GENERAL_COLOR+"["+SPECIAL_COLOR+"W"+GENERAL_COLOR+"] - Tracking Trap")
-        ..setTooltipNormalExtended(1, "Troll walking through this trap will get tracked, havint their position revealed and armor reduced by 4.")
+        ..setTooltipNormalExtended(1, "Troll walking through this trap will get tracked, having their position revealed and armor reduced by 4 for 30 seconds.")
         ..setHotkeyNormal("W")
+        ..setDetonationRadius(1, 100)
+        ..setDetectionRadius(1, 100)
+        ..setDurationNormal(1, 600.)
+        ..setCastRange(1, 100.)
+        ..setDurationHero(1, 0.1)
+        ..setStunDuration(1, 0.1)
+        ..setCooldown(1, COOLDOWN)
         ..setWardUnitType(1, UNIT_TRAP.toRawCode())
     
 @compiletime function createSpikedTrapSpell()
-    new AbilityDefinitionItemPlaceMine(SPELL_SPIKED_TRAP)
+    new AbilityDefinitionShadowHunterSerpentWard(SPELL_SPIKED_TRAP)
         ..setRequirements("")
+        ..setAnimationNames("spell,slam")
         ..setButtonPositionNormalX(0)
         ..setButtonPositionNormalY(1)
+        ..setButtonPositionResearchX(0)
+        ..setButtonPositionResearchY(0)
         ..setIconNormal(Icons.bTNSpikedBarricades)
+        ..setIconResearch(Icons.bTNSpikedBarricades)
         ..setManaCost(1, 10)
         ..setName("Spiked Trap")
+        ..setTooltipLearn("Learn Spiked Trap")
+        ..setTooltipLearnExtended("Allows you to place spiked trap on the ground, greatly slowing enemy troll who walk through it")
         ..setTooltipNormal(1, GENERAL_COLOR+"["+SPECIAL_COLOR+"Q"+GENERAL_COLOR+"] - Spiked Trap")
-        ..setTooltipNormalExtended(1, "An itchy trap, troll who walks on this trap will get slowed.")
+        ..setTooltipNormalExtended(1, "An itchy trap, troll who walks on it will get slowed by 80% for 5 seconds.")
         ..setHotkeyNormal("Q")
-        ..setUnitType(1, UNIT_SPIKED_TRAP.toRawCode())
+        ..setOrderStringUseTurnOn("purge")
+        ..setRequiredLevel(4)
+        ..setLevels(1)
+        ..setCastRange(1, 100.)
+        ..setDurationNormal(1, 600.)
+        ..setHeroAbility(TRUE)
+        ..setCooldown(1, COOLDOWN)
+        ..setSummonedUnitType(1, UNIT_SPIKED_TRAP.toRawCode())
 
 @compiletime function createTrapExplosionSpell()
     new AbilityDefinitionMine(ABILITY_TRAP_EXPLOSION)
         ..setButtonPositionNormalX(0)
         ..setButtonPositionNormalY(1)
+        ..setCastRange(1, TRAP_EFFECT_RADIUS + 50)
         ..setActivationDelay(1, 5)
-        ..setTargetsAllowed(1, "Hero,Ground,Enemy")
+        ..setTargetsAllowed(1, "Hero")
 
 function onCast(unit trap)
 
-    forUnitsInRange(trap.getPos(), 400) u ->
-        if u.getOwner().isEnemyOf(trap.getOwner()) and u.isTroll() and trap.getTypeId() == UNIT_TRAP
-            new DummyCaster()
-            ..owner(trap.getOwner())
-            ..origin(trap.getPos() + vec2(100, 0))
-            ..castTarget('A05P', 1, Orders.faeriefire, u)
-        else if u.getOwner().isEnemyOf(trap.getOwner()) and u.isTroll() and trap.getTypeId() == UNIT_SPIKED_TRAP
-            new DummyCaster()
-            ..owner(trap.getOwner())
-            ..origin(trap.getPos() + vec2(100, 0))
-            ..castTarget(ABILITY_SPIKED_TRAP_SLOW, 1, Orders.cripple, u)
+    forUnitsInRange(trap.getPos(), TRAP_EFFECT_RADIUS) u ->
+        if u.isTroll() and u.getOwner().isEnemyOf(trap.getOwner())
+            let dummy = new DummyCaster()
+            dummy.owner(trap.getOwner())
+            dummy.origin(trap.getPos() + vec2(100, 0))
+            if  trap.getTypeId() == UNIT_TRAP
+                dummy.castTarget('A05P', 1, Orders.faeriefire, u)
+            else if trap.getTypeId() == UNIT_SPIKED_TRAP
+                dummy.castTarget(ABILITY_SPIKED_TRAP_SLOW, 1, Orders.cripple, u)
     
 init
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->

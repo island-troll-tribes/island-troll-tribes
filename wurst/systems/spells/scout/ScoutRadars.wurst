@@ -18,7 +18,7 @@ constant let SPELL_PING_TROLL= compiletime(ABIL_ID_GEN.next())
 constant let SPELL_PING_BUILDING= compiletime(ABIL_ID_GEN.next())
 constant let SPELL_PING_TRADESHIP= compiletime(ABIL_ID_GEN.next())
 
-constant let IMPROVED_RADAR_SPELLBOOK = commaList(SPELL_PING_ELK, SPELL_PING_HAWK, SPELL_PING_HOSTILE_ANIMALS, SPELL_PING_BUILDING, SPELL_PING_TRADESHIP)
+constant let ADVANCED_RADAR_SPELLBOOK = commaList(SPELL_PING_ELK, SPELL_PING_HAWK, SPELL_PING_HOSTILE_ANIMALS, SPELL_PING_BUILDING, SPELL_PING_TRADESHIP)
 
 constant let HOSTILE_ANIMALS_LIST = asList(UNIT_SNAKE, UNIT_JUNGLE_WOLF, UNIT_JUNGLE_BEAR, UNIT_PANTHER,
                                     UNIT_ALIGATOR_MAN, UNIT_ONE, UNIT_MAMMOTH, UNIT_DISCO_DUCK, UNIT_ANCIENT_HYDRA,
@@ -35,7 +35,7 @@ constant let BUILDING_LIST        = asList(UNIT_FIRE, UNIT_SMOKE_HOUSE, UNIT_STO
 constant let TRADESHIP_LIST       = asList(UNIT_TRADE_SHIP_1, UNIT_TRADE_SHIP_2, UNIT_TRADE_SHIP_3, UNIT_TRADE_SHIP_4, UNIT_TRADE_SHIP_5, UNIT_TRADE_SHIP_6)
 
 constant let COOLDOWN = 50.
-constant let MANACOST = 10
+constant let MANACOST = 0
 constant let RADAR_RANGE = 3500.
 
 public class RadarSpell
@@ -52,7 +52,7 @@ public class RadarSpell
 
     construct(string unitToPing, string toolTip, string iconPath, int id, int btnX, int btnY, string hotkey, string baseOrderId, int manaCost, string color)
         this.name = GENERAL_COLOR+"[" + SPECIAL_COLOR + hotkey + GENERAL_COLOR + "] - " + this.name + unitToPing + "|r"
-        this.toolTip += color+unitToPing + "|r  surrounding your position." + toolTip
+        this.toolTip += color+unitToPing + "|r surrounding your position." + toolTip
         this.iconPath += iconPath
         this.id = id
         this.btnPositionX = btnX
@@ -64,7 +64,7 @@ public class RadarSpell
     function buildSpell()
         new AbilityDefinitionIllidanChannel(id)
             ..setTargetType(1, 0)
-            ..setAnimationNames("spell,slam")
+            ..setAnimationNames("spell")
             ..setArtCaster("")
             ..setArtEffect("")
             ..setArtTarget("")
@@ -94,7 +94,7 @@ public class RadarSpell
 
 function getRadarSpells() returns LinkedList<RadarSpell>
     return asList(
-        new RadarSpell("Elk"             , "", "BTNSpy.blp" , SPELL_PING_ELK            , 0, 0, "Q", "bloodlust", MANACOST, COLOR_BLUE  ),
+        new RadarSpell("Elk"             , "", "BTNSpy.blp" , SPELL_PING_ELK            , 0, 0, "Q", "bloodlust", MANACOST, COLOR_GREEN  ),
         new RadarSpell("Hawk"            , "", "BTNSpy.blp" , SPELL_PING_HAWK           , 0, 0, "W", "curseon"  , MANACOST, COLOR_TEAL  ),
         new RadarSpell("Hostile Animals" , "", "BTNSpy.blp" , SPELL_PING_HOSTILE_ANIMALS, 0, 0, "E", "curseoff" , MANACOST, COLOR_RED   ),
         new RadarSpell("Hostile Building", "", "BTNSpy.blp" , SPELL_PING_BUILDING       , 0, 0, "R", "blizzard" , MANACOST, COLOR_ORANGE),
@@ -121,12 +121,12 @@ function buildSpells()
     getRadarSpells().forEach(spell -> spell.buildSpell())
 
 @compiletime function createSpellBook() 
-    new AbilityDefinitionSpellBook(SPELL_IMPROVED_RADAR_SPELLBOOK_ID)
-        ..setButtonPositionNormalX(0)
+    new AbilityDefinitionSpellBook(SPELL_ADVANCED_RADAR_SPELLBOOK_ID)
+        ..setButtonPositionNormalX(2)
         ..setButtonPositionNormalY(1)
         ..setButtonPositionResearchX(0)
         ..setButtonPositionResearchY(0)
-        ..setIconNormal(Icons.bTNSpellBookBLS)
+        ..setIconNormal(Icons.bTNSpy)
         ..setHeroAbility(true)
         ..setItemAbility(false)
         ..setLevels(1)
@@ -134,16 +134,16 @@ function buildSpells()
         ..setCasterAttachmentPoint1("")
         ..presetBaseOrderID(lvl -> "stormbolt")
         ..setHotkeyNormal("D")
-        ..setName("Improved Radar")
+        ..setName("Advanced Radar")
         ..presetMaximumSpells(lvl -> 11)
         ..presetMinimumSpells(lvl -> 11)
-        ..presetSpellList(lvl -> IMPROVED_RADAR_SPELLBOOK)
+        ..presetSpellList(lvl -> ADVANCED_RADAR_SPELLBOOK)
         ..presetCooldown(lvl -> COOLDOWN)
-        ..presetTooltipNormal(lvl -> GOLD_COLOR+"Improved Radar|r")
+        ..presetTooltipNormal(lvl -> GOLD_COLOR+"Advanced Radar|r")
         ..presetTooltipNormalExtended(lvl -> "Trapper got a better radar to locate unit around him")
         ..presetSharedSpellCooldown(lvl -> false)
 init 
-    registerSpellEffectEvent(SPELL_PING_ELK, () -> onCast(asList(UNIT_ELK), 0, 0, 255))
+    registerSpellEffectEvent(SPELL_PING_ELK, () -> onCast(asList(UNIT_ELK), 0, 255, 0))
     registerSpellEffectEvent(SPELL_PING_HAWK, () -> onCast(asList(UNIT_HAWK), 0, 255, 255))
     registerSpellEffectEvent(SPELL_PING_HOSTILE_ANIMALS, () -> onCast(HOSTILE_ANIMALS_LIST, 255, 128, 0))
     registerSpellEffectEvent(SPELL_PING_BUILDING, () -> onCast(BUILDING_LIST, 255, 102, 102))

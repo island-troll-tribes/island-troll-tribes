@@ -1,0 +1,46 @@
+package Grab
+
+// Local imports:
+import ChatCommands
+import ClosuresForItems
+import Game
+import PlayerExtensions
+import UnitUtils
+
+// The radius around the selected unit to search for a target item.
+constant GRAB_RADIUS = 300.
+
+// The radius around the selected units to search for an enemy presence.
+constant ENEMY_RADIUS = 1000.
+
+function executeGrab(player p)
+    // Enumerate the selected units of the player.
+    ENUM_GROUP.enumUnitsSelected(p, null)
+
+    // Iterate to clear the group, filter out enemies, and grab the last unit.
+    unit selected = null
+    for member from ENUM_GROUP
+        if GetPlayerAlliance(member.getOwner(), p, ALLIANCE_SHARED_CONTROL)
+            selected = member
+
+    // Do not continue if the player did not have any valid units selected.
+    if selected == null
+        return
+
+    // Ensure that there are no nearby enemies.
+    let enemy = findNearestUnit(selected.getPos(), ENEMY_RADIUS) u ->
+        return u.getOwner().isEnemyOf(p) and u.getOwner().isPlaying()
+    if enemy != null
+        return
+
+    // Find the target item.
+    let target = findNearestItem(selected.getPos(), GRAB_RADIUS, null)
+    if target == null
+        return
+
+    // Issue the grab order.
+    selected.issueTargetOrder("smart", target)
+
+init
+    registerGameStartEvent() () ->
+        registerCommandAll("grab", (p, args) -> executeGrab(p))

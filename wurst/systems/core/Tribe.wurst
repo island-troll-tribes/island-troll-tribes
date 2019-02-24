@@ -5,6 +5,30 @@ import TribeUtils
 import Lodash
 import PlayerExtensions
 import LegacyColors
+import GameConfig
+import GameMode
+
+let listeners = CreateTrigger()
+
+public function registerTribeInitializationFinishEvent(code listener)
+    listeners.addAction(listener)
+
+let names = asList(
+    "Darkspear",
+    "Windfury",
+    "Zanku",
+    "Waterfury",
+    "Snaketongue",
+    "Zaldeer",
+    "Kuzu",
+    "Juan'ji",
+    "Blood",
+    "Bonecoat",
+    "Hydra",
+    "Puma",
+    "Firewater",
+    "Woodland"
+)
 
 public class Tribe
     static let playerToTribeMap = new HashMap<player, Tribe>()
@@ -18,7 +42,25 @@ public class Tribe
     rect spawn
     let tribePlayers = new OwnedLinkedList<player>()
     let tribe = CreateForce()
+    let name = ""
     var defeated = true
+
+    static function initialize()
+        GameMode.onModeSelectionFinish(function onModesFinish)
+
+    static function onModesFinish()
+        resetAllianceState()
+        let numTribes = gameConfig.getNumTribes()
+        names.shuffle()
+        for tribeId = 0 to numTribes - 1
+            new Tribe(tribeId, names.dequeue() + " Tribe")
+        listeners.execute()
+
+    static function resetAllianceState()
+        for i = 0 to PLAYER_NEUTRAL_AGGRESSIVE - 1
+            for j = 0 to PLAYER_NEUTRAL_AGGRESSIVE - 1
+                if i != j
+                    SetPlayerAllianceStateBJ(players[i], players[j], bj_ALLIANCE_UNALLIED)
 
     static function getTribes() returns LinkedList<Tribe>
         return tribes
@@ -26,26 +68,29 @@ public class Tribe
     static function ofPlayer(player query) returns Tribe
         return playerToTribeMap.get(query)
 
-    construct(int id)
-        tribeId = id
+    construct(int id, string name)
+        this.tribeId = id
+        this.name = name
 
         let range = getPlayerIdRangeForTribe(tribeId)
         for pid = range.min to range.max
             let member = players[pid]
-            if member.isIngame() and not member.isObserver()
-                tribePlayers.push(member)
-                playerToTribeMap.put(member, this)
-                tribe.addPlayer(member)
-
+            if true // member.isIngame() and not member.isObserver()
+                addMember(member)
                 defeated = false
 
-        tribePlayers.forEach() a ->
-            tribePlayers.forEach() b ->
+        for a in tribePlayers
+            for b in tribePlayers
                 if a != b
                     SetPlayerAllianceStateBJ(a, b, bj_ALLIANCE_ALLIED_VISION)
 
         if not defeated
             tribes.push(this)
+
+    function addMember(player member)
+        tribePlayers.push(member)
+        playerToTribeMap.put(member, this)
+        tribe.addPlayer(member)
 
     function getId() returns int
         return tribeId
@@ -78,3 +123,9 @@ public class Tribe
 
     function getSpawn() returns rect
         return spawn
+
+    function getName() returns string
+        return name
+
+init
+    Tribe.initialize()

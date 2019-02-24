@@ -1,0 +1,48 @@
+package TribeOwnsBuildings
+import GameConfig
+import GameMode
+import ChatUtils
+import RegisterEvents
+import PlayerExtensions
+import LegacyColors
+import Tribe
+
+player array tribePlayers
+
+function onConstruct()
+    let building = GetConstructingStructure()
+    let tribe = building.getOwner().getTribe()
+
+    if tribe == null
+        return
+
+    let tribeId = tribe.getId()
+    let tribePlayer = tribePlayers[tribeId]
+    building.setOwner(tribePlayer, false)
+
+function initialize()
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_CONSTRUCT_START, function onConstruct)
+
+    for tribe in Tribe.getTribes()
+        let members = tribe.getMembers()
+        let tribePlayer = players[12 + tribe.getId()]
+        tribePlayers[tribe.getId()] = tribePlayer
+        tribePlayer.setName(tribe.getName())
+        for member in members
+            SetPlayerAllianceStateBJ(member, tribePlayer, bj_ALLIANCE_ALLIED_VISION)
+            SetPlayerAllianceStateBJ(tribePlayer, member, bj_ALLIANCE_ALLIED_ADVUNITS)
+
+        for a in members
+            for b in members
+                if a != b
+                    a.setPlayerAlliance(b, ALLIANCE_SHARED_ADVANCED_CONTROL, true)
+
+init
+    registerTribeInitializationFinishEvent() ->
+        if gameConfig.isTribeOwnsBuildingsEnabled()
+            initialize()
+
+    new GameMode("tribe-owns-buildings", "tb", "Building ownership is transferred to the tribe") (mode, args) ->
+        let value = args.size() > 1 ? args.get(0).isConfirmation() : true
+        gameConfig.setTribeOwnsBuildingsEnabled(value)
+        mode.message(ENERGY_COLOR + "Tribe building ownership|r enabled")

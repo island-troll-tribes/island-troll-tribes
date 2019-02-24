@@ -1,0 +1,130 @@
+package HealingWave
+
+import RegisterEvents
+import ClosureTimers
+import AbilityObjEditing
+import GroupExtensions
+import Assets
+import HealingSystem
+import EffectUtils
+import LinkedList
+import MapBounds
+
+constant let ABILITY_ID = 'XPHW'
+constant let CAST_RANGE = 6000.
+constant let BOUNCE_SEARCH_RANGE = 6000.
+constant let COOLDOWN = 20.
+constant let MANACOST = 10
+constant let HEAL_AMOUNT = 50.
+constant let HEAL_REDUCTION_BOUNCE_FACTOR = 0.1
+constant let BOUNCE_COUNT = 7
+constant let TOOLTIP_NORMAL = "|c00ffcc00D|r - Healing wave"
+constant let TOOLTIP_NORMAL_EXT = "Calls forth a wave of healing energy that bounces up to 7 times, healing 50 damage on the primary target. Each jump heals 10% less. Bounces on an extremely large range."
+constant let HEALING_WAVE_HIT_FX = "Abilities\\Spells\\Orc\\HealingWave\\HealingWaveTarget.mdl"
+constant let HEAL_HIT_FX = "Abilities\\Spells\\Human\\Heal\\HealTarget.mdl"
+
+@compiletime function createSpell()
+    new AbilityDefinitionIllidanChannel(ABILITY_ID)
+    ..setButtonPositionNormalX(0)
+    ..setButtonPositionNormalY(0)
+    ..setButtonPositionResearchX(0)
+    ..setButtonPositionResearchY(0)
+    ..setArtTarget("")
+    ..setArtCaster("")
+    ..setArtSpecial("")
+    ..presetCastRange(lvl -> CAST_RANGE)
+    ..presetCastingTime(lvl -> 0)
+    ..presetFollowThroughTime(lvl -> 0.275)
+    ..presetCooldown(lvl -> COOLDOWN)
+    ..presetManaCost(lvl -> MANACOST)
+    ..presetTargetType(lvl -> 1)
+    ..presetTargetsAllowed(lvl -> "air,ground,friend,self,vuln,invu,organic")
+    ..presetOptions(lvl -> 1)
+    ..presetDisableOtherAbilities(lvl -> false)
+    ..setLevels(1)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setHotkeyNormal("D")
+    ..setName("Healing Wave")
+    ..presetTooltipNormal(lvl -> TOOLTIP_NORMAL)
+    ..presetTooltipNormalExtended(lvl -> TOOLTIP_NORMAL_EXT)
+    ..setIconNormal(Icons.bTNHealingWave)
+    ..setIconResearch(Icons.bTNHealingWave)
+    ..presetBaseOrderID(lvl -> "healingwave")
+    ..setOrderStringActivate("healingwave")
+    ..setOrderStringUseTurnOn("healingwave")
+
+class HealingWaveInstance
+    unit caster
+    player owner
+    int bouncesLeft
+    real healingAmount
+    LinkedList<unit> targetsHit = new LinkedList<unit>()
+
+    construct(unit caster, unit target, real healingInitialAmount, int bounces)
+        this.caster = caster
+        this.healingAmount = healingInitialAmount
+        this.bouncesLeft = bounces
+        this.owner = caster.getOwner()
+        waveBounce(target, caster, true)
+
+    function waveBounce(unit target, unit previousTarget, bool isFirstBounce)
+        new HealingInstance(target, this.healingAmount, HealingType.ABILITY)
+
+        var lightningFxPath = isFirstBounce ? LIGHTNING_HEALING_WAWE_PRIMARY : LIGHTNING_HEALING_WAWE_SEECONDARY
+        attachLightningFX(previousTarget, target, lightningFxPath, 1.5)
+
+        let fx1 = addEffect(HEALING_WAVE_HIT_FX, target.getPos3Real())
+        let fx2 = target.addEffect(HEAL_HIT_FX, "origin")
+        doPeriodicallyTimed(ANIMATION_PERIOD, 1.5) fxUpdater ->
+            fx1.setPos(target.getPos3Real())
+            if fxUpdater.isLast()
+                fx1.setPos(boundMax)
+                fx1.destr()
+                fx2.destr()
+
+        this.healingAmount *= 1 - HEAL_REDUCTION_BOUNCE_FACTOR
+        this.bouncesLeft -= 1
+        this.targetsHit.add(target)
+        if this.bouncesLeft > 0
+            doAfter(0.3) ->
+                let nextTarget = findBounceTarget(target)
+                if nextTarget != null
+                    waveBounce(nextTarget, target, false)
+                else
+                    destroy this
+        else
+            destroy this
+
+    function findBounceTarget(unit bounceOrigin) returns unit
+        let units = CreateGroup()
+            ..enumUnitsInRange(bounceOrigin.getPos(), BOUNCE_SEARCH_RANGE)
+
+        unit nearest = null
+        var closestDistance = REAL_MAX
+        for u in units
+            if isValidTarget(u)
+                let distance = u.getPos().distanceTo(bounceOrigin.getPos())
+                if distance < closestDistance
+                    nearest = u
+                    closestDistance = distance
+
+        units.destr()
+        return nearest
+
+    function isValidTarget(unit target) returns bool
+        return target.isAlive()
+            and target.getOwner().isAllyOf(this.owner)
+            and not target.isType(UNIT_TYPE_STRUCTURE)
+            and not target.isType(UNIT_TYPE_MECHANICAL)
+            and not targetsHit.has(target)
+            and not target.getHP().round() == target.getMaxHP().round()
+
+    ondestroy
+        destroy this.targetsHit
+
+init
+    registerSpellEffectEvent(ABILITY_ID) ->
+        var caster = GetSpellAbilityUnit()
+        var target = GetSpellTargetUnit()
+        new HealingWaveInstance(caster, target, HEAL_AMOUNT, BOUNCE_COUNT)

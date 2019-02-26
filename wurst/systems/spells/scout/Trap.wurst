@@ -10,16 +10,26 @@ import Orders
 import DummyCaster
 import ObjectIds
 import ID
-import LegacyColors
 import Icons
+import ToolTipsUtils
+
+constant let COOLDOWN = 150.
+constant let TRAP_DURATION = 600.
+constant let TRAP_EFFECT_RADIUS = 200.
+constant let TOOL_TIP_NORM_TRACK_TRAP = makeToolTipNorm("W", "Tracking Trap")
+constant let TOOL_TIP_NORM_SPIKED_TRAP = makeToolTipNorm("Q", "Spiked Trap")
 
 constant let ABILITY_TRAP_EXPLOSION = compiletime(ABIL_ID_GEN.next())
 constant let ABILITY_SPIKED_TRAP_SLOW = compiletime(ABIL_ID_GEN.next())
 constant let BUFF_SPIKED_TRAP_SLOW = compiletime(BUFF_ID_GEN.next())
-constant let TRAP_EFFECT_RADIUS = 200.
-constant let COOLDOWN = 150.
-constant let TRAP_DURATION = 600.
-constant let TOOL_TIP_TRACK_TRAP = "Troll walking through this trap will get tracked, having their position revealed and armor reduced by 4 for 30 seconds. Has "
+
+
+constant let TOOL_TIP_LEARN_TRACK_TRAP = makeToolTipNorm("W", "Learn Tracking Trap")
+constant let TOOL_TIP_LEARN_SPIKED_TRAP = makeToolTipNorm("Q", "Learn Spiked Trap")
+
+constant let TOOL_TIP_EXT_TRACK_TRAP = "Troll walking through this trap will get tracked, having their position revealed and armor reduced by 4 for 30 seconds. Has "
+constant let TOOL_TIP_EXT_SPIKED_TRAP = "An itchy trap, troll who walks on it will get slowed by 80% for 5 seconds. Has 60 seconds cooldown. Spiked Trap last "+
+                                        TRAP_DURATION.toInt().toString()+" seconds."
 
 @compiletime function createSpikedTrapBuff()
     new BuffDefinition(BUFF_SPIKED_TRAP_SLOW, 'Bcri')
@@ -66,7 +76,7 @@ constant let TOOL_TIP_TRACK_TRAP = "Troll walking through this trap will get tra
         ..setAnimationNames("spell,throw")
         ..setButtonPositionNormalX(1)
         ..setButtonPositionNormalY(1)
-        ..setButtonPositionResearchX(0)
+        ..setButtonPositionResearchX(1)
         ..setButtonPositionResearchY(0)
         ..setIconNormal(Icons.bTNStasisTrap)
         ..setIconResearch(Icons.bTNStasisTrap)
@@ -74,11 +84,12 @@ constant let TOOL_TIP_TRACK_TRAP = "Troll walking through this trap will get tra
         ..setName("Tracking Trap")
         ..setLevels(3)
         ..setLevelSkipRequirement(1)
-        ..setHeroAbility(TRUE)
-        ..setTooltipLearn(GENERAL_COLOR+"Learn Tracking Trap")
+        ..setHeroAbility(true)
+        ..setTooltipLearn(TOOL_TIP_LEARN_TRACK_TRAP)
         ..setTooltipLearnExtended("Troll walking through this trap will get tracked, having their position revealed and armor reduced by 4 for 30 seconds.")
-        ..presetTooltipNormal(lvl -> GENERAL_COLOR+"["+SPECIAL_COLOR+"W"+GENERAL_COLOR+"] - Tracking Trap")
-        ..presetTooltipNormalExtended(lvl -> TOOL_TIP_TRACK_TRAP+(((COOLDOWN - lvl * 30).toInt()).toString())+" cooldown. Track Trap last "+TRAP_DURATION.toInt().toString()+" seconds.")
+        ..presetTooltipNormal(lvl -> TOOL_TIP_NORM_TRACK_TRAP+" - Level "+lvl.toString())
+        ..presetTooltipNormalExtended(lvl -> TOOL_TIP_EXT_TRACK_TRAP+(((COOLDOWN - lvl * 30).toInt()).toString())+" cooldown. Track Trap last "
+                                     +TRAP_DURATION.toInt().toString()+" seconds.")
         ..setHotkeyNormal("W")
         ..presetDetonationRadius(lvl -> 100)
         ..presetDetectionRadius(lvl -> 100)
@@ -88,6 +99,34 @@ constant let TOOL_TIP_TRACK_TRAP = "Troll walking through this trap will get tra
         ..presetStunDuration(lvl -> 0.1)
         ..presetCooldown(lvl -> COOLDOWN - lvl * 30)
         ..presetWardUnitType(lvl -> UNIT_TRAP.toRawCode())
+
+
+@compiletime function createSpyTrackTrapSpell()
+    new AbilityDefinitionStasisTrap(SPELL_SPY_TRACK_TRAP)
+        ..setRequirements("")
+        ..setAnimationNames("spell,throw")
+        ..setButtonPositionNormalX(1)
+        ..setButtonPositionNormalY(1)
+        ..setButtonPositionResearchX(1)
+        ..setButtonPositionResearchY(0)
+        ..setIconNormal(Icons.bTNStasisTrap)
+        ..setIconResearch(Icons.bTNStasisTrap)
+        ..presetManaCost(lvl -> 10)
+        ..setName("Tracking Trap")
+        ..setLevels(1)
+        ..setHeroAbility(false)
+        ..setTooltipNormal(1, TOOL_TIP_NORM_TRACK_TRAP)
+        ..setTooltipNormalExtended(1, TOOL_TIP_EXT_TRACK_TRAP+(((COOLDOWN - 90).toInt()).toString())+" cooldown. Track Trap last "
+                                     +TRAP_DURATION.toInt().toString()+" seconds.")
+        ..setHotkeyNormal("W")
+        ..presetDetonationRadius(lvl -> 100)
+        ..presetDetectionRadius(lvl -> 100)
+        ..presetDurationNormal(lvl -> TRAP_DURATION)
+        ..presetCastRange(lvl -> 100.)
+        ..presetDurationHero(lvl -> 0.1)
+        ..presetStunDuration(lvl -> 0.1)
+        ..presetCooldown(lvl -> COOLDOWN - 90)
+        ..presetWardUnitType(lvl -> UNIT_TRAP.toRawCode())
     
 @compiletime function createSpikedTrapSpell()
     new AbilityDefinitionShadowHunterSerpentWard(SPELL_SPIKED_TRAP)
@@ -95,16 +134,16 @@ constant let TOOL_TIP_TRACK_TRAP = "Troll walking through this trap will get tra
         ..setAnimationNames("spell,slam")
         ..setButtonPositionNormalX(0)
         ..setButtonPositionNormalY(1)
-        ..setButtonPositionResearchX(1)
+        ..setButtonPositionResearchX(0)
         ..setButtonPositionResearchY(0)
         ..setIconNormal(Icons.bTNMeatapult)
         ..setIconResearch(Icons.bTNMeatapult)
         ..setManaCost(1, 10)
         ..setName("Spiked Trap")
-        ..setTooltipLearn(GENERAL_COLOR+"Learn Spiked Trap")
+        ..setTooltipLearn(TOOL_TIP_LEARN_SPIKED_TRAP)
         ..setTooltipLearnExtended("Allows you to place spiked trap on the ground, greatly slowing enemy troll who walk through it.")
-        ..setTooltipNormal(1, GENERAL_COLOR+"["+SPECIAL_COLOR+"Q"+GENERAL_COLOR+"] - Spiked Trap")
-        ..setTooltipNormalExtended(1, "An itchy trap, troll who walks on it will get slowed by 80% for 5 seconds. Spiked Trap last "+TRAP_DURATION.toInt().toString()+" seconds. Has 60 seconds cooldown.")
+        ..setTooltipNormal(1, TOOL_TIP_NORM_SPIKED_TRAP)
+        ..setTooltipNormalExtended(1, TOOL_TIP_EXT_SPIKED_TRAP)
         ..setHotkeyNormal("Q")
         ..setOrderStringUseTurnOn("purge")
         ..setRequiredLevel(4)

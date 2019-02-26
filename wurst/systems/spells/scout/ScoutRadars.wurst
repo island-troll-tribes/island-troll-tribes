@@ -10,6 +10,7 @@ import ObjectIdGenerator
 import ObjectIds
 import UnitExtensions
 import ID
+import ToolTipsUtils
 
 constant let SPELL_PING_ELK            = compiletime(ABIL_ID_GEN.next())
 constant let SPELL_PING_HAWK           = compiletime(ABIL_ID_GEN.next())
@@ -20,9 +21,10 @@ constant let SPELL_PING_TRADESHIP      = compiletime(ABIL_ID_GEN.next())
 constant let SPELL_PING_HOSTILE_ANIMALS= compiletime(ABIL_ID_GEN.next())
 constant let UNSUB_RADAR_PING          = compiletime(UNIT_ID_GEN.next())
 constant let TROLLS                    = compiletime(UNIT_ID_GEN.next())
+constant let SHADOW_SIGHT              = 'A07V'
 
-constant let ADVANCED_RADAR_SPELLBOOK = commaList(SPELL_PING_ELK, SPELL_PING_HAWK, SPELL_PING_HOSTILE_ANIMALS, SPELL_PING_BUILDING, SPELL_PING_TROLL,
-                                                  SPELL_PING_LIVING_CLAY, SPELL_PING_TRADESHIP)
+public constant let ADVANCED_RADAR_SPELLBOOK = commaList(SPELL_PING_ELK, SPELL_PING_HAWK, SPELL_PING_HOSTILE_ANIMALS, SPELL_PING_BUILDING, SPELL_PING_TROLL,
+                                                  SPELL_PING_LIVING_CLAY, SPELL_PING_TRADESHIP, SHADOW_SIGHT) //Shadow sight, don't have much place to put it any more :/
 
 constant let HOSTILE_ANIMALS_LIST = asList(UNIT_SNAKE, UNIT_JUNGLE_WOLF, UNIT_JUNGLE_BEAR, UNIT_PANTHER,
                                     UNIT_ALIGATOR_MAN           , UNIT_ONE                    , UNIT_MAMMOTH             , UNIT_DISCO_DUCK, UNIT_ANCIENT_HYDRA,
@@ -32,9 +34,9 @@ constant let HOSTILE_ANIMALS_LIST = asList(UNIT_SNAKE, UNIT_JUNGLE_WOLF, UNIT_JU
                                     UNIT_FOREST_DRAGON          , UNIT_GREATER_FOREST_DRAGON  , UNIT_BRONZE_DRAGON       , UNIT_GREATER_BRONZE_DRAGON,
                                     UNIT_RED_DRAGON             , UNIT_GREATER_RED_DRAGON     , UNIT_NETHER_DRAGON       , UNIT_GREATER_NETHER_DRAGON)
 
-constant let BUILDING_LIST        = asList(UNIT_FIRE, UNIT_SMOKE_HOUSE, UNIT_STORAGE_HUT, UNIT_MUD_HUT, UNIT_ARMORY, UNIT_TELEPORTATION_BEACON,
-                                           UNIT_WORKSHOP , UNIT_WITCH_DOCTORS_HUT, UNIT_POT     , UNIT_TANNERY    , UNIT_ENSNARE_TRAP, UNIT_OMNITOWER,
-                                           UNIT_MAGE_FIRE, UNIT_TROLL_HUT        , UNIT_HATCHERY, UNIT_SPIRIT_WARD)
+constant let BUILDING_LIST        = asList(UNIT_FIRE,      UNIT_SMOKE_HOUSE,       UNIT_STORAGE_HUT, UNIT_MUD_HUT,     UNIT_ARMORY, UNIT_TELEPORTATION_BEACON,
+                                           UNIT_WORKSHOP , UNIT_WITCH_DOCTORS_HUT, UNIT_POT     ,    UNIT_TANNERY    , UNIT_ENSNARE_TRAP, UNIT_OMNITOWER,
+                                           UNIT_MAGE_FIRE, UNIT_TROLL_HUT        , UNIT_HATCHERY,    UNIT_SPIRIT_WARD)
 
 constant let TRADESHIP_LIST       = asList(UNIT_TRADE_SHIP_1, UNIT_TRADE_SHIP_2, UNIT_TRADE_SHIP_3, UNIT_TRADE_SHIP_4, UNIT_TRADE_SHIP_5, UNIT_TRADE_SHIP_6)
 
@@ -130,6 +132,7 @@ function onCast(LinkedList<int> unitId, real red, real green, real blue)
 
     forUnitsInRange(caster.getPos(), range) u ->
         if u.getOwner().isEnemyOf(caster.getOwner())
+            
             //Unsub scout Radar
             if unitId.has(UNSUB_RADAR_PING)
                 if u.getTypeId() == UNIT_ELK
@@ -141,8 +144,10 @@ function onCast(LinkedList<int> unitId, real red, real green, real blue)
                 PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 5, bj_MINIMAPPINGSTYLE_SIMPLE, red, green, blue)
             else if unitId.has(TROLLS) and u.isTroll()
                 PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 5, bj_MINIMAPPINGSTYLE_SIMPLE, red, green, blue)
+
+        //Will ping tradeship
         else if unitId.has(u.getTypeId()) and TRADESHIP_LIST.has(u.getTypeId())
-            PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 5, bj_MINIMAPPINGSTYLE_SIMPLE, red, green, blue) //Will ping tradeship
+            PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 5, bj_MINIMAPPINGSTYLE_SIMPLE, red, green, blue) 
 
             
 
@@ -163,14 +168,14 @@ function buildSpells()
         ..setTargetAttachmentPoint1("")
         ..setCasterAttachmentPoint1("")
         ..presetBaseOrderID(lvl -> "stormbolt")
-        ..setHotkeyNormal("D")
+        ..setHotkeyNormal("E")
         ..setName("Advanced Radar")
         ..presetMaximumSpells(lvl -> 11)
         ..presetMinimumSpells(lvl -> 11)
         ..presetSpellList(lvl -> ADVANCED_RADAR_SPELLBOOK)
         ..presetCooldown(lvl -> COOLDOWN)
-        ..presetTooltipNormal(lvl -> GOLD_COLOR+"Advanced Radar|r")
-        ..presetTooltipNormalExtended(lvl -> "Trapper got a better radar to locate unit around him")
+        ..presetTooltipNormal(lvl -> makeToolTipNorm("E", "Advanced Radar"))
+        ..presetTooltipNormalExtended(lvl -> "An improved better radar to locate unit around him with high precision")
         ..presetSharedSpellCooldown(lvl -> false)
 
 init

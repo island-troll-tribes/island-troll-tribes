@@ -5,11 +5,13 @@ import Icons
 import ClosureEvents
 import Orders
 import DummyCaster
+import ToolTipsUtils
 
+
+public let ABILITY_ID_GREATER_REVEAL = 'XSGR'
 
 let ABILITY_ID_REVEAL = 'XSRV'
 let ABILITY_ID_REVEAL_DUMMY = compiletime(ABIL_ID_GEN.next())
-let ABILITY_ID_GREATER_REVEAL = 'XSGR'
 let ABILITY_ID_GREATER_REVEAL_DUMMY = compiletime(ABIL_ID_GEN.next())
 let REVEAL_ICON = Icons.bTNReveal
 let REVEAL_DURATION = 8.
@@ -17,10 +19,11 @@ let GREATER_REVEAL_DURATION = 10.
 let REVEAL_COOLDOWN = 20.
 let GREATER_REVEAL_COOLDOWN = 20.
 let CASTTIME = 0.3
-let TOOLTIP_NORM_REVEAL = "|c00ffcc00E|r - Reveal"
+let TOOLTIP_NORM_REVEAL = makeToolTipNorm("W", "Reveal")
+let TOOLTIP_LEARN_REVEAL = makeToolTipNorm("Q", "Reveal")
 let TOOLTIP_EXT_REVEAL = "Reveals an area around you for 8 seconds. Detects invisible units."
-let TOOLTIP_NORM_GREATER_REVEAL = "|c00ffcc00E|r - Greater Reveal"
-let TOOLTIP_EXT_GREATER_REVEAL = "Reveals an area around you for 10 seconds. Detects invisible units."
+let TOOLTIP_NORM_GREATER_REVEAL = makeToolTipNorm("E", "Greater Reveal")
+let TOOLTIP_EXT_GREATER_REVEAL = "Reveals an large area around you for 10 seconds. Detects invisible units."
 
 @compiletime function createDummyReveal()
     new AbilityDefinitionFarseerFarSight(ABILITY_ID_REVEAL_DUMMY)
@@ -63,8 +66,10 @@ let TOOLTIP_EXT_GREATER_REVEAL = "Reveals an area around you for 10 seconds. Det
     ..setHotkeyNormal("E")
     ..setName("Reveal")
     ..setDisableOtherAbilities(1, false)
-    ..setTooltipNormal(1, TOOLTIP_NORM_REVEAL)
+    ..presetTooltipNormal(lvl -> TOOLTIP_NORM_REVEAL+" - Level "+lvl.toString())
     ..setTooltipNormalExtended(1, TOOLTIP_EXT_REVEAL)
+    ..setTooltipLearn(TOOLTIP_LEARN_REVEAL)
+    ..setTooltipLearnExtended(TOOLTIP_EXT_REVEAL)
     ..presetBaseOrderID(lvl -> "rechargeoff")
     ..setOrderStringActivate("channel")
     ..setOrderStringUseTurnOn("channel")
@@ -81,7 +86,7 @@ let TOOLTIP_EXT_GREATER_REVEAL = "Reveals an area around you for 10 seconds. Det
     ..setArtEffect("")
     ..setArtTarget("")
     ..setArtSpecial("")
-    ..setButtonPositionNormalX(1)
+    ..setButtonPositionNormalX(2)
     ..setButtonPositionNormalY(1)
     ..setButtonPositionResearchX(0)
     ..setButtonPositionResearchY(0)

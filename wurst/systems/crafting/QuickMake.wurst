@@ -10,23 +10,49 @@ import Mixing
 
 class QuickMake
     let itemLists = new OwnedLinkedList<LinkedList<int>>()
+    let specialHerb = new HashMap<int, int>
+    int herbThreshold = 0
+    int spellAbilityId = 0
 
     construct(int spellAbilityId)
         EventListener.onCast(spellAbilityId, caster -> onCast(caster))
 
+    construct(int spellAbilityId, int herbThreshold)
+        this.spellAbilityId = spellAbilityId
+        this.herbThreshold = herbThreshold
+        EventListener.onCast(spellAbilityId, caster -> onCast(caster))
+       
     function onCast(unit caster)
         let pos = caster.getPos()
         let recipeSize = itemLists.size()
         let items = new OwnedLinkedList<item>()
         let inventory = caster.getInventory()
 
+        specialHerb.put(ITEM_BLUE_HERB, 0)
+        specialHerb.put(ITEM_YELLOW_HERB, 0)
+        specialHerb.put(ITEM_PURPLE_HERB, 0)
+        specialHerb.put(ITEM_ORANGE_HERB, 0)
+        
         caster.dropItems()
-        print(itemLists.toString())
+
         for itemIds in itemLists
             item found = null
             for itemId in itemIds
                 found = findNearestItem(pos, 700, i -> i.getTypeId() == itemId)
-                if found != null
+
+                if specialHerb.has(found.getTypeId())
+                    specialHerb.put(found.getTypeId(), specialHerb.get(found.getTypeId()) + 1)
+                
+                //In order to avoid picking up the same special herb too much time    
+                if specialHerb.get(found.getTypeId()) > herbThreshold
+                    found = null
+
+                //Special case for eob, once you get 2 spec, you don't to be able to pick up 2 spec of another type
+                //Not pretty but couldn't figure out something else
+                if spellAbilityId == SPELL_QM_ESSENCE_BEES and specialHerb.get(found.getTypeId()) == herbThreshold
+                    herbThreshold = 1
+
+                if found != null 
                     items.add(found)
                     found.setVisible(false)
                     break
@@ -51,6 +77,8 @@ class QuickMake
             mix(caster)
         gg_trg_transmute.enable()
 
+        if spellAbilityId == SPELL_QM_ESSENCE_BEES
+            herbThreshold = 2
         destroy items
         destroy inventory
 
@@ -59,7 +87,6 @@ class QuickMake
 
     function add(LinkedList<int> itemIds)
         itemLists.add(itemIds)
-
 
 init
     // Armory
@@ -366,11 +393,11 @@ init
     ..add(ITEM_BUTSU)
     ..add(ITEM_BUTSU)
     
-    new QuickMake(SPELL_QM_ANTI_MAGIC_POTION)
+    new QuickMake(SPELL_QM_ANTI_MAGIC_POTION, 1)
     ..add(ITEM_BUTSU)
     ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_ORANGE_HERB, ITEM_PURPLE_HERB))
     
-    new QuickMake(SPELL_QM_ACID_BOMB)
+    new QuickMake(SPELL_QM_ACID_BOMB, 3)
     ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_PURPLE_HERB))
     ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_PURPLE_HERB, ITEM_ORANGE_HERB))
     ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_PURPLE_HERB, ITEM_ORANGE_HERB))
@@ -378,23 +405,23 @@ init
     ..add(ITEM_RIVER_STEM)
     ..add(ITEM_RIVER_STEM)
     
-    new QuickMake(SPELL_QM_DISEASE_POTION)
+    new QuickMake(SPELL_QM_DISEASE_POTION, 3)
     ..add(ITEM_RIVER_ROOT)
     ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_PURPLE_HERB))
     ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_PURPLE_HERB, ITEM_ORANGE_HERB))
     ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_PURPLE_HERB, ITEM_ORANGE_HERB))
     ..add(asList(ITEM_ORANGE_HERB, ITEM_PURPLE_HERB, ITEM_YELLOW_HERB))
     
-    new QuickMake(SPELL_QM_BEE_HIVE)
+    new QuickMake(SPELL_QM_BEE_HIVE, 1)
     ..add(ITEM_RIVER_STEM)
     ..add(ITEM_RIVER_STEM)
     ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_PURPLE_HERB, ITEM_ORANGE_HERB))
     
-    new QuickMake(SPELL_QM_ESSENCE_BEES)
-    ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_PURPLE_HERB, ITEM_ORANGE_HERB))
-    ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_ORANGE_HERB, ITEM_PURPLE_HERB))
-    ..add(asList(ITEM_PURPLE_HERB, ITEM_ORANGE_HERB, ITEM_YELLOW_HERB))
-    ..add(asList(ITEM_ORANGE_HERB, ITEM_PURPLE_HERB, ITEM_YELLOW_HERB))
+    new QuickMake(SPELL_QM_ESSENCE_BEES, 2)
+    ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_PURPLE_HERB))
+    ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_ORANGE_HERB))
+    ..add(asList(ITEM_YELLOW_HERB, ITEM_PURPLE_HERB, ITEM_ORANGE_HERB))
+    ..add(asList(ITEM_ORANGE_HERB, ITEM_PURPLE_HERB))
     
     new QuickMake(SPELL_QM_SPIRIT_WIND)
     ..add(ITEM_RIVER_STEM)
@@ -416,54 +443,52 @@ init
     ..add(ITEM_RIVER_STEM)
     ..add(ITEM_RIVER_STEM)
 
-    new QuickMake(SPELL_QM_FERVOR_POTION)
+    new QuickMake(SPELL_QM_FERVOR_POTION, 2)
     ..add(ITEM_BUTSU)
-    ..add(ITEM_BLUE_HERB)
-    ..add(ITEM_BLUE_HERB)
-    ..add(ITEM_ORANGE_HERB)
-   
-    new QuickMake(SPELL_QM_DRUNKS_POTION)
-    ..add(ITEM_BUTSU)
-    ..add(ITEM_BUTSU)
-    ..add(ITEM_RIVER_ROOT)
-    ..add(ITEM_RIVER_ROOT)
     ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_ORANGE_HERB, ITEM_PURPLE_HERB))
+    ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_ORANGE_HERB, ITEM_PURPLE_HERB))
+    ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_ORANGE_HERB, ITEM_PURPLE_HERB))
+   
+    new QuickMake(SPELL_QM_DRUNKS_POTION, 1)
+    ..add(ITEM_BUTSU)
+    ..add(ITEM_BUTSU)
+    ..add(ITEM_RIVER_ROOT)
+    ..add(ITEM_RIVER_ROOT)
     ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_ORANGE_HERB, ITEM_PURPLE_HERB))
 
-    new QuickMake(SPELL_QM_NETHER_POTION)
+    new QuickMake(SPELL_QM_NETHER_POTION, 1)
     ..add(ITEM_BUTSU)
     ..add(ITEM_BUTSU)
     ..add(ITEM_RIVER_STEM)
     ..add(ITEM_RIVER_STEM)
     ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_ORANGE_HERB, ITEM_PURPLE_HERB))
    
-    new QuickMake(SPELL_QM_GEM_OF_KNOWLEDGE)
+    new QuickMake(SPELL_QM_GEM_OF_KNOWLEDGE, 3)
     ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_PURPLE_HERB))
     ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_PURPLE_HERB, ITEM_ORANGE_HERB))
     ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_PURPLE_HERB, ITEM_ORANGE_HERB))
     ..add(asList(ITEM_ORANGE_HERB, ITEM_PURPLE_HERB, ITEM_YELLOW_HERB))
    
-    new QuickMake(SPELL_QM_ORACLE_POTION)
+    new QuickMake(SPELL_QM_ORACLE_POTION, 1)
     ..add(ITEM_BUTSU)
     ..add(ITEM_BUTSU)
     ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_ORANGE_HERB, ITEM_PURPLE_HERB))
    
     new QuickMake(SPELL_QM_TWIN_ISLANDS)
-    ..add(ITEM_BLUE_HERB)
-    ..add(ITEM_BLUE_HERB)
-    ..add(ITEM_BLUE_HERB)
-    ..add(ITEM_YELLOW_HERB)
-    ..add(ITEM_YELLOW_HERB)
-    ..add(ITEM_YELLOW_HERB)
+    ..add(ITEM_ORANGE_HERB)
+    ..add(ITEM_ORANGE_HERB)
+    ..add(ITEM_ORANGE_HERB)
+    ..add(ITEM_PURPLE_HERB)
+    ..add(ITEM_PURPLE_HERB)
+    ..add(ITEM_PURPLE_HERB)
 
-    //Need 2 different herb to mix correctly, utter failure for now
-    // new QuickMake(SPELL_QM_OMNICURE)
-    // ..add(ITEM_BUTSU)
-    // ..add(ITEM_BUTSU)
-    // ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_ORANGE_HERB, ITEM_PURPLE_HERB))
-    // ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_ORANGE_HERB, ITEM_PURPLE_HERB))
+    new QuickMake(SPELL_QM_OMNICURE, 1)
+    ..add(ITEM_BUTSU)
+    ..add(ITEM_BUTSU)
+    ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_ORANGE_HERB, ITEM_PURPLE_HERB))
+    ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_ORANGE_HERB, ITEM_PURPLE_HERB))
 
-    new QuickMake(SPELL_QM_ELEMENTAL_SHIELD_POTION)
+    new QuickMake(SPELL_QM_ELEMENTAL_SHIELD_POTION, 1)
     ..add(asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_ORANGE_HERB, ITEM_PURPLE_HERB))
     ..add(ITEM_BUTSU)
     ..add(ITEM_RIVER_STEM)

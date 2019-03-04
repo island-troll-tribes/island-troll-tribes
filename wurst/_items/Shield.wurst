@@ -1,0 +1,111 @@
+package Shield
+
+import ID
+import ObjectIds
+import LinkedList
+import ItemObjEditing
+import AbilityObjEditing
+import ObjectIdGenerator
+
+constant let BASIC_SHIELD_TOOLTIP = "A Basic Shield, reduce damage taken by 4, gives 10% magic resistance."
+constant let BONE_SHIELD_TOOLTIP  = "A Bone Shield, reduce damage taken by 6, gives 10% magic resistance."
+constant let IRON_SHIELD_TOOLTIP  = "An Iron Shield, reduce damage taken by 10, gives 10% magic resistance."
+constant let STEEL_SHIELD_TOOLTIP = "A Steel Shield, reduce damage taken by 13, gives 10% magic resistance."+
+                                    "Has a bash ability, silences and disarms the target for 2 seconds, 15 seconds cooldown."
+
+constant let ABILITY_BASIC_SHIELD_BLOCK_ID = ABIL_ID_GEN.next()
+constant let ABILITY_BONE_SHIELD_BLOCK_ID  = ABIL_ID_GEN.next()
+constant let ABILITY_IRON_SHIELD_BLOCK_ID  = ABIL_ID_GEN.next()
+constant let ABILITY_STEEL_SHIELD_BLOCK_ID = ABIL_ID_GEN.next()
+constant let ABILITY_STEEL_SHIELD_BASH_ID  = ABIL_ID_GEN.next()
+
+constant let BASIC_SHIELD_ABILITIES = commaList(ABILITY_BASIC_SHIELD_BLOCK_ID)
+constant let BONE_SHIELD_ABILITIES  = commaList(ABILITY_BONE_SHIELD_BLOCK_ID, ABILITY_ARMOR_BONUS1)
+constant let IRON_SHIELD_ABILITIES  = commaList(ABILITY_IRON_SHIELD_BLOCK_ID, ABILITY_ARMOR_BONUS2)
+constant let STEEL_SHIELD_ABILITIES = commaList(ABILITY_STEEL_SHIELD_BASH_ID, ABILITY_STEEL_SHIELD_BLOCK_ID, ABILITY_ARMOR_BONUS4)
+
+public class Shield
+    int id = 0
+    int abilId = 0
+    int goldCost = 0
+    real ignoreDamage = 0 
+    string name = ""
+    string tooltip = ""
+    string iconPath = "ReplaceableTextures\\CommandButtons\\BTN"
+    string abilities = ""
+
+    construct(int id, string name, int abilId, real ignoreDamage, string tooltip, string iconPath, string abilities, int goldCost)
+        this.id = id
+        this.name = name
+        this.abilId = abilId
+        this.tooltip = tooltip
+        this.goldCost = goldCost
+        this.iconPath += iconPath+".blp"
+        this.ignoreDamage = ignoreDamage
+        this.abilities = abilities+",A0DI" //A0DI refer to the 10% magic resistance ability
+
+    function buildShield()
+        buildItem()
+        buildReduceDamageSpell()
+
+    function buildItem()
+        new ItemDefinition(id, 'bspd')
+        ..setName(name)
+        ..setAbilities(abilities)
+        ..setTooltipExtended(tooltip)
+        ..setModelUsed("Doodads\\LordaeronSummer\\Terrain\\Crates\\Crates0.mdx")
+        ..setGoldCost(0)
+        ..setInterfaceIcon(iconPath)
+        ..setDescription(tooltip)
+        ..setDroppedWhenCarrierDies(true)
+        ..setScalingValue(0.80)
+        ..setActivelyUsed(true)
+        ..setCooldownGroup("defend")
+        ..setHitPoints(75)
+        ..setLumberCost(goldCost)
+        ..setLevelUnclassified(0)
+        ..setPerishable(false)
+        ..setPriority(0)
+        ..setTooltipBasic("Trade for "+name)
+    
+    function buildReduceDamageSpell()
+        new AbilityDefinitionHardenedSkin(abilId)
+        ..setName(name+" block")
+        ..setRequirements("")
+        ..setChancetoReduceDamage(1, 100.0)
+        ..setIgnoredDamage(1, ignoreDamage)
+        ..setMinimumDamage(1, 0)
+        ..setItemAbility(true)
+
+function getShield() returns LinkedList<Shield>
+    return asList(
+        new Shield(ITEM_SHIELD      , "Basic Shield", ABILITY_BASIC_SHIELD_BLOCK_ID, 4 , BASIC_SHIELD_TOOLTIP, "SteelArmor"         , BASIC_SHIELD_ABILITIES, 13),
+        new Shield(ITEM_BONE_SHIELD , "Bone Shield" , ABILITY_BONE_SHIELD_BLOCK_ID , 6 , BONE_SHIELD_TOOLTIP , "ImprovedUnholyArmor", BONE_SHIELD_ABILITIES , 20),
+        new Shield(ITEM_IRON_SHIELD , "Iron Shield" , ABILITY_IRON_SHIELD_BLOCK_ID , 10, IRON_SHIELD_TOOLTIP , "HumanArmorUpOne"    , IRON_SHIELD_ABILITIES , 46),
+        new Shield(ITEM_STEEL_SHIELD, "Steel Shield", ABILITY_STEEL_SHIELD_BLOCK_ID, 13, STEEL_SHIELD_TOOLTIP, "ThoriumArmor"       , STEEL_SHIELD_ABILITIES, 66)
+    )
+    
+@compiletime function createBashSpell()
+    new AbilityDefinitionBrewmasterDrunkenHaze(ABILITY_STEEL_SHIELD_BASH_ID)
+    ..setArtTarget("Abilities\\Spells\\Undead\\ReplenishHealth\\ReplenishHealthCaster.mdl")
+    ..setEffectSound("MetalHeavyBashFlesh")
+    ..setMissileArt("")
+    ..setAttacksPrevented(1, '9') //9 is the number to prevent melee attack & spells
+    ..setChanceToMiss(1, 0)
+    ..setAttackSpeedModifier(1, 0)
+    ..setMovementSpeedModifier(1, 0)
+    ..setAreaofEffect(1, 0)
+    ..setBuffs(1, "BNsi")
+    ..setCastRange(1, 100)
+    ..setCooldown(1, 15)
+    ..setDurationHero(1, 2)
+    ..setDurationNormal(1, 2)
+    ..setTargetsAllowed(1, "Ground,Neutral,Enemy,Organic")
+    ..setHeroAbility(false)
+    ..setLevels(1)
+    ..setItemAbility(true)
+    ..setManaCost(1, 10)
+    ..setName("Steel Shield Bash")
+
+@compiletime function buildShield()
+    getShield().forEach(shield -> shield.buildShield())

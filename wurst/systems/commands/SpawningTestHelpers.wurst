@@ -69,18 +69,21 @@ init
             registerCommandAll("spawn") (triggerPlayer, args) ->
                 let troll = triggerPlayer.getTroll()
                 var pos = troll.getPos()
-                var count = args.get(2).toInt()
+                var count = 1
                 let listName = args.get(1).toLowerCase()
                 let toSpawn = itemMap.get(listName)
                 
+                if args.get(2).toInt() > 0
+                    count = args.get(2).toInt()
+
                 if listName == null or toSpawn == null
                     print(HELP_MESSAGE)
                 else
                     pos.y -= (toSpawn.size() / 2) * 100
                     for elem in toSpawn
-                        for i = count downto 0
+                        for i = count downto 1
                             if listName == "buildings"
-                                createUnit(triggerPlayer, elem, pos, angle(0))
+                                createUnit(triggerPlayer, elem, pos, angle(270))
                                 pos.y += 50
                             else        
                                 createItem(elem, pos)

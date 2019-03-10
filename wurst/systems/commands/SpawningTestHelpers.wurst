@@ -66,6 +66,12 @@ init
                     else
                         simError(triggerPlayer, "Cannot spawn {0}".format(idStr))
 
+            registerCommandAll("hostile") (triggerPlayer, args) ->
+                let units = CreateGroup()..enumUnitsSelected(triggerPlayer, null)
+                for u from units
+                    u.setOwner(players[PLAYER_NEUTRAL_AGGRESSIVE], true)
+                units.destr()
+                
             registerCommandAll("spawn") (triggerPlayer, args) ->
                 let troll = triggerPlayer.getTroll()
                 var pos = troll.getPos()

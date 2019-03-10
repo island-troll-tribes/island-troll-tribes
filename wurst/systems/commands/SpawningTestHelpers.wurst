@@ -7,6 +7,22 @@ import PlayerExtensions
 import GameConfig
 import IDUtils
 import LegacyColors
+import LinkedList
+import ID
+import HashMap
+
+let herbList = asList(ITEM_BLUE_HERB, ITEM_YELLOW_HERB, ITEM_ORANGE_HERB, ITEM_PURPLE_HERB, ITEM_RIVER_ROOT, ITEM_RIVER_STEM, ITEM_BUTSU)
+let armorList = asList(ITEM_ELK_SKIN_BOOTS, ITEM_BONE_BOOTS, ITEM_ELK_SKIN_GLOVES, ITEM_BONE_GLOVES, ITEM_ELK_SKIN_COAT, ITEM_BONE_COAT, ITEM_SHIELD, ITEM_BONE_SHIELD)
+let materialList = asList(ITEM_BONE, ITEM_TINDER, ITEM_FLINT, ITEM_STONE, ITEM_MANA_CRYSTAL, ITEM_MAGIC)
+let buildingList = asList(UNIT_ARMORY, UNIT_WORKSHOP, UNIT_POT, UNIT_TANNERY, UNIT_WITCH_DOCTORS_HUT, UNIT_MUD_HUT, UNIT_TROLL_HUT)
+let craftedMaterialList = asList(ITEM_IRON_INGOT, ITEM_STEEL_INGOT, ITEM_SPIRIT_WATER, ITEM_SPIRIT_WIND)
+
+let itemMap = new HashMap<string, LinkedList<int>>
+                ..put("herbs", herbList)
+                ..put("armors", armorList)
+                ..put("materials", materialList)
+                ..put("buildings", buildingList)
+                ..put("craftedmaterials", craftedMaterialList)
 
 let HELP_MESSAGE = (
     GOLD_COLOR + "Create units and items\n|r" +
@@ -14,7 +30,10 @@ let HELP_MESSAGE = (
     "Where pid is for example, UNIT_PANTHER or ITEM_ARMORY_KIT" +
     "\ncount the number of spawn\nplayer the player which own the unit, player must be > 0\n" +
     "pid are listed in wurst/_legacy_/lib/IDUtils.wurst\n\n|r"+
-    GOLD_COLOR + "Example : \"-create UNIT_PANTHER 2 1\" will spawn 2 panther for player 1|r"
+    GOLD_COLOR + "Example : \"-create UNIT_PANTHER 2 1\" will spawn 2 panther for player 1\n\n|r"+
+    GOLD_COLOR+"Spawn multiple units and items at once\n|r"+
+    GENERAL_COLOR +"-spawn herbs/materials/craftedmaterials/building [count]\n"+
+    "To spawn herbs/materials/all building in order to test crafting"
 )
 
 init
@@ -52,3 +71,26 @@ init
                 for u from units
                     u.setOwner(players[PLAYER_NEUTRAL_AGGRESSIVE], true)
                 units.destr()
+                
+            registerCommandAll("spawn") (triggerPlayer, args) ->
+                let troll = triggerPlayer.getTroll()
+                var pos = troll.getPos()
+                var count = 1
+                let listName = args.get(1).toLowerCase()
+                let toSpawn = itemMap.get(listName)
+                
+                if args.get(2).toInt() > 0
+                    count = args.get(2).toInt()
+
+                if listName == null or toSpawn == null
+                    print(HELP_MESSAGE)
+                else
+                    pos.y -= (toSpawn.size() / 2) * 100
+                    for elem in toSpawn
+                        for i = count downto 1
+                            if listName == "buildings"
+                                createUnit(triggerPlayer, elem, pos, angle(270))
+                                pos.y += 50
+                            else        
+                                createItem(elem, pos)
+                        pos.y += 100

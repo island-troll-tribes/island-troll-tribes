@@ -8,8 +8,7 @@ import LegacyColors
 import ClosureTimers
 import ClosureEvents
 import ClosuresForItems
-import ObjectIdGenerator
-import AbilityObjEditing
+import ChannelAbilityPreset
 
 constant let COOLDOWN = 50.
 constant let CASTTIME = 1.
@@ -69,12 +68,10 @@ class Radar
     string name     = "Find "
     string toolTip  = "placeholder"
     string toolTipExt  = "placeholder"
-    string orderId = "rechargeoff"
 
-    construct(int id, string itemName, string toolTipExt, string hotkey, int buttonPosX, int buttonPosY, string color, string orderId)
+    construct(int id, string itemName, string toolTipExt, string hotkey, int buttonPosX, int buttonPosY, string color)
         this.id = id
         this.hotkey   = hotkey
-        this.orderId = orderId
         this.name     += itemName
         this.toolTipExt  = toolTipExt
         this.buttonPosX  = buttonPosX
@@ -82,7 +79,7 @@ class Radar
         this.toolTip  = GENERAL_COLOR+"[" + color + hotkey + GENERAL_COLOR + "] - " + this.name + "|r"
 
     function buildSpell()
-        new AbilityDefinitionIllidanChannel(id)
+        new ChannelAbilityPreset(id, 3, false)
         ..setTargetType(1, 0)
         ..setAnimationNames("spell,slam")
         ..setArtCaster("")
@@ -98,15 +95,11 @@ class Radar
         ..setIconTurnOff(SPELL_ICON)
         ..setHeroAbility(false)
         ..setItemAbility(false)
-        ..setLevels(3)
         ..setHotkeyNormal(hotkey)
         ..setName(name)
         ..setDisableOtherAbilities(1, false)
         ..setTooltipNormal(1, toolTip)
         ..setTooltipNormalExtended(1, toolTipExt)
-        ..presetBaseOrderID(lvl -> orderId)
-        ..setOrderStringActivate("channel")
-        ..setOrderStringUseTurnOn("channel")
         ..presetOptions(lvl -> 1)
         ..presetCooldown(lvl -> COOLDOWN)
         ..presetManaCost(lvl -> MANACOST)
@@ -228,13 +221,13 @@ function areHostilesNearItem(player p, item itm) returns bool
 
 function getRadarSpells() returns LinkedList<Radar>
     return asList(
-        new Radar(ABILITY_ID_FIND_TINDER  , "Tinders"      , TOOLTIP_EXT_FIND_TINDER  , "Q", 2, 0, SPECIAL_COLOR, "rechargeoff"),
-        new Radar(ABILITY_ID_FIND_STICK   , "Sticks"       , TOOLTIP_EXT_FIND_STICK   , "W", 2, 0, SPECIAL_COLOR, "rechargeon"),
-        new Radar(ABILITY_ID_FIND_MUSHROOM, "Mushrooms"    , TOOLTIP_EXT_FIND_MANA    , "E", 2, 0, SPECIAL_COLOR, "cripple"),
-        new Radar(ABILITY_ID_FIND_CLAYBALL, "Clay Balls"   , TOOLTIP_EXT_FIND_CLAYBALL, "R", 2, 0, SPECIAL_COLOR, "blizzard"),
-        new Radar(ABILITY_ID_FIND_FLINT   , "Flints"       , TOOLTIP_EXT_FIND_FLINT   , "A", 2, 0, SPECIAL_COLOR, "avatar"),
-        new Radar(ABILITY_ID_FIND_STONE   , "Stones"       , TOOLTIP_EXT_FIND_STONE   , "S", 3, 0, SPECIAL_COLOR, "detonate"), 
-        new Radar(ABILITY_ID_FIND_MANA    , "Mana Crystals", TOOLTIP_EXT_FIND_MANA    , "D", 2, 0, SPECIAL_COLOR, "cyclone")
+        new Radar(ABILITY_ID_FIND_TINDER  , "Tinders"      , TOOLTIP_EXT_FIND_TINDER  , "Q", 2, 0, SPECIAL_COLOR),
+        new Radar(ABILITY_ID_FIND_STICK   , "Sticks"       , TOOLTIP_EXT_FIND_STICK   , "W", 2, 0, SPECIAL_COLOR),
+        new Radar(ABILITY_ID_FIND_MUSHROOM, "Mushrooms"    , TOOLTIP_EXT_FIND_MANA    , "E", 2, 0, SPECIAL_COLOR),
+        new Radar(ABILITY_ID_FIND_CLAYBALL, "Clay Balls"   , TOOLTIP_EXT_FIND_CLAYBALL, "R", 2, 0, SPECIAL_COLOR),
+        new Radar(ABILITY_ID_FIND_FLINT   , "Flints"       , TOOLTIP_EXT_FIND_FLINT   , "A", 2, 0, SPECIAL_COLOR),
+        new Radar(ABILITY_ID_FIND_STONE   , "Stones"       , TOOLTIP_EXT_FIND_STONE   , "S", 3, 0, SPECIAL_COLOR), 
+        new Radar(ABILITY_ID_FIND_MANA    , "Mana Crystals", TOOLTIP_EXT_FIND_MANA    , "D", 2, 0, SPECIAL_COLOR)
     )
 
 @compiletime function buildRadarSpells()

@@ -1,0 +1,114 @@
+package TrollUnitGenerator
+
+import UnitObjEditing
+import UnitIds
+import Lodash
+import ObjectIds
+import ID
+import LinkedList
+import Units
+import LegacyColors
+
+
+constant let DIFFICULTY_EASY = "\n\nDifficulty : "+COLOR_GREEN+"Easy"
+constant let HUNTER_TOOLTIP_EXETENDED = "Fast and strong, the hunter is a hard to beat. The hunter has the |c00ff7500Net|r ability and"+
+                                        " can also learn |c00ff7500Track|r which amplifies damage and gives vision. Has |c007f007f3|r Inventory Slots"
+
+public class TrollUnit
+    int id = 0
+    int baseDamage = 10
+    int properNameUsed = 3
+    real cooldownTime = 2
+    real scalingValue = 1.0
+    string name = "Troll"
+    string properName = "The PlaceHolder Troll"
+    string model = ""
+    string iconInterface = "ReplaceableTextures\\CommandButtons\\BTN"
+    string iconScoreScreen = "ReplaceableTextures\\CommandButtons\\BTN"
+    string hotkey = "Q"
+    string heroAbilities = ""
+    string normalAbilities = toRawCode(SPELL_PANIC)+toRawCode(SPELL_REST)
+    string toolTipBasic = "Pick "
+    string toolTipAwaken = "Revive "
+    string toolTipRevive = "Revive"
+    string toolTipExtented = "Troll PlaceHolder is an awesome Troll, always faithful to his job of placeholder§"
+    Pair<int, int> buttonPos = new Pair(0, 0)
+    Pair<int, int> sightRadius = new Pair(900, 900)
+
+    construct(int id, int baseDamage, int properNameUsed, real cooldownTime, real scalingValue,
+     string name, string toolTipExtended, string model, string icon, string hotkey, string properName,
+     string heroAbilities, string normalAbilities, Pair<int, int> buttonPos, Pair<int, int> sightRadius)
+
+        this.id = id
+        this.name = name
+        this.baseDamage = baseDamage
+        this.properNameUsed = properNameUsed
+        this.cooldownTime = cooldownTime
+        this.scalingValue = scalingValue
+        this.name = name
+        this.properName = properName
+        this.toolTipExtented = toolTipExtended
+        this.toolTipBasic += name
+        this.toolTipAwaken += name
+        this.toolTipRevive += name
+        this.model = model
+        this.iconInterface = icon
+        this.iconScoreScreen = icon
+        this.hotkey = hotkey
+        this.heroAbilities = heroAbilities
+        this.normalAbilities += normalAbilities
+        this.buttonPos = buttonPos
+        this.sightRadius = sightRadius
+
+    function buildUnit()
+        new HeroDefinition(id, UnitIds.blademaster)
+        ..setUpgradesUsed("")
+        ..setRequierementsForTier(2, "")
+        ..setRequierementsForTier(3, "")
+        ..setHeroAbilities(heroAbilities)
+        ..setNormalAbilities(normalAbilities)
+        ..setAttack1DamageNumberofDice(1)
+        ..setAttack1DamageBase(baseDamage)
+        ..setAttack1DamageSidesperDie(1)
+        ..setAttack1CooldownTime(cooldownTime)
+        ..setAnimationRunSpeed(290)
+        ..setAnimationWalkSpeed(290)
+        ..setModelFile(model)
+        ..setIconScoreScreen(iconScoreScreen)
+        ..setIconGameInterface(iconInterface)
+        ..setAllowCustomTeamColor(true)
+        ..setButtonPositionX(buttonPos.a)
+        ..setButtonPositionY(buttonPos.b)
+        ..setScalingValue(scalingValue)
+        ..setStartingAgility(1)
+        ..setAgilityPerLevel(1.0)
+        ..setLumberCost(3)
+        ..setFoodCost(0)
+        ..setGoldCost(0)
+        ..setStockStartDelay(5)
+        ..setStartingStrength(1)
+        ..setStrengthPerLevel(1.00)
+        ..setStartingIntelligence(1)
+        ..setIntelligencePerLevel(1.00)
+        ..setManaMaximum(192)
+        ..setManaInitialAmount(200)
+        ..setHitPointsMaximumBase(192)
+        ..setSightRadiusDay(sightRadius.a)
+        ..setSightRadiusNight(sightRadius.b)
+        ..setStockMaximum(1)
+        ..setManaRegeneration(0)
+        ..setHitPointsRegenerationRate(0)
+        ..setTooltipBasic(toolTipBasic)
+        ..setTooltipExtended(toolTipExtented)
+        ..setTooltipAwaken(toolTipAwaken)
+        ..setTooltipRevive(toolTipRevive)
+        ..setName(name)
+        ..setProperNames(properName)
+        ..setProperNamesUsed(properNameUsed)
+        ..setHotkey(hotkey)
+
+@compiletime function getTrollUnit() returns LinkedList<TrollUnit>
+    return asList(
+        new TrollUnit(UNIT_HUNTER, 13, 3, 1.7, 1, "Hunter", "Fast as Fuck", Units.forestTrollTrapper1, "ForestTroll", "W", "Wonton", "", "", pair(1,1), pair(1000, 500))
+        )
+

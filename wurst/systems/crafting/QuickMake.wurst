@@ -6,27 +6,61 @@ import Lodash
 import UnitExtensions
 import IsTypeThing
 import LegacyTriggers
+import Mixing
+import Tannering
 
-
-class QuickMake
+public class QuickMake
     let itemLists = new OwnedLinkedList<LinkedList<int>>()
+    let specialHerb = new HashMap<int, int>
+    real pickUpRange = 700
+    int herbThreshold = 0
+    int spellAbilityId = 0
 
     construct(int spellAbilityId)
+        this.spellAbilityId = spellAbilityId
         EventListener.onCast(spellAbilityId, caster -> onCast(caster))
 
+    construct(int spellAbilityId, int herbThreshold)
+        this.spellAbilityId = spellAbilityId
+        this.herbThreshold = herbThreshold
+        EventListener.onCast(spellAbilityId, caster -> onCast(caster))
+       
     function onCast(unit caster)
         let pos = caster.getPos()
         let recipeSize = itemLists.size()
         let items = new OwnedLinkedList<item>()
         let inventory = caster.getInventory()
 
+        specialHerb.put(ITEM_BLUE_HERB, 0)
+        specialHerb.put(ITEM_YELLOW_HERB, 0)
+        specialHerb.put(ITEM_PURPLE_HERB, 0)
+        specialHerb.put(ITEM_ORANGE_HERB, 0)
+
+        if caster.isTroll()
+            pickUpRange = 100
+        if caster.getTypeId() == UNIT_CRAFT_MASTER
+            pickUpRange = 300
+
         caster.dropItems()
 
         for itemIds in itemLists
             item found = null
             for itemId in itemIds
-                found = findNearestItem(pos, 700, i -> i.getTypeId() == itemId)
-                if found != null
+                found = findNearestItem(pos, pickUpRange, i -> i.getTypeId() == itemId)
+
+                if specialHerb.has(found.getTypeId())
+                    specialHerb.put(found.getTypeId(), specialHerb.get(found.getTypeId()) + 1)
+                
+                //In order to avoid picking up the same special herb too much time    
+                if specialHerb.get(found.getTypeId()) > herbThreshold
+                    found = null
+
+                //Special case for eob, once you get 2 spec, you don't want to be able to pick up 2 spec of another type
+                //Not pretty but couldn't figure out something else
+                if spellAbilityId == SPELL_QM_ESSENCE_BEES and specialHerb.get(found.getTypeId()) == herbThreshold
+                    herbThreshold = 1
+
+                if found != null 
                     items.add(found)
                     found.setVisible(false)
                     break
@@ -41,6 +75,11 @@ class QuickMake
                 inventory.remove(elem)
                 caster.addItemHandle(elem)
 
+        if caster.getName() == "Mixing Pot"
+            mix(caster)
+        else if caster.getName() == "Tannery"
+            tan(caster, spellAbilityId)
+        
         gg_trg_transmute.disable()
 
         for elem in inventory
@@ -49,6 +88,8 @@ class QuickMake
 
         gg_trg_transmute.enable()
 
+        if spellAbilityId == SPELL_QM_ESSENCE_BEES
+            herbThreshold = 2
         destroy items
         destroy inventory
 
@@ -59,183 +100,3 @@ class QuickMake
         itemLists.add(itemIds)
 
 
-init
-    // Armory
-
-    new QuickMake('A06A')
-    ..add(asList(ITEM_ELK_SKIN_BOOTS, ITEM_WOLF_SKIN_BOOTS, ITEM_BEAR_SKIN_BOOTS))
-    ..add(ITEM_BONE)
-    ..add(ITEM_BONE)
-    ..add(ITEM_BONE)
-    ..add(ITEM_BONE)
-    ..add(ITEM_BONE)
-
-    new QuickMake('A06C')
-    ..add(asList(ITEM_ELK_SKIN_COAT, ITEM_WOLF_SKIN_COAT, ITEM_BEAR_SKIN_COAT))
-    ..add(ITEM_BONE)
-    ..add(ITEM_BONE)
-    ..add(ITEM_BONE)
-    ..add(ITEM_BONE)
-    ..add(ITEM_BONE)
-
-    new QuickMake('A06B')
-    ..add(asList(ITEM_ELK_SKIN_GLOVES, ITEM_WOLF_SKIN_GLOVES, ITEM_BEAR_SKIN_GLOVES))
-    ..add(ITEM_BONE)
-    ..add(ITEM_BONE)
-    ..add(ITEM_BONE)
-    ..add(ITEM_BONE)
-    ..add(ITEM_BONE)
-
-    new QuickMake('A0A0')
-    ..add(ITEM_SHIELD)
-    ..add(ITEM_BONE)
-    ..add(ITEM_BONE)
-    ..add(ITEM_BONE)
-    ..add(ITEM_BONE)
-    ..add(ITEM_BONE)
-
-    new QuickMake('A06E')
-    ..add(ITEM_IRON_INGOT)
-    ..add(ITEM_IRON_INGOT)
-    ..add(ITEM_FLINT)
-    ..add(ITEM_FLINT)
-
-    new QuickMake('A06D')
-    ..add(ITEM_STONE)
-    ..add(ITEM_FLINT)
-
-    new QuickMake('A06F')
-    ..add(ITEM_STONE)
-    ..add(asList(ITEM_BONE, ITEM_STICK))
-
-    new QuickMake('A0G7')
-    ..add(ITEM_DARK_ROCK)
-    ..add(asList(ITEM_BONE, ITEM_STICK))
-
-    new QuickMake('A06G')
-    ..add(ITEM_IRON_INGOT)
-    ..add(asList(ITEM_BONE, ITEM_STICK))
-
-    new QuickMake('A06H')
-    ..add(ITEM_STEEL_INGOT)
-    ..add(asList(ITEM_BONE, ITEM_STICK))
-
-    new QuickMake('A06I')
-    ..add(ITEM_TINDER)
-    ..add(asList(ITEM_BONE, ITEM_STICK))
-    ..add(ITEM_STICK)
-
-    new QuickMake('A09Z')
-    ..add(asList(ITEM_ELK_HIDE, ITEM_JUNGLE_WOLF_HIDE, ITEM_JUNGLE_BEAR_HIDE))
-    ..add(ITEM_STICK)
-    ..add(ITEM_STICK)
-
-    // WDH
-
-    new QuickMake('A0GB')
-    ..add(ITEM_MAGIC)
-    ..add(ITEM_BONE_COAT)
-    ..add(ITEM_FLINT)
-
-    new QuickMake('A0GA')
-    ..add(ITEM_MAGIC)
-    ..add(ITEM_BONE_COAT)
-    ..add(ITEM_SPIRIT_WATER)
-
-    new QuickMake('A0GC')
-    ..add(ITEM_MAGIC)
-    ..add(ITEM_BONE_COAT)
-    ..add(ITEM_BUTSU)
-
-    new QuickMake('A062')
-    ..add(ITEM_MUSHROOM)
-    ..add(ITEM_MUSHROOM)
-    ..add(ITEM_MUSHROOM)
-
-    new QuickMake('A068')
-    ..add(ITEM_STONE)
-    ..add(ITEM_MANA_CRYSTAL)
-
-    new QuickMake('A0G8')
-    ..add(ITEM_SPIRIT_WIND)
-    ..add(ITEM_MANA_CRYSTAL)
-
-    new QuickMake('A069')
-    ..add(ITEM_BONE)
-    ..add(ITEM_MANA_CRYSTAL)
-
-    new QuickMake('A067')
-    ..add(ITEM_FLINT)
-    ..add(ITEM_MANA_CRYSTAL)
-
-    new QuickMake('A066')
-    ..add(ITEM_TINDER)
-    ..add(ITEM_MANA_CRYSTAL)
-
-    new QuickMake('A0G9')
-    ..add(ITEM_SPIRIT_WATER)
-    ..add(ITEM_MANA_CRYSTAL)
-
-    new QuickMake('A063')
-    ..add(ITEM_POISON)
-    ..add(ITEM_POISON)
-
-    // Workshop
-
-    new QuickMake('A0G1')
-    ..add(ITEM_BONE_BOOTS)
-    ..add(ITEM_SPIRIT_WIND)
-    ..add(ITEM_SPIRIT_WATER)
-    ..add(ITEM_MANA_CRYSTAL)
-    ..add(ITEM_ANABOLIC_POTION)
-    ..add(ITEM_ANABOLIC_POTION)
-
-    new QuickMake('A0G0')
-    ..add(ITEM_BONE_COAT)
-    ..add(ITEM_SPIRIT_WIND)
-    ..add(ITEM_SPIRIT_WATER)
-    ..add(ITEM_MANA_CRYSTAL)
-
-    new QuickMake('A0G3')
-    ..add(ITEM_STICK)
-    ..add(ITEM_STEEL_INGOT)
-    ..add(ITEM_IRON_INGOT)
-    ..add(ITEM_SPIRIT_WIND)
-    ..add(ITEM_SPIRIT_WATER)
-    ..add(ITEM_MANA_CRYSTAL)
-
-    new QuickMake('A06M')
-    ..add(ITEM_BONE_GLOVES)
-    ..add(ITEM_STEEL_INGOT)
-    ..add(ITEM_IRON_INGOT)
-    ..add(ITEM_SPIRIT_WIND)
-    ..add(ITEM_SPIRIT_WATER)
-    ..add(ITEM_MANA_CRYSTAL)
-
-    new QuickMake('A0G2')
-    ..add(ITEM_BONE_SHIELD)
-    ..add(ITEM_ELK_HIDE)
-    ..add(ITEM_STEEL_INGOT)
-    ..add(ITEM_SPIRIT_WIND)
-    ..add(ITEM_SPIRIT_WATER)
-    ..add(ITEM_MANA_CRYSTAL)
-
-    new QuickMake('A06J')
-    ..add(ITEM_STICK)
-    ..add(ITEM_CLAY_BALL)
-
-    new QuickMake('A06K')
-    ..add(ITEM_TINDER)
-    ..add(ITEM_TINDER)
-
-    new QuickMake('A0G4')
-    ..add(ITEM_SPEAR)
-    ..add(ITEM_MUSHROOM)
-
-    new QuickMake('A0G5')
-    ..add(ITEM_SPEAR)
-    ..add(ITEM_POISON)
-
-    new QuickMake('A0G6')
-    ..add(ITEM_SPEAR)
-    ..add(ITEM_ULTRA_POISON)

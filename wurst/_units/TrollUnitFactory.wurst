@@ -1,43 +1,42 @@
-package TrollUnitGenerator
+package TrollUnitFactory
 
 import UnitObjEditing
 import UnitIds
 import Lodash
-import ObjectIds
-import ID
-import LinkedList
-import Units
-import TrollUnitToolTip
+import Soundsets
 
 public class TrollUnit
     int id = 0
     int baseDamage = 10
     int properNameUsed = 3
+    int speedBase = 300
     real cooldownTime = 2
     real scalingValue = 1.0
     string name = "Troll"
     string properName = "The PlaceHolder Troll"
     string model = ""
+    string soundSet = Soundsets.forestTrollShadowPriest
     string iconInterface = "ReplaceableTextures\\CommandButtons\\BTN"
     string iconScoreScreen = "ReplaceableTextures\\CommandButtons\\BTN"
     string hotkey = "Q"
     string heroAbilities = ""
-    string normalAbilities = toRawCode(SPELL_PANIC)+toRawCode(SPELL_REST)
+    string normalAbilities = ""
     string toolTipBasic = "Pick "
     string toolTipAwaken = "Revive "
     string toolTipRevive = "Revive"
-    string toolTipExtented = "Troll PlaceHolder is an awesome Troll, always faithful to his job of placeholder§"
+    string toolTipExtented = "Troll PlaceHolder is an awesome Troll, always faithful to his job of placeholder"
     Pair<int, int> buttonPos = new Pair(0, 0)
     Pair<int, int> sightRadius = new Pair(900, 900)
 
-    construct(int id, int baseDamage, int properNameUsed, real cooldownTime, real scalingValue,
+    construct(int id, int baseDamage, int properNameUsed, int speedBase, real cooldownTime, real scalingValue,
      string name, string toolTipExtended, string model, string icon, string hotkey, string properName,
-     string heroAbilities, string normalAbilities, Pair<int, int> buttonPos, Pair<int, int> sightRadius)
+     string heroAbilities, string normalAbilities, string soundSet, Pair<int, int> buttonPos, Pair<int, int> sightRadius)
 
         this.id = id
         this.name = name
         this.baseDamage = baseDamage
         this.properNameUsed = properNameUsed
+        this.speedBase = speedBase
         this.cooldownTime = cooldownTime
         this.scalingValue = scalingValue
         this.name = name
@@ -47,11 +46,12 @@ public class TrollUnit
         this.toolTipAwaken += name
         this.toolTipRevive += name
         this.model = model
-        this.iconInterface = icon
-        this.iconScoreScreen = icon
+        this.iconInterface += icon+".blp"
+        this.iconScoreScreen += icon+".blp"
         this.hotkey = hotkey
         this.heroAbilities = heroAbilities
         this.normalAbilities += normalAbilities
+        this.soundSet = soundSet
         this.buttonPos = buttonPos
         this.sightRadius = sightRadius
 
@@ -71,28 +71,32 @@ public class TrollUnit
         ..setModelFile(model)
         ..setIconScoreScreen(iconScoreScreen)
         ..setIconGameInterface(iconInterface)
-        ..setAllowCustomTeamColor(true)
+        ..setUnitSoundSet(soundSet)
+        ..setSpeedBase(speedBase)
+        ..setTurnRate(1.80)
         ..setButtonPositionX(buttonPos.a)
         ..setButtonPositionY(buttonPos.b)
         ..setScalingValue(scalingValue)
+        ..setAllowCustomTeamColor(true)
+        ..setStartingStrength(1)
+        ..setStrengthPerLevel(1.00)
         ..setStartingAgility(1)
         ..setAgilityPerLevel(1.0)
+        ..setStartingIntelligence(1)
+        ..setIntelligencePerLevel(1.00)
+        ..setManaMaximum(192)
+        ..setManaRegeneration(0)
+        ..setManaInitialAmount(200)
+        ..setHitPointsMaximumBase(192)
+        ..setHitPointsRegenerationRate(0)
+        ..setSightRadiusDay(sightRadius.a)
+        ..setSightRadiusNight(sightRadius.b)
         ..setLumberCost(3)
         ..setFoodCost(0)
         ..setGoldCost(0)
         ..setStockStartDelay(5)
-        ..setStartingStrength(1)
-        ..setStrengthPerLevel(1.00)
-        ..setStartingIntelligence(1)
-        ..setIntelligencePerLevel(1.00)
-        ..setManaMaximum(192)
-        ..setManaInitialAmount(200)
-        ..setHitPointsMaximumBase(192)
-        ..setSightRadiusDay(sightRadius.a)
-        ..setSightRadiusNight(sightRadius.b)
+        ..setStockReplenishInterval(1)
         ..setStockMaximum(1)
-        ..setManaRegeneration(0)
-        ..setHitPointsRegenerationRate(0)
         ..setTooltipBasic(toolTipBasic)
         ..setTooltipExtended(toolTipExtented)
         ..setTooltipAwaken(toolTipAwaken)
@@ -101,9 +105,3 @@ public class TrollUnit
         ..setProperNames(properName)
         ..setProperNamesUsed(properNameUsed)
         ..setHotkey(hotkey)
-
-@compiletime function getTrollUnit() returns LinkedList<TrollUnit>
-    return asList(
-        new TrollUnit(UNIT_HUNTER, 13, 3, 1.7, 1, "Hunter", "Fast as Fuck", Units.forestTrollTrapper1, "ForestTroll", "W", "Wonton", "", "", pair(1,1), pair(1000, 500))
-        )
-

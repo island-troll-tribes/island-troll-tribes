@@ -1,0 +1,104 @@
+package WardArea
+
+import ChannelAbilityPreset
+import ClosureEvents
+import IsTypeThing
+import ToolTipsUtils
+import AbilityObjEditing
+
+constant let SPELL_ICON = "ReplaceableTextures\\CommandButtons\\BTNGreenSentryWard.blp"
+constant let OBS_TOOLTIP_NORM = makeToolTipNorm("W", "Ward the Area")
+constant let SPY_TOOLTIP_NORM = makeToolTipNorm("R", "Ward the Area")
+constant let OBS_TOOLTIP_LEARN = makeToolTipNorm("Q", "Ward the Area")
+constant let OBS_TOOLTIP_EXT = "Places wards in the area around you. Duration and amount of wards increases with level."
+constant let SPY_TOOLTIP_EXT = "Places wards in the area around you."
+constant let COOLDOWN = 80.
+constant let SPY_COOLDOWN = COOLDOWN - 30
+constant let MANACOST = 10
+constant let CASTTIME = 1.0
+
+@compiletime function createSpySpell()
+    new AbilityDefinitionIllidanChannel(SPELL_SPY_WARD_AREA_ID)
+    ..setTargetType(1, 0)
+    ..setAnimationNames("spell,throw")
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..setButtonPositionNormalX(2)
+    ..setButtonPositionNormalY(0)
+    ..setButtonPositionResearchX(2)
+    ..setButtonPositionResearchY(0)
+    ..setIconNormal(SPELL_ICON)
+    ..setIconResearch(SPELL_ICON)
+    ..setIconTurnOff(SPELL_ICON)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(3)
+    ..setHotkeyNormal("R")
+    ..setName("Ward the area")
+    ..setDisableOtherAbilities(1, false)
+    ..setTooltipNormal(1, SPY_TOOLTIP_NORM)
+    ..setTooltipNormalExtended(1, SPY_TOOLTIP_EXT+" Has "+SPY_COOLDOWN.toInt().toString()+" seconds cooldown.")
+    ..presetBaseOrderID(lvl -> "defend")
+    ..setOrderStringActivate("channel")
+    ..setOrderStringUseTurnOn("channel")
+    ..presetOptions(lvl -> 1)
+    ..presetCooldown(lvl -> SPY_COOLDOWN - 20)
+    ..presetManaCost(lvl -> MANACOST)
+    ..presetFollowThroughTime(lvl -> CASTTIME)
+
+@compiletime function createObsSpell()
+    new ChannelAbilityPreset(SPELL_OBS_WARD_AREA_ID, 3, true)
+    ..setTargetType(1, 0)
+    ..setAnimationNames("spell,throw")
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..setButtonPositionNormalX(2)
+    ..setButtonPositionNormalY(1)
+    ..setButtonPositionResearchX(0)
+    ..setButtonPositionResearchY(0)
+    ..setIconNormal(SPELL_ICON)
+    ..setIconResearch(SPELL_ICON)
+    ..setIconTurnOff(SPELL_ICON)
+    ..setHeroAbility(true)
+    ..setItemAbility(false)
+    ..setLevelSkipRequirement(1)
+    ..setHotkeyNormal("W")
+    ..setHotkeyLearn("Q")
+    ..setName("Ward the area")
+    ..setCheckDependencies(true)
+    ..setRequiredLevel(1)
+    ..setDisableOtherAbilities(1, false)
+    ..presetTooltipNormal(lvl -> OBS_TOOLTIP_NORM+" - Level "+lvl.toString())
+    ..presetTooltipNormalExtended(lvl -> OBS_TOOLTIP_EXT+" Has "+(COOLDOWN - lvl * 10).toInt().toString()+" seconds cooldown.")
+    ..setTooltipLearn(OBS_TOOLTIP_LEARN)
+    ..setTooltipLearnExtended(OBS_TOOLTIP_EXT)
+    ..presetBaseOrderID(lvl -> "carrionscarabson")
+    ..setOrderStringActivate("None")
+    ..setOrderStringUseTurnOn("channel")
+    ..presetOptions(lvl -> 1)
+    ..presetCooldown(lvl -> COOLDOWN - lvl * 10)
+    ..presetManaCost(lvl -> MANACOST)
+    ..presetFollowThroughTime(lvl -> CASTTIME)
+
+function onCast()
+    let caster = GetSpellAbilityUnit()
+    var wardNbr = 3
+
+    if GetSpellAbilityId() == SPELL_OBS_WARD_AREA_ID
+        wardNbr = caster.getAbilityLevel(SPELL_OBS_WARD_AREA_ID)
+
+    print(wardNbr)
+    for i = wardNbr downto 0
+        var pos = caster.getPos()
+        pos.x += GetRandomReal(-500, 500)
+        pos.y += GetRandomReal(-500, 500)
+        let ward = createUnit(caster.getOwner(), UNIT_LIVING_CLAY, pos, (270.0).asAngleDegrees())
+        UnitApplyTimedLife(ward, 'Bhwd', 240. + 120 * wardNbr)
+
+init
+    registerSpellEffectEvent(SPELL_SPY_WARD_AREA_ID, () -> onCast())
+    registerSpellEffectEvent(SPELL_OBS_WARD_AREA_ID, () -> onCast())

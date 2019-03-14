@@ -1,0 +1,287 @@
+package QuickMakeSpell
+import QuickMakeToolTips
+import AbilityObjEditing
+import ObjectIds
+import ID
+import LinkedList
+import LegacyColors
+import Icons
+
+constant let COOLDOWN = 1.
+
+//Additional pages for Quick Make
+constant let MIXING_POT_SPELLBOOK = commaList( SPELL_QM_DISEASE_POTION, SPELL_QM_ACID_BOMB, SPELL_QM_BEE_HIVE, SPELL_QM_ESSENCE_BEES,
+                                    SPELL_QM_GEM_OF_KNOWLEDGE,  SPELL_QM_OMNICURE, SPELL_QM_TWIN_ISLANDS, SPELL_QM_NETHER_POTION,
+                                    SPELL_QM_DRUNKS_POTION, SPELL_QM_FERVOR_POTION, SPELL_QM_ELEMENTAL_SHIELD_POTION)
+
+constant let ARMOR_SPELLBOOK =  commaList(SPELL_QM_BONE_BOOTS,SPELL_QM_BONE_GLOVES,SPELL_QM_BONE_COAT,
+                                SPELL_QM_IRON_BOOTS,SPELL_QM_IRON_GLOVES,SPELL_QM_IRON_COAT,
+                                SPELL_QM_STEEL_BOOTS,SPELL_QM_STEEL_GLOVES,SPELL_QM_STEEL_COAT)
+
+constant let ARMORY_SPELLBOOK = commaList(SPELL_QM_SHIELD, SPELL_QM_BONE_SHIELD, SPELL_QM_IRON_SHIELD, SPELL_QM_STEEL_SHIELD, SPELL_QM_ENSNARE_TRAP)
+
+constant let WDH_SPELLBOOK = commaList(SPELL_QM_SCROLL_FIREBALL, SPELL_QM_SCROLL_CYCLONE, SPELL_QM_SCROLL_SWIFTNESS, SPELL_QM_LIVING_CLAY, SPELL_QM_MAGIC_SEED, SPELL_QM_SPIRIT_WARD)
+
+constant let WORKSHOP_SPELLBOOK = commaList(SPELL_QM_SMOKE_BOMB,SPELL_QM_FIRE_BOMB,SPELL_QM_EMP,SPELL_QM_TRANSPORT_SHIP, SPELL_QM_SONAR_COMPASS,SPELL_QM_DARK_THISTLES)                             
+
+constant let BUILDING_CRAFT_SPELLBOOK_= commaList(SPELL_QM_CAMP_FIRE_KIT, SPELL_QM_TENT_KIT, SPELL_QM_TROLL_HUT_KIT, SPELL_QM_MUD_HUT_KIT,
+                                                  SPELL_QM_ARMORY_KIT, SPELL_QM_WORKSHOP_KIT, SPELL_QM_MIXING_POT_KIT, SPELL_QM_WITCH_DOCTORS_HUT_KIT,
+                                                  SPELL_QM_TANNERY_KIT, SPELL_QM_OMNI_TOWER_KIT, SPELL_QM_TELEPORT_BEACON_KIT)
+
+public class QuickMakeSpell
+    let hotkey = ""
+    let name = "Quick make "
+    let toolTip = ""
+    let iconPath = "ReplaceableTextures\\CommandButtons\\"
+    let id = '0'
+    let btnPositionX = 0
+    let btnPositionY = 0
+    let baseOrderId = "avatar"
+
+    construct(string itemName, string toolTip, string iconPath, int id, int btnX, int btnY, string hotkey, string color, string baseOrderId, string toolTipEnd)
+        this.name = GENERAL_COLOR+"[" + color + hotkey + GENERAL_COLOR + "] - " + this.name + itemName + "|r"
+        this.toolTip += toolTip + "|r\n\n" + COLOR_LIGHT_BLUE + toolTipEnd
+        this.iconPath += iconPath
+        this.id = id
+        this.btnPositionX = btnX
+        this.btnPositionY = btnY
+        this.baseOrderId = baseOrderId
+        this.hotkey = hotkey
+    
+    function buildSpell()
+        new AbilityDefinitionIllidanChannel(id)
+        ..setName(name)
+        ..setIconNormal(iconPath)
+        ..setTooltipNormal(1, name)
+        ..setTooltipNormalExtended(1, toolTip)
+        ..setCooldown(1, COOLDOWN)
+        ..setLevels(1)
+        ..setHotkeyNormal(hotkey)
+        ..setHeroAbility(false)
+        ..setItemAbility(false)
+        ..setButtonPositionNormalX(btnPositionX)
+        ..setButtonPositionNormalY(btnPositionY)
+        ..setAnimationNames("")
+        ..setArtCaster("")
+        ..setArtEffect("")
+        ..setArtTarget("")
+        ..setArtSpecial("")
+        ..setDisableOtherAbilities(1, false)
+        ..setFollowThroughTime(1, 0.0)
+        ..setCastingTime(1, 0)
+        ..presetBaseOrderID(lvl -> baseOrderId)
+        ..setOrderStringUseTurnOn("channel")
+        ..setOrderStringActivate("channel")
+        ..setOptions(1, 1)
+        ..setManaCost(1, 0)
+
+public class QuickMakeSpellBook
+    let id = '0'
+    let name = "Page"
+    let hotkey = "Q"
+    let toolTip = ""
+    let abilityList = ""
+    let btnPositionX = 0
+    let btnPositionY = 0
+    let baseOrderId = ""
+    let icon = Icons.bTNSkillz
+
+    construct(int id, string name, string hotkey, string toolTip, string abilityList, int x, int y, string baseOrderId)
+        this.id = id
+        this.name = GENERAL_COLOR+"[" + SPECIAL_COLOR + hotkey + GENERAL_COLOR + "] - " + name + "|r"
+        this.hotkey = hotkey
+        this.toolTip = toolTip
+        this.abilityList = abilityList
+        this.btnPositionX = x
+        this.btnPositionY = y
+        this.baseOrderId = baseOrderId
+
+    construct(int id, string name, string hotkey, string toolTip, string abilityList, int x, int y, string baseOrderId, string icon)
+        this.id = id
+        this.name = GENERAL_COLOR+"[" + SPECIAL_COLOR + hotkey + GENERAL_COLOR + "] - " + name + "|r"
+        this.hotkey = hotkey
+        this.toolTip = toolTip
+        this.abilityList = abilityList
+        this.btnPositionX = x
+        this.btnPositionY = y
+        this.baseOrderId = baseOrderId
+        this.icon = "ReplaceableTextures\\CommandButtons\\"+icon
+
+    function buildSpellBook()
+        new AbilityDefinitionSpellBook(id)
+        ..setButtonPositionNormalX(btnPositionX)
+        ..setButtonPositionNormalY(btnPositionY)
+        ..setButtonPositionResearchX(0)
+        ..setButtonPositionResearchY(0)
+        ..setIconNormal(icon)
+        ..setHeroAbility(true)
+        ..setItemAbility(false)
+        ..setLevels(3)
+        ..setTargetAttachmentPoint1("")
+        ..setCasterAttachmentPoint1("")
+        ..presetBaseOrderID(lvl -> baseOrderId)
+        ..setHotkeyNormal(hotkey)
+        ..setName(name)
+        ..presetMaximumSpells(lvl -> 11)
+        ..presetMinimumSpells(lvl -> 11)
+        ..presetSpellList(lvl -> abilityList)
+        ..presetCooldown(lvl -> COOLDOWN)
+        ..presetTooltipNormal(lvl -> name)
+        ..presetTooltipNormalExtended(lvl -> toolTip)
+        ..presetSharedSpellCooldown(lvl -> false)
+
+//All Quick Make Spells created here
+function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
+    return asList(
+        //Mixing Pot
+        new QuickMakeSpell("Healing Potion"          , MIX_TOOLTIP+HEALING_POTION_RECIPE          , "BTNLesserRejuvPotion.blp"       , SPELL_QM_HEALING_POTION          , 0, 0, "Q", SPECIAL_COLOR, "dismount"        , QM_TOOLIP),
+        new QuickMakeSpell("Mana Potion"             , MIX_TOOLTIP+MANA_POTION_RECIPE             , "BTNPotionBlueSmall.blp"         , SPELL_QM_MANA_POTION             , 1, 0, "W", SPECIAL_COLOR, "doom"            , QM_TOOLIP),
+        new QuickMakeSpell("Cure All"                , MIX_TOOLTIP+CURE_ALL_RECIPE                , "BTNLesserClarityPotion.blp"     , SPELL_QM_CURE_ALL                , 2, 0, "E", SPECIAL_COLOR, "drain"           , QM_TOOLIP),
+        new QuickMakeSpell("Anti-Magic Potion"       , MIX_TOOLTIP+ANTI_MAGIC_POTION_RECIPE       , "BTNPotionOfClarity.blp"         , SPELL_QM_ANTI_MAGIC_POTION       , 0, 1, "A", SPECIAL_COLOR, "farsight"        , QM_TOOLIP),
+        new QuickMakeSpell("Anabolic Potion"         , MIX_TOOLTIP+ANABOLIC_POTION_RECIPE         , "BTNPotionRed.blp"               , SPELL_QM_ANABOLIC_POTION         , 1, 1, "S", SPECIAL_COLOR, "avatar"          , QM_TOOLIP),
+        new QuickMakeSpell("Oracle Potion"           , MIX_TOOLTIP+ORACLE_POTION_RECIPE           , "BTNCharm.blp"                   , SPELL_QM_ORACLE_POTION           , 2, 1, "D", SPECIAL_COLOR, "burrow"          , QM_TOOLIP),
+        new QuickMakeSpell("Spirit Of Wind"          , MIX_TOOLTIP+SPIRIT_WIND_RECIPE             , "BTNOrbOfLightning.blp"          , SPELL_QM_SPIRIT_WIND             , 0, 2, "W", SPECIAL_COLOR, "ward"            , QM_TOOLIP),
+        new QuickMakeSpell("Spirit Of Water"         , MIX_TOOLTIP+SPIRIT_WATER_RECIPE            , "BTNOrbOfFrost.blp"              , SPELL_QM_SPIRIT_WATER            , 1, 2, "X", SPECIAL_COLOR, "unsummon"        , QM_TOOLIP),
+        new QuickMakeSpell("Dark Rock"               , MIX_TOOLTIP+DARK_ROCK_RECIPE               , "BTNOrbOfVenom.blp"              , SPELL_QM_DARK_ROCK               , 2, 2, "C", SPECIAL_COLOR, "unroot"          , QM_TOOLIP),
+
+        //Special Herb Page
+        new QuickMakeSpell("Disease Potion"          , MIX_TOOLTIP+DISEASE_POTION_RECIPE          , "BTNPotionGreen.blp"             , SPELL_QM_DISEASE_POTION          , 0, 0, "Q", SPECIAL_COLOR, "frostarmoroff"   , QM_TOOLIP),
+        new QuickMakeSpell("Acid Bomb"               , MIX_TOOLTIP+ACID_BOMB_RECIPE               , "BTNAcidBomb.blp"                , SPELL_QM_ACID_BOMB               , 1, 0, "W", SPECIAL_COLOR, "ancestralspirit" , QM_TOOLIP),
+        new QuickMakeSpell("Bee Hive"                , MIX_TOOLTIP+BEE_HIVE_RECIPE                , "BTNCrate.blp"                   , SPELL_QM_BEE_HIVE                , 2, 0, "E", SPECIAL_COLOR, "wispharvest"     , QM_TOOLIP),
+        new QuickMakeSpell("Essences Of Bees"        , MIX_TOOLTIP+ESSENCE_BEES_RECIPE            , "BTNCrate.blp"                   , SPELL_QM_ESSENCE_BEES            , 3, 0, "R", SPECIAL_COLOR, "web"             , QM_TOOLIP),
+        new QuickMakeSpell("Gem Of Knowledge"        , MIX_TOOLTIP+GEM_OF_KNOWLEDGE_RECIPE        , "BTNEnchantedGemstone.blp"       , SPELL_QM_GEM_OF_KNOWLEDGE        , 0, 1, "A", SPECIAL_COLOR, "blink"           , QM_TOOLIP),
+        new QuickMakeSpell("Omnicure"                , MIX_TOOLTIP+OMNICURE_RECIPE                , "BTNMinorRejuvPotion.blp"        , SPELL_QM_OMNICURE                , 1, 1, "S", SPECIAL_COLOR, "cripple"         , QM_TOOLIP),
+        new QuickMakeSpell("Twin Islands Potion"     , MIX_TOOLTIP+TWIN_ISLANDS_POTION_RECIPE     , "BTNPotionGreenSmall.blp"        , SPELL_QM_TWIN_ISLANDS            , 2, 1, "D", SPECIAL_COLOR, "curseon"         , QM_TOOLIP),
+        new QuickMakeSpell("Nether Potion"           , MIX_TOOLTIP+NETHER_POTION_RECIPE           , "BTNPotionOfOmniscience.blp"     , SPELL_QM_NETHER_POTION           , 0, 2, "F", SPECIAL_COLOR, "cyclone"         , QM_TOOLIP),
+        new QuickMakeSpell("Drunks Potion"           , MIX_TOOLTIP+DRUNKS_POTION_RECIPE           , "BTNLesserInvulneralbility.blp"  , SPELL_QM_DRUNKS_POTION           , 2, 2, "Z", SPECIAL_COLOR, "doom"            , QM_TOOLIP),
+        new QuickMakeSpell("Fervor Potion"           , MIX_TOOLTIP+FERVER_POTION_RECIPE           , "BTNGreaterInvulneralbility.blp" , SPELL_QM_FERVOR_POTION           , 1, 2, "X", SPECIAL_COLOR, "curseof"         , QM_TOOLIP),
+        new QuickMakeSpell("Elemental Shield Potion" , MIX_TOOLTIP+ELEMENTAL_SHIELD_POTION_RECIPE , "BTNPotionOfRestoration.blp"     , SPELL_QM_ELEMENTAL_SHIELD_POTION , 2, 2, "C", SPECIAL_COLOR, "blizzard"        , QM_TOOLIP),
+
+        
+        //Armory
+        //new QuickMakeSpell("Stone Axe"   , TRANSMUTE_TOOLTIP+STONE_AXE_RECIPE   , "BTNOrcMeleeUpOne.blp"              , SPELL_QM_STONE_AXE   , 0, 0, "F", SPECIAL_COLOR, "dismount"    ),
+        new QuickMakeSpell("Spear"        , TRANSMUTE_TOOLTIP+SPEAR_RECIPE        , "BTNSteelRanged.blp"                , SPELL_QM_SPEAR        , 0, 0, "Q", SPECIAL_COLOR, "doom"             , QM_TOOLIP),
+        new QuickMakeSpell("Iron Spear"   , TRANSMUTE_TOOLTIP+IRON_SPEAR_RECIPE   , "BTNStrengthOfTheMoon.blp"          , SPELL_QM_IRON_SPEAR   , 1, 0, "W", SPECIAL_COLOR, "drain"            , QM_TOOLIP),
+        new QuickMakeSpell("Steel Spear"  , TRANSMUTE_TOOLTIP+STEEL_SPEAR_RECIPE  , "BTNThoriumRanged.blp"              , SPELL_QM_STEEL_SPEAR  , 2, 0, "E", SPECIAL_COLOR, "avatar"           , QM_TOOLIP),
+        new QuickMakeSpell("Dark Spear"   , TRANSMUTE_TOOLTIP+DARK_SPEAR_RECIPE   , "BTNArcaniteRanged.blp"             , SPELL_QM_DARK_SPEAR   , 3, 0, "R", SPECIAL_COLOR, "farsight"         , QM_TOOLIP),
+        new QuickMakeSpell("Iron Axe"     , TRANSMUTE_TOOLTIP+IRON_AXE_RECIPE     , "BTNOrcMeleeUpTwo.blp"              , SPELL_QM_IRON_AXE     , 0, 1, "A", SPECIAL_COLOR, "burrow"           , QM_TOOLIP),
+        new QuickMakeSpell("Steel Axe"    , TRANSMUTE_TOOLTIP+STEEL_AXE_RECIPE    , "BTNSpiritWalkerAdeptTraining.blp"  , SPELL_QM_STEEL_AXE    , 1, 1, "S", SPECIAL_COLOR, "ward"             , QM_TOOLIP),
+        new QuickMakeSpell("Mage Masher"  , TRANSMUTE_TOOLTIP+MAGE_MASHER_RECIPE  , "BTNSpiritWalkerMasterTraining.blp" , SPELL_QM_MAGE_MASHER  , 2, 1, "D", SPECIAL_COLOR, "unsummon"         , QM_TOOLIP),
+        new QuickMakeSpell("Iron Ingot"   , TRANSMUTE_TOOLTIP+IRON_INGOT_RECIPE   , "BTNIronIngot.blp"                  , SPELL_QM_IRON_INGOT   , 0, 2, "Z", SPECIAL_COLOR, "cyclone"          , QM_TOOLIP),
+        new QuickMakeSpell("Steel Ingot"  , TRANSMUTE_TOOLTIP+STEEL_INGOT_RECIPE  , "BTNSteelIngot.blp"                 , SPELL_QM_STEEL_INGOT  , 1, 2, "X", SPECIAL_COLOR, "wispharvest"      , QM_TOOLIP),
+       
+        //Second Page
+        new QuickMakeSpell("Shield"       , TRANSMUTE_TOOLTIP+SHIELD_RECIPE       , "BTNSteelArmor.blp"                 , SPELL_QM_SHIELD       , 0, 0, "Q", SPECIAL_COLOR, "unroot"           , QM_TOOLIP),
+        new QuickMakeSpell("Bone Shield"  , TRANSMUTE_TOOLTIP+BONE_SHIELD_RECIPE  , "BTNImprovedUnholyArmor.blp"        , SPELL_QM_BONE_SHIELD  , 1, 0, "W", SPECIAL_COLOR, "frostarmoroff"    , QM_TOOLIP),
+        new QuickMakeSpell("Iron Shield"  , TRANSMUTE_TOOLTIP+IRON_SHIELD_RECIPE  , "BTNHumanArmorUpOne.blp"            , SPELL_QM_IRON_SHIELD  , 2, 0, "E", SPECIAL_COLOR, "ancestralspirit"  , QM_TOOLIP),
+        new QuickMakeSpell("Steel Shield" , TRANSMUTE_TOOLTIP+STEEL_SHIELD_RECIPE , "BTNThoriumArmor.blp"               , SPELL_QM_STEEL_SHIELD , 3, 0, "R", SPECIAL_COLOR, "wispharvest"      , QM_TOOLIP),
+        new QuickMakeSpell("Ensnare Trap" , TRANSMUTE_TOOLTIP+ENSNARE_TRAP_RECIPE , "BTNCOP.blp"                        , SPELL_QM_ENSNARE_TRAP , 1, 2, "A", SPECIAL_COLOR, "curseof"          , QM_TOOLIP),
+
+        //Armor Page
+        new QuickMakeSpell("Bone Boots"   , TRANSMUTE_TOOLTIP+BONE_BOOTS_RECIPE   , "BTNBoneBoots.blp"                  , SPELL_QM_BONE_BOOTS   , 0, 0, "Q", SPECIAL_COLOR, "web"              , QM_TOOLIP),
+        new QuickMakeSpell("Iron Boots"   , TRANSMUTE_TOOLTIP+IRON_BOOTS_RECIPE   , "BTNSlippersOfAgility.blp"          , SPELL_QM_IRON_BOOTS   , 1, 0, "W", SPECIAL_COLOR, "blink"            , QM_TOOLIP),
+        new QuickMakeSpell("Steel Boots"  , TRANSMUTE_TOOLTIP+STEEL_BOOTS_RECIPE  , "BTNImprovedCreatureCarapace.blp"   , SPELL_QM_STEEL_BOOTS  , 2, 0, "E", SPECIAL_COLOR, "cripple"          , QM_TOOLIP),
+        new QuickMakeSpell("Bone Gloves"  , TRANSMUTE_TOOLTIP+BONE_GLOVES_RECIPE  , "BTNGauntletsOfOgrePower.blp"       , SPELL_QM_BONE_GLOVES  , 0, 1, "A", SPECIAL_COLOR, "curseon"          , QM_TOOLIP),
+        new QuickMakeSpell("Iron Gloves"  , TRANSMUTE_TOOLTIP+IRON_GLOVES_RECIPE  , "BTNSpellSteal.blp"                 , SPELL_QM_IRON_GLOVES  , 1, 1, "S", SPECIAL_COLOR, "acidbomb"         , QM_TOOLIP),
+        new QuickMakeSpell("Steel Gloves" , TRANSMUTE_TOOLTIP+STEEL_GLOVES_RECIPE , "BTNAdvancedUnholyStrength.blp"     , SPELL_QM_STEEL_GLOVES , 2, 1, "D", SPECIAL_COLOR, "acolyteharvest"   , QM_TOOLIP),
+        new QuickMakeSpell("Bone Coat"    , TRANSMUTE_TOOLTIP+BONE_COAT_RECIPE    , "BTNMantleOfIntelligence.blp"       , SPELL_QM_BONE_COAT    , 0, 2, "Z", SPECIAL_COLOR, "banish"           , QM_TOOLIP),
+        new QuickMakeSpell("Iron Coat"    , TRANSMUTE_TOOLTIP+IRON_COAT_RECIPE    , "BTNImprovedMoonArmor.blp"          , SPELL_QM_IRON_COAT    , 1, 2, "X", SPECIAL_COLOR, "creepanimatedead" , QM_TOOLIP),
+        new QuickMakeSpell("Steel Coat"   , TRANSMUTE_TOOLTIP+STEEL_COAT_RECIPE   , "BTNAdvancedMoonArmor.blp"          , SPELL_QM_STEEL_COAT   , 2, 2, "C", SPECIAL_COLOR, "faeriefire"       , QM_TOOLIP),
+
+
+        //Witch Doctors Hut
+        new QuickMakeSpell("Scroll Of Entangling Root" , TRANSMUTE_TOOLTIP+SCROLL_ROOT_RECIPE        , "BTNScrollOfRegenerationGreen.blp" , SPELL_QM_SCROLL_ROOT        , 0, 0, "Q", SPECIAL_COLOR, "creepanimatedead" , QM_TOOLIP),
+        new QuickMakeSpell("Scroll Of Stone Armor"     , TRANSMUTE_TOOLTIP+SCROLL_ARMOR_RECIPE       , "BTNScrollUber.blp"                , SPELL_QM_SCROLL_ARMOR       , 1, 0, "W", SPECIAL_COLOR, "faeriefire"       , QM_TOOLIP),
+        new QuickMakeSpell("Scroll Of Tsunami"         , TRANSMUTE_TOOLTIP+SCROLL_TSUNAMI_RECIPE     , "BTNSnazzyScrollPurple.blp"        , SPELL_QM_SCROLL_TSUNAMI     , 2, 0, "E", SPECIAL_COLOR, "cripple"          , QM_TOOLIP),
+        new QuickMakeSpell("Scroll Of Living Dead"     , TRANSMUTE_TOOLTIP+SCROLL_LIVING_DEAD_RECIPE , "BTNSnazzyScroll.blp"              , SPELL_QM_SCROLL_LIVING_DEAD , 3, 0, "R", SPECIAL_COLOR, "banish"           , QM_TOOLIP),
+        new QuickMakeSpell("Scroll Of Fireball"        , TRANSMUTE_TOOLTIP+SCROLL_FIREBALL_RECIPE    , "BTNScrollOfHealing.blp"           , SPELL_QM_SCROLL_FIREBALL    , 2, 2, "Q", SPECIAL_COLOR, "avatar"           , QM_TOOLIP),
+        new QuickMakeSpell("Scroll Of Cyclone"         , TRANSMUTE_TOOLTIP+SCROLL_CYCLONE_RECIPE     , "BTNBansheeMaster.blp"             , SPELL_QM_SCROLL_CYCLONE     , 2, 2, "W", SPECIAL_COLOR, "curseon"          , QM_TOOLIP),
+        new QuickMakeSpell("Scroll Of Swiftness"       , TRANSMUTE_TOOLTIP+SCROLL_SWIFTNESS_RECIPE   , "BTNScrollOfHaste.blp"             , SPELL_QM_SCROLL_SWIFTNESS   , 2, 2, "E", SPECIAL_COLOR, "curseoff"         , QM_TOOLIP),
+        new QuickMakeSpell("Cloak Of Flames"           , TRANSMUTE_TOOLTIP+CLOAK_FLAMES_RECIPE       , "BTNCloakOfInferno.blp"            , SPELL_QM_CLOAK_FLAMES       , 0, 1, "A", SPECIAL_COLOR, "summon"           , QM_TOOLIP),
+        new QuickMakeSpell("Cloak Of Frost"            , TRANSMUTE_TOOLTIP+CLOAK_FROST_RECIPE        , "BTNIceShard.blp"                  , SPELL_QM_CLOAK_FROST        , 1, 1, "S", SPECIAL_COLOR, "unsummon"         , QM_TOOLIP),
+        new QuickMakeSpell("Cloak Of Healing"          , TRANSMUTE_TOOLTIP+CLOAK_HEALING_RECIPE      , "BTNImbuedMasonry.blp"             , SPELL_QM_CLOAK_HEALING      , 2, 1, "D", SPECIAL_COLOR, "wispharvest"      , QM_TOOLIP),
+        new QuickMakeSpell("Cloak Of Mana"             , TRANSMUTE_TOOLTIP+CLOAK_MANA_RECIPE         , "BTNCloakOfFrost.blp"              , SPELL_QM_CLOAK_MANA         , 3, 1, "F", SPECIAL_COLOR, "windwalk"         , QM_TOOLIP),
+
+        //Second Page
+        new QuickMakeSpell("Living Clay"               , TRANSMUTE_TOOLTIP+LIVING_CLAY_RECIPE        , "BTNGreenSentryWard.blp"           , SPELL_QM_LIVING_CLAY        , 2, 2, "R", SPECIAL_COLOR, "blink"            , QM_TOOLIP),
+        new QuickMakeSpell("Magic Seed"                , TRANSMUTE_TOOLTIP+MAGIC_SEED_RECIPE         , "BTNRoot.blp"                      , SPELL_QM_MAGIC_SEED         , 2, 2, "A", SPECIAL_COLOR, "web"              , QM_TOOLIP),
+        new QuickMakeSpell("Spirit Ward"               , TRANSMUTE_TOOLTIP+SPIRIT_WARD_RECIPE        , "BTNAbsorbMagic.blp"               , SPELL_QM_SPIRIT_WARD        , 2, 2, "S", SPECIAL_COLOR, "acidbomb"         , QM_TOOLIP),
+        new QuickMakeSpell("Poison"                    , TRANSMUTE_TOOLTIP+POISON_RECIPE             , "BTNHealingSalve.blp"              , SPELL_QM_POISON             , 0, 2, "Z", SPECIAL_COLOR, "ward"             , QM_TOOLIP),
+        new QuickMakeSpell("Ultra Poison"              , TRANSMUTE_TOOLTIP+ULTRA_POISON_RECIPE       , "BTNVialFull.blp"                  , SPELL_QM_ULTRA_POISON       , 1, 2, "X", SPECIAL_COLOR, "cyclone"          , QM_TOOLIP),
+
+
+        //Workshop
+        new QuickMakeSpell("Battle Gloves"        , TRANSMUTE_TOOLTIP+BATTLE_GLOVES_RECIPE        , "BTNImprovedUnholyStrength.blp" , SPELL_QM_BATTLE_GLOVES        , 0, 0, "Q", SPECIAL_COLOR, "windwalk"    , QM_TOOLIP),
+        new QuickMakeSpell("Battle Armor"         , TRANSMUTE_TOOLTIP+BATTLE_ARMOR_RECIPE         , "BTNRobeOfTheMagi.blp"          , SPELL_QM_BATTLE_ARMOR         , 1, 0, "W", SPECIAL_COLOR, "blink"       , QM_TOOLIP),
+        new QuickMakeSpell("Battle Axe"           , TRANSMUTE_TOOLTIP+BATTLE_AXE_RECIPE           , "BTNOrcMeleeUpThree.blp"        , SPELL_QM_BATTLE_AXE           , 2, 0, "E", SPECIAL_COLOR, "acidbomb"    , QM_TOOLIP),
+        new QuickMakeSpell("Battle Shield"        , TRANSMUTE_TOOLTIP+BATTLE_SHIELD_RECIPE        , "BTNArcaniteArmor.blp"          , SPELL_QM_BATTLE_SHIELD        , 3, 0, "R", SPECIAL_COLOR, "bloodlust"   , QM_TOOLIP),
+        new QuickMakeSpell("Poison Spear"         , TRANSMUTE_TOOLTIP+POISON_SPEAR_RECIPE         , "BTNPoisonSpear.blp"            , SPELL_QM_POISON_SPEAR         , 0, 1, "A", SPECIAL_COLOR, "avatar"      , QM_TOOLIP),
+        new QuickMakeSpell("Refined Poison Spear" , TRANSMUTE_TOOLTIP+REFINED_POISON_SPEAR_RECIPE , "BTNEnvenomedSpear.blp"         , SPELL_QM_REFINED_POISON_SPEAR , 1, 1, "S", SPECIAL_COLOR, "wispharvest" , QM_TOOLIP),
+        new QuickMakeSpell("Ultra Poison Spear"   , TRANSMUTE_TOOLTIP+ULTRA_POISON_SPEAR_RECIPE   , "BTNUltraPoisonSpear.blp"       , SPELL_QM_ULTRA_POISON_SPEAR   , 2, 1, "D", SPECIAL_COLOR, "faeriefire"  , QM_TOOLIP),
+        new QuickMakeSpell("Nets"                 , TRANSMUTE_TOOLTIP+NETS_RECIPE                 , "BTNEnsnare.blp"                , SPELL_QM_NETS                 , 3, 1, "F", SPECIAL_COLOR, "web"         , QM_TOOLIP),
+        new QuickMakeSpell("Blow Gun"             , TRANSMUTE_TOOLTIP+BLOW_GUN_RECIPE             , "BTNAlleriaFlute.blp"           , SPELL_QM_BLOW_GUN             , 0, 2, "Z", SPECIAL_COLOR, "banish"      , QM_TOOLIP),
+        new QuickMakeSpell("Anabolic Boots"       , TRANSMUTE_TOOLTIP+ANABOLIC_BOOTS_RECIPE       , "BTNWirtsOtherLeg.blp"          , SPELL_QM_ANABOLIC_BOOTS       , 1, 2, "X", SPECIAL_COLOR, "cyclone"     , QM_TOOLIP),
+     
+        //Second Page
+        new QuickMakeSpell("Smoke Bomb"           , TRANSMUTE_TOOLTIP+SMOKE_BOMB_RECIPE           , "BTNOrbOfDarkness.blp"          , SPELL_QM_SMOKE_BOMB           , 0, 0, "Q", SPECIAL_COLOR, "burrow"      , QM_TOOLIP),
+        new QuickMakeSpell("Fire Bomb"            , TRANSMUTE_TOOLTIP+FIRE_BOMB_RECIPE            , "BTNOrbOfFire.blp"              , SPELL_QM_FIRE_BOMB            , 1, 0, "W", SPECIAL_COLOR, "berserk"     , QM_TOOLIP),
+        new QuickMakeSpell("EMP"                  , TRANSMUTE_TOOLTIP+EMP_RECIPE                  , "BTNWispSplode.blp"             , SPELL_QM_EMP                  , 2, 0, "E", SPECIAL_COLOR, "blizzard"    , QM_TOOLIP),
+        new QuickMakeSpell("Transport Ship"       , TRANSMUTE_TOOLTIP+TRANSPORT_SHIP_RECIPE       , "BTNNightElfTransport.blp"      , SPELL_QM_TRANSPORT_SHIP       , 3, 0, "R", SPECIAL_COLOR, "devour"      , QM_TOOLIP),
+        new QuickMakeSpell("Sonar Compass"        , TRANSMUTE_TOOLTIP+SONAR_COMPASS_RECIPE        , "BTNShip.blp"                   , SPELL_QM_SONAR_COMPASS        , 0, 1, "A", SPECIAL_COLOR, "charm"       , QM_TOOLIP),
+        new QuickMakeSpell("Dark Thistles"        , TRANSMUTE_TOOLTIP+DARK_THISTLES_RECIPE        , "BTNQuillSpray.blp"             , SPELL_QM_DARK_THISTLES        , 1, 2, "X", SPECIAL_COLOR, "detonate"    , QM_TOOLIP),
+
+
+        //Tannery
+        new QuickMakeSpell("Elk Skin"         , TRANSMUTE_TOOLTIP+ELK_SKIN_BOOTS_RECIPE          , "BTNElkHideBoots.blp"  , SPELL_QM_ELK_SKIN_BOOTS          , 0, 0, "Q", SPECIAL_COLOR, "burrow"   , QM_TOOLIP),
+        new QuickMakeSpell("Elk Skin"         , TRANSMUTE_TOOLTIP+ELK_SKIN_GLOVES_RECIPE         , "BTNGlove.blp"         , SPELL_QM_ELK_SKIN_GLOVES         , 1, 0, "W", SPECIAL_COLOR, "berserk"  , QM_TOOLIP),
+        new QuickMakeSpell("Elk Skin"         , TRANSMUTE_TOOLTIP+ELK_SKIN_COAT_RECIPE           , "BTNHoodOfCunning.blp" , SPELL_QM_ELK_SKIN_COAT           , 2, 0, "E", SPECIAL_COLOR, "devour"   , QM_TOOLIP),
+        new QuickMakeSpell("Jungle Wolf Skin" , TRANSMUTE_TOOLTIP+JUNGLE_WOLF_SKIN_BOOTS_RECIPE  , "BTNWolfHideBoots.blp" , SPELL_QM_JUNGLE_WOLF_SKIN_BOOTS  , 0, 1, "A", SPECIAL_COLOR, "charm"    , QM_TOOLIP),
+        new QuickMakeSpell("Jungle Wolf Skin" , TRANSMUTE_TOOLTIP+JUNGLE_WOLF_SKIN_GLOVES_RECIPE , "BTNGlove.blp"         , SPELL_QM_JUNGLE_WOLF_SKIN_GLOVES , 1, 1, "S", SPECIAL_COLOR, "detonate" , QM_TOOLIP),
+        new QuickMakeSpell("Jungle Wolf Skin" , TRANSMUTE_TOOLTIP+JUNGLE_WOLF_SKIN_COAT_RECIPE   , "BTNHoodOfCunning.blp" , SPELL_QM_JUNGLE_WOLF_SKIN_COAT   , 2, 1, "D", SPECIAL_COLOR, "cyclone"  , QM_TOOLIP),
+        new QuickMakeSpell("Jungle Bear Skin" , TRANSMUTE_TOOLTIP+JUNGLE_BEAR_SKIN_BOOTS_RECIPE  , "BTNBearHideBoots.blp" , SPELL_QM_JUNGLE_BEAR_SKIN_BOOTS  , 0, 2, "Z", SPECIAL_COLOR, "avatar"   , QM_TOOLIP),
+        new QuickMakeSpell("Jungle Bear Skin" , TRANSMUTE_TOOLTIP+JUNGLE_BEAR_SKIN_GLOVES_RECIPE , "BTNGlove.blp"         , SPELL_QM_JUNGLE_BEAR_SKIN_GLOVES , 1, 2, "X", SPECIAL_COLOR, "cripple"  , QM_TOOLIP),
+        new QuickMakeSpell("Jungle Bear Skin" , TRANSMUTE_TOOLTIP+JUNGLE_BEAR_SKIN_COAT_RECIPE   , "BTNHoodOfCunning.blp" , SPELL_QM_JUNGLE_BEAR_SKIN_COAT   , 2, 2, "C", SPECIAL_COLOR, "blink"    , QM_TOOLIP),
+
+        //Those are placeholder for tannery, just to fill the interface and make it look cleaner
+        new QuickMakeSpell("Tips on Stat" , "" , "BTNSelectHeroOn.blp" , PLACEHOLDER_STAT_TOOLTIP_SPELL , 3, 0, "R", SPECIAL_COLOR, "" , TANNERY_PLACEHOLDER_STAT_TOOLTIP),
+        new QuickMakeSpell("Tips on Hide" , "" , "BTNSelectHeroOn.blp" , PLACEHOLDER_HIDE_TOOLTIP_SPELL , 3, 1, "F", SPECIAL_COLOR, "" , TANNERY_PLACEHOLDER_HIDE_USAGE_TOOLTIP),
+        
+        //Buildings
+        //First three aren't added to master crafter because it's useless, button position set to 0 since they're in a spellbook
+        new QuickMakeSpell("Camp Fire Kit"         , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+CAMP_FIRE_KIT_RECIPE         , "BTNFire.blp"                 , SPELL_QM_CAMP_FIRE_KIT         , 0, 0, "Q", SPECIAL_COLOR, "detonate"  , QM_BUILD_TOOLIP),
+        new QuickMakeSpell("Tent Kit"              , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+TENT_KIT_RECIPE              , "BTNGenericCreepBuilding.blp" , SPELL_QM_TENT_KIT              , 0, 0, "W", SPECIAL_COLOR, "blizzard"  , QM_BUILD_TOOLIP),
+        new QuickMakeSpell("Troll Hut Kit"         , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+TROLL_HUT_KIT_RECIPE         , "BTNSpiritLodge.blp"          , SPELL_QM_TROLL_HUT_KIT         , 0, 0, "E", SPECIAL_COLOR, "berserk"   , QM_BUILD_TOOLIP),
+
+        //Following are also used in master crafter so they got proper button positioning
+        new QuickMakeSpell("Mud Hut Kit"           , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+MUD_HUT_KIT_RECIPE           , "BTNGoldMine.blp"             , SPELL_QM_MUD_HUT_KIT           , 3, 0, "R", SPECIAL_COLOR, "avatar"    , QM_BUILD_TOOLIP),
+        new QuickMakeSpell("Armory Kit"            , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+ARMORY_KIT_RECIPE            , "BTNForge.blp"                , SPELL_QM_ARMORY_KIT            , 0, 1, "A", SPECIAL_COLOR, "purge"     , QM_BUILD_TOOLIP),
+        new QuickMakeSpell("Workshop Kit"          , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+WORKSHOP_KIT_RECIPE          , "BTNTrollBurrow.blp"          , SPELL_QM_WORKSHOP_KIT          , 1, 1, "S", SPECIAL_COLOR, "innerfire" , QM_BUILD_TOOLIP),
+        new QuickMakeSpell("Mixing Pot Kit"        , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+MIXING_POT_KIT_RECIPE        , "BTNSacrificialPit.blp"       , SPELL_QM_MIXING_POT_KIT        , 2, 1, "D", SPECIAL_COLOR, "bloodlust" , QM_BUILD_TOOLIP),
+        new QuickMakeSpell("Witch Doctors Hut Kit" , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+WITCH_DOCTORS_HUT_KIT_RECIPE , "BTNVoodooLounge.blp"         , SPELL_QM_WITCH_DOCTORS_HUT_KIT , 3, 1, "F", SPECIAL_COLOR, "web"       , QM_BUILD_TOOLIP),
+        new QuickMakeSpell("Tannery Kit"           , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+TANNERY_KIT_RECIPE           , "BTNPigFarm.blp"              , SPELL_QM_TANNERY_KIT           , 0, 2, "Z", SPECIAL_COLOR, "blink"     , QM_BUILD_TOOLIP),
+        new QuickMakeSpell("Omnitower Kit"         , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+OMNI_TOWER_KIT_RECIPE        , "BTNOrcTower.blp"             , SPELL_QM_OMNI_TOWER_KIT        , 1, 2, "X", SPECIAL_COLOR, "banish"    , QM_BUILD_TOOLIP),
+        new QuickMakeSpell("Teleport Beacon Kit"   , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+TELEPORT_BEACON_KIT_RECIPE   , "BTNEnergyTower.blp"          , SPELL_QM_TELEPORT_BEACON_KIT   , 2, 2, "C", SPECIAL_COLOR, "devour"    , QM_BUILD_TOOLIP),
+
+        // No places for those, put position and hotkey value for master crafter, except smoke house
+        new QuickMakeSpell("Smoke House Kit"       , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+SMOKE_HOUSE_KIT_RECIPE       , "BTNRockTower.blp"            , SPELL_QM_SMOKE_HOUSE_KIT       , 0, 0, "V", SPECIAL_COLOR, "cripple"   , QM_BUILD_TOOLIP),
+        new QuickMakeSpell("Storage Hut Kit"       , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+STORAGE_HUT_KIT_RECIPE       , "BTNElvenFarm.blp"            , SPELL_QM_STORAGE_HUT_KIT       , 1, 0, "W", SPECIAL_COLOR, "cyclone"   , QM_BUILD_TOOLIP),
+        new QuickMakeSpell("Hatchery Kit"          , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+HATCHERY_KIT_RECIPE          , "BTNSnowOwl.blp"              , SPELL_QM_HATCHERY_KIT          , 2, 0, "E", SPECIAL_COLOR, "acidbomb"  , QM_BUILD_TOOLIP)
+
+    )
+
+//Additional pages created here
+function getQuickMakeSpellBookSpells() returns LinkedList<QuickMakeSpellBook>
+    return asList(
+        new QuickMakeSpellBook(SPELL_MIXING_POT_SPELLBOOK_ID, "Special Herb Quick Make Page"          , "G", MIXING_SPELLBOOK_TOOLTIP  , MIXING_POT_SPELLBOOK, 3, 1 , "spellbook"),
+        new QuickMakeSpellBook(SPELL_ARMOR_SPELLBOOK_ID     , "Armor Quick Make Page"                 , "N", ARMOR_SPELLBOOK_TOOLTIP   , ARMOR_SPELLBOOK     , 3, 1 , "blink"    ),
+        new QuickMakeSpellBook(SPELL_ARMORY_SPELLBOOK_ID    , "More Armory Quick Make Page"           , "G", ARMORY_SPELLBOOK_TOOLTIP  , ARMORY_SPELLBOOK    , 2, 2 , "farsight" ),
+        new QuickMakeSpellBook(SPELL_WDH_SPELLBOOK_ID       , "More Witch Doctors Hut Quick Make Page", "G", WDH_SPELLBOOK_TOOLTIP     , WDH_SPELLBOOK       , 2, 2 , "farsight" ),
+        new QuickMakeSpellBook(SPELL_WORKSHOP_SPELLBOOK_ID  , "More Workshop Quick Make Page"         , "G", WORKSHOP_SPELLBOOK_TOOLTIP, WORKSHOP_SPELLBOOK  , 2, 2 , "farsight" ),
+
+        new QuickMakeSpellBook(SPELL_BUILDING_CRAFT_SPELLBOOK_ID  , "Buildings Craft Recipe"         , "Q", BUILDING_CRAFT_TOOLTIP, BUILDING_CRAFT_SPELLBOOK_  , 0, 1 , "farsight", "BTNBasicStruct.blp")
+    )
+
+@compiletime
+function buildSpells()
+    getQuickMakeSpells().forEach(spell -> spell.buildSpell())
+    getQuickMakeSpellBookSpells().forEach(spell -> spell.buildSpellBook())

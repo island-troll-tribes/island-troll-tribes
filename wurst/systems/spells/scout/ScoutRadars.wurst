@@ -58,7 +58,7 @@ public class RadarSpell
     let btnPositionY = 0
     let baseOrderId = "avatar"
     let cooldown = COOLDOWN
-    let manaCost = 0
+    let manaCost = 10
 
     construct(string unitToPing, string toolTip, string iconPath, int id, int btnX, int btnY, string hotkey, string baseOrderId, int manaCost, string color)
         this.name = GENERAL_COLOR+"[" + SPECIAL_COLOR + hotkey + GENERAL_COLOR + "] - " + this.name + color + unitToPing + "|r"
@@ -132,13 +132,13 @@ function onCast(LinkedList<int> unitId, real red, real green, real blue)
 
     forUnitsInRange(caster.getPos(), range) u ->
         if u.getOwner().isEnemyOf(caster.getOwner())
-            
+
             //Unsub scout Radar
             if unitId.has(UNSUB_RADAR_PING)
                 if u.getTypeId() == UNIT_ELK
                     PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 5, bj_MINIMAPPINGSTYLE_SIMPLE, 0, 255, 0)
                 else if DONT_PING_THOSE_LIST.has(u.getTypeId()) == false
-                    PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 5, bj_MINIMAPPINGSTYLE_SIMPLE, 255, 0, 0)             
+                    PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 5, bj_MINIMAPPINGSTYLE_SIMPLE, 255, 0, 0)
             else if unitId.has(u.getTypeId())
                 PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 5, bj_MINIMAPPINGSTYLE_SIMPLE, red, green, blue)
             else if unitId.has(TROLLS) and u.isTroll()
@@ -146,15 +146,15 @@ function onCast(LinkedList<int> unitId, real red, real green, real blue)
 
         //Will ping tradeship
         else if unitId.has(u.getTypeId()) and TRADESHIP_LIST.has(u.getTypeId())
-            PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 5, bj_MINIMAPPINGSTYLE_SIMPLE, red, green, blue) 
+            PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 5, bj_MINIMAPPINGSTYLE_SIMPLE, red, green, blue)
 
-            
+
 
 @compiletime
 function buildSpells()
     getRadarSpells().forEach(spell -> spell.buildSpell())
 
-@compiletime function createSpellBook() 
+@compiletime function createSpellBook()
     new AbilityDefinitionSpellBook(SPELL_ADVANCED_RADAR_SPELLBOOK_ID)
         ..setButtonPositionNormalX(2)
         ..setButtonPositionNormalY(1)
@@ -167,13 +167,13 @@ function buildSpells()
         ..setTargetAttachmentPoint1("")
         ..setCasterAttachmentPoint1("")
         ..presetBaseOrderID(lvl -> "stormbolt")
-        ..setHotkeyNormal("E")
+        ..setHotkeyNormal("R")
         ..setName("Advanced Radar")
         ..presetMaximumSpells(lvl -> 11)
         ..presetMinimumSpells(lvl -> 11)
         ..presetSpellList(lvl -> ADVANCED_RADAR_SPELLBOOK)
         ..presetCooldown(lvl -> COOLDOWN)
-        ..presetTooltipNormal(lvl -> makeToolTipNorm("E", "Advanced Radar"))
+        ..presetTooltipNormal(lvl -> makeToolTipNorm("R", "Advanced Radar"))
         ..presetTooltipNormalExtended(lvl -> "An improved better radar to locate unit around him with high precision")
         ..presetSharedSpellCooldown(lvl -> false)
 

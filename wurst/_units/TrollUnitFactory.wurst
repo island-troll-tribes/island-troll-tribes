@@ -4,22 +4,13 @@ import UnitObjEditing
 import UnitIds
 import Lodash
 import Soundsets
-
-public class SuperSubTroll extends TrollUnit
-    construct(int id, int baseDamage, int properNameUsed, int speedBase, real cooldownTime, real scalingValue,
-            string name, string toolTipExtended, string model, string icon, string hotkey, string properName,
-            string heroAbilities, string normalAbilities, string soundSet, Pair<int, int> buttonPos, Pair<int, int> sightRadius)
-
-        super(id, baseDamage, properNameUsed, speedBase, cooldownTime, scalingValue, name, toolTipExtended, model, icon,
-            hotkey, properName, heroAbilities, normalAbilities, soundSet, buttonPos, sightRadius)
-        this.baseHpMana = 210
-
-public class TrollUnit
+public abstract class TrollUnit
     int id = 0
     int baseDamage = 10
     int properNameUsed = 3
     int speedBase = 300
     int baseHpMana = 192
+    int startingStats = 1
     real cooldownTime = 2
     real scalingValue = 1.0
     string name = "Troll"
@@ -88,11 +79,11 @@ public class TrollUnit
         ..setButtonPositionY(buttonPos.b)
         ..setScalingValue(scalingValue)
         ..setAllowCustomTeamColor(true)
-        ..setStartingStrength(1)
+        ..setStartingStrength(startingStats)
         ..setStrengthPerLevel(1.00)
-        ..setStartingAgility(1)
+        ..setStartingAgility(startingStats)
         ..setAgilityPerLevel(1.0)
-        ..setStartingIntelligence(1)
+        ..setStartingIntelligence(startingStats)
         ..setIntelligencePerLevel(1.00)
         ..setManaMaximum(baseHpMana)
         ..setManaRegeneration(0)
@@ -115,3 +106,34 @@ public class TrollUnit
         ..setProperNames(properName)
         ..setProperNamesUsed(properNameUsed)
         ..setHotkey(hotkey)
+
+// This isn't pretty to look at, might need to give it more thought
+public class SuperSubTrollUnit extends TrollUnit
+    construct(int id, int baseDamage, int properNameUsed, int speedBase, real cooldownTime, real scalingValue,
+            string name, string toolTipExtended, string model, string icon, string hotkey, string properName,
+            string heroAbilities, string normalAbilities, string soundSet, Pair<int, int> buttonPos, Pair<int, int> sightRadius)
+
+        super(id, baseDamage, properNameUsed, speedBase, cooldownTime, scalingValue, name, toolTipExtended, model, icon,
+            hotkey, properName, heroAbilities, normalAbilities, soundSet, buttonPos, sightRadius)
+        this.baseHpMana = 210
+        this.startingStats = 9
+
+public class SubTrollUnit extends TrollUnit
+    construct(int id, int baseDamage, int properNameUsed, int speedBase, real cooldownTime, real scalingValue,
+            string name, string toolTipExtended, string model, string icon, string hotkey, string properName,
+            string heroAbilities, string normalAbilities, string soundSet, Pair<int, int> buttonPos, Pair<int, int> sightRadius)
+
+        super(id, baseDamage, properNameUsed, speedBase, cooldownTime, scalingValue, name, toolTipExtended, model, icon,
+            hotkey, properName, heroAbilities, normalAbilities, soundSet, buttonPos, sightRadius)
+        this.baseHpMana = 192
+        this.startingStats = 6
+
+public class UnSubTrollUnit extends TrollUnit
+    construct(int id, int baseDamage, int properNameUsed, int speedBase, real cooldownTime, real scalingValue,
+            string name, string toolTipExtended, string model, string icon, string hotkey, string properName,
+            string heroAbilities, string normalAbilities, string soundSet, Pair<int, int> buttonPos, Pair<int, int> sightRadius)
+
+        super(id, baseDamage, properNameUsed, speedBase, cooldownTime, scalingValue, name, toolTipExtended, model, icon,
+            hotkey, properName, heroAbilities, normalAbilities, soundSet, buttonPos, sightRadius)
+        this.baseHpMana = 192
+        this.startingStats = 1

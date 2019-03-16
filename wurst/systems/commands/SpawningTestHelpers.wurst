@@ -8,25 +8,28 @@ import GameConfig
 import IDUtils
 import LegacyColors
 import LinkedList
-import ID
-import Lodash
+import IdListConstant
 import HashMap
 
 let unitSpawnList = new HashMap<string, LinkedList<int>>()
-..put("hunter"     , asList(UNIT_HUNTER      ,UNIT_WARRIOR          ,UNIT_TRACKER       ,UNIT_JUGGERNAUT              ))
-..put("mage"       , asList(UNIT_MAGE        ,UNIT_ELEMENTALIST_NEW ,UNIT_HYPNOTIST     ,UNIT_DEMENTIA_MASTER         ))
-..put("priest"     , asList(UNIT_PRIEST      ,UNIT_BOOSTER          ,UNIT_MASTER_HEALER ,UNIT_SAGE                    ))
-..put("beastMaster", asList(UNIT_BEAST_MASTER,UNIT_SHAPESHIFTER_WOLF,UNIT_CHICKEN_FORM  ,UNIT_ULTIMATE_FORM           ))
-..put("thief"      , asList(UNIT_THIEF       ,UNIT_ESCAPE_ARTIST    ,UNIT_CONTORTIONIST ,UNIT_ASSASSIN                ))
-..put("scout"      , asList(UNIT_SCOUT       ,UNIT_OBSERVER         ,UNIT_TRAPPER       ,UNIT_RADAR_SCOUT    ,UNIT_SPY))
-..put("gatherer"   , asList(UNIT_GATHERER    ,UNIT_HERB_MASTER      ,UNIT_RADAR_GATHERER,UNIT_OMNIGATHERER            ))
-..put("buildings"  , asList(UNIT_ARMORY      ,UNIT_WORKSHOP         ,UNIT_POT           ,UNIT_TANNERY    ,UNIT_WITCH_DOCTORS_HUT, UNIT_MUD_HUT, UNIT_TROLL_HUT))
+..put("trolls"      , TROLL_UNIT_LIST)
+..put("mage"        , MAGE_CLASS_LIST)
+..put("thief"       , THIEF_CLASS_LIST)
+..put("scout"       , SCOUT_CLASS_LIST)
+..put("hunter"      , HUNTER_CLASS_LIST)
+..put("priest"      , PRIEST_CLASS_LIST)
+..put("gatherer"    , GATHERER_CLASS_LIST)
+..put("sTrolls"     , SUB_TROLL_UNIT_LIST)
+..put("uTrolls"     , UNSUB_TROLL_UNIT_LIST)
+..put("beastMaster" , BEASTMASTER_CLASS_LIST)
+..put("buildings"   , CRAFTING_BUILDING_LIST)
+..put("ssTrolls"    , SUPERSUB_TROLL_UNIT_LIST)
 
 let itemSpawnList = new HashMap<string, LinkedList<int>>()
-..put("herbs"           , asList(ITEM_BLUE_HERB     , ITEM_YELLOW_HERB, ITEM_ORANGE_HERB    , ITEM_PURPLE_HERB, ITEM_RIVER_ROOT, ITEM_RIVER_STEM, ITEM_BUTSU                     ))
-..put("armors"          , asList(ITEM_ELK_SKIN_BOOTS, ITEM_BONE_BOOTS , ITEM_ELK_SKIN_GLOVES, ITEM_BONE_GLOVES, ITEM_ELK_SKIN_COAT, ITEM_BONE_COAT, ITEM_SHIELD, ITEM_BONE_SHIELD))
-..put("materials"       , asList(ITEM_BONE          , ITEM_TINDER     , ITEM_FLINT          , ITEM_STONE      , ITEM_MANA_CRYSTAL, ITEM_MAGIC                                    ))
-..put("craftedMaterials", asList(ITEM_IRON_INGOT    , ITEM_STEEL_INGOT, ITEM_SPIRIT_WATER   , ITEM_SPIRIT_WIND))
+..put("herbs"           , HERB_LIST)
+..put("armors"          , ARMOR_LIST)
+..put("materials"       , MATERIAL_LIST)
+..put("craftedMaterials", CRAFTED_MATERIAL_LIST)
 
 let HELP_MESSAGE = (
     GOLD_COLOR + "Create units and items\n|r" +
@@ -35,9 +38,14 @@ let HELP_MESSAGE = (
     "\ncount the number of spawn\nplayer the player which own the unit, player must be > 0\n" +
     "pid are listed in wurst/_legacy_/lib/IDUtils.wurst\n\n|r"+
     GOLD_COLOR + "Example : \"-create UNIT_PANTHER 2 1\" will spawn 2 panther for player 1\n\n|r"+
+    GOLD_COLOR+"Can also use -spawn to create multiple items/units at once\n|r"
+)
+
+let SPAWN_HELP_MESSAGE = ( 
     GOLD_COLOR+"Spawn multiple units and items at once\n|r"+
-    GENERAL_COLOR +"-spawn herbs/materials/craftedmaterials/buildings [count]\n"+
-    "To spawn herbs/materials/all building in order to test crafting"
+    GENERAL_COLOR +"-spawn herbs/materials/craftedmaterials/buildings/trollclassname/uTrolls/sTrolls/ssTrolls/trolls [count]\n"+
+    "To spawn herbs/materials/all building in order to test crafting\n"+
+    "Example : "+SPECIAL_COLOR+"-spawn hunter\n|r"+GENERAL_COLOR+"Will spawn all hunter's class unit"
 )
 
 init
@@ -89,7 +97,7 @@ init
                     count = args.get(2).toInt()
 
                 if unitList == null and itemList == null
-                    print(HELP_MESSAGE)
+                    print(SPAWN_HELP_MESSAGE)
                 else
                     let toSpawn = (unitList != null) ? unitList : itemList
                     pos.x += 100

@@ -22,7 +22,7 @@ constant let ARMORY_SPELLBOOK = commaList(SPELL_QM_SHIELD, SPELL_QM_BONE_SHIELD,
 
 constant let WDH_SPELLBOOK = commaList(SPELL_QM_SCROLL_FIREBALL, SPELL_QM_SCROLL_CYCLONE, SPELL_QM_SCROLL_SWIFTNESS, SPELL_QM_LIVING_CLAY, SPELL_QM_MAGIC_SEED, SPELL_QM_SPIRIT_WARD)
 
-constant let WORKSHOP_SPELLBOOK = commaList(SPELL_QM_SMOKE_BOMB,SPELL_QM_FIRE_BOMB,SPELL_QM_EMP,SPELL_QM_TRANSPORT_SHIP, SPELL_QM_SONAR_COMPASS,SPELL_QM_DARK_THISTLES)                             
+constant let WORKSHOP_SPELLBOOK = commaList(SPELL_QM_SMOKE_BOMB,SPELL_QM_FIRE_BOMB,SPELL_QM_EMP,SPELL_QM_TRANSPORT_SHIP, SPELL_QM_SONAR_COMPASS,SPELL_QM_DARK_THISTLES)
 
 constant let BUILDING_CRAFT_SPELLBOOK_= commaList(SPELL_QM_CAMP_FIRE_KIT, SPELL_QM_TENT_KIT, SPELL_QM_TROLL_HUT_KIT, SPELL_QM_MUD_HUT_KIT,
                                                   SPELL_QM_ARMORY_KIT, SPELL_QM_WORKSHOP_KIT, SPELL_QM_MIXING_POT_KIT, SPELL_QM_WITCH_DOCTORS_HUT_KIT,
@@ -32,28 +32,30 @@ public class QuickMakeSpell
     let hotkey = ""
     let name = "Quick make "
     let toolTip = ""
+    let toolTipExt = ""
     let iconPath = "ReplaceableTextures\\CommandButtons\\"
     let id = '0'
     let btnPositionX = 0
     let btnPositionY = 0
     let baseOrderId = "avatar"
 
-    construct(string itemName, string toolTip, string iconPath, int id, int btnX, int btnY, string hotkey, string color, string baseOrderId, string toolTipEnd)
-        this.name = GENERAL_COLOR+"[" + color + hotkey + GENERAL_COLOR + "] - " + this.name + itemName + "|r"
-        this.toolTip += toolTip + "|r\n\n" + COLOR_LIGHT_BLUE + toolTipEnd
+    construct(string itemName, string toolTipExt, string iconPath, int id, int btnX, int btnY, string hotkey, string color, string baseOrderId, string toolTipEnd)
+        this.name = this.name + itemName
+        this.toolTip = GENERAL_COLOR+"[" + color + hotkey + GENERAL_COLOR + "] - " + this.name + "|r"
+        this.toolTipExt += toolTipExt + "|r\n\n" + COLOR_LIGHT_BLUE + toolTipEnd
         this.iconPath += iconPath
         this.id = id
         this.btnPositionX = btnX
         this.btnPositionY = btnY
         this.baseOrderId = baseOrderId
         this.hotkey = hotkey
-    
+
     function buildSpell()
         new AbilityDefinitionIllidanChannel(id)
         ..setName(name)
         ..setIconNormal(iconPath)
-        ..setTooltipNormal(1, name)
-        ..setTooltipNormalExtended(1, toolTip)
+        ..setTooltipNormal(1, toolTip)
+        ..setTooltipNormalExtended(1, toolTipExt)
         ..setCooldown(1, COOLDOWN)
         ..setLevels(1)
         ..setHotkeyNormal(hotkey)
@@ -157,7 +159,7 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
         new QuickMakeSpell("Fervor Potion"           , MIX_TOOLTIP+FERVER_POTION_RECIPE           , "BTNGreaterInvulneralbility.blp" , SPELL_QM_FERVOR_POTION           , 1, 2, "X", SPECIAL_COLOR, "curseof"         , QM_TOOLIP),
         new QuickMakeSpell("Elemental Shield Potion" , MIX_TOOLTIP+ELEMENTAL_SHIELD_POTION_RECIPE , "BTNPotionOfRestoration.blp"     , SPELL_QM_ELEMENTAL_SHIELD_POTION , 2, 2, "C", SPECIAL_COLOR, "blizzard"        , QM_TOOLIP),
 
-        
+
         //Armory
         //new QuickMakeSpell("Stone Axe"   , TRANSMUTE_TOOLTIP+STONE_AXE_RECIPE   , "BTNOrcMeleeUpOne.blp"              , SPELL_QM_STONE_AXE   , 0, 0, "F", SPECIAL_COLOR, "dismount"    ),
         new QuickMakeSpell("Spear"        , TRANSMUTE_TOOLTIP+SPEAR_RECIPE        , "BTNSteelRanged.blp"                , SPELL_QM_SPEAR        , 0, 0, "Q", SPECIAL_COLOR, "doom"             , QM_TOOLIP),
@@ -169,7 +171,7 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
         new QuickMakeSpell("Mage Masher"  , TRANSMUTE_TOOLTIP+MAGE_MASHER_RECIPE  , "BTNSpiritWalkerMasterTraining.blp" , SPELL_QM_MAGE_MASHER  , 2, 1, "D", SPECIAL_COLOR, "unsummon"         , QM_TOOLIP),
         new QuickMakeSpell("Iron Ingot"   , TRANSMUTE_TOOLTIP+IRON_INGOT_RECIPE   , "BTNIronIngot.blp"                  , SPELL_QM_IRON_INGOT   , 0, 2, "Z", SPECIAL_COLOR, "cyclone"          , QM_TOOLIP),
         new QuickMakeSpell("Steel Ingot"  , TRANSMUTE_TOOLTIP+STEEL_INGOT_RECIPE  , "BTNSteelIngot.blp"                 , SPELL_QM_STEEL_INGOT  , 1, 2, "X", SPECIAL_COLOR, "wispharvest"      , QM_TOOLIP),
-       
+
         //Second Page
         new QuickMakeSpell("Shield"       , TRANSMUTE_TOOLTIP+SHIELD_RECIPE       , "BTNSteelArmor.blp"                 , SPELL_QM_SHIELD       , 0, 0, "Q", SPECIAL_COLOR, "unroot"           , QM_TOOLIP),
         new QuickMakeSpell("Bone Shield"  , TRANSMUTE_TOOLTIP+BONE_SHIELD_RECIPE  , "BTNImprovedUnholyArmor.blp"        , SPELL_QM_BONE_SHIELD  , 1, 0, "W", SPECIAL_COLOR, "frostarmoroff"    , QM_TOOLIP),
@@ -221,7 +223,7 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
         new QuickMakeSpell("Nets"                 , TRANSMUTE_TOOLTIP+NETS_RECIPE                 , "BTNEnsnare.blp"                , SPELL_QM_NETS                 , 3, 1, "F", SPECIAL_COLOR, "web"         , QM_TOOLIP),
         new QuickMakeSpell("Blow Gun"             , TRANSMUTE_TOOLTIP+BLOW_GUN_RECIPE             , "BTNAlleriaFlute.blp"           , SPELL_QM_BLOW_GUN             , 0, 2, "Z", SPECIAL_COLOR, "banish"      , QM_TOOLIP),
         new QuickMakeSpell("Anabolic Boots"       , TRANSMUTE_TOOLTIP+ANABOLIC_BOOTS_RECIPE       , "BTNWirtsOtherLeg.blp"          , SPELL_QM_ANABOLIC_BOOTS       , 1, 2, "X", SPECIAL_COLOR, "cyclone"     , QM_TOOLIP),
-     
+
         //Second Page
         new QuickMakeSpell("Smoke Bomb"           , TRANSMUTE_TOOLTIP+SMOKE_BOMB_RECIPE           , "BTNOrbOfDarkness.blp"          , SPELL_QM_SMOKE_BOMB           , 0, 0, "Q", SPECIAL_COLOR, "burrow"      , QM_TOOLIP),
         new QuickMakeSpell("Fire Bomb"            , TRANSMUTE_TOOLTIP+FIRE_BOMB_RECIPE            , "BTNOrbOfFire.blp"              , SPELL_QM_FIRE_BOMB            , 1, 0, "W", SPECIAL_COLOR, "berserk"     , QM_TOOLIP),
@@ -245,7 +247,7 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
         //Those are placeholder for tannery, just to fill the interface and make it look cleaner
         new QuickMakeSpell("Tips on Stat" , "" , "BTNSelectHeroOn.blp" , PLACEHOLDER_STAT_TOOLTIP_SPELL , 3, 0, "R", SPECIAL_COLOR, "" , TANNERY_PLACEHOLDER_STAT_TOOLTIP),
         new QuickMakeSpell("Tips on Hide" , "" , "BTNSelectHeroOn.blp" , PLACEHOLDER_HIDE_TOOLTIP_SPELL , 3, 1, "F", SPECIAL_COLOR, "" , TANNERY_PLACEHOLDER_HIDE_USAGE_TOOLTIP),
-        
+
         //Buildings
         //First three aren't added to master crafter because it's useless, button position set to 0 since they're in a spellbook
         new QuickMakeSpell("Camp Fire Kit"         , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+CAMP_FIRE_KIT_RECIPE         , "BTNFire.blp"                 , SPELL_QM_CAMP_FIRE_KIT         , 0, 0, "Q", SPECIAL_COLOR, "detonate"  , QM_BUILD_TOOLIP),

@@ -3,7 +3,6 @@ package NewTrollUpgrade
 import ID
 import HashMap
 import RegisterEvents
-import PlayerExtensions
 
 public constant trollUpgradeMap = new HashMap<int, int>()
 ..put(SPELL_WARRIOR         , UNIT_WARRIOR)
@@ -41,7 +40,6 @@ function replaceUnit(int newUnitId, unit oldUnit) returns unit
     print(oldUnit.getMana().toString()+" "+oldUnit.getHP().toString())
     newUnit.setMana(oldUnit.getMana())
     newUnit.setHP(oldUnit.getHP())
-
     for items in oldUnit.inventory()
         newUnit.addItemById(items.getTypeId())
     return newUnit
@@ -70,15 +68,14 @@ function upgradeUnit(int newUnitId, unit oldUnit)
     oldUnit.getOwner()
     RemoveUnit(oldUnit)
 
-function upgadeAction()
+function upgradeAction()
     let spell = GetLearnedSkill()
     let oldUnit = GetLearningUnit()
     var _newUnitId = 0
 
     _newUnitId = trollUpgradeMap.get(spell)
     if _newUnitId != 0
-        print("WELCOME TO OUR VILLAGE")
         upgradeUnit(_newUnitId, oldUnit)
 
 init
-    registerPlayerUnitEvent(EVENT_PLAYER_HERO_SKILL, () -> upgadeAction())
+    registerPlayerUnitEvent(EVENT_PLAYER_HERO_SKILL, () -> upgradeAction())

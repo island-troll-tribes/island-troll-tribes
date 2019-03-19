@@ -1,0 +1,84 @@
+package NewTrollUpgrade
+
+import ID
+import HashMap
+import RegisterEvents
+import PlayerExtensions
+
+public constant trollUpgradeMap = new HashMap<int, int>()
+..put(SPELL_WARRIOR         , UNIT_WARRIOR)
+..put(SPELL_TRACKER         , UNIT_TRACKER)
+..put(SPELL_JUGGERNAUT      , UNIT_JUGGERNAUT)
+..put(SPELL_ELEMENTALIST    , UNIT_ELEMENTALIST)
+..put(SPELL_HYPNOTIST       , UNIT_HYPNOTIST)
+..put(SPELL_DEMENTIA_MASTER , UNIT_DEMENTIA_MASTER)
+..put(SPELL_BOOSTER         , UNIT_BOOSTER)
+..put(SPELL_MASTER_HEALER   , UNIT_MASTER_HEALER)
+..put(SPELL_SAGE            , UNIT_SAGE)
+..put(SPELL_CHICKEN         , UNIT_CHICKEN)
+..put(SPELL_SHAPESHIFTER    , UNIT_SHAPESHIFTER_WOLF)
+..put(SPELL_ULTIMATE_FORM   , UNIT_ULTIMATE_FORM)
+..put(SPELL_ESCAPE_ARTIST   , UNIT_ESCAPE_ARTIST)
+..put(SPELL_CONTORTIONIST   , UNIT_CONTORTIONIST)
+..put(SPELL_ASSASSIN        , UNIT_ASSASSIN)
+..put(SPELL_OBSERVER        , UNIT_OBSERVER)
+..put(SPELL_RADAR_SCOUT     , UNIT_RADAR_SCOUT)
+..put(SPELL_TRAPPER         , UNIT_TRAPPER)
+..put(SPELL_SPY             , UNIT_SPY)
+..put(SPELL_RADAR_GATHERER  , UNIT_RADAR_GATHERER)
+..put(SPELL_HERB_MASTER     , UNIT_HERB_MASTER)
+..put(SPELL_OMNIGATHERER    , UNIT_OMNIGATHERER)
+
+function replaceUnit(int newUnitId, unit oldUnit) returns unit
+    let owner = GetOwningPlayer(oldUnit)
+    let pos = oldUnit.getPos()
+    let angle = oldUnit.getFacingAngle()
+
+    print(UNIT_WARRIOR)
+    print(newUnitId)
+    ShowUnit(oldUnit, false)
+    let newUnit = createUnit(owner, newUnitId, pos, angle)
+    print(oldUnit.getMana().toString()+" "+oldUnit.getHP().toString())
+    newUnit.setMana(oldUnit.getMana())
+    newUnit.setHP(oldUnit.getHP())
+
+    for items in oldUnit.inventory()
+        newUnit.addItemById(items.getTypeId())
+    return newUnit
+
+function upgradeUnit(int newUnitId, unit oldUnit)
+    let newUnit = replaceUnit(newUnitId, oldUnit)
+    let owner = GetOwningPlayer(oldUnit)
+    int str = GetHeroStr(oldUnit, false)
+    int agi = GetHeroAgi(oldUnit, false)
+    int inte = GetHeroInt(oldUnit, false)
+
+    GroupRemoveUnit(udg_trolls, oldUnit)
+    GroupAddUnit(udg_trolls, newUnit)
+    udg_PUnits[GetPlayerId(owner)] = newUnit
+    print(newUnit.getName())
+    newUnit.setStr(str)
+    newUnit.setAgi(agi)
+    newUnit.setInt(inte)
+
+    // "Preserve or release BM pet When subbing" -> no such thing in the current state
+    // of the game so I didn't recode it
+
+    if GetLocalPlayer() == owner
+        SelectUnit(newUnit, true)
+        ForceUICancel()
+    oldUnit.getOwner()
+    RemoveUnit(oldUnit)
+
+function upgadeAction()
+    let spell = GetLearnedSkill()
+    let oldUnit = GetLearningUnit()
+    var _newUnitId = 0
+
+    _newUnitId = trollUpgradeMap.get(spell)
+    if _newUnitId != 0
+        print("WELCOME TO OUR VILLAGE")
+        upgradeUnit(_newUnitId, oldUnit)
+
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_HERO_SKILL, () -> upgadeAction())

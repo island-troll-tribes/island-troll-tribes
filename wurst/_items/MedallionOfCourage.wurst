@@ -1,0 +1,34 @@
+package MedallionOfCourage
+
+import RegisterEvents
+import ID
+import IdListConstant
+import HashMap
+import PublicLibrary
+
+constant superSubUpgrade = new HashMap<int, int>()
+..put(UNIT_MAGE    , ABILITY_MEU_DEMENTIA_MASTER)
+..put(UNIT_PRIEST  , ABILITY_MEU_SAGE)
+..put(UNIT_THIEF   , ABILITY_MEU_ASSASSIN)
+..put(UNIT_SCOUT   , ABILITY_MEU_SPY)
+..put(UNIT_GATHERER, ABILITY_MEU_OMNIGATHERER)
+
+function onCast()
+    let caster = GetSpellAbilityUnit()
+    let unitId = caster.getTypeId()
+    var superSubUpgradeId = 0
+
+    superSubUpgradeId = superSubUpgrade.get(unitId)
+
+    if superSubUpgradeId != 0
+        print("welcome to our village")
+        if GetUnitAbilityLevelSwapped(superSubUpgradeId, caster) == 0
+            SetPlayerAbilityAvailable(caster.getOwner(), superSubUpgradeId, false)
+            caster.addAbility(superSubUpgradeId)
+        removeItem(caster, ITEM_MEDALLION_COURAGE)
+
+init
+    registerSpellEffectEvent(SPELL_SUPERSUB_COURAGE, () -> onCast())
+
+    for i = 12 downto 0
+        SetPlayerAbilityAvailable(players[i], ABILITY_MEU_DUMMY, false)

@@ -4,6 +4,7 @@ import Lodash
 import TrollUnitTextConstant
 import ChannelAbilityPreset
 import LinkedList
+import LegacyColors
 import ID
 
 public class TrollUpgradeSuperSubSpell extends TrollUpgradeSubSpell
@@ -28,25 +29,25 @@ public class TrollUpgradeSubSpell
         this.btnPos = btnPos
         this.hotkey = hotkey
         this.icon += icon + ".blp"
-        this.toolTipExt = "Raise your class status to " + name + "." + toolTipExt
-        this.toolTip = "Transform into " + name
+        this.toolTipExt = "Raise your class status to " + COLOR_LIGHT_BLUE + name + "|r. " + toolTipExt
+        this.toolTip =  GENERAL_COLOR+"[" + SPECIAL_COLOR + hotkey + GENERAL_COLOR + "] - " + "Transform into " + name
 
     function buildSpell()
         new ChannelAbilityPreset(id, 1, true)
         ..setName(name)
         ..setIconNormal(icon)
         ..setIconResearch(icon)
-        ..setTooltipNormal(1, name)
-        ..setTooltipNormalExtended(1, toolTip)
+        ..setTooltipLearn(toolTip)
+        ..setTooltipLearnExtended(toolTipExt)
         ..setCooldown(1, 0)
         ..setLevels(1)
         ..setRequiredLevel(levelReq)
         ..setHeroAbility(true)
-        ..setHotkeyNormal(hotkey)
-        ..setButtonPositionNormalX(btnPos.a)
-        ..setButtonPositionNormalY(btnPos.b)
+        ..presetHotkey(hotkey)
+        ..presetButtonPosResearch(btnPos.a, btnPos.b)
 
 function getTrollUpgrade() returns LinkedList<TrollUpgradeSubSpell>
+    print(TOOLTIP_WARRIOR)
     return asList<TrollUpgradeSubSpell>(
         // Hunter
         new TrollUpgradeSubSpell(SPELL_WARRIOR              , "Warrior"              , TOOLTIP_WARRIOR         , new Pair(1, 0), "TrollPredator"           , "W"),
@@ -60,7 +61,7 @@ function getTrollUpgrade() returns LinkedList<TrollUpgradeSubSpell>
 
         // Priest
         new TrollUpgradeSubSpell(SPELL_BOOSTER              , "Booster"              , TOOLTIP_BOOSTER         , new Pair(1, 0), "ForestTrollShadowPriest" , "W"),
-        new TrollUpgradeSubSpell(SPELL_MASTER_HEALER        , "Master Healer"        , TOOLTIP_MASTER_HEALER   , new Pair(2, 0), "HeroShadowHunter"        , "E"),
+        new TrollUpgradeSubSpell(SPELL_MASTER_HEALER        , "Master Healer"        , TOOLTIP_MASTER_HEALER   , new Pair(2, 0), "HeroShadowHunter2"       , "E"),
         new TrollUpgradeSuperSubSpell(SPELL_SAGE            , "Sage"                 , TOOLTIP_SAGE            , new Pair(3, 0), "ForestTrollShadowPriest" , "R"),
 
         // Beast Master

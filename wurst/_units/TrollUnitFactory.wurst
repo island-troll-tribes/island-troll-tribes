@@ -2,8 +2,19 @@ package TrollUnitFactory
 
 import UnitObjEditing
 import UnitIds
+import ObjectIds
 import Lodash
 import Soundsets
+import HashMap
+import LinkedList
+import ID
+import IdListConstant
+
+constant trollInventoryAbilityMap = new IterableMap<int, LinkedList<int>>()
+..put(ABILITY_INVENTORY_3_SLOT, TROLL_INVENTORY_SLOT_3_LIST)
+..put(ABILITY_INVENTORY_4_SLOT, TROLL_INVENTORY_SLOT_4_LIST)
+..put(ABILITY_INVENTORY_5_SLOT, TROLL_INVENTORY_SLOT_5_LIST)
+..put(ABILITY_INVENTORY_6_SLOT, TROLL_INVENTORY_SLOT_6_LIST)
 public abstract class TrollUnit
     int id = 0
     int baseDamage = 10
@@ -50,11 +61,15 @@ public abstract class TrollUnit
         this.iconInterface += icon+".blp"
         this.iconScoreScreen += icon+".blp"
         this.hotkey = hotkey
-        this.heroAbilities = heroAbilities
-        this.normalAbilities += normalAbilities
         this.soundSet = soundSet
         this.buttonPos = buttonPos
         this.sightRadius = sightRadius
+        this.heroAbilities = heroAbilities
+
+        for key in trollInventoryAbilityMap
+            if trollInventoryAbilityMap.get(key).has(id)
+                this.normalAbilities += commaList(key)
+        this.normalAbilities += ","+normalAbilities
 
     function buildUnit()
         new HeroDefinition(id, UnitIds.blademaster)

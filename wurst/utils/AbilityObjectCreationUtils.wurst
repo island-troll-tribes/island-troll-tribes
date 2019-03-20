@@ -2,6 +2,9 @@ package AbilityObjectCreationUtils
 
 import AbilityObjEditing
 import ObjectIdGenerator
+import Lodash
+import HashMap
+import LegacyColors
 
 public function createHiddenSpellbookWithAbilities(string abilityList) returns int
     let id = ABIL_ID_GEN.next()
@@ -29,5 +32,82 @@ public function createHiddenSpellbookWithAbilities(string abilityList) returns i
     ..presetTooltipNormal(lvl -> "You are not supposed to be seeing this")
     ..presetTooltipNormalExtended(lvl -> "You are not supposed to be seeing this")
     ..presetSharedSpellCooldown(lvl -> false)
-
     return id
+
+public class SpellBookObject
+    let id = '0'
+    let name = "Page"
+    let hotkey = "Q"
+    let toolTip = "Hello there"
+    let toolTipExt = "Welcome to our village"
+    let btnPos = new Pair(0, 0)
+    let baseOrderId = ""
+    private let abilityList = ""
+    let icon = "ReplaceableTextures\\CommandButtons\\BTN"
+
+    construct(int id, string name, string hotkey, string toolTipExt, string abilityList, Pair<int, int> btnPos, string baseOrderId, string icon)
+        this.id = id
+        this.name = name
+        this.hotkey = hotkey
+        this.toolTip = GENERAL_COLOR+"[" + SPECIAL_COLOR + hotkey + GENERAL_COLOR + "] - " + this.name + "|r"
+        this.toolTipExt = toolTipExt
+        this.abilityList = abilityList
+        this.btnPos = btnPos
+        this.baseOrderId = baseOrderId
+        this.icon += icon+".blp"
+
+    function buildSpellBook()
+        new AbilityDefinitionSpellBook(id)
+        ..setButtonPositionNormalX(btnPos.a)
+        ..setButtonPositionNormalY(btnPos.b)
+        ..setIconNormal(icon)
+        ..setHeroAbility(true)
+        ..setItemAbility(false)
+        ..setLevels(1)
+        ..setTargetAttachmentPoint1("")
+        ..setCasterAttachmentPoint1("")
+        ..setBaseOrderID(1, baseOrderId)
+        ..setHotkeyNormal(hotkey)
+        ..setName(name)
+        ..setMaximumSpells(1, 11)
+        ..setMinimumSpells(1, 11)
+        ..setSpellList(1, abilityList)
+        ..setCooldown(1, 0)
+        ..setTooltipNormal(1, toolTip)
+        ..setTooltipNormalExtended(1, toolTipExt)
+        ..setSharedSpellCooldown(1, false)
+
+public class HeroSpellBookObject extends SpellBookObject
+    let level = 1
+    let btnPos = new Pair(0, 0)
+    let btnResPos = new Pair(0, 0)
+    let abilityList = new HashMap<int, string>
+
+    construct(int id, string name, string hotkey, string toolTip, HashMap<int, string> abilityList, Pair<int, int> btnPos, Pair<int, int> btnResPos, string baseOrderId,     string icon, int level)
+        super(id, name, hotkey, toolTip, "", btnPos, baseOrderId, icon)
+        this.abilityList = abilityList
+        this.level = level
+        this.btnResPos = btnResPos
+
+    override function buildSpellBook()
+        new AbilityDefinitionSpellBook(id)
+        ..setButtonPositionNormalX(btnPos.a)
+        ..setButtonPositionNormalY(btnPos.b)
+        ..setButtonPositionResearchX(btnResPos.a)
+        ..setButtonPositionResearchY(btnResPos.b)
+        ..setIconNormal(icon)
+        ..setIconResearch(icon)
+        ..setHeroAbility(true)
+        ..setItemAbility(false)
+        ..setLevels(level)
+        ..presetBaseOrderID(lvl -> baseOrderId)
+        ..setHotkeyLearn(hotkey)
+        ..setHotkeyNormal(hotkey)
+        ..setName(name)
+        ..presetMaximumSpells(lvl -> 11)
+        ..presetMinimumSpells(lvl -> 11)
+        ..presetSpellList(lvl -> abilityList.get(lvl))
+        ..presetCooldown(lvl -> 0)
+        ..presetTooltipNormal(lvl -> toolTip)
+        ..presetTooltipNormalExtended(lvl -> toolTipExt)
+        ..presetSharedSpellCooldown(lvl -> false)

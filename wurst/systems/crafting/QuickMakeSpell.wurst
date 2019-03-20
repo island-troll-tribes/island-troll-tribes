@@ -32,15 +32,17 @@ public class QuickMakeSpell
     let hotkey = ""
     let name = "Quick make "
     let toolTip = ""
-    let iconPath = "ReplaceableTextures\\CommandButtons\\BTN"
+    let toolTipExt = ""
+    let iconPath = "ReplaceableTextures\\CommandButtons\\"
     let id = '0'
     let btnPositionX = 0
     let btnPositionY = 0
 
-    construct(string itemName, string toolTip, string iconPath, int id, int btnX, int btnY, string hotkey, string color, string toolTipEnd)
-        this.name = GENERAL_COLOR+"[" + color + hotkey + GENERAL_COLOR + "] - " + this.name + itemName + "|r"
-        this.toolTip += toolTip + "|r\n\n" + COLOR_LIGHT_BLUE + toolTipEnd
-        this.iconPath += iconPath+".blp"
+    construct(string itemName, string toolTipExt, string iconPath, int id, int btnX, int btnY, string hotkey, string color, string toolTipEnd)
+        this.name = this.name + itemName
+        this.toolTip = GENERAL_COLOR+"[" + color + hotkey + GENERAL_COLOR + "] - " + this.name + "|r"
+        this.toolTipExt += toolTipExt + "|r\n\n" + COLOR_LIGHT_BLUE + toolTipEnd
+        this.iconPath += iconPath
         this.id = id
         this.btnPositionX = btnX
         this.btnPositionY = btnY
@@ -50,8 +52,8 @@ public class QuickMakeSpell
         new ChannelAbilityPreset(id, 1, true)
         ..setName(name)
         ..setIconNormal(iconPath)
-        ..setTooltipNormal(1, name)
-        ..setTooltipNormalExtended(1, toolTip)
+        ..setTooltipNormal(1, toolTip)
+        ..setTooltipNormalExtended(1, toolTipExt)
         ..setCooldown(1, COOLDOWN)
         ..setLevels(1)
         ..setHeroAbility(false)
@@ -114,10 +116,10 @@ public class QuickMakeSpellBook
         ..presetTooltipNormalExtended(lvl -> toolTip)
         ..presetSharedSpellCooldown(lvl -> false)
 
-//All Quick Make Spells created here
+// All Quick Make Spells created here
 function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
     return asList(
-        //Mixing Pot
+        // Mixing Pot
         new QuickMakeSpell("Healing Potion"          , MIX_TOOLTIP+HEALING_POTION_RECIPE          , "LesserRejuvPotion"       , SPELL_QM_HEALING_POTION          , 0, 0, "Q", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Mana Potion"             , MIX_TOOLTIP+MANA_POTION_RECIPE             , "PotionBlueSmall"         , SPELL_QM_MANA_POTION             , 1, 0, "W", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Cure All"                , MIX_TOOLTIP+CURE_ALL_RECIPE                , "LesserClarityPotion"     , SPELL_QM_CURE_ALL                , 2, 0, "E", SPECIAL_COLOR, QM_TOOLIP),
@@ -128,7 +130,7 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
         new QuickMakeSpell("Spirit Of Water"         , MIX_TOOLTIP+SPIRIT_WATER_RECIPE            , "OrbOfFrost"              , SPELL_QM_SPIRIT_WATER            , 1, 2, "X", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Dark Rock"               , MIX_TOOLTIP+DARK_ROCK_RECIPE               , "OrbOfVenom"              , SPELL_QM_DARK_ROCK               , 2, 2, "C", SPECIAL_COLOR, QM_TOOLIP),
 
-        //Special Herb Page
+        // Special Herb Page
         new QuickMakeSpell("Disease Potion"          , MIX_TOOLTIP+DISEASE_POTION_RECIPE          , "PotionGreen"             , SPELL_QM_DISEASE_POTION          , 0, 0, "Q", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Acid Bomb"               , MIX_TOOLTIP+ACID_BOMB_RECIPE               , "AcidBomb"                , SPELL_QM_ACID_BOMB               , 1, 0, "W", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Bee Hive"                , MIX_TOOLTIP+BEE_HIVE_RECIPE                , "Crate"                   , SPELL_QM_BEE_HIVE                , 2, 0, "E", SPECIAL_COLOR, QM_TOOLIP),
@@ -142,7 +144,7 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
         new QuickMakeSpell("Elemental Shield Potion" , MIX_TOOLTIP+ELEMENTAL_SHIELD_POTION_RECIPE , "PotionOfRestoration"     , SPELL_QM_ELEMENTAL_SHIELD_POTION , 2, 2, "C", SPECIAL_COLOR, QM_TOOLIP),
 
 
-        //Armory
+        // Armory
         //new QuickMakeSpell("Stone Axe"   , TRANSMUTE_TOOLTIP+STONE_AXE_RECIPE   , "OrcMeleeUpOne"              , SPELL_QM_STONE_AXE   , 0, 0, "F", SPECIAL_COLOR, "dismount"    ),
         new QuickMakeSpell("Spear"        , TRANSMUTE_TOOLTIP+SPEAR_RECIPE        , "SteelRanged"                , SPELL_QM_SPEAR        , 0, 0, "Q", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Iron Spear"   , TRANSMUTE_TOOLTIP+IRON_SPEAR_RECIPE   , "StrengthOfTheMoon"          , SPELL_QM_IRON_SPEAR   , 1, 0, "W", SPECIAL_COLOR, QM_TOOLIP),
@@ -154,14 +156,14 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
         new QuickMakeSpell("Iron Ingot"   , TRANSMUTE_TOOLTIP+IRON_INGOT_RECIPE   , "IronIngot"                  , SPELL_QM_IRON_INGOT   , 0, 2, "Z", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Steel Ingot"  , TRANSMUTE_TOOLTIP+STEEL_INGOT_RECIPE  , "SteelIngot"                 , SPELL_QM_STEEL_INGOT  , 1, 2, "X", SPECIAL_COLOR, QM_TOOLIP),
 
-        //Second Page
+        // Second Page
         new QuickMakeSpell("Shield"       , TRANSMUTE_TOOLTIP+SHIELD_RECIPE       , "SteelArmor"                 , SPELL_QM_SHIELD       , 0, 0, "Q", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Bone Shield"  , TRANSMUTE_TOOLTIP+BONE_SHIELD_RECIPE  , "ImprovedUnholyArmor"        , SPELL_QM_BONE_SHIELD  , 1, 0, "W", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Iron Shield"  , TRANSMUTE_TOOLTIP+IRON_SHIELD_RECIPE  , "HumanArmorUpOne"            , SPELL_QM_IRON_SHIELD  , 2, 0, "E", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Steel Shield" , TRANSMUTE_TOOLTIP+STEEL_SHIELD_RECIPE , "ThoriumArmor"               , SPELL_QM_STEEL_SHIELD , 3, 0, "R", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Ensnare Trap" , TRANSMUTE_TOOLTIP+ENSNARE_TRAP_RECIPE , "COP"                        , SPELL_QM_ENSNARE_TRAP , 1, 2, "A", SPECIAL_COLOR, QM_TOOLIP),
 
-        //Armor Page
+        // Armor Page
         new QuickMakeSpell("Bone Boots"   , TRANSMUTE_TOOLTIP+BONE_BOOTS_RECIPE   , "BoneBoots"                  , SPELL_QM_BONE_BOOTS   , 0, 0, "Q", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Iron Boots"   , TRANSMUTE_TOOLTIP+IRON_BOOTS_RECIPE   , "SlippersOfAgility"          , SPELL_QM_IRON_BOOTS   , 1, 0, "W", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Steel Boots"  , TRANSMUTE_TOOLTIP+STEEL_BOOTS_RECIPE  , "ImprovedCreatureCarapace"   , SPELL_QM_STEEL_BOOTS  , 2, 0, "E", SPECIAL_COLOR, QM_TOOLIP),
@@ -173,7 +175,7 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
         new QuickMakeSpell("Steel Coat"   , TRANSMUTE_TOOLTIP+STEEL_COAT_RECIPE   , "AdvancedMoonArmor"          , SPELL_QM_STEEL_COAT   , 2, 2, "C", SPECIAL_COLOR, QM_TOOLIP),
 
 
-        //Witch Doctors Hut
+        // Witch Doctors Hut
         new QuickMakeSpell("Scroll Of Entangling Root" , TRANSMUTE_TOOLTIP+SCROLL_ROOT_RECIPE        , "ScrollOfRegenerationGreen" , SPELL_QM_SCROLL_ROOT        , 0, 0, "Q", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Scroll Of Stone Armor"     , TRANSMUTE_TOOLTIP+SCROLL_ARMOR_RECIPE       , "ScrollUber"                , SPELL_QM_SCROLL_ARMOR       , 1, 0, "W", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Scroll Of Tsunami"         , TRANSMUTE_TOOLTIP+SCROLL_TSUNAMI_RECIPE     , "SnazzyScrollPurple"        , SPELL_QM_SCROLL_TSUNAMI     , 2, 0, "E", SPECIAL_COLOR, QM_TOOLIP),
@@ -186,7 +188,7 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
         new QuickMakeSpell("Cloak Of Healing"          , TRANSMUTE_TOOLTIP+CLOAK_HEALING_RECIPE      , "ImbuedMasonry"             , SPELL_QM_CLOAK_HEALING      , 2, 1, "D", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Cloak Of Mana"             , TRANSMUTE_TOOLTIP+CLOAK_MANA_RECIPE         , "CloakOfFrost"              , SPELL_QM_CLOAK_MANA         , 3, 1, "F", SPECIAL_COLOR, QM_TOOLIP),
 
-        //Second Page
+        // Second Page
         new QuickMakeSpell("Living Clay"               , TRANSMUTE_TOOLTIP+LIVING_CLAY_RECIPE        , "GreenSentryWard"           , SPELL_QM_LIVING_CLAY        , 2, 2, "R", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Magic Seed"                , TRANSMUTE_TOOLTIP+MAGIC_SEED_RECIPE         , "Root"                      , SPELL_QM_MAGIC_SEED         , 2, 2, "A", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Spirit Ward"               , TRANSMUTE_TOOLTIP+SPIRIT_WARD_RECIPE        , "AbsorbMagic"               , SPELL_QM_SPIRIT_WARD        , 2, 2, "S", SPECIAL_COLOR, QM_TOOLIP),
@@ -194,7 +196,7 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
         new QuickMakeSpell("Ultra Poison"              , TRANSMUTE_TOOLTIP+ULTRA_POISON_RECIPE       , "VialFull"                  , SPELL_QM_ULTRA_POISON       , 1, 2, "X", SPECIAL_COLOR, QM_TOOLIP),
 
 
-        //Workshop
+        // Workshop
         new QuickMakeSpell("Battle Gloves"        , TRANSMUTE_TOOLTIP+BATTLE_GLOVES_RECIPE        , "ImprovedUnholyStrength" , SPELL_QM_BATTLE_GLOVES        , 0, 0, "Q", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Battle Armor"         , TRANSMUTE_TOOLTIP+BATTLE_ARMOR_RECIPE         , "RobeOfTheMagi"          , SPELL_QM_BATTLE_ARMOR         , 1, 0, "W", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Battle Axe"           , TRANSMUTE_TOOLTIP+BATTLE_AXE_RECIPE           , "OrcMeleeUpThree"        , SPELL_QM_BATTLE_AXE           , 2, 0, "E", SPECIAL_COLOR, QM_TOOLIP),
@@ -206,7 +208,7 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
         new QuickMakeSpell("Blow Gun"             , TRANSMUTE_TOOLTIP+BLOW_GUN_RECIPE             , "AlleriaFlute"           , SPELL_QM_BLOW_GUN             , 0, 2, "Z", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Anabolic Boots"       , TRANSMUTE_TOOLTIP+ANABOLIC_BOOTS_RECIPE       , "WirtsOtherLeg"          , SPELL_QM_ANABOLIC_BOOTS       , 1, 2, "X", SPECIAL_COLOR, QM_TOOLIP),
 
-        //Second Page
+        // Second Page
         new QuickMakeSpell("Smoke Bomb"           , TRANSMUTE_TOOLTIP+SMOKE_BOMB_RECIPE           , "OrbOfDarkness"          , SPELL_QM_SMOKE_BOMB           , 0, 0, "Q", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Fire Bomb"            , TRANSMUTE_TOOLTIP+FIRE_BOMB_RECIPE            , "OrbOfFire"              , SPELL_QM_FIRE_BOMB            , 1, 0, "W", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("EMP"                  , TRANSMUTE_TOOLTIP+EMP_RECIPE                  , "WispSplode"             , SPELL_QM_EMP                  , 2, 0, "E", SPECIAL_COLOR, QM_TOOLIP),
@@ -215,7 +217,7 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
         new QuickMakeSpell("Dark Thistles"        , TRANSMUTE_TOOLTIP+DARK_THISTLES_RECIPE        , "QuillSpray"             , SPELL_QM_DARK_THISTLES        , 1, 2, "X", SPECIAL_COLOR, QM_TOOLIP),
 
 
-        //Tannery
+        // Tannery
         new QuickMakeSpell("Elk Skin Boots"          , TRANSMUTE_TOOLTIP+ELK_SKIN_BOOTS_RECIPE          , "ElkHideBoots"  , SPELL_QM_ELK_SKIN_BOOTS          , 0, 0, "Q", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Elk Skin Gloves"         , TRANSMUTE_TOOLTIP+ELK_SKIN_GLOVES_RECIPE         , "Glove"         , SPELL_QM_ELK_SKIN_GLOVES         , 1, 0, "W", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Elk Skin Coat"           , TRANSMUTE_TOOLTIP+ELK_SKIN_COAT_RECIPE           , "HoodOfCunning" , SPELL_QM_ELK_SKIN_COAT           , 2, 0, "E", SPECIAL_COLOR, QM_TOOLIP),
@@ -226,17 +228,17 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
         new QuickMakeSpell("Jungle Bear Skin Gloves" , TRANSMUTE_TOOLTIP+JUNGLE_BEAR_SKIN_GLOVES_RECIPE , "Glove"         , SPELL_QM_JUNGLE_BEAR_SKIN_GLOVES , 1, 2, "X", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Jungle Bear Skin Coat"   , TRANSMUTE_TOOLTIP+JUNGLE_BEAR_SKIN_COAT_RECIPE   , "HoodOfCunning" , SPELL_QM_JUNGLE_BEAR_SKIN_COAT   , 2, 2, "C", SPECIAL_COLOR, QM_TOOLIP),
 
-        //Those are placeholder for tannery, just to fill the interface and make it look cleaner
+        // Those are placeholder for tannery, just to fill the interface and make it look cleaner
         new QuickMakeSpell("Tips on Stat" , "" , "SelectHeroOn" , PLACEHOLDER_STAT_TOOLTIP_SPELL , 3, 0, "R", SPECIAL_COLOR, TANNERY_PLACEHOLDER_STAT_TOOLTIP),
         new QuickMakeSpell("Tips on Hide" , "" , "SelectHeroOn" , PLACEHOLDER_HIDE_TOOLTIP_SPELL , 3, 1, "F", SPECIAL_COLOR, TANNERY_PLACEHOLDER_HIDE_USAGE_TOOLTIP),
 
-        //Buildings
+        // Buildings
         //First three aren't added to master crafter because it's useless, button position set to 0 since they're in a spellbook
         new QuickMakeSpell("Camp Fire Kit"         , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+CAMP_FIRE_KIT_RECIPE         , "Fire"                 , SPELL_QM_CAMP_FIRE_KIT         , 0, 0, "Q", SPECIAL_COLOR, QM_BUILD_TOOLIP),
         new QuickMakeSpell("Tent Kit"              , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+TENT_KIT_RECIPE              , "GenericCreepBuilding" , SPELL_QM_TENT_KIT              , 0, 0, "W", SPECIAL_COLOR, QM_BUILD_TOOLIP),
         new QuickMakeSpell("Troll Hut Kit"         , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+TROLL_HUT_KIT_RECIPE         , "SpiritLodge"          , SPELL_QM_TROLL_HUT_KIT         , 0, 0, "E", SPECIAL_COLOR, QM_BUILD_TOOLIP),
 
-        //Following are also used in master crafter so they got proper button positioning
+        // Following are also used in master crafter so they got proper button positioning
         new QuickMakeSpell("Mud Hut Kit"           , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+MUD_HUT_KIT_RECIPE           , "GoldMine"             , SPELL_QM_MUD_HUT_KIT           , 3, 0, "R", SPECIAL_COLOR, QM_BUILD_TOOLIP),
         new QuickMakeSpell("Armory Kit"            , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+ARMORY_KIT_RECIPE            , "Forge"                , SPELL_QM_ARMORY_KIT            , 0, 1, "A", SPECIAL_COLOR, QM_BUILD_TOOLIP),
         new QuickMakeSpell("Workshop Kit"          , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+WORKSHOP_KIT_RECIPE          , "TrollBurrow"          , SPELL_QM_WORKSHOP_KIT          , 1, 1, "S", SPECIAL_COLOR, QM_BUILD_TOOLIP),
@@ -253,7 +255,7 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
 
     )
 
-//Additional pages created here
+// Additional pages created here
 function getQuickMakeSpellBookSpells() returns LinkedList<QuickMakeSpellBook>
     return asList(
         new QuickMakeSpellBook(SPELL_MIXING_POT_SPELLBOOK_ID, "Special Herb Quick Make Page"          , "G", MIXING_SPELLBOOK_TOOLTIP  , MIXING_POT_SPELLBOOK, 3, 1 , "spellbook"),

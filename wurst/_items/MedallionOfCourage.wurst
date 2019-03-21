@@ -1,0 +1,94 @@
+package MedallionOfCourage
+
+import RegisterEvents
+import PublicLibrary
+import AbilityObjEditing
+import IdListConstant
+import LinkedList
+import ObjectIds
+import ObjectIdGenerator
+import SimError
+import StringExtensions
+
+// Engineering Upgrade Dummies ID
+constant ABILITY_DUMMY_MEU_SPY = compiletime(ABIL_ID_GEN.next())
+constant ABILITY_DUMMY_MEU_SAGE = compiletime(ABIL_ID_GEN.next())
+constant ABILITY_DUMMY_MEU_ASSASSIN = compiletime(ABIL_ID_GEN.next())
+constant ABILITY_DUMMY_MEU_OMNIGATHERER = compiletime(ABIL_ID_GEN.next())
+constant ABILITY_DUMMY_MEU_DEMENTIA_MASTER = compiletime(ABIL_ID_GEN.next())
+
+constant superSubUpgrade = new HashMap<int, int>()
+..put(UNIT_MAGE    , ABILITY_DUMMY_MEU_DEMENTIA_MASTER)
+..put(UNIT_PRIEST  , ABILITY_DUMMY_MEU_SAGE)
+..put(UNIT_THIEF   , ABILITY_DUMMY_MEU_ASSASSIN)
+..put(UNIT_SCOUT   , ABILITY_DUMMY_MEU_SPY)
+..put(UNIT_GATHERER, ABILITY_DUMMY_MEU_OMNIGATHERER)
+
+// Engineering Upgrade Spells, this is neccessary to add the SuperSub transform spell once medallion is casted
+public class MedallionDummySpell
+    int id = 0
+    let name = ""
+    let dummyMedalAbilities = ""
+
+    construct(int id, string name, int superSubAbility)
+        this.id = id
+        this.name = name
+        this.dummyMedalAbilities = commaList(ABILITY_MEU_DUMMY, superSubAbility)
+
+    function buildSpell()
+        new AbilityDefinitionTinkererEngineeringUpgrade(id)
+        ..setAbilityUpgrade1(1, dummyMedalAbilities)
+        ..setAbilityUpgrade2(1, "")
+        ..setAbilityUpgrade3(1, "")
+        ..setDamageBonus(1, 0)
+        ..setMoveSpeedBonus(1, 0)
+        ..setBuffs(1, "")
+        ..setHeroAbility(false)
+        ..setLevels(1)
+        ..setRace(Race.Naga)
+        ..setName(name)
+        ..setHotkeyNormal("")
+
+function getMedallionDummySpells() returns LinkedList<MedallionDummySpell>
+    return asList(
+        new MedallionDummySpell(ABILITY_DUMMY_MEU_DEMENTIA_MASTER , "MedallionEU Mage"    , SPELL_DEMENTIA_MASTER),
+        new MedallionDummySpell(ABILITY_DUMMY_MEU_SAGE            , "MedallionEU Priest"  , SPELL_SAGE),
+        new MedallionDummySpell(ABILITY_DUMMY_MEU_ASSASSIN        , "MedallionEU Thief"   , SPELL_ASSASSIN),
+        new MedallionDummySpell(ABILITY_DUMMY_MEU_SPY             , "MedallionEU Scout"   , SPELL_SPY),
+        new MedallionDummySpell(ABILITY_DUMMY_MEU_OMNIGATHERER    , "MedallionEU Gatherer", SPELL_OMNIGATHERER)
+    )
+
+@compiletime function buildMedallionDummySpells()
+    getMedallionDummySpells().forEach(elem -> elem.buildSpell())
+
+// Medallion item cast
+function onCast()
+    let caster = GetSpellAbilityUnit()
+    let owner = caster.getOwner()
+    let unitId = caster.getTypeId()
+    var _superSubUpgradeId = 0
+
+    if unitId == UNIT_HUNTER or unitId == UNIT_BEAST_MASTER
+        simError(owner, "This unit cannot use this item, read the item description")
+        return
+    if  SUB_TROLL_UNIT_LIST.has(unitId) or SUPERSUB_TROLL_UNIT_LIST.has(unitId)
+        simError(owner, "You need to be a basic troll (mage, priest, thief, scout, gatherer) in order to use this item")
+        return
+
+    _superSubUpgradeId = superSubUpgrade.get(unitId)
+
+    if _superSubUpgradeId != 0
+        if GetUnitAbilityLevel(caster, _superSubUpgradeId) == 0 // Checking if the ability already exist so we don't waste a medallion
+            string medalHint = "{0} {1}".format(caster.getProperName().color(GOLD_COLOR), "acquired a super class choice! Check your hero skill and reach level 9 to use it.".color(GENERAL_COLOR))
+            printTimedToPlayer(medalHint, 5, owner)
+            SetPlayerAbilityAvailable(owner, _superSubUpgradeId, false)
+            caster.addAbility(_superSubUpgradeId)
+            removeItem(caster, ITEM_MEDALLION_COURAGE)
+        else
+            simError(owner, "This unit already used the medallion of Courage")
+
+init
+    registerSpellEffectEvent(SPELL_SUPERSUB_COURAGE, () -> onCast())
+
+    for i = 12 downto 0
+        SetPlayerAbilityAvailable(players[i], ABILITY_MEU_DUMMY, false)

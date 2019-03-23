@@ -7,19 +7,71 @@ import BuffObjEditing
 import ObjectIds
 import Orders
 import DummyCaster
+import Assets
+import Lodash
+import ToolTipsUtils
 
 @configurable constant int ABILITY_ID = 'A025'
 let BUFF_ID = compiletime(BUFF_ID_GEN.next())
 let DUMMY_SLOW_ID = compiletime(ABIL_ID_GEN.next())
 let MS_SLOW = 0.2
 let AS_SLOW = 0.1
+let BUFF_TOOLTIP = "Depress Slow"
+let BUFF_TOOLTIPEXTENDED = "Slowed by Depress"
+let BUFF_SLOWED = 'Bfro'
+let BUFF_DEPRESS  = "B000"
+let DURATION = 20.
+
+let MANA_LOST_INIT = 10.
+let DEPRESS_TICK = 4
+let MANA_LOST_PER_TICK = 5.
+let TOTAL_MANA_LOST = MANA_LOST_INIT + DEPRESS_TICK * MANA_LOST_PER_TICK
+
+let SPELL_TMP_DEPRESS = 'TMP'
+let MANACOST = 10
+let COOLDOWN = 20.
+let BUFF = ""
+let SPELL_TOOLTIP_NORM = "Depress"
+let SPELL_TOOLTIP_EXTENDED = "The mage casts a spell causing a chemical inbalance in the target's head. The target becomes severly depressed "+
+                             "causing their attack speed to be reduced by {0} and movement speed by {1} while loosing {2} over {3} seconds. Has {4} seconds cooldown."
+                            .format(AS_SLOW.toInt().toString(), MS_SLOW.toInt().toString(), TOTAL_MANA_LOST.toInt().toString(), DURATION.toInt().toString(),
+                             COOLDOWN.toInt().toString())
+
+public class Depress extends AbilityDefinitionAlchemistAcidBomb
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setName(SPELL_TOOLTIP_NORM)
+        this.setHotkeyNormal(hotkey)
+        this.setCooldown(1, COOLDOWN)
+        this.setManaCost(1, MANACOST)
+        this.setIconNormal(Icons.bTNFire)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setDurationHero(1, DURATION)
+        this.setDurationNormal(1, DURATION)
+        this.setTooltipNormalExtended(1, SPELL_TOOLTIP_EXTENDED)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, SPELL_TOOLTIP_NORM))
+        this.setPrimaryDamage(1, 1)
+        this.setSecondaryDamage(1, 0)
+        this.setArmorPenalty(1, 0)
+        this.setMissileArc(0.70)
+        this.setMissileArt(Abilities.blackArrowMissile)
+        this.setMissileSpeed(1400)
+        this.setBuffs(1, BUFF_DEPRESS)
+        this.setHeroAbility(false)
+        this.setLevels(1)
+        this.setAreaofEffect(1, 0)
+
+
+@compiletime function createDepress()
+    new Depress(SPELL_TMP_DEPRESS, "D", new Pair(1, 1))
 
 @compiletime function createBuffs()
-    new BuffDefinition(BUFF_ID, 'Bfro')
-        ..setTooltipNormal(1, "Depress Slow")
-        ..setTooltipNormalExtended(1, "Slowed by Depress")
-        ..setIconNormal(1, "ReplaceableTextures\\CommandButtons\\BTNShadowPact.blp")
-        ..setIcon("ReplaceableTextures\\CommandButtons\\BTNShadowPact.blp")
+    new BuffDefinition(BUFF_ID, BUFF_SLOWED)
+        ..setTooltipNormal(1, BUFF_TOOLTIP)
+        ..setTooltipNormalExtended(1, BUFF_TOOLTIPEXTENDED)
+        ..setIconNormal(1,Icons.bTNShadowPact)
+        ..setIcon(Icons.bTNShadowPact)
         ..setArtTarget(1, "")
 
 @compiletime function createSlowDummySpell()
@@ -32,8 +84,8 @@ let AS_SLOW = 0.1
         ..setCastRange(1, 2800)
         ..setCastingTime(1, 0)
         ..setCooldown(1, 0)
-        ..setDurationHero(1, 20)
-        ..setDurationNormal(1, 20)
+        ..setDurationHero(1, DURATION)
+        ..setDurationNormal(1, DURATION)
         ..setManaCost(1, 0)
         ..setTargetsAllowed(1, "air,allies,enemies,ground")
         ..setName("Depress dummy slow")
@@ -48,8 +100,8 @@ function onCast()
             ..origin(caster.getPos())
             ..castTarget(DUMMY_SLOW_ID, 1, Orders.slow, target)
         if target.getMana() >= 40
-            target.subMana(10)
-            doPeriodicallyCounted(2.00, 4, (cb) -> target.subMana(5))
+            target.subMana(MANA_LOST_INIT)
+            doPeriodicallyCounted(2.00, DEPRESS_TICK, (cb) -> target.subMana(MANA_LOST_PER_TICK))
 
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())

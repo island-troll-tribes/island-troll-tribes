@@ -1,8 +1,52 @@
 package ReduceFood
 import RegisterEvents
 import ID
+import ChannelAbilityPreset
+import Assets
+import Lodash
 
 @configurable constant int ABILITY_ID = 'A029'
+
+let MANACOST = 25
+let COOLDOWN = 15.
+let CAST_RANGE = 100.
+
+let TARGET_ALLOWED = "enemies,ground,hero"
+let TOOLTIP = "Reduce Food"
+let TOOLTIP_EXTENDED = "The mage conjures a hungry spirit which is thrown at a target. The spirit devours 0 to 1 Cooked meats in the targest inventory, but can not reduce the food count below 1. "
+
+let SPELL_TMP_REDUCE_FOOD = 'TMP'
+
+class ReduceFood extends ChannelAbilityPreset
+    construct(int newAbility, string hotkey, Pair<int, int> buttonPos)
+        super(newAbility, 1, true)
+        this.setTargetType(1, 1)
+        this.setMissileArc(0.20)
+        this.setMissileArt(Abilities.possessionMissile)
+        this.setArtTarget(Abilities.possessionMissile)
+        this.setArtEffect("")
+        this.setIconNormal(Icons.bTNMonsterLure)
+        this.setArtCaster("")
+        this.setAnimationNames("")
+        this.setTargetAttachmentPoint1("")
+        this.setCasterAttachmentPoint1("")
+        this.setMissileHomingEnabled(true)
+        this.setMissileSpeed(900)
+        this.setManaCost(1, MANACOST)
+        this.setLevels(1)
+        this.setHeroAbility(false)
+        this.setCooldown(1, COOLDOWN)
+        this.setCastRange(1, CAST_RANGE)
+        this.setTargetsAllowed(1, TARGET_ALLOWED)
+        this.setName(TOOLTIP)
+        this.setTooltipNormal(1, TOOLTIP)
+        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        this.setHotkeyNormal(hotkey)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalX(buttonPos.b)
+
+@compiletime function createReduceFood()
+    new ReduceFood(SPELL_TMP_REDUCE_FOOD, "R", new Pair(3,0))
 
 function onCast()
     var target = GetSpellTargetUnit()

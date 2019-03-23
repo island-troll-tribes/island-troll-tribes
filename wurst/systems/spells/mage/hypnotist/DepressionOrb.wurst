@@ -6,9 +6,13 @@ import ClosureForGroups
 import EventHelper
 import ID
 import DummyCaster
+import Icons
+import Lodash
+import ToolTipsUtils
+import ChannelAbilityPreset
 
 @configurable constant int ABILITY_ID = 'A04R'
-@configurable constant int DUMMY_ABILITY_ID = 'A025'
+@configurable constant int DUMMY_ABILITY_ID = 'A025' // Depress Spell
 @configurable constant int DUMMY_ID = UNIT_LOCUST
 @configurable constant int BUFF_ID = DEST_SUPER_TREE
 @configurable constant real INTERVAL = 0.05
@@ -21,6 +25,39 @@ import DummyCaster
 
 constant INTERVAL_TURN_SPEED = INTERVAL * TURN_SPEED
 constant INTERVAL_MOVE_SPEED = INTERVAL * MOVE_SPEED
+
+let MANACOST = 20
+let COOLDOWN = 30.
+
+let ANIMATION_NAME = "channel,spell"
+let TOOLTIP_NORM = "Depression Orb"
+let TOOLTIP_EXTENDED = "The Hypnotist uses powerful magic to create an wisp of pure hatred and depression. The wisp is projected at opponents "+
+                       "and it depresses all who get near it. Depressed opponents have slightly reduced speed and experience severe energy shortages. "+
+                       "Has {0} seconds cooldown.".format(COOLDOWN.toToolTipT())
+
+let SPELL_TMP_DEPRESSION_ORB = 'DOTP'
+
+class DepressionOrb extends ChannelAbilityPreset
+    construct(int newAbility, string hotkey, Pair<int , int> buttonPos)
+        super(newAbility, 1, true)
+        this.setName(TOOLTIP_NORM)
+        this.setHotkeyNormal(hotkey)
+        this.setCooldown(1, COOLDOWN)
+        this.setManaCost(1, MANACOST)
+        this.setIconNormal(Icons.bTNOrbOfCorruption)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.setArtDuration(1, 0)
+        this.setTargetType(1, 2)
+        this.setAnimationNames(ANIMATION_NAME)
+        this.setHeroAbility(false)
+        this.setTargetAttachmentPoint1("")
+        this.setCasterAttachmentPoint1("")
+
+@compiletime function createDepressionOrb()
+    new DepressionOrb(SPELL_TMP_DEPRESSION_ORB, "R", new Pair(3, 0))
 
 function onCast()
     var caster = GetSpellAbilityUnit()

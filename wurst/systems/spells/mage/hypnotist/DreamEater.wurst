@@ -1,10 +1,52 @@
 package DreamEater
 import RegisterEvents
+import ID
+import Icons
+import Lodash
+import ToolTipsUtils
+import ChannelAbilityPreset
+import Abilities
 import SimError
 
 @configurable constant int ABILITY_ID = 'A04Z'
-@configurable constant int BUFF_ID = 'BOvd'
-@configurable constant string EFFECT_PATH = "Abilities\\Spells\\Items\\AIso\\AIsoTarget.mdl"
+@configurable constant int BUFF_ID = 'BOvd' // Sleep
+@configurable constant string EFFECT_PATH = Abilities.aIsoTarget
+
+let HP_RESTORED = 50.
+let MANA_RESTORED = 30.
+let MANA_EATEN = 50.
+let DAMAGE = 20.
+let MANACOST = 10
+let COOLDOWN = 20.
+
+let ANIMATION_NAME = "channel"
+let TOOLTIP_NORM = "Dream Eater"
+let TOOLTIP_EXTENDED = "Steals an enemies dream restoring {0} Health Point and {1} Mana. Also reduces enemy's Mana by {2} and deals {3} damage. "+
+                        "Only works if the enemy is dreaming. Has {4} seconds cooldown."
+                       .format(HP_RESTORED.toToolTipG(), MANA_RESTORED.toToolTipB(), MANA_EATEN.toToolTipB(), DAMAGE.toToolTipR(), COOLDOWN.toToolTipT())
+
+let SPELL_TMP_DREAM_EATER = 'DETP'
+let TARGET_ALLOWED = "enemies,ground,hero"
+
+class DreamEater extends ChannelAbilityPreset
+    construct(int newAbility, string hotkey, Pair<int , int> buttonPos)
+        super(newAbility, 1, true)
+        this.setName(TOOLTIP_NORM)
+        this.setHotkeyNormal(hotkey)
+        this.setCooldown(1, COOLDOWN)
+        this.setManaCost(1, MANACOST)
+        this.setIconNormal(Icons.bTNDevourMagic)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.setArtDuration(1, 0)
+        this.setTargetType(1, 1)
+        this.setAnimationNames(ANIMATION_NAME)
+        this.setTargetsAllowed(1, TARGET_ALLOWED)
+
+@compiletime function createDreamEater()
+    new DreamEater(SPELL_TMP_DREAM_EATER, "W", new Pair(1, 0))
 
 function onStartCast()
     if GetSpellAbilityId() == ABILITY_ID and not GetSpellTargetUnit().hasAbility(BUFF_ID)
@@ -14,14 +56,14 @@ function onStartCast()
 function onCast()
     var target = GetSpellTargetUnit()
     target.addEffect(EFFECT_PATH, "overhead").destr()
-    target.subHP(20)
+    target.subHP(DAMAGE)
 
-    var value = target.getMana() - 50
+    var value = target.getMana() - MANA_EATEN
     target.setMana(max(value, 10))
 
     var caster = GetSpellAbilityUnit()
-    caster.addHP(50)
-    caster.addMana(30)
+    caster.addHP(HP_RESTORED)
+    caster.addMana(MANA_RESTORED)
 
 init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())

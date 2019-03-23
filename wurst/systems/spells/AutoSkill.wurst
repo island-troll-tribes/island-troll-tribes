@@ -8,6 +8,11 @@ import ID
 
 let skillMap = new HashMap<int, int>()
 
+/**
+    This file allow you to put spells on autoSkill, meaning the skill will level up by itself instead of having the player
+    attribute skillPoint
+*/
+
 function autoSkill(unit whichUnit)
     if not whichUnit.isTroll()
         return
@@ -33,44 +38,59 @@ init
     onEnter(-> maybeAutoSkillEnteringUnit(getEnterLeaveUnit()))
 
     skillMap
-    ..put(UNIT_ASSASSIN, 'A075')
-    ..put(UNIT_BOOSTER, 'A05D')
-    ..put(UNIT_BOOSTER_1, 'CBO1')
-    ..put(UNIT_CHICKEN_FORM, 'A07Q')
-    ..put(UNIT_CONTORTIONIST, 'A04K')
-    ..put(UNIT_DEMENTIA_MASTER, 'A03M')
-    ..put(UNIT_DRUID, 'A0EW')
-    ..put(UNIT_DRUNKEN_TROLL, 'A0C1')
-    ..put(UNIT_ELEMENTALIST, 'A04S')
-    ..put(UNIT_ELEMENTALIST_1, 'A04S')
-    ..put(UNIT_ELEMENTALIST_NEW, 'XESB')
-    ..put(UNIT_ESCAPE_ARTIST, 'A04L')
-    ..put(UNIT_GATHERER, 'XGRB')
-    ..put(UNIT_HERB_MASTER, 'A057')
-    ..put(UNIT_HUNTER, 'A01O')
-    ..put(UNIT_HUNTER_1, 'A01O')
-    ..put(UNIT_HYPNOTIST, 'A04X')
-    ..put(UNIT_JUGGERNAUT, 'A06Z')
-    ..put(UNIT_MAGE, 'A01S')
-    ..put(UNIT_MAGE_1, 'A01S')
-    ..put(UNIT_MASTER_HEALER, 'A05B')
-    ..put(UNIT_MASTER_HEALER_1, 'A05B')
-    ..put(UNIT_OBSERVER, 'A054')
-    ..put(UNIT_OMNIGATHERER, 'A06W')
-    ..put(UNIT_PRIEST, 'A02D')
-    ..put(UNIT_RADAR_GATHERER, 'A057')
-    ..put(UNIT_RADAR_SCOUT, 'A055')
-    ..put(UNIT_TRAPPER, SPELL_SPIKED_TRAP) // This one doesn't work for some reason
-    ..put(UNIT_TRAPPER, SPELL_TRACK_TRAP)
-    ..put(UNIT_SAGE, 'A07J')
-    ..put(UNIT_SCOUT, 'XSRV')
-    ..put(UNIT_SPY, 'A073')
-    ..put(UNIT_THIEF, 'A01V')
-    ..put(UNIT_TRACKER, 'A05O')
-    ..put(UNIT_TROLL_BRAWLER, 'A0C3')
-    ..put(UNIT_TROLL_BREWMASTER, 'A0C5')
-    ..put(UNIT_WARRIOR, 'A05H')
-    ..put(UNIT_SHAPESHIFTER_WOLF, 'A0EP')
-    ..put(UNIT_SHAPESHIFTER_BEAR, 'A0EP')
-    ..put(UNIT_SHAPESHIFTER_PANTHER, 'A0EP')
-    ..put(UNIT_SHAPESHIFTER_TIGER, 'A0EP')
+
+    // Hunter
+    ..put(UNIT_HUNTER              , SPELL_TRACK                     )
+    ..put(UNIT_HUNTER_1            , SPELL_TRACK                     )
+    ..put(UNIT_WARRIOR             , SPELL_WARRIOR_SPELLBOOK         )
+    ..put(UNIT_TRACKER             , SPELL_TRACKER_SPELLBOOK         )
+    ..put(UNIT_JUGGERNAUT          , SPELL_THE_JUGGERNAUT            )
+
+    // Mage
+    ..put(UNIT_MAGE                , SPELL_MAGE_SPELLBOOK            )
+    ..put(UNIT_MAGE_1              , SPELL_MAGE_SPELLBOOK            )
+    ..put(UNIT_ELEMENTALIST        , 'A04S'                          )
+    ..put(UNIT_ELEMENTALIST_1      , 'A04S'                          )
+    ..put(UNIT_ELEMENTALIST_NEW    , SPELL_ELEMENTALIST_NEW_SPELLBOOK)
+    ..put(UNIT_HYPNOTIST           , SPELL_HYPNOTIST_SPELLBOOK       )
+    ..put(UNIT_DEMENTIA_MASTER     , SPELL_DEMENTIA_MASTER_SPELLBOOK )
+
+    // Priest
+    ..put(UNIT_PRIEST              , SPELL_PRIEST_SPELLBOOK          )
+    ..put(UNIT_BOOSTER             , SPELL_BOOSTER_SPELLBOOK         )
+    ..put(UNIT_BOOSTER_1           , SPELL_BOOSTER_SPELLBOOK         )
+    ..put(UNIT_MASTER_HEALER       , SPELL_MASTER_HEALER_SPELLBOOK   )
+    ..put(UNIT_MASTER_HEALER_1     , SPELL_MASTER_HEALER_SPELLBOOK   )
+    ..put(UNIT_SAGE                , SPELL_SAGE_SPELLBOOK            )
+
+    // Beast Master
+    ..put(UNIT_SHAPESHIFTER_WOLF   , SPELL_SHAPESHIFTER_FORM         )
+    ..put(UNIT_SHAPESHIFTER_BEAR   , SPELL_SHAPESHIFTER_FORM         )
+    ..put(UNIT_SHAPESHIFTER_PANTHER, SPELL_SHAPESHIFTER_FORM         )
+    ..put(UNIT_SHAPESHIFTER_TIGER  , SPELL_SHAPESHIFTER_FORM         )
+    ..put(UNIT_CHICKEN_FORM        , SPELL_SHORTNESS                 )
+
+    // Thief
+    ..put(UNIT_THIEF               , SPELL_CLOAK                     )
+    ..put(UNIT_ESCAPE_ARTIST       , SPELL_ESCAPE_ARTIST_SPELLBOOK   )
+    ..put(UNIT_CONTORTIONIST       , SPELL_CONTORTIONIST_SPELLBOOK   )
+    ..put(UNIT_ASSASSIN            , SPELL_ASSASSINATE               )
+
+    // Scout
+    ..put(UNIT_SCOUT               , SPELL_REVEAL_ID                 )
+    ..put(UNIT_OBSERVER            , SPELL_WARD_AREA                 )
+    ..put(UNIT_TRAPPER             , SPELL_TRACK_TRAP                )
+    ..put(UNIT_RADAR_SCOUT         , SPELL_MOTION_SENSOR_RADAR       )
+    ..put(UNIT_SPY                 , SPELL_CHAIN_REVEAL              )
+
+    // Gatherer
+    ..put(UNIT_GATHERER            , SPELL_ITEM_RADAR                )
+    ..put(UNIT_HERB_MASTER         , SPELL_TELE_GATHER               )
+    ..put(UNIT_RADAR_GATHERER      , SPELL_TELE_GATHER               )
+    ..put(UNIT_OMNIGATHERER        , SPELL_ITEM_WARP                 )
+
+    // Unimplemented Troll
+    ..put(UNIT_TROLL_BRAWLER       , 'A0C3'                          )
+    ..put(UNIT_TROLL_BREWMASTER    , 'A0C5'                          )
+    ..put(UNIT_DRUID               , 'A0EW'                          )
+    ..put(UNIT_DRUNKEN_TROLL       , 'A0C1'                          )

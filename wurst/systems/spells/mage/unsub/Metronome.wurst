@@ -5,9 +5,44 @@ import Orders
 import ClosureTimers
 import EventHelper
 import DummyCaster
+import AbilityObjEditing
+import Assets
+import Lodash
+import ToolTipsUtils
 
 @configurable constant int ABILITY_ID = 'A01Z'
 
+let MANACOST = 20
+let TOOLTIP = "Metronome"
+let TOOLTIP_EXTENDED = "Barrages enemies with random, chaining effects."
+let COOLDOWN = 45.
+let TARGET_ALLOWED = "air,enemies,ground,neutral,organic"
+
+let SPELL_TMP_METRONOME = 'TMP'
+
+class Metronome extends AbilityDefinitionFirelordSoulBurn
+    construct(int newAbility, string hotkey, Pair<int, int> buttonPos)
+        super(newAbility)
+        this.setDamageAmount(1, 0)
+        this.setDamagePenalty(1, 0)
+        this.setDamagePeriod(1, 0)
+        this.setIconNormal(Icons.bTNWandOfManaSteal)
+        this.setTargetsAllowed(1, TARGET_ALLOWED)
+        this.setHeroAbility(false)
+        this.setManaCost(1, MANACOST)
+        this.setDurationHero(1, 0.01)
+        this.setDurationNormal(1, 0.01)
+        this.setLevels(1)
+        this.setCooldown(1, COOLDOWN)
+        this.setName(TOOLTIP)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP))
+        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setHotkeyNormal(hotkey)
+
+@compiletime function createMetronome()
+    new Metronome(SPELL_TMP_METRONOME, "F", new Pair(2, 1))
 class MasterCaster
     static constant impale        = 'A028'
     static constant tsunami       = 'A038'

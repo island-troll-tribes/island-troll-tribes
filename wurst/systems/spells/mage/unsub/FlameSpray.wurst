@@ -1,0 +1,47 @@
+package FlameSpray
+
+import AbilityObjEditing
+import ID
+import Abilities
+import Icons
+import Lodash
+import ToolTipsUtils
+
+let MANACOST = 10
+let COOLDOWN = 30.
+let HERO_DURATION = 0.
+let NORMAL_DURATION = 0.
+let AREA_OF_EFFECT = 600.
+let DAMAGE = 20.
+let TOOLTIP_NORM = "Flame Spray"
+let TOOLTIP_EXTENDED = "Shoots fire bolt at nearby enemies dealing {0} damages."
+                        .format(DAMAGE.toInt().toString())
+
+let SPELL_FLAME_SPRAY = 'TMP'
+
+public class FlameSpray extends AbilityDefinitionWardenFanofKnives
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setLevels(1)
+        this.setEffects(1, "")
+        this.setHeroAbility(false)
+        this.setName(TOOLTIP_NORM)
+        this.setAreaofEffect(1, AREA_OF_EFFECT)
+        this.setHotkeyNormal(hotkey)
+        this.setCooldown(1, COOLDOWN)
+        this.setManaCost(1, MANACOST)
+        this.setMissileHomingEnabled(true)
+        this.setDamagePerTarget(1, DAMAGE)
+        this.setMaximumNumberofTargets(1, 4)
+        this.setIconNormal(Icons.bTNFireBolt)
+        this.setDurationHero(1, HERO_DURATION)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setDurationNormal(1, NORMAL_DURATION)
+        this.setEffects(1, Abilities.warStompCaster)
+        this.setMissileArt(Abilities.fireBallMissile)
+        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
+
+@compiletime function createFlameSpray()
+    new FlameSpray(SPELL_FLAME_SPRAY, "W", new Pair(1, 0))

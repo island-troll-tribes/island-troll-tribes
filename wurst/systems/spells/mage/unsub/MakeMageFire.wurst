@@ -1,0 +1,43 @@
+package MakeMageFire
+
+import AbilityObjEditing
+import ID
+import Icons
+import Lodash
+import ToolTipsUtils
+
+let MANACOST = 40
+let COOLDOWN = 150.
+let CAST_RANGE = 1000.
+let HERO_DURATION = 30.
+let NORMAL_DURATION = 30.
+let BUFF = ""
+let ANIMATION_NAME = "channel,spell"
+let TOOLTIP_NORM = "Make Temporary Mage Fire"
+let TOOLTIP_EXTENDED = "The mage conjures a powerful fire on his energy alone. The is placed where he is and lasts for {0} seconds. Has {1} seconds cooldown."
+                        .format(NORMAL_DURATION.toInt().toString(), COOLDOWN.toInt().toString())
+
+let SPELL_TMP_MAGE_FIRE = 'TMP'
+
+public class FlameSpray extends AbilityDefinitionSummonSeaElemental
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setName(TOOLTIP_NORM)
+        this.setHotkeyNormal(hotkey)
+        this.setCooldown(1, COOLDOWN)
+        this.setManaCost(1, MANACOST)
+        this.setIconNormal(Icons.bTNFire)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setDurationHero(1, HERO_DURATION)
+        this.setDurationNormal(1, NORMAL_DURATION)
+        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.setAnimationNames(ANIMATION_NAME)
+        this.setCheckDependencies(false)
+        this.setSummonedUnitType(1, "")
+        this.setBuffs(1, BUFF)
+
+
+@compiletime function createPumpUp()
+    new FlameSpray(SPELL_TMP_MAGE_FIRE, "A", new Pair(0, 1))

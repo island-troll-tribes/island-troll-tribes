@@ -1,74 +1,50 @@
-package SEFNew
+package EarthGuardian
 import RegisterEvents
 import HashMap
 import LinkedList
 import ClosureForGroups
 import ClosureTimers
-import AbilityObjEditing
 import OverCharge
 import Orders
 import BuffObjEditing
-import Icons
 import DummyCaster
+import ChannelAbilityPreset
+import Assets
+import ToolTipsUtils
+import Lodash
+
+let ABILITY_ID = 'EEarthGuardian'
+let DUMMY_STUN_SPELL_ID = 'ESES'
+let DUMMY_BUFF_SPELL_ID = 'XSSB'
+let IMPACT_STUN_DURATION_HERO = 0.10
+let IMPACT_STUN_DURATION_NORMAL = 0.10
+let COOLDOWN = 35.
+let MANACOST = 25
+let ORB_ATTACK_RADIUS = 575.
+let ORB_ATTACK_COOLDOWN = 0.35
+let ORB_IMPACT_DAMAGE = 40.
+let ORB_IMPACT_DAMAGE_SAMETARGET = 10.
+let ORB_SAMETARGET_BUFF_MARKER_DURATION = 1.5
+let ORB_LIFETIME = 25.
+let ORB_SPEED = 650.
+let ORB_SPAWN_INTERVAL = 0.35
+let CHANNEL_DURATION = 0.35*7 //7 Projectiles
+let ORB_PERIODICINTERVAL_SPAWN = 0.05
+let ORB_PERIODICINTERVAL_LOOP = 0.03125
+let ORB_ANGULARORBITSPEED = 100.
+let ORB_ORBIT_RADIUS = 150.
+let ORB_ORBIT_HEIGHT = 140.
+let SPELL_ICON = Icons.bTNGolemStormBolt
+let TOOLTIP_NORM = "Earth Guardians"
+let TOOLTIP_EXT = ("Channels to conjure 7 orbs that circle around you, striking enemies that come close for {0} damage and stunning them very "+
+                  "briefly. Subsequent impacts on the same target do {1} damage. Has {2} seconds cooldown.").format(ORB_IMPACT_DAMAGE.toToolTipRed(),
+                  ORB_IMPACT_DAMAGE_SAMETARGET.toToolTipRed(), COOLDOWN.toToolTipLightBlue())
+
+let ORB_EFFECT_PATH = Abilities.ancientProtectorMissile
+let ORB_IMPACT_EFFECT = Objects.impaleTargetDust
 
 
-constant let ABILITY_ID = 'ESEF'
-constant let DUMMY_STUN_SPELL_ID = 'ESES'
-constant let DUMMY_BUFF_SPELL_ID = 'XSSB'
-constant let IMPACT_STUN_DURATION_HERO = 0.10
-constant let IMPACT_STUN_DURATION_NORMAL = 0.10
-constant let COOLDOWN = 35.
-constant let MANACOST = 25
-constant let ORB_ATTACK_RADIUS = 575.
-constant let ORB_ATTACK_COOLDOWN = 0.35
-constant let ORB_IMPACT_DAMAGE = 40.
-constant let ORB_IMPACT_DAMAGE_SAMETARGET = 10.
-constant let ORB_SAMETARGET_BUFF_MARKER_DURATION = 1.5
-constant let ORB_LIFETIME = 25.
-constant let ORB_SPEED = 650.
-constant let ORB_SPAWN_INTERVAL = 0.35
-constant let CHANNEL_DURATION = 0.35*7 //7 Projectiles
-constant let ORB_PERIODICINTERVAL_SPAWN = 0.05
-constant let ORB_PERIODICINTERVAL_LOOP = 0.03125
-constant let ORB_ANGULARORBITSPEED = 100.
-constant let ORB_ORBIT_RADIUS = 150.
-constant let ORB_ORBIT_HEIGHT = 140.
-constant let SPELL_ICON = "ReplaceableTextures\\CommandButtons\\BTNGolemStormBolt.blp"
-constant let TOOLTIP_NORM = "|c00ffcc00R |r- Earth Guardians"
-constant let TOOLTIP_EXT = "Channels to conjure 7 orbs that circle around you, striking enemies that come close for |c00ff000040|r damage and stunning them very briefly. Subsequent impacts on the same target do |c00ff000010|r damage."
-constant let ORB_EFFECT_PATH = "Abilities\\Weapons\\AncientProtectorMissile\\AncientProtectorMissile.mdl"
-constant let ORB_IMPACT_EFFECT = "Objects\\Spawnmodels\\Undead\\ImpaleTargetDust\\ImpaleTargetDust.mdl"
-
-@compiletime function createSpell()
-    new AbilityDefinitionIllidanChannel(ABILITY_ID)
-    ..setTargetType(1, 0)
-    ..setAnimationNames("spell,channel")
-    ..setArtCaster("")
-    ..setArtEffect("")
-    ..setArtTarget("")
-    ..setArtSpecial("")
-    ..setButtonPositionNormalX(3)
-    ..setButtonPositionNormalY(0)
-    ..setButtonPositionResearchX(3)
-    ..setButtonPositionResearchY(0)
-    ..setIconNormal(SPELL_ICON)
-    ..setIconResearch(SPELL_ICON)
-    ..setIconTurnOff(SPELL_ICON)
-    ..setHeroAbility(false)
-    ..setItemAbility(false)
-    ..setLevels(1)
-    ..setHotkeyNormal("R")
-    ..setName("Storm, Earth and Fire")
-    ..setDisableOtherAbilities(1, false)
-    ..setFollowThroughTime(1, CHANNEL_DURATION)
-    ..setTooltipNormal(1, TOOLTIP_NORM)
-    ..setTooltipNormalExtended(1, TOOLTIP_EXT)
-    ..setBaseOrderID(1, "rechargeoff")
-    ..setOptions(1, 1)
-    ..setCooldown(1, COOLDOWN)
-    ..setManaCost(1, MANACOST)
-
-@compiletime function createDummySpell()
+function createDummySpell()
     new AbilityDefinitionFireBolt(DUMMY_STUN_SPELL_ID)
     ..setAnimationNames("")
     ..setMissileSpeed(20000)
@@ -88,13 +64,13 @@ constant let ORB_IMPACT_EFFECT = "Objects\\Spawnmodels\\Undead\\ImpaleTargetDust
     ..setRace(Race.Creeps)
     ..setName("Orb stun Dummy Spell")
 
-@compiletime function createDummyBuff()
+function createDummyBuff()
     new BuffDefinition('XSFB', 'Bclf')
     ..setIcon(Icons.bTNResistantSkin)
     ..setTooltipNormal(1, "Hit by earth orbs")
     ..setTooltipNormalExtended(1, "Hit by earth orbs")
 
-@compiletime function createBuffSpell()
+function createBuffSpell()
     new AbilityDefinitionAlchemistAcidBomb('XSSB')
     ..setAnimationNames("")
     ..setMissileSpeed(20000)
@@ -119,19 +95,44 @@ constant let ORB_IMPACT_EFFECT = "Objects\\Spawnmodels\\Undead\\ImpaleTargetDust
     ..setSecondaryDamage(1, 0)
     ..setPrimaryDamage(1, 0)
 
-let instances = new HashMap<unit, SEFInstance>()
+class EarthGuardian extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 1, true)
+        this.setTargetType(1, 0)
+        this.setAnimationNames("spell,channel")
+        this.setIconNormal(SPELL_ICON)
+        this.setIconResearch(SPELL_ICON)
+        this.setIconTurnOff(SPELL_ICON)
+        this.setHeroAbility(false)
+        this.setHotkeyNormal(hotkey)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setName("Storm, Earth and Fire")
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.setTooltipNormalExtended(1, TOOLTIP_EXT)
+        this.setFollowThroughTime(1, CHANNEL_DURATION)
+        this.setCooldown(1, COOLDOWN)
+        this.setManaCost(1, MANACOST)
 
-class SEFOrb
-    SEFInstance instance
+@compiletime function createEarthGuardian()
+    new EarthGuardian(ABILITY_ID, "W", new Pair(1, 0))
+    createDummySpell()
+    createDummyBuff()
+    createBuffSpell()
+
+let instances = new HashMap<unit, EarthGuardianInstance>()
+
+class EarthGuardianOrb
+    EarthGuardianInstance instance
     unit ownerUnit = null
     real speed = ORB_SPEED
     effect projectile = null
     vec3 targetPos
     unit targetUnit = null
 
-    construct (unit owner, SEFInstance SEF, vec3 startPos)
+    construct (unit owner, EarthGuardianInstance earthGuardian, vec3 startPos)
         ownerUnit = owner
-        instance = SEF
+        instance = earthGuardian
         projectile = addEffect(ORB_EFFECT_PATH, startPos)
         projectile.setScale(0.65)
         targetUnit = null
@@ -224,7 +225,7 @@ class SEFOrb
         projectile.destr()
 
 
-class SEFInstance
+class EarthGuardianInstance
     angle orbAngle
     unit ownerUnit
     bool isChanneling
@@ -233,7 +234,7 @@ class SEFInstance
     CallbackCounted orbLoopPeriodic
     CallbackCounted orbCreationLoopPeriodic
     let targetedTimestampMap = new HashMap<unit, real>()
-    LinkedList<SEFOrb> orbs = new LinkedList<SEFOrb>()
+    LinkedList<EarthGuardianOrb> orbs = new LinkedList<EarthGuardianOrb>()
 
     construct (unit caster, bool overcharged)
         isOvercharged = overcharged
@@ -251,7 +252,7 @@ class SEFInstance
                     channeledTime = channeledTime + ORB_PERIODICINTERVAL_SPAWN
                     //Avoid floating point errors in the interval check with the -0.01
                     if (channeledTime - _lastOrbCreatedTimestamp >= orb_interval-0.01)
-                        orbs.push(new SEFOrb(ownerUnit, this, caster.getPos().withTerrainZ(ORB_ORBIT_HEIGHT)))
+                        orbs.push(new EarthGuardianOrb(ownerUnit, this, caster.getPos().withTerrainZ(ORB_ORBIT_HEIGHT)))
                         _lastOrbCreatedTimestamp = channeledTime
                 else
                     orbCreationLoopPeriodic.stop()
@@ -259,7 +260,7 @@ class SEFInstance
             //Create orbs instantly if overcharged
             int count = (CHANNEL_DURATION/ORB_SPAWN_INTERVAL).round()
             for i = 1 to count
-                orbs.push(new SEFOrb(ownerUnit, this, caster.getPos().withTerrainZ(ORB_ORBIT_HEIGHT)))
+                orbs.push(new EarthGuardianOrb(ownerUnit, this, caster.getPos().withTerrainZ(ORB_ORBIT_HEIGHT)))
 
         this.startOrbLoop()
 
@@ -317,8 +318,8 @@ function onCast()
         prev_instance.orbLoopPeriodic.stop()
 
 
-    var SEF = new SEFInstance(caster, consumeOvercharge(caster))
-    instances.put(caster, SEF)
+    var earthGuardian = new EarthGuardianInstance(caster, consumeOvercharge(caster))
+    instances.put(caster, earthGuardian)
 
 function onEndCast()
     if GetSpellAbilityId() == ABILITY_ID

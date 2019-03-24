@@ -2,53 +2,58 @@ package FrostBlast
 
 import ClosureEvents
 import ClosureTimers
-import AbilityObjEditing
 import OverCharge
 import Assets
-import ObjectIdGenerator
 import ClosureForGroups
 import Orders
 import BuffObjEditing
-import ObjectIds
 import DummyCaster
+import Lodash
+import ChannelAbilityPreset
+import ToolTipsUtils
 
-constant let ABILITY_ID = 'ESFB'
-constant let DUMMY_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
-constant let DUMMY_ABILITY_BUFF_ID = compiletime(BUFF_ID_GEN.next())
-constant let COOLDOWN = 35.
-constant let MISSILE_SPEED = 1100.
-constant let MISSILE_LIFETIME = 1.5
-constant let MANACOST = 15
-constant let IMPACT_TRIGGER_AOE = 130.
-constant let MISSILE_FLY_HEIGHT = 140.
-constant let IMPACT_EFFECT_AOE = 250.
-constant let OVERCHARGE_DAMAGE_MULTIPLIER = 0.3
-constant let OVERCHARGE_PROJECTILE_COUNT = 7
-constant let OVERCHARGE_PROJECTILE_INTERVAL = 0.35
-constant let IMPACT_EFFECT_MIN_DAMAGE = 25.
-constant let IMPACT_EFFECT_MAX_DAMAGE = 65.
-constant let IMPACT_EFFECT_MIN_SLOW_AMOUNT = 0.35
-constant let IMPACT_EFFECT_MAX_SLOW_AMOUNT = 0.75
-constant let IMPACT_EFFECT_MIN_DURATION = 2
-constant let IMPACT_EFFECT_MAX_DURATION = 5
-constant let SPAWN_OFFSET_DISTANCE = 50.
-constant let LOOP_INTERVAL = 0.03125
-constant let SPELL_ICON = Icons.bTNFrostBolt
-constant let PROJECTILE_EFFECT_PATH = "Abilities\\Weapons\\FrostWyrmMissile\\FrostWyrmMissile.mdl"
-constant let PROJECTILE_EFFECT_PATH_OVERCHARGED = "Abilities\\Weapons\\ZigguratFrostMissile\\ZigguratFrostMissile.mdl" //"Abilities\\Spells\\Other\\FrostBolt\\FrostBoltMissile.mdl"
+let ABILITY_ID = 'ESFB'
+let DUMMY_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
+let DUMMY_ABILITY_BUFF_ID = compiletime(BUFF_ID_GEN.next())
+let BUFF_SLOW = 'Bfro'
+let COOLDOWN = 35.
+let MISSILE_SPEED = 1100.
+let MISSILE_LIFETIME = 1.5
+let MANACOST = 15
+let IMPACT_TRIGGER_AOE = 130.
+let MISSILE_FLY_HEIGHT = 140.
+let IMPACT_EFFECT_AOE = 250.
+let OVERCHARGE_DAMAGE_MULTIPLIER = 0.3
+let OVERCHARGE_PROJECTILE_COUNT = 7
+let OVERCHARGE_PROJECTILE_INTERVAL = 0.35
+let IMPACT_EFFECT_MIN_DAMAGE = 25.
+let IMPACT_EFFECT_MAX_DAMAGE = 65.
+let IMPACT_EFFECT_MIN_SLOW_AMOUNT = 0.35
+let IMPACT_EFFECT_MAX_SLOW_AMOUNT = 0.75
+let IMPACT_EFFECT_MIN_DURATION = 2.
+let IMPACT_EFFECT_MAX_DURATION = 5.
+let SPAWN_OFFSET_DISTANCE = 50.
+let LOOP_INTERVAL = 0.03125
+let SPELL_ICON = Icons.bTNFrostBolt
+let PROJECTILE_EFFECT_PATH = Abilities.frostWyrmMissile
+let PROJECTILE_EFFECT_PATH_OVERCHARGED = Abilities.zigguratFrostMissile
 
-constant let IMPACT_EFFECT_PATH = "Abilities\\Spells\\Undead\\FrostNova\\FrostNovaTarget.mdl"
-constant let TOOLTIP_NORM = "|c00ffcc00E|r - Frost Blast"
-constant let TOOLTIP_EXT = "Shoots out a missile of frost that explodes on impact, dealing |c00ff000025 - 65|r damage to units in a small area and slows their movement and attack speeds by 35% - 75% for 2 - 5 seconds with effects increasing by distance travelled before impact."
+let IMPACT_EFFECT_PATH = Abilities.frostNovaTarget
+let TOOLTIP_NORM = "Frost Blast"
+let TOOLTIP_EXTENDED = ("Shoots out a missile of frost that explodes on impact, dealing {0} - {1} damage to units in a small area and slows "+
+                       "their movement and attack speeds by {2} - {3} for {4} - {5} seconds with effects increasing by distance travelled before impact. "+
+                       "Has {6} seconds cooldown.").format(IMPACT_EFFECT_MIN_DAMAGE.toToolTipRed(), IMPACT_EFFECT_MAX_DAMAGE.toToolTipRed(),
+                       IMPACT_EFFECT_MIN_SLOW_AMOUNT.toToolTipOrange(), IMPACT_EFFECT_MAX_SLOW_AMOUNT.toToolTipOrange(),
+                       IMPACT_EFFECT_MIN_DURATION.toToolTipLightBlue(), IMPACT_EFFECT_MAX_DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
 
-@compiletime function createBuff()
-    new BuffDefinition(DUMMY_ABILITY_BUFF_ID, 'Bfro')
+function createBuff()
+    new BuffDefinition(DUMMY_ABILITY_BUFF_ID, BUFF_SLOW)
     ..setTooltipNormal(1, "Frost Blast slow")
     ..setTooltipNormalExtended(1, "Slowed by Frost Blast")
     ..setIcon(SPELL_ICON)
     ..setIconNormal(1, SPELL_ICON)
 
-@compiletime function createDummySlow()
+function createDummySlow()
     new AbilityDefinitionSlowCreep(DUMMY_ABILITY_ID)
     ..setLevels(10)
     ..setArtCaster("")
@@ -69,42 +74,32 @@ constant let TOOLTIP_EXT = "Shoots out a missile of frost that explodes on impac
     ..setHeroAbility(false)
     ..setItemAbility(false)
 
+class FrostBlast extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 1, true)
+        this.setTargetType(1, 0)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setIconNormal(SPELL_ICON)
+        this.setIconResearch(SPELL_ICON)
+        this.setIconTurnOff(SPELL_ICON)
+        this.setHeroAbility(false)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.setDisableOtherAbilities(1, false)
+        this.setFollowThroughTime(1, 0)
+        this.setCastingTime(1, 0)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        this.setCooldown(1, COOLDOWN)
+        this.setManaCost(1, MANACOST)
+        this.setTargetType(1, 3)
+        this.setCastRange(1, MISSILE_SPEED * MISSILE_LIFETIME)
 
-@compiletime function createSpell()
-    new AbilityDefinitionIllidanChannel(ABILITY_ID)
-    ..setTargetType(1, 0)
-    ..setAnimationNames("")
-    ..setArtCaster("")
-    ..setArtEffect("")
-    ..setArtTarget("")
-    ..setArtSpecial("")
-    ..setButtonPositionNormalX(0)
-    ..setButtonPositionNormalY(1)
-    ..setButtonPositionResearchX(0)
-    ..setButtonPositionResearchY(1)
-    ..setIconNormal(SPELL_ICON)
-    ..setIconResearch(SPELL_ICON)
-    ..setIconTurnOff(SPELL_ICON)
-    ..setHeroAbility(false)
-    ..setItemAbility(false)
-    ..setLevels(1)
-    ..setHotkeyNormal("E")
-    ..setName("Frost Blast")
-    ..setDisableOtherAbilities(1, false)
-    ..setFollowThroughTime(1, 0)
-    ..setCastingTime(1, 0)
-    ..setTooltipNormal(1, TOOLTIP_NORM)
-    ..setTooltipNormalExtended(1, TOOLTIP_EXT)
-    ..setBaseOrderID(1, "frostarmoroff")
-    ..setOrderStringUseTurnOn("frostarmoroff")
-    ..setOrderStringActivate("frostarmoroff")
-    ..setOrderStringDeactivate("frostarmoroff")
-    ..setOrderStringTurnOff("frostarmoroff")
-    ..setOptions(1, 1)
-    ..setCooldown(1, COOLDOWN)
-    ..setManaCost(1, MANACOST)
-    ..setTargetType(1, 3)
-    ..setCastRange(1, MISSILE_SPEED * MISSILE_LIFETIME)
+@compiletime function createFrostBlast()
+    new FrostBlast(ABILITY_ID, "E", new Pair(2, 0))
+    createBuff()
+    createDummySlow()
 
 class FrostBlastProjectile
     real lifeTime

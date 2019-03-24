@@ -6,26 +6,67 @@ import ClosureTimers
 import Orders
 import ClosureForGroups
 import DummyCaster
-import AbilityObjEditing
 import GroupExtensions
+import Assets
+import ChannelAbilityPreset
+import Lodash
+import ToolTipsUtils
 
-constant let ABILITY_ID = 'A076'
-constant let GROW_DURATION = 10.
-constant let MINIMUM_GROW_DURATION = 1.5
-constant let DURATION_MAX = 40.
-constant let ORB_COUNT = 7
-constant let ORB_LOOP_INTERVAL = 0.03125
-constant let ORB_ANGULARSPEED_SUMMON = 80.
-constant let ORB_ANGULARSPEED_ACTIVE = 10.
-constant let SPELLCAST_INTERVAL_FASTEST = 1.5
-constant let SPELLCAST_INTERVAL_START = 2.5
-constant let PORTAL_GROWSPEED = 100.
-constant let SPELLCAST_EFFECT_PATH = "Abilities\\Spells\\Demon\\DarkPortal\\DarkPortalTarget.mdl"
-constant let TRAIL_EFFECT_PATH = "Abilities\\Weapons\\AvengerMissile\\AvengerMissile.mdl"
-constant let ORB_EFFECT_PATH = "Objects\\InventoryItems\\CrystalShard\\CrystalShard.mdl"
+let TMP_CHAIN_LIGHTNING_ID  = 'PRTA'
+let TMP_FROST_NOVA_ID       = 'PRTC'
+let TMP_FORKED_LIGHTNING_ID = 'PRTD'
+let TMP_MANA_BURN_ID        = 'PRTE'
+let TMP_TSUNAMI_ID          = 'PRTG'
+let TMP_FIRE_BOLT_ID        = 'PRTH'
+let TMP_IMPALE_ID           = 'PRTF'
 
-@compiletime function createDummyChainlightning()
-    new AbilityDefinitionChainLightningcreep('PRTA')
+let ABILITY_ID = 'A076' // Open Dark gate
+let GROW_DURATION = 10.
+let MINIMUM_GROW_DURATION = 1.5
+let DURATION_MAX = 40.
+let ORB_COUNT = 7
+let ORB_LOOP_INTERVAL = 0.03125
+let ORB_ANGULARSPEED_SUMMON = 80.
+let ORB_ANGULARSPEED_ACTIVE = 10.
+let SPELLCAST_INTERVAL_FASTEST = 1.5
+let SPELLCAST_INTERVAL_START = 2.5
+let PORTAL_GROWSPEED = 100.
+let SPELLCAST_EFFECT_PATH = Abilities.darkPortalTarget
+let TRAIL_EFFECT_PATH = Abilities.avengerMissile
+let ORB_EFFECT_PATH = Objects.crystalShard
+
+let MANACOST = 80
+let COOLDOWN = 70.
+let ANIMATION_NAMES = "spell,throw"
+let TOOLTIP_NORM = "Open Dark Gate"
+let TOOLTIP_EXTENDED = "The Dementia Summoner channels pure balls or dark energy which he uses to construct a gate. "+
+                       "As the balls dissipate, they cast spells on enemies inside the gate. The longer the gate is channeled "+
+                       "the longer it lasts and the faster the orbs cast spells. Runes carried by the Dementia Master have increased "+
+                       "range inside the gate and he can use the gate and Dementia Summoning to summon monsters from the Dementia Realm. "+
+                       "Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
+
+class DarkGate extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 1, true)
+        this.setFollowThroughTime(1, GROW_DURATION)
+        this.setArtTarget("")
+        this.setArtEffect("")
+        this.setIconNormal(Icons.bTNPortal)
+        this.setAnimationNames(ANIMATION_NAMES)
+        this.setTargetAttachmentPoint1("")
+        this.setCasterAttachmentPoint1("")
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setHeroAbility(false)
+        this.setManaCost(1, MANACOST)
+        this.setCooldown(1, COOLDOWN)
+        this.setName(TOOLTIP_NORM)
+        this.setTooltipNormal(1, TOOLTIP_NORM)
+        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        this.setHotkeyNormal(hotkey)
+
+function createDummyChainlightning()
+    new AbilityDefinitionChainLightningcreep(TMP_CHAIN_LIGHTNING_ID)
     ..setAnimationNames("")
     ..setDamageReductionperTarget(1, 0.1)
     ..setDamageperTarget(1, 20)
@@ -38,10 +79,10 @@ constant let ORB_EFFECT_PATH = "Objects\\InventoryItems\\CrystalShard\\CrystalSh
     ..setLevels(1)
     ..setCooldown(1,0)
 
-@compiletime function createDummyFrostnova()
-    new AbilityDefinitionFrostNovacreep('PRTC')
+function createDummyFrostnova()
+    new AbilityDefinitionFrostNovacreep(TMP_FROST_NOVA_ID)
     ..setAnimationNames("")
-    ..setBuffs(1, "Bfro")
+    ..setBuffs(1, "Bfro") // Slow buff
     ..setCastRange(1, 4000)
     ..setCastingTime(1, 0)
     ..setDurationHero(1, 4)
@@ -53,8 +94,8 @@ constant let ORB_EFFECT_PATH = "Objects\\InventoryItems\\CrystalShard\\CrystalSh
     ..setLevels(1)
     ..setCooldown(1,0)
 
-@compiletime function createDummyForkedlightning()
-    new AbilityDefinitionSeaWitchForkedLightning('PRTD')
+function createDummyForkedlightning()
+    new AbilityDefinitionSeaWitchForkedLightning(TMP_FORKED_LIGHTNING_ID)
     ..setCastRange(1, 4000)
     ..setAnimationNames("")
     ..setCastingTime(1, 0)
@@ -68,8 +109,8 @@ constant let ORB_EFFECT_PATH = "Objects\\InventoryItems\\CrystalShard\\CrystalSh
     ..setLevels(1)
     ..setCooldown(1,0)
 
-@compiletime function createDummyManaburn()
-    new AbilityDefinitionManaBurndemon('PRTE')
+function createDummyManaburn()
+    new AbilityDefinitionManaBurndemon(TMP_MANA_BURN_ID)
     ..setCastRange(1, 4000)
     ..setAnimationNames("")
     ..setCastingTime(1, 0)
@@ -79,8 +120,8 @@ constant let ORB_EFFECT_PATH = "Objects\\InventoryItems\\CrystalShard\\CrystalSh
     ..setLevels(1)
     ..setCooldown(1,0)
 
-@compiletime function createDummyCrushingwave()
-    new AbilityDefinitionCrushingWave('PRTG')
+function createDummyTsunami()
+    new AbilityDefinitionCrushingWave(TMP_TSUNAMI_ID)
     ..setAnimationNames("")
     ..setCastRange(1, 4000)
     ..setDistance(1, 2000)
@@ -93,8 +134,8 @@ constant let ORB_EFFECT_PATH = "Objects\\InventoryItems\\CrystalShard\\CrystalSh
     ..setMaxDamage(1, 200)
     ..setCooldown(1,0)
 
-@compiletime function createDummyFirebolt()
-    new AbilityDefinitionFireBoltcreep('PRTH')
+function createDummyFirebolt()
+    new AbilityDefinitionFireBoltcreep(TMP_FIRE_BOLT_ID)
     ..setAnimationNames("")
     ..setCastRange(1, 2000)
     ..setCastingTime(1, 0)
@@ -106,8 +147,8 @@ constant let ORB_EFFECT_PATH = "Objects\\InventoryItems\\CrystalShard\\CrystalSh
     ..setDurationNormal(1, 2.1)
     ..setCooldown(1,0)
 
-@compiletime function createDummyImpale()
-    new AbilityDefinitionImpaleCreep('PRTF')
+function createDummyImpale()
+    new AbilityDefinitionImpaleCreep(TMP_IMPALE_ID)
     ..setAnimationNames("")
     ..setCastRange(1, 2500)
     ..setAirTimeseconds(1, 0.7)
@@ -122,6 +163,15 @@ constant let ORB_EFFECT_PATH = "Objects\\InventoryItems\\CrystalShard\\CrystalSh
     ..setDurationNormal(1, 2)
     ..setCooldown(1,0)
 
+@compiletime function createDarkGateSpells()
+    new DarkGate(ABILITY_ID, "Q", new Pair(0, 0))
+    createDummyChainlightning()
+    createDummyFrostnova()
+    createDummyForkedlightning()
+    createDummyManaburn()
+    createDummyTsunami()
+    createDummyFirebolt()
+    createDummyImpale()
 
 let darkPortalInstances = new HashMap<unit, DarkPortalInstance>()
 let spellList = new LinkedList<OrbSpell>()
@@ -331,7 +381,7 @@ public class DarkPortalInstance
         if (not aIsEnemy and bIsEnemy)
             return 1
 
-        //Sort by units without buff - with buff
+        //Sort by units without buff - with buff - Bmlt -> Unholy Flames, B00Q -> Bad Breath
         let aHasBuff = a.hasAbility('Bmlt') or a.hasAbility('B00Q')
         let bHasBuff = b.hasAbility('Bmlt') or b.hasAbility('B00Q')
         if (not aHasBuff and bHasBuff)
@@ -426,22 +476,14 @@ function onEndCast()
         instance.isChanneling = false
 
 function createSpellList()
-    //Chainlight
-    spellList.push(new OrbSpell("Chain lightning",'PRTA', Orders.chainlightning) )
-    //Thistle
-    spellList.push(new OrbSpell("Thistle poison",'A01K', Orders.shadowstrike) )
-    //Frostnova
-    spellList.push(new OrbSpell("Frost nova",'PRTC', Orders.frostnova) )
-    //Forked
-    spellList.push(new OrbSpell("Forked lightning",'PRTD', Orders.forkedlightning) )
-    //Manaburn
-    spellList.push(new OrbSpell("Manaburn",'PRTE', Orders.manaburn) )
-    //Tsunami
-    spellList.push(new OrbSpell("Crushingwave",'PRTG', Orders.carrionswarm) )
-    //Firebolt
-    spellList.push(new OrbSpell("Firebolt",'PRTH', Orders.firebolt) )
-    //Impale
-    spellList.push(new OrbSpell("Impale",'PRTF', Orders.impale) )
+    spellList.push(new OrbSpell("Chain lightning" ,TMP_CHAIN_LIGHTNING_ID , Orders.chainlightning ))
+    spellList.push(new OrbSpell("Thistle poison"  ,'A01K'                 , Orders.shadowstrike   ))
+    spellList.push(new OrbSpell("Frost nova"      ,TMP_FROST_NOVA_ID      , Orders.frostnova      ))
+    spellList.push(new OrbSpell("Forked lightning",TMP_FORKED_LIGHTNING_ID, Orders.forkedlightning))
+    spellList.push(new OrbSpell("Manaburn"        ,TMP_MANA_BURN_ID       , Orders.manaburn       ))
+    spellList.push(new OrbSpell("Crushingwave"    ,TMP_TSUNAMI_ID         , Orders.carrionswarm   ))
+    spellList.push(new OrbSpell("Firebolt"        ,TMP_FIRE_BOLT_ID       , Orders.firebolt       ))
+    spellList.push(new OrbSpell("Impale"          ,TMP_IMPALE_ID          , Orders.impale         ))
 
 public function getDementiaGate(unit owner) returns DarkPortalInstance
     if (darkPortalInstances.has(owner))

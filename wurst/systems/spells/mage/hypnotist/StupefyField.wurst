@@ -1,0 +1,78 @@
+package StupefyField
+import RegisterEvents
+import ID
+import Icons
+import Lodash
+import ToolTipsUtils
+import ChannelAbilityPreset
+import Abilities
+
+@configurable constant int ABILITY_ID = 'A05W' // Dummy Channel ability
+@configurable constant int AURA_ABILITY_ID = 'A05V' // Real Aura
+
+let AS_REDUCED = 3.0
+let MS_REDUCED = 3.0
+let BUFF = "Bbar" // Stupefied
+let TARGET_ALLOWED = "enemies,friend,ground,hero,organic,self,vulnerable"
+
+let MANACOST = 10
+let COOLDOWN = 60.
+
+let ANIMATION_NAME = "channel"
+let TOOLTIP_NORM = "Stupefy Field"
+let TOOLTIP_EXTENDED = "The Hypnotist generates a magic field. Anyone, including allies and the hypnotist, that enters this field becomes temporarily stupefied. "+
+                       "Stupefied units have attack and movespeed extremely reduced. "+
+                       "Has {0} seconds cooldown.".format(COOLDOWN.toToolTipTeal())
+
+let SPELL_TMP_STUPEFY_FIELD = 'SSFT'
+let REAL_AURA_STUPEFY = 'RAST'
+
+class StupefyField extends ChannelAbilityPreset
+    construct(int newAbility, string hotkey, Pair<int , int> buttonPos)
+        super(newAbility, 1, true)
+        this.setName(TOOLTIP_NORM)
+        this.setHotkeyNormal(hotkey)
+        this.setCooldown(1, COOLDOWN)
+        this.setManaCost(1, MANACOST)
+        this.setIconNormal(Icons.bTNPolymorph)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.setArtDuration(1, 2)
+        this.setFollowThroughTime(1, 10)
+        this.setAnimationNames(ANIMATION_NAME)
+        this.setHeroAbility(false)
+        this.setArtTarget(Abilities.flameStrike)
+        this.setEffects(1, Abilities.flameStrike)
+        this.setArtCaster(commaList(Abilities.voodooAuraTarget, Abilities.flameStrike))
+
+@compiletime function createStupefyField()
+    new StupefyField(SPELL_TMP_STUPEFY_FIELD, "F", new Pair(3, 1))
+
+@compiletime function createStupefyAura()
+    new AbilityDefinitionAuraSlow(REAL_AURA_STUPEFY)
+    ..setName("Stupefying Aura")
+    ..setAttackSpeedFactor(1, -AS_REDUCED)
+    ..setMovementSpeedFactor(1, -MS_REDUCED)
+    ..setIconNormal(Icons.bTNLoad)
+    ..setBuffs(1, BUFF)
+    ..setTargetsAllowed(1, TARGET_ALLOWED)
+    ..setTooltipNormal(1, "Stupefying Aura")
+    ..setTooltipNormalExtended(1, "You shouldn't see this")
+
+function onCast()
+    var caster = GetSpellAbilityUnit()
+    if not caster.hasAbility(AURA_ABILITY_ID)
+        caster.addAbility(AURA_ABILITY_ID)
+
+function onEndcast()
+    var caster = GetSpellAbilityUnit()
+    if GetSpellAbilityId() == ABILITY_ID and caster.hasAbility(AURA_ABILITY_ID)
+        caster.removeAbility(AURA_ABILITY_ID)
+        caster.removeAbility('B00L')
+        caster.removeAbility('B00M')
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST, () -> onEndcast())

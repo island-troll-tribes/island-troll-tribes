@@ -27,6 +27,17 @@ let TOOLTIP_EXTENDED = ("The Hypnotist generates a magic field. Anyone, includin
 let SPELL_TMP_STUPEFY_FIELD = 'SSFT'
 let REAL_AURA_STUPEFY = 'RAST'
 
+function createStupefyAura()
+    new AbilityDefinitionAuraSlow(REAL_AURA_STUPEFY)
+    ..setName("Stupefying Aura")
+    ..setAttackSpeedFactor(1, -AS_REDUCED)
+    ..setMovementSpeedFactor(1, -MS_REDUCED)
+    ..setIconNormal(Icons.bTNLoad)
+    ..setBuffs(1, BUFF)
+    ..setTargetsAllowed(1, TARGET_ALLOWED)
+    ..setTooltipNormal(1, "Stupefying Aura")
+    ..setTooltipNormalExtended(1, "You shouldn't see this")
+
 class StupefyField extends ChannelAbilityPreset
     construct(int newAbility, string hotkey, Pair<int , int> buttonPos)
         super(newAbility, 1, true)
@@ -49,17 +60,7 @@ class StupefyField extends ChannelAbilityPreset
 
 @compiletime function createStupefyField()
     new StupefyField(SPELL_TMP_STUPEFY_FIELD, "F", new Pair(3, 1))
-
-@compiletime function createStupefyAura()
-    new AbilityDefinitionAuraSlow(REAL_AURA_STUPEFY)
-    ..setName("Stupefying Aura")
-    ..setAttackSpeedFactor(1, -AS_REDUCED)
-    ..setMovementSpeedFactor(1, -MS_REDUCED)
-    ..setIconNormal(Icons.bTNLoad)
-    ..setBuffs(1, BUFF)
-    ..setTargetsAllowed(1, TARGET_ALLOWED)
-    ..setTooltipNormal(1, "Stupefying Aura")
-    ..setTooltipNormalExtended(1, "You shouldn't see this")
+    createStupefyAura()
 
 function onCast()
     var caster = GetSpellAbilityUnit()

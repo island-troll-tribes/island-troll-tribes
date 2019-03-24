@@ -4,14 +4,58 @@ import Orders
 import Table
 import ClosureTimers
 import ClosureForGroups
+import ID
+import Icons
+import Lodash
+import ToolTipsUtils
+import ChannelAbilityPreset
 
-@configurable constant int ABILITY_ID = 'A051'
-@configurable constant int BUFF_ID = 'BHav'
+@configurable constant int ABILITY_ID = 'A051' // Jealousy spell
+@configurable constant int BUFF_ID = 'BHav' // Jealousy buff
 @configurable constant real INTERVAL = 0.5
 @configurable constant real CURSE_RADIUS = 600
 @configurable constant real CURSE_DURATION = 7
 
 constant targetTable = new Table()
+
+let MANACOST = 30
+let COOLDOWN = 75.
+
+let HERO_DURATION = 7.0
+let NORMAL_DURATION = 30.0
+let TARGET_ALLOWED = "hero,ennemies"
+
+let ANIMATION_NAME = "channel"
+let TOOLTIP_NORM = "Jealousy"
+let TOOLTIP_EXTENDED = "The Hypnotist curses an enemy causing nearby allies to attack it. Jealousy has a melee casting range and no "+
+                       "casting animation to make it hard to notice. A jealousied troll will be attacked by his allied towers as well. "+
+                       "Lasts {0} seconds. Has {1} seconds cooldown.".format(HERO_DURATION.toToolTipOrange(), COOLDOWN.toToolTipTeal())
+
+let SPELL_TMP_JEALOUSY = 'JETM'
+
+class Jealousy extends AbilityDefinitionMindRot
+    construct(int newAbility, string hotkey, Pair<int , int> buttonPos)
+        super(newAbility)
+        this.setName(TOOLTIP_NORM)
+        this.setHotkeyNormal(hotkey)
+        this.setCooldown(1, COOLDOWN)
+        this.setManaCost(1, MANACOST)
+        this.setIconNormal(Icons.bTNSacrifice)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.setAnimationNames(ANIMATION_NAME)
+        this.setHeroAbility(false)
+        this.setTargetsAllowed(1, TARGET_ALLOWED)
+        this.setManaDrainedperSecond(1, 0)
+        this.setBuffs(1, BUFF_ID.toString())
+        this.setDurationHero(1, HERO_DURATION)
+        this.setDurationNormal(1, NORMAL_DURATION)
+
+@compiletime function createJealousy()
+    new Jealousy(SPELL_TMP_JEALOUSY, "E", new Pair(2, 1))
+
 
 function onCast()
     var target = GetSpellTargetUnit()

@@ -8,41 +8,61 @@ import Lodash
 import Assets
 import ToolTipsUtils
 
-@configurable constant int ABILITY_ID = 'A05T'
-@configurable constant int DUMMY_ABILITY_ID = 'A05U'
+@configurable constant int ABILITY_ID = 'A05T' // Seizures channel
+@configurable constant int DUMMY_ABILITY_ID = 'A05U' // Seizures bolt
+
+let NEW_DUMMY_ID = 'DSSB'
+let DAMAGE = 4.
 
 let MANACOST = 20
 let COOLDOWN = 30.
+let ART_DURATION = 8.
 
-let ANIMATION_NAME = "channel,spell"
-let TOOLTIP_NORM = "Depression Orb"
-let TOOLTIP_EXTENDED = "The Hypnotist uses powerful magic to create an wisp of pure hatred and depression. The wisp is projected at opponents "+
-                       "and it depresses all who get near it. Depressed opponents have slightly reduced speed and experience severe energy shortages. "+
-                       "Has {0} seconds cooldown.".format(COOLDOWN.toToolTipTeal())
+let ANIMATION_NAME = "spell,throw"
+let TOOLTIP_NORM = "Seizures"
+let TOOLTIP_EXTENDED = "Manipulates the targets brain sending small electric pulses through his nerves causing him seizures. The seizures do {0} "+
+                       "damage per stun and have a random chance of occuring. Seizures stop after {1} seconds. "+
+                       "Has {2} seconds cooldown.".format(DAMAGE.toToolTipRed(), ART_DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipTeal())
 
-let SPELL_TMP_DEPRESSION_ORB = 'DOTP'
+let TARGET_ALLOWED = "air,enemies,ground,neutral,organic,terrain"
+let SPELL_TMP_SEIZURES = 'DOTP'
 
-class DepressionOrb extends ChannelAbilityPreset
+// New Seizures bolt
+@compiletime function createSeizuresBolt()
+    new AbilityDefinitionThunderBoltCreep(NEW_DUMMY_ID)
+    ..setDamage(1, DAMAGE)
+    ..setMissileArt("")
+    ..setMissileSpeed(5000)
+    ..setHeroAbility(false)
+    ..setManaCost(1, 0)
+    ..setDurationHero(1, 0.1)
+    ..setDurationNormal(1, 0.1)
+    ..setLevels(1)
+    ..setCooldown(1, 0)
+    ..setName("Seizure Bolt")
+
+class Seizures extends ChannelAbilityPreset
     construct(int newAbility, string hotkey, Pair<int , int> buttonPos)
         super(newAbility, 1, true)
         this.setName(TOOLTIP_NORM)
         this.setHotkeyNormal(hotkey)
         this.setCooldown(1, COOLDOWN)
         this.setManaCost(1, MANACOST)
-        this.setIconNormal(Icons.bTNOrbOfCorruption)
+        this.setIconNormal(Icons.bTNPurge)
         this.setButtonPositionNormalX(buttonPos.a)
         this.setButtonPositionNormalY(buttonPos.b)
         this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
         this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
-        this.setArtDuration(1, 0)
-        this.setTargetType(1, 2)
-        this.setAnimationNames(ANIMATION_NAME)
+        this.setTargetType(1, 1)
         this.setHeroAbility(false)
-        this.setTargetAttachmentPoint1("")
+        this.setArtDuration(1, ART_DURATION)
         this.setCasterAttachmentPoint1("")
+        this.setAnimationNames(ANIMATION_NAME)
+        this.setArtTarget(Abilities.boltImpact)
+        this.setTargetsAllowed(1, TARGET_ALLOWED)
 
-@compiletime function createDepressionOrb()
-    new DepressionOrb(SPELL_TMP_DEPRESSION_ORB, "R", new Pair(3, 0))
+@compiletime function createSeizures()
+    new Seizures(SPELL_TMP_SEIZURES, "S", new Pair(1, 1))
 
 function startPeriodicAction(player owner, unit target, real timeout, int chance)
     doPeriodicallyTimed(0.1, timeout) cb ->

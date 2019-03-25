@@ -3,10 +3,6 @@ import RegisterEvents
 import ClosureTimers
 import AbilityObjEditing
 import ObjectIdGenerator
-import BuffObjEditing
-import ObjectIds
-import Orders
-import DummyCaster
 import Assets
 import ID
 import Lodash
@@ -15,13 +11,13 @@ import ToolTipsUtils
 //@configurable constant int ABILITY_ID = 'A025' Old GUI
 let BUFF_ID = compiletime(BUFF_ID_GEN.next())
 let DUMMY_SLOW_ID = compiletime(ABIL_ID_GEN.next())
-let MS_SLOW = 0.2
-let AS_SLOW = 0.1
+let MS_SLOW = 0.20
+let AS_SLOW = 0.10
 let BUFF_TOOLTIP = "Depress Slow"
 let BUFF_TOOLTIPEXTENDED = "Slowed by Depress"
 let BUFF_SLOWED = 'Bfro'
 let BUFF_DEPRESS  = "B000"
-let DURATION = 20.
+let DURATION = 10.
 
 let MANA_LOST_INIT = 10.
 let DEPRESS_TICK = 4
@@ -37,30 +33,6 @@ let SPELL_TOOLTIP_EXTENDED = ("The mage casts a spell causing a chemical inbalan
                             .format(AS_SLOW.toToolTipOrange(), MS_SLOW.toToolTipOrange(), TOTAL_MANA_LOST.toToolTipTeal(), DURATION.toToolTipOrange(), COOLDOWN.toToolTipLightBlue())
 
 
-function createBuffs()
-    new BuffDefinition(BUFF_ID, BUFF_SLOWED)
-        ..setTooltipNormal(1, BUFF_TOOLTIP)
-        ..setTooltipNormalExtended(1, BUFF_TOOLTIPEXTENDED)
-        ..setIconNormal(1,Icons.bTNShadowPact)
-        ..setIcon(Icons.bTNShadowPact)
-        ..setArtTarget(1, "")
-
-function createSlowDummySpell()
-    new AbilityDefinitionSlowCreep(DUMMY_SLOW_ID)
-        ..setArtCaster("")
-        ..setArtTarget("")
-        ..setAttackSpeedFactor(1, AS_SLOW)
-        ..setMovementSpeedFactor(1, MS_SLOW)
-        ..setBuffs(1, toRawCode(BUFF_ID))
-        ..setCastRange(1, 2800)
-        ..setCastingTime(1, 0)
-        ..setCooldown(1, 0)
-        ..setDurationHero(1, DURATION)
-        ..setDurationNormal(1, DURATION)
-        ..setManaCost(1, 0)
-        ..setTargetsAllowed(1, "air,allies,enemies,ground")
-        ..setName("Depress dummy slow")
-
 class Depress extends AbilityDefinitionAlchemistAcidBomb
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
         super(newAbilityId)
@@ -75,6 +47,9 @@ class Depress extends AbilityDefinitionAlchemistAcidBomb
         this.setDurationNormal(1, DURATION)
         this.setTooltipNormalExtended(1, SPELL_TOOLTIP_EXTENDED)
         this.setTooltipNormal(1, makeToolTipNorm(hotkey, SPELL_TOOLTIP_NORM))
+        this.setAttackSpeedReduction(1, -AS_SLOW)
+        this.setMovementSpeedReduction(1, -MS_SLOW)
+        this.setAreaofEffect(1, 0)
         this.setPrimaryDamage(1, 1)
         this.setSecondaryDamage(1, 0)
         this.setArmorPenalty(1, 0)
@@ -84,23 +59,15 @@ class Depress extends AbilityDefinitionAlchemistAcidBomb
         this.setBuffs(1, BUFF_DEPRESS)
         this.setHeroAbility(false)
         this.setLevels(1)
-        this.setAreaofEffect(1, 0)
 
 
 @compiletime function createDepress()
     new Depress(SPELL_DEPRESS, "D", new Pair(1, 1))
-    createBuffs()
-    createSlowDummySpell()
 
 function onCast()
     let target = GetSpellTargetUnit()
-    let caster = GetSpellAbilityUnit()
-    let owner = caster.getOwner()
+
     doAfter(0.2) ->
-        new DummyCaster()
-            ..owner(owner)
-            ..origin(caster.getPos())
-            ..castTarget(DUMMY_SLOW_ID, 1, Orders.slow, target)
         if target.getMana() >= 40
             target.subMana(MANA_LOST_INIT)
             doPeriodicallyCounted(2.00, DEPRESS_TICK, (cb) -> target.subMana(MANA_LOST_PER_TICK))

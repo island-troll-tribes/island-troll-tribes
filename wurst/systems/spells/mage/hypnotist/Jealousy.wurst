@@ -5,16 +5,17 @@ import Table
 import ClosureTimers
 import ClosureForGroups
 import ID
-import Icons
+import BuffObjEditing
 import Lodash
+import Assets
 import ToolTipsUtils
 import ChannelAbilityPreset
 
-@configurable constant int ABILITY_ID = 'A051' // Jealousy spell
-@configurable constant int BUFF_ID = 'BHav' // Jealousy buff
+//@configurable constant int SPELL_JEALOUSY = 'A051' // Jealousy spell, Old GUI
+//@configurable constant int BUFF_ID = 'BHav' // Jealousy buff
 @configurable constant real INTERVAL = 0.5
 @configurable constant real CURSE_RADIUS = 600
-@configurable constant real CURSE_DURATION = 7
+//@configurable constant real CURSE_DURATION = 7
 
 constant targetTable = new Table()
 
@@ -31,7 +32,17 @@ let TOOLTIP_EXTENDED = ("The Hypnotist curses an enemy causing nearby allies to 
                        "casting animation to make it hard to notice. A jealousied troll will be attacked by his allied towers as well. "+
                        "Lasts {0} seconds. Has {1} seconds cooldown.").format(HERO_DURATION.toToolTipOrange(), COOLDOWN.toToolTipLightBlue())
 
-let SPELL_TMP_JEALOUSY = 'JETM'
+let BUFF_ID = BUFF_ID_GEN.next()
+let ORIGINAL_BUFF_ID = 'ANmr' // Mindrot
+
+function createBuff()
+    new BuffDefinition(BUFF_ID, ORIGINAL_BUFF_ID)
+    ..setTargetAttachments(1, 1)
+    ..setTargetAttachmentPoint0(1, "overhead")
+    ..setArtTarget(1, Abilities.possessionTarget)
+    ..setIcon(Icons.bTNSacrifice)
+    ..setTooltipNormal(1, "Jealousy")
+    ..setTooltipNormalExtended(1, "This unit will be attacked by it's allies")
 
 class Jealousy extends AbilityDefinitionMindRot
     construct(int newAbility, string hotkey, Pair<int , int> buttonPos)
@@ -49,19 +60,19 @@ class Jealousy extends AbilityDefinitionMindRot
         this.setHeroAbility(false)
         this.setTargetsAllowed(1, TARGET_ALLOWED)
         this.setManaDrainedperSecond(1, 0)
-        this.setBuffs(1, BUFF_ID.toString())
+        this.setBuffs(1, toRawCode(BUFF_ID))
         this.setDurationHero(1, HERO_DURATION)
         this.setDurationNormal(1, NORMAL_DURATION)
 
 @compiletime function createJealousy()
-    new Jealousy(SPELL_TMP_JEALOUSY, "D", new Pair(2, 1))
-
+    new Jealousy(SPELL_JEALOUSY, "D", new Pair(2, 1))
+    createBuff()
 
 function onCast()
     var target = GetSpellTargetUnit()
     var owner = target.getOwner()
 
-    doPeriodicallyTimed(INTERVAL, CURSE_DURATION) cb ->
+    doPeriodicallyTimed(INTERVAL, HERO_DURATION) cb ->
         if not target.isAlive() or not target.hasAbility(BUFF_ID)
             cb.stop()
         else
@@ -71,4 +82,4 @@ function onCast()
                         u.issueTargetOrderById(Orders.attack, target)
 
 init
-    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerSpellEffectEvent(SPELL_JEALOUSY, () -> onCast())

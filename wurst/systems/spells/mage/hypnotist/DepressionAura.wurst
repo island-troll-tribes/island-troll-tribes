@@ -9,44 +9,30 @@ import ChannelAbilityPreset
 let AS_REDUCED = 0.10
 let MS_REDUCED = 0.10
 
+let MODEL_PATH = "Models\\DepressAura.mdx"
 let TOOLTIP_NORM = "Depression Aura"
 let TOOLTIP_EXTENDED = ("The Hypnotist spend many time studying dark magic, he can passively generate a field of depression around him. Units that enter "+
-                       "it got their attack and movement speed reduced by {0}%, they also loose energy quickly. Stacks with depression. ")
-                       .format(AS_REDUCED.toToolTipRed())
+                       "it got their attack and movement speed reduced by {0}, they also loose energy quickly. Stacks with depression. ")
+                       .format(AS_REDUCED.toToolTipOrange())
 
 let BUFF = "B00F" // Depression (Aura) Buff
 let TARGET_ALLOWED = "enemies,ground,hero,organic,vulnerable"
 
-let SPELL_TMP_DEPRESSION_AURA = 'DATM'
-let REAL_AURA_DEPRESS_ID = 'RADI'
-
-function createDepressionAuraReal()
-    new AbilityDefinitionAuraSlow(REAL_AURA_DEPRESS_ID)
-    ..setName(TOOLTIP_NORM+" (Real)")
-    ..setIconNormal(Icons.bTNLoad)
-    ..setTooltipNormal(1, "You shoudln't see this")
-    ..setAttackSpeedFactor(1, -AS_REDUCED)
-    ..setMovementSpeedFactor(1, -MS_REDUCED)
-    ..setBuffs(1, BUFF)
-    ..setTargetsAllowed(1, TARGET_ALLOWED)
-
-class DepressionAura extends AbilityDefinitionKeeperoftheGroveThornsAura
+class DepressionAura extends AbilityDefinitionAuraEnduranceCreep
     construct(int newAbility, Pair<int , int> buttonPos)
         super(newAbility)
         this.setName(TOOLTIP_NORM)
         this.setIconNormal(Icons.bTNShadowPact)
         this.setButtonPositionNormalX(buttonPos.a)
         this.setButtonPositionNormalY(buttonPos.b)
-        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
         this.setTooltipNormal(1, makeToolTipNormAura(TOOLTIP_NORM))
-        this.setHeroAbility(false)
-        this.setDamageDealttoAttackers(1, 0)
-        this.setDamageisPercentReceived(1, false)
-        this.setArtTarget("")
-        this.setTargetAttachmentPoint1("")
-        this.setTargetsAllowed(1, "")
-        this.setAreaofEffect(1, 0)
+        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        this.setAttackSpeedIncrease(1, -AS_REDUCED)
+        this.setMovementSpeedIncrease(1, -MS_REDUCED)
+        this.setBuffs(1, BUFF)
+        this.setArtTarget(MODEL_PATH)
+        this.setTargetsAllowed(1, TARGET_ALLOWED)
+
 
 @compiletime function createDepressionAura()
-    new DepressionAura(SPELL_TMP_DEPRESSION_AURA, new Pair(0, 1))
-    createDepressionAuraReal()
+    new DepressionAura(SPELL_DEPRESSION_AURA, new Pair(0, 1))

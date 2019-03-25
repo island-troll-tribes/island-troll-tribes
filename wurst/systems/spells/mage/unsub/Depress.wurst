@@ -6,7 +6,9 @@ import ObjectIdGenerator
 import Assets
 import ID
 import Lodash
+import ObjectIds
 import ToolTipsUtils
+import BuffObjEditing
 
 //@configurable constant int ABILITY_ID = 'A025' Old GUI
 let BUFF_ID = compiletime(BUFF_ID_GEN.next())
@@ -16,7 +18,6 @@ let AS_SLOW = 0.10
 let BUFF_TOOLTIP = "Depress Slow"
 let BUFF_TOOLTIPEXTENDED = "Slowed by Depress"
 let BUFF_SLOWED = 'Bfro'
-let BUFF_DEPRESS  = "B000"
 let DURATION = 10.
 
 let MANA_LOST_INIT = 10.
@@ -32,6 +33,16 @@ let SPELL_TOOLTIP_EXTENDED = ("The mage casts a spell causing a chemical inbalan
                              "causing their attack speed to be reduced by {0} and movement speed by {1} while loosing {2} mana over {3} seconds. Has {4} seconds cooldown.")
                             .format(AS_SLOW.toToolTipOrange(), MS_SLOW.toToolTipOrange(), TOTAL_MANA_LOST.toToolTipTeal(), DURATION.toToolTipOrange(), COOLDOWN.toToolTipLightBlue())
 
+let BUFF_ACIDBOMB = 'BNab'
+
+class DepressBuff extends BuffDefinition
+    construct(int newBuffId, string whichSpell)
+        super(newBuffId, BUFF_ACIDBOMB)
+        this.setTargetAttachmentPoint1(1, "overhead")
+        this.setArtTarget(1, Abilities.orbDarkness)
+        this.setIcon(Icons.bTNShadowPact)
+        this.setTooltipNormal(1, "Depressed"+whichSpell)
+        this.setTooltipNormalExtended(1, "This unit loses energy over time")
 
 class Depress extends AbilityDefinitionAlchemistAcidBomb
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
@@ -56,13 +67,16 @@ class Depress extends AbilityDefinitionAlchemistAcidBomb
         this.setMissileArc(0.70)
         this.setMissileArt(Abilities.blackArrowMissile)
         this.setMissileSpeed(1400)
-        this.setBuffs(1, BUFF_DEPRESS)
+        this.setBuffs(1, toRawCode(BUFF_DEPRESSED_ARROW))
         this.setHeroAbility(false)
         this.setLevels(1)
 
 
 @compiletime function createDepress()
     new Depress(SPELL_DEPRESS, "D", new Pair(1, 1))
+    new DepressBuff(BUFF_DEPRESSED_AURA, "(Aura)")
+    new DepressBuff(BUFF_DEPRESSED_ARROW, "(Arrow)")
+    new DepressBuff(BUFF_DEPRESSED_THISTLE, "(Thistle)")
 
 function onCast()
     let target = GetSpellTargetUnit()

@@ -31,6 +31,8 @@ constant let TOOL_TIP_EXT_TRACK_TRAP = "Troll walking through this trap will get
 constant let TOOL_TIP_EXT_SPIKED_TRAP = "An itchy trap, troll who walks on it will get slowed by 80% for 5 seconds. Has 60 seconds cooldown. Spiked Trap last "+
                                         TRAP_DURATION.toInt().toString()+" seconds."
 
+constant let TRAP_SPELLBOOK = commaList(SPELL_TRACK_TRAP, SPELL_SPIKED_TRAP)
+
 @compiletime function createSpikedTrapBuff()
     new BuffDefinition(BUFF_SPIKED_TRAP_SLOW, 'Bcri')
         ..setArtTarget(1, "Objects\\Spawnmodels\\Other\\HumanBloodCinematicEffect\\HumanBloodCinematicEffect.mdl")
@@ -63,7 +65,7 @@ constant let TOOL_TIP_EXT_SPIKED_TRAP = "An itchy trap, troll who walks on it wi
 @compiletime function createSpikedTrapUnit()
     new UnitDefinition(UNIT_SPIKED_TRAP, 'otot')
         ..setNormalAbilities(commaList("Aeth",  ABILITY_TRAP_EXPLOSION.toRawCode()))
-        ..setName("Trapper Spiked Trap")    
+        ..setName("Trapper Spiked Trap")
         ..setIconGameInterface(Icons.bTNMeatapult)
         ..setModelFile("Models\\SpikedTrap.mdx")
         ..setScalingValue(1)
@@ -76,14 +78,14 @@ constant let TOOL_TIP_EXT_SPIKED_TRAP = "An itchy trap, troll who walks on it wi
         ..setAnimationNames("spell,throw")
         ..setButtonPositionNormalX(1)
         ..setButtonPositionNormalY(1)
-        ..setButtonPositionResearchX(1)
+        ..setButtonPositionResearchX(0)
         ..setButtonPositionResearchY(0)
         ..setIconNormal(Icons.bTNStasisTrap)
         ..setIconResearch(Icons.bTNStasisTrap)
         ..presetManaCost(lvl -> 10)
         ..setName("Tracking Trap")
         ..setLevels(3)
-        ..setLevelSkipRequirement(1)
+        ..setLevelSkipRequirement(0)
         ..setHeroAbility(true)
         ..setTooltipLearn(TOOL_TIP_LEARN_TRACK_TRAP)
         ..setTooltipLearnExtended("Troll walking through this trap will get tracked, having their position revealed and armor reduced by 4 for 30 seconds.")
@@ -99,7 +101,6 @@ constant let TOOL_TIP_EXT_SPIKED_TRAP = "An itchy trap, troll who walks on it wi
         ..presetStunDuration(lvl -> 0.1)
         ..presetCooldown(lvl -> COOLDOWN - lvl * 30)
         ..presetWardUnitType(lvl -> UNIT_TRAP.toRawCode())
-
 
 @compiletime function createSpyTrackTrapSpell()
     new AbilityDefinitionStasisTrap(SPELL_SPY_TRACK_TRAP)
@@ -127,7 +128,7 @@ constant let TOOL_TIP_EXT_SPIKED_TRAP = "An itchy trap, troll who walks on it wi
         ..presetStunDuration(lvl -> 0.1)
         ..presetCooldown(lvl -> COOLDOWN - 90)
         ..presetWardUnitType(lvl -> UNIT_TRAP.toRawCode())
-    
+
 @compiletime function createSpikedTrapSpell()
     new AbilityDefinitionShadowHunterSerpentWard(SPELL_SPIKED_TRAP)
         ..setRequirements("")
@@ -146,7 +147,7 @@ constant let TOOL_TIP_EXT_SPIKED_TRAP = "An itchy trap, troll who walks on it wi
         ..setTooltipNormalExtended(1, TOOL_TIP_EXT_SPIKED_TRAP)
         ..setHotkeyNormal("Q")
         ..setOrderStringUseTurnOn("purge")
-        ..setRequiredLevel(4)
+        ..setRequiredLevel(1)
         ..setLevels(1)
         ..setCastRange(1, 100.)
         ..setDurationNormal(1, TRAP_DURATION)
@@ -162,6 +163,29 @@ constant let TOOL_TIP_EXT_SPIKED_TRAP = "An itchy trap, troll who walks on it wi
         ..setActivationDelay(1, 5)
         ..setTargetsAllowed(1, "Hero")
 
+// @compiletime function createSpellBook()
+//     new AbilityDefinitionSpellBook(SPELL_TRAPPER_SPELLBOOK)
+//         ..setButtonPositionNormalX(1)
+//         ..setButtonPositionNormalY(1)
+//         ..setButtonPositionResearchX(0)
+//         ..setButtonPositionResearchY(0)
+//         ..setIconNormal(Icons.bTNGoblinLandMine)
+//         ..setHeroAbility(true)
+//         ..setItemAbility(false)
+//         ..setLevels(4)
+//         ..setTargetAttachmentPoint1("")
+//         ..setCasterAttachmentPoint1("")
+//         ..presetBaseOrderID(lvl -> "cripple")
+//         ..setHotkeyNormal("E")
+//         ..setName("Trap Spells")
+//         ..presetMaximumSpells(lvl -> 11)
+//         ..presetMinimumSpells(lvl -> 11)
+//         ..presetSpellList(lvl -> TRAP_SPELLBOOK)
+//         ..presetCooldown(lvl -> COOLDOWN)
+//         ..presetTooltipNormal(lvl -> makeToolTipNorm("E", "Trap Spells"))
+//         ..presetTooltipNormalExtended(lvl -> "The trapper can create trap to keep vision on enemy or slow them down")
+//         ..presetSharedSpellCooldown(lvl -> false)
+
 function onCast(unit trap)
 
     forUnitsInRange(trap.getPos(), TRAP_EFFECT_RADIUS) u ->
@@ -173,7 +197,7 @@ function onCast(unit trap)
                 dummy.castTarget('A05P', 1, Orders.faeriefire, u)
             else if trap.getTypeId() == UNIT_SPIKED_TRAP
                 dummy.castTarget(ABILITY_SPIKED_TRAP_SLOW, 1, Orders.cripple, u)
-    
+
 init
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
         let dyingUnit = GetDyingUnit()

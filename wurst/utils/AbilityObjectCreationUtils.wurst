@@ -41,11 +41,10 @@ public class SpellBookObject
     let toolTip = "Hello there"
     let toolTipExt = "Welcome to our village"
     let btnPos = new Pair(0, 0)
-    let baseOrderId = ""
     private let abilityList = ""
     let icon = "ReplaceableTextures\\CommandButtons\\BTN"
 
-    construct(int id, string name, string hotkey, string toolTipExt, string abilityList, Pair<int, int> btnPos, string baseOrderId, string icon)
+    construct(int id, string name, string hotkey, string toolTipExt, string abilityList, Pair<int, int> btnPos, string icon)
         this.id = id
         this.name = name
         this.hotkey = hotkey
@@ -53,7 +52,6 @@ public class SpellBookObject
         this.toolTipExt = toolTipExt
         this.abilityList = abilityList
         this.btnPos = btnPos
-        this.baseOrderId = baseOrderId
         this.icon += icon+".blp"
 
     function buildSpellBook()
@@ -61,12 +59,13 @@ public class SpellBookObject
         ..setButtonPositionNormalX(btnPos.a)
         ..setButtonPositionNormalY(btnPos.b)
         ..setIconNormal(icon)
-        ..setHeroAbility(true)
+        ..setHeroAbility(false)
         ..setItemAbility(false)
         ..setLevels(1)
+        ..setLevelSkipRequirement(0)
         ..setTargetAttachmentPoint1("")
         ..setCasterAttachmentPoint1("")
-        ..setBaseOrderID(1, baseOrderId)
+        ..setBaseOrderID(1, "spellbook")
         ..setHotkeyNormal(hotkey)
         ..setName(name)
         ..setMaximumSpells(1, 11)
@@ -79,15 +78,20 @@ public class SpellBookObject
 
 public class HeroSpellBookObject extends SpellBookObject
     let level = 1
+    let reqLevel = 0
+    int skipLevel = 1
     let btnPos = new Pair(0, 0)
     let btnResPos = new Pair(0, 0)
+    let toolTipRes = ""
     let abilityList = new HashMap<int, string>
 
-    construct(int id, string name, string hotkey, string toolTip, HashMap<int, string> abilityList, Pair<int, int> btnPos, Pair<int, int> btnResPos, string baseOrderId,     string icon, int level)
-        super(id, name, hotkey, toolTip, "", btnPos, baseOrderId, icon)
+    construct(int id, string name, string hotkey, string toolTip, HashMap<int, string> abilityList, Pair<int, int> btnPos, string icon, int level, int reqLevel, int               skipLevel)
+        super(id, name, hotkey, toolTip, "", btnPos, icon)
         this.abilityList = abilityList
         this.level = level
-        this.btnResPos = btnResPos
+        this.skipLevel = skipLevel
+        this.reqLevel = reqLevel
+        this.toolTipRes = GENERAL_COLOR + "Learn " + name
 
     override function buildSpellBook()
         new AbilityDefinitionSpellBook(id)
@@ -100,7 +104,9 @@ public class HeroSpellBookObject extends SpellBookObject
         ..setHeroAbility(true)
         ..setItemAbility(false)
         ..setLevels(level)
-        ..presetBaseOrderID(lvl -> baseOrderId)
+        ..setLevelSkipRequirement(skipLevel)
+        ..setRequiredLevel(reqLevel)
+        ..presetBaseOrderID(lvl -> "unsummon")
         ..setHotkeyLearn(hotkey)
         ..setHotkeyNormal(hotkey)
         ..setName(name)
@@ -110,4 +116,6 @@ public class HeroSpellBookObject extends SpellBookObject
         ..presetCooldown(lvl -> 0)
         ..presetTooltipNormal(lvl -> toolTip)
         ..presetTooltipNormalExtended(lvl -> toolTipExt)
+        ..setTooltipLearn(toolTipRes)
+        ..setTooltipLearnExtended(toolTipExt)
         ..presetSharedSpellCooldown(lvl -> false)

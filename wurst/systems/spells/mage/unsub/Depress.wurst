@@ -8,10 +8,11 @@ import ObjectIds
 import Orders
 import DummyCaster
 import Assets
+import ID
 import Lodash
 import ToolTipsUtils
 
-@configurable constant int ABILITY_ID = 'A025'
+//@configurable constant int ABILITY_ID = 'A025' Old GUI
 let BUFF_ID = compiletime(BUFF_ID_GEN.next())
 let DUMMY_SLOW_ID = compiletime(ABIL_ID_GEN.next())
 let MS_SLOW = 0.2
@@ -27,14 +28,13 @@ let DEPRESS_TICK = 4
 let MANA_LOST_PER_TICK = 5.
 let TOTAL_MANA_LOST = MANA_LOST_INIT + DEPRESS_TICK * MANA_LOST_PER_TICK
 
-let SPELL_TMP_DEPRESS = 'DTMP'
 let MANACOST = 10
 let COOLDOWN = 20.
 let BUFF = ""
 let SPELL_TOOLTIP_NORM = "Depress"
 let SPELL_TOOLTIP_EXTENDED = ("The mage casts a spell causing a chemical inbalance in the target's head. The target becomes severly depressed "+
-                             "causing their attack speed to be reduced by {0} and movement speed by {1} while loosing {2} over {3} seconds. Has {4} seconds cooldown.")
-                            .format(AS_SLOW.toToolTipOrange(), MS_SLOW.toToolTipOrange(), TOTAL_MANA_LOST.toToolTipBlue(), DURATION.toToolTipOrange(), COOLDOWN.toToolTipLightBlue())
+                             "causing their attack speed to be reduced by {0} and movement speed by {1} while loosing {2} mana over {3} seconds. Has {4} seconds cooldown.")
+                            .format(AS_SLOW.toToolTipOrange(), MS_SLOW.toToolTipOrange(), TOTAL_MANA_LOST.toToolTipTeal(), DURATION.toToolTipOrange(), COOLDOWN.toToolTipLightBlue())
 
 
 function createBuffs()
@@ -68,7 +68,7 @@ class Depress extends AbilityDefinitionAlchemistAcidBomb
         this.setHotkeyNormal(hotkey)
         this.setCooldown(1, COOLDOWN)
         this.setManaCost(1, MANACOST)
-        this.setIconNormal(Icons.bTNFire)
+        this.setIconNormal(Icons.bTNShadowPact)
         this.setButtonPositionNormalX(buttonPos.a)
         this.setButtonPositionNormalY(buttonPos.b)
         this.setDurationHero(1, DURATION)
@@ -88,7 +88,7 @@ class Depress extends AbilityDefinitionAlchemistAcidBomb
 
 
 @compiletime function createDepress()
-    new Depress(SPELL_TMP_DEPRESS, "D", new Pair(1, 1))
+    new Depress(SPELL_DEPRESS, "D", new Pair(1, 1))
     createBuffs()
     createSlowDummySpell()
 
@@ -106,4 +106,4 @@ function onCast()
             doPeriodicallyCounted(2.00, DEPRESS_TICK, (cb) -> target.subMana(MANA_LOST_PER_TICK))
 
 init
-    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerSpellEffectEvent(SPELL_DEPRESS, () -> onCast())

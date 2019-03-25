@@ -6,14 +6,15 @@ import DummyCaster
 import ChannelAbilityPreset
 import Lodash
 import Assets
+import ID
 import ToolTipsUtils
 
-@configurable constant int ABILITY_ID = 'A05T' // Seizures channel
-@configurable constant int DUMMY_ABILITY_ID = 'A05U' // Seizures bolt
+//@configurable constant int ABILITY_ID = 'A05T' // Seizures channel, Old GUI
+//@configurable constant int DUMMY_ABILITY_ID = 'A05U' // Seizures bolt, Old GUI
 
-let NEW_DUMMY_ID = 'DSSB'
+let REAL_SEIZURES_ID = 'RSSB'
+
 let DAMAGE = 4.
-
 let MANACOST = 20
 let COOLDOWN = 30.
 let ART_DURATION = 8.
@@ -25,18 +26,18 @@ let TOOLTIP_EXTENDED = ("Manipulates the targets brain sending small electric pu
                        "Has {2} seconds cooldown.").format(DAMAGE.toToolTipRed(), ART_DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
 
 let TARGET_ALLOWED = "air,enemies,ground,neutral,organic,terrain"
-let SPELL_TMP_SEIZURES = 'SETP'
 
 // New Seizures bolt
 function createSeizuresBolt()
-    new AbilityDefinitionThunderBoltCreep(NEW_DUMMY_ID)
+    new AbilityDefinitionMountainKingThunderBolt(REAL_SEIZURES_ID)
     ..setDamage(1, DAMAGE)
     ..setMissileArt("")
     ..setMissileSpeed(5000)
     ..setHeroAbility(false)
     ..setManaCost(1, 0)
-    ..setDurationHero(1, 0.1)
-    ..setDurationNormal(1, 0.1)
+    ..setAnimationNames("")
+    ..setDurationHero(1, 0.10)
+    ..setDurationNormal(1, 0.10)
     ..setLevels(1)
     ..setCooldown(1, 0)
     ..setName("Seizure Bolt")
@@ -62,7 +63,7 @@ class Seizures extends ChannelAbilityPreset
         this.setTargetsAllowed(1, TARGET_ALLOWED)
 
 @compiletime function createSeizures()
-    new Seizures(SPELL_TMP_SEIZURES, "S", new Pair(1, 1))
+    new Seizures(SPELL_SEIZURES, "S", new Pair(1, 1))
     createSeizuresBolt()
 
 function startPeriodicAction(player owner, unit target, real timeout, int chance)
@@ -71,7 +72,7 @@ function startPeriodicAction(player owner, unit target, real timeout, int chance
             new DummyCaster()
                 ..owner(owner)
                 ..origin(target.getPos()+vec2(100, 0))
-                ..castTarget(DUMMY_ABILITY_ID, 1, Orders.thunderbolt, target)
+                ..castTarget(REAL_SEIZURES_ID, 1, Orders.thunderbolt, target)
 
 function onCast()
     var target = GetSpellTargetUnit()
@@ -82,4 +83,4 @@ function onCast()
     doAfter(6, () -> startPeriodicAction(owner, target, 2, 8))
 
 init
-    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerSpellEffectEvent(SPELL_SEIZURES, () -> onCast())

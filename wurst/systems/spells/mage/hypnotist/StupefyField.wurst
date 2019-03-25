@@ -7,14 +7,17 @@ import ToolTipsUtils
 import ChannelAbilityPreset
 import Abilities
 
-@configurable constant int ABILITY_ID = 'A05W' // Dummy Channel ability
-@configurable constant int AURA_ABILITY_ID = 'A05V' // Real Aura
+//@configurable constant int SPELL_STUPEFY = 'A05W' // Dummy Channel ability, Old GUI
+//@configurable constant int REAL_AURA_STUPEFY = 'A05V' // Real Aura, Old GUI
 
+// So hum technically it reduces by 300%, I guess it's okay since there is a threshold on minimal as & ms
 let AS_REDUCED = 3.0
 let MS_REDUCED = 3.0
+
 let BUFF = "Bbar" // Stupefied
 let TARGET_ALLOWED = "enemies,friend,ground,hero,organic,self,vulnerable"
 
+let DURATION = 10.
 let MANACOST = 10
 let COOLDOWN = 60.
 
@@ -22,9 +25,8 @@ let ANIMATION_NAME = "channel"
 let TOOLTIP_NORM = "Stupefy Field"
 let TOOLTIP_EXTENDED = ("The Hypnotist generates a magic field. Anyone, including allies and the hypnotist, that enters this field becomes temporarily stupefied. "+
                        "Stupefied units have attack and movespeed extremely reduced. "+
-                       "Has {0} seconds cooldown.").format(COOLDOWN.toToolTipLightBlue())
+                       "Last {0} seconds. Has {1} seconds cooldown.").format(DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
 
-let SPELL_TMP_STUPEFY_FIELD = 'SSFT'
 let REAL_AURA_STUPEFY = 'RAST'
 
 function createStupefyAura()
@@ -51,29 +53,29 @@ class StupefyField extends ChannelAbilityPreset
         this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
         this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
         this.setArtDuration(1, 2)
-        this.setFollowThroughTime(1, 10)
+        this.setFollowThroughTime(1, DURATION)
         this.setAnimationNames(ANIMATION_NAME)
         this.setHeroAbility(false)
-        this.setArtTarget(Abilities.flameStrike)
-        this.setEffects(1, Abilities.flameStrike)
-        this.setArtCaster(commaList(Abilities.voodooAuraTarget, Abilities.flameStrike))
+        this.setArtTarget(Abilities.flameStrikeTarget)
+        this.setEffects(1, Abilities.flameStrikeTarget)
+        this.setArtCaster(commaList(Abilities.voodooAuraTarget, Abilities.flameStrikeTarget))
 
 @compiletime function createStupefyField()
-    new StupefyField(SPELL_TMP_STUPEFY_FIELD, "F", new Pair(3, 1))
+    new StupefyField(SPELL_STUPEFY, "F", new Pair(3, 1))
     createStupefyAura()
 
 function onCast()
     var caster = GetSpellAbilityUnit()
-    if not caster.hasAbility(AURA_ABILITY_ID)
-        caster.addAbility(AURA_ABILITY_ID)
+    if not caster.hasAbility(REAL_AURA_STUPEFY)
+        caster.addAbility(REAL_AURA_STUPEFY)
 
 function onEndcast()
     var caster = GetSpellAbilityUnit()
-    if GetSpellAbilityId() == ABILITY_ID and caster.hasAbility(AURA_ABILITY_ID)
-        caster.removeAbility(AURA_ABILITY_ID)
-        caster.removeAbility('B00L')
-        caster.removeAbility('B00M')
+    if GetSpellAbilityId() == SPELL_STUPEFY and caster.hasAbility(REAL_AURA_STUPEFY)
+        caster.removeAbility(REAL_AURA_STUPEFY)
+        caster.removeAbility('B00L') // Bams
+        caster.removeAbility('B00M') // Bam2
 
 init
-    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerSpellEffectEvent(SPELL_STUPEFY, () -> onCast())
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST, () -> onEndcast())

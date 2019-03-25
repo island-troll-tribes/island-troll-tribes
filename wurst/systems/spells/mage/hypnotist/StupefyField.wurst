@@ -6,6 +6,7 @@ import Lodash
 import ToolTipsUtils
 import ChannelAbilityPreset
 import Abilities
+import BuffObjEditing
 
 //@configurable constant int SPELL_STUPEFY = 'A05W' // Dummy Channel ability, Old GUI
 //@configurable constant int REAL_AURA_STUPEFY = 'A05V' // Real Aura, Old GUI
@@ -14,7 +15,7 @@ import Abilities
 let AS_REDUCED = 3.0
 let MS_REDUCED = 3.0
 
-let BUFF = "Bbar" // Stupefied
+//let BUFF = "Bbar" // Stupefied
 let TARGET_ALLOWED = "enemies,friend,ground,hero,organic,self,vulnerable"
 
 let DURATION = 10.
@@ -28,6 +29,15 @@ let TOOLTIP_EXTENDED = ("The Hypnotist generates a magic field. Anyone, includin
                        "Last {0} seconds. Has {1} seconds cooldown.").format(DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
 
 let REAL_AURA_STUPEFY = 'RAST'
+let BUFF = BUFF_ID_GEN.next()
+let ORIGINAL_BUFF_ID = 'Bbar' // Barkskin
+
+function createBuff()
+    new BuffDefinition(BUFF, ORIGINAL_BUFF_ID)
+    ..setTargetAttachmentPoint0(1, "overhead")
+    ..setIcon(Icons.bTNPolymorph)
+    ..setTooltipNormal(1, "Stupefied")
+    ..setTooltipNormalExtended(1, "This unit has been caught in stupefying field. It has extremely lowered attack speed and movement speed.")
 
 function createStupefyAura()
     new AbilityDefinitionAuraSlow(REAL_AURA_STUPEFY)
@@ -35,7 +45,7 @@ function createStupefyAura()
     ..setAttackSpeedFactor(1, -AS_REDUCED)
     ..setMovementSpeedFactor(1, -MS_REDUCED)
     ..setIconNormal(Icons.bTNLoad)
-    ..setBuffs(1, BUFF)
+    ..setBuffs(1, toRawCode(BUFF))
     ..setTargetsAllowed(1, TARGET_ALLOWED)
     ..setTooltipNormal(1, "Stupefying Aura")
     ..setTooltipNormalExtended(1, "You shouldn't see this")
@@ -63,6 +73,7 @@ class StupefyField extends ChannelAbilityPreset
 @compiletime function createStupefyField()
     new StupefyField(SPELL_STUPEFY, "F", new Pair(3, 1))
     createStupefyAura()
+    createBuff()
 
 function onCast()
     var caster = GetSpellAbilityUnit()

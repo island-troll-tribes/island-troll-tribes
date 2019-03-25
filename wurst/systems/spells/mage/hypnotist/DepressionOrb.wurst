@@ -11,8 +11,8 @@ import Lodash
 import ToolTipsUtils
 import ChannelAbilityPreset
 
-@configurable constant int ABILITY_ID = 'A04R' // Depression Orb
-@configurable constant int DUMMY_ABILITY_ID = 'A025' // Depress Spell
+// @configurable constant int ABILITY_ID = 'A04R' // Old GUI Depression Orb
+// @configurable constant int DUMMY_ABILITY_ID = 'A025' // Old GUI Depress Spell
 @configurable constant int DUMMY_ID = UNIT_LOCUST
 @configurable constant int BUFF_ID = DEST_SUPER_TREE
 @configurable constant real INTERVAL = 0.05
@@ -35,7 +35,6 @@ let TOOLTIP_EXTENDED = ("The Hypnotist uses powerful magic to create an wisp of 
                        "and it depresses all who get near it. Depressed opponents have slightly reduced speed and experience severe energy shortages. "+
                        "Has {0} seconds cooldown.").format(COOLDOWN.toToolTipLightBlue())
 
-let SPELL_TMP_DEPRESSION_ORB = 'DOTP'
 
 class DepressionOrb extends ChannelAbilityPreset
     construct(int newAbility, string hotkey, Pair<int , int> buttonPos)
@@ -57,7 +56,7 @@ class DepressionOrb extends ChannelAbilityPreset
         this.setCasterAttachmentPoint1("")
 
 @compiletime function createDepressionOrb()
-    new DepressionOrb(SPELL_TMP_DEPRESSION_ORB, "R", new Pair(3, 0))
+    new DepressionOrb(SPELL_DEPRESSION_ORB, "R", new Pair(3, 0))
 
 function onCast()
     var caster = GetSpellAbilityUnit()
@@ -80,9 +79,9 @@ function onCast()
                     new DummyCaster()
                         ..owner(owner)
                         ..origin(dpos)
-                        ..castTarget(DUMMY_ABILITY_ID, 1, Orders.acidbomb, u)
+                        ..castTarget(SPELL_DEPRESS, 1, Orders.acidbomb, u)
         if cb.isLast()
             dummy.kill()
 
 init
-    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerSpellEffectEvent(SPELL_DEPRESSION_ORB, () -> onCast())

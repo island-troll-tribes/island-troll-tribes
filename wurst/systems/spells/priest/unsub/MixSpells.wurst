@@ -1,17 +1,14 @@
 package MixSpells
 
 import ClosureEvents
-import ClosureForGroups
-import DummyCaster
-import Orders
 import ChannelAbilityPreset
-import Assets
 import ID
 import Lodash
 import ToolTipsUtils
 
 let COOLDOWN = 50.
-let MANACOST = 10
+let ENERGY_MANACOST = 0
+let HEAT_MANACOST = 10
 let CAST_RANGE = 500.
 
 let TOOLTIP_NORM = "Mix "
@@ -23,19 +20,19 @@ let TARGET_ALLOWED = "air,enemies,friend,ground,hero"
 
 
 class MixSpell extends ChannelAbilityPreset
-    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos, string name, string icon)
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos, string name, string icon, int manaCost)
         super(newAbilityId, 1, true)
         let toolTipExtended = "The Priest psychically links up with a target. Both unit's "+name.toLowerCase()+" are drained, pooled, and "+
                               "redistributed equally between the 2 units. Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
         this.setLevels(1)
         this.setCastRange(1, CAST_RANGE)
-        this.setManaCost(1, MANACOST)
+        this.setManaCost(1, manaCost)
         this.setCooldown(1, COOLDOWN)
         this.setHeroAbility(false)
         this.presetTargetType(lvl -> 1)
         this.setHotkeyNormal(hotkey)
         this.setName(TOOLTIP_NORM+name)
-        this.presetTooltipNormal(lvl -> TOOLTIP_NORM+name)
+        this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM+name))
         this.presetTooltipNormalExtended(lvl -> toolTipExtended)
         this.setButtonPositionNormalX(buttonPos.a)
         this.setButtonPositionNormalY(buttonPos.b)
@@ -43,8 +40,8 @@ class MixSpell extends ChannelAbilityPreset
 
 
 @compiletime function createMixSpells()
-    new MixSpell(SPELL_MIX_ENERGY, "D", new Pair(2, 1), "Energy", "ManaDrain")
-    new MixSpell(SPELL_MIX_HEAT, "F", new Pair(3, 1), "Heat", "HeatDrain")
+    new MixSpell(SPELL_MIX_ENERGY, "D", new Pair(2, 1), "Energy", "ManaDrain", ENERGY_MANACOST)
+    new MixSpell(SPELL_MIX_HEAT, "F", new Pair(3, 1), "Heat", "HeatDrain", HEAT_MANACOST)
 
 function mixHeat(unit caster, unit target)
     let targetHeat = target.getOwner().getGold()

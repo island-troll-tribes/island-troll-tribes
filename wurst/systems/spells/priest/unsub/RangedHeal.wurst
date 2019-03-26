@@ -1,58 +1,58 @@
 package RangedHeal
 
 import RegisterEvents
-import AbilityObjEditing
+import ChannelAbilityPreset
 import Assets
+import ID
 import HealingSystem
 import ClosureTimers
+import Lodash
+import ToolTipsUtils
 
-constant let ABILITY_ID = 'XPRH'
-constant let CAST_RANGE = 6000.
-constant let COOLDOWN = 5.
-constant let MANACOST = 15
-constant let HEAL_AMOUNT = 50.
-constant let TOOLTIP_NORMAL = "|c00ffcc00G|r - Ranged heal"
-constant let TOOLTIP_NORMAL_EXT = "Heals a friendly unit for 50 health. Can be casted from very far away."
-constant let HEAL_HIT_FX = "Abilities\\Spells\\Human\\Heal\\HealTarget.mdl"
+//let ABILITY_ID = 'XPRH'
+let CAST_RANGE = 6000.
+let HEALING_AMOUNT = 50.
+let COOLDOWN = 5.
+let MANACOST = 15
+let HEAL_AMOUNT = 50.
+let TOOLTIP_NORM = "Ranged heal"
+let TOOLTIP_EXTENDED = "Heals a friendly unit for {0} health. Can be casted from very far away. Has {1} seconds cooldown."
+                        .format(HEALING_AMOUNT.toToolTipGreen(),COOLDOWN.toToolTipLightBlue())
 
-@compiletime function createSpell()
-    new AbilityDefinitionIllidanChannel(ABILITY_ID)
-    ..setButtonPositionNormalX(0)
-    ..setButtonPositionNormalY(0)
-    ..setButtonPositionResearchX(0)
-    ..setButtonPositionResearchY(0)
-    ..setArtTarget("")
-    ..setArtCaster("")
-    ..setArtSpecial("")
-    ..presetCastRange(lvl -> CAST_RANGE)
-    ..presetCastingTime(lvl -> 0)
-    ..presetFollowThroughTime(lvl -> 0.275)
-    ..presetCooldown(lvl -> COOLDOWN)
-    ..presetManaCost(lvl -> MANACOST)
-    ..presetTargetType(lvl -> 1)
-    ..presetDisableOtherAbilities(lvl -> false)
-    ..presetTargetsAllowed(lvl -> "air,ground,friend,vuln,invu,self,organic,nonancient,neutral")
-    ..presetOptions(lvl -> 1)
-    ..setLevels(1)
-    ..setHeroAbility(false)
-    ..setItemAbility(false)
-    ..setHotkeyNormal("G")
-    ..setName("Ranged Heal")
-    ..presetTooltipNormal(lvl -> TOOLTIP_NORMAL)
-    ..presetTooltipNormalExtended(lvl -> TOOLTIP_NORMAL_EXT)
-    ..setIconNormal(Icons.bTNHeal)
-    ..setIconResearch(Icons.bTNHeal)
-    ..presetBaseOrderID(lvl -> "heal")
-    ..setOrderStringActivate("heal")
-    ..setOrderStringUseTurnOn("heal")
+let HEAL_HIT_FX = "Abilities\\Spells\\Human\\Heal\\HealTarget.mdl"
+let TARGET_ALLOWED = "air,ground,friend,vuln,invu,self,organic,nonancient,neutral"
+
+
+class RangedHeal extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 1, true)
+        this.setIconNormal(Icons.bTNHeal)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.presetCastRange(lvl -> CAST_RANGE)
+        this.presetCastingTime(lvl -> 0)
+        this.presetFollowThroughTime(lvl -> 0.275)
+        this.presetCooldown(lvl -> COOLDOWN)
+        this.presetManaCost(lvl -> MANACOST)
+        this.presetTargetType(lvl -> 1)
+        this.presetTargetsAllowed(lvl -> TARGET_ALLOWED)
+        this.presetOptions(lvl -> 1)
+        this.setHeroAbility(false)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> TOOLTIP_NORM)
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+
+@compiletime function createRangedHeal()
+    new RangedHeal(SPELL_RANGED_HEAL, "R", new Pair(3, 0))
 
 function onCast()
     var target = GetSpellTargetUnit()
-    new HealingInstance(target, 50, HealingType.ABILITY)
+    new HealingInstance(target, HEALING_AMOUNT, HealingType.ABILITY)
     let fx = target.addEffect(HEAL_HIT_FX, "origin")
     doAfter(1.5) ->
         fx.destr()
 
 init
-    registerSpellEffectEvent(ABILITY_ID) ->
+    registerSpellEffectEvent(SPELL_RANGED_HEAL) ->
         onCast()

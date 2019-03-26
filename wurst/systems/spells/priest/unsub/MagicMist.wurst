@@ -1,0 +1,58 @@
+package MagicMist
+
+import AbilityObjEditing
+import Assets
+import ID
+import Lodash
+import ObjectIds
+import ToolTipsUtils
+import BuffObjEditing
+
+// I should rework cloudcast.jurst but too lazy right now
+
+let BUFF = 'PCLF'
+let ABILITY_ID = 'XPRH'
+let CAST_RANGE = 6000.
+let HEALING_AMOUNT = 50.
+let COOLDOWN = 5.
+let MANACOST = 15
+let HEAL_AMOUNT = 50.
+let TOOLTIP_NORM = "Ranged heal"
+let TOOLTIP_EXTENDED = "Heals a friendly unit for {0} health. Can be casted from very far away. Has {1} seconds cooldown."
+                        .format(HEALING_AMOUNT.toToolTipGreen(),COOLDOWN.toToolTipLightBlue())
+
+function createBuff()
+    new BuffDefinition(BUFF, 'Bclf') // CloudFog
+    ..setTooltipNormal(1, "Magic Mist")
+    ..setTooltipNormalExtended(1, "This unit is cought in magic mist, it can't attack anything")
+
+
+class MagicMist extends AbilityDefinitionBloodMageFlameStrike
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setManaCost(1, MANACOST)
+        this.setCastRange(1, CAST_RANGE)
+        this.setCooldown(1, COOLDOWN)
+        this.setName(TOOLTIP_NORM)
+        this.setTooltipNormal(1, TOOLTIP_NORM)
+        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.presetHotkey(hotkey)
+        this.setHalfDamageDealt(1, 1)
+        this.setFullDamageDealt(1, 1)
+        this.setMaximumDamage(1, 1)
+        this.setBuildingReduction(1, 1)
+        this.setArtEffect("")
+        this.setIconNormal(Abilities.cloudOfFog)
+        this.setArtSpecial("")
+        this.setTargetsAllowed(1, "debris")
+        this.setHeroAbility(false)
+        this.setDurationHero(1, 0.01)
+        this.setDurationNormal(1, 0.01)
+        this.setEffects(1, "")
+        this.setBuffs(1, toRawCode(BUFF))
+
+
+@compiletime function createRangedHeal()
+    new MagicMist(SPELL_MAGIC_MIST, "A", new Pair(0, 0))

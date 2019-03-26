@@ -1,0 +1,76 @@
+package MixSpells
+
+import ClosureEvents
+import ClosureForGroups
+import DummyCaster
+import Orders
+import ChannelAbilityPreset
+import Assets
+import ID
+import Lodash
+import ToolTipsUtils
+
+let COOLDOWN = 50.
+let MANACOST = 10
+let CAST_RANGE = 500.
+
+let TOOLTIP_NORM = "Mix "
+let TOOLTIP_EXTENDED = ("The Priest psychically links up with a target. Both unit's energies are drained, pooled, and redistributed equally between the 2 units."+
+                       "Lasts {2} seconds, has {3}.")
+                       .format(COOLDOWN.toToolTipLightBlue())
+
+let TARGET_ALLOWED = "air,enemies,friend,ground,hero"
+
+
+class MixSpell extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos, string name, string icon)
+        super(newAbilityId, 1, true)
+        let toolTipExtended = "The Priest psychically links up with a target. Both unit's "+name.toLowerCase()+" are drained, pooled, and "+
+                              "redistributed equally between the 2 units. Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
+        this.setLevels(1)
+        this.setCastRange(1, CAST_RANGE)
+        this.setManaCost(1, MANACOST)
+        this.setCooldown(1, COOLDOWN)
+        this.setHeroAbility(false)
+        this.presetTargetType(lvl -> 1)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM+name)
+        this.presetTooltipNormal(lvl -> TOOLTIP_NORM+name)
+        this.presetTooltipNormalExtended(lvl -> toolTipExtended)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setIconNormal("ReplaceableTextures\\CommandButtons\\BTN"+icon+".blp")
+
+
+@compiletime function createMixSpells()
+    new MixSpell(SPELL_MIX_ENERGY, "D", new Pair(2, 1), "Energy", "ManaDrain")
+    new MixSpell(SPELL_MIX_HEAT, "F", new Pair(3, 1), "Heat", "HeatDrain")
+
+function mixHeat(unit caster, unit target)
+    let targetHeat = target.getOwner().getGold()
+    let casterHeat = caster.getOwner().getGold()
+    let newHeat = (targetHeat + casterHeat) / 2.00
+
+    target.getOwner().setGold(newHeat.toInt())
+    caster.getOwner().setGold(newHeat.toInt())
+
+function mixMana(unit caster, unit target)
+    let targetMana = target.getMana()
+    let casterMana = caster.getMana()
+    let newMana = (targetMana + casterMana) / 2.00
+
+    target.setMana(newMana)
+    caster.setMana(newMana)
+
+function onCast()
+    let caster = GetSpellAbilityUnit()
+    let target = GetSpellTargetUnit()
+
+    if GetSpellAbilityId() == SPELL_MIX_ENERGY
+        mixMana(caster, target)
+    else
+        mixHeat(caster, target)
+
+init
+    registerSpellEffectEvent(SPELL_MIX_ENERGY, ()-> onCast())
+    registerSpellEffectEvent(SPELL_MIX_HEAT, ()-> onCast())

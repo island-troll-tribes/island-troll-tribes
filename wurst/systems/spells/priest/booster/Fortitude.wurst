@@ -1,0 +1,33 @@
+package Fortitude
+
+import ChannelAbilityPreset
+import ID
+import Lodash
+import Assets
+import ToolTipsUtils
+
+let ARMOR_BONUS = 2.5
+
+let TOOLTIP_NORM = "Fortitude"
+let TOOLTIP_EXTENDED = ("Gives {0} bonus armor to allied trolls around you.").format(ARMOR_BONUS.toToolTipGreen())
+
+let TARGET_ALLOWED = "air,allies,friend,ground,hero,invulnerable,self,vulnerable"
+
+
+class Fortitude extends AbilityDefinitionPaladinDevotionAura
+    construct(int newAbilityId, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setLevels(1)
+        this.setHeroAbility(false)
+        this.setArmorBonus(1, ARMOR_BONUS)
+        this.setName(TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> makeToolTipNormAura(TOOLTIP_NORM))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setIconNormal(Icons.bTNDevotion)
+        this.setTargetsAllowed(1, TARGET_ALLOWED)
+
+
+@compiletime function createFortitude()
+    new Fortitude(SPELL_FORTITUDE, new Pair(2, 0))

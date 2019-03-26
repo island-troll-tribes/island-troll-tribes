@@ -11,9 +11,9 @@ import Lodash
 import ToolTipsUtils
 import LegacyColors
 
-let NEL_ABILITY_ID = 'A06S' // Invoke Rune 1
-let KA_ABILITY_ID  = 'A079' // Invoke Rune 2
-let LEZ_ABILITY_ID = 'A07A' // Invoke Rune 3
+// let NEL_ABILITY_ID = 'A06S' // Invoke Rune 1, Old GUI
+// let KA_ABILITY_ID  = 'A079' // Invoke Rune 2, Old GUI
+// let LEZ_ABILITY_ID = 'A07A' // Invoke Rune 3, Old GUI
 
 let MANACOST = 15
 let COOLDOWN  = 20.
@@ -22,12 +22,12 @@ let TOOLTIP_NORM_NEL = "Summon Nel Rune"
 let TOOLTIP_NORM_KA  = "Summon Ka Rune"
 let TOOLTIP_NORM_LEZ = "Summon Lez Rune"
 
-let COOLDOWN_TOOLTIP = " Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
+let COOLDOWN_TOOLTIP = "Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
 let RUNE_TOOLTIP = "They circle the caster until activated and when activated they seek a nearby enemy and blast it with their element. 5 runes at a time max. "
 
-let TOOLTIP_EXT_NEL = "Summons a {0}Nel|r rune from dementia space. Nel runes are commonly used in crippling spells. ".format(COLOR_GREEN)+RUNE_TOOLTIP+COOLDOWN_TOOLTIP
-let TOOLTIP_EXT_KA  = "Summons a {0}Ka|r rune from dementia space. Ka runes are commonly used in fire spells. ".format(COLOR_RED)+RUNE_TOOLTIP+COOLDOWN_TOOLTIP
-let TOOLTIP_EXT_LEZ = "Summons a {0}Lez|r rune from dementia space. Lez runes are commonly used in frost spells. ".format(COLOR_TEAL)+RUNE_TOOLTIP+COOLDOWN_TOOLTIP
+let TOOLTIP_EXT_NEL = "Summons a {0}Nel|r rune from dementia space. {0}Nel|r runes are commonly used in crippling spells. ".format(COLOR_GREEN)+RUNE_TOOLTIP+COOLDOWN_TOOLTIP
+let TOOLTIP_EXT_KA  = "Summons a {0}Ka|r rune from dementia space. {0}Ka|r runes are commonly used in fire spells. ".format(COLOR_RED)+RUNE_TOOLTIP+COOLDOWN_TOOLTIP
+let TOOLTIP_EXT_LEZ = "Summons a {0}Lez|r rune from dementia space. {0}Lez|r runes are commonly used in frost spells. ".format(COLOR_TEAL)+RUNE_TOOLTIP+COOLDOWN_TOOLTIP
 
 let ICON_NEL = "ReplaceableTextures\\CommandButtons\\BTNNelRune.blp"
 let ICON_KA  = "ReplaceableTextures\\CommandButtons\\BTNHire.blp"
@@ -86,9 +86,9 @@ class InvokeRune extends ChannelAbilityPreset
         this.setName(toolTipNorm)
 
 @compiletime function createRuneSpells()
-    new InvokeRune(NEL_ABILITY_ID, "W", new Pair(1, 0), TOOLTIP_NORM_NEL, TOOLTIP_EXT_NEL, ICON_NEL)
-    new InvokeRune(KA_ABILITY_ID,  "E", new Pair(2, 0), TOOLTIP_NORM_KA , TOOLTIP_EXT_KA , ICON_KA )
-    new InvokeRune(LEZ_ABILITY_ID, "R", new Pair(3, 0), TOOLTIP_NORM_LEZ, TOOLTIP_EXT_LEZ, ICON_LEZ)
+    new InvokeRune(SPELL_INVOKE_RUNE_1, "W", new Pair(1, 0), TOOLTIP_NORM_NEL, TOOLTIP_EXT_NEL, ICON_NEL)
+    new InvokeRune(SPELL_INVOKE_RUNE_2, "E", new Pair(2, 0), TOOLTIP_NORM_KA , TOOLTIP_EXT_KA , ICON_KA)
+    new InvokeRune(SPELL_INVOKE_RUNE_3, "R", new Pair(3, 0), TOOLTIP_NORM_LEZ, TOOLTIP_EXT_LEZ, ICON_LEZ)
 
 class DementiaRune
     DementiaRunesInstance instance
@@ -194,11 +194,11 @@ function onCast()
     var ID = GetSpellAbilityId()
     Runes runeType = Runes.None
 
-    if ID == NEL_ABILITY_ID
+    if ID == SPELL_INVOKE_RUNE_1
         runeType = Runes.Nel
-    else if ID == LEZ_ABILITY_ID
+    else if ID == SPELL_INVOKE_RUNE_3
         runeType = Runes.Lez
-    else if ID == KA_ABILITY_ID
+    else if ID == SPELL_INVOKE_RUNE_2
         runeType = Runes.Ka
 
 
@@ -228,6 +228,6 @@ function setupRuneSpellsList()
 
 init
     setupRuneSpellsList()
-    registerSpellEffectEvent(NEL_ABILITY_ID, () -> onCast())
-    registerSpellEffectEvent(KA_ABILITY_ID,  () -> onCast())
-    registerSpellEffectEvent(LEZ_ABILITY_ID, () -> onCast())
+    registerSpellEffectEvent(SPELL_INVOKE_RUNE_1, () -> onCast())
+    registerSpellEffectEvent(SPELL_INVOKE_RUNE_2,  () -> onCast())
+    registerSpellEffectEvent(SPELL_INVOKE_RUNE_3, () -> onCast())

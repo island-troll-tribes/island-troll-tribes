@@ -14,20 +14,28 @@ import Assets
 import ToolTipsUtils
 import ChannelAbilityPreset
 
-let ABILITY_ID = 'DMAR' // Activates Runes
-//let ABILITY_ID = 'A07B' // Activates Runes
-let REQUIREMENT_ABILITY_ID = 'DMDS' // Dementia Summoning
+//let ABILITY_ID = 'A07B' // Activates Runes, Old GUI
 //let REQUIREMENT_ABILITY_ID = 'A07D' // Dementia Summoning
 let PORTAL_OFFSET = 350.
 let RUNE_CAST_RADIUS = 350.
 let SUMMON_EFFECT_PATH = Abilities.ancestralSpiritCaster
 
+let KA = COLOR_RED+"Ka|r"
+let NEL = COLOR_GREEN+"Nel|r"
+let LEZ = COLOR_LIGHT_BLUE+"Lez|r"
+
+let KA_RECIPE = KA+" "+LEZ+" "+KA+" "+NEL+" "+KA
+let NEL_RECIPE = NEL+" "+NEL+" "+KA+" "+NEL+" "+LEZ
+let LEZ_RECIPE = LEZ+" "+NEL+" "+LEZ+" "+LEZ+" "+KA
+let SUMMONS_RECIPE = KA_RECIPE+"\n"+NEL_RECIPE+"\n"+LEZ_RECIPE+"\n"
+
 let COOLDOWN = 10.
-let DEMENTIA_SUMMON_TOOLTIP_NORM    = "Dementia Summoning"
-let DEMENTIA_SUMMON_TOOLTIP_EXTENDED = "Passively gives the Dementia Master the ability to summon a monster from dementia space using Dementia Runes. "+
+let DEMENTIA_SUMMON_TOOLTIP_NORM     = "Dementia Summoning"
+let DEMENTIA_SUMMON_TOOLTIP_EXTENDED = ("Passively gives the Dementia Master the ability to summon a monster from dementia space using Dementia Runes. "+
                                        "Summoning must be performed close to the center of an open dark gate and you must have a correct rune order. "+
-                                       "This skill also gives a 10% evasion bonus to the Dementia Master.\n{0}Warning! Dementia Summonings can be "+
-                                       "unpredictable and dangerous. No creature wants to be summoned for no reason!|r".format(COLOR_RED)
+                                       "The Dementia Master managed to decipher the following rune order from the ancient dark book.\n"+
+                                       SUMMONS_RECIPE+"{0}Warning! Dementia Summonings can be unpredictable and dangerous. No creature wants "+
+                                       "to be summoned for no reason!|r").format(COLOR_RED)
 
 let ACTIVATE_RUNES_TOOLTIP_NORM     = "Activates Runes"
 let ACTIVATE_RUNES_TOOLTIP_EXTENDED = "Casting this spell causes nearby runes to become active and seek targets. Runes will seek any enemies inside "+
@@ -64,8 +72,8 @@ class ActivateRunes extends ChannelAbilityPreset
         this.setHotkeyNormal(hotkey)
 
 @compiletime function createSpells()
-    new ActivateRunes(ABILITY_ID, "A", new Pair(0, 0))
-    new DementiaSummoning(REQUIREMENT_ABILITY_ID, new Pair(1, 0))
+    new ActivateRunes(SPELL_ACTIVATE_RUNE, "A", new Pair(0, 0))
+    new DementiaSummoning(SPELL_DEMENTIA_SUMMONING, new Pair(1, 0))
 
 LinkedList<SummonData> summonsList = new LinkedList<SummonData>()
 
@@ -141,7 +149,7 @@ function findMatchingSummonData(LinkedList<Runes> runes) returns SummonData
     return null
 
 function trySummonDemon(unit caster, DementiaRunesInstance runesInstance, DarkPortalInstance portalInstance) returns bool
-    if runesInstance != null and portalInstance != null and runesInstance.runes.size() > 0 and caster.hasAbility(REQUIREMENT_ABILITY_ID)
+    if runesInstance != null and portalInstance != null and runesInstance.runes.size() > 0 and caster.hasAbility(SPELL_DEMENTIA_SUMMONING)
         if portalInstance.isUnitInsidePortal(caster)
             //Have portal, and standing inside portal
             var runeSequence = new LinkedList<Runes>()
@@ -167,7 +175,7 @@ function doSummon(SummonData summon, DarkPortalInstance portalInstance, player o
     doAfter(1.25) ->
         efx.destr()
         PlaySound(Sounds.shadowHunterReady1)
-        printTimedToPlayer(GENERAL_COLOR + "You have summoned " + summon.name + GENERAL_COLOR + "!|r", 4, owner)
+        printTimedToPlayer(GENERAL_COLOR + "You have summoned " + summon.name + GENERAL_COLOR + "!|r", 5, owner)
         portalInstance.summons.push(new Summon(createUnit(owner, summon.summonUnitID, portalInstance.centerPos, angle(-90 * DEGTORAD)), summon.cooldown, summon.orderId))
 
 
@@ -178,4 +186,4 @@ function initSummonsData()
 
 init
     initSummonsData()
-    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerSpellEffectEvent(SPELL_ACTIVATE_RUNE, () -> onCast())

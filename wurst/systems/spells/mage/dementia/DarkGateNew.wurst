@@ -11,6 +11,7 @@ import Assets
 import ChannelAbilityPreset
 import Lodash
 import ToolTipsUtils
+import ID
 
 let TMP_CHAIN_LIGHTNING_ID  = 'PRTA'
 let TMP_FROST_NOVA_ID       = 'PRTC'
@@ -20,7 +21,6 @@ let TMP_TSUNAMI_ID          = 'PRTG'
 let TMP_FIRE_BOLT_ID        = 'PRTH'
 let TMP_IMPALE_ID           = 'PRTF'
 
-let ABILITY_ID = 'A076' // Open Dark gate
 let GROW_DURATION = 10.
 let MINIMUM_GROW_DURATION = 1.5
 let DURATION_MAX = 40.
@@ -43,7 +43,7 @@ let TOOLTIP_EXTENDED = "The Dementia Summoner channels pure balls or dark energy
                        "As the balls dissipate, they cast spells on enemies inside the gate. The longer the gate is channeled "+
                        "the longer it lasts and the faster the orbs cast spells. Runes carried by the Dementia Master have increased "+
                        "range inside the gate and he can use the gate and Dementia Summoning to summon monsters from the Dementia Realm. "+
-                       "Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
+                       "Can last up to {0} seconds, has {1} seconds cooldown.".format(DURATION_MAX.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
 
 class DarkGate extends ChannelAbilityPreset
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
@@ -162,7 +162,7 @@ function createDummyImpale()
     ..setCooldown(1,0)
 
 @compiletime function createDarkGateSpells()
-    new DarkGate(ABILITY_ID, "Q", new Pair(0, 0))
+    new DarkGate(SPELL_DARK_GATE, "Q", new Pair(0, 0))
     createDummyChainlightning()
     createDummyFrostnova()
     createDummyForkedlightning()
@@ -249,7 +249,8 @@ public class Summon
 
 
     ondestroy
-        this.summonUnit.remove()
+        this.summonUnit.kill()
+        //this.summonUnit.remove()
 
 
 public class DarkPortalInstance
@@ -468,7 +469,7 @@ function onCast()
     darkPortalInstances.put(caster, new DarkPortalInstance(caster, caster.getPos3Real() + vec3(0, 0, 50)))
 
 function onEndCast()
-    if GetSpellAbilityId() == ABILITY_ID
+    if GetSpellAbilityId() == SPELL_DARK_GATE
         var caster = GetSpellAbilityUnit()
         var instance = darkPortalInstances.get(caster)
         instance.isChanneling = false
@@ -491,5 +492,5 @@ public function getDementiaGate(unit owner) returns DarkPortalInstance
 
 init
     createSpellList()
-    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerSpellEffectEvent(SPELL_DARK_GATE, () -> onCast())
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST, () -> onEndCast())

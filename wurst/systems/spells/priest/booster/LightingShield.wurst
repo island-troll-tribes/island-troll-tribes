@@ -1,0 +1,40 @@
+package LightingShield
+
+import ChannelAbilityPreset
+import ID
+import Lodash
+import Assets
+import ToolTipsUtils
+
+let MANACOST = 10
+let DAMAGE = 6.0
+let DURATION = 20.
+let COOLDOWN = 30.
+let CAST_RANGE = 900.
+
+let TOOLTIP_NORM = "Lighting Shield"
+let TOOLTIP_EXTENDED = ("Cast Lighting Shield on target unit, deals {0} damage per second. Last {1} seconds, has {2} seconds cooldown.")
+                        .format(DAMAGE.toToolTipRed(), DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipBlue())
+
+let TARGET_ALLOWED = "enemies,friend,ground,neutral,self"
+
+class LightningShield extends AbilityDefinitionLightningShieldcreep
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> makeToolTipNormAura(TOOLTIP_NORM))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setIconNormal(Icons.bTNLightningShield)
+        this.setCastRange(1, CAST_RANGE)
+        this.setDurationHero(1, DURATION)
+        this.setDurationNormal(1, DURATION)
+        this.setManaCost(1, MANACOST)
+        this.setCooldown(1, COOLDOWN)
+        this.setDamageperSecond(1, DAMAGE)
+        this.setTargetsAllowed(1, TARGET_ALLOWED)
+
+@compiletime function createLightningShield()
+    new LightningShield(SPELL_LIGHTING_SHIELD, "Q", new Pair(0, 0))

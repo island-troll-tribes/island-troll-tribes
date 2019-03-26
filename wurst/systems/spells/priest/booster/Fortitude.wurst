@@ -5,6 +5,7 @@ import ID
 import Lodash
 import Assets
 import ToolTipsUtils
+import BuffObjEditing
 
 let ARMOR_BONUS = 2.5
 
@@ -12,7 +13,17 @@ let TOOLTIP_NORM = "Fortitude"
 let TOOLTIP_EXTENDED = ("Gives {0} bonus armor to allied trolls around you.").format(ARMOR_BONUS.toToolTipGreen())
 
 let TARGET_ALLOWED = "air,allies,friend,ground,hero,invulnerable,self,vulnerable"
+let BUFF_ID = 'BFOR'
+let ORIGINAL_BUFF_ID = 'BHad' // Devotion Aura
 
+function createBuff()
+    new BuffDefinition(BUFF_ID, ORIGINAL_BUFF_ID)
+    ..setTargetAttachments(1, 1)
+    ..setTargetAttachmentPoint0(1, "overhead")
+    ..setArtTarget(1, Abilities.faerieDragon_Invis)
+    ..setIcon(Icons.bTNDevotion)
+    ..setTooltipNormal(1, TOOLTIP_NORM)
+    ..setTooltipNormalExtended(1, "This unit has fortitude. It has increased armor.")
 
 class Fortitude extends AbilityDefinitionPaladinDevotionAura
     construct(int newAbilityId, Pair<int, int> buttonPos)
@@ -27,7 +38,8 @@ class Fortitude extends AbilityDefinitionPaladinDevotionAura
         this.setButtonPositionNormalY(buttonPos.b)
         this.setIconNormal(Icons.bTNDevotion)
         this.setTargetsAllowed(1, TARGET_ALLOWED)
-
+        this.setBuffs(1, BUFF_ID.toString())
 
 @compiletime function createFortitude()
-    new Fortitude(SPELL_FORTITUDE, new Pair(2, 0))
+    new Fortitude(SPELL_FORTITUDE, new Pair(1, 0))
+    createBuff()

@@ -1,0 +1,40 @@
+package CureAll
+
+import ChannelAbilityPreset
+import Assets
+import ID
+import Lodash
+import ToolTipsUtils
+
+let COOLDOWN = 15.
+let MANACOST = 10
+let CAST_RANGE = 400.
+
+let TOOLTIP_NORM = "Cure All"
+let TOOLTIP_EXTENDED = ("Dispels buffs and effects from friendly units. Can be used to cure snake poison, disease or even jealousy among other things. "+
+                        "Has {0} seconds cooldown.").format(COOLDOWN.toToolTipLightBlue())
+
+let TARGET_ALLOWED = "air,allies,friend,ground,invulnerable,self,vulnerable"
+
+class Cureall extends AbilityDefinitionAbolishMagic
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setRequirements("")
+        this.setCheckDependencies(false)
+        this.setManaCost(1, MANACOST)
+        this.setCastRange(1, CAST_RANGE)
+        this.setName(TOOLTIP_NORM)
+        this.setTooltipNormal(1, TOOLTIP_NORM)
+        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        this.presetHotkey(hotkey)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setSummonedUnitDamage(1, 50)
+        this.setArtTarget(Abilities.animateDeadTarget)
+        this.setTargetsAllowed(1, TARGET_ALLOWED)
+        this.setCastRange(1, CAST_RANGE)
+        this.setCooldown(1, COOLDOWN)
+
+
+@compiletime function createCureAll()
+    new Cureall(SPELL_CURE_ALL, "W", new Pair(1, 0))

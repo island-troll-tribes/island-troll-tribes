@@ -1,4 +1,4 @@
-package AntiMagicAoe
+package AntiMagic
 import ClosureEvents
 import ClosureForGroups
 import DummyCaster
@@ -19,6 +19,12 @@ let SHIELD_AMOUNT = 100.
 let DURATION = 10.
 let CAST_RANGE = 800.
 let SINGLE_AM_MANACOST = 5
+let SINGLE_AM_COOLDOWN = 1.
+let SINGLE_AM_TOOLTIP_NORM = "Anti-Magic Shell"
+let SINGLE_AM_TOOLTIP_EXTENDED = ("Grants an anti-magic barrier to target ally that absorbs {0} magic damage and blocks them "+
+                                  "from being ensnared by hunters or ensnare traps. Lasts {1} seconds, has {2}.")
+                                  .format(SHIELD_AMOUNT.toToolTipGreen(), DURATION.toToolTipLightBlue(), SINGLE_AM_COOLDOWN.toToolTipLightBlue())
+
 
 let TOOLTIP_NORM = "Anti-Magic Shell"
 let TOOLTIP_EXTENDED = ("Grants an anti-magic barrier to allies in a {0} radius that absorbs {1} magic damage and blocks them "+
@@ -35,7 +41,10 @@ class AntiMagic extends AbilityDefinitionAntimagicShield
         this.setCastRange(1, CAST_RANGE)
         this.setDurationHero(1, DURATION)
         this.setDurationNormal(1, DURATION)
-        this.setTooltipNormal(1, TOOLTIP_NORM)
+        this.setName(SINGLE_AM_TOOLTIP_NORM)
+        this.setTooltipNormal(1, SINGLE_AM_TOOLTIP_NORM)
+        this.setTooltipNormalExtended(1, SINGLE_AM_TOOLTIP_EXTENDED)
+        this.setCooldown(1, SINGLE_AM_COOLDOWN)
         this.presetHotkey(hotkey)
         this.setButtonPositionNormalX(buttonPos.a)
         this.setButtonPositionNormalY(buttonPos.b)

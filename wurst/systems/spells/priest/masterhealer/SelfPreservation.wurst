@@ -1,0 +1,54 @@
+package SelfPreservation
+
+import ClosureEvents
+import ChannelAbilityPreset
+import Assets
+import ID
+import Lodash
+import ToolTipsUtils
+
+let COOLDOWN = 60.
+let MANACOST = 0
+let STATS_RAISE_AMOUNT = 50.
+
+let TOOLTIP_NORM = "Self Preservation"
+let TOOLTIP_EXTENDED = "Raises all stats (Health Point, Energy, Heat) of your troll by {0}. Has {1} seconds cooldown."
+                       .format(STATS_RAISE_AMOUNT.toToolTipGreen(), COOLDOWN.toToolTipLightBlue())
+
+
+
+class SelfPreservation extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 1, true)
+        this.presetManaCost(lvl -> MANACOST)
+        this.presetCooldown(lvl -> COOLDOWN)
+        this.setHeroAbility(false)
+        this.presetTargetType(lvl -> 0)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+        this.setIconNormal(Icons.bTNRegenerate)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setFollowThroughTime(1, 1)
+        this.setArtDuration(1, 2)
+        this.setArtTarget("")
+        this.setArtCaster(Abilities.resurrecttarget)
+        this.setTargetAttachmentPoint("overhead")
+        this.setCasterAttachmentPoint1("")
+
+@compiletime function createAntiMagic()
+    new SelfPreservation(SPELL_SELF_PRESERVATION, "A", new Pair(0, 1))
+
+function onCast()
+    let caster = GetSpellAbilityUnit()
+    let owner = caster.getOwner()
+
+    caster.setHP(caster.getHP() + STATS_RAISE_AMOUNT)
+    caster.setMana(caster.getMana() + STATS_RAISE_AMOUNT)
+    owner.setGold(min(owner.getGold() + STATS_RAISE_AMOUNT.toInt(), udg_MAX_HEAT))
+
+init
+    registerSpellEffectEvent(SPELL_SELF_PRESERVATION) ->
+        onCast()

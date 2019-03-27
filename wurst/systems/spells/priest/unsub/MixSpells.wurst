@@ -29,7 +29,7 @@ class MixSpell extends ChannelAbilityPreset
         this.setManaCost(1, manaCost)
         this.setCooldown(1, COOLDOWN)
         this.setHeroAbility(false)
-        this.presetTargetType(lvl -> 1)
+        this.presetTargetTypes(Targettype.UNIT)
         this.setHotkeyNormal(hotkey)
         this.setName(TOOLTIP_NORM+name)
         this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM+name))
@@ -40,6 +40,10 @@ class MixSpell extends ChannelAbilityPreset
 
 
 @compiletime function createMixSpells()
+    // Master Healer
+    new MixSpell(SPELL_MH_MIX_ENERGY, "Q", new Pair(0, 0), "Energy", "ManaDrain", ENERGY_MANACOST)
+    new MixSpell(SPELL_MH_MIX_HEAT, "W", new Pair(1, 0), "Heat", "HeatDrain", HEAT_MANACOST)
+    // Priest
     new MixSpell(SPELL_MIX_ENERGY, "D", new Pair(2, 1), "Energy", "ManaDrain", ENERGY_MANACOST)
     new MixSpell(SPELL_MIX_HEAT, "F", new Pair(3, 1), "Heat", "HeatDrain", HEAT_MANACOST)
 
@@ -63,11 +67,14 @@ function onCast()
     let caster = GetSpellAbilityUnit()
     let target = GetSpellTargetUnit()
 
-    if GetSpellAbilityId() == SPELL_MIX_ENERGY
+    // Could be prettier, but I am lazy
+    if GetSpellAbilityId() == SPELL_MIX_ENERGY or GetSpellAbilityId() == SPELL_MH_MIX_ENERGY
         mixMana(caster, target)
     else
         mixHeat(caster, target)
 
 init
-    registerSpellEffectEvent(SPELL_MIX_ENERGY, ()-> onCast())
-    registerSpellEffectEvent(SPELL_MIX_HEAT, ()-> onCast())
+    registerSpellEffectEvent(SPELL_MIX_ENERGY   , ()-> onCast())
+    registerSpellEffectEvent(SPELL_MH_MIX_ENERGY, ()-> onCast())
+    registerSpellEffectEvent(SPELL_MIX_HEAT     , ()-> onCast())
+    registerSpellEffectEvent(SPELL_MH_MIX_HEAT  , ()-> onCast())

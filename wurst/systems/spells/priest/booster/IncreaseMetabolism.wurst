@@ -1,11 +1,15 @@
 package IncreaseMetabolism
+
 import AbilityObjEditing
 import ObjectIds
 import Assets
 import HealingSystem
+import ToolTipsUtils
+import Lodash
+import BuffObjEditing
+import ID
 
-let ABILITY_ID = 'XIMB'
-let BUFF_ID = 'Bblo'
+let BUFF_ID = 'Bicm'
 let ICON = Icons.bTNReincarnation
 let CAST_RANGE = 700.
 let COOLDOWN = 30.
@@ -13,34 +17,46 @@ let MANACOST = 20
 let MS_FACTOR = 0.2
 let AS_FACTOR = 0.
 let DURATION = 20.
+let HEALING_MULTIPLIER = 0.50
 let CAST_TIME = 0.2
-let TOOLTIP_NORM = "Increase M|cffffcc00e|rtabolism"
-let TOOLTIP_EXT = "Increases the health recovered by food and potions by 50% and boosts movement speed by 20%. Lasts 20 seconds."
+let TARGET_ALLOWED = "air,ground,friend,organic,self,neutral"
+let TOOLTIP_NORM = "Increase Metabolism"
+let TOOLTIP_EXTENDED = "Increases the health recovered by food and potions by {0} and boosts movement speed by {1}. Lasts {2} seconds, Has {3} seconds cooldown."
+                  .format(HEALING_MULTIPLIER.toToolTipGreen(), MS_FACTOR.toToolTipOrange(), DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
 
-@compiletime function createSpell()
-    new AbilityDefinitionSlowCreep(ABILITY_ID)
-        ..setAttackSpeedFactor(1, -AS_FACTOR)
-        ..setMovementSpeedFactor(1, -MS_FACTOR)
-        ..setBuffs(1, toRawCode(BUFF_ID))
-        ..setIconNormal(ICON)
-        ..setIconResearch(ICON)
-        ..setIconTurnOff(ICON)
-        ..setCastRange(1, CAST_RANGE)
-        ..setCastingTime(1, CAST_TIME)
-        ..setCooldown(1, COOLDOWN)
-        ..setDurationHero(1, DURATION)
-        ..setDurationNormal(1, DURATION)
-        ..setManaCost(1, MANACOST)
-        ..setTargetsAllowed(1, "air,ground,friend,organic,self,neutral")
-        ..setName("Increase metabolism")
-        ..setHeroAbility(false)
-        ..setItemAbility(false)
-        ..setLevels(1)
-        ..setHotkeyNormal("F")
-        ..setHotkeyLearn("F")
-        ..setHotkeyTurnOff("F")
-        ..presetTooltipNormal(lvl -> TOOLTIP_NORM)
-        ..presetTooltipNormalExtended(lvl -> TOOLTIP_EXT)
+function createBuff()
+    new BuffDefinition(BUFF_ID, 'Bblo') // Original ID is BloodLust
+    ..setTargetAttachmentPoint0(1, "origin")
+    ..setTargetAttachmentPoint1(1, "")
+    ..setArtTarget(1, Abilities.faerieDragon_Invis)
+    ..setIcon(ICON)
+    ..setTooltipNormal(1, TOOLTIP_NORM)
+    ..setTooltipNormalExtended(1, "This unit recover more health points when eating meat and run faster.")
+
+class IncreaseMetabolism extends AbilityDefinitionSlowCreep
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setAttackSpeedFactor(1, -AS_FACTOR)
+        this.setMovementSpeedFactor(1, -MS_FACTOR)
+        this.setBuffs(1, toRawCode(BUFF_ID))
+        this.setIconNormal(ICON)
+        this.setCastRange(1, CAST_RANGE)
+        this.setCastingTime(1, CAST_TIME)
+        this.setCooldown(1, COOLDOWN)
+        this.setDurationHero(1, DURATION)
+        this.setDurationNormal(1, DURATION)
+        this.setManaCost(1, MANACOST)
+        this.setTargetsAllowed(1, TARGET_ALLOWED)
+        this.setName(TOOLTIP_NORM)
+        this.setHotkeyNormal(hotkey)
+        this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+
+@compiletime function createSpells()
+    new IncreaseMetabolism(SPELL_INCREASE_METABOLISM, "D", new Pair(3, 1))
+    createBuff()
 
 init
     onUnitHealed() ->

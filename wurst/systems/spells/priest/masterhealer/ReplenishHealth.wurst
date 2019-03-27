@@ -2,26 +2,99 @@ package ReplenishHealth
 import RegisterEvents
 import Orders
 import UnitEntity
+import AbilityObjEditing
+import Assets
+import Lodash
+import ToolTipsUtils
+import BuffObjEditing
+import ObjectIds
+import ObjectIdGenerator
+import LegacyColors
+import ID
 
-let ABILITY_ID_REPLENISH_HEALTH_EFFECT = 'A0F2'
-let ABILITY_ID_REPLENISH_HEALTH = 'A0F3'
+//let ABILITY_ID_REPLENISH_HEALTH_EFFECT = 'A0F2'
+//let ABILITY_ID_REPLENISH_HEALTH = 'A0F3'
+
+
+let BUFF_ID = BUFF_ID_GEN.next()
+let ORIGINAL_BUFF_ID = 'BEim'
+
+let ABILITY_REPLENISH_HEALTH_EFFECT = ABIL_ID_GEN.next()
+let AMOUNT_HP_HEALED = 5.0
+let AOE = 500.
+let TARGET_ALLOWED = "air,allies,friend,ground,invulnerable,organic,self,vulnerable"
+
+let COOLDOWN = 5.0
+let MANA_DRAINED = 5.0
+let TOOLTIP_NORM = "Replenish Health"
+let TOOLTIP_EXTENDED = ("{0}Sustained manacost:|r {1} per second |n|nReplenishes health to the Master Healer and nearby allies, healing {2} health per second. "+
+                       "|nDrains mana until deactivated.").format(COLOR_LIGHT_BLUE, MANA_DRAINED.toToolTipLightBlue(), AMOUNT_HP_HEALED.toToolTipGreen())
+
+function createBuff()
+    new BuffDefinition(BUFF_ID, ORIGINAL_BUFF_ID)
+    ..setIcon(Icons.bTNHolyBolt)
+    ..setArtSpecial(1, "")
+    ..setEffectSoundLooping(1, Sounds.fountainOfLifeLoop1)
+    ..setTooltipNormal(1, TOOLTIP_NORM)
+    ..setTooltipNormalExtended(1, "This unit is replenishing the health of nearby units")
+
+class ReplenishHealth extends AbilityDefinitionAuraRegenerationHealingWard
+    construct(int newAbilityId)
+        super(newAbilityId)
+        this.setName(TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> TOOLTIP_NORM)
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+        this.setIconNormal(Icons.bTNHeal)
+        this.setIconResearch(Icons.bTNHeal)
+        this.setBuffs(1, toRawCode(BUFF_ID))
+        this.setAmountofHitPointsRegenerated(1, AMOUNT_HP_HEALED)
+        this.setAreaofEffect(1, AOE)
+        this.setPercentage(1, false)
+        this.setTargetsAllowed(1, TARGET_ALLOWED)
+
+class ReplenishHealthDummy extends AbilityDefinitionImmolationcreep
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setCheckDependencies(false)
+        this.setDamageperInterval(1, 0)
+        this.setManaDrainedperSecond(1, MANA_DRAINED)
+        this.setBufferManaRequired(1, 0)
+        this.setIconNormal(Icons.bTNHolyBolt)
+        this.setIconTurnOff(Icons.bTNHolyBolt)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setBuffs(1, toRawCode(BUFF_ID))
+        this.setTargetsAllowed(1, "")
+        this.setCooldown(1, COOLDOWN)
+        this.setAreaofEffect(1, 1)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, "Activate "+TOOLTIP_NORM))
+        this.setTooltipLearnExtended(TOOLTIP_EXTENDED)
+        this.setTooltipTurnOff(1, makeToolTipNorm(hotkey, "Deactivate "+TOOLTIP_NORM))
+        this.setHotkeyNormal(hotkey)
+        this.setHotkeyTurnOff(hotkey)
+
+
+@compiletime function createReplenishHealth()
+    new ReplenishHealthDummy(SPELL_REPLENISH_HEALTH, "D", new Pair(2, 1))
+    new ReplenishHealth(ABILITY_REPLENISH_HEALTH_EFFECT)
+
 
 function onCast()
     let caster = GetTriggerUnit()
     let entity = UnitEntity.findForUnit(caster)
-    if not caster.hasAbility(ABILITY_ID_REPLENISH_HEALTH)
+    if not caster.hasAbility(SPELL_REPLENISH_HEALTH)
         return
 
     switch GetIssuedOrderId()
         case Orders.immolation
-            caster.addAbility(ABILITY_ID_REPLENISH_HEALTH_EFFECT)
+            caster.addAbility(ABILITY_REPLENISH_HEALTH_EFFECT)
         case Orders.unimmolation
-            caster.removeAbility(ABILITY_ID_REPLENISH_HEALTH_EFFECT)
+            caster.removeAbility(ABILITY_REPLENISH_HEALTH_EFFECT)
 
 function onDeath()
     let caster = GetTriggerUnit()
-    if caster.hasAbility(ABILITY_ID_REPLENISH_HEALTH_EFFECT)
-        caster.removeAbility(ABILITY_ID_REPLENISH_HEALTH_EFFECT)
+    if caster.hasAbility(ABILITY_REPLENISH_HEALTH_EFFECT)
+        caster.removeAbility(ABILITY_REPLENISH_HEALTH_EFFECT)
 
 init
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_ORDER, function onCast)

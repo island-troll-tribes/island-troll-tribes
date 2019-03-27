@@ -1,8 +1,5 @@
 package AngelicElemental
-import AbilityObjEditing
 import BuffObjEditing
-import ObjectIdGenerator
-import ObjectIds
 import ClosureTimers
 import ClosureForGroups
 import Orders
@@ -11,66 +8,43 @@ import Assets
 import MapBounds
 import DummyCaster
 import ToolTipsUtils
+import ChannelAbilityPreset
+import Lodash
+import ID
 
 let EFFECT_PATH = Abilities.resurrectcaster
 let BUFF_EFFECT_PATH = Abilities.staff_Sanctuary_Target
 let BUFF_SPELL_ID = compiletime(ABIL_ID_GEN.next())
 let BUFF_ID = compiletime(BUFF_ID_GEN.next())
-let ABILITY_ID = 'XANG'
 let ABILITY_ICON = Icons.bTNDivineIntervention
 let PROJECTILE_HEIGHT_OFFSET = -420.
 let BUFF_CAST_RADIUS = 250.
 let PROJECTILE_LIFETIME = 1.4
 let PROJECTILE_SPEED = 550.
 let BUFF_DAMAGE_INCREASE = 0.25
-let BUFF_ARMOR_INCREASE = 3
-let BUFF_DURATION = 20
+let BUFF_ARMOR_INCREASE = 3.
+let BUFF_DURATION = 20.
 let COOLDOWN = 60.
 let MANACOST = 30
 let INITIAL_DISTANCE = 75.
-let HOTKEY = "C"
-let TOOLTIP_NORM = makeToolTipNorm(HOTKEY, "Angelic Elemental")
-let TOOLTIP_EXT = "Summons an angelic elemental and projects it forward. Any friendly unit that comes in contact with the elemental gets blessed, increasing their attack damage by 25% and armor by 3 for 20 seconds."
+let TOOLTIP_NORM = "Angelic Elemental"
+let TOOLTIP_EXT = "Summons an angelic elemental and projects it forward. Any friendly unit that comes in contact with the elemental gets blessed, "+
+                  "increasing their attack damage by {0} and armor by {1} for {2} seconds. Has {3} seconds cooldown."
+                  .format(BUFF_DAMAGE_INCREASE.toToolTipRed(), BUFF_ARMOR_INCREASE.toToolTipGreen(), BUFF_DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
 
-@compiletime function createSpell()
-    new AbilityDefinitionIllidanChannel(ABILITY_ID)
-        ..setArtCaster("")
-        ..setArtEffect("")
-        ..setArtTarget("")
-        ..setIconNormal(ABILITY_ICON)
-        ..setIconResearch(ABILITY_ICON)
-        ..setIconTurnOff(ABILITY_ICON)
-        ..presetArtDuration(lvl -> 0)
-        ..presetBaseOrderID(lvl ->"selfdestructoff")
-        ..presetFollowThroughTime(lvl -> 0.5)
-        ..presetOptions(lvl -> 1)
-        ..presetDisableOtherAbilities(lvl -> false)
-        ..presetTargetType(lvl -> 2)
-        ..presetCastRange(lvl -> PROJECTILE_LIFETIME * PROJECTILE_SPEED)
-        ..presetCooldown(lvl -> COOLDOWN)
-        ..setHeroAbility(false)
-        ..setItemAbility(false)
-        ..setLevels(1)
-        ..presetManaCost(lvl -> MANACOST)
-        ..setHotkeyNormal(HOTKEY)
-        ..setHotkeyLearn(HOTKEY)
-        ..setHotkeyTurnOff(HOTKEY)
-        ..setName("Angelic Elemental")
-        ..presetTooltipNormal(lvl -> TOOLTIP_NORM)
-        ..presetTooltipNormalExtended(lvl -> TOOLTIP_EXT)
 
-@compiletime function createBuff()
-    new BuffDefinition(BUFF_ID, 'BHds')
+function createBuff()
+    new BuffDefinition(BUFF_ID, 'BHds') // orig ID is divine shield buff
         ..setTooltipNormal(1, "Inner Power")
         ..setTooltipNormalExtended(1, "Blessed by an angelic elemental. Temporarily increased damage and armor.")
         ..setArtTarget(1, BUFF_EFFECT_PATH)
 
-@compiletime function createBuffSpell()
+function createBuffSpell()
     new AbilityDefinitionInnerFireCreep(BUFF_SPELL_ID)
         ..setLevels(1)
         ..presetAutocastRange(lvl -> 0)
         ..presetDamageIncrease(lvl -> BUFF_DAMAGE_INCREASE)
-        ..presetDefenseIncrease(lvl -> BUFF_ARMOR_INCREASE)
+        ..presetDefenseIncrease(lvl -> BUFF_ARMOR_INCREASE.toInt())
         ..presetCastRange(lvl -> 99999)
         ..presetCooldown(lvl -> 0)
         ..presetDurationHero(lvl -> 20)
@@ -80,6 +54,28 @@ let TOOLTIP_EXT = "Summons an angelic elemental and projects it forward. Any fri
         ..setCheckDependencies(false)
         ..setHeroAbility(false)
         ..setItemAbility(false)
+
+class AngelicElemental extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 1, true)
+        this.setIconNormal(ABILITY_ICON)
+        this.presetFollowThroughTime(lvl -> 0.5)
+        this.presetTargetType(lvl -> 2)
+        this.presetCastRange(lvl -> PROJECTILE_LIFETIME * PROJECTILE_SPEED)
+        this.presetCooldown(lvl -> COOLDOWN)
+        this.setHeroAbility(false)
+        this.presetManaCost(lvl -> MANACOST)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXT)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+
+@compiletime function createAngelicElemental()
+    new AngelicElemental(SPELL_ANGELIC_ELEMENTAL, "S", new Pair(2, 1))
+    createBuff()
+    createBuffSpell()
 
 class AngelicElementalInstance
     player ownerPlayer
@@ -135,4 +131,4 @@ function onCast()
     new AngelicElementalInstance(caster, targetPos)
 
 init
-    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerSpellEffectEvent(SPELL_ANGELIC_ELEMENTAL, () -> onCast())

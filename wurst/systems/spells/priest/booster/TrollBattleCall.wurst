@@ -17,7 +17,7 @@ let MANA_REGEN = 1.0
 
 let TOOLTIP_NORM = "Troll Battle Call"
 let TOOLTIP_EXTENDED = ("Increase damage by {0} and defense by {1} of you and allied trolls around for {2} seconds. Medium range.")
-                        .format(DAMAGE_BONUS.toToolTipRed(), ARMOR_BONUS.toToolTipGreen(), COOLDOWN.toToolTipBlue())
+                        .format(DAMAGE_BONUS.toToolTipRed(), ARMOR_BONUS.toToolTipGreen(), COOLDOWN.toToolTipLightBlue())
 
 let BUFF_ID = 'TBCA'
 let ORIGINAL_BUFF_ID = 'BHad' // Devotion Aura
@@ -31,12 +31,12 @@ function createBuff()
     ..setTooltipNormal(1, TOOLTIP_NORM)
     ..setTooltipNormalExtended(1, "This unit has heard a battle call, gaining damage and armor.")
 
-class TrollBattleCall extends AbilityDefinitionBattleRoar
+class TrollBattleCall extends AbilityDefinitionRoar
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
         super(newAbilityId)
         this.setHotkeyNormal(hotkey)
         this.setName(TOOLTIP_NORM)
-        this.presetTooltipNormal(lvl -> makeToolTipNormAura(TOOLTIP_NORM))
+        this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM))
         this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
         this.setButtonPositionNormalX(buttonPos.a)
         this.setButtonPositionNormalY(buttonPos.b)
@@ -54,8 +54,9 @@ class TrollBattleCall extends AbilityDefinitionBattleRoar
         this.setArtCaster(Abilities.tauntCaster)
         this.setMissileHomingEnabled(true)
         this.setMissileSpeed(700)
-        this.setBuffs(1, BUFF_ID.toString())
+        this.setBuffs(1, toRawCode(BUFF_ID))
 
 
 @compiletime function createTrollBattleCall()
     new TrollBattleCall(SPELL_TROLL_BATTLE_CALL, "R", new Pair(3, 0))
+    createBuff()

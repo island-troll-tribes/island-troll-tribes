@@ -1,0 +1,63 @@
+package Sniff
+
+import ChannelAbilityPreset
+import ID
+import Lodash
+import Assets
+import ToolTipsUtils
+import BuffObjEditing
+import ObjectIds
+import RegisterEvents
+
+let ICON = "ReplaceableTextures\\CommandButtons\\BTNPoisonousSmell.blp"
+
+let CAST_RANGE = 0
+let COOLDOWN = 3.
+let MANACOST = 1
+let DURATION = 0.
+let AOE = 40.
+let TOOLTIP_NORM = "Sniff"
+let TOOLTIP_EXTENDED = "Using hid penguin-like sense of smell, the tracker can sniff a hide or bone. "+
+                        "If the animal was killed recently, the tracker will pickup the scent of whoever killed it"+
+                        ". He can also sniff items dropped by enemies.".format(DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
+let TARGET_ALLOWED = "item"
+
+class Sniff extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 1, true)
+        this.presetManaCost(lvl -> MANACOST)
+        this.presetCooldown(lvl -> COOLDOWN)
+        this.setHeroAbility(false)
+        this.setItemAbility(false)
+        this.presetTargetTypes(Targettype.POINT)
+        this.presetTargetsAllowed(lvl -> TARGET_ALLOWED)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+        this.setIconNormal(ICON)
+        this.setIconResearch(ICON)
+        this.setIconTurnOff(ICON)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setFollowThroughTime(1, 1)
+        this.setAreaofEffect(1, AOE)
+        this.setAnimationNames("spell")
+        this.setArtDuration(1, 0.98)
+        this.setArtEffect("")
+        this.setArtTarget("")
+        this.setArtCaster("")
+        this.setTargetAttachmentPoint("")
+        this.setCasterAttachmentPoint1("")
+        this.setCasterAttachmentPoint("")
+        this.setCasterAttachments(0)
+
+@compiletime function createSniff()
+    new Sniff(SPELL_SNIFF, "W", new Pair(1, 0))
+
+//function onCast()
+// Work In Progress
+
+
+init
+    //registerSpellEffectEvent(SPELL_SNIFF, () -> onCast())

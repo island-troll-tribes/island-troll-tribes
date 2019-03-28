@@ -3,9 +3,45 @@ package Omnicure
 import RegisterEvents
 import DummyCaster
 import Orders
+import ChannelAbilityPreset
+import ID
+import Lodash
+import Assets
+import ToolTipsUtils
 
-public constant SPELL_OMNICURE = 'A061'
-public constant SPELL_CURE = 'A02H'
+let BUFF_ID = BUFF_ID_GEN.next()
+let COOLDOWN = 50.
+let MANACOST = 10
+let TOOLTIP_NORM = "OmniCure"
+let TOOLTIP_EXTENDED = "An upgrade of Cure All that affects all allies as well as the caster. Can cure jealousy, "+
+                        "track, disease, snake poison, and many others. Can not be used on enemies. Has {0} seconds cooldown."
+                        .format(COOLDOWN.toToolTipLightBlue())
+
+let TARGET_ALLOWED = "targetAllowed"
+
+
+class Omnicure extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 1, true)
+        this.presetManaCost(lvl -> MANACOST)
+        this.presetCooldown(lvl -> COOLDOWN)
+        this.setHeroAbility(false)
+        this.setItemAbility(false)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+        this.setIconNormal(Icons.bTNBigBadVoodooSpell)
+        this.setIconResearch(Icons.bTNBigBadVoodooSpell)
+        this.setIconTurnOff(Icons.bTNBigBadVoodooSpell)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setFollowThroughTime(1, 0.25)
+        this.setArtDuration(1, 0)
+
+
+@compiletime function createOmnicure()
+    new Omnicure(SPELL_OMNICURE, "E", new Pair(1, 0))
 
 init
     registerSpellEffectEvent(SPELL_OMNICURE) ->
@@ -19,4 +55,4 @@ init
             new DummyCaster()
                 ..owner(owner)
                 ..origin(hero.getPos() + vec2(100, 0))
-                ..castTarget(SPELL_CURE, 1, Orders.autodispel, hero)
+                ..castTarget(SPELL_CURE_ALL, 1, Orders.autodispel, hero)

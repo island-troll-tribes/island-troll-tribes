@@ -11,7 +11,6 @@ import Lodash
 import ChannelAbilityPreset
 import ID
 import ToolTipsUtils
-import EventHelper
 
 //let ABILITY_ID = 'XPHW'
 let CAST_RANGE = 6000.
@@ -40,6 +39,7 @@ class HealingWave extends ChannelAbilityPreset
         this.presetTargetType(lvl -> 1)
         this.presetTargetsAllowed(lvl -> "air,ground,friend,self,vuln,invu,organic")
         this.setHeroAbility(false)
+        this.setBaseOrderID(1, "healingwave")
         this.setHotkeyNormal(hotkey)
         this.setName(TOOLTIP_NORMAL)
         this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORMAL))
@@ -49,6 +49,7 @@ class HealingWave extends ChannelAbilityPreset
 @compiletime function createHealingWave()
     new HealingWave(SPELL_HEALING_WAVE, "S", new Pair(1, 1))
     new HealingWave(SPELL_MH_HEALING_WAVE, "E", new Pair(2, 0))
+    new HealingWave(SPELL_SAGE_HEALING_WAVE, "D", new Pair(2, 1))
 
 class HealingWaveInstance
     unit caster
@@ -127,6 +128,11 @@ init
         new HealingWaveInstance(caster, target, HEAL_AMOUNT, BOUNCE_COUNT.toInt())
 
     registerSpellEffectEvent(SPELL_MH_HEALING_WAVE) ->
+        var caster = GetSpellAbilityUnit()
+        var target = GetSpellTargetUnit()
+        new HealingWaveInstance(caster, target, HEAL_AMOUNT, BOUNCE_COUNT.toInt())
+
+    registerSpellEffectEvent(SPELL_SAGE_HEALING_WAVE) ->
         var caster = GetSpellAbilityUnit()
         var target = GetSpellTargetUnit()
         new HealingWaveInstance(caster, target, HEAL_AMOUNT, BOUNCE_COUNT.toInt())

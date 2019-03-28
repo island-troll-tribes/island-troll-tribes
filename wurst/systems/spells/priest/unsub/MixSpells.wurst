@@ -42,10 +42,14 @@ class MixSpell extends ChannelAbilityPreset
 @compiletime function createMixSpells()
     // Master Healer
     new MixSpell(SPELL_MH_MIX_ENERGY, "Q", new Pair(0, 0), "Energy", "ManaDrain", ENERGY_MANACOST)
-    new MixSpell(SPELL_MH_MIX_HEAT, "W", new Pair(1, 0), "Heat", "HeatDrain", HEAT_MANACOST)
+    new MixSpell(SPELL_MH_MIX_HEAT  , "W", new Pair(1, 0), "Heat"  , "HeatDrain", HEAT_MANACOST)
     // Priest
     new MixSpell(SPELL_MIX_ENERGY, "D", new Pair(2, 1), "Energy", "ManaDrain", ENERGY_MANACOST)
-    new MixSpell(SPELL_MIX_HEAT, "F", new Pair(3, 1), "Heat", "HeatDrain", HEAT_MANACOST)
+    new MixSpell(SPELL_MIX_HEAT  , "F", new Pair(3, 1), "Heat"  , "HeatDrain", HEAT_MANACOST)
+    // Sage
+    new MixSpell(SPELL_SAGE_MIX_ENERGY, "Z", new Pair(0, 2), "Energy", "ManaDrain", ENERGY_MANACOST)
+    new MixSpell(SPELL_SAGE_MIX_HEAT  , "X", new Pair(1, 2), "Heat"  , "HeatDrain", HEAT_MANACOST)
+
 
 function mixHeat(unit caster, unit target)
     let targetHeat = target.getOwner().getGold()
@@ -66,15 +70,18 @@ function mixMana(unit caster, unit target)
 function onCast()
     let caster = GetSpellAbilityUnit()
     let target = GetSpellTargetUnit()
+    let spell = GetSpellAbilityId()
 
     // Could be prettier, but I am lazy
-    if GetSpellAbilityId() == SPELL_MIX_ENERGY or GetSpellAbilityId() == SPELL_MH_MIX_ENERGY
+    if spell == SPELL_MIX_ENERGY or spell == SPELL_MH_MIX_ENERGY or spell == SPELL_SAGE_MIX_ENERGY
         mixMana(caster, target)
     else
         mixHeat(caster, target)
 
 init
-    registerSpellEffectEvent(SPELL_MIX_ENERGY   , ()-> onCast())
-    registerSpellEffectEvent(SPELL_MH_MIX_ENERGY, ()-> onCast())
-    registerSpellEffectEvent(SPELL_MIX_HEAT     , ()-> onCast())
-    registerSpellEffectEvent(SPELL_MH_MIX_HEAT  , ()-> onCast())
+    registerSpellEffectEvent(SPELL_MIX_ENERGY      , ()-> onCast())
+    registerSpellEffectEvent(SPELL_MH_MIX_ENERGY   , ()-> onCast())
+    registerSpellEffectEvent(SPELL_SAGE_MIX_ENERGY , ()-> onCast())
+    registerSpellEffectEvent(SPELL_MIX_HEAT        , ()-> onCast())
+    registerSpellEffectEvent(SPELL_MH_MIX_HEAT     , ()-> onCast())
+    registerSpellEffectEvent(SPELL_SAGE_MIX_HEAT   , ()-> onCast())

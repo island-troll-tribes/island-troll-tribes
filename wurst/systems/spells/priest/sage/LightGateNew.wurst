@@ -4,26 +4,69 @@ import HashMap
 import LinkedList
 import ClosureTimers
 import Orders
+import ID
 import ClosureForGroups
 import DummyCaster
+import Assets
 import Pool
+import ChannelAbilityPreset
+import Lodash
+import ToolTipsUtils
 
-constant let ABILITY_ID = 'A01H'
-constant let GROW_DURATION = 10.
-constant let MINIMUM_GROW_DURATION = 1.5
-constant let DURATION_MAX = 40.
-constant let ORB_COUNT = 7
-constant let ORB_LOOP_INTERVAL = 0.03125
-constant let ORB_ANGULARSPEED_SUMMON = 80.
-constant let ORB_ANGULARSPEED_ACTIVE = 10.
-constant let SPELLCAST_INTERVAL_FASTEST = 2.
-constant let SPELLCAST_INTERVAL_START = 3.
-constant let PORTAL_GROWSPEED = 100.
-constant let SPELLCAST_EFFECT_PATH = "Abilities\\Spells\\Human\\HolyBolt\\HolyBoltSpecialArt.mdl"
-constant let ORB_EFFECT_PATH = "Abilities\\Weapons\\FaerieDragonMissile\\FaerieDragonMissile.mdl"
+let GROW_DURATION = 10.
+let MINIMUM_GROW_DURATION = 1.5
+let DURATION_MAX = 40.
+let ORB_COUNT = 7
+let ORB_LOOP_INTERVAL = 0.03125
+let ORB_ANGULARSPEED_SUMMON = 80.
+let ORB_ANGULARSPEED_ACTIVE = 10.
+let SPELLCAST_INTERVAL_FASTEST = 2.
+let SPELLCAST_INTERVAL_START = 3.
+let PORTAL_GROWSPEED = 100.
+let SPELLCAST_EFFECT_PATH = Abilities.holyBoltSpecialArt
+let ORB_EFFECT_PATH = Abilities.faerieDragonMissile
 
 let lightGateInstances = new HashMap<unit, LightGateInstance>()
 let spellPool = new Pool<OrbSpell>()
+
+let COOLDOWN = 70.
+let MANACOST = 70
+let TOOLTIP_NORM = "Open Light Gate"
+let TOOLTIP_EXTENDED = "The Sage summons an extraordinary amount of white magic forming it into balls of energy. "+
+                        "The energy balls form a ring and slowly dissipate, casting boosting spells on all allies "+
+                        "within as they do. The longer this spell is channeled, the longer the gate remains open and "+
+                        "the more spells the energy balls cast. "
+
+
+let TARGET_ALLOWED = "targetAllowed"
+
+class OpenLightGate extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 1, true)
+        this.presetManaCost(lvl -> MANACOST)
+        this.presetCooldown(lvl -> COOLDOWN)
+        this.setHeroAbility(false)
+        this.setItemAbility(false)
+        this.presetTargetTypes(Targettype.NONE)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+        this.setIconNormal(Icons.bTNSell)
+        this.setIconResearch(Icons.bTNSell)
+        this.setIconTurnOff(Icons.bTNSell)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setFollowThroughTime(1, GROW_DURATION)
+        this.setAnimationNames("spell,throw")
+        this.setArtEffect("")
+        this.setArtTarget("")
+        this.setArtCaster("")
+        this.setTargetAttachmentPoint("")
+        this.setCasterAttachmentPoint("")
+
+@compiletime function createOpenLightGate()
+    new OpenLightGate(SPELL_LIGHT_GATE, "E", new Pair(0, 0))
 
 class OrbSpell
     int spellId
@@ -204,19 +247,19 @@ function onCast()
     lightGateInstances.put(caster, new LightGateInstance(caster, caster.getPos3Real() + vec3(0, 0, 50)))
 
 function onEndCast()
-    if GetSpellAbilityId() == ABILITY_ID
+    if GetSpellAbilityId() == SPELL_LIGHT_GATE
         var caster = GetSpellAbilityUnit()
         var instance = lightGateInstances.get(caster)
         instance.isChanneling = false
 
 function initSpellPool()
-    spellPool.add(1, new OrbSpell("Healing wave", 'XPHW', Orders.healingwave, 0))
-    spellPool.add(1, new OrbSpell("Spirit link", 'Aspl', Orders.spiritlink, 'Bspl'))
-    spellPool.add(2, new OrbSpell("Ranged heal", 'XPRH', Orders.heal, 0))
-    spellPool.add(2, new OrbSpell("Pump up", 'A01U', Orders.bloodlust, 'B00O'))
-    spellPool.add(2, new OrbSpell("Inner fire", 'Ainf', Orders.innerfire, 'BHds'))
+    spellPool.add(1, new OrbSpell("Healing wave", SPELL_HEALING_WAVE, Orders.healingwave, 0     ))
+    spellPool.add(1, new OrbSpell("Spirit link" , SPELL_SPIRIT_LINK , Orders.spiritlink , 'Bspl'))
+    spellPool.add(2, new OrbSpell("Ranged heal" , SPELL_RANGED_HEAL , Orders.heal       , 0     ))
+    spellPool.add(2, new OrbSpell("Pump up"     , SPELL_PUMP_UP     , Orders.bloodlust  , 'B00O'))
+    spellPool.add(2, new OrbSpell("Inner fire"  , 'Ainf'            , Orders.innerfire  , 'BHds'))
 
 init
     initSpellPool()
-    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerSpellEffectEvent(SPELL_LIGHT_GATE, () -> onCast())
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST, () -> onEndCast())

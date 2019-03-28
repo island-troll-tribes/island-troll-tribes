@@ -1,0 +1,85 @@
+package Track
+
+import ChannelAbilityPreset
+import ID
+import Lodash
+import Assets
+import LegacyColors
+import ToolTipsUtils
+import BuffObjEditing
+
+let BUFF_ID = BUFF_ID_GEN.next()
+let BUFF_ORIGINAL_ID = 'Bafe'
+let CAST_RANGE = 700.
+let ARMOR_REDUCED = 4
+let COOLDOWN = 50.
+let MANACOST = 0
+let DURATION = 30.
+let TOOLTIP_NORM = "Track"
+let TOOLTIP_EXTENDED = "Gives vision of the tracked unit and reduces armor by "+COLOR_RED+"{0}|r."
+
+let COOLDOWN_DECREASE_VALUE = 5.
+let DURATION_INCREASE_VALUE = 5.
+let TARGET_ALLOWED = "air,ground,enemies,neutral"
+
+function createBuff()
+    new BuffDefinition(BUFF_ID, BUFF_ORIGINAL_ID)
+        ..setIcon(Icons.bTNSpy)
+        ..setTargetAttachmentPoint0(1, "overhead")
+        ..setArtTarget(1, Abilities.aneuCaster)
+        ..setTooltipNormal(1, "Track")
+        ..setTooltipNormalExtended(1, "This unit is being tracked.")
+
+class Track extends AbilityDefinitionFaerieFire
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setLevels(3)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.setTooltipLearn("Learn " + TOOLTIP_NORM)
+        this.setTooltipLearnExtended(TOOLTIP_EXTENDED.format("1/2/3|r"))
+        this.presetTooltipNormal(lvl ->makeToolTipNormHero(hotkey, TOOLTIP_NORM, lvl))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED.format(lvl.toString())+toolTipDuration(
+                                         DURATION - (4 - lvl) * DURATION_INCREASE_VALUE, COOLDOWN - lvl * COOLDOWN_DECREASE_VALUE))
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setIconNormal(Icons.bTNSpy)
+        this.setIconResearch(Icons.bTNSpy)
+        this.setManaCost(1, MANACOST)
+        this.presetCooldown(lvl -> COOLDOWN - lvl * COOLDOWN_DECREASE_VALUE)
+        this.presetDurationHero(lvl -> DURATION - (4 - lvl) * DURATION_INCREASE_VALUE) // 15,20,25 seconds
+        this.presetDurationNormal(lvl -> DURATION)
+        this.presetBuffs(lvl -> toRawCode(BUFF_ID))
+        this.setCheckDependencies(false)
+        this.presetTargetsAllowed(lvl -> TARGET_ALLOWED)
+        this.presetCastRange(lvl -> CAST_RANGE)
+        this.setHeroAbility(true)
+        this.presetDefenseReduction(lvl -> lvl)
+
+class GreaterTrack extends AbilityDefinitionFaerieFirecreep
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, "Greater "+TOOLTIP_NORM))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED.format("4"))
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setIconNormal(Icons.bTNSpy)
+        this.setManaCost(1, MANACOST)
+        this.presetCooldown(lvl -> COOLDOWN)
+        this.presetDurationHero(lvl -> DURATION)
+        this.presetDurationNormal(lvl -> DURATION)
+        this.presetTargetsAllowed(lvl -> TARGET_ALLOWED)
+        this.presetCastRange(lvl -> CAST_RANGE)
+        this.presetBuffs(lvl -> toRawCode(BUFF_ID))
+        this.setCheckDependencies(false)
+        this.setHeroAbility(false)
+        this.setLevels(1)
+        this.presetDefenseReduction(lvl -> ARMOR_REDUCED)
+
+
+@compiletime function createTrack()
+    new Track(SPELL_TRACK, "E", new Pair(1, 1))
+    new GreaterTrack(SPELL_TRACKER_TRACK, "E", new Pair(2, 0))
+    createBuff()

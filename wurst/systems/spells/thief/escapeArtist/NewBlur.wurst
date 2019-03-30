@@ -135,17 +135,19 @@ function onCast()
         doPeriodicallyTimed(0.10, DURATION + 0.10 * 10) cb ->
             updateTransparency(afterImageList)
             dazzled(afterImageList)
+
             // Create new afterImage as long as the unit is buffed
-            if caster.hasAbility(BLUR_BUFF_ID)
-                var afterImage = createUnit(caster.getOwner(), afterImageUnit, caster.getPos(), caster.getFacingAngle())
+            // Don't create if unit is jumping, jump currentOrders is "stunned" for some reason"
+            if caster.hasAbility(BLUR_BUFF_ID) and caster.getCurrentOrder() != Orders.stunned
+                var afterImage = createUnit(caster.getOwner(), afterImageUnit, caster.getPos3Real(), caster.getFacingAngle())
                 afterImage.setPathing(false)
-                // Set afterImage animation to run or let it be random
+                // Set afterImage animation to run when caster's running, else it should be random
                 if caster.getCurrentOrder() != 0
                     afterImage.setAnimation(8)
                 afterImageList.addtoStart(afterImage)
             // Remove the afterImage after the set time, 10 afterImage max
-            doAfter(0.10 * 10) ->
-                afterImageList.pop().remove()
+                doAfter(0.10 * 10) ->
+                    afterImageList.pop().remove()
 
 init
     registerSpellEffectEvent(SPELL_BLUR, () -> onCast())

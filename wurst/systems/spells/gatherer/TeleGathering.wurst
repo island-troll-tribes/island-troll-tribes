@@ -4,11 +4,11 @@ import ClosureTimers
 import ClosureEvents
 import InstantDummyCaster
 import ID
+import Thief
+import UnitExtensions
 import HerbMaster
 import Omnigatherer
-import Thief
 import UnitEntity
-import UnitExtensions
 import ClosuresForItems
 import TerrainUtils
 import NewTeleThief
@@ -66,19 +66,18 @@ class TeleGatherInstance
     IterableMap<int, SortingPosition> sortingPositions
     int nextSortAngle = 0
     int sortDistanceOffset = SORT_DISTANCE_INCREMENT
-    int teleSpellToCast = ABILITY_ID_CASTER_BUFF
+    int teleAbilityToCast = ABILITY_ID_CASTER_BUFF
 
     construct(unit caster, unit teleTarget, real duration)
+        this.caster = caster
         this.casterEntity = UnitEntity.findForUnit(this.caster)
 
         if this.casterEntity instanceof Thief
-            this.teleSpellToCast = DUMMY_TELE_THIEF_ID
-        InstantDummyCaster.castTarget(caster.getOwner(), this.teleSpellToCast, 1, "curse", caster, caster.getPos() + vec2(100,0))
+            teleAbilityToCast = DUMMY_TELE_THIEF_ID
+        InstantDummyCaster.castTarget(caster.getOwner(), teleAbilityToCast, 1, "curse", caster, caster.getPos() + vec2(100,0))
 
-        this.caster = caster
         this.duration = duration
         this.teleTarget = teleTarget
-
         if cachedSortingPositions.has(this.teleTarget)
             let cache = cachedSortingPositions.get(this.teleTarget)
             this.sortingPositions = cache.sortingPositions.deepCopy()
@@ -94,28 +93,17 @@ class TeleGatherInstance
         this.pollingLoop = doPeriodically(1) cb ->
             this.lifetime += 1
             if this.lifetime >= this.duration
-                or not caster.hasAbility(CASTER_BUFF_ID)
+                or not (caster.hasAbility(CASTER_BUFF_ID) or caster.hasAbility(BUFF_TELE_THIEF))
                 or not teleTarget.hasAbility(TARGET_BUFF_ID)
                 destroy this
-
-    function isEnemyBuildingAround(real radius, unit caster) returns bool
-        var nearbyUnits = CreateGroup()..enumUnitsInRange(caster.getPos(), radius)
-        while nearbyUnits.hasNext()
-            let u = nearbyUnits.next()
-            if u.isEnemyOf(caster.getOwner()) and u.isStructure()
-                nearbyUnits.destr()
-                return true
-        nearbyUnits.destr()
-        return false
-
 
     function canGatherItem(int itemType) returns bool
         if itemType == ITEM_RAW_MEAT
             return false
 
         //Skip herbs if not herb-gatherer
-        if not this.casterEntity instanceof HerbMaster
-            and not this.casterEntity instanceof Omnigatherer
+        if not this.casterEntity instanceof HerbMaster and not this.casterEntity instanceof Omnigatherer
+        and not this.casterEntity instanceof Thief
             if itemType == ITEM_RIVER_ROOT
                 or itemType == ITEM_RIVER_STEM
                 or itemType == ITEM_BUTSU
@@ -131,7 +119,9 @@ class TeleGatherInstance
     function handleTeleGather(item itm)
         let itemType = itm.getTypeId()
 
-        if not casterEntity instanceof Thief and isEnemyBuildingAround(600, caster)
+        print(caster.isEnemyBuildingAround(400))
+        print(this.casterEntity instanceof Thief)
+        if not caster.isEnemyBuildingAround(400) and this.casterEntity instanceof Thief
             return
         if not canGatherItem(itemType)
             or caster.getPos().distanceToSq(teleTarget.getPos()) <= TELEGATHER_DISABLE_DISTANCE_SQ //Disable gathering near target fire
@@ -142,6 +132,8 @@ class TeleGatherInstance
         itm.setPos(sortingPos.pos)
 
     function getSortingPos(int itemType) returns SortingPosition
+        let targetPos = teleTarget.getPos()
+
         //If a cached pos exists, return it
         if this.sortingPositions.has(itemType)
             return this.sortingPositions.get(itemType)
@@ -208,7 +200,6 @@ function onTeleGatherCast()
             duration = TELE_THIEF_DURATION
         case SPELL_AS_TELE_THIEF
             duration = TELE_THIEF_DURATION
-
 
     if instances.has(caster)
         destroy instances.getAndRemove(caster)

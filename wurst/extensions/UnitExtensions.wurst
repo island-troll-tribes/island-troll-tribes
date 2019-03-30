@@ -179,3 +179,13 @@ public function unit.isImmobilized() returns bool
 //  TO DO : should find a way that works and checks the return
 public function unit.makeAbilitiesPermanent(LinkedList<int> abilList, boolean flag)
     abilList.forEach(elem -> this.makeAbilityPermanent(elem, flag))
+
+public function unit.isEnemyBuildingAround(real radius) returns bool
+    var nearbyUnits = CreateGroup()..enumUnitsInRange(this.getPos(), radius)
+    while nearbyUnits.hasNext()
+        let u = nearbyUnits.next()
+        if u.isEnemyOf(this.getOwner()) and u.isStructure()
+            nearbyUnits.destr()
+            return true
+    nearbyUnits.destr()
+    return false

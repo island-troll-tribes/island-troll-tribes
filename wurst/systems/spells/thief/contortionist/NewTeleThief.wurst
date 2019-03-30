@@ -6,10 +6,6 @@ import Lodash
 import Assets
 import ToolTipsUtils
 import BuffObjEditing
-import RegisterEvents
-import OrderIds
-import SimError
-import DummyCaster
 
 
 public let DUMMY_TELE_THIEF_ID = compiletime(ABIL_ID_GEN.next())
@@ -22,7 +18,7 @@ let MANACOST = 30
 let TOOLTIP_NORM = "Tele-Thief"
 let TOOLTIP_EXTENDED = "The thief uses a powerful magic designating the targeted fire as its tele-thiefing outlet. "+
                        "While tele-thiefing, any item picked up near enemy buildings warps to the tele-thiefing outlet. "+
-                       "Lasts 140 seconds.".format(TELE_THIEF_DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
+                       makeToolTipDuration(TELE_THIEF_DURATION, COOLDOWN)
 let TARGET_ALLOWED = "air,friend,ground,mechanical,neutral,structure,sapper"
 let DUMMY_TARGET_ALLOWED = "air,friend,ground,neutral,organic"
 
@@ -62,29 +58,13 @@ class TeleThief extends AbilityDefinitionFaerieFire
         this.setCooldown(1, COOLDOWN)
         this.setDurationHero(1, TELE_THIEF_DURATION)
         this.setDurationNormal(1, TELE_THIEF_DURATION)
-        this.setBuffs(1, toRawCode(BUFF_TELE_THIEF))
+        this.setBuffs(1, toRawCode('B00I'))
         this.setTargetsAllowed(1, TARGET_ALLOWED)
         this.setCastRange(1, CAST_RANGE)
         this.setDefenseReduction(1, 0)
 
 @compiletime function createTeleThief()
-    new TeleThief(SPELL_TELE_THIEF, "W", new Pair(1, 0))
+    new TeleThief(SPELL_TELE_THIEF   , "W", new Pair(1, 0))
     new TeleThief(SPELL_AS_TELE_THIEF, "S", new Pair(1, 1))
     new TeleThiefDummyCasting(DUMMY_TELE_THIEF_ID)
     createBuff()
-
-function onCast()
-    let target = GetSpellAbilityUnit()
-    let caster = GetSpellAbilityUnit()
-
-    if target.getTypeId() != UNIT_FIRE or target.getTypeId() != UNIT_MAGE_FIRE
-        simError(caster.getOwner(), "You need to cast this on a friendly fire")
-        return
-    new DummyCaster()
-        ..owner(caster.getOwner())
-        ..origin(caster.getPos() + vec2(100,0))
-        ..castTarget(DUMMY_TELE_THIEF_ID, 1, Orders.curse, caster)
-
-
-init
-    registerSpellEffectEvent(SPELL_TELE_THIEF, () -> onCast())

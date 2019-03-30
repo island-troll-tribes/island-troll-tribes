@@ -6,9 +6,12 @@ import InstantDummyCaster
 import ID
 import HerbMaster
 import Omnigatherer
+import Thief
 import UnitEntity
+import UnitExtensions
 import ClosuresForItems
 import TerrainUtils
+import NewTeleThief
 
 let ABILITY_ID_TELEGATHER = 'A057'
 let ABILITY_ID_OMNI_TELEGATHER = 'A06V'
@@ -63,13 +66,19 @@ class TeleGatherInstance
     IterableMap<int, SortingPosition> sortingPositions
     int nextSortAngle = 0
     int sortDistanceOffset = SORT_DISTANCE_INCREMENT
+    int teleSpellToCast = ABILITY_ID_CASTER_BUFF
 
     construct(unit caster, unit teleTarget, real duration)
-        InstantDummyCaster.castTarget(caster.getOwner(), ABILITY_ID_CASTER_BUFF, 1, "curse", caster, caster.getPos() + vec2(100,0))
-        this.caster = caster
         this.casterEntity = UnitEntity.findForUnit(this.caster)
+
+        if this.casterEntity instanceof Thief
+            this.teleSpellToCast = DUMMY_TELE_THIEF_ID
+        InstantDummyCaster.castTarget(caster.getOwner(), this.teleSpellToCast, 1, "curse", caster, caster.getPos() + vec2(100,0))
+
+        this.caster = caster
         this.duration = duration
         this.teleTarget = teleTarget
+
         if cachedSortingPositions.has(this.teleTarget)
             let cache = cachedSortingPositions.get(this.teleTarget)
             this.sortingPositions = cache.sortingPositions.deepCopy()
@@ -89,6 +98,17 @@ class TeleGatherInstance
                 or not teleTarget.hasAbility(TARGET_BUFF_ID)
                 destroy this
 
+    function isEnemyBuildingAround(real radius, unit caster) returns bool
+        var nearbyUnits = CreateGroup()..enumUnitsInRange(caster.getPos(), radius)
+        while nearbyUnits.hasNext()
+            let u = nearbyUnits.next()
+            if u.isEnemyOf(caster.getOwner()) and u.isStructure()
+                nearbyUnits.destr()
+                return true
+        nearbyUnits.destr()
+        return false
+
+
     function canGatherItem(int itemType) returns bool
         if itemType == ITEM_RAW_MEAT
             return false
@@ -96,21 +116,23 @@ class TeleGatherInstance
         //Skip herbs if not herb-gatherer
         if not this.casterEntity instanceof HerbMaster
             and not this.casterEntity instanceof Omnigatherer
-                if itemType == ITEM_RIVER_ROOT
-                    or itemType == ITEM_RIVER_STEM
-                    or itemType == ITEM_BUTSU
-                    or itemType == ITEM_BLUE_HERB
-                    or itemType == ITEM_ORANGE_HERB
-                    or itemType == ITEM_YELLOW_HERB
-                    or itemType == ITEM_PURPLE_HERB
-                    or itemType == ITEM_MUSHROOM
-                    return false
+            if itemType == ITEM_RIVER_ROOT
+                or itemType == ITEM_RIVER_STEM
+                or itemType == ITEM_BUTSU
+                or itemType == ITEM_BLUE_HERB
+                or itemType == ITEM_ORANGE_HERB
+                or itemType == ITEM_YELLOW_HERB
+                or itemType == ITEM_PURPLE_HERB
+                or itemType == ITEM_MUSHROOM
+                return false
 
         return true
 
     function handleTeleGather(item itm)
         let itemType = itm.getTypeId()
 
+        if not casterEntity instanceof Thief and isEnemyBuildingAround(600, caster)
+            return
         if not canGatherItem(itemType)
             or caster.getPos().distanceToSq(teleTarget.getPos()) <= TELEGATHER_DISABLE_DISTANCE_SQ //Disable gathering near target fire
             return
@@ -120,8 +142,6 @@ class TeleGatherInstance
         itm.setPos(sortingPos.pos)
 
     function getSortingPos(int itemType) returns SortingPosition
-        let targetPos = teleTarget.getPos()
-
         //If a cached pos exists, return it
         if this.sortingPositions.has(itemType)
             return this.sortingPositions.get(itemType)
@@ -184,6 +204,11 @@ function onTeleGatherCast()
             duration = 120.
         case ABILITY_ID_TELEGATHER
             duration = 30. + 20. * caster.getAbilityLevel(ABILITY_ID_TELEGATHER)
+        case SPELL_TELE_THIEF
+            duration = TELE_THIEF_DURATION
+        case SPELL_AS_TELE_THIEF
+            duration = TELE_THIEF_DURATION
+
 
     if instances.has(caster)
         destroy instances.getAndRemove(caster)
@@ -195,6 +220,12 @@ init
         onTeleGatherCast()
 
     registerSpellEffectEvent(ABILITY_ID_OMNI_TELEGATHER) ->
+        onTeleGatherCast()
+
+    registerSpellEffectEvent(SPELL_TELE_THIEF) ->
+        onTeleGatherCast()
+
+    registerSpellEffectEvent(SPELL_AS_TELE_THIEF) ->
         onTeleGatherCast()
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->

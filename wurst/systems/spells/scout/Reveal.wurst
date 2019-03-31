@@ -1,130 +1,100 @@
 package Reveal
-import AbilityObjEditing
-import ObjectIdGenerator
 import Icons
 import ClosureEvents
 import Orders
 import DummyCaster
 import ToolTipsUtils
 import ID
+import ChannelAbilityPreset
+import Lodash
 
-let ABILITY_ID_REVEAL = 'XSRV'
 let ABILITY_ID_REVEAL_DUMMY = compiletime(ABIL_ID_GEN.next())
 let ABILITY_ID_GREATER_REVEAL_DUMMY = compiletime(ABIL_ID_GEN.next())
-let REVEAL_ICON = Icons.bTNReveal
-let REVEAL_DURATION = 8.
-let GREATER_REVEAL_DURATION = 10.
-let REVEAL_COOLDOWN = 20.
-let GREATER_REVEAL_COOLDOWN = 20.
-let CASTTIME = 0.3
-let TOOLTIP_NORM_REVEAL = makeToolTipNorm("W", "Reveal")
-let TOOLTIP_LEARN_REVEAL = makeToolTipNorm("Q", "Reveal")
-let TOOLTIP_EXT_REVEAL = "Reveals an area around you for 8 seconds. Detects invisible units."
-let TOOLTIP_NORM_GREATER_REVEAL = makeToolTipNorm("E", "Greater Reveal")
-let TOOLTIP_EXT_GREATER_REVEAL = "Reveals an large area around you for 10 seconds. Detects invisible units."
+let DURATION = 8.
+let GREATER_DURATION = 10.
+let COOLDOWN = 20.
+let GREATER_COOLDOWN = 20.
+let AOE = 700.
+let GREATER_AOE = 2700.
 
-@compiletime function createDummyReveal()
-    new AbilityDefinitionFarseerFarSight(ABILITY_ID_REVEAL_DUMMY)
-    ..setLevels(3)
-    ..presetCastRange(lvl -> 99999)
-    ..presetAreaofEffect(lvl -> 300. + lvl * 700.)
-    ..presetDurationHero(lvl -> REVEAL_DURATION)
-    ..presetDurationNormal(lvl -> REVEAL_DURATION)
-    ..presetManaCost(lvl -> 0)
-    ..presetCooldown(lvl -> 0)
+let CAST_TIME = 0.3
+let TOOLTIP_NORM = "Reveal"
+let TOOLTIP_EXTENDED = "Reveals an area around you, detects invisible units."+makeToolTipDuration(DURATION, COOLDOWN)
 
-@compiletime function createDummyGreaterReveal()
-    new AbilityDefinitionFarseerFarSight(ABILITY_ID_GREATER_REVEAL_DUMMY)
-    ..setLevels(1)
-    ..presetCastRange(lvl -> 99999)
-    ..presetAreaofEffect(lvl -> 2700)
-    ..presetDurationHero(lvl -> GREATER_REVEAL_DURATION)
-    ..presetDurationNormal(lvl -> GREATER_REVEAL_DURATION)
-    ..presetManaCost(lvl -> 0)
-    ..presetCooldown(lvl -> 0)
+let TOOLTIP_EXT_GREATER = "Reveals an large area around you, detects invisible units."+makeToolTipDuration(GREATER_DURATION, GREATER_COOLDOWN)
 
-@compiletime function createStandardReveal()
-    new AbilityDefinitionIllidanChannel(ABILITY_ID_REVEAL)
-    ..setTargetType(1, 0)
-    ..setAnimationNames("spell")
-    ..setArtCaster("")
-    ..setArtEffect("")
-    ..setArtTarget("")
-    ..setArtSpecial("")
-    ..setButtonPositionNormalX(1)
-    ..setButtonPositionNormalY(1)
-    ..setButtonPositionResearchX(0)
-    ..setButtonPositionResearchY(0)
-    ..setIconNormal(REVEAL_ICON)
-    ..setIconResearch(REVEAL_ICON)
-    ..setIconTurnOff(REVEAL_ICON)
-    ..setHeroAbility(true)
-    ..setItemAbility(false)
-    ..setLevels(3)
-    ..setHotkeyNormal("E")
-    ..setName("Reveal")
-    ..setDisableOtherAbilities(1, false)
-    ..presetTooltipNormal(lvl -> TOOLTIP_NORM_REVEAL+" - Level "+lvl.toString())
-    ..setTooltipNormalExtended(1, TOOLTIP_EXT_REVEAL)
-    ..setTooltipLearn(TOOLTIP_LEARN_REVEAL)
-    ..setTooltipLearnExtended(TOOLTIP_EXT_REVEAL)
-    ..presetBaseOrderID(lvl -> "rechargeoff")
-    ..setOrderStringActivate("channel")
-    ..setOrderStringUseTurnOn("channel")
-    ..presetOptions(lvl -> 1)
-    ..presetCooldown(lvl -> REVEAL_COOLDOWN)
-    ..presetManaCost(lvl -> 0)
-    ..presetFollowThroughTime(lvl -> CASTTIME)
+class DummyReveal extends AbilityDefinitionFarseerFarSight
+    construct(int newAbilityId)
+        super(newAbilityId)
+        this.setLevels(3)
+        this.presetCastRange(lvl -> 99999)
+        this.presetAreaofEffect(lvl -> 300. + lvl * AOE)
+        this.presetDurationHero(lvl -> DURATION)
+        this.presetDurationNormal(lvl -> DURATION)
+        this.presetCooldown(lvl -> 0)
 
-@compiletime function createGreaterReveal()
-    new AbilityDefinitionIllidanChannel(SPELL_GREATER_REVEAL_ID)
-    ..setTargetType(1, 0)
-    ..setAnimationNames("spell")
-    ..setArtCaster("")
-    ..setArtEffect("")
-    ..setArtTarget("")
-    ..setArtSpecial("")
-    ..setButtonPositionNormalX(2)
-    ..setButtonPositionNormalY(1)
-    ..setButtonPositionResearchX(0)
-    ..setButtonPositionResearchY(0)
-    ..setIconNormal(REVEAL_ICON)
-    ..setIconResearch(REVEAL_ICON)
-    ..setIconTurnOff(REVEAL_ICON)
-    ..setHeroAbility(false)
-    ..setItemAbility(false)
-    ..setLevels(1)
-    ..setHotkeyNormal("E")
-    ..setName("Greater Reveal")
-    ..setDisableOtherAbilities(1, false)
-    ..setTooltipNormal(1, TOOLTIP_NORM_GREATER_REVEAL)
-    ..setTooltipNormalExtended(1, TOOLTIP_EXT_GREATER_REVEAL)
-    ..presetBaseOrderID(lvl -> "rechargeon")
-    ..setOrderStringActivate("channel")
-    ..setOrderStringUseTurnOn("channel")
-    ..presetOptions(lvl -> 1)
-    ..presetCooldown(lvl -> GREATER_REVEAL_COOLDOWN)
-    ..presetManaCost(lvl -> 0)
-    ..presetFollowThroughTime(lvl -> CASTTIME)
+class DummyGreaterReveal extends DummyReveal
+    construct(int newAbilityId)
+        super(newAbilityId)
+        this.setLevels(1)
+        this.setAreaofEffect(1, GREATER_AOE)
+        this.presetDurationHero(lvl -> GREATER_DURATION)
+        this.presetDurationNormal(lvl -> GREATER_DURATION)
+
+class Reveal extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 3, true)
+        this.setHeroAbility(true)
+        this.setItemAbility(false)
+        this.setRequiredLevel(1)
+        this.setLevelSkipRequirement(1)
+        this.setCheckDependencies(false)
+        this.presetManaCost(lvl -> 0)
+        this.presetCooldown(lvl -> COOLDOWN)
+        this.presetTargetTypes(Targettype.NONE)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> makeToolTipNormHero(hotkey, TOOLTIP_NORM, lvl))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+        this.setTooltipLearn(makeToolTipLearn(TOOLTIP_NORM))
+        this.setTooltipLearnExtended(TOOLTIP_EXTENDED)
+        this.setIconNormal(Icons.bTNReveal)
+        this.setIconResearch(Icons.bTNReveal)
+        this.setIconTurnOff(Icons.bTNReveal)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.presetFollowThroughTime(lvl -> CAST_TIME)
+
+class GreaterReveal extends Reveal
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, hotkey, buttonPos)
+        this.setHeroAbility(false)
+        this.setLevels(1)
+        this.setName("Greater "+TOOLTIP_NORM)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, "Greater "+TOOLTIP_NORM))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+
+@compiletime function createReveal()
+    new Reveal(SPELL_REVEAL_ID, "E", new Pair(1, 1))
+    new GreaterReveal(SPELL_GREATER_REVEAL_ID, "E", new Pair(1, 1))
+    new DummyReveal(ABILITY_ID_REVEAL_DUMMY)
+    new DummyGreaterReveal(ABILITY_ID_GREATER_REVEAL_DUMMY)
 
 function onCastReveal()
     let caster = GetSpellAbilityUnit()
     let owner = caster.getOwner()
     let lvl = caster.getAbilityLevel(GetSpellAbilityId())
-    new DummyCaster()
-        ..owner(owner)
-        ..origin(caster.getPos() + vec2(100,0))
-        ..castPoint(ABILITY_ID_REVEAL_DUMMY, lvl, Orders.farsight, caster.getPos())
+    var dummyToCast = ABILITY_ID_REVEAL_DUMMY
 
-function onCastGreaterReveal()
-    let caster = GetSpellAbilityUnit()
-    let owner = caster.getOwner()
-    let lvl = 1
+    if GetSpellAbilityId() == SPELL_GREATER_REVEAL_ID
+        dummyToCast = ABILITY_ID_GREATER_REVEAL_DUMMY
+
     new DummyCaster()
         ..owner(owner)
         ..origin(caster.getPos() + vec2(100,0))
-        ..castPoint(ABILITY_ID_GREATER_REVEAL_DUMMY, lvl, Orders.farsight, caster.getPos())
+        ..castPoint(dummyToCast, lvl, Orders.farsight, caster.getPos())
+
 
 init
-    registerSpellEffectEvent(ABILITY_ID_REVEAL, () -> onCastReveal())
-    registerSpellEffectEvent(SPELL_GREATER_REVEAL_ID, () -> onCastGreaterReveal())
+    registerSpellEffectEvent(SPELL_REVEAL_ID, () -> onCastReveal())
+    registerSpellEffectEvent(SPELL_GREATER_REVEAL_ID, () -> onCastReveal())

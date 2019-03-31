@@ -7,8 +7,10 @@ import ToolTipsUtils
 import ID
 import ChannelAbilityPreset
 import Lodash
+import ClosureForGroups
 
 let ABILITY_ID_REVEAL_DUMMY = compiletime(ABIL_ID_GEN.next())
+let ABILITY_ID_RECON_REVEAL_DUMMY = compiletime(ABIL_ID_GEN.next())
 let ABILITY_ID_GREATER_REVEAL_DUMMY = compiletime(ABIL_ID_GEN.next())
 let DURATION = 8.
 let GREATER_DURATION = 10.
@@ -21,7 +23,7 @@ let CAST_TIME = 0.3
 let TOOLTIP_NORM = "Reveal"
 let TOOLTIP_EXTENDED = "Reveals an area around you, detects invisible units."+makeToolTipDuration(DURATION, COOLDOWN)
 
-let TOOLTIP_EXT_GREATER = "Reveals an large area around you, detects invisible units."+makeToolTipDuration(GREATER_DURATION, GREATER_COOLDOWN)
+let TOOLTIP_EXTENDED_GREATER = "Reveals an large area around you, detects invisible units."+makeToolTipDuration(GREATER_DURATION, GREATER_COOLDOWN)
 
 class DummyReveal extends AbilityDefinitionFarseerFarSight
     construct(int newAbilityId)
@@ -40,6 +42,15 @@ class DummyGreaterReveal extends DummyReveal
         this.setAreaofEffect(1, GREATER_AOE)
         this.presetDurationHero(lvl -> GREATER_DURATION)
         this.presetDurationNormal(lvl -> GREATER_DURATION)
+
+class DummyReconReveal extends DummyReveal
+    construct(int newAbilityId)
+        super(newAbilityId)
+        this.setLevels(3)
+        this.presetAreaofEffect(lvl -> 400. + (lvl * 600.))
+        this.presetDurationHero(lvl -> DURATION)
+        this.presetDurationNormal(lvl -> DURATION)
+
 
 class Reveal extends ChannelAbilityPreset
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
@@ -72,21 +83,63 @@ class GreaterReveal extends Reveal
         this.setLevels(1)
         this.setName("Greater "+TOOLTIP_NORM)
         this.setTooltipNormal(1, makeToolTipNorm(hotkey, "Greater "+TOOLTIP_NORM))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED_GREATER)
+
+class ChainReveal extends Reveal
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, hotkey, buttonPos)
+        this.presetCooldown(lvl -> COOLDOWN + 30.)
+        this.setName("Chain "+TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> makeToolTipNormHero(hotkey, "Chain "+TOOLTIP_NORM, lvl))
         this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+        this.setTooltipLearn(makeToolTipLearn(TOOLTIP_NORM))
+        this.setTooltipLearnExtended(TOOLTIP_EXTENDED)
 
 @compiletime function createReveal()
     new Reveal(SPELL_REVEAL_ID, "E", new Pair(1, 1))
     new GreaterReveal(SPELL_GREATER_REVEAL_ID, "E", new Pair(1, 1))
+    new ChainReveal(SPELL_CHAIN_REVEAL, "E", new Pair(1, 1))
     new DummyReveal(ABILITY_ID_REVEAL_DUMMY)
     new DummyGreaterReveal(ABILITY_ID_GREATER_REVEAL_DUMMY)
+    new DummyReconReveal(ABILITY_ID_RECON_REVEAL_DUMMY)
+
+
+function chainReveal(unit caster, player owner, int lvl)
+    // Reveal on living clay
+    forUnitsOfPlayer(caster.getOwner()) u ->
+        if u.getTypeId() == UNIT_LIVING_CLAY
+            new DummyCaster()
+                ..owner(owner)
+                ..origin(u.getPos() + vec2(100,0))
+                ..castPoint(ABILITY_ID_RECON_REVEAL_DUMMY, lvl, Orders.farsight, u.getPos())
+
+    // Reveal on Units around
+    // let unitsAround = CreateGroup()..enumUnitsInRange(caster.getPos(), 2700, Condition(() -> begin
+    //     let unitFilter = GetFilterUnit()
+    //     return unitFilter.getOwner().isEnemyOf(caster.getOwner())
+    // end))
+    let unitsAround = CreateGroup()..enumUnitsInRange(caster.getPos(), 2700)
+    for i = 0 to lvl
+        let randomUnit = unitsAround.getRandomUnit()
+        if randomUnit == null
+            break
+        unitsAround.removeUnit(randomUnit)
+        new DummyCaster()
+            ..owner(caster.getOwner())
+            ..origin(randomUnit.getPos() + vec2(100,0))
+            ..castTarget(ABILITY_ID_GREATER_REVEAL_DUMMY, lvl, Orders.farsight, randomUnit)
+    unitsAround.destr()
 
 function onCastReveal()
     let caster = GetSpellAbilityUnit()
     let owner = caster.getOwner()
-    let lvl = caster.getAbilityLevel(GetSpellAbilityId())
+    let spellId = GetSpellAbilityId()
+    let lvl = caster.getAbilityLevel(spellId)
     var dummyToCast = ABILITY_ID_REVEAL_DUMMY
 
-    if GetSpellAbilityId() == SPELL_GREATER_REVEAL_ID
+    if spellId == SPELL_CHAIN_REVEAL
+        chainReveal(caster, owner, lvl)
+    if spellId == SPELL_GREATER_REVEAL_ID
         dummyToCast = ABILITY_ID_GREATER_REVEAL_DUMMY
 
     new DummyCaster()
@@ -98,3 +151,4 @@ function onCastReveal()
 init
     registerSpellEffectEvent(SPELL_REVEAL_ID, () -> onCastReveal())
     registerSpellEffectEvent(SPELL_GREATER_REVEAL_ID, () -> onCastReveal())
+    registerSpellEffectEvent(SPELL_CHAIN_REVEAL, () -> onCastReveal())

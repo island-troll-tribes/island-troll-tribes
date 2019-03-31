@@ -1,0 +1,101 @@
+package TeleGatherAbilityDefinition
+
+import ChannelAbilityPreset
+import ID
+import Lodash
+import Assets
+import ToolTipsUtils
+import BuffObjEditing
+
+public let DUMMY_TELE_GATHER_ID = compiletime(ABIL_ID_GEN.next())
+public let BUFF_TELE_TARGET = compiletime(BUFF_ID_GEN.next())
+public let BUFF_TELE_GATHER = compiletime(BUFF_ID_GEN.next())
+let BUFF_ORIGINAL_ID = 'BOac'
+let BUFF_TARGET_ORIGINAL_ID = 'BHds'
+
+let CAST_RANGE = 100.
+let COOLDOWN = 120.
+let MANACOST = 15
+let DURATION = 30.
+
+let OMNI_DURATION = 90.
+let OMNI_MANACOST = 30
+
+let TOOLTIP_NORM = "Tele-Gathering"
+let TOOLTIP_EXTENDED = "The Tele-Gatherer psychically links up with the targeted campfire as its "+
+                       "Tele-gathering outlet and starts telegathering. While tele-gathering, items"+
+                       " picked up are warped directly to the outlet."
+
+let TARGET_ALLOWED = "friend,ground,mechanical,neutral,structure,worker"
+let DUMMY_TARGET_ALLOWED = "air,friend,ground,neutral,organic"
+
+
+function createTargetBuff()
+    new BuffDefinition(BUFF_TELE_TARGET, BUFF_TARGET_ORIGINAL_ID)
+        ..setIcon(Icons.bTNSpellSteal)
+        ..setTargetAttachmentPoint0(1, "overhead")
+        ..setArtTarget(1, Abilities.crystalBallCaster)
+        ..setTooltipNormal(1, "Tele-Gathering target")
+        ..setTooltipNormalExtended(1, "Items are being Tele-Gathered to this fire.")
+
+function createTeleGatherBuff()
+    new BuffDefinition(BUFF_TELE_GATHER, BUFF_ORIGINAL_ID)
+        ..setIcon(Icons.bTNSpellSteal)
+        ..setTargetAttachmentPoint0(1, "overhead")
+        ..setArtTarget(1, Abilities.faerieFireTarget)
+        ..setTooltipNormal(1, TOOLTIP_NORM)
+        ..setTooltipNormalExtended(1, "This unit is using Tele-Gathering. Items picked up will be warp to its campfire.")
+
+public class TeleGatherDummyCasting extends AbilityDefinitionCurse
+    construct(int newAbilityId)
+        super(newAbilityId)
+        this.setLevels(4)
+        this.presetBuffs(lvl -> toRawCode(BUFF_TELE_GATHER))
+        this.presetManaCost(lvl -> 0)
+        this.presetDurationHero(lvl -> DURATION + (lvl * 20))
+        this.presetDurationNormal(lvl -> DURATION + (lvl * 20))
+        this.setName("Tele-Gather person buff")
+        this.presetChancetoMiss(lvl -> 0)
+        this.presetTargetsAllowed(lvl -> DUMMY_TARGET_ALLOWED)
+
+public class TeleGatheringDefinition extends AbilityDefinitionFaerieFire
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setIconNormal(Icons.bTNSpellSteal)
+        this.setIconResearch(Icons.bTNSpellSteal)
+        this.presetTargetsAllowed(lvl -> TARGET_ALLOWED)
+        this.presetDefenseReduction(lvl -> 0)
+        this.presetBuffs(lvl -> toRawCode(BUFF_TELE_TARGET))
+        this.presetCastRange(lvl -> CAST_RANGE)
+
+class HerbMasterTeleGathering extends TeleGatheringDefinition
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, hotkey, buttonPos)
+        this.setHeroAbility(true)
+        this.setLevels(3)
+        this.presetCooldown(lvl -> COOLDOWN)
+        this.presetManaCost(lvl -> MANACOST + (lvl * 5))
+        this.presetDurationHero(lvl -> DURATION + (lvl * 20))
+        this.presetDurationNormal(lvl -> DURATION + (lvl * 20))
+        this.presetBuffs(lvl -> toRawCode(BUFF_TELE_TARGET))
+
+class OmnigathererTeleGathering extends TeleGatheringDefinition
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, hotkey, buttonPos)
+        this.presetManaCost(lvl -> OMNI_MANACOST)
+        this.presetDurationHero(lvl -> OMNI_DURATION)
+        this.presetDurationNormal(lvl -> OMNI_DURATION)
+
+
+@compiletime function createTeleGatheringSpells()
+    createTargetBuff()
+    createTeleGatherBuff()
+    new HerbMasterTeleGathering  (SPELL_TELE_GATHER, "E", new Pair(1, 1))
+    new OmnigathererTeleGathering(SPELL_TELE_GATHER_OMNI, "E", new Pair(1, 1))
+    new TeleGatherDummyCasting(DUMMY_TELE_GATHER_ID)

@@ -4,20 +4,22 @@ import ClosureTimers
 import ClosureEvents
 import InstantDummyCaster
 import ID
-import Thief
 import UnitExtensions
+import Thief
 import HerbMaster
 import Omnigatherer
+import Gatherer
 import UnitEntity
 import ClosuresForItems
 import TerrainUtils
 import NewTeleThief
+import TeleGatherAbilityDefinition
 
-let ABILITY_ID_TELEGATHER = 'A057'
-let ABILITY_ID_OMNI_TELEGATHER = 'A06V'
-let ABILITY_ID_CASTER_BUFF = 'A056'
-let CASTER_BUFF_ID = 'B00H'
-let TARGET_BUFF_ID = 'B00I'
+//let ABILITY_ID_TELEGATHER = 'A057'
+//let ABILITY_ID_OMNI_TELEGATHER = 'A06V'
+//let ABILITY_ID_CASTER_BUFF = 'A056'
+//let CASTER_BUFF_ID = 'B00H'
+//let TARGET_BUFF_ID = 'B00I'
 let SORT_DISTANCE_INCREMENT = 110
 let SORT_DISTANCE_BASE = 30
 let SORT_ANGLE_INCREMENT = 45
@@ -66,18 +68,27 @@ class TeleGatherInstance
     IterableMap<int, SortingPosition> sortingPositions
     int nextSortAngle = 0
     int sortDistanceOffset = SORT_DISTANCE_INCREMENT
-    int teleAbilityToCast = ABILITY_ID_CASTER_BUFF
+    int teleAbilityToCast = DUMMY_TELE_GATHER_ID
 
     construct(unit caster, unit teleTarget, real duration)
+        var teleAbilityCastLevel = 1
+
         this.caster = caster
         this.casterEntity = UnitEntity.findForUnit(this.caster)
 
-        if this.casterEntity instanceof Thief
+        // Just fixing correct spell value for the ability to cast on caster
+        if this.casterEntity instanceof Omnigatherer
+            teleAbilityCastLevel = 4
+        else if this.casterEntity instanceof Gatherer
+            teleAbilityCastLevel = caster.getAbilityLevel(SPELL_TELE_GATHER)
+        else
             teleAbilityToCast = DUMMY_TELE_THIEF_ID
-        InstantDummyCaster.castTarget(caster.getOwner(), teleAbilityToCast, 1, "curse", caster, caster.getPos() + vec2(100,0))
+
+        InstantDummyCaster.castTarget(caster.getOwner(), teleAbilityToCast, teleAbilityCastLevel, "curse", caster, caster.getPos() + vec2(100,0))
 
         this.duration = duration
         this.teleTarget = teleTarget
+
         if cachedSortingPositions.has(this.teleTarget)
             let cache = cachedSortingPositions.get(this.teleTarget)
             this.sortingPositions = cache.sortingPositions.deepCopy()
@@ -93,8 +104,8 @@ class TeleGatherInstance
         this.pollingLoop = doPeriodically(1) cb ->
             this.lifetime += 1
             if this.lifetime >= this.duration
-                or not (caster.hasAbility(CASTER_BUFF_ID) or caster.hasAbility(BUFF_TELE_THIEF))
-                or not teleTarget.hasAbility(TARGET_BUFF_ID)
+                or not (caster.hasAbility(BUFF_TELE_GATHER) or caster.hasAbility(BUFF_TELE_THIEF))
+                or not teleTarget.hasAbility(BUFF_TELE_TARGET)
                 destroy this
 
     function canGatherItem(int itemType) returns bool
@@ -132,7 +143,6 @@ class TeleGatherInstance
         itm.setPos(sortingPos.pos)
 
     function getSortingPos(int itemType) returns SortingPosition
-        let targetPos = teleTarget.getPos()
 
         //If a cached pos exists, return it
         if this.sortingPositions.has(itemType)
@@ -172,10 +182,12 @@ class TeleGatherInstance
                 destroy cachedSortingPositions.getAndRemove(this.teleTarget)
             cachedSortingPositions.put(teleTarget, new SortingCache(this.sortingPositions, this.nextSortAngle, this.sortDistanceOffset))
 
-        if this.caster.hasAbility(CASTER_BUFF_ID)
-            this.caster.removeAbility(CASTER_BUFF_ID)
-        if this.teleTarget.hasAbility(TARGET_BUFF_ID)
-            this.teleTarget.removeAbility(TARGET_BUFF_ID)
+        if this.caster.hasAbility(DUMMY_TELE_GATHER_ID)
+            this.caster.removeAbility(DUMMY_TELE_GATHER_ID)
+        if this.caster.hasAbility(DUMMY_TELE_THIEF_ID)
+            this.caster.removeAbility(DUMMY_TELE_THIEF_ID)
+        if this.teleTarget.hasAbility(BUFF_TELE_TARGET)
+            this.teleTarget.removeAbility(BUFF_TELE_TARGET)
 
         destroy this.pollingLoop
 
@@ -192,10 +204,10 @@ function onTeleGatherCast()
     let target = GetSpellTargetUnit()
     var duration = 0.
     switch GetSpellAbilityId()
-        case ABILITY_ID_OMNI_TELEGATHER
-            duration = 120.
-        case ABILITY_ID_TELEGATHER
-            duration = 30. + 20. * caster.getAbilityLevel(ABILITY_ID_TELEGATHER)
+        case SPELL_TELE_GATHER_OMNI
+            duration = 30. + 20 * 4
+        case SPELL_TELE_GATHER
+            duration = 30. + 20. * caster.getAbilityLevel(SPELL_TELE_GATHER)
         case SPELL_TELE_THIEF
             duration = TELE_THIEF_DURATION
         case SPELL_AS_TELE_THIEF
@@ -207,10 +219,10 @@ function onTeleGatherCast()
     instances.put(caster, new TeleGatherInstance(caster, target, duration))
 
 init
-    registerSpellEffectEvent(ABILITY_ID_TELEGATHER) ->
+    registerSpellEffectEvent(SPELL_TELE_GATHER) ->
         onTeleGatherCast()
 
-    registerSpellEffectEvent(ABILITY_ID_OMNI_TELEGATHER) ->
+    registerSpellEffectEvent(SPELL_TELE_GATHER_OMNI) ->
         onTeleGatherCast()
 
     registerSpellEffectEvent(SPELL_TELE_THIEF) ->

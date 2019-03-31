@@ -3,9 +3,11 @@ import HashMap
 import LinkedList
 import UnitExtensions
 import ID
+import RegisterEvents
+import Texttag
 
 public function mixIt(LinkedList<item> inv)
-    inv.forEach() items -> 
+    inv.forEach() items ->
         if items.getTypeId() == ITEM_RIVER_ROOT
             items.remove()
         if items.getTypeId() == ITEM_RIVER_STEM
@@ -21,9 +23,9 @@ public function mixIt(LinkedList<item> inv)
         if items.getTypeId() == ITEM_YELLOW_HERB
             items.remove()
 
-public function mix(unit u)
-    let count = u.getInventoryItemCountMap()
-    let inventory = u.getInventory()
+public function mix(unit caster)
+    let count = caster.getInventoryItemCountMap()
+    let inventory = caster.getInventory()
     int specCount = 0
     int specTypes = 0
 
@@ -54,123 +56,129 @@ public function mix(unit u)
     // Eob
     if specTypes > 2  and specCount > 3
         mixIt(inventory)
-        u.addItemById(ITEM_ESSENCE_BEES)
+        caster.addItemById(ITEM_ESSENCE_BEES)
         return
 
     // Twin Islands
     if (yell > 2 and blue > 2) or (oran > 2 and purp > 2)
         mixIt(inventory)
-        u.addItemById(ITEM_POTION_TWIN_ISLANDS)
+        caster.addItemById(ITEM_POTION_TWIN_ISLANDS)
         return
 
     // Nether
     if specCount > 0 and stem > 1 and butsu > 1
         mixIt(inventory)
-        u.addItemById(ITEM_NETHER_POTION)
+        caster.addItemById(ITEM_NETHER_POTION)
         return
 
     // Drunk
     if specCount > 0 and root > 1 and butsu > 1
         mixIt(inventory)
-        u.addItemById(ITEM_DRUNKS_POTION)
+        caster.addItemById(ITEM_DRUNKS_POTION)
         return
- 
+
     // Fervor
     if specCount > 2 and specTypes > 1 and butsu > 0
         mixIt(inventory)
-        u.addItemById(ITEM_FERVER_POTION)
+        caster.addItemById(ITEM_FERVER_POTION)
         return
 
     // Disease Potion
     if specTypes > 1 and specCount > 3 and root > 0
         mixIt(inventory)
-        u.addItemById(ITEM_DISEASE_POTION)
+        caster.addItemById(ITEM_DISEASE_POTION)
         return
 
     // Acid Bomb
     if specTypes > 1 and specCount > 3 and stem > 1
         mixIt(inventory)
-        u.addItemById(ITEM_ACID_BOMB)
+        caster.addItemById(ITEM_ACID_BOMB)
         return
 
     // Bee Hive
     if specCount > 0 and stem > 1
         mixIt(inventory)
-        u.addItemById(ITEM_BEE_HIVE)
+        caster.addItemById(ITEM_BEE_HIVE)
         return
 
     // Dark Rock
     if stem > 0 and root > 0 and butsu == 2
         mixIt(inventory)
-        u.addItemById(ITEM_DARK_ROCK)
+        caster.addItemById(ITEM_DARK_ROCK)
         return
 
     // Anabolic Potion
     if stem > 3
         mixIt(inventory)
-        u.addItemById(ITEM_ANABOLIC_POTION)
+        caster.addItemById(ITEM_ANABOLIC_POTION)
         return
 
     // Elemental Shield Potion
     if stem > 0 and butsu > 0 and specCount > 0
         mixIt(inventory)
-        u.addItemById(ITEM_ELEMENTAL_SHIELD_POTION)
+        caster.addItemById(ITEM_ELEMENTAL_SHIELD_POTION)
         return
-    
+
     // Omnicure
     if butsu > 1 and specTypes > 1
         mixIt(inventory)
-        u.addItemById(ITEM_OMNICURE)
+        caster.addItemById(ITEM_OMNICURE)
         return
-    
+
     // Oracle
     if butsu > 1 and specCount > 0
         mixIt(inventory)
-        u.addItemById(ITEM_ORACLE_POTION)
+        caster.addItemById(ITEM_ORACLE_POTION)
         return
-    
+
     // Mana
     if stem > 0 and butsu > 0
         mixIt(inventory)
-        u.addItemById(ITEM_MANA_POTION_I)
+        caster.addItemById(ITEM_MANA_POTION_I)
         return
-    
+
     // Healing
     if root > 0 and butsu > 0
         mixIt(inventory)
-        u.addItemById(ITEM_HEALING_POTION_I)
+        caster.addItemById(ITEM_HEALING_POTION_I)
         return
-    
+
     // Gem Of Knowledge
     if specTypes >= 2 and specCount >= 4
         mixIt(inventory)
-        u.addItemById(ITEM_GEM_OF_KNOWLEDGE)
+        caster.addItemById(ITEM_GEM_OF_KNOWLEDGE)
         return
-    
+
     // Anti Magic Potion
     if specCount > 0 and butsu > 0
         mixIt(inventory)
-        u.addItemById(ITEM_ANTI_MAGIC_POTION)
+        caster.addItemById(ITEM_ANTI_MAGIC_POTION)
         return
-    
+
     // Wind
     if stem > 1
         mixIt(inventory)
-        u.addItemById(ITEM_SPIRIT_WIND)
+        caster.addItemById(ITEM_SPIRIT_WIND)
         return
-    
+
     // Water
     if root > 1
         mixIt(inventory)
-        u.addItemById(ITEM_SPIRIT_WATER)
+        caster.addItemById(ITEM_SPIRIT_WATER)
         return
-    
+
     // Cure All
     if butsu > 1
         mixIt(inventory)
-        u.addItemById(ITEM_CURE_ALL)
+        caster.addItemById(ITEM_CURE_ALL)
         return
 
-    
+function onCast()
+    let caster = GetSpellAbilityUnit()
 
-    
+    mix(caster)
+
+init
+    registerSpellEffectEvent(SPELL_MIX_HERBS, () -> onCast())
+    registerSpellEffectEvent(SPELL_POT_MIX_HERBS, () -> onCast())
+    registerSpellEffectEvent(SPELL_OMNIGATHERER_MIX_HERBS, () -> onCast())

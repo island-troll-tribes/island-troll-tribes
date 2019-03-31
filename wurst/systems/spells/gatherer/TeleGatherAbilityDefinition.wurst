@@ -18,7 +18,7 @@ let COOLDOWN = 120.
 let MANACOST = 15
 let DURATION = 30.
 
-let OMNI_DURATION = 90.
+let OMNI_DURATION = DURATION + 4 * 20
 let OMNI_MANACOST = 30
 
 let TOOLTIP_NORM = "Tele-Gathering"
@@ -64,7 +64,7 @@ public class TeleGatheringDefinition extends AbilityDefinitionFaerieFire
         this.setHotkeyNormal(hotkey)
         this.setName(TOOLTIP_NORM)
         this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM))
-        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED+makeToolTipDuration(DURATION + (lvl * 20), COOLDOWN))
         this.setButtonPositionNormalX(buttonPos.a)
         this.setButtonPositionNormalY(buttonPos.b)
         this.setIconNormal(Icons.bTNSpellSteal)
@@ -84,6 +84,7 @@ class HerbMasterTeleGathering extends TeleGatheringDefinition
         this.presetDurationHero(lvl -> DURATION + (lvl * 20))
         this.presetDurationNormal(lvl -> DURATION + (lvl * 20))
         this.presetBuffs(lvl -> toRawCode(BUFF_TELE_TARGET))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED+makeToolTipDuration(DURATION + (lvl * 20), COOLDOWN))
 
 class OmnigathererTeleGathering extends TeleGatheringDefinition
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
@@ -91,11 +92,13 @@ class OmnigathererTeleGathering extends TeleGatheringDefinition
         this.presetManaCost(lvl -> OMNI_MANACOST)
         this.presetDurationHero(lvl -> OMNI_DURATION)
         this.presetDurationNormal(lvl -> OMNI_DURATION)
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED+makeToolTipDuration(OMNI_DURATION, COOLDOWN))
+
 
 
 @compiletime function createTeleGatheringSpells()
     createTargetBuff()
     createTeleGatherBuff()
     new HerbMasterTeleGathering  (SPELL_TELE_GATHER, "E", new Pair(1, 1))
-    new OmnigathererTeleGathering(SPELL_TELE_GATHER_OMNI, "E", new Pair(1, 1))
+    new OmnigathererTeleGathering(SPELL_TELE_GATHER_OMNI, "F", new Pair(1, 1))
     new TeleGatherDummyCasting(DUMMY_TELE_GATHER_ID)

@@ -113,21 +113,21 @@ function chainReveal(unit caster, player owner, int lvl)
                 ..origin(u.getPos() + vec2(100,0))
                 ..castPoint(ABILITY_ID_RECON_REVEAL_DUMMY, lvl, Orders.farsight, u.getPos())
 
-    // Reveal on Units around
-    // let unitsAround = CreateGroup()..enumUnitsInRange(caster.getPos(), 2700, Condition(() -> begin
-    //     let unitFilter = GetFilterUnit()
-    //     return unitFilter.getOwner().isEnemyOf(caster.getOwner())
-    // end))
+    // Get neraby enemy units
     let unitsAround = CreateGroup()..enumUnitsInRange(caster.getPos(), 2700)
+    unitsAround.forEachIn() elem ->
+        if elem.getOwner().isAllyOf(caster.getOwner())
+            unitsAround.removeUnit(elem)
+
+    // cast greater reveal on a random nearby unit
     for i = 0 to lvl
         let randomUnit = unitsAround.getRandomUnit()
-        if randomUnit == null
-            break
-        unitsAround.removeUnit(randomUnit)
-        new DummyCaster()
-            ..owner(caster.getOwner())
-            ..origin(randomUnit.getPos() + vec2(100,0))
-            ..castTarget(ABILITY_ID_GREATER_REVEAL_DUMMY, lvl, Orders.farsight, randomUnit)
+        if randomUnit != null
+            new DummyCaster()
+                ..owner(caster.getOwner())
+                ..origin(randomUnit.getPos() + vec2(100,0))
+                ..castTarget(ABILITY_ID_GREATER_REVEAL_DUMMY, lvl, Orders.farsight, randomUnit)
+            unitsAround.removeUnit(randomUnit)
     unitsAround.destr()
 
 function onCastReveal()

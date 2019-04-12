@@ -11,6 +11,7 @@ import LegacyColors
 import IDUtils
 import ChatUtils
 import initlater CheatPack
+import Icons
 
 
 let MODES_TIME_LIMIT = 60.0
@@ -100,9 +101,8 @@ public class GameMode
             ..setWidth(.60)
             ..release()
 
-            let name = "{0}-{1}|r {2}(|r{3}{4}|r{5})|r".format(GOLD_COLOR, mode.name, GRAY_COLOR, SPECIAL_COLOR, mode.abbrev, GRAY_COLOR)
             modeboard.getItem(row, 0)
-            ..setValue(name)
+            ..setValue(mode.getDisplayString())
             ..setWidth(.15)
             ..release()
 
@@ -117,6 +117,24 @@ public class GameMode
                     time = "0" + time
 
                 modeboard.setTitle("Modes - 00:" + time)
+
+    static function createModeQuest()
+        list
+        .filter(mode -> mode.display)
+        .chunk(10) // 10 modes per quest?
+        .map(modes -> begin
+            return modes
+                .map(mode -> mode.getDisplayString())
+                .joinBy("\n")
+        end)
+        .each((modes, i) -> begin
+            CreateQuestBJ(
+                bj_QUESTTYPE_REQ_DISCOVERED,
+                GOLD_COLOR + "Modes (" + (i + 1).toString() + ")",
+                modes,
+                Icons.bTNBansheeMaster
+            )
+        end)
 
     let description = ""
     let name = ""
@@ -146,6 +164,9 @@ public class GameMode
         ..put(abbrev, this)
         ..put(name, this)
         list.add(this)
+
+    function getDisplayString() returns string
+        return "{0}-{1}|r {2}(|r{3}{4}|r{5})|r".format(GOLD_COLOR, name, GRAY_COLOR, SPECIAL_COLOR, abbrev, GRAY_COLOR)
 
     function registerFor(player modesPlayer, string command)
         registerCommand(modesPlayer, command, (enablePlayer, args) -> enable(args))

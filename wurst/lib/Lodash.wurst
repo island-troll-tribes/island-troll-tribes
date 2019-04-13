@@ -35,6 +35,12 @@ public abstract class VoidFunction<T> extends Callable
 
     abstract function call(T t)
 
+public abstract class VoidBiFunction<S, T> extends Callable
+    static function owned<S, T>(VoidBiFunction<S, T> func) returns VoidBiFunction<S, T>
+        return func..own()
+
+    abstract function call(S s, T t)
+
 public abstract class Function<S, R> extends Callable
     static function owned<S, R>(Function<S, R> func) returns Function<S, R>
         return func..own()
@@ -244,6 +250,21 @@ public function map<T, Q>(Function<T, Q> transform, LinkedList<T> list) returns 
 public function map<T, Q>(Function<T, Q> transform) returns Function<LinkedList<T>, LinkedList<Q>>
     return list -> map(transform, list)
 
+public function map<T, Q>(BiFunction<T, int, Q> transform, LinkedList<T> list) returns LinkedList<Q>
+    let result = new LinkedList<Q>()
+    let iter = list.iterator()
+    var idx = 0
+    for elem from iter
+        result.add(transform.call(elem, idx))
+        idx += 1
+    iter.close()
+    transform.maybeFree()
+    list.maybeFree()
+    return result
+
+public function LinkedList<T>.map<T, Q>(BiFunction<T, int, Q> transform) returns LinkedList<Q>
+    return map(transform, this)
+
 public function flatten<T>(LinkedList<LinkedList<T>> list) returns LinkedList<T>
     let result = new LinkedList<T>()
     let iter = list.iterator()
@@ -287,6 +308,9 @@ public function filter<T>(Predicate<T> filter, LinkedList<T> list) returns Linke
 public function LinkedList<T>.filter<T>(Predicate<T> filter) returns LinkedList<T>
     return filter(filter, this)
 
+public function LinkedList<T>.lfilter<T>(Predicate<T> filter) returns LinkedList<T>
+    return filter(filter, this)
+
 public function sum<T>(Function<T, int> fn, LinkedList<T> list) returns int
     return foldl(0, (elem, value) -> value + fn.call(elem), list)
 
@@ -314,6 +338,17 @@ public function each<T>(VoidFunction<T> func, LinkedList<T> list)
     func.maybeFree()
 
 public function LinkedList<T>.each<T>(VoidFunction<T> func)
+    each(func, this)
+
+public function each<T>(VoidBiFunction<T, int> func, LinkedList<T> list)
+    var i = 0
+    for elem in list
+        func.call(elem, i)
+        i += 1
+    list.maybeFree()
+    func.maybeFree()
+
+public function LinkedList<T>.each<T>(VoidBiFunction<T, int> func)
     each(func, this)
 
 public function zipObject<A, B>(LinkedList<A> a, LinkedList<B> b) returns IterableMap<A, B>

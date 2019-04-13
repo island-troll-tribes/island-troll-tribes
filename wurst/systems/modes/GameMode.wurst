@@ -12,6 +12,7 @@ import IDUtils
 import ChatUtils
 import initlater CheatPack
 import Icons
+import Lodash
 
 
 let MODES_TIME_LIMIT = 60.0
@@ -49,7 +50,7 @@ public class GameMode
 
     static function getEnabledModes() returns string
         return list
-        .filter(mode -> mode.enabled)
+        .lfilter(mode -> mode.enabled)
         .map(mode -> mode.message)
         .joinBy("\n")
 
@@ -83,7 +84,7 @@ public class GameMode
         ..destr()
 
     static function createModeBoard()
-        let displayableModes = list.filter(mode -> mode.display)
+        let displayableModes = list.lfilter(mode -> mode.display)
 
         modeboard
         ..setColumnCount(2)
@@ -118,20 +119,19 @@ public class GameMode
 
                 modeboard.setTitle("Modes - 00:" + time)
 
-    static function createModeQuest()
+    static function createModeQuests()
         list
-        .filter(mode -> mode.display)
-        .chunk(10) // 10 modes per quest?
-        .map(modes -> begin
-            return modes
+        .lfilter(mode -> mode.display)
+        .groupBy(mode -> mode.category)
+        .map((category, modes) -> begin
+            let contents = modes
                 .map(mode -> mode.getDisplayString())
                 .joinBy("\n")
-        end)
-        .each((modes, i) -> begin
-            CreateQuestBJ(
+
+            return CreateQuestBJ(
                 bj_QUESTTYPE_REQ_DISCOVERED,
-                GOLD_COLOR + "Modes (" + (i + 1).toString() + ")",
-                modes,
+                GOLD_COLOR + category + " Modes",
+                contents,
                 Icons.bTNBansheeMaster
             )
         end)
@@ -140,6 +140,7 @@ public class GameMode
     let name = ""
     let abbrev = ""
     var message = ""
+    var category = "General"
     let display = true
     var enabled = false
     GameModeHandler action = null
@@ -160,6 +161,18 @@ public class GameMode
         abbrev = _abbrev
         action = _action
         display = _display
+        modes
+        ..put(abbrev, this)
+        ..put(name, this)
+        list.add(this)
+
+    construct(string _name, string _abbrev, string _description, bool _display, string _category, GameModeHandler _action)
+        name = _name
+        description = _description
+        abbrev = _abbrev
+        action = _action
+        display = _display
+        category = _category
         modes
         ..put(abbrev, this)
         ..put(name, this)

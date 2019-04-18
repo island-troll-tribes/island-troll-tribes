@@ -1,4 +1,4 @@
-library TrollUpgrade initializer onInit requires ID, PublicLibrary, LegacyTriggers, MeatSystem
+library TrollUpgrade initializer onInit requires ID, PublicLibrary, LegacyTriggers, MeatSystem, Shapeshift
   private function ReplaceUnitEx takes unit whichUnit, integer newUnitId, integer unitStateMethod returns unit
     local unit    oldUnit = whichUnit
     local unit    newUnit
@@ -66,6 +66,12 @@ library TrollUpgrade initializer onInit requires ID, PublicLibrary, LegacyTrigge
         set udg_parameterUnit=REPLACING_UNIT
         call TriggerExecute(gg_trg_Release_Pets)
         call SetPlayerTechResearched(PLAYER, 'Roch', 1)
+        PLAYER.setAbilityAvailable(ABILITY_ID_WOLFS_HUNGER, true)
+        PLAYER.setAbilityAvailable(ABILITY_ID_BEARS_BULWARK, false)
+        PLAYER.setAbilityAvailable(ABILITY_ID_PROWL, false)
+        PLAYER.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES_ACTIVE, false)
+        PLAYER.setAbilityAvailable(ABILITY_ID_VICIOUS_STRIKES_ORB, false)
+
     elseif UNIT_ID_REPLACE == UNIT_TRUE_FORM or UNIT_ID_REPLACE == UNIT_ULTIMATE_FORM then
         set udg_parameterUnit = REPLACING_UNIT
         call TriggerExecute(gg_trg_Rest_BM_SKills)
@@ -114,6 +120,8 @@ library TrollUpgrade initializer onInit requires ID, PublicLibrary, LegacyTrigge
     elseif SKILL_UPGRADE == 'S005' then
         set UNIT_ID_REPLACE = UNIT_OBSERVER
     elseif SKILL_UPGRADE == 'S008' then
+        set UNIT_ID_REPLACE = UNIT_TRAPPER
+    elseif SKILL_UPGRADE == 'S010' then
         set UNIT_ID_REPLACE = UNIT_RADAR_SCOUT
     elseif SKILL_UPGRADE == 'S004' then
         set UNIT_ID_REPLACE = UNIT_CONTORTIONIST

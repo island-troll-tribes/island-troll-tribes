@@ -39,7 +39,7 @@ public IterableMap<unit, MeatInventory> meatInventoryInstances = new IterableMap
 
 @compiletime function createRawMeatObject()
     new ItemDefinition(ITEM_RAW_MEAT, 'shrs')
-        ..setModelUsed("Heart.mdx")
+        ..setModelUsed("Models\\Heart.mdx")
         ..setAbilities("")
         ..setTintingColor1Red(230)
         ..setTintingColor2Green(150)
@@ -189,10 +189,12 @@ public class MeatInventory
             return false
 
     function tryPickupMeatArea()
-        forItemsInRect(ownerUnit.getPos().withRadiusRect(AOE_PICKUP_RADIUS)) maybeMeat ->
+        let tempRect = ownerUnit.getPos().withRadiusRect(AOE_PICKUP_RADIUS)
+        forItemsInRect(tempRect) maybeMeat ->
             if maybeMeat.getTypeId() == ITEM_RAW_MEAT
                 tryPickupMeat(maybeMeat, false)
         updateMeatAbilities()
+        tempRect.remove()
 
     function tryRemoveOneMeat() returns boolean
         if carriedMeat.size() >= 0

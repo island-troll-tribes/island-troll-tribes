@@ -9,16 +9,15 @@ import BabyAnimal
 import Orders
 import UnitExtensions
 import GameConfig
-import LinkedListModule
+import LinkedList
 import Game
 
 let ACORN_DISTANCE_THRESHOLD_SQ = (50.0).squared()
 
 public class Fawn extends BabyAnimal
-    use LinkedListModule
-
     private static let unitTypeId = UNIT_FAWN
-    private static let iterator = Fawn.iterator()
+    private static let fawns = new LinkedList<thistype>()
+    private static let iterator = fawns.iterator()
 
     static function initialize()
         register(unitTypeId, fawn -> new Fawn(fawn))
@@ -29,7 +28,7 @@ public class Fawn extends BabyAnimal
             doPeriodically(ANIMATION_PERIOD, cb -> nextFawnCheckForAcorn())
 
     static function nextFawnCheckForAcorn()
-        if size == 0
+        if fawns.size() == 0
             return
 
         if not iterator.hasNext()
@@ -40,9 +39,11 @@ public class Fawn extends BabyAnimal
 
     construct(unit whichUnit)
         super(whichUnit)
+        fawns.add(this)
 
     construct(player whichPlayer, vec2 pos)
         super(whichPlayer, pos)
+        fawns.add(this)
 
     override function getTypeId() returns int
         return unitTypeId
@@ -62,7 +63,7 @@ public class Fawn extends BabyAnimal
             fawn.issuePointOrderById(Orders.move, acornPos)
             return
 
-        let troll = findNearestUnit(acornPos, 500, Filter(-> GetFilterUnit().isTroll()))
+        let troll = findNearestUnit(acornPos, 500, -> GetFilterUnit().isTroll())
         if troll == null
             return
 
@@ -81,6 +82,8 @@ public class Fawn extends BabyAnimal
 
         destroy this
 
+    ondestroy
+        fawns.remove(this)
 
 init
     Fawn.initialize()

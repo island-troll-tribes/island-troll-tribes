@@ -16,13 +16,15 @@ CommandHandler giveGold = (player giver, LinkedList<string> args) -> begin
     var amount = args.size() > 2 ? args.get(2).toInt() : currentGold
 
     if playerId < 0 or playerId > 11
-        simError(giver, "Command: -g player amount")
+        simError(giver, "Command: -g [player] [goldAmount]")
     else if amount > currentGold
         simError(giver, "Not enough gold")
     else if playerId == giver.getId()
         simError(giver, "You cannot trade with yourself")
     else if target.getTribe().getId() != tribeId
         simError(giver, "You cannot trade with that player")
+    else if players[playerId].isIngame() == false
+        simError(giver, "This player has left the game")
     else
         giver.subLumber(amount)
         target.addLumber(amount)

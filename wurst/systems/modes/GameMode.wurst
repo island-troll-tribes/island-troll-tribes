@@ -3,13 +3,13 @@ import HashMap
 import LinkedList
 import ChatCommands
 import ClosureTimers
-import GameConfig
 import Classes
-import StringUtils
 import TimerUtils
 import LegacyColors
 import IDUtils
 import ChatUtils
+import Lodash
+import StringUtils
 import initlater CheatPack
 import Icons
 import Lodash
@@ -21,7 +21,7 @@ public interface GameModeHandler
     function run(GameMode mode, LinkedList<string> args)
 
 public class GameMode
-    static let list = new LinkedList<thistype>()
+    static let list = new OwnedLinkedList<thistype>()
     static let modeboard = CreateMultiboard()
     static let listeners = CreateTrigger()
     static let modes = new HashMap<string, thistype>()
@@ -258,17 +258,19 @@ init
         GameMode.find("el").enable()
 
     new GameMode("all", "ar", "Each player is given the same or a random troll, eg: \"-all random\" or \"-all mage\"") (mode, args) ->
-        if args.size() > 1 and args.get(1) != "random"
-            let klass = "UNIT_" + args.joinBy("_").toUpperCase()
-            let uid = S2ID(klass)
-            if getTrollClassType(uid) != ClassType.BASE_CLASS
+        let classArgs = args.drop(1)
+        if classArgs.size() > 0 and args.get(0) != "random"
+            let trollClass = "UNIT_" + classArgs.joinBy("_").toUpperCase()
+            let uid = S2ID(trollClass)
+            if uid == 0 or getTrollClassType(uid) != ClassType.BASE_CLASS
                 mode.error("Invalid class selection")
             else
                 gameConfig.setAllTrollEnabled(uid)
-                mode.message(ENERGY_COLOR + "All " + args.joinBy(" ") + "|r enabled")
+                mode.message(ENERGY_COLOR + "All " + classArgs.joinBy(" ") + "|r enabled")
         else
             gameConfig.setAllTrollEnabled(0)
             mode.message(ENERGY_COLOR + "All random|r enabled")
+        destroy classArgs
 
     new GameMode("hot-mode", "hm", "Increase the amount of heat a fire gives per cast, defaults to 22, eg: \"-hm 30\"") (mode, args) ->
         var amount = 22
@@ -407,7 +409,7 @@ init
         mode.message(ENERGY_COLOR + "Reverse Famine|r has been enabled. More animals spawn and they give more food.")
 
     new GameMode("raise-food-limit", "rfl", "More animals and fish can be on the map at the same time", false) (mode, args) ->
-        udg_ANIMAL_MAX = 480
+        gameConfig.setMaxAnimals(90)
         udg_FISH_MAX = 320
         mode.message(ENERGY_COLOR + "Food limits|r have been increased. More animals and fish can be on the map at the same time.")
 
@@ -457,7 +459,8 @@ init
         mode.message("|c00ae4946Slow mode|r has been enabled. Less items spawn at once.")
 
     new GameMode("lower-food-limit", "lfl", "Lower spawn rate for animals on the map") (mode, args) ->
-        udg_ANIMAL_MAX = 60
+        gameConfig.setMaxAnimals(40)
+        udg_FOOD_BASE = 0.8
         udg_FISH_MAX = 50
         mode.message("Food limits have been |c00755d00decreased|r.")
 

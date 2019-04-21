@@ -38,6 +38,7 @@ public class GameMode
 
         nullTimer() ->
             createModeBoard()
+            createModeQuests()
             registerAll(modePlayer)
 
         clock.doAfter(MODES_TIME_LIMIT) ->
@@ -93,7 +94,7 @@ public class GameMode
         ..display(true)
         ..minimalize(localPlayer != modePlayer)
 
-        for row = 0 to displayableModes.size()
+        for row = 0 to displayableModes.size() - 1
             let mode = displayableModes.get(row)
 
             modeboard.getItem(row, 1)
@@ -123,16 +124,21 @@ public class GameMode
         .lfilter(mode -> mode.display)
         .groupBy(mode -> mode.category)
         .map((category, modes) -> begin
-            let contents = modes
-                .map(mode -> mode.getDisplayString())
-                .joinBy("\n")
+            return modes
+            .chunk(10)
+            .map((modes, i) -> begin
+                print(modes.toString())
+                let contents = modes
+                    .map(mode -> mode.getDisplayString() + "\n" + mode.description)
+                    .joinBy("\n\n")
 
-            return CreateQuestBJ(
-                bj_QUESTTYPE_REQ_DISCOVERED,
-                GOLD_COLOR + category + " Modes",
-                contents,
-                Icons.bTNBansheeMaster
-            )
+                return CreateQuestBJ(
+                    bj_QUESTTYPE_OPT_DISCOVERED,
+                    GOLD_COLOR + category + " Modes (" + (i + 1).toString() + ")",
+                    contents,
+                    Icons.bTNBansheeMaster
+                )
+            end)
         end)
 
     let description = ""

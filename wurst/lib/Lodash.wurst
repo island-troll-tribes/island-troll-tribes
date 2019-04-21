@@ -237,19 +237,6 @@ public function values<T, Q>(IterableMap<T, Q> map) returns LinkedList<Q>
 public function IterableMap<T, Q>.values<T, Q>() returns LinkedList<Q>
     return values(this)
 
-public function map<T, Q>(Function<T, Q> transform, LinkedList<T> list) returns LinkedList<Q>
-    let result = new LinkedList<Q>()
-    let iter = list.iterator()
-    for elem from iter
-        result.add(transform.call(elem))
-    iter.close()
-    transform.maybeFree()
-    list.maybeFree()
-    return result
-
-public function map<T, Q>(Function<T, Q> transform) returns Function<LinkedList<T>, LinkedList<Q>>
-    return list -> map(transform, list)
-
 public function map<T, Q>(BiFunction<T, int, Q> transform, LinkedList<T> list) returns LinkedList<Q>
     let result = new LinkedList<Q>()
     let iter = list.iterator()
@@ -574,7 +561,7 @@ public function groupBy<T, R>(LinkedList<T> lst, Function<T, R> idx) returns Ite
 public function LinkedList<T>.groupBy<T, R>(Function<T, R> idx) returns IterableMap<R, LinkedList<T>>
     return groupBy(this, idx)
 
-public function map<S, T, R>(IterableMap<S, T> map, BiFunction<S, T, R> transform) returns LinkedList<R>
+public function mapMap<S, T, R>(IterableMap<S, T> map, BiFunction<S, T, R> transform) returns LinkedList<R>
     let res = new LinkedList<R>()
     let iter = map.iterator()
     for key from iter
@@ -585,7 +572,7 @@ public function map<S, T, R>(IterableMap<S, T> map, BiFunction<S, T, R> transfor
     return res
 
 public function IterableMap<S, T>.map<S, T, R>(BiFunction<S, T, R> transform) returns LinkedList<R>
-    return map(this, transform)
+    return mapMap(this, transform)
 
 public function mapValues<S, T, R>(IterableMap<S, T> map, BiFunction<S, T, R> transform) returns IterableMap<S, R>
     let res = new IterableMap<S, R>()
@@ -689,43 +676,6 @@ function testRange()
     range.next().assertEquals(8)
     range.next().assertEquals(9)
     range.hasNext().assertFalse()
-
-@Test
-public function testMapValues()
-    let maps = asOwnedList(
-        new IterableMap<int, int>()..put(1, 2),
-        new IterableMap<int, int>()..put(3, 4),
-        new IterableMap<int, int>()..put(5, 6)
-    )
-
-    let valuesOf = Function.owned<IterableMap<int, int>, LinkedList<int>>(elem -> values(elem))
-    let mapValues = map(valuesOf)
-    let values = flatten(mapValues.call(maps))
-
-    values.size().assertEquals(3)
-    values.get(0).assertEquals(2)
-    values.get(1).assertEquals(4)
-    values.get(2).assertEquals(6)
-
-    destroy mapValues
-
-@Test
-public function testFlatten()
-    let lists = asList(
-        asList(
-            asList(1, 2, 3, 4, 5),
-            asList(6, 7, 8, 9, 10)
-        ),
-        asList(
-            asList(1, 2, 3, 4, 5),
-            asList(6, 7, 8, 9, 10)
-        )
-    )
-
-    let mapFlatten = map(Function.owned(flatten<int>()))
-    let result = mapFlatten.call(lists)
-    result.size().assertEquals(2)
-    result.get(0).size().assertEquals(10)
 
 @Test
 function testTake2()

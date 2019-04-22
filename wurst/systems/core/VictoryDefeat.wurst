@@ -5,6 +5,7 @@ import UnitExtensions
 import Tribe
 import LinkedList
 import Lodash
+import LodashExtensions
 import Respawn
 
 
@@ -17,11 +18,11 @@ init
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
         if not gameOver and GetDyingUnit().isTroll() and not isGracePeriod()
             Tribe.getTribes()
-                .lfilter(Tribe.isNotDefeated)
-                .lfilter(Tribe.hasNoAliveMembers)
+                .lodashFilter(Tribe.isNotDefeated)
+                .lodashFilter(Tribe.hasNoAliveMembers)
                 .each(tribe -> tribe.wasDefeated())
 
-            let aliveTribes = Tribe.getTribes().lfilter(Tribe.isNotDefeated)
+            let aliveTribes = Tribe.getTribes().lodashFilter(Tribe.isNotDefeated)
             if aliveTribes.size() == 1
                 gameOver = true
                 aliveTribes.getFirst().wasVictorious()

@@ -5,19 +5,26 @@ jobs:
     working_directory: ~/island-troll-tribes
 
     docker:
-      - image: frotty/wurstscript
+      - image: circleci/openjdk:8-jdk-browsers
 
     steps:
       - checkout
 
       - run:
-          name: Update Wurst
-          command: grill install wurstscript
+          name: Install Wurst
+          command: |
+            mkdir $HOME/.wurst/
+            wget https://grill.wurstlang.org/hudson/job/WurstSetup/lastSuccessfulBuild/artifact/downloads/WurstSetup.jar -O $HOME/.wurst/WurstSetup.jar
+            java -jar $HOME/.wurst/WurstSetup.jar install wurstscript
 
       - run:
-          name: Install Dependencies
-          command: grill install
+          name: Update Dependencies
+          command: |
+            rm $HOME/.gitconfig
+            java -jar $HOME/.wurst/WurstSetup.jar update
 
       - run:
           name: Test
-          command: grill test
+          command: |
+            rm _build/dependencies/wurstExtLibs.git/wurst/war3map.j
+            java -jar $HOME/.wurst/wurstscript.jar $HOME/.wurst/common.j $HOME/.wurst/blizzard.j ./ -runcompiletimefunctions -runtests

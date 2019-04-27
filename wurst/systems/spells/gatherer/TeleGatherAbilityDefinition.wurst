@@ -46,14 +46,30 @@ function createTeleGatherBuff()
         ..setTooltipNormal(1, TOOLTIP_NORM)
         ..setTooltipNormalExtended(1, "This unit is using Tele-Gathering. Items picked up will be warp to its campfire.")
 
-public class TeleGatherDummyCasting extends AbilityDefinitionCurse
+public class OldTeleGatherDummyCasting extends AbilityDefinitionCurse
     construct(int newAbilityId)
         super(newAbilityId)
+        this.setDummyAbility()
+        this.setCheckDependencies(false)
+        this.setHeroAbility(true)
         this.setLevels(4)
         this.presetBuffs(lvl -> toRawCode(BUFF_TELE_GATHER))
         this.presetManaCost(lvl -> 0)
         this.presetDurationHero(lvl -> DURATION + (lvl * 20))
         this.presetDurationNormal(lvl -> DURATION + (lvl * 20))
+        this.setName("Tele-Gather person buff")
+        this.presetChancetoMiss(lvl -> 0)
+        this.presetTargetsAllowed(lvl -> DUMMY_TARGET_ALLOWED)
+
+//Small Work around, didn't manage to dummycast lvl 2,3 or 4 ability in telegathering.wurst
+public class TeleGatherDummyCasting extends AbilityDefinitionCurse
+    construct(int newAbilityId)
+        super(newAbilityId)
+        this.setLevels(1)
+        this.presetBuffs(lvl -> toRawCode(BUFF_TELE_GATHER))
+        this.presetManaCost(lvl -> 0)
+        this.presetDurationHero(lvl -> DURATION + (5 * 20))
+        this.presetDurationNormal(lvl -> DURATION + (5 * 20))
         this.setName("Tele-Gather person buff")
         this.presetChancetoMiss(lvl -> 0)
         this.presetTargetsAllowed(lvl -> DUMMY_TARGET_ALLOWED)
@@ -74,7 +90,7 @@ public class TeleGatheringDefinition extends AbilityDefinitionCurse
         this.presetBuffs(lvl -> toRawCode(BUFF_TELE_TARGET))
         this.presetCastRange(lvl -> CAST_RANGE)
 
-class HerbMasterTeleGathering extends TeleGatheringDefinition
+class TeleGathering extends TeleGatheringDefinition
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
         super(newAbilityId, hotkey, buttonPos)
         this.setHeroAbility(true)
@@ -103,6 +119,6 @@ class OmnigathererTeleGathering extends TeleGatheringDefinition
 @compiletime function createTeleGatheringSpells()
     createTargetBuff()
     createTeleGatherBuff()
-    new HerbMasterTeleGathering  (SPELL_TELE_GATHER, "E", new Pair(1, 1))
-    new OmnigathererTeleGathering(SPELL_TELE_GATHER_OMNI, "F", new Pair(1, 1))
     new TeleGatherDummyCasting(DUMMY_TELE_GATHER_ID)
+    new TeleGathering(SPELL_TELE_GATHER, "E", new Pair(1, 1))
+    new OmnigathererTeleGathering(SPELL_TELE_GATHER_OMNI, "F", new Pair(1, 1))

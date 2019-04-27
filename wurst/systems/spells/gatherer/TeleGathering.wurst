@@ -1,5 +1,6 @@
 package TeleGathering
 import HashMap
+import Assets
 import ClosureTimers
 import ClosureEvents
 import InstantDummyCaster
@@ -77,13 +78,13 @@ class TeleGatherInstance
         this.casterEntity = UnitEntity.findForUnit(this.caster)
 
         // Just fixing correct spell value for the ability to cast on caster
-        if this.casterEntity instanceof Omnigatherer
-            teleAbilityCastLevel = 4
-        else if this.casterEntity instanceof Gatherer
-            teleAbilityCastLevel = caster.getAbilityLevel(SPELL_TELE_GATHER)
-        else
-            teleAbilityToCast = DUMMY_TELE_THIEF_ID
 
+        // if this.casterEntity instanceof Omnigatherer
+        //     teleAbilityCastLevel = 4
+        // else if this.casterEntity instanceof Gatherer
+        //     teleAbilityCastLevel = caster.getAbilityLevel(SPELL_TELE_GATHER)
+        if this.casterEntity instanceof Thief
+            teleAbilityToCast = DUMMY_TELE_THIEF_ID
         InstantDummyCaster.castTarget(caster.getOwner(), teleAbilityToCast, teleAbilityCastLevel, "curse", caster, caster.getPos() + vec2(100,0))
 
         this.duration = duration
@@ -137,8 +138,10 @@ class TeleGatherInstance
             return
 
         let sortingPos = this.getSortingPos(itemType)
+        flashEffect(Abilities.blinkCaster, itm.getPos())
         this.caster.removeItem(itm)
         itm.setPos(sortingPos.pos)
+        flashEffect(Abilities.blinkTarget, itm.getPos())
 
     function getSortingPos(int itemType) returns SortingPosition
 
@@ -180,10 +183,10 @@ class TeleGatherInstance
                 destroy cachedSortingPositions.getAndRemove(this.teleTarget)
             cachedSortingPositions.put(teleTarget, new SortingCache(this.sortingPositions, this.nextSortAngle, this.sortDistanceOffset))
 
-        if this.caster.hasAbility(DUMMY_TELE_GATHER_ID)
-            this.caster.removeAbility(DUMMY_TELE_GATHER_ID)
-        if this.caster.hasAbility(DUMMY_TELE_THIEF_ID)
-            this.caster.removeAbility(DUMMY_TELE_THIEF_ID)
+        if this.caster.hasAbility(BUFF_TELE_GATHER)
+            this.caster.removeAbility(BUFF_TELE_GATHER)
+        if this.caster.hasAbility(BUFF_TELE_THIEF)
+            this.caster.removeAbility(BUFF_TELE_THIEF)
         if this.teleTarget.hasAbility(BUFF_TELE_TARGET)
             this.teleTarget.removeAbility(BUFF_TELE_TARGET)
 

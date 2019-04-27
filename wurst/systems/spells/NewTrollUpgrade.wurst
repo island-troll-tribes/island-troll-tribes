@@ -3,6 +3,7 @@ package NewTrollUpgrade
 import ID
 import HashMap
 import RegisterEvents
+import LegacyTriggers
 
 public constant trollUpgradeMap = new HashMap<int, int>()
 ..put(SPELL_WARRIOR         , UNIT_WARRIOR)
@@ -48,6 +49,8 @@ function upgradeUnit(int newUnitId, unit oldUnit)
     int agi = GetHeroAgi(oldUnit, false)
     int inte = GetHeroInt(oldUnit, false)
 
+    if oldUnit.getTypeId() == UNIT_BEAST_MASTER
+        TriggerExecute(gg_trg_Release_Pets)
     GroupRemoveUnit(udg_trolls, oldUnit)
     GroupAddUnit(udg_trolls, newUnit)
     udg_PUnits[GetPlayerId(owner)] = newUnit
@@ -57,6 +60,7 @@ function upgradeUnit(int newUnitId, unit oldUnit)
 
     // "Preserve or release BM pet When subbing" -> no such thing in the current state
     // of the game so I didn't recode it
+    // Edit : Nevermind, pet doesn't get realese, ended up with 4 wolfs (2 bm 2 wolf pet) in a game :o
 
     if GetLocalPlayer() == owner
         SelectUnit(newUnit, true)

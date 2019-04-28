@@ -2,6 +2,7 @@ package Radars
 
 import Assets
 import Tribe
+import ToolTipsUtils
 import LinkedList
 import IsTypeThing
 import LegacyColors
@@ -69,7 +70,7 @@ class Radar
         this.buttonPosY  = buttonPosY
         this.toolTip  = GENERAL_COLOR+"[" + color + hotkey + GENERAL_COLOR + "] - " + this.name + "|r"
 
-    function buildSpell()
+    function buildRadarSpell()
         new ChannelAbilityPreset(id, 1, true)
         ..presetTargetTypes(Targettype.NONE)
         ..setAnimationNames("spell,slam")
@@ -84,6 +85,7 @@ class Radar
         ..setItemAbility(false)
         ..setHotkeyNormal(hotkey)
         ..setName(name)
+        ..setLevels(3)
         ..setTooltipNormal(1, toolTip)
         ..setTooltipNormalExtended(1, toolTipExt)
         ..presetOptions(lvl -> 1)
@@ -92,7 +94,7 @@ class Radar
         ..presetFollowThroughTime(lvl -> CASTTIME)
 
 @compiletime function createSpellbook()
-    new AbilityDefinitionSpellBook(SPELL_ID_SPELLBOOK)
+    new AbilityDefinitionSpellBook(SPELL_ITEM_RADAR)
     ..setButtonPositionNormalX(1)
     ..setButtonPositionNormalY(1)
     ..setButtonPositionResearchX(0)
@@ -113,7 +115,7 @@ class Radar
     ..presetMinimumSpells(lvl -> 11)
     ..presetSpellList(lvl -> SPELLBOOKSPELLS[lvl - 1])
     ..presetCooldown(lvl -> COOLDOWN)
-    ..presetTooltipNormal(lvl -> "(|cffffcc00R|r) - Look up radar spell ")
+    ..presetTooltipNormal(lvl -> makeToolTipNormHero("R", "Look up Radar Spells", lvl))
     ..presetTooltipNormalExtended(lvl -> "Contains various item radar abilities for more efficient gathering.")
     ..presetSharedSpellCooldown(lvl -> true)
 
@@ -157,10 +159,7 @@ function onCast(int itemId)
     var caster = GetSpellAbilityUnit()
     var casterPos = caster.getPos()
     var owner = caster.getOwner()
-    var efx = addEffect("Abilities\\Spells\\Human\\Thunderclap\\ThunderClapCaster.mdl", casterPos)
-    efx.setScale(1.5)
-    efx.setTimeScale(1.5)
-    efx.destr()
+    flashEffect(Abilities.thunderclapCaster, casterPos)
 
     //Calculate range
     var range = min(RADAR_RANGE_BASE + RADAR_RANGE_PER_LEVEL * caster.getLevel(), MAX_RANGE)
@@ -195,6 +194,9 @@ function onCast(int itemId)
 
                 //Ping
                 PingMinimapForForceEx(GetPlayersAllies(owner), i.getPos().x, i.getPos().y, 10, bj_MINIMAPPINGSTYLE_SIMPLE, 0, 255, 0)
+//    if caster.getTypeId() == UNIT_GATHERER
+//        print("fuck")
+//        caster.setAbilityCooldown(SPELL_ITEM_RADAR, caster.getAbilityLevel(SPELL_ITEM_RADAR), COOLDOWN)
 
 function areHostilesNearItem(player p, item itm) returns bool
     let g = CreateGroup()..enumUnitsInRange(itm.getPos(), 350)
@@ -217,7 +219,7 @@ function getRadarSpells() returns LinkedList<Radar>
     )
 
 @compiletime function buildRadarSpells()
-    getRadarSpells().forEach(spell -> spell.buildSpell())
+    getRadarSpells().forEach(spell -> spell.buildRadarSpell())
 
 init
     registerSpellEffectEvent(SPELL_ID_FIND_STONE, () -> onCast(ITEM_STONE))

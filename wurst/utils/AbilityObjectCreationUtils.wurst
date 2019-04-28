@@ -5,6 +5,7 @@ import ObjectIdGenerator
 import Lodash
 import HashMap
 import LegacyColors
+import ToolTipsUtils
 
 public function createHiddenSpellbookWithAbilities(string abilityList) returns int
     let id = ABIL_ID_GEN.next()
@@ -43,6 +44,8 @@ public class SpellBookObject
     let btnPos = new Pair(0, 0)
     private let abilityList = ""
     let icon = "ReplaceableTextures\\CommandButtons\\BTN"
+    let sharedCd = false
+    let cooldown = 0.
 
     construct(int id, string name, string hotkey, string toolTipExt, string abilityList, Pair<int, int> btnPos, string icon)
         this.id = id
@@ -53,6 +56,18 @@ public class SpellBookObject
         this.abilityList = abilityList
         this.btnPos = btnPos
         this.icon += icon+".blp"
+
+    construct(int id, string name, string hotkey, string toolTipExt, string abilityList, Pair<int, int> btnPos, string icon, real cooldown)
+        this.id = id
+        this.name = name
+        this.hotkey = hotkey
+        this.toolTip = GENERAL_COLOR+"[" + SPECIAL_COLOR + hotkey + GENERAL_COLOR + "] - " + this.name + "|r"
+        this.toolTipExt = toolTipExt+" Has {0} seconds cooldown.".format(cooldown.toToolTipLightBlue())
+        this.abilityList = abilityList
+        this.btnPos = btnPos
+        this.icon += icon+".blp"
+        this.cooldown = cooldown
+        this.sharedCd = true
 
     function buildSpellBook()
         new AbilityDefinitionSpellBook(id)
@@ -74,7 +89,8 @@ public class SpellBookObject
         ..setCooldown(1, 0)
         ..setTooltipNormal(1, toolTip)
         ..setTooltipNormalExtended(1, toolTipExt)
-        ..setSharedSpellCooldown(1, false)
+        ..setCooldown(1, cooldown)
+        ..setSharedSpellCooldown(1, sharedCd)
 
 public class HeroSpellBookObject extends SpellBookObject
     let level = 1
@@ -85,13 +101,25 @@ public class HeroSpellBookObject extends SpellBookObject
     let toolTipRes = ""
     let abilityList = new HashMap<int, string>
 
-    construct(int id, string name, string hotkey, string toolTip, HashMap<int, string> abilityList, Pair<int, int> btnPos, string icon, int level, int reqLevel, int               skipLevel)
+    construct(int id, string name, string hotkey, string toolTip, HashMap<int, string> abilityList, Pair<int, int> btnPos, string icon, int level, int reqLevel, int skipLevel)
         super(id, name, hotkey, toolTip, "", btnPos, icon)
         this.abilityList = abilityList
         this.level = level
         this.skipLevel = skipLevel
         this.reqLevel = reqLevel
         this.toolTipRes = GENERAL_COLOR + "Learn " + name
+
+    construct(int id, string name, string hotkey, string toolTip, HashMap<int, string> abilityList, Pair<int, int> btnPos, string icon, int level, int reqLevel, int skipLevel,
+             real cooldown)
+        super(id, name, hotkey, toolTip, "", btnPos, icon)
+        this.abilityList = abilityList
+        this.level = level
+        this.skipLevel = skipLevel
+        this.reqLevel = reqLevel
+        this.toolTipRes = GENERAL_COLOR + "Learn " + name
+        this.cooldown = cooldown
+        this.sharedCd = true
+
 
     override function buildSpellBook()
         new AbilityDefinitionSpellBook(id)
@@ -118,4 +146,5 @@ public class HeroSpellBookObject extends SpellBookObject
         ..presetTooltipNormalExtended(lvl -> toolTipExt)
         ..setTooltipLearn(toolTipRes)
         ..setTooltipLearnExtended(toolTipExt)
-        ..presetSharedSpellCooldown(lvl -> false)
+        ..presetCooldown(lvl -> cooldown)
+        ..presetSharedSpellCooldown(lvl -> sharedCd)

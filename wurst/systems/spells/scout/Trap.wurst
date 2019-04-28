@@ -52,7 +52,7 @@ function createBuff()
 
 class TrapUnit extends UnitDefinition
     construct(int newUnitId, string name)
-        super(newUnitId, 'otot')
+        super(newUnitId, 'nglm') // Goblin land mine
         this.setNormalAbilities(commaList("Aeth",  ABILITY_TRAP_EXPLOSION.toRawCode()))
         this.setName(name)
         this.setIconGameInterface(Icons.bTNStasisTrap)
@@ -80,7 +80,7 @@ class SpikedTrapSlowSpell extends AbilityDefinitionCripple
         this.setRequirements("")
         this.setBuffs(1, BUFF_SPIKED_TRAP_SLOW.toRawCode())
 
-class TrackTrapSpell extends AbilityDefinitionStasisTrap
+class TrackTrapSpell extends AbilityDefinitionItemPlaceMine
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
         super(newAbilityId)
         this.setRequirements("")
@@ -99,13 +99,12 @@ class TrackTrapSpell extends AbilityDefinitionStasisTrap
         this.setIconResearch(Icons.bTNStasisTrap)
         this.presetManaCost(lvl -> MANACOST)
         this.presetCooldown(lvl -> TRACK_TRAP_COOLDOWN - lvl * 30)
-        this.presetDetonationRadius(lvl -> 100)
-        this.presetDetectionRadius(lvl -> 100)
         this.presetDurationHero(lvl -> 0.1)
-        this.presetStunDuration(lvl -> 0.1)
         this.presetDurationNormal(lvl -> TRAP_DURATION)
-        this.presetWardUnitType(lvl -> UNIT_TRAP.toRawCode())
+        this.setUnitType(1, toRawCode(UNIT_TRAP))
         this.setAnimationNames("spell,throw")
+        this.presetTargetsAllowed(lvl -> "hero")
+        this.setOrderStringUseTurnOn("stasistrap")
 
 class SpyTrackTrapSpell extends TrackTrapSpell
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
@@ -142,7 +141,7 @@ function createTrapExplosionSpell()
         ..setButtonPositionNormalY(1)
         ..setCastRange(1, TRAP_EFFECT_RADIUS + 50)
         ..setActivationDelay(1, 5)
-        ..setTargetsAllowed(1, "Hero")
+        ..setTargetsAllowed(1, "hero")
 
 @compiletime function createTrapSpells()
     createBuff()

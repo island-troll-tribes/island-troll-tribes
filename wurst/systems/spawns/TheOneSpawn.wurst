@@ -1,5 +1,6 @@
 package TheOneSpawn
 import TheOne
+import Assets
 import ClosureTimers
 
 
@@ -10,15 +11,15 @@ let spawnSpot = gg_rct_TheOne.getCenter()
 public TheOne theOne = null
 
 public function spawnTheOne()
-    let bolt = addEffect("Doodads\\Cinematic\\Lightningbolt\\Lightningbolt.mdl", spawnSpot)
-    doAfter(5.0) ->
-        bolt.destr()
-
     if theOne == null
         doPeriodically(60) cb ->
             if theOne != null and theOne.getUnit().isAlive()
                 theOne.getUnit().addLevels(1, true)
-        theOne = new TheOne(players[PLAYER_NEUTRAL_AGGRESSIVE], spawnSpot, angle(0))
+        let fx = addEffect(Doodads.lightningbolt, spawnSpot)
+        doAfter(2) () ->
+            fx.destr()
+            flashEffect(Abilities.darkPortalTarget, spawnSpot)
+            theOne = new TheOne(players[PLAYER_NEUTRAL_AGGRESSIVE], spawnSpot, angle(0))
     else
         theOne.getUnit().revive(spawnSpot, true)
 

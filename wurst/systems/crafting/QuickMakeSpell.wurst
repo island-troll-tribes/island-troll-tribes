@@ -6,25 +6,28 @@ import LinkedList
 import LegacyColors
 import Icons
 import ChannelAbilityPreset
+import BuffObjEditing
 
-constant let COOLDOWN = 1.
+constant COOLDOWN = 1.
 
 // Additional pages for Quick Make
-constant let MIXING_POT_SPELLBOOK = commaList( SPELL_QM_DISEASE_POTION, SPELL_QM_ACID_BOMB, SPELL_QM_BEE_HIVE, SPELL_QM_ESSENCE_BEES,
+let MY_BUFF = compiletime(createDummyBuffObject("PlaceHolder", "", "None"))
+
+constant MIXING_POT_SPELLBOOK = commaList( SPELL_QM_DISEASE_POTION, SPELL_QM_ACID_BOMB, SPELL_QM_BEE_HIVE, SPELL_QM_ESSENCE_BEES,
                                     SPELL_QM_GEM_OF_KNOWLEDGE,  SPELL_QM_OMNICURE, SPELL_QM_TWIN_ISLANDS, SPELL_QM_NETHER_POTION,
                                     SPELL_QM_DRUNKS_POTION, SPELL_QM_FERVOR_POTION, SPELL_QM_ELEMENTAL_SHIELD_POTION)
 
-constant let ARMOR_SPELLBOOK =  commaList(SPELL_QM_BONE_BOOTS,SPELL_QM_BONE_GLOVES,SPELL_QM_BONE_COAT,
-                                SPELL_QM_IRON_BOOTS,SPELL_QM_IRON_GLOVES,SPELL_QM_IRON_COAT,
-                                SPELL_QM_STEEL_BOOTS,SPELL_QM_STEEL_GLOVES,SPELL_QM_STEEL_COAT)
+constant ARMOR_SPELLBOOK =  commaList(SPELL_QM_BONE_BOOTS, SPELL_QM_IRON_BOOTS, SPELL_QM_STEEL_BOOTS, MY_BUFF.abilId,
+                                SPELL_QM_BONE_GLOVES, SPELL_QM_IRON_GLOVES, SPELL_QM_STEEL_GLOVES, MY_BUFF.abilId,
+                                SPELL_QM_BONE_COAT, SPELL_QM_IRON_COAT, SPELL_QM_STEEL_COAT)
 
-constant let ARMORY_SPELLBOOK = commaList(SPELL_QM_SHIELD, SPELL_QM_BONE_SHIELD, SPELL_QM_IRON_SHIELD, SPELL_QM_STEEL_SHIELD, SPELL_QM_ENSNARE_TRAP)
+constant ARMORY_SPELLBOOK = commaList(SPELL_QM_SHIELD, SPELL_QM_BONE_SHIELD, SPELL_QM_IRON_SHIELD, SPELL_QM_STEEL_SHIELD, SPELL_QM_ENSNARE_TRAP)
 
-constant let WDH_SPELLBOOK = commaList(SPELL_QM_SCROLL_FIREBALL, SPELL_QM_SCROLL_CYCLONE, SPELL_QM_SCROLL_SWIFTNESS, SPELL_QM_LIVING_CLAY, SPELL_QM_MAGIC_SEED, SPELL_QM_SPIRIT_WARD)
+constant WDH_SPELLBOOK = commaList(SPELL_QM_SCROLL_FIREBALL, SPELL_QM_SCROLL_CYCLONE, SPELL_QM_SCROLL_SWIFTNESS, SPELL_QM_LIVING_CLAY, SPELL_QM_MAGIC_SEED, SPELL_QM_SPIRIT_WARD)
 
-constant let WORKSHOP_SPELLBOOK = commaList(SPELL_QM_SMOKE_BOMB,SPELL_QM_FIRE_BOMB,SPELL_QM_EMP,SPELL_QM_TRANSPORT_SHIP, SPELL_QM_SONAR_COMPASS,SPELL_QM_DARK_THISTLES)
+constant WORKSHOP_SPELLBOOK = commaList(SPELL_QM_SMOKE_BOMB,SPELL_QM_FIRE_BOMB,SPELL_QM_EMP,SPELL_QM_TRANSPORT_SHIP, SPELL_QM_SONAR_COMPASS,SPELL_QM_DARK_THISTLES)
 
-constant let BUILDING_CRAFT_SPELLBOOK = commaList(SPELL_QM_CAMP_FIRE_KIT, SPELL_QM_TENT_KIT, SPELL_QM_TROLL_HUT_KIT, SPELL_QM_MUD_HUT_KIT,
+constant BUILDING_CRAFT_SPELLBOOK = commaList(SPELL_QM_CAMP_FIRE_KIT, SPELL_QM_TENT_KIT, SPELL_QM_TROLL_HUT_KIT, SPELL_QM_MUD_HUT_KIT,
                                                   SPELL_QM_ARMORY_KIT, SPELL_QM_WORKSHOP_KIT, SPELL_QM_MIXING_POT_KIT, SPELL_QM_WITCH_DOCTORS_HUT_KIT,
                                                   SPELL_QM_TANNERY_KIT, SPELL_QM_OMNI_TOWER_KIT, SPELL_QM_TELEPORT_BEACON_KIT)
 
@@ -168,7 +171,7 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
         new QuickMakeSpell("Iron Boots"   , TRANSMUTE_TOOLTIP+IRON_BOOTS_RECIPE   , "SlippersOfAgility"          , SPELL_QM_IRON_BOOTS   , 1, 0, "W", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Steel Boots"  , TRANSMUTE_TOOLTIP+STEEL_BOOTS_RECIPE  , "ImprovedCreatureCarapace"   , SPELL_QM_STEEL_BOOTS  , 2, 0, "E", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Bone Gloves"  , TRANSMUTE_TOOLTIP+BONE_GLOVES_RECIPE  , "GauntletsOfOgrePower"       , SPELL_QM_BONE_GLOVES  , 0, 1, "A", SPECIAL_COLOR, QM_TOOLIP),
-        new QuickMakeSpell("Iron Gloves"  , TRANSMUTE_TOOLTIP+IRON_GLOVES_RECIPE  , "SpellSteal"                 , SPELL_QM_IRON_GLOVES  , 1, 1, "S", SPECIAL_COLOR, QM_TOOLIP),
+        new QuickMakeSpell("Iron Gloves"  , TRANSMUTE_TOOLTIP+IRON_GLOVES_RECIPE  , "IronGloves"                 , SPELL_QM_IRON_GLOVES  , 1, 1, "S", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Steel Gloves" , TRANSMUTE_TOOLTIP+STEEL_GLOVES_RECIPE , "AdvancedUnholyStrength"     , SPELL_QM_STEEL_GLOVES , 2, 1, "D", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Bone Coat"    , TRANSMUTE_TOOLTIP+BONE_COAT_RECIPE    , "MantleOfIntelligence"       , SPELL_QM_BONE_COAT    , 0, 2, "Z", SPECIAL_COLOR, QM_TOOLIP),
         new QuickMakeSpell("Iron Coat"    , TRANSMUTE_TOOLTIP+IRON_COAT_RECIPE    , "ImprovedMoonArmor"          , SPELL_QM_IRON_COAT    , 1, 2, "X", SPECIAL_COLOR, QM_TOOLIP),
@@ -258,11 +261,11 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
 // Additional pages created here
 function getQuickMakeSpellBookSpells() returns LinkedList<QuickMakeSpellBook>
     return asList(
-        new QuickMakeSpellBook(SPELL_MIXING_POT_SPELLBOOK_ID, "Special Herb Quick Make Page"          , "G", MIXING_SPELLBOOK_TOOLTIP  , MIXING_POT_SPELLBOOK, 3, 1 , "spellbook"),
-        new QuickMakeSpellBook(SPELL_ARMOR_SPELLBOOK_ID     , "Armor Quick Make Page"                 , "N", ARMOR_SPELLBOOK_TOOLTIP   , ARMOR_SPELLBOOK     , 3, 1 , "blink"    ),
-        new QuickMakeSpellBook(SPELL_ARMORY_SPELLBOOK_ID    , "More Armory Quick Make Page"           , "G", ARMORY_SPELLBOOK_TOOLTIP  , ARMORY_SPELLBOOK    , 2, 2 , "spellbook" ),
-        new QuickMakeSpellBook(SPELL_WDH_SPELLBOOK_ID       , "More Witch Doctors Hut Quick Make Page", "G", WDH_SPELLBOOK_TOOLTIP     , WDH_SPELLBOOK       , 2, 2 , "spellbook" ),
-        new QuickMakeSpellBook(SPELL_WORKSHOP_SPELLBOOK_ID  , "More Workshop Quick Make Page"         , "G", WORKSHOP_SPELLBOOK_TOOLTIP, WORKSHOP_SPELLBOOK  , 2, 2 , "spellbook" ),
+        new QuickMakeSpellBook(SPELL_MIXING_POT_SPELLBOOK_ID, "Special Herb Quick Make Page"          , "F", MIXING_SPELLBOOK_TOOLTIP  , MIXING_POT_SPELLBOOK, 3, 1 , "spellbook"),
+        new QuickMakeSpellBook(SPELL_ARMOR_SPELLBOOK_ID     , "Armor Quick Make Page"                 , "F", ARMOR_SPELLBOOK_TOOLTIP   , ARMOR_SPELLBOOK     , 3, 1 , "blink"    ),
+        new QuickMakeSpellBook(SPELL_ARMORY_SPELLBOOK_ID    , "More Armory Quick Make Page"           , "C", ARMORY_SPELLBOOK_TOOLTIP  , ARMORY_SPELLBOOK    , 2, 2 , "spellbook" ),
+        new QuickMakeSpellBook(SPELL_WDH_SPELLBOOK_ID       , "More Witch Doctors Hut Quick Make Page", "C", WDH_SPELLBOOK_TOOLTIP     , WDH_SPELLBOOK       , 2, 2 , "spellbook" ),
+        new QuickMakeSpellBook(SPELL_WORKSHOP_SPELLBOOK_ID  , "More Workshop Quick Make Page"         , "C", WORKSHOP_SPELLBOOK_TOOLTIP, WORKSHOP_SPELLBOOK  , 2, 2 , "spellbook" ),
 
         new QuickMakeSpellBook(SPELL_BUILDING_CRAFT_SPELLBOOK_ID  , "Buildings Craft Recipe"         , "B", BUILDING_CRAFT_TOOLTIP, BUILDING_CRAFT_SPELLBOOK  , 0, 1 , "charm", "BasicStruct")
     )

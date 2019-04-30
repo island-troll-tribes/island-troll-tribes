@@ -10,26 +10,29 @@ import TimerUtils
 import ObjectIds
 import ClosureTimers
 import ID
+import Assets
 import ItemObjEditing
 
 
-constant let ABILITY_ID = compiletime(ABIL_ID_GEN.next())
-constant let ABILITY_DUMMY_ID = compiletime(ABIL_ID_GEN.next())
-constant let BUFF_ID = compiletime(BUFF_ID_GEN.next())
-constant let BUFF_AURA_ID = compiletime(ABIL_ID_GEN.next())
-constant let SPELLBOOK_ABILITY_ID = compiletime(createHiddenSpellbookWithAbilities("{0},{1}".format(toRawCode(ABILITY_ID), toRawCode(BUFF_AURA_ID))))
+constant ABILITY_ID = compiletime(ABIL_ID_GEN.next())
+constant ABILITY_DUMMY_ID = compiletime(ABIL_ID_GEN.next())
 
-constant let SPELL_ICON = "ReplaceableTextures\\CommandButtons\\BTNCharm.blp"
-constant let DURATION = 20.
-constant let COOLDOWN = 20.
+constant BUFF_ID = compiletime(BUFF_ID_GEN.next())
+constant BUFF_AURA_ID = compiletime(ABIL_ID_GEN.next())
+constant SPELLBOOK_ABILITY_ID = compiletime(createHiddenSpellbookWithAbilities("{0},{1}".format(toRawCode(ABILITY_ID), toRawCode(BUFF_AURA_ID))))
+
+
+constant SPELL_ICON = "ReplaceableTextures\\CommandButtons\\BTNPotionBlueSmall.blp"
+constant DURATION = 20.
+constant COOLDOWN = 20.
 
 @compiletime function createTrueSightBuff()
     new BuffDefinition(BUFF_ID, 'Bstt')
     ..setArtTarget(1, "")
     ..setTooltipNormal(1, "True Sight")
     ..setTooltipNormalExtended(1, "This unit can see invisible unit.")
-    ..setIcon("ReplaceableTextures\\PassiveButtons\\PASBTNMagicalSentry.blp")
- 
+    ..setIcon(Icons.pASBTNMagicalSentry)
+
 @compiletime function createDummyAbility()
     new AbilityDefinitionWindWalk(ABILITY_DUMMY_ID)
     ..setArtCaster("")
@@ -56,7 +59,7 @@ constant let COOLDOWN = 20.
 
 @compiletime function createDummyAura()
     new AbilityDefinitionAuraSlow(BUFF_AURA_ID)
-    ..setArtTarget("Abilities\\Spells\\Human\\MagicSentry\\MagicSentryCaster.mdl")
+    ..setArtTarget(Abilities.magicSentryCaster)
     ..setTargetAttachmentPoint("overhead")
     ..setMovementSpeedFactor(1, 0)
     ..setAreaofEffect(1, 0)
@@ -65,7 +68,7 @@ constant let COOLDOWN = 20.
     ..setDurationNormal(1, 20)
     ..setTargetsAllowed(1, "self")
     ..setName("True Sight")
- 
+
 @compiletime function createTrueSightSpell()
     new AbilityDefinition(ABILITY_ID, 'Atru')
     ..setCastRange(1, 900)
@@ -77,7 +80,7 @@ constant let COOLDOWN = 20.
     ..setDurationHero(1, 20)
     ..setDurationNormal(1, 20)
     ..setButtonPositionNormalY(0)
-    ..setArtCaster("Abilities\\Spells\\Human\\MagicSentry\\MagicSentryCaster.mdl")
+    ..setArtCaster(Abilities.magicSentryCaster)
     ..setCasterAttachmentPoint("overhead")
     ..setCasterAttachments(0)
 
@@ -87,10 +90,11 @@ constant let COOLDOWN = 20.
     ..setAbilities(toRawCode(ABILITY_DUMMY_ID))
     ..setActivelyUsed(true)
     ..setTooltipExtended("The consumer of this potion gain the true sight buff for 20 seconds, allowing him to see stealthed unit. Good versus thief & vision ward")
-    ..setModelUsed("Abilities\\Spells\\Other\\AcidBomb\\BottleMissile.mdx")
+    ..setModelUsed("Models\\PotionBlueSmall.mdx")
     ..setLumberCost(11)
     ..setGoldCost(0)
-    ..setInterfaceIcon("ReplaceableTextures\\CommandButtons\\BTNCharm.blp")
+    ..setScalingValue(0.70)
+    ..setInterfaceIcon("ReplaceableTextures\\CommandButtons\\BTNPotionOracle.blp")
     ..setDescription("Give true sight")
     ..setDroppedWhenCarrierDies(true)
     ..setNumberofCharges(1)

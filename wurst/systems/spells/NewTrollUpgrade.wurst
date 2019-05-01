@@ -4,6 +4,7 @@ import ID
 import HashMap
 import RegisterEvents
 import LegacyTriggers
+import MeatSystem
 
 public constant trollUpgradeMap = new HashMap<int, int>()
 ..put(SPELL_WARRIOR         , UNIT_WARRIOR)
@@ -38,6 +39,11 @@ function replaceUnit(int newUnitId, unit oldUnit) returns unit
     let newUnit = createUnit(owner, newUnitId, pos, angle)
     newUnit.setMana(oldUnit.getMana())
     newUnit.setHP(oldUnit.getHP())
+
+    //Transfer raw meat inventory
+    if meatInventoryInstances.has(oldUnit)
+        meatInventoryInstances.get(oldUnit).transferMeatInventoryToUnit(newUnit)
+
     for items in oldUnit.inventory()
         UnitAddItem(newUnit, items)
     return newUnit

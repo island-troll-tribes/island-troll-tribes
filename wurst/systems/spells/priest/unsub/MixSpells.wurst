@@ -18,7 +18,7 @@ let TOOLTIP_EXTENDED = ("The Priest psychically links up with a target. Both uni
                        "Lasts {2} seconds, has {3}.")
                        .format(COOLDOWN.toToolTipLightBlue())
 
-let TARGET_ALLOWED = "air,enemies,friend,ground,hero"
+let TARGET_ALLOWED = "air,enemies,friend,ground,hero,notself"
 
 class MixHeat extends ChannelAbilityPreset
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
@@ -31,12 +31,14 @@ class MixHeat extends ChannelAbilityPreset
         this.setCooldown(1, COOLDOWN)
         this.setHeroAbility(false)
         this.presetTargetTypes(Targettype.UNIT)
+        this.setTargetsAllowed(1, TARGET_ALLOWED)
         this.setHotkeyNormal(hotkey)
         this.setName(TOOLTIP_NORM+"Heat")
         this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM+"Heat"))
         this.presetTooltipNormalExtended(lvl -> toolTipExtended)
         this.setButtonPositionNormalX(buttonPos.a)
         this.setButtonPositionNormalY(buttonPos.b)
+        this.setFollowThroughTime(1, 0.5)
         this.setBaseOrderID(1, "slowoff")
         this.setIconNormal("ReplaceableTextures\\CommandButtons\\BTNHeatDrain.blp")
 
@@ -52,14 +54,15 @@ class MixEnergy extends ChannelAbilityPreset
         this.setCooldown(1, COOLDOWN)
         this.setHeroAbility(false)
         this.presetTargetTypes(Targettype.UNIT)
+        this.setTargetsAllowed(1, TARGET_ALLOWED)
         this.setHotkeyNormal(hotkey)
         this.setName(TOOLTIP_NORM+"Energy")
         this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM+"Energy"))
         this.presetTooltipNormalExtended(lvl -> toolTipExtended)
         this.setButtonPositionNormalX(buttonPos.a)
         this.setButtonPositionNormalY(buttonPos.b)
-        this.setBaseOrderID(1, "slow")
         this.setFollowThroughTime(1, 0.5)
+        this.setBaseOrderID(1, "slow")
         this.setIconNormal(Icons.bTNManaDrain)
 
 

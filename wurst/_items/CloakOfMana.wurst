@@ -5,12 +5,20 @@ import ObjectIdGenerator
 import ObjectIds
 import ID
 import ItemObjEditing
+import ToolTipsUtils
 
-constant let COOLDOWN = 35.
-public constant let MANA_AMOUNT = 100
-constant let SPELL_RADIUS = 700.
-constant let ABILITY_ID = compiletime(ABIL_ID_GEN.next())
-constant let ITEM_ABILITIES = commaList(ABILITY_ID, ABILITY_CLOAK_STATS_BONUS, ABILITY_ARMOR_BONUS3)
+public constant  MANA_AMOUNT = 100
+constant  COOLDOWN = 35.
+constant  SPELL_RADIUS = 700.
+constant  ABILITY_ID = compiletime(ABIL_ID_GEN.next())
+constant  ITEM_ABILITIES = commaList(ABILITY_ID, ABILITY_CLOAK_STATS_BONUS, ABILITY_ARMOR_BONUS3)
+
+constant TOOLTIP = "Cloak Of Mana"
+constant TOOLTIP_EXTENDED = "Provides +3 armor and +3 all stats, has an active ability which restore {0} mana to allies in a radius of {1}. Has {2} seconds cooldown"
+                            .format(MANA_AMOUNT.toReal().toToolTipBlue(), SPELL_RADIUS.toToolTipOrange(), COOLDOWN.toToolTipLightBlue())
+
+constant MODEL = "Models\\Cloak.mdx"
+constant ICON  = "ReplaceableTextures\\CommandButtons\\BTNCloakOfMana.blp"
 
 @compiletime function createSpell()
     new AbilityDefinitionItemManaRestoreAoe(ABILITY_ID)
@@ -20,15 +28,15 @@ constant let ITEM_ABILITIES = commaList(ABILITY_ID, ABILITY_CLOAK_STATS_BONUS, A
 
 @compiletime function createCloakOfMana()
     new ItemDefinition(ITEM_CLOAK_OF_MANA, 'bspd')
-    ..setName("Cloak of Mana")
+    ..setName(TOOLTIP)
     ..setAbilities(ITEM_ABILITIES)
-    ..setTooltipExtended("Provides +3 armor and +3 all stats, has an active ability which restore "+MANA_AMOUNT.toString()+" mana to allies in a radius of "+SPELL_RADIUS.toString()+", "+COOLDOWN.toString()+" seconds cooldown")
-    ..setModelUsed("Models\\Cloak.mdx")
+    ..setTooltipExtended(TOOLTIP_EXTENDED)
+    ..setModelUsed(MODEL)
     ..setTintingColor1Red(128)
     ..setTintingColor2Green(0)
     ..setTintingColor3Blue(128)
     ..setGoldCost(0)
-    ..setInterfaceIcon("ReplaceableTextures\\CommandButtons\\BTNCloakOfMana.blp")
+    ..setInterfaceIcon(ICON)
     ..setDescription("Provides +3 armor and +3 all stats, can restore allies mana")
     ..setDroppedWhenCarrierDies(true)
     ..setScalingValue(0.80)
@@ -39,4 +47,4 @@ constant let ITEM_ABILITIES = commaList(ABILITY_ID, ABILITY_CLOAK_STATS_BONUS, A
     ..setLevelUnclassified(2)
     ..setPerishable(false)
     ..setPriority(41)
-    ..setTooltipBasic("Trade for Cloak of Mana")
+    ..setTooltipBasic("Trade for "+TOOLTIP)

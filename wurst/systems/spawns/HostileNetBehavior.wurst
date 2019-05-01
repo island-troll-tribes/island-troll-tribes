@@ -1,0 +1,25 @@
+package HostileNetBehavior
+import ClosureTimers
+import RegisterEvents
+import ID
+import Orders
+
+function onCast()
+    let target = GetSpellTargetUnit()
+
+    if target.getOwner() == players[PLAYER_NEUTRAL_AGGRESSIVE] and target.isType(UNIT_TYPE_GROUND)
+         and target.getCurrentOrder() == Orders.move and target.getTypeId() != UNIT_ELK
+        doAfter(0.5) ->
+            if target.isAlive()
+                target.abortOrder()
+        //After approximatively 5 seconds, there is a move order issued, since net last 10 seconds, we need to abort this order too
+        doAfter(6) ->
+            if target.isAlive()
+                target.abortOrder()
+
+init
+    //Hunter & ensnare ability
+    registerSpellEffectEvent('Aweb', () -> onCast())
+
+    //Nets item ability
+    registerSpellEffectEvent('Aens', () -> onCast())

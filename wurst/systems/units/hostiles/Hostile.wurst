@@ -36,28 +36,29 @@ public abstract class Hostile extends UnitEntity
     override function onDeath()
         let pos = getPos()
         let numCorpses = (getNumCorpses() * udg_FOOD_FOR_KILL_PROPORTION).round()
+        let drops = getDrops()
+        let numDrops = drops.size()
+
+        if numDrops != 0
+            let dropsIter = drops.iterator()
+            doPeriodicallyCounted(ANIMATION_PERIOD, numDrops) cb ->
+                createItem(dropsIter.next(), pos)
+                if cb.isLast()
+                    dropsIter.close()
+                    destroy drops
+        else
+            destroy drops
 
         //Find an offset position for the meat so items are separated on drop
-        for angleIndex = 0 to 3
-            let meatPos = pos.polarOffset((angleIndex * 90.).fromDeg(), MEAT_DROP_OFFSET_DISTANCE)
-            if meatPos.isTerrainWalkable()
-                spawnRawMeat(meatPos, numCorpses)
-                break
-            else if angleIndex == 3
-                spawnRawMeat(pos, numCorpses)
-                break
-
-        let drops = getDrops()
-        doAfter(ANIMATION_PERIOD * numCorpses) ->
-            if drops.size() != 0
-                let dropsIter = drops.iterator()
-                doPeriodicallyCounted(ANIMATION_PERIOD, drops.size()) cb ->
-                    createItem(dropsIter.next(), pos)
-                    if cb.isLast()
-                        dropsIter.close()
-                        destroy drops
-            else
-                destroy drops
+        doAfter(ANIMATION_PERIOD * numDrops) ->
+            for angleIndex = 0 to 3
+                let meatPos = pos.polarOffset((angleIndex * 90.).fromDeg(), MEAT_DROP_OFFSET_DISTANCE)
+                if meatPos.isTerrainWalkable()
+                    spawnRawMeat(meatPos, numCorpses)
+                    break
+                else if angleIndex == 3
+                    spawnRawMeat(pos, numCorpses)
+                    break
 
         if this instanceof Hawk
             or this instanceof Fish

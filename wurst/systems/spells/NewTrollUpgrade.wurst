@@ -5,6 +5,7 @@ import HashMap
 import RegisterEvents
 import LegacyTriggers
 import MeatSystem
+import ReleasePet
 
 public constant trollUpgradeMap = new HashMap<int, int>()
 ..put(SPELL_WARRIOR         , UNIT_WARRIOR)
@@ -55,12 +56,8 @@ function upgradeUnit(int newUnitId, unit oldUnit)
     int agi = GetHeroAgi(oldUnit, false)
     int inte = GetHeroInt(oldUnit, false)
 
-    if newUnit.isAlive()
-        print(newUnit.getName() + " is alive")
-    else
-        print(newUnit.getName() + " is dead")
     if oldUnit.getTypeId() == UNIT_BEAST_MASTER
-        TriggerExecute(gg_trg_Release_Pets)
+        gg_trg_Release_Pets.execute()
     GroupRemoveUnit(udg_trolls, oldUnit)
     GroupAddUnit(udg_trolls, newUnit)
     udg_PUnits[GetPlayerId(owner)] = newUnit
@@ -77,11 +74,6 @@ function upgradeUnit(int newUnitId, unit oldUnit)
         ForceUICancel()
     oldUnit.getOwner()
     RemoveUnit(oldUnit)
-    if newUnit.isAlive()
-        print(newUnit.getName() + " is alive")
-    else
-        print(newUnit.getName() + " is dead")
-
 
 function upgradeAction()
     let spell = GetLearnedSkill()

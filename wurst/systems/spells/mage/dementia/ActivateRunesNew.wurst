@@ -79,13 +79,13 @@ class ActivateRunes extends ChannelAbilityPreset
 LinkedList<SummonData> summonsList = new LinkedList<SummonData>()
 
 public class SummonData
-    LinkedList<Runes> runeOrder
+    OwnedLinkedList<Runes> runeOrder
     string name
     int orderId
     real cooldown
     int summonUnitID
     construct(Runes r1, Runes r2, Runes r3, Runes r4, Runes r5, string name, int orderId, real cooldown, int summonUnitID)
-        runeOrder = new LinkedList<Runes>()
+        runeOrder = new OwnedLinkedList<Runes>()
         runeOrder.push(r1)
         runeOrder.push(r2)
         runeOrder.push(r3)
@@ -143,7 +143,7 @@ function Runes.toString() returns string
             print("ERROR: Unsupported rune type")
             return ""
 
-function findMatchingSummonData(LinkedList<Runes> runes) returns SummonData
+function findMatchingSummonData(OwnedLinkedList<Runes> runes) returns SummonData
     for summonInfo in summonsList
         if summonInfo.runeOrder.equals(runes)
             return summonInfo
@@ -153,7 +153,7 @@ function trySummonDemon(unit caster, DementiaRunesInstance runesInstance, DarkPo
     if runesInstance != null and portalInstance != null and runesInstance.runes.size() > 0 and caster.hasAbility(SPELL_DEMENTIA_SUMMONING)
         if portalInstance.isUnitInsidePortal(caster)
             //Have portal, and standing inside portal
-            var runeSequence = new LinkedList<Runes>()
+            var runeSequence = new OwnedLinkedList<Runes>()
             for r in runesInstance.runes
                 runeSequence.push(r.runeType)
 

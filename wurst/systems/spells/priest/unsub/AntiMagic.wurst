@@ -11,13 +11,12 @@ import ToolTipsUtils
 
 //let ABILITY_ANTI_MAGIC_SHELL = 'A0F8'
 //let ABILITY_ANTI_MAGIC_DUMMY = 'XAMG'
+let AOE = 800.
 let COOLDOWN = 20.
 let MANACOST = 20
-let AOE = 800.
-
-let SHIELD_AMOUNT = 100.
 let DURATION = 10.
 let CAST_RANGE = 800.
+let SHIELD_AMOUNT = 100.
 let SINGLE_AM_MANACOST = 5
 let SINGLE_AM_COOLDOWN = 1.
 let SINGLE_AM_TOOLTIP_NORM = "Anti-Magic Shell"
@@ -27,8 +26,8 @@ let SINGLE_AM_TOOLTIP_EXTENDED = ("Grants an anti-magic barrier to target ally t
 
 
 let TOOLTIP_NORM = "Anti-Magic Shell"
-let TOOLTIP_EXTENDED = ("Grants an anti-magic barrier to allies in a {0} radius that absorbs {1} magic damage and blocks them "+
-                       "from being ensnared by hunters or ensnare traps. Lasts {2} seconds, has {3} seconds cooldown.")
+let TOOLTIP_EXTENDED = ("Grants an anti-magic barrier to allies in a {0} radius around point cast that absorbs {1} magic damage and blocks them "+
+                       "from being ensnared by hunters or ensnare traps. Does block workshop ensnare. Lasts {2} seconds, has {3} seconds cooldown.")
                        .format(AOE.toToolTipGray(), SHIELD_AMOUNT.toToolTipGreen(), DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
 
 class AntiMagic extends AbilityDefinitionAntimagicShield
@@ -52,14 +51,14 @@ class AntiMagic extends AbilityDefinitionAntimagicShield
 class AntiMagicAoEDummy extends ChannelAbilityPreset
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
         super(newAbilityId, 1, true)
-        this.presetCastRange(lvl -> 1)
+        this.presetCastRange(lvl -> CAST_RANGE)
         // this.presetDurationHero(lvl -> 0.01)
         // this.presetDurationNormal(lvl -> 0.01)
         this.presetManaCost(lvl -> MANACOST)
         this.presetCooldown(lvl -> COOLDOWN)
         this.setHeroAbility(false)
         this.setItemAbility(false)
-        this.presetTargetType(lvl -> 0)
+        this.presetTargetTypes(Targettype.POINT)
         this.setHotkeyNormal(hotkey)
         this.setName(TOOLTIP_NORM)
         this.setBaseOrderID(1, "antimagicshell")
@@ -68,6 +67,9 @@ class AntiMagicAoEDummy extends ChannelAbilityPreset
         this.setIconNormal(Icons.bTNAntiMagicShell)
         this.setIconTurnOff(Icons.bTNAntiMagicShell)
         this.setIconResearch(Icons.bTNAntiMagicShell)
+        this.presetOption(Option.TARGETIMAGE, true)
+        this.presetAreaofEffect(lvl -> AOE)
+        this.setFollowThroughTime(1, 1)
         this.setButtonPositionNormalX(buttonPos.a)
         this.setButtonPositionNormalY(buttonPos.b)
 
@@ -75,16 +77,11 @@ class AntiMagicAoEDummy extends ChannelAbilityPreset
     new AntiMagic(SPELL_ANTI_MAGIC, "Q", new Pair(0, 0))
     new AntiMagicAoEDummy(SPELL_ANTI_MAGIC_AOE, "Q", new Pair(0, 0))
 
-function onCast()
-    let caster = GetSpellAbilityUnit()
-    forUnitsInRange(caster.getPos(), AOE) u ->
-        if u.isAlive() and u.getOwner().isAllyOf(caster.getOwner())
-            new DummyCaster()
-                ..owner(caster.getOwner())
-                ..origin(u.getPos() + vec2(100, 0))
-                ..delay(1)
-                ..castTarget(SPELL_ANTI_MAGIC, 1, Orders.antimagicshell, u)
-
 init
-    registerSpellEffectEvent(SPELL_ANTI_MAGIC_AOE) ->
-        onCast()
+    EventListener.onPointCast(SPELL_ANTI_MAGIC_AOE) (unit caster, vec2 target) ->
+        forUnitsInRange(target, AOE) u ->
+            if u.isAlive() and u.getOwner().isAllyOf(caster.getOwner())
+                new DummyCaster()
+                    ..owner(caster.getOwner())
+                    ..origin(target)
+                    ..castTarget(SPELL_ANTI_MAGIC, 1, Orders.antimagicshell, u)

@@ -27,31 +27,57 @@ let CHAIN_REVEAL_TOOLTIP_EXTENDED = "Cast multiple reveal around you and on your
 
 let TOOLTIP_EXTENDED_GREATER = "Reveals an large area around you, detects invisible units."+makeToolTipDuration(GREATER_DURATION, GREATER_COOLDOWN)
 
-class DummyReveal extends AbilityDefinitionFarseerFarSight
-    construct(int newAbilityId)
-        super(newAbilityId)
-        this.setLevels(3)
-        this.presetCastRange(lvl -> 99999)
-        this.presetAreaofEffect(lvl -> 300. + lvl * AOE)
-        this.presetDurationHero(lvl -> DURATION)
-        this.presetDurationNormal(lvl -> DURATION)
-        this.presetCooldown(lvl -> 0)
 
-class DummyGreaterReveal extends DummyReveal
-    construct(int newAbilityId)
-        super(newAbilityId)
-        this.setLevels(1)
-        this.setAreaofEffect(1, GREATER_AOE)
-        this.presetDurationHero(lvl -> GREATER_DURATION)
-        this.presetDurationNormal(lvl -> GREATER_DURATION)
+@compiletime function revealDefinition()
+    new AbilityDefinitionFarseerFarSight(ABILITY_ID_REVEAL_DUMMY)
+    ..setDummyAbility()
+    ..setLevels(3)
+    ..presetAreaofEffect(lvl -> 300. + lvl * AOE)
+    ..presetDurationHero(lvl -> DURATION)
+    ..presetDurationNormal(lvl -> DURATION)
 
-class DummyReconReveal extends DummyReveal
-    construct(int newAbilityId)
-        super(newAbilityId)
-        this.setLevels(3)
-        this.presetAreaofEffect(lvl -> 400. + (lvl * 600.))
-        this.presetDurationHero(lvl -> DURATION)
-        this.presetDurationNormal(lvl -> DURATION)
+    new AbilityDefinitionFarseerFarSight(ABILITY_ID_GREATER_REVEAL_DUMMY)
+    ..setDummyAbility()
+    ..setLevels(1)
+    ..setAreaofEffect(1, GREATER_AOE)
+    ..presetDurationHero(lvl -> GREATER_DURATION)
+    ..presetDurationNormal(lvl -> GREATER_DURATION)
+
+    new AbilityDefinitionFarseerFarSight(ABILITY_ID_RECON_REVEAL_DUMMY)
+    ..setDummyAbility()
+    ..setLevels(3)
+    ..presetAreaofEffect(lvl -> 400. + (lvl * 600.))
+    ..presetDurationHero(lvl -> DURATION)
+    ..presetDurationNormal(lvl -> DURATION)
+
+
+
+
+// class DummyReveal extends AbilityDefinitionFarseerFarSight
+//     construct(int newAbilityId)
+//         super(newAbilityId)
+//         this.setLevels(3)
+//         this.presetCastRange(lvl -> 99999)
+//         this.presetAreaofEffect(lvl -> 300. + lvl * AOE)
+//         this.presetDurationHero(lvl -> DURATION)
+//         this.presetDurationNormal(lvl -> DURATION)
+//         this.presetCooldown(lvl -> 0)
+
+// class DummyGreaterReveal extends DummyReveal
+//     construct(int newAbilityId)
+//         super(newAbilityId)
+//         this.setLevels(1)
+//         this.setAreaofEffect(1, GREATER_AOE)
+//         this.presetDurationHero(lvl -> GREATER_DURATION)
+//         this.presetDurationNormal(lvl -> GREATER_DURATION)
+
+// class DummyReconReveal extends DummyReveal
+//     construct(int newAbilityId)
+//         super(newAbilityId)
+//         this.setLevels(3)
+//         this.presetAreaofEffect(lvl -> 400. + (lvl * 600.))
+//         this.presetDurationHero(lvl -> DURATION)
+//         this.presetDurationNormal(lvl -> DURATION)
 
 
 class Reveal extends ChannelAbilityPreset
@@ -101,36 +127,9 @@ class ChainReveal extends Reveal
     new Reveal(SPELL_REVEAL_ID, "E", new Pair(1, 1))
     new GreaterReveal(SPELL_GREATER_REVEAL_ID, "E", new Pair(1, 1))
     new ChainReveal(SPELL_CHAIN_REVEAL, "E", new Pair(1, 1))
-    new DummyReveal(ABILITY_ID_REVEAL_DUMMY)
-    new DummyGreaterReveal(ABILITY_ID_GREATER_REVEAL_DUMMY)
-    new DummyReconReveal(ABILITY_ID_RECON_REVEAL_DUMMY)
-
-
-function chainReveal(unit caster, player owner, int lvl)
-    // Reveal on living clay
-    forUnitsOfPlayer(caster.getOwner()) u ->
-        if u.getTypeId() == UNIT_LIVING_CLAY
-            new DummyCaster()
-                ..owner(owner)
-                ..origin(u.getPos() + vec2(100,0))
-                ..castPoint(ABILITY_ID_RECON_REVEAL_DUMMY, lvl, Orders.farsight, u.getPos())
-
-    // Get neraby enemy units
-    let unitsAround = CreateGroup()..enumUnitsInRange(caster.getPos(), 2700)
-    unitsAround.forEachIn() elem ->
-        if elem.getOwner().isAllyOf(caster.getOwner())
-            unitsAround.removeUnit(elem)
-
-    // cast greater reveal on a random nearby unit
-    for i = 0 to lvl
-        let randomUnit = unitsAround.getRandomUnit()
-        if randomUnit != null
-            new DummyCaster()
-                ..owner(caster.getOwner())
-                ..origin(randomUnit.getPos() + vec2(100,0))
-                ..castTarget(ABILITY_ID_GREATER_REVEAL_DUMMY, lvl, Orders.farsight, randomUnit)
-            unitsAround.removeUnit(randomUnit)
-    unitsAround.destr()
+    //new DummyReveal(ABILITY_ID_REVEAL_DUMMY)
+    //new DummyGreaterReveal(ABILITY_ID_GREATER_REVEAL_DUMMY)
+    //new DummyReconReveal(ABILITY_ID_RECON_REVEAL_DUMMY)
 
 function onCastReveal()
     let caster = GetSpellAbilityUnit()
@@ -139,8 +138,6 @@ function onCastReveal()
     let lvl = caster.getAbilityLevel(spellId)
     var dummyToCast = ABILITY_ID_REVEAL_DUMMY
 
-    if spellId == SPELL_CHAIN_REVEAL
-        chainReveal(caster, owner, lvl)
     if spellId == SPELL_GREATER_REVEAL_ID
         dummyToCast = ABILITY_ID_GREATER_REVEAL_DUMMY
 
@@ -153,4 +150,30 @@ function onCastReveal()
 init
     registerSpellEffectEvent(SPELL_REVEAL_ID, () -> onCastReveal())
     registerSpellEffectEvent(SPELL_GREATER_REVEAL_ID, () -> onCastReveal())
-    registerSpellEffectEvent(SPELL_CHAIN_REVEAL, () -> onCastReveal())
+    EventListener.onCast(SPELL_CHAIN_REVEAL) (unit caster) ->
+        let owner = caster.getOwner()
+        let lvl = caster.getAbilityLevel(SPELL_CHAIN_REVEAL)
+        // Reveal on living clay
+        forUnitsOfPlayer(owner) u ->
+            if u.getTypeId() == UNIT_LIVING_CLAY
+                new DummyCaster()
+                    ..owner(owner)
+                    ..origin(u.getPos() + vec2(100,0))
+                    ..castPoint(ABILITY_ID_RECON_REVEAL_DUMMY, lvl, Orders.farsight, u.getPos())
+
+        // Get nearby enemy units
+        let unitsAround = CreateGroup()..enumUnitsInRange(caster.getPos(), 2700)
+        unitsAround.forEachIn() elem ->
+            if elem.getOwner().isAllyOf(owner)
+                unitsAround.removeUnit(elem)
+
+        // cast greater reveal on a random nearby unit
+        for i = 0 to lvl
+            let randomUnit = unitsAround.getRandomUnit()
+            if randomUnit != null
+                new DummyCaster()
+                    ..owner(owner)
+                    ..origin(randomUnit.getPos() + vec2(100,0))
+                    ..castTarget(ABILITY_ID_GREATER_REVEAL_DUMMY, lvl, Orders.farsight, randomUnit)
+                unitsAround.removeUnit(randomUnit)
+        unitsAround.destr()

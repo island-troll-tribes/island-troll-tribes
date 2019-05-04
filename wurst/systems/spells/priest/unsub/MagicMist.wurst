@@ -8,16 +8,24 @@ import ObjectIds
 import ToolTipsUtils
 import BuffObjEditing
 import ObjectIdGenerator
+import ClosureEvents
+import ClosureTimers
+import DummyCaster
+import OrderIds
 
 // I should rework cloudcast.jurst but too lazy right now
 
-let BUFF_ID = compiletime(BUFF_ID_GEN.next())
-let CAST_RANGE = 400.
-let COOLDOWN = 35.
-let MANACOST = 20
-let DURATION = 10.
-let TOOLTIP_NORM = "Magic Mist"
-let TOOLTIP_EXTENDED = "The Priest creates an artificial fog preventing all combat within it." + makeToolTipDuration(DURATION, COOLDOWN)
+public constant TRUE_MAGIC_MIST_ID = compiletime(ABIL_ID_GEN.next())
+constant BUFF_ID = compiletime(BUFF_ID_GEN.next())
+constant CAST_RANGE = 400.
+constant COOLDOWN = 35.
+constant MANACOST = 20
+constant DURATION = 10.
+constant TOOLTIP_NORM = "Magic Mist"
+constant TOOLTIP_EXTENDED = "The Priest creates an artificial fog preventing all combat within it." + makeToolTipDuration(DURATION, COOLDOWN)
+
+constant TARGET_ALLOWED = "friendly,enemy,air,debris,ground,structure"
+constant AOE = 400.
 
 
 function createBuff()
@@ -25,6 +33,17 @@ function createBuff()
     ..setTooltipNormal(1, "Magic Mist")
     ..setTooltipNormalExtended(1, "This unit is cought in magic mist, it can't attack anything")
 
+class MagicMistTrue extends AbilityDefinitionSilenceCreep
+    construct(int newAbilityId)
+        super(newAbilityId)
+        this.setArtEffect("")
+        this.setDummyAbility()
+        this.setAreaofEffect(1, AOE)
+        this.setBuffs(1, BUFF_ID.toRawCode())
+        this.setDurationHero(1, 1)
+        this.setDurationNormal(1, 1)
+        this.setAttacksPrevented(1, 3)
+//        this.setTargetsAllowed(1, TARGET_ALLOWED)
 
 class MagicMist extends AbilityDefinitionBloodMageFlameStrike
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
@@ -50,8 +69,22 @@ class MagicMist extends AbilityDefinitionBloodMageFlameStrike
         this.setDurationHero(1, 0.01)
         this.setDurationNormal(1, 0.01)
         this.setEffects(1, "")
+        this.setAreaofEffect(1, AOE)
         this.setBuffs(1, toRawCode(BUFF_ID))
 
 
 @compiletime function createRangedHeal()
     new MagicMist(SPELL_MAGIC_MIST, "A", new Pair(0, 0))
+    new MagicMistTrue(TRUE_MAGIC_MIST_ID)
+    createBuff()
+
+
+init
+    EventListener.onPointCast(SPELL_MAGIC_MIST) (unit caster, vec2 target) ->
+        let fx = addEffect(Abilities.cloudOfFog, target)..setScale(2)
+        doAfter(DURATION) () ->
+            fx.destr()
+        doPeriodicallyTimed(1, DURATION) (CallbackCounted cb) ->
+            new DummyCaster()
+                ..origin(caster.getPos() + vec2(100,0))
+                ..castPoint(TRUE_MAGIC_MIST_ID, 1, OrderIds.silence, target)

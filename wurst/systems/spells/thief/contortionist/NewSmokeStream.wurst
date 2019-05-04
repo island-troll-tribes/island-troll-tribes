@@ -11,6 +11,7 @@ import ClosureTimers
 import RegisterEvents
 import OrderIds
 import DummyCaster
+import MagicMist
 
 let BUFF_ID = compiletime(BUFF_ID_GEN.next())
 let BUFF_ORIGINAL_ID = 'Bclf' // Cloud
@@ -23,35 +24,16 @@ let MS_FACTOR = 0.6
 let COOLDOWN = 20.
 let MANACOST = 10
 let DURATION = 3.
-let SMOKE_SPAWNING_DURATION = 4.
+let SMOKE_SPAWNING_DURATION = 6.
 let TOOLTIP_NORM = "Smoke Stream"
 let TOOLTIP_EXTENDED = "The Magic Thief releases a stream of smoke bocking all combat and spells. "+
                        "Smoke is only released while you are moving."+makeToolTipDuration(DURATION+SMOKE_SPAWNING_DURATION, COOLDOWN)
-let TARGET_ALLOWED = "air,debris,ground,notself,structure"
 
 function createBuff()
     new BuffDefinition(BUFF_ID, BUFF_ORIGINAL_ID)
         ..setIcon(Icons.bTNCloudOfFog)
         ..setTooltipNormal(1, "Smoke Bomb")
         ..setTooltipNormalExtended(1, "This unit can't see because of the smoke of a smoke bomb. It cannot attack anything and moves slower.")
-
-class BattleMist extends AbilityDefinitionCloudofFog
-    construct(int newAbilityId)
-        super(newAbilityId)
-        this.setRequirements("")
-        this.setCheckDependencies(false)
-        this.setName("BattleMist")
-        this.setManaCost(1, 0)
-        this.setCooldown(1, COOLDOWN)
-        this.setDurationHero(1, DURATION)
-        this.setDurationNormal(1, DURATION)
-        this.setBuffs(1, toRawCode(BUFF_ID))
-        this.setTargetsAllowed(1, TARGET_ALLOWED)
-        this.setAttacksPrevented(1, 3) // Melee, ranged
-        this.setChanceToMiss(1, 0)
-        this.setMovementSpeedModifier(1, MS_FACTOR)
-        this.setAreaofEffect(1, AOE)
-
 
 class SmokeStream extends ChannelAbilityPreset
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
@@ -61,7 +43,6 @@ class SmokeStream extends ChannelAbilityPreset
         this.setHeroAbility(false)
         this.setItemAbility(false)
         this.presetTargetTypes(Targettype.NONE)
-        this.presetTargetsAllowed(lvl -> TARGET_ALLOWED)
         this.setHotkeyNormal(hotkey)
         this.setName(TOOLTIP_NORM)
         this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM))
@@ -78,7 +59,6 @@ class SmokeStream extends ChannelAbilityPreset
 @compiletime function createSmokeStream()
     new SmokeStream(SPELL_SMOKE_STREAM, "R", new Pair(3, 0))
     new SmokeStream(SPELL_AS_SMOKE_STREAM, "A", new Pair(0, 1))
-    new BattleMist(BATTLE_MIST_ID)
     createBuff()
 
 function onCast()
@@ -86,10 +66,12 @@ function onCast()
 
     doPeriodicallyTimed(0.50, SMOKE_SPAWNING_DURATION) cb ->
         if caster.getCurrentOrder() != 0 // Checking if unit is moving
+            let fx = addEffect(Abilities.cloudOfFog, caster.getPos())
+            doAfter(DURATION) () ->
+                fx.destr()
             new DummyCaster()
-                ..owner(caster.getOwner())
                 ..origin(caster.getPos() + vec2(100,0))
-                ..castTarget(BATTLE_MIST_ID, 1, Orders.cloudoffog, caster)
+                ..castTarget(TRUE_MAGIC_MIST_ID, 1, Orders.silence, caster)
 
 init
     registerSpellEffectEvent(SPELL_SMOKE_STREAM, () -> onCast())

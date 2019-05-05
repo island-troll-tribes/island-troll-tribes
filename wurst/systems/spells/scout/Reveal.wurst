@@ -7,7 +7,9 @@ import ToolTipsUtils
 import ID
 import ChannelAbilityPreset
 import Lodash
+import InstantDummyCaster
 import ClosureForGroups
+import ErrorHandling
 
 let ABILITY_ID_REVEAL_DUMMY = compiletime(ABIL_ID_GEN.next())
 let ABILITY_ID_RECON_REVEAL_DUMMY = compiletime(ABIL_ID_GEN.next())
@@ -141,10 +143,12 @@ function onCastReveal()
     if spellId == SPELL_GREATER_REVEAL_ID
         dummyToCast = ABILITY_ID_GREATER_REVEAL_DUMMY
 
-    new DummyCaster()
-        ..owner(owner)
-        ..origin(caster.getPos() + vec2(100,0))
-        ..castPoint(dummyToCast, lvl, Orders.farsight, caster.getPos())
+    if InstantDummyCaster.castPoint(owner, dummyToCast, lvl, Orders.farsight, caster.getPos()) == false
+        error("Reveal cast failed, this isn't supposed to happen, report this please.")
+    // new DummyCaster()
+    //     ..owner(owner)
+    //     ..origin(caster.getPos() + vec2(100,0))
+    //     ..castPoint(dummyToCast, lvl, Orders.farsight, caster.getPos())
 
 
 init
@@ -156,10 +160,12 @@ init
         // Reveal on living clay
         forUnitsOfPlayer(owner) u ->
             if u.getTypeId() == UNIT_LIVING_CLAY
-                new DummyCaster()
-                    ..owner(owner)
-                    ..origin(u.getPos() + vec2(100,0))
-                    ..castPoint(ABILITY_ID_RECON_REVEAL_DUMMY, lvl, Orders.farsight, u.getPos())
+                if InstantDummyCaster.castPoint(owner, ABILITY_ID_RECON_REVEAL_DUMMY, lvl, Orders.farsight, u.getPos()) == false
+                    error("Reveal cast failed, this isn't supposed to happen, report this please.")
+                // new DummyCaster()
+                //     ..owner(owner)
+                //     ..origin(u.getPos() + vec2(100,0))
+                //     ..castPoint(ABILITY_ID_RECON_REVEAL_DUMMY, lvl, Orders.farsight, u.getPos())
 
         // Get nearby enemy units
         let unitsAround = CreateGroup()..enumUnitsInRange(caster.getPos(), 2700)
@@ -171,9 +177,11 @@ init
         for i = 0 to lvl
             let randomUnit = unitsAround.getRandomUnit()
             if randomUnit != null
-                new DummyCaster()
-                    ..owner(owner)
-                    ..origin(randomUnit.getPos() + vec2(100,0))
-                    ..castTarget(ABILITY_ID_GREATER_REVEAL_DUMMY, lvl, Orders.farsight, randomUnit)
+                if InstantDummyCaster.castTarget(owner, ABILITY_ID_GREATER_REVEAL_DUMMY, lvl, Orders.farsight, randomUnit) == false
+                    error("Reveal cast failed, this isn't supposed to happen, report this please.")
+                // new DummyCaster()
+                //     ..owner(owner)
+                //     ..origin(randomUnit.getPos() + vec2(100,0))
+                //     ..castTarget(ABILITY_ID_GREATER_REVEAL_DUMMY, lvl, Orders.farsight, randomUnit)
                 unitsAround.removeUnit(randomUnit)
         unitsAround.destr()

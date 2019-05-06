@@ -74,8 +74,6 @@ constant TOOLTIP_EXTENDED_SPIKED_TRAP = "An itchy trap, troll who walks on it wi
 constant TOOLTIP_EXTENDED_BEAR_TRAP = "Troll walking through this trap will be immobilized for {0} seconds. Bear Trap last {1} seconds, has {2} seconds cooldown."
                                .format(BEAR_TRAP_LOCK_DURATION.toToolTipOrange(), BEAR_TRAP_DURATION.toToolTipLightBlue(), BEAR_TRAP_COOLDOWN.toToolTipLightBlue())
 
-constant TRAP_SPELLBOOK = commaList(SPELL_TRACK_TRAP, SPELL_SPIKED_TRAP)
-
 // Buff
 function createBuff()
     new BuffDefinition(BUFF_SPIKED_TRAP_SLOW, BUFF_SPIKED_TRAP_ORIGINAL_ID)
@@ -93,11 +91,11 @@ function createBuff()
         ..setTooltipNormalExtended(1, "This unit has been crippled by an spiked trap, it's movement speed has been greatly reduced.")
 
     new BuffDefinition(BUFF_BEAR_TRAP_LOCK_AIR, BUFF_BEAR_TRAP_AIR_ORIGINAL_ID)
-        ..setIcon(Icons.bTNMeatapult)
+        ..setIcon(BEAR_TRAP_ICON)
         ..setArtTarget(1, BEAR_TRAP_BUFF_PATH)
         ..setTargetAttachmentPoint0(1, "origin")
         ..setTooltipNormal(1, "Bear Trap Lock")
-        ..setTooltipNormalExtended(1, "This unit has been crippled by an spiked trap, it's movement speed has been greatly reduced.")
+        ..setTooltipNormalExtended(1, "This unit is stuck in a bear trap, it can't move for a short period.")
 
 //Trap Unit Definition
 class TrapUnit extends UnitDefinition
@@ -294,9 +292,9 @@ let trapList = new HashMap<int, Pair<int, int>>()
     ..put(UNIT_BEAR_TRAP  , new Pair(ABILITY_BEAR_TRAP_LOCK  , Orders.ensnare   ))
 
 function onTrapDeath(unit trap)
-    forUnitsInRange(trap.getPos(), TRAP_EFFECT_RADIUS + 50) u ->
+    forUnitsInRange(trap.getPos(), TRAP_EFFECT_RADIUS + 25) u ->
         let trapId = trap.getTypeId()
-        if u.isTroll() and u.getOwner().isEnemyOf(trap.getOwner())
+        if u.isTroll() and u.getOwner().isEnemyOf(trap.getOwner()) and not (u.hasAbility('Bams') or u.hasAbility('Bam2'))
             if InstantDummyCaster.castTarget(trap.getOwner(), trapList.get(trapId).a, 1, trapList.get(trapId).b, u) == false
                 error("Trap failed, this isn't supposed to happen, report this please.")
 

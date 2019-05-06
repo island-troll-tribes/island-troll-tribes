@@ -60,8 +60,9 @@ class Radar
     string name     = "Find "
     string toolTip  = "placeholder"
     string toolTipExt  = "placeholder"
+    string orderId = "channel"
 
-    construct(int id, string itemName, string toolTipExt, string hotkey, int buttonPosX, int buttonPosY, string color)
+    construct(int id, string itemName, string toolTipExt, string hotkey, int buttonPosX, int buttonPosY, string color, string orderId)
         this.id = id
         this.hotkey   = hotkey
         this.name     += itemName
@@ -69,6 +70,7 @@ class Radar
         this.buttonPosX  = buttonPosX
         this.buttonPosY  = buttonPosY
         this.toolTip  = GENERAL_COLOR+"[" + color + hotkey + GENERAL_COLOR + "] - " + this.name + "|r"
+        this.orderId = orderId
 
     function buildRadarSpell()
         new ChannelAbilityPreset(id, 1, true)
@@ -92,6 +94,7 @@ class Radar
         ..presetCooldown(lvl -> COOLDOWN)
         ..presetManaCost(lvl -> MANACOST)
         ..presetFollowThroughTime(lvl -> CASTTIME)
+        ..presetBaseOrderID(lvl -> orderId)
 
 @compiletime function createSpellbook()
     new AbilityDefinitionSpellBook(SPELL_ITEM_RADAR)
@@ -209,13 +212,13 @@ function areHostilesNearItem(player p, item itm) returns bool
 
 function getRadarSpells() returns LinkedList<Radar>
     return asList(
-        new Radar(SPELL_ID_FIND_TINDER  , "Tinders"      , TOOLTIP_EXT_FIND_TINDER  , "Q", 2, 0, SPECIAL_COLOR),
-        new Radar(SPELL_ID_FIND_STICK   , "Sticks"       , TOOLTIP_EXT_FIND_STICK   , "W", 2, 0, SPECIAL_COLOR),
-        new Radar(SPELL_ID_FIND_MUSHROOM, "Mushrooms"    , TOOLTIP_EXT_FIND_MANA    , "E", 2, 0, SPECIAL_COLOR),
-        new Radar(SPELL_ID_FIND_CLAYBALL, "Clay Balls"   , TOOLTIP_EXT_FIND_CLAYBALL, "R", 2, 0, SPECIAL_COLOR),
-        new Radar(SPELL_ID_FIND_FLINT   , "Flints"       , TOOLTIP_EXT_FIND_FLINT   , "A", 2, 0, SPECIAL_COLOR),
-        new Radar(SPELL_ID_FIND_STONE   , "Stones"       , TOOLTIP_EXT_FIND_STONE   , "S", 3, 0, SPECIAL_COLOR),
-        new Radar(SPELL_ID_FIND_MANA    , "Mana Crystals", TOOLTIP_EXT_FIND_MANA    , "D", 2, 0, SPECIAL_COLOR)
+        new Radar(SPELL_ID_FIND_TINDER  , "Tinders"      , TOOLTIP_EXT_FIND_TINDER  , "Q", 2, 0, SPECIAL_COLOR, "townbellon"),
+        new Radar(SPELL_ID_FIND_STICK   , "Sticks"       , TOOLTIP_EXT_FIND_STICK   , "W", 2, 0, SPECIAL_COLOR, "townbelloff"),
+        new Radar(SPELL_ID_FIND_MUSHROOM, "Mushrooms"    , TOOLTIP_EXT_FIND_MANA    , "E", 2, 0, SPECIAL_COLOR, "unburrow"),
+        new Radar(SPELL_ID_FIND_CLAYBALL, "Clay Balls"   , TOOLTIP_EXT_FIND_CLAYBALL, "R", 2, 0, SPECIAL_COLOR, "unbearform"),
+        new Radar(SPELL_ID_FIND_FLINT   , "Flints"       , TOOLTIP_EXT_FIND_FLINT   , "A", 2, 0, SPECIAL_COLOR, "bearform"),
+        new Radar(SPELL_ID_FIND_STONE   , "Stones"       , TOOLTIP_EXT_FIND_STONE   , "S", 3, 0, SPECIAL_COLOR, "crowform"),
+        new Radar(SPELL_ID_FIND_MANA    , "Mana Crystals", TOOLTIP_EXT_FIND_MANA    , "D", 2, 0, SPECIAL_COLOR, "unrobogoblin")
     )
 
 @compiletime function buildRadarSpells()

@@ -3,11 +3,10 @@ import RegisterEvents
 import LinkedList
 import ClosureTimers
 import TimerUtils
-import TimerDialog
 import UnitExtensions
 import PlayerExtensions
 import UnitPoolExtensions
-import Lodash
+import LodashExtensions
 import GameConfig
 import GameMode
 import Tribe
@@ -41,17 +40,6 @@ public class ClassSelector
     static function findByTotem(unit totem) returns thistype
         return spawners.get(totem)
 
-    static function resetAllianceState()
-        for i = 0 to PLAYER_NEUTRAL_AGGRESSIVE - 1
-            for j = 0 to PLAYER_NEUTRAL_AGGRESSIVE - 1
-                if i != j
-                    SetPlayerAllianceStateBJ(players[i], players[j], bj_ALLIANCE_UNALLIED)
-
-    static function initializeTribes()
-        let numTribes = gameConfig.getNumTribes()
-        for tribeId = 0 to numTribes - 1
-            new Tribe(tribeId)
-
     static function initializeSpawns()
         let randomSpawns = gameConfig.getRandomSpawns()
         let tribes = Tribe.getTribes()
@@ -67,8 +55,6 @@ public class ClassSelector
             new ClassSelector(tribe)
 
     static function startClassSelection()
-        resetAllianceState()
-        initializeTribes()
         initializeSpawns()
 
         var selectionTime = 0
@@ -85,7 +71,7 @@ public class ClassSelector
         ..display(true)
 
         clock.doAfter(selectionTime.toReal()) ->
-            values(spawners).each(spawner -> spawner.endSelection())
+            spawners.values().each(spawner -> spawner.endSelection())
             listeners.execute()
             clockDialog.destr()
 
@@ -93,8 +79,7 @@ public class ClassSelector
         registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SELL) ->
             findByTotem(GetSellingUnit()).handleUnitSold()
 
-        GameMode.onModeSelectionFinish() ->
-            startClassSelection()
+        registerTribeInitializationFinishEvent(function startClassSelection)
 
     Tribe tribe
     let pickers = new LinkedList<unit>()

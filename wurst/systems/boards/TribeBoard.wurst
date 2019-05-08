@@ -4,7 +4,7 @@ import Game
 import ClosureTimers
 import Tribe
 import LinkedList
-import Lodash
+import LodashExtensions
 import LegacyColors
 import PlayerExtensions
 import HashMap
@@ -84,6 +84,7 @@ class TribeBoard
         var row = 0
         for member in members
             let troll = member.getTroll()
+
             board
             .getItem(row, 1)
             ..setValue(HEALTH_COLOR + troll.getHP().toInt().toString())
@@ -117,7 +118,8 @@ class TribeBoard
 
 init
     registerGameStartEvent() ->
-        Tribe.getTribes().each(tribe -> new TribeBoard(tribe))
+        nullTimer() ->
+            Tribe.getTribes().each(tribe -> new TribeBoard(tribe))
 
         registerPlayerEvent(EVENT_PLAYER_LEAVE) ->
             TribeBoard

@@ -1,10 +1,11 @@
-package Axes
+package AxesDefinition
 
 import ItemObjEditing
 import Assets
 import ID
 import LinkedList
 import ObjectIds
+import ToolTipsUtils
 
 constant ABIL_ST = "AItj" //DMG Bonus +5
 constant ABIL_IA = "AItl" //DMG Bonus +8
@@ -22,19 +23,19 @@ constant DESC_COMMON = "Boosts attack damage by {0}. Wielder can cut trees."
 constant TT_COMMON = "Increases the attack damage of the unit by {0} when worn. Wielder can cut trees."
 
 constant DESC_MM = DESC_COMMON + " Can silence opponents."
-constant TT_MM = TT_COMMON + " Can cast silence which has a 225 AoE lasting 4 seconds with a 45 second cooldown. "+
-                             "Every hit burns 6 mana against mages, priests, and their subclasses."
+constant TT_MM = TT_COMMON + " Can cast silence which has a 225 AoE lasting {0} seconds with a {1} second cooldown. ".format(4..toToolTipLightBlue(), 45..toToolTipLightBlue())+
+                             "Every hit burns {0} mana against mages, priests, and their subclasses.".format(6..toToolTipBlue())
 
 constant DESC_BA = DESC_COMMON + " Can cast purge."
 constant TT_BA = TT_COMMON + " Can cast purge, removes all buffs from a target unit, and slows its movement speed by a factor of <A0FA,DataA1>."+
                              " Purged units will slowly regain their movement speed over <A0FA,Dur1> seconds."
 
 class Axe extends ItemDefinition
-    construct(int id, string icon, string model, string name, string desc, string toolTipExt, string damage, int cost, LinkedList<int> tinting, string abilities)
+    construct(int id, string icon, string model, string name, string desc, string toolTipExt, real damage, int cost, LinkedList<int> tinting, string abilities)
         super(id, 'rat3') // Claws of attack +3
         this.setName(name)
         this.setAbilities(commaList("A00W", abilities)) //A00W is the attack tree ability
-        this.setDescription(desc.format(damage))
+        this.setDescription(desc.format(damage.toToolTipRed()))
         this.setTintingColor1Red(tinting.dequeue())
         this.setTintingColor2Green(tinting.dequeue())
         this.setTintingColor3Blue(tinting.dequeue())
@@ -48,13 +49,13 @@ class Axe extends ItemDefinition
         this.setStockMaximum(1)
         this.setDroppedWhenCarrierDies(true)
         this.setTooltipBasic("Trade for {0}".format(name))
-        this.setTooltipExtended(toolTipExt.format(damage))
+        this.setTooltipExtended(toolTipExt.format(damage.toToolTipRed()))
         this.setStockReplenishInterval(damage.toInt() * 15)
         this.setActivelyUsed(true)
 
 @compiletime function createAxes()
-    new Axe(ITEM_STONE_AXE   , Icons.bTNOrcMeleeUpOne              , ST_MODEL , "Stone Axe"   , DESC_COMMON , TT_COMMON , "5"  , 12, asList(255, 255 , 255 ), ABIL_ST)
-    new Axe(ITEM_IRON_AXE    , Icons.bTNOrcMeleeUpTwo              , IA_MODEL , "Iron Axe"    , DESC_COMMON , TT_COMMON , "8"  , 25, asList(255, 255 , 255 ), ABIL_IA)
-    new Axe(ITEM_STEEL_AXE   , Icons.bTNSpiritWalkerAdeptTraining  , SA_MODEL , "Steel Axe"   , DESC_COMMON , TT_COMMON , "12" , 48, asList(120, 140 , 255 ), ABIL_SA)
-    new Axe(ITEM_BATTLE_AXE  , Icons.bTNOrcMeleeUpThree            , BA_MODEL , "Battle Axe"  , DESC_BA     , TT_BA     , "14" , 60, asList(255, 255 , 255 ), ABIL_BA)
-    new Axe(ITEM_MAGE_MASHER , Icons.bTNSpiritWalkerMasterTraining , MM_MODEL , "Mage Masher" , DESC_MM     , TT_MM     , "7"  , 40, asList(255, 65  , 65  ), ABIL_MM)
+    new Axe(ITEM_STONE_AXE   , Icons.bTNOrcMeleeUpOne              , ST_MODEL , "Stone Axe"   , DESC_COMMON , TT_COMMON , 5.  , 12, asList(255, 255 , 255 ), ABIL_ST)
+    new Axe(ITEM_IRON_AXE    , Icons.bTNOrcMeleeUpTwo              , IA_MODEL , "Iron Axe"    , DESC_COMMON , TT_COMMON , 8.  , 25, asList(255, 255 , 255 ), ABIL_IA)
+    new Axe(ITEM_STEEL_AXE   , Icons.bTNSpiritWalkerAdeptTraining  , SA_MODEL , "Steel Axe"   , DESC_COMMON , TT_COMMON , 12. , 48, asList(120, 140 , 255 ), ABIL_SA)
+    new Axe(ITEM_BATTLE_AXE  , Icons.bTNOrcMeleeUpThree            , BA_MODEL , "Battle Axe"  , DESC_BA     , TT_BA     , 14. , 60, asList(255, 255 , 255 ), ABIL_BA)
+    new Axe(ITEM_MAGE_MASHER , Icons.bTNSpiritWalkerMasterTraining , MM_MODEL , "Mage Masher" , DESC_MM     , TT_MM     , 7.  , 40, asList(255, 65  , 65  ), ABIL_MM)

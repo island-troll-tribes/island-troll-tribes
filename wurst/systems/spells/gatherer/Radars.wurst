@@ -22,7 +22,11 @@ constant let MAP_MAGIC_BUFF_ID = 'BHbd'
 constant let RADAR_RANGE_PER_LEVEL = 200.
 constant let MAP_MAGIC_RANGE_BONUS = 1500.
 
-constant string array SPELLBOOKSPELLS = ["XGFT, XGFZ, XGFR, XGFC", "XGFT, XGFZ, XGFR, XGFC, XGFF, XGFS", "XGFT, XGFZ, XGFR, XGFC, XGFF, XGFS, XGFM"]
+constant string array SPELLBOOKSPELLS = [commaList(SPELL_ID_FIND_TINDER, SPELL_ID_FIND_STICK, SPELL_ID_FIND_MUSHROOM, SPELL_ID_FIND_CLAYBALL),
+                                         commaList(SPELL_ID_FIND_TINDER, SPELL_ID_FIND_STICK, SPELL_ID_FIND_MUSHROOM, SPELL_ID_FIND_CLAYBALL,
+                                          SPELL_ID_FIND_FLINT, SPELL_ID_FIND_STONE),
+                                         commaList(SPELL_ID_FIND_TINDER, SPELL_ID_FIND_STICK, SPELL_ID_FIND_MUSHROOM, SPELL_ID_FIND_CLAYBALL,
+                                          SPELL_ID_FIND_FLINT, SPELL_ID_FIND_STONE, SPELL_ID_FIND_MANA)]
 
 constant let TOOLTIP_EXT_FIND_STICK    = "Pings all nearby sticks in the minimap and reveals them for a short duration. Ignores items near enemies."
 constant let TOOLTIP_EXT_FIND_TINDER   = "Pings all nearby tinder in the minimap and reveals them for a short duration. Ignores items near enemies."
@@ -61,8 +65,9 @@ class Radar
     string toolTip  = "placeholder"
     string toolTipExt  = "placeholder"
     string orderId = "channel"
+    string icon = "ReplaceableTextures\\CommandButtons\\BTN{0}.blp"
 
-    construct(int id, string itemName, string toolTipExt, string hotkey, int buttonPosX, int buttonPosY, string color, string orderId)
+    construct(int id, string itemName, string toolTipExt, string icon, string hotkey, int buttonPosX, int buttonPosY, string color, string orderId)
         this.id = id
         this.hotkey   = hotkey
         this.name     += itemName
@@ -71,6 +76,7 @@ class Radar
         this.buttonPosY  = buttonPosY
         this.toolTip  = GENERAL_COLOR+"[" + color + hotkey + GENERAL_COLOR + "] - " + this.name + "|r"
         this.orderId = orderId
+        this.icon = this.icon.format(icon)
 
     function buildRadarSpell()
         new ChannelAbilityPreset(id, 1, true)
@@ -80,9 +86,9 @@ class Radar
         ..setButtonPositionNormalY(buttonPosY)
         ..setButtonPositionResearchX(buttonPosX)
         ..setButtonPositionResearchY(buttonPosY)
-        ..setIconNormal(SPELL_ICON)
-        ..setIconResearch(SPELL_ICON)
-        ..setIconTurnOff(SPELL_ICON)
+        ..setIconNormal(icon)
+        ..setIconResearch(icon)
+        ..setIconTurnOff(icon)
         ..setHeroAbility(false)
         ..setItemAbility(false)
         ..setHotkeyNormal(hotkey)
@@ -212,13 +218,13 @@ function areHostilesNearItem(player p, item itm) returns bool
 
 function getRadarSpells() returns LinkedList<Radar>
     return asList(
-        new Radar(SPELL_ID_FIND_TINDER  , "Tinders"      , TOOLTIP_EXT_FIND_TINDER  , "Q", 2, 0, SPECIAL_COLOR, "townbellon"),
-        new Radar(SPELL_ID_FIND_STICK   , "Sticks"       , TOOLTIP_EXT_FIND_STICK   , "W", 2, 0, SPECIAL_COLOR, "townbelloff"),
-        new Radar(SPELL_ID_FIND_MUSHROOM, "Mushrooms"    , TOOLTIP_EXT_FIND_MANA    , "E", 2, 0, SPECIAL_COLOR, "waterelemental"),
-        new Radar(SPELL_ID_FIND_CLAYBALL, "Clay Balls"   , TOOLTIP_EXT_FIND_CLAYBALL, "R", 2, 0, SPECIAL_COLOR, "unbearform"),
-        new Radar(SPELL_ID_FIND_FLINT   , "Flints"       , TOOLTIP_EXT_FIND_FLINT   , "A", 2, 0, SPECIAL_COLOR, "bearform"),
-        new Radar(SPELL_ID_FIND_STONE   , "Stones"       , TOOLTIP_EXT_FIND_STONE   , "S", 3, 0, SPECIAL_COLOR, "crowform"),
-        new Radar(SPELL_ID_FIND_MANA    , "Mana Crystals", TOOLTIP_EXT_FIND_MANA    , "D", 2, 0, SPECIAL_COLOR, "unrobogoblin")
+        new Radar(SPELL_ID_FIND_TINDER   , "Tinders"       , TOOLTIP_EXT_FIND_TINDER   , "ShimmerWeed"     , "Q", 2, 0, SPECIAL_COLOR, "taunt"),
+        new Radar(SPELL_ID_FIND_STICK    , "Sticks"        , TOOLTIP_EXT_FIND_STICK    , "NatureTouchGrow" , "W", 2, 0, SPECIAL_COLOR, "tranquility"),
+        new Radar(SPELL_ID_FIND_MUSHROOM , "Mushrooms"     , TOOLTIP_EXT_FIND_MANA     , "Mushroom"        , "E", 2, 0, SPECIAL_COLOR, "waterelemental"),
+        new Radar(SPELL_ID_FIND_CLAYBALL , "Clay Balls"    , TOOLTIP_EXT_FIND_CLAYBALL , "ThunderLizardEgg", "R", 2, 0, SPECIAL_COLOR, "unbearform"),
+        new Radar(SPELL_ID_FIND_FLINT    , "Flints"        , TOOLTIP_EXT_FIND_FLINT    , "StaffOfSanctuary", "A", 2, 0, SPECIAL_COLOR, "bearform"),
+        new Radar(SPELL_ID_FIND_STONE    , "Stones"        , TOOLTIP_EXT_FIND_STONE    , "GolemStormBolt"  , "S", 3, 0, SPECIAL_COLOR, "unflamingarrows"),
+        new Radar(SPELL_ID_FIND_MANA     , "Mana Crystals" , TOOLTIP_EXT_FIND_MANA     , "HealthStone"     , "D", 2, 0, SPECIAL_COLOR, "unrobogoblin")
     )
 
 @compiletime function buildRadarSpells()

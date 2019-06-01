@@ -1,0 +1,53 @@
+package CloaksDefinition
+
+import ArmorsDefinition
+import ItemObjEditing
+import ID
+import LinkedList
+import ToolTipsUtils
+
+constant ABIL_FL = "A0A2,AId3,A0E6" // Immolation,+ 3 Armor, +3 all stats
+constant ABIL_FR = "A0FP,AId3,A0E6" // Frost Cast,+ 3 Armor, +3 all stats
+constant ABIL_HE = "A0FQ,AId3,A0E6" // Healing Cast,+ 3 Armor, +3 all stats
+constant ABIL_MA = "AM0q,AId3,A0E6" // Mana Cast,+ 3 Armor, +3 all stats
+
+constant ICON_PATH = "ReplaceableTextures\\CommandButtons\\BTN{0}.blp"
+
+constant FLAMES_ICON  = ICON_PATH.format("CloakOfInferno")
+constant FROST_ICON   = ICON_PATH.format("CloakOfFrost")
+constant HEALING_ICON = ICON_PATH.format("CloakOfHealing")
+constant MANA_ICON    = ICON_PATH.format("CloakOfMana")
+
+constant MODEL = "Models\\Cloak.mdx"
+
+constant COMMON_TT  = "Provides +{0} armor and +{1} all stats, and "
+constant FLAMES_TT  = COMMON_TT + "burns nearby enemies within melee range for {2} damage per second."
+constant FROST_TT   = COMMON_TT + "can be cast to chill all nearby enemy units dealing {2} dmg, and slowing their movement and attack speeds by {3} for {4} seconds." + makeToolTipCooldown(40)
+constant HEALING_TT = COMMON_TT + "can be cast to heal all nearby allies by {2} HP." + makeToolTipCooldown(35)
+constant MANA_TT    = COMMON_TT + "can be cast to restore {2} mana to nearby allies." + makeToolTipCooldown(35)
+
+
+class CloakDefinition extends ArmorDefinition
+    construct(int id, string icon, string name, string toolTipExt, int cost, LinkedList<int> tinting, string abilities)
+        super(id, icon, MODEL, name, toolTipExt, toolTipExt, cost, tinting, abilities)
+        this.setCooldownGroup("AIms")
+        this.setActivelyUsed(true)
+        this.setScalingValue(0.80)
+
+function string.flamesToolTipFormat(real armor, real stats, real dmg) returns string
+    return this.format(armor.toToolTipGreen(), stats.toToolTipGreen(), dmg.toToolTipRed())
+
+function string.frostToolTipFormat(real armor, real stats, real dmg, real msReduc, real duration) returns string
+    return this.format(armor.toToolTipGreen(), stats.toToolTipGreen(), dmg.toToolTipRed(), msReduc.toToolTipOrange(), duration.toToolTipLightBlue())
+
+function string.healingToolTipFormat(real armor, real stats, real healingAmount) returns string
+    return this.format(armor.toToolTipGreen(), stats.toToolTipGreen(), healingAmount.toToolTipGreen())
+
+function string.manaToolTipFormat(real armor, real stats, real manaAmount) returns string
+    return this.format(armor.toToolTipGreen(), stats.toToolTipGreen(), manaAmount.toToolTipLightBlue())
+
+@compiletime function createCloaks()
+    new CloakDefinition(ITEM_CLOAK_OF_FLAMES  , FLAMES_ICON  , "Cloak of Flames"  , FLAMES_TT  .flamesToolTipFormat  (3,3, 7            ) , 68, asList(255 , 0   , 0   ), ABIL_FL )
+    new CloakDefinition(ITEM_CLOAK_OF_FROST   , FROST_ICON   , "Cloak of Frost"   , FROST_TT   .frostToolTipFormat   (3,3, 20  , 0.35, 4) , 74, asList(0   , 0   , 255 ), ABIL_FR )
+    new CloakDefinition(ITEM_CLOAK_OF_HEALING , HEALING_ICON , "Cloak of Healing" , HEALING_TT .healingToolTipFormat (3,3, 150          ) , 68, asList(0   , 255 , 0   ), ABIL_HE )
+    new CloakDefinition(ITEM_CLOAK_OF_MANA    , MANA_ICON    , "Cloak of Mana"    , MANA_TT    .manaToolTipFormat    (3,3, 100          ) , 68, asList(56 , 0   , 128 ), ABIL_MA )

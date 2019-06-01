@@ -1,0 +1,93 @@
+package BasicMaterials
+
+import ItemObjEditing
+import ID
+import LinkedList
+import Assets
+
+constant ICON_PATH = "ReplaceableTextures\\CommandButtons\\BTN{0}.blp"
+
+constant TINDER_ICON    = ICON_PATH.format("ShimmerWeed")
+constant STICK_ICON     = ICON_PATH.format("NatureTouchGrow")
+constant FLINT_ICON     = ICON_PATH.format("StaffOfSanctuary")
+constant MUSHROOM_ICON  = ICON_PATH.format("Mushroom")
+constant CLAY_ICON      = ICON_PATH.format("ThunderLizardEgg")
+constant STONE_ICON     = ICON_PATH.format("GolemStormBolt")
+constant ELK_HIDE_ICON  = ICON_PATH.format("HideElk")
+constant WOLF_HIDE_ICON = ICON_PATH.format("HideWolf")
+constant BEAR_HIDE_ICON = ICON_PATH.format("HideBear")
+constant BONE_ICON      = ICON_PATH.format("Bone")
+constant MAGIC_ICON     = ICON_PATH.format("MoonStone")
+constant MC_ICON        = ICON_PATH.format("ManaStone")
+
+constant TINDER_MODEL    = Doodads.ruins_Shrub1
+constant STICK_MODEL     = Doodads.felwoodLogStraight
+constant FLINT_MODEL     = Doodads.rubbleRock5
+constant MUSHROOM_MODEL  = Doodads.shroomsBlue
+constant CLAY_MODEL      = Objects.thunderLizardEgg1
+constant STONE_MODEL     = Doodads.lords_Rock6
+constant ELK_HIDE_MODEL  = "Models\\HideElk.mdx"
+constant WOLF_HIDE_MODEL = "Models\\HideWolf.mdx"
+constant BEAR_HIDE_MODEL = "Models\\HideBear.mdx"
+constant BONE_MODEL      = Doodads.skull0
+constant MAGIC_MODEL     = Doodads.icecrown_Crystal3
+constant MC_MODEL        = Doodads.eyeOfSargeras
+
+constant TT_TINDER    = "Some small leaves and twigs. Used in camp fire (Tinder Flint Stick), or for making ensnare traps and nets."
+constant TT_STICK     = "Increases the damage of the troll by 1 when carried. Used in Troll hut, Storage hut, Witch Doctors hut, camp fire, tent, and tannery. Can make various items in the armory too."
+constant TT_FLINT     = "Used for starting fires or making iron and steel in the armory."
+constant TT_MUSHROOM  = "Erk, this is clearly not edible, should be used to craft poison."
+constant TT_CLAY      = "A ball of clay that can be used for building."
+constant TT_STONE     = "A sturdy stone. Can be thrown at enemies or used in buildings."
+constant TT_ELK_HIDE  = "A hide from an Elk, can be tanned to make armor."
+constant TT_WOLF_HIDE = "A hide from a Wolf, can be tanned to make armor."
+constant TT_BEAR_HIDE = "A hide from a Bear, can be tanned to make armor."
+constant TT_BONE      = "A sharp bone that can be used to cut an opponent adding 2 to damage. Can be used to make bone armor and weapons."
+constant TT_MAGIC     = "A very rare and unpredictable activated Mana Complex. Use with extreme caution. Who knows what it will do."
+constant TT_MC        = "A glowing crystal of mana. Used to craft magic gear."
+
+public class BasicMaterialDefinition extends ItemDefinition
+    construct(int id, string icon, string model, string name, string toolTipExt, int cost, LinkedList<int> tinting, string abilities, real scale)
+        super(id, 'ratc') //Shimmerweed
+        this.setAbilities(abilities)
+        this.setInterfaceIcon(icon)
+        this.setDescription(toolTipExt)
+        this.setDroppedWhenCarrierDies(true)
+        this.setTintingColor1Red(tinting.dequeue())
+        this.setTintingColor2Green(tinting.dequeue())
+        this.setTintingColor3Blue(tinting.dequeue())
+        this.setModelUsed(model)
+        this.setGoldCost(0)
+        this.setHotkey("")
+        this.setLevel(0)
+        this.setLumberCost(cost)
+        this.setName(name)
+        this.setTooltipBasic("Trade for " + name)
+        this.setTooltipExtended(toolTipExt)
+        this.setScalingValue(scale)
+        this.setPerishable(true)
+
+class ActivableMaterialDefinition extends BasicMaterialDefinition
+    construct(int id, string icon, string model, string name, string toolTipExt, int cost, LinkedList<int> tinting, string abilities, real scale)
+        super(id, icon, model, name, toolTipExt, cost, tinting, abilities, scale)
+        this.setActivelyUsed(true)
+        this.setNumberofCharges(1)
+        if name == "Stone"
+            this.setCooldownGroup("A00V") // Spear
+        else if name == "Magic"
+            this.setCooldownGroup("Asp6")
+
+
+@compiletime function createBasicMaterial()
+    new BasicMaterialDefinition     (ITEM_TINDER           , TINDER_ICON    , TINDER_MODEL    , "Tinder"       , TT_TINDER    , 2  , asList(255 , 255 , 255 ), ""     , 0.80 )
+    new BasicMaterialDefinition     (ITEM_STICK            , STICK_ICON     , STICK_MODEL     , "Stick"        , TT_STICK     , 3  , asList(255 , 255 , 255 ), "AItg" , 0.40 )
+    new BasicMaterialDefinition     (ITEM_FLINT            , FLINT_ICON     , FLINT_MODEL     , "Flint"        , TT_FLINT     , 3  , asList(255 , 255 , 255 ), ""     , 0.50 )
+    new BasicMaterialDefinition     (ITEM_MUSHROOM         , MUSHROOM_ICON  , MUSHROOM_MODEL  , "Mushroom"     , TT_MUSHROOM  , 2  , asList(255 , 255 , 255 ), ""     , 0.50 )
+    new BasicMaterialDefinition     (ITEM_CLAY_BALL        , CLAY_ICON      , CLAY_MODEL      , "Clay Ball"    , TT_CLAY      , 3  , asList(255 , 255 , 255 ), ""     , 1.50 )
+    new ActivableMaterialDefinition (ITEM_STONE            , STONE_ICON     , STONE_MODEL     , "Stone"        , TT_STONE     , 5  , asList(255 , 255 , 255 ), "ACtb" , 0.33 )
+    new BasicMaterialDefinition     (ITEM_ELK_HIDE         , ELK_HIDE_ICON  , ELK_HIDE_MODEL  , "Elk Hide"     , TT_ELK_HIDE  , 9  , asList(180 , 180 , 180 ), ""     , 0.90 )
+    new BasicMaterialDefinition     (ITEM_JUNGLE_WOLF_HIDE , WOLF_HIDE_ICON , WOLF_HIDE_MODEL , "Wolf Hide"    , TT_WOLF_HIDE , 15 , asList(150 , 190 , 140 ), ""     , 0.90 )
+    new BasicMaterialDefinition     (ITEM_JUNGLE_BEAR_HIDE , BEAR_HIDE_ICON , BEAR_HIDE_MODEL , "Bear Hide"    , TT_BEAR_HIDE , 21 , asList(150 , 255 , 150 ), ""     , 1.20 )
+    new BasicMaterialDefinition     (ITEM_BONE             , BONE_ICON      , BONE_MODEL      , "Bone"         , TT_BONE      , 3  , asList(255 , 255 , 255 ), "AIth" , 1.00 )
+    new ActivableMaterialDefinition (ITEM_MAGIC            , MAGIC_ICON     , MAGIC_MODEL     , "Magic"        , TT_MAGIC     , 5  , asList(0   , 0   , 255 ), "A0GL" , 0.30 )
+    new BasicMaterialDefinition     (ITEM_MANA_CRYSTAL     , MC_ICON        , MC_MODEL        , "Mana Crystal" , TT_MC        , 5  , asList(255 , 255 , 255 ), ""     , 0.25 )

@@ -1,0 +1,28 @@
+package MagicSeedDefinition
+
+import BuildingConstructAbility
+import ItemObjEditing
+import ID
+import LinkedList
+import Assets
+import ScrollsDefinition
+import ObjectIds
+
+constant ABIL_ID = compiletime(ABIL_ID_GEN.next())
+
+constant ICON_PATH = "ReplaceableTextures\\CommandButtons\\BTN{0}.blp"
+
+constant ICON  = ICON_PATH.format("Root")
+
+constant MODEL = Objects.crystalShard
+
+constant TOOLTIP  = "This seed can grow a tree really fast when planted."
+
+class MagicSeedDefinition extends ScrollDefinition
+    construct(int id, string icon, string model, string name, string toolTipExt, int cost, LinkedList<int> tinting, string abilities, real scale)
+        super(id, icon, model, name, toolTipExt, cost, tinting, abilities, scale, "")
+        this.setNumberofCharges(2)
+
+@compiletime function createMagicSeed()
+    new BuildAbilityDefinition(ABIL_ID, ICON, "Magic Seed", 5.0, UNIT_BUILDING_TREE)
+    new MagicSeedDefinition(ITEM_MAGIC_SEED, ICON, MODEL, "Magic Seed", TOOLTIP, 8, asList(0, 255, 0), commaList(ABIL_ID), 0.65)

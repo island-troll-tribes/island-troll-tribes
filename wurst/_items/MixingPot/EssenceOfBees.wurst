@@ -6,13 +6,20 @@ import ClosureTimers
 import Orders
 import GeometryUtils
 import TerrainUtils
-import DummyCaster
+import InstantDummyCaster
+import ItemObjEditing
+import Assets
+import ObjectIds
 
-let HIVE_SPAWN_INTERVAL = 10.0
-let LOCATION_ATTEMPTS = 20
-let HIVE_SPAWN_MIN_RADIUS = 0.
-let HIVE_SPAWN_MAX_RADIUS = 200.
-let BEEHIVE_ABILITY_ID = 'A02C'
+constant HIVE_SPAWN_INTERVAL = 10.0
+constant LOCATION_ATTEMPTS = 20
+constant HIVE_SPAWN_MIN_RADIUS = 0.
+constant HIVE_SPAWN_MAX_RADIUS = 200.
+constant BEEHIVE_ABILITY_ID = 'A02C'
+
+constant ICON = Icons.bTNCrate
+constant MODEL = Doodads.emptyCrates1
+constant TT = "This is really good. Dont waste it. One primary hive releases bees, and if it is not killed, spawns lesser hives around it."
 
 function onEobEnter(unit hive)
     let hivePos = hive.getPos()
@@ -31,11 +38,22 @@ function spawnChildHive(player owner, vec2 hivePos)
         var randomDistance = GetRandomReal(HIVE_SPAWN_MIN_RADIUS, HIVE_SPAWN_MAX_RADIUS)
         var spawnPos = hivePos.polarOffset(randomAngle, randomDistance)
         if spawnPos.isTerrainWalkable()
-            new DummyCaster()
-                ..owner(owner)
-                ..origin(spawnPos)
-                ..castPoint(BEEHIVE_ABILITY_ID, 1, Orders.summonfactory, spawnPos)
+            InstantDummyCaster.castPoint(owner, BEEHIVE_ABILITY_ID, 1, Orders.summonfactory, spawnPos)
             break
+
+@compiletime function createBeesHiveItem()
+    new ItemDefinition(ITEM_ESSENCE_BEES, 'tgrh')
+    ..setRequirements("")
+    ..setAbilities("A03Y")
+    ..setLumberCost(45)
+    ..setName("Essences of Bees")
+    ..setGoldCost(0)
+    ..setCooldownGroup("AIin")
+    ..setTooltipBasic("Trade for Essences of Bees")
+    ..setInterfaceIcon(ICON)
+    ..setModelUsed(MODEL)
+    ..setTooltipExtended(TT)
+
 
 init
     onEnter() ->

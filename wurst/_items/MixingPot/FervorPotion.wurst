@@ -8,10 +8,12 @@ import InstantDummyCaster
 import ClosureEvents
 import Orders
 import ChannelAbilityPreset
+import BuffObjEditing
 
 constant ABIL_CAST  = compiletime(ABIL_ID_GEN.next())
 constant ABIL_AS  = compiletime(ABIL_ID_GEN.next())
 constant ABIL_DAMAGE  = compiletime(ABIL_ID_GEN.next())
+constant BUFF  = compiletime(BUFF_ID_GEN.next())
 //constant ABIL = "A03Z"
 constant ICON = ICON_PATH.format("GreaterInvulneralbility")
 constant MODEL = "Models\\PotionInvulnerability.mdl"
@@ -19,7 +21,7 @@ constant MODEL = "Models\\PotionInvulnerability.mdl"
 constant AS_BOOST = 0.20
 constant DMG_BOOST = 8.
 constant ARMOR_BOOST = 6
-constant DMG_SEC = 12.
+constant DMG_SEC = 9.
 constant DURATION = 20.
 constant COOLDOWN = 5.
 
@@ -27,6 +29,13 @@ constant TT = "Increase the consumer attack speed by {0}, damage by {1} and armo
                .format(AS_BOOST.toToolTipOrange(), DMG_BOOST.toToolTipRed(), ARMOR_BOOST.toReal().toToolTipGreen(), DMG_SEC.toToolTipRed()) + makeToolTipDuration(DURATION, COOLDOWN)
 
 @compiletime function createAbil()
+    new BuffDefinition(BUFF, 'Bmil')
+    ..setIcon(ICON)
+    ..setArtTarget(1, "Models\\RageBuff.mdx")
+    ..setTargetAttachmentPoint0(1, "origin")
+    ..setTooltipNormal(1, "Metabolism Boost")
+    ..setTooltipNormalExtended(1, "This unit just drank a stimulant its attack speed damage and armor are increased. The feedback deals damage to the consumer.")
+
     new ChannelAbilityPreset(ABIL_CAST, 1, true)
     ..setDummyAbility()
     ..setItemAbility(true)
@@ -45,7 +54,7 @@ constant TT = "Increase the consumer attack speed by {0}, damage by {1} and armo
     ..setDurationNormal(1, DURATION)
     ..setAttackSpeedBonus(1, AS_BOOST)
     ..setDamageperSecond(1, DMG_SEC)
-    ..setBuffs(1, "B00O") // Pumped
+    ..setBuffs(1, "") // Pumped
     ..setEditorSuffix("(Wurst)")
 
     new AbilityDefinitionBattleRoar(ABIL_DAMAGE)
@@ -58,7 +67,7 @@ constant TT = "Increase the consumer attack speed by {0}, damage by {1} and armo
     ..setDurationNormal(1, DURATION)
     ..setDamageIncrease(1, DMG_BOOST)
     ..setDefenseIncrease(1, ARMOR_BOOST)
-    ..setBuffs(1, "B00O") //
+    ..setBuffs(1, BUFF.toRawCode()) //
     ..setEditorSuffix("(Wurst)")
 
 @compiletime function createFervorPotion()

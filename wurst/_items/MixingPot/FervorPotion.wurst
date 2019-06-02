@@ -1,0 +1,72 @@
+package FervorPotion
+
+import PotionsDefinition
+import ID
+import LinkedList
+import ToolTipsUtils
+import InstantDummyCaster
+import ClosureEvents
+import Orders
+import ChannelAbilityPreset
+
+constant ABIL_CAST  = compiletime(ABIL_ID_GEN.next())
+constant ABIL_AS  = compiletime(ABIL_ID_GEN.next())
+constant ABIL_DAMAGE  = compiletime(ABIL_ID_GEN.next())
+//constant ABIL = "A03Z"
+constant ICON = ICON_PATH.format("GreaterInvulneralbility")
+constant MODEL = "Models\\PotionInvulnerability.mdl"
+
+constant AS_BOOST = 0.20
+constant DMG_BOOST = 8.
+constant ARMOR_BOOST = 6
+constant DMG_SEC = 12.
+constant DURATION = 20.
+constant COOLDOWN = 5.
+
+constant TT = "Increase the consumer attack speed by {0}, damage by {1} and armor by {2}. This potion put alot of stress on the consumer body, who takes {3} damage per seconds."
+               .format(AS_BOOST.toToolTipOrange(), DMG_BOOST.toToolTipRed(), ARMOR_BOOST.toReal().toToolTipGreen(), DMG_SEC.toToolTipRed()) + makeToolTipDuration(DURATION, COOLDOWN)
+
+@compiletime function createAbil()
+    new ChannelAbilityPreset(ABIL_CAST, 1, true)
+    ..setDummyAbility()
+    ..setItemAbility(true)
+    ..setHeroAbility(false)
+    ..setCooldown(1, COOLDOWN)
+    ..setName("Fervor Cast")
+    ..setBaseOrderID(1, "bloodlust")
+    ..setEditorSuffix("(Wurst)")
+
+    new AbilityDefinitionUnholyFrenzycreep(ABIL_AS)
+    ..setDummyAbility()
+    ..setName("Fervor Attack Speed Boost")
+    ..setHeroAbility(false)
+    ..setItemAbility(true)
+    ..setDurationHero(1, DURATION)
+    ..setDurationNormal(1, DURATION)
+    ..setAttackSpeedBonus(1, AS_BOOST)
+    ..setDamageperSecond(1, DMG_SEC)
+    ..setBuffs(1, "B00O") // Pumped
+    ..setEditorSuffix("(Wurst)")
+
+    new AbilityDefinitionBattleRoar(ABIL_DAMAGE)
+    ..setDummyAbility()
+    ..setName("Fervor Damage/Armor Boost")
+    ..setHeroAbility(false)
+    ..setItemAbility(true)
+    ..setAreaofEffect(1, 1)
+    ..setDurationHero(1, DURATION)
+    ..setDurationNormal(1, DURATION)
+    ..setDamageIncrease(1, DMG_BOOST)
+    ..setDefenseIncrease(1, ARMOR_BOOST)
+    ..setBuffs(1, "B00O") //
+    ..setEditorSuffix("(Wurst)")
+
+@compiletime function createFervorPotion()
+    new PotionDefinition(ITEM_NEW_FERVOR_POTION, ICON, MODEL, "Fervor Potion", TT, 25, asList(255, 255, 255), commaList(ABIL_CAST), 1.0, commaList(ABIL_CAST), 120)
+
+init
+    EventListener.onCast(ABIL_CAST) (unit caster) ->
+        InstantDummyCaster.castTarget(caster.getOwner(), ABIL_AS, 1, Orders.unholyfrenzy, caster)
+        InstantDummyCaster.castImmediate(caster.getOwner(), ABIL_DAMAGE, 1, Orders.battleroar, caster.getPos())
+        CreateTextTag()..setColor(255, 0, 0, 100)..setLifespan(4)..setPos(caster.getPos3Fly())..setPermanent(false)..setVelocity(100, 100)..setVisibility(true)
+        ..setText("TAZ'DINGO", 8)..setFadepoint(0.7)

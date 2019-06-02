@@ -1,0 +1,45 @@
+package AnabolicPotion
+
+import PotionsDefinition
+import ID
+import LinkedList
+import AbilityObjEditing
+import ObjectIds
+import ToolTipsUtils
+import BuffObjEditing
+import Assets
+
+constant ABIL  = compiletime(ABIL_ID_GEN.next())
+constant BUFF  = compiletime(BUFF_ID_GEN.next())
+//constant ABIL  = "AIsp"
+constant ICON  = ICON_PATH.format("PotionRed")
+constant MODEL = "Models\\PotionRed.mdl"
+
+constant DURATION = 7.
+constant COOLDOWN = 35.
+constant TT    = "Boost the consumer movement speed to the max." + makeToolTipDuration(DURATION, COOLDOWN)
+
+@compiletime function createAbil()
+    new AbilityDefinitionItemSpeed(ABIL)
+    ..setName("Max Speed")
+    ..setMovementSpeedIncrease(1, 5)
+    ..setMissileSpeed(900)
+    ..setHeroAbility(false)
+    ..setItemAbility(true)
+    ..setDurationHero(1, DURATION)
+    ..setDurationNormal(1, DURATION)
+    ..setCooldown(1, COOLDOWN)
+    ..setBuffs(1, BUFF.toRawCode())
+    ..setEditorSuffix("(Wurst)")
+
+    new BuffDefinition(BUFF, 'Bspe') // Speed Bonus
+    ..setName(1, "Speed Boost")
+    ..setArtTarget(1, Abilities.speedTarget)
+    ..setTooltipNormal(1, "Speed Boost")
+    ..setTooltipNormalExtended(1, "This unit got a speed boost, moving faster.")
+    ..setTargetAttachments(1, 0)
+    ..setTargetAttachmentPoint0(1, "")
+    ..setTargetAttachmentPoint1(1, "")
+
+@compiletime function createAnabolicPotion()
+    new PotionDefinition(ITEM_ANABOLIC_POTION, ICON, MODEL, "Anabolic Potion", TT, 18, asList(255, 255, 255), commaList(ABIL), 0.70, "AIsp", 120)

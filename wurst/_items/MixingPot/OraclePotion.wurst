@@ -3,7 +3,7 @@ package OraclePotion
 import AbilityObjEditing
 import AbilityObjectCreationUtils
 import BuffObjEditing
-import ObjectIdGenerator
+import PotionsDefinition
 import RegisterEvents
 import HashMap
 import TimerUtils
@@ -11,30 +11,32 @@ import ObjectIds
 import ClosureTimers
 import ID
 import Assets
+import LinkedList
 import ItemObjEditing
-
+import ToolTipsUtils
 
 constant ABILITY_ID = compiletime(ABIL_ID_GEN.next())
 constant ABILITY_DUMMY_ID = compiletime(ABIL_ID_GEN.next())
 
-constant MODEL_PATH = "Models\\PotionOracle.mdx"
+constant ICON = Icons.bTNGreaterInvisibility
+constant MODEL = "Models\\PotionOracle.mdx"
 
 constant BUFF_ID = compiletime(BUFF_ID_GEN.next())
 constant BUFF_AURA_ID = compiletime(ABIL_ID_GEN.next())
 constant SPELLBOOK_ABILITY_ID = compiletime(createHiddenSpellbookWithAbilities("{0},{1}".format(toRawCode(ABILITY_ID), toRawCode(BUFF_AURA_ID))))
 
-
 constant DURATION = 20.
 constant COOLDOWN = 20.
 
-@compiletime function createTrueSightBuff()
+constant TT = "The consumer of this potion gain true sight, allowing him to see stealthed unit. Good versus thief & vision ward." + makeToolTipDuration(DURATION, COOLDOWN)
+
+@compiletime function createAbilities()
     new BuffDefinition(BUFF_ID, 'Bstt')
     ..setArtTarget(1, "")
     ..setTooltipNormal(1, "True Sight")
     ..setTooltipNormalExtended(1, "This unit can see invisible unit.")
     ..setIcon(Icons.pASBTNMagicalSentry)
 
-@compiletime function createDummyAbility()
     new AbilityDefinitionWindWalk(ABILITY_DUMMY_ID)
     ..setArtCaster("")
     ..setArtEffect("")
@@ -58,19 +60,17 @@ constant COOLDOWN = 20.
     ..setDurationNormal(1, 0.01)
     ..setEffectSound("")
 
-@compiletime function createDummyAura()
     new AbilityDefinitionAuraSlow(BUFF_AURA_ID)
     ..setArtTarget(Abilities.magicSentryCaster)
     ..setTargetAttachmentPoint("overhead")
     ..setMovementSpeedFactor(1, 0)
     ..setAreaofEffect(1, 0)
     ..setBuffs(1, toRawCode(BUFF_ID))
-    ..setDurationHero(1, 20)
-    ..setDurationNormal(1, 20)
+    ..setDurationHero(1, DURATION)
+    ..setDurationNormal(1, DURATION)
     ..setTargetsAllowed(1, "self")
     ..setName("True Sight")
 
-@compiletime function createTrueSightSpell()
     new AbilityDefinition(ABILITY_ID, 'Atru')
     ..setCastRange(1, 900)
     ..setName("Oracle clarity")
@@ -78,27 +78,15 @@ constant COOLDOWN = 20.
     ..setTooltipNormalExtended(1, "Reveal invisible unit")
     ..setBuffs(1, "Binf")
     ..setItemAbility(true)
-    ..setDurationHero(1, 20)
-    ..setDurationNormal(1, 20)
+    ..setDurationHero(1, DURATION)
+    ..setDurationNormal(1, DURATION)
     ..setButtonPositionNormalY(0)
     ..setArtCaster(Abilities.magicSentryCaster)
     ..setCasterAttachmentPoint("overhead")
     ..setCasterAttachments(0)
 
 @compiletime function createOraclePotion()
-    new ItemDefinition(ITEM_ORACLE_POTION, 'pinv')
-    ..setName("Oracle Potion")
-    ..setAbilities(toRawCode(ABILITY_DUMMY_ID))
-    ..setActivelyUsed(true)
-    ..setTooltipExtended("The consumer of this potion gain the true sight buff for 20 seconds, allowing him to see stealthed unit. Good versus thief & vision ward")
-    ..setModelUsed(MODEL_PATH)
-    ..setLumberCost(11)
-    ..setGoldCost(0)
-    ..setScalingValue(1)
-    ..setInterfaceIcon(Icons.bTNGreaterInvisibility)
-    ..setDescription("Give true sight")
-    ..setDroppedWhenCarrierDies(true)
-    ..setNumberofCharges(1)
+    new PotionDefinition(ITEM_ORACLE_POTION, ICON, MODEL, "Oracle Potion", TT, 11, asList(255, 255, 255), ABILITY_DUMMY_ID.toRawCode(), 1, ABILITY_DUMMY_ID.toRawCode(), 90)
 
 HashMap<unit, timer> removalTimers = new HashMap<unit,timer>()
 

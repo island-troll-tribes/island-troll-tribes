@@ -6,14 +6,26 @@ import HashMap
 import ClosureTimers
 import ClosureForGroups
 import HealingSystem
+import PotionsDefinition
+import Assets
+import ChannelAbilityPreset
+import LinkedList
+import ToolTipsUtils
 
-public let DISEASE_HEALING_REDUCTION_FACTOR = 0.3
-let DURATION = 25.
-let DAMAGE_TICK_INTERVAL = 0.5
-let DAMAGE_PER_SECOND = 3
-let AOE = 200.
-let EFFECT_PATH = "Abilities\\Spells\\Undead\\PlagueCloud\\PlagueCloudCaster.mdl"
+public constant DISEASE_HEALING_REDUCTION_FACTOR = 0.3
+constant DURATION = 25.
+constant DAMAGE_TICK_INTERVAL = 0.5
+constant DAMAGE_PER_SECOND = 3
+constant AOE = 200.
+constant EFFECT_PATH = Abilities.plagueCloudCaster
 HashMap<unit, DiseaseInstance> diseaseInstances = new HashMap<unit,DiseaseInstance>()
+
+constant ICON = ICON_PATH.format("PotionGreen")
+constant MODEL = "Models\\PotionGreen.mdl"
+constant TT = "Biological warfare! Throw at an enemy to give him and all units in a 200 radius of them a disease. Dealing "+
+              "{0} damage per second. Reduces healing received from items and potions by {1}. Last {2} seconds."
+              .format(DAMAGE_PER_SECOND.toReal().toToolTipRed(), DISEASE_HEALING_REDUCTION_FACTOR.toToolTipOrange(), DURATION.toToolTipLightBlue())
+
 
 public function isUnitDiseased(unit u) returns bool
     return diseaseInstances.has(u)
@@ -66,6 +78,10 @@ class DiseaseInstance
     ondestroy
         t.destr()
         fx.destr()
+
+@compiletime function createDiseasePotion()
+    new PotionDefinition(ITEM_DISEASE_POTION, ICON, MODEL, "Disease Potion", TT, 40, asList(255, 255, 255), commaList(SPELL_DISEASE), 0.70, commaList(SPELL_DISEASE), 120)
+
 
 init
     registerSpellEffectEvent(SPELL_DISEASE) ->

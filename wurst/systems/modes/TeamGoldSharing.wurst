@@ -9,25 +9,30 @@ import ClosureTimers
 import Tribe
 import ID
 
-function syncTribeToOwnerGold(unit whichUnit)
+// Third-party imports:
+import Lodash
+
+function syncTribeGold(unit whichUnit, boolean useMin)
     nullTimer() ->
         let owner = whichUnit.getOwner()
         let tribe = Tribe.ofPlayer(owner)
-        let gold = owner.getLumber()
         let members = tribe.getMembers()
+        let gold = useMin
+            ? min(map((member, index) -> member.getLumber(), members))
+            : owner.getLumber()
         for member in members
             member.setLumber(gold)
 
 function initializeTeamGold()
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SELL_ITEM) ->
-        syncTribeToOwnerGold(GetBuyingUnit())
+        syncTribeGold(GetBuyingUnit(), true)
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PAWN_ITEM) ->
-        syncTribeToOwnerGold(GetTriggerUnit())
+        syncTribeGold(GetTriggerUnit(), false)
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
         if GetManipulatedItem().getTypeId() == ITEM_ALIGATOR_GOLD
-            syncTribeToOwnerGold(GetTriggerUnit())
+            syncTribeGold(GetTriggerUnit(), false)
 
 init
     new GameMode("team-gold", "tg", "Pro", "Players on a team share gold in the same pool") (mode, args) ->

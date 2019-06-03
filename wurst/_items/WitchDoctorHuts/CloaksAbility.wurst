@@ -30,6 +30,7 @@ constant FROST_RADIUS = 700.
 
 constant HEAL_MODEL = "Models\\RejuvHealth.mdx"
 constant MANA_MODEL = "Models\\RejuvMana.mdx"
+constant FROST_MODEL = "Models\\SnowSteam.mdx"
 
 constant HEAL_ICON = Icons.bTNReplenishHealth
 constant MANA_ICON = Icons.bTNReplenishMana
@@ -83,14 +84,15 @@ class FrostVeilBuff
         new BuffDefinition(buffId, 'BUfa') //Frost Armor
         ..setName(1, name)
         ..setIcon(icon)
-        ..setTargetAttachmentPoint0(1, "chest")
+        ..setSpecialAttachmentPoint(1, "origin")
+        ..setTargetAttachmentPoint0(1, "origin")
         ..setArtSpecial(1, Abilities.frostArmorDamage)
-        ..setArtTarget(1, Abilities.frostArmorTarget)
+        ..setArtTarget(1, FROST_MODEL)
         ..setTooltipNormal(1, name)
         ..setTooltipNormalExtended(1, toolTip)
         ..setEditorSuffix(1, "(Wurst)")
 
-class DummyAbilToPutBuff extends AbilityDefinitionFrostArmorcreep
+class FrostDummyAbilToPutBuff extends AbilityDefinitionFrostArmorcreep
     construct(int abilId, string name, int buffId, real duration)
         super(abilId)
         this.setDummyAbility()
@@ -130,7 +132,7 @@ class FrostVeilAbility extends AbilityDefinitionFrostNovacreep
     new Rejuvination(ABIL_DUMMY_MANA, "Health Rejuv", BUFF_MANA, MANA_ICON, MANA_RESTORED, 0)
 
     new FrostVeilBuff(BUFF_FROST, "Ice Veil", FROST_ICON, "This unit is engulfed in a Ice Veil; it slows and damage nearby enemies over time.")
-    new DummyAbilToPutBuff(ABIL_DUMMY_FROST_ARMOR, "Frost Cloak Dummy Aura", BUFF_FROST, FROST_DURATION)
+    new FrostDummyAbilToPutBuff(ABIL_DUMMY_FROST_ARMOR, "Frost Cloak Dummy Aura", BUFF_FROST, FROST_DURATION)
     new FrostVeilAbility(ABIL_DUMMY_FROST, "Ice Veil Dummy", FROST_DURATION, FROST_DMG)
     // Old Mana Cloak Ability
     // new AbilityDefinitionItemManaRestoreAoe(ABIL_MANA)
@@ -143,6 +145,7 @@ function castRejuv(unit caster, int rejuvAbility)
         if u.isAlive() and u.getOwner().isAllyOf(caster.getOwner())
             InstantDummyCaster.castTarget(caster.getOwner(), rejuvAbility, 1, Orders.rejuvination, u)
 
+//Could be better, but will do the job
 function castIceVeil(unit caster)
     let owner = caster.getOwner()
     InstantDummyCaster.castTarget(owner, ABIL_DUMMY_FROST_ARMOR, 1, Orders.frostarmor, caster)

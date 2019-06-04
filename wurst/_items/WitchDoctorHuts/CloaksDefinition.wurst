@@ -1,8 +1,7 @@
 package CloaksDefinition
 
+import Items
 import CloaksAbility
-import ArmorsDefinition
-import ItemObjEditing
 import ID
 import LinkedList
 import ToolTipsUtils
@@ -12,8 +11,6 @@ constant ABIL_FL = commaList(ABIL_FLAMES, ABILITY_ARMOR_BONUS3, ABILITY_CLOAK_ST
 constant ABIL_FR = commaList(ABIL_FROST, ABILITY_ARMOR_BONUS3, ABILITY_CLOAK_STATS_BONUS) // Frost Cast,+ 3 Armor, +3 all stats
 constant ABIL_HE = commaList(ABIL_HEAL, ABILITY_ARMOR_BONUS3, ABILITY_CLOAK_STATS_BONUS) // Healing Cast,+ 3 Armor, +3 all stats
 constant ABIL_MA = commaList(ABIL_MANA, ABILITY_ARMOR_BONUS3, ABILITY_CLOAK_STATS_BONUS) // Mana Cast,+ 3 Armor, +3 all stats
-
-constant ICON_PATH = "ReplaceableTextures\\CommandButtons\\BTN{0}.blp"
 
 constant FLAMES_ICON  = ICON_PATH.format("CloakOfInferno")
 constant FROST_ICON   = ICON_PATH.format("CloakOfFrost")
@@ -29,12 +26,9 @@ constant HEALING_TT = COMMON_TT + "can be cast to heal all nearby allies by {2} 
 constant MANA_TT    = COMMON_TT + "can be cast to restore {2} mana to nearby allies over {3} seconds." + makeToolTipCooldown(RESTORE_COOLDOWN)
 
 
-class CloakDefinition extends ArmorDefinition
-    construct(int id, string icon, string name, string toolTipExt, int cost, LinkedList<int> tinting, string abilities)
-        super(id, icon, MODEL, name, toolTipExt, toolTipExt, cost, tinting, abilities)
-        this.setCooldownGroup("AIms")
-        this.setActivelyUsed(true)
-        this.setScalingValue(0.80)
+class CloakDefinition extends UsableItem
+    construct(int id, string icon, string name, string toolTipExt, int cost, real scale, LinkedList<int> tinting, string abilities)
+        super(id, icon, MODEL, name, toolTipExt, cost, scale, tinting, abilities, "AIms")
 
 function string.flamesToolTipFormat(real armor, real stats, real dmg) returns string
     return this.format(armor.toToolTipGreen(), stats.toToolTipGreen(), dmg.toToolTipRed())
@@ -49,9 +43,9 @@ function string.manaToolTipFormat(real armor, real stats, real manaAmount, real 
     return this.format(armor.toToolTipGreen(), stats.toToolTipGreen(), manaAmount.toToolTipLightBlue(), duration.toToolTipLightBlue())
 
 @compiletime function createCloaks()
-    new CloakDefinition(ITEM_CLOAK_OF_FLAMES , FLAMES_ICON , "Cloak of Flames" , FLAMES_TT .flamesToolTipFormat (3,3, FLAMES_DMG                       ), 68, asList(255 , 0   , 0   ), ABIL_FL)
-    new CloakDefinition(ITEM_CLOAK_OF_HEALING, HEALING_ICON, "Cloak of Healing", HEALING_TT.healingToolTipFormat(3,3, HEALTH_RESTORED, RESTORE_DURATION), 68, asList(0   , 255 , 0   ), ABIL_HE)
-    new CloakDefinition(ITEM_CLOAK_OF_MANA   , MANA_ICON   , "Cloak of Mana"   , MANA_TT   .manaToolTipFormat   (3,3, MANA_RESTORED  , RESTORE_DURATION), 68, asList(56  , 0   , 128 ), ABIL_MA)
+    new CloakDefinition(ITEM_CLOAK_OF_FLAMES , FLAMES_ICON , "Cloak of Flames" , FLAMES_TT .flamesToolTipFormat (3,3, FLAMES_DMG                       ), 68, 1, asList(255 , 0   , 0   ), ABIL_FL)
+    new CloakDefinition(ITEM_CLOAK_OF_HEALING, HEALING_ICON, "Cloak of Healing", HEALING_TT.healingToolTipFormat(3,3, HEALTH_RESTORED, RESTORE_DURATION), 68, 1, asList(0   , 255 , 0   ), ABIL_HE)
+    new CloakDefinition(ITEM_CLOAK_OF_MANA   , MANA_ICON   , "Cloak of Mana"   , MANA_TT   .manaToolTipFormat   (3,3, MANA_RESTORED  , RESTORE_DURATION), 68, 1, asList(56  , 0   , 128 ), ABIL_MA)
 
-    new CloakDefinition(ITEM_CLOAK_OF_FROST   , FROST_ICON   , "Cloak of Frost"   , FROST_TT   .frostToolTipFormat   (3,3, FROST_DMG  , FROST_AS_DEBUFF, FROST_DURATION) , 74,
-                    asList(10   , 10   , 255 ), ABIL_FR )
+    new CloakDefinition(ITEM_CLOAK_OF_FROST   , FROST_ICON   , "Cloak of Frost"   , FROST_TT   .frostToolTipFormat   (3,3, FROST_DMG  , FROST_AS_DEBUFF, FROST_DURATION) , 74, 1,
+                        asList(10   , 10   , 255 ), ABIL_FR )

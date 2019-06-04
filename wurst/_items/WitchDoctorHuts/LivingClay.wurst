@@ -4,13 +4,45 @@ import Items
 import ID
 import Assets
 import LinkedList
+import ChannelAbilityPreset
+import ClosureEvents
+
+constant ABIL_CLAY_EXPLOSION = compiletime(ABIL_ID_GEN.next())
+constant ABIL_PLACE_CLAY = compiletime(ABIL_ID_GEN.next())
 
 constant ICON = ICON_PATH.format("GreenSentryWard")
 constant MODEL = "Models\\LivingClays.mdx"
 
+constant MIN_WARD = 8
+constant MAX_WARD = 12
+constant EXPLOSION_RANGE = 1500.
+
 constant TT = "Drops a clay ward that views the area and can self destruct. Ward lasts indefinatley"
 constant TT_EXPLOSION = "Drops many wards in the area around the caster."
 
+class PlaceLivingClay extends AbilityDefinitionItemPlaceMine
+    construct(int abilId)
+        super(abilId)
+        this.setUnitType(1, UNIT_LIVING_CLAY.toRawCode())
+
 @compiletime function createLivingClay()
-    new PerishableItem(ITEM_CLAY_EXPLOSION, ICON, MODEL, "Clay Explosion", TT_EXPLOSION, 10, 1.50, asList(255, 126, 0), "A00L", "Amnx", 1)
-    new PerishableItem(ITEM_LIVING_CLAY, ICON, MODEL, "Living Clay", TT, 8, 1.25, "AIpm", "Amnx", 3)
+    new ChannelAbilityPreset(ABIL_CLAY_EXPLOSION, 1, true)
+    ..setArtCaster(Abilities.gryphonRiderMissileTarget)
+    ..setAnimationNames("spell,throw")
+    ..setTargetAttachmentPoint1("")
+    ..setHeroAbility(false)
+    ..setItemAbility(true)
+    ..setName("Clay Explosion")
+
+    new PlaceLivingClay(ABIL_PLACE_CLAY)
+    new PerishableItem(ITEM_CLAY_EXPLOSION, ICON, MODEL, "Clay Explosion", TT_EXPLOSION, 10, 1.50, asList(0, 126, 255), commaList(ABIL_CLAY_EXPLOSION), "Amnx", 1)
+    new PerishableItem(ITEM_LIVING_CLAY, ICON, MODEL, "Living Clay", TT, 8, 1.25, commaList(ABIL_PLACE_CLAY), "Amnx", 3)
+
+init
+    EventListener.onCast(ABIL_CLAY_EXPLOSION) (unit caster) ->
+        let _nbrWard = GetRandomInt(MIN_WARD, MAX_WARD)
+        for i = _nbrWard downto 0
+            var pos = caster.getPos()
+            pos.x += GetRandomReal(-EXPLOSION_RANGE, EXPLOSION_RANGE)
+            pos.y += GetRandomReal(-EXPLOSION_RANGE, EXPLOSION_RANGE)
+            createUnit(caster.getOwner(), UNIT_LIVING_CLAY, pos, (270.0).asAngleDegrees())..setAnimation("birth")

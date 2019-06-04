@@ -1,0 +1,176 @@
+package ScrollsAbility
+
+import ID
+import ChannelAbilityPreset
+import Assets
+import BuffObjEditing
+import AnabolicPotion
+
+
+public constant ABIL_ROOT     = compiletime(ABIL_ID_GEN.next())
+public constant ABIL_FIRE     = compiletime(ABIL_ID_GEN.next())
+public constant ABIL_SKELETAL = compiletime(ABIL_ID_GEN.next())
+public constant ABIL_STONE    = compiletime(ABIL_ID_GEN.next())
+public constant ABIL_TSUNAMI  = compiletime(ABIL_ID_GEN.next())
+public constant ABIL_HASTE    = compiletime(ABIL_ID_GEN.next())
+public constant ABIL_CYCLONE  = compiletime(ABIL_ID_GEN.next())
+
+public constant ROOT_DMG          = 5.
+public constant FIRE_DMG          = 40.
+public constant STONE_ARMOR       = 9.
+public constant TSUNAMI_DMG       = 25.
+constant TSUNAMI_MAX_DMG   = 200.
+constant HASTE_SPEED_BONUS = 5.
+
+public constant ROOT_DURATION_HERO       = 3.
+public constant ROOT_DURATION_NORMAL     = 8.
+public constant FIRE_DURATION_HERO       = 0.5
+public constant FIRE_DURATION_NORMAL     = 2.5
+public constant SKELETAL_DURATION_HERO   = 30.
+public constant SKELETAL_DURATION_NORMAL = 30.
+public constant STONE_DURATION           = 20.
+public constant HASTE_DURATION           = 7.
+public constant CYCLONE_DURATION_HERO    = 5.
+public constant CYCLONE_DURATION_NORMAL  = 10.
+
+public constant ROOT_COOLDOWN     = 45.
+public constant FIRE_COOLDOWN     = 32.
+public constant SKELETAL_COOLDOWN = 60.
+public constant STONE_COOLDOWN    = 80.
+public constant TSUNAMI_COOLDOWN  = 15.
+public constant HASTE_COOLDOWN    = 35.
+public constant CYCLONE_COOLDOWN  = 35.
+
+constant ROOT_CAST_RANGE    = 450.
+constant FIRE_CAST_RANGE    = 800.
+constant STONE_CAST_RANGE   = 400.
+constant TSUNAMI_CAST_RANGE = 500.
+constant CYCLONE_CAST_RANGE = 500.
+
+constant TSUNAMI_DISTANCE = 600.
+constant SKELETAL_AOE = 200.
+constant HASTE_AOE = 600.
+
+constant BUFF_STONE_ARMOR = compiletime(BUFF_ID_GEN.next())
+
+class Rootinated extends AbilityDefinitionEntanglingRootscreep
+    construct(int abilId, string name, real damage, real castRange, real durationHero, real durationNormal, real cooldown)
+        super(abilId)
+        this.setCheckDependencies(false)
+        this.setDamageperSecond(1, damage)
+        this.setHeroAbility(false)
+        this.setItemAbility(true)
+        this.setManaCost(1, 0)
+        this.setDurationHero(1, durationHero)
+        this.setDurationNormal(1, durationNormal)
+        this.setTargetsAllowed(1, "ground,enemy,neutral,organic")
+        this.setLevels(1)
+        this.setCastRange(1, castRange)
+        this.setCooldown(1, cooldown)
+        this.setName(name)
+        this.setEditorSuffix("(Wurst)")
+
+class FireBall extends AbilityDefinitionFireBoltwarlock
+    construct(int abilId, string name, real damage, real castRange, real durationHero, real durationNormal, real cooldown)
+        super(abilId)
+        this.setName(name)
+        this.setDamage(1, damage)
+        this.setMissileArt(Abilities.phoenix_Missile)
+        this.setCastRange(1, castRange)
+        this.setManaCost(1, 0)
+        this.setDurationHero(1, durationHero)
+        this.setDurationNormal(1, durationNormal)
+        this.setCooldown(1, cooldown)
+        this.setEditorSuffix("(Wurst)")
+
+class SkeletalMinion extends AbilityDefinitionCryptLordLocustSwarm
+    construct(int abilId, string name, real durationHero, real durationNormal, real cooldown, real aoe)
+        super(abilId)
+        this.setName(name)
+        this.setCheckDependencies(false)
+        this.setDamageReturnFactor(1, 0)
+        this.setNumberofSwarmUnits(1, 2)
+        this.setDamageReturnThreshold(1, 600)
+        this.setMaxSwarmUnitsPerTarget(1, 5)
+        this.setSwarmUnitType(1, UNIT_LOCUST_SKELETON.toRawCode())
+        this.setIconNormal(Icons.bTNSkeletonWarrior)
+        this.setEffectSoundLooping("")
+        this.setTargetsAllowed(1, "air,enemies,ground")
+        this.setHeroAbility(false)
+        this.setItemAbility(true)
+        this.setManaCost(1, 0)
+        this.setDurationHero(1, durationHero)
+        this.setDurationNormal(1, durationNormal)
+        this.setCooldown(1, cooldown)
+        this.setAreaofEffect(1, aoe)
+        this.setEditorSuffix("(Wurst)")
+
+class StoneArmor extends AbilityDefinitionFrostArmorcreep
+    construct(int abilId, string name, real armor, real castRange, real duration, real cooldown)
+        super(abilId)
+        this.setName(name)
+        this.setBuffs(1, BUFF_STONE_ARMOR.toRawCode())
+        this.setArmorBonus(1, armor)
+        this.setArmorDuration(1, duration)
+        this.setTargetsAllowed(1, "air,friend,ground,neutral,self")
+        this.setItemAbility(true)
+        this.setManaCost(1, 0)
+        this.setDurationHero(1, 1)
+        this.setDurationNormal(1, 1)
+        this.setCastRange(1, castRange)
+        this.setCooldown(1, cooldown)
+        this.setEditorSuffix("(Wurst)")
+
+class Tsunami extends AbilityDefinitionCrushingWave
+    construct(int abilId, string name, real damage, real maxDamage, real castRange, real distance, real cooldown)
+        super(abilId)
+        this.setName(name)
+        this.setDamage(1, damage)
+        this.setMaxDamage(1, maxDamage)
+        this.setCastRange(1, castRange)
+        this.setDistance(1, distance)
+        this.setCooldown(1, cooldown)
+        this.setItemAbility(true)
+        this.setManaCost(1, 0)
+        this.setEditorSuffix("(Wurst)")
+
+class Haste extends AbilityDefinitionItemSpeedAoe
+    construct(int abilId, string name, real speedBonus, real aoe, real duration, real cooldown)
+        super(abilId)
+        this.setName(name)
+        this.setBuffs(1, BUFF_SPEED.toRawCode())
+        this.setMovementSpeedIncrease(1, speedBonus)
+        this.setAreaofEffect(1, aoe)
+        this.setDurationHero(1, duration)
+        this.setDurationNormal(1, duration)
+        this.setTargetsAllowed(1, "air,ground,friend,self,vuln,invu,nonsapper")
+        this.setCooldown(1, cooldown)
+        this.setEditorSuffix("(Wurst)")
+
+class Cyclone extends AbilityDefinitionCycloneAIcy
+    construct(int abilId, string name, real durationHero, real durationNormal, real castRange, real cooldown)
+        super(abilId)
+        this.setName(name)
+        this.setDurationHero(1, durationHero)
+        this.setDurationNormal(1, durationNormal)
+        this.setCooldown(1, cooldown)
+        this.setCastRange(1, castRange)
+
+@compiletime function createScrollsAbility()
+    new BuffDefinition(BUFF_STONE_ARMOR, 'BUfa')
+    ..setIcon(Icons.bTNResistantSkin)
+    ..setArtTarget(1, Abilities.aIdaTarget)
+    ..setTargetAttachmentPoint0(1, "overhead")
+    ..setArtSpecial(1, Abilities.aIdaTarget)
+    ..setSpecialAttachmentPoint(1, "overhead")
+    ..setTooltipNormal(1, "Stone Armor")
+    ..setTooltipNormalExtended(1, "This unit is protected by a stone armor. Its armor is increased.")
+
+
+    new Rootinated    (ABIL_ROOT    , "Scroll of Root"        , ROOT_DMG              , ROOT_CAST_RANGE         , ROOT_DURATION_HERO, ROOT_DURATION_NORMAL, ROOT_COOLDOWN   )
+    new FireBall      (ABIL_FIRE    , "Scroll of FireBall"    , FIRE_DMG              , FIRE_CAST_RANGE         , FIRE_DURATION_HERO, FIRE_DURATION_NORMAL, FIRE_COOLDOWN   )
+    new SkeletalMinion(ABIL_SKELETAL, "Scroll of Living Dead" , SKELETAL_DURATION_HERO, SKELETAL_DURATION_NORMAL, SKELETAL_COOLDOWN , SKELETAL_AOE                          )
+    new StoneArmor   (ABIL_STONE   , "Scroll of Stone Armor", STONE_ARMOR           , STONE_CAST_RANGE        , STONE_DURATION    , STONE_COOLDOWN                        )
+    new Tsunami       (ABIL_TSUNAMI , "Scroll of Tsunami"     , TSUNAMI_DMG           , TSUNAMI_MAX_DMG         , TSUNAMI_CAST_RANGE, TSUNAMI_DISTANCE    , TSUNAMI_COOLDOWN)
+    new Haste         (ABIL_HASTE   , "Scroll of Haste"       , HASTE_SPEED_BONUS     , HASTE_AOE               , HASTE_DURATION    , HASTE_COOLDOWN                        )
+    new Cyclone       (ABIL_CYCLONE , "Scroll of Cyclone"     , CYCLONE_DURATION_HERO , CYCLONE_DURATION_NORMAL , CYCLONE_CAST_RANGE, CYCLONE_COOLDOWN                      )

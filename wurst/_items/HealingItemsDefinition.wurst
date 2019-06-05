@@ -1,0 +1,37 @@
+package HealingItemsDefinition
+
+import Items
+import Assets
+import LinkedList
+import ID
+import ToolTipsUtils
+import ChannelAbilityPreset
+
+constant ABIL_MEAT   = compiletime(ABIL_ID_GEN.next())
+constant ABIL_ACORN  = compiletime(ABIL_ID_GEN.next())
+constant ABIL_MACORN = compiletime(ABIL_ID_GEN.next())
+
+constant MEAT_ICON   = ICON_PATH.format("MonsterLure")
+constant ACORN_ICON  = ICON_PATH.format("Acorn")
+constant MACORN_ICON = ICON_PATH.format("Dizzy")
+
+constant MEAT_MODEL   = "Models\\ham.mdx"
+constant ACORN_MODEL  = Objects.thunderLizardEgg1
+constant MACORN_MODEL = Objects.crystalShard
+
+public constant MEAT_HEAL   = 50.
+public constant ACORN_HEAL  = 30.
+public constant MACORN_HEAL = 90.
+
+constant TT_MEAT   = "A well done steak. Instantly heals {0} health point on use.".format(MEAT_HEAL.toToolTipGreen())
+constant TT_ACORN  = "An acorn left by an animal. Restores {0} health point on use.".format(ACORN_HEAL.toToolTipGreen())
+constant TT_MACORN = "An acorn left by an animal. Restores {0} health point on use.".format(MACORN_HEAL.toToolTipGreen())
+
+@compiletime function createHealingItems()
+    new ItemChannelCast(ABIL_MEAT  , "Cooked Meat", Targettype.NONE, 0, 0)
+    new ItemChannelCast(ABIL_ACORN , "Acorn"      , Targettype.NONE, 0, 0)
+    new ItemChannelCast(ABIL_MACORN, "Magic Acorn", Targettype.NONE, 0, 0)
+
+    new PerishableItem(ITEM_COOKED_MEAT , MEAT_ICON   , MEAT_MODEL   , "Cooked Meat" , TT_MEAT   , 2 , 0.85 , asList(255, 160 , 125 ), ABIL_MEAT   .toRawCode(), ABIL_MEAT   .toRawCode(), 1)
+    new PerishableItem(ITEM_ACORN       , ACORN_ICON  , ACORN_MODEL  , "Acorn"       , TT_ACORN  , 2 , 1    , asList(128, 64  , 0   ), ABIL_ACORN  .toRawCode(), ABIL_ACORN  .toRawCode(), 1)
+    new PerishableItem(ITEM_MAGIC_ACORN , MACORN_ICON , MACORN_MODEL , "Magic Acorn" , TT_MACORN , 10, 0.65 , asList(128, 64  , 0   ), ABIL_MACORN .toRawCode(), ABIL_MACORN .toRawCode(), 1)

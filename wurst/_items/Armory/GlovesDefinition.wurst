@@ -1,66 +1,90 @@
 package GlovesDefinition
 
-import ArmorsDefinition
+import Items
 import ItemObjEditing
+import BattleGlovesCritical
 import ID
 import LinkedList
 import ToolTipsUtils
+import ObjectIds
+import LegacyColors
 
-constant ABIL_EG  = "A00Q" //+10% AS
-constant ABIL_WG  = "A00S,AId2,AIth" //+15% AS, +2 Armor, +2 DMG
-constant ABIL_BG  = "A00U,AId3,AIat" //+20% AS, +3 Armor, +3 DMG
-constant ABIL_BOG = "A00U,AId2,AItg" //+20% AS, +2 Armor, +1 DMG
-constant ABIL_IG  = "A00R,AId3,AIth" //+25% AS, +3 Armor, +2 DMG
-constant ABIL_SG  = "A00T,AId5,AIti" //+35% AS, +5 Armor, +4 DMG
-constant ABIL_BTG = "A0FK,AId5,A0E7" //+30% AS, +5 Armor, +4 stats
+constant ABIL_ATTACK_SPEED_ELK    = compiletime(ABIL_ID_GEN.next())
+constant ABIL_ATTACK_SPEED_WOLF   = compiletime(ABIL_ID_GEN.next())
+constant ABIL_ATTACK_SPEED_BEAR   = compiletime(ABIL_ID_GEN.next())
+constant ABIL_ATTACK_SPEED_BONE   = compiletime(ABIL_ID_GEN.next())
+constant ABIL_ATTACK_SPEED_IRON   = compiletime(ABIL_ID_GEN.next())
+constant ABIL_ATTACK_SPEED_STEEL  = compiletime(ABIL_ID_GEN.next())
+constant ABIL_ATTACK_SPEED_BATTLE = compiletime(ABIL_ID_GEN.next())
 
-constant ICON_PATH = "ReplaceableTextures\\CommandButtons\\BTN{0}.blp"
+constant ABIL_ELK    = commaList(ABIL_ATTACK_SPEED_ELK) //+10% AS
+constant ABIL_WOLF   = commaList(ABIL_ATTACK_SPEED_WOLF  , 'AId2', 'AIth') //+15% AS, +2 Armor, +2 DMG
+constant ABIL_BEAR   = commaList(ABIL_ATTACK_SPEED_BEAR  , 'AId3', 'AIat') //+20% AS, +3 Armor, +3 DMG
+constant ABIL_BONE   = commaList(ABIL_ATTACK_SPEED_BONE  , 'AId2', 'AItg') //+20% AS, +2 Armor, +1 DMG
+constant ABIL_IRON   = commaList(ABIL_ATTACK_SPEED_IRON  , 'AId3', 'AIth') //+25% AS, +3 Armor, +2 DMG
+constant ABIL_STEEL  = commaList(ABIL_ATTACK_SPEED_STEEL , 'AId5', 'AIti') //+35% AS, +5 Armor, +4 DMG
+constant ABIL_BATTLE = commaList(ABIL_ATTACK_SPEED_BATTLE, 'AId5', 'A0E7') //+30% AS, +5 Armor, +4 stats
 
-constant IRON_GLOVES_ICON      = ICON_PATH.format("IronGloves")
-constant BONE_GLOVES_ICON      = ICON_PATH.format("GauntletsOfOgrePower")
-constant STEEL_GLOVES_ICON     = ICON_PATH.format("AdvancedUnholyStrength")
-constant BATTLE_GLOVES_ICON    = ICON_PATH.format("ImprovedUnholyStrength")
-constant ELK_SKIN_GLOVES_ICON  = ICON_PATH.format("ElkHideGloves")
-constant WOLF_SKIN_GLOVES_ICON = ICON_PATH.format("WolfHideGloves")
-constant BEAR_SKIN_GLOVES_ICON = ICON_PATH.format("BearHideGloves")
+constant IRON_ICON      = ICON_PATH.format("IronGloves")
+constant BONE_ICON      = ICON_PATH.format("GauntletsOfOgrePower")
+constant STEEL_ICON     = ICON_PATH.format("AdvancedUnholyStrength")
+constant BATTLE_ICON    = ICON_PATH.format("ImprovedUnholyStrength")
+constant ELK_SKIN_ICON  = ICON_PATH.format("ElkHideGloves")
+constant WOLF_SKIN_ICON = ICON_PATH.format("WolfHideGloves")
+constant BEAR_SKIN_ICON = ICON_PATH.format("BearHideGloves")
 
-constant SG_MODEL   = "Models\\SkinGloves.mdx"
-constant BG_MODEL   = "Models\\BoneGloves.mdx"
-constant IG_MODEL   = "Models\\IronGloves.mdx"
-constant BTG_MODEL  = "Models\\BattleGloves.mdx"
+constant SKIN_MODEL    = "Models\\SkinGloves.mdx"
+constant BONE_MODEL    = "Models\\BoneGloves.mdx"
+constant ARMORED_MODEL = "Models\\IronGloves.mdx"
+constant BATTLE_MODEL  = "Models\\BattleGloves.mdx"
 
-constant TT_COMMON = "Increases Attack Speed by {0}"
-constant TT_ELK_GLOVES  = "A pair of gloves made from animals pelt. " + TT_COMMON + " and provides warmth."
-constant TT_ARMOR_GLOVES = "A pair of gloves reinforced with metals. " + TT_COMMON + ", Damage by {1}, Armor by {2} and provides warmth."
-constant TT_BONE_GLOVES  = "A pair of gloves reinforced with bones. "  + TT_COMMON + ", Damage by {1}, Armor by {2} and provides warmth. "+
-                           "All basic gloves transmute into the same bone/iron/steel gloves."
-constant TT_BATTLE_GLOVES = "A pair of armored gloves enhanced with alchemy. Increase Attack Speed by {0}, all stats by {1}, armor by {2} and grants {3} chance "+
-                            "to deal 1.6x damage on a 6 seconds cooldown. Attacking enemies reduces the cooldown of the critical strike by 1 second."
+constant ELK_ATTACK_SPEED_BONUS    = 0.10
+constant WOLF_ATTACK_SPEED_BONUS   = 0.15
+constant BEAR_ATTACK_SPEED_BONUS   = 0.20
+constant BONE_ATTACK_SPEED_BONUS   = 0.20
+constant IRON_ATTACK_SPEED_BONUS   = 0.25
+constant STEEL_ATTACK_SPEED_BONUS  = 0.35
+constant BATTLE_ATTACK_SPEED_BONUS = 0.30
 
+constant TT_BASIC  = COLOR_ORANGE + "\nBasic Gloves|r"  + COLOR_RED +  "\nNote : All basic Gloves transmute into the same Bone/Iron/Steel Gloves."
+constant TT_SKIN = "A pair of gloves made from animals pelt. {0} and provides warmth."
+constant TT_ARMOR = "A pair of gloves reinforced with metals. {0} and provides warmth."
+constant TT_BONE_PRE_FORMAT = "A pair of gloves reinforced with bones. {0} and provides warmth."
 
-class GlovesDefinition extends ArmorDefinition
+constant TT_AS = "Increases attack speed by {0}"
+constant TT_DMG = ", damage by {0}, armor by {1}"
+constant TT_BATTLE_PRE_FORMAT = "A pair of armored gloves enhanced with mana. {0}, all stats by {1}, armor by {2} and grants a critical strike for {3}x damage on a {4} seconds cooldown. " +
+                     "Attacking enemies reduces the cooldown of the critical strike by {5} second."
+
+constant TT_ELK   = TT_SKIN.format(TT_AS.format(ELK_ATTACK_SPEED_BONUS .toToolTipOrange())) + TT_BASIC
+constant TT_WOLF  = TT_SKIN.format(TT_AS.format(WOLF_ATTACK_SPEED_BONUS.toToolTipOrange()) + TT_DMG.format(1..toToolTipRed(), 2..toToolTipGreen())) + TT_BASIC
+constant TT_BEAR  = TT_SKIN.format(TT_AS.format(BEAR_ATTACK_SPEED_BONUS.toToolTipOrange()) + TT_DMG.format(3..toToolTipRed(), 3..toToolTipGreen())) + TT_BASIC
+constant TT_BONE  = TT_BONE_PRE_FORMAT.format(TT_AS.format(BONE_ATTACK_SPEED_BONUS.toToolTipOrange()) + TT_DMG.format(1..toToolTipRed(), 2..toToolTipGreen()))
+constant TT_IRON  = TT_ARMOR.format(TT_AS.format(IRON_ATTACK_SPEED_BONUS .toToolTipOrange()) + TT_DMG.format(2..toToolTipRed(), 3..toToolTipGreen()))
+constant TT_STEEL = TT_ARMOR.format(TT_AS.format(STEEL_ATTACK_SPEED_BONUS.toToolTipOrange()) + TT_DMG.format(4..toToolTipRed(), 5..toToolTipGreen()))
+
+//Making tooltip ain't an easy task
+constant TT_BATTLE = TT_BATTLE_PRE_FORMAT.format(TT_AS.format(BATTLE_ATTACK_SPEED_BONUS.toToolTipOrange()), 4..toToolTipGreen(), 5..toToolTipGreen(),
+                     MULTIPLIER.toToolTipRed(), COOLDOWN.toToolTipLightBlue(), COOLDOWN_SKIP_PER_ATTACK.toToolTipLightBlue())
+
+class GlovesDefinition extends IttItem
     construct(int id, string icon, string model, string name, string toolTipExt, int cost, LinkedList<int> tinting, string abilities)
-        super(id, icon, model, name, toolTipExt, toolTipExt, cost, tinting, abilities)
-        this.setCooldownGroup("AIsp")
-        this.setScalingValue(0.80)
-
-function string.bootToolTipFormat(real asBonus, real damageBonus) returns string
-    let bootDescription = this.format(asBonus.toToolTipOrange(), damageBonus.toToolTipLightBlue())
-    return bootDescription
-
-function string.bootToolTipFormat(real asBonus, real damageBonus, real armorBonus) returns string
-    let bootDescription = this.format(asBonus.toToolTipOrange(), damageBonus.toToolTipLightBlue(), armorBonus.toToolTipGreen())
-    return bootDescription
-
-function string.bootToolTipFormat(real asBonus, real statsBonus, real armorBonus, real criticalChance) returns string
-    let bootDescription = this.format(asBonus.toToolTipOrange(), statsBonus.toToolTipLightBlue(), armorBonus.toToolTipGreen(), criticalChance.toToolTipLightBlue())
-    return bootDescription
+        super(id, icon, model, name, toolTipExt, cost, 0.80, tinting, abilities)
+        this.setClassification("Permanent")
 
 @compiletime function createGloves()
-    new GlovesDefinition(ITEM_ELK_SKIN_GLOVES  , ELK_SKIN_GLOVES_ICON  , SG_MODEL , "Elk Skin Gloves"  , TT_ELK_GLOVES    .bootToolTipFormat(0.10 , 2           ) , 19, asList(136 , 0   , 255 ), ABIL_EG  )
-    new GlovesDefinition(ITEM_WOLF_SKIN_GLOVES , WOLF_SKIN_GLOVES_ICON , SG_MODEL , "Wolf Skin Gloves" , TT_ARMOR_GLOVES  .bootToolTipFormat(0.15 , 2 , 2       ) , 33, asList(255 , 255 , 255 ), ABIL_WG  )
-    new GlovesDefinition(ITEM_BEAR_SKIN_GLOVES , BEAR_SKIN_GLOVES_ICON , SG_MODEL , "Bear Skin Gloves" , TT_ARMOR_GLOVES  .bootToolTipFormat(0.20 , 3 , 3       ) , 47, asList(139  , 69  , 19 ), ABIL_BG  )
-    new GlovesDefinition(ITEM_BONE_GLOVES      , BONE_GLOVES_ICON      , BG_MODEL , "Bone Gloves"      , TT_BONE_GLOVES   .bootToolTipFormat(0.20 , 1 , 2       ) , 34, asList(255 , 255 , 255 ), ABIL_BOG )
-    new GlovesDefinition(ITEM_IRON_GLOVES      , IRON_GLOVES_ICON      , IG_MODEL , "Iron Gloves"      , TT_ARMOR_GLOVES  .bootToolTipFormat(0.25 , 2 , 3       ) , 55, asList(255 , 255 , 255 ), ABIL_IG  )
-    new GlovesDefinition(ITEM_STEEL_GLOVES     , STEEL_GLOVES_ICON     , IG_MODEL , "Steel Gloves"     , TT_ARMOR_GLOVES  .bootToolTipFormat(0.35 , 4, 5        ) , 70, asList(0   , 119 , 255 ), ABIL_SG  )
-    new GlovesDefinition(ITEM_BATTLE_GLOVES    , BATTLE_GLOVES_ICON    , BTG_MODEL, "Battle Gloves"    , TT_BATTLE_GLOVES .bootToolTipFormat(0.30 , 4 , 5, 0.30 ) , 70, asList(128 , 0   , 128 ), ABIL_BTG  )
+    new AttackSpeedBonusAbility(ABIL_ATTACK_SPEED_ELK   , "Elk Gloves"   , ELK_ATTACK_SPEED_BONUS)
+    new AttackSpeedBonusAbility(ABIL_ATTACK_SPEED_WOLF  , "Wolf Gloves"  , WOLF_ATTACK_SPEED_BONUS)
+    new AttackSpeedBonusAbility(ABIL_ATTACK_SPEED_BEAR  , "Bear Gloves"  , BEAR_ATTACK_SPEED_BONUS)
+    new AttackSpeedBonusAbility(ABIL_ATTACK_SPEED_BONE  , "Bone Gloves"  , BONE_ATTACK_SPEED_BONUS)
+    new AttackSpeedBonusAbility(ABIL_ATTACK_SPEED_IRON  , "Iron Gloves"  , IRON_ATTACK_SPEED_BONUS)
+    new AttackSpeedBonusAbility(ABIL_ATTACK_SPEED_STEEL , "Steel Gloves" , STEEL_ATTACK_SPEED_BONUS)
+    new AttackSpeedBonusAbility(ABIL_ATTACK_SPEED_BATTLE, "Battle Gloves", BATTLE_ATTACK_SPEED_BONUS)
+
+    new GlovesDefinition(ITEM_ELK_SKIN_GLOVES  , ELK_SKIN_ICON  , SKIN_MODEL    , "Elk Skin Gloves"  , TT_ELK    , 19, asList(136 , 0   , 255 ), ABIL_ELK)
+    new GlovesDefinition(ITEM_WOLF_SKIN_GLOVES , WOLF_SKIN_ICON , SKIN_MODEL    , "Wolf Skin Gloves" , TT_WOLF  , 33, asList(255 , 255 , 255 ), ABIL_WOLF)
+    new GlovesDefinition(ITEM_BEAR_SKIN_GLOVES , BEAR_SKIN_ICON , SKIN_MODEL    , "Bear Skin Gloves" , TT_BEAR  , 47, asList(139 , 69  , 19  ), ABIL_BEAR)
+    new GlovesDefinition(ITEM_BONE_GLOVES      , BONE_ICON      , BONE_MODEL    , "Bone Gloves"      , TT_BONE   , 34, asList(255 , 255 , 255 ), ABIL_BONE)
+    new GlovesDefinition(ITEM_IRON_GLOVES      , IRON_ICON      , ARMORED_MODEL , "Iron Gloves"      , TT_IRON  , 55, asList(255 , 255 , 255 ), ABIL_IRON)
+    new GlovesDefinition(ITEM_STEEL_GLOVES     , STEEL_ICON     , ARMORED_MODEL , "Steel Gloves"     , TT_STEEL  , 70, asList(0   , 119 , 255 ), ABIL_STEEL)
+    new GlovesDefinition(ITEM_BATTLE_GLOVES    , BATTLE_ICON    , BATTLE_MODEL  , "Battle Gloves"    , TT_BATTLE , 70, asList(128 , 0   , 128 ), ABIL_BATTLE )

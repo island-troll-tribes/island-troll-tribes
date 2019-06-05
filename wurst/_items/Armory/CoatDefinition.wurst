@@ -1,69 +1,119 @@
 package CoatDefinition
 
-import ArmorsDefinition
+import Items
+import AbilityObjectCreationUtils
 import ItemObjEditing
+import ObjectIds
 import ID
+import Orders
+import LegacyColors
 import LinkedList
 import ToolTipsUtils
+import ClosureEvents
+import InstantDummyCaster
 
-constant ABIL_EC  = "A0DY,AId1" //+2 Str + 1 Int, + 1 Armor
-constant ABIL_WC  = "A0DX,AId3" //+3 Str + 2 Int, + 3 Armor
-constant ABIL_BC  = "A0E0,AId4" //+4 Str + 3 Int, + 4 Armor
-constant ABIL_BOC = "A0E3,AId3" //+3 Str + 2 Int, + 3 Armor
-constant ABIL_IC  = "A0EA,AId4" //+4 Str + 3 Int, + 4 Armor
-constant ABIL_SC  = "A0E8,AId8,XSCC" //+8 Str + 6 Int, + 8 Armor, Omnicure
+constant ABIL_STATS_ELK    = compiletime(ABIL_ID_GEN.next())
+constant ABIL_STATS_WOLF   = compiletime(ABIL_ID_GEN.next())
+constant ABIL_STATS_BEAR   = compiletime(ABIL_ID_GEN.next())
+constant ABIL_STATS_BONE   = compiletime(ABIL_ID_GEN.next())
+constant ABIL_STATS_IRON   = compiletime(ABIL_ID_GEN.next())
+constant ABIL_STATS_STEEL  = compiletime(ABIL_ID_GEN.next())
+constant ABIL_STATS_BATTLE = compiletime(ABIL_ID_GEN.next())
+
+constant ABIL_CAST_BATTLE = compiletime(ABIL_ID_GEN.next())
+
+//constant ABIL_EC  = "A0DY,AId1" //+2 Str + 1 Int, + 1 Armor
+//constant ABIL_WC  = "A0DX,AId3" //+3 Str + 2 Int, + 3 Armor
+//constant ABIL_BONE  = "A0E0,AId4" //+4 Str + 3 Int, + 4 Armor
+//constant ABIL_BOC = "A0E3,AId3" //+3 Str + 2 Int, + 3 Armor
+//constant ABIL_IC  = "A0EA,AId4" //+4 Str + 3 Int, + 4 Armor
+//constant ABIL_SKIN  = "A0E8,AId8,XSKINC" //+8 Str + 6 Int, + 8 Armor, Omnicure
+
+constant ABIL_ELK    = commaList(ABIL_STATS_ELK    , 'AId1')
+constant ABIL_WOLF   = commaList(ABIL_STATS_WOLF   , 'AId2')
+constant ABIL_BEAR   = commaList(ABIL_STATS_BEAR   , 'AId3')
+constant ABIL_BONE   = commaList(ABIL_STATS_BONE   , 'AId2')
+constant ABIL_IRON   = commaList(ABIL_STATS_IRON   , 'AId3')
+constant ABIL_STEEL  = commaList(SPELL_OMNICURE, ABIL_STATS_STEEL  , 'AId5') // Using current priest omnicure spell
+constant ABIL_BATTLE = commaList(ABIL_CAST_BATTLE, ABIL_STATS_BATTLE , 'AId7')
 
 constant ABIL_BTG = "A07E,AId7,Alsr" //+30% AS, +5 Armor, +4 stats
 
-constant ICON_PATH = "ReplaceableTextures\\CommandButtons\\BTN{0}.blp"
+// Remember to check out the tooltip if you change the following
+// STR,AGI,INT
+constant ELK_STATS_BONUS    = [2, 0, 1]
+constant WOLF_STATS_BONUS   = [3, 0, 2]
+constant BEAR_STATS_BONUS   = [4, 0, 3]
+constant BONE_STATS_BONUS   = [3, 0, 2]
+constant IRON_STATS_BONUS   = [4, 0, 3]
+constant STEEL_STATS_BONUS  = [8, 0, 6]
+constant BATTLE_STATS_BONUS = [4, 4, 4]
 
-constant IRON_COAT_ICON      = ICON_PATH.format("ImprovedMoonArmor")
-constant BONE_COAT_ICON      = ICON_PATH.format("BoneCoat")
-constant STEEL_COAT_ICON     = ICON_PATH.format("AdvancedMoonArmor")
-constant BATTLE_ARMOR_ICON   = ICON_PATH.format("ImprovedUnholyStrength")
-constant ELK_SKIN_COAT_ICON  = ICON_PATH.format("ElkHideCoat")
-constant WOLF_SKIN_COAT_ICON = ICON_PATH.format("WolfHideCoat")
-constant BEAR_SKIN_COAT_ICON = ICON_PATH.format("BearHideCoat")
+constant IRON_ICON      = ICON_PATH.format("ImprovedMoonArmor")
+constant BONE_ICON      = ICON_PATH.format("BoneCoat")
+constant STEEL_ICON     = ICON_PATH.format("AdvancedMoonArmor")
+constant BATTLE_ICON    = ICON_PATH.format("RobeOfTheMagi")
+constant ELK_SKIN_ICON  = ICON_PATH.format("ElkHideCoat")
+constant WOLF_SKIN_ICON = ICON_PATH.format("WolfHideCoat")
+constant BEAR_SKIN_ICON = ICON_PATH.format("BearHideCoat")
 
-constant SC_MODEL   = "Models\\SkinCoat.mdx"
-constant BC_MODEL   = "Models\\BoneCoat.mdx"
-constant IC_MODEL   = "Models\\Armor.mdx"
-constant BTG_MODEL  = "Models\\BattleCoat.mdx"
+constant SKIN_MODEL   = "Models\\SkinCoat.mdx"
+constant BONE_MODEL   = "Models\\BoneCoat.mdx"
+constant ARMOR_MODEL   = "Models\\Armor.mdx"
 
+constant BATTLE_COOLDOWN = 75.
+
+constant TT_BASIC  = COLOR_ORANGE + "\nBasic Coat|r"
 constant TT_COMMON = "Increases Strenght by {0}, Intelligence by {1}, Armor by {2}"
-constant TT_SKIN_COAT  = "A coat made from animals pelt. " + TT_COMMON + " and provides warmth."
-constant TT_ARMOR_COAT = "A coat reinforced with metals. " + TT_COMMON + " and provides warmth."
-constant TT_BONE_COAT  = "A coat reinforced with bones. "  + TT_COMMON + " and provides warmth. All basic gloves transmute into the same bone/iron/steel gloves."
-constant TT_BATTLE_ARMOR = "A pair of armored gloves enhanced with alchemy. Increase Attack Speed by {0}, all stats by {1}, armor by {2} and grants {3} chance "+
-                            "to deal 1.6x damage on a 6 seconds cooldown. Attacking enemies reduces the cooldown of the critical strike by 1 second."
+constant TT_SKIN   = "A coat made from animals pelt. " + TT_COMMON + " and provides warmth."
+constant TT_ARMOR  = "A coat reinforced with metals. " + TT_COMMON + " and provides warmth."
 
+constant TT_BONE  = ("A coat reinforced with bones. "  + TT_COMMON + " and provides warmth. All basic gloves transmute into the same bone/iron/steel gloves.")
+                            .format(BONE_STATS_BONUS  [0].formatStat(), BONE_STATS_BONUS  [2].formatStat(), (3).formatStat())
+constant TT_ELK   = TT_SKIN .format(ELK_STATS_BONUS  [0].formatStat(), ELK_STATS_BONUS  [2].formatStat(), (1).formatStat()) + TT_BASIC
+constant TT_WOLF  = TT_SKIN .format(WOLF_STATS_BONUS [0].formatStat(), WOLF_STATS_BONUS [2].formatStat(), (2).formatStat()) + TT_BASIC
+constant TT_BEAR  = TT_SKIN .format(BEAR_STATS_BONUS [0].formatStat(), BEAR_STATS_BONUS [2].formatStat(), (3).formatStat()) + TT_BASIC
+constant TT_IRON  = TT_ARMOR.format(IRON_STATS_BONUS [0].formatStat(), IRON_STATS_BONUS [2].formatStat(), (3).formatStat())
+constant TT_STEEL = TT_ARMOR.format(STEEL_STATS_BONUS[0].formatStat(), STEEL_STATS_BONUS[2].formatStat(), (5).formatStat()) + " Can cast Omnicure, curing all allies on the map."
+constant TT_BATTLE = ("A coat embedded with a protective mana layer. Increase all stats by {0}, Armor by {1} and provides warmth. Can cast Anti-Magic on "+
+                     "Allies wherever they are.").format(4..toToolTipGreen(), 7..toToolTipGreen()) + makeToolTipCooldown(BATTLE_COOLDOWN)
 
-class CoatDefinition extends ArmorDefinition
+class CoatDefinition extends IttItem
     construct(int id, string icon, string model, string name, string toolTipExt, int cost, LinkedList<int> tinting, string abilities)
-        super(id, icon, model, name, toolTipExt, toolTipExt, cost, tinting, abilities)
+        super(id, icon, model, name, toolTipExt, cost, 1.50, tinting, abilities)
+        this.setClassification("Permanent")
+
+class UsableCoatDefinition extends CoatDefinition
+    construct(int id, string icon, string model, string name, string toolTipExt, int cost, LinkedList<int> tinting, string abilities)
+        super(id, icon, model, name, toolTipExt, cost, tinting, abilities)
+        this.setActivelyUsed(true)
         this.setCooldownGroup("AIms")
-        this.setScalingValue(1.50)
-        if name == "Steel Coat"
-            this.setActivelyUsed(true)
-
-function string.coatToolTipFormat(real strBonus, real intBonus) returns string
-    let coatDescription = this.format(strBonus.toToolTipOrange(), intBonus.toToolTipLightBlue())
-    return coatDescription
-
-function string.coatToolTipFormat(real strBonus, real intBonus, real armorBonus) returns string
-    let coatDescription = this.format(strBonus.toToolTipOrange(), intBonus.toToolTipLightBlue(), armorBonus.toToolTipGreen())
-    return coatDescription
-
-function string.coatToolTipFormat(real strBonus, real statsBonus, real armorBonus, real criticalChance) returns string
-    let coatDescription = this.format(strBonus.toToolTipOrange(), statsBonus.toToolTipLightBlue(), armorBonus.toToolTipGreen(), criticalChance.toToolTipLightBlue())
-    return coatDescription
 
 @compiletime function createCoats()
-    new CoatDefinition(ITEM_ELK_SKIN_COAT  , ELK_SKIN_COAT_ICON  , SC_MODEL  , "Elk Skin Coat"  , TT_SKIN_COAT   .coatToolTipFormat(2 , 1,  1       ) , 27, asList(136 , 0   , 255 ), ABIL_EC)
-    new CoatDefinition(ITEM_WOLF_SKIN_COAT , WOLF_SKIN_COAT_ICON , SC_MODEL  , "Wolf Skin Coat" , TT_SKIN_COAT   .coatToolTipFormat(3 , 2 , 3       ) , 49, asList(255 , 255 , 255 ), ABIL_WC)
-    new CoatDefinition(ITEM_BEAR_SKIN_COAT , BEAR_SKIN_COAT_ICON , SC_MODEL  , "Bear Skin Coat" , TT_SKIN_COAT   .coatToolTipFormat(4 , 3 , 4       ) , 70, asList(139  , 69  , 19 ), ABIL_BC)
-    new CoatDefinition(ITEM_BONE_COAT      , BONE_COAT_ICON      , BC_MODEL  , "Bone Coat"      , TT_BONE_COAT   .coatToolTipFormat(3 , 2 , 3       ) , 47, asList(255 , 255 , 255 ), ABIL_BOC)
-    new CoatDefinition(ITEM_IRON_COAT      , IRON_COAT_ICON      , IC_MODEL  , "Iron Coat"      , TT_ARMOR_COAT  .coatToolTipFormat(4 , 3 , 4       ) , 63, asList(255 , 255 , 255 ), ABIL_IC)
-    new CoatDefinition(ITEM_STEEL_COAT     , STEEL_COAT_ICON     , IC_MODEL  , "Steel Coat"     , TT_ARMOR_COAT  .coatToolTipFormat(8 , 6 , 8       ) , 68, asList(0   , 119 , 255 ), ABIL_SC)
+    new DummyCastAbilityWindWalk(ABIL_CAST_BATTLE, "Battle Armor", BATTLE_COOLDOWN)
 
-    //new CoatDefinition(ITEM_BATTLE_ARMOR    , BATTLE_ARMOR_ICON    , BTG_MODEL , "Battle Coat"    , TT_BATTLE_ARMOR .coatToolTipFormat(0.30 , 4 , 5, 0.30 ) , 70, asList(128 , 0   , 128 ), ABIL_BTG , false)
+    new StatBonusAbility(ABIL_STATS_ELK  , "Elk Coat"     , ELK_STATS_BONUS  [0], ELK_STATS_BONUS  [1], ELK_STATS_BONUS  [2])
+    new StatBonusAbility(ABIL_STATS_WOLF , "Wolf Coat"    , WOLF_STATS_BONUS [0], WOLF_STATS_BONUS [1], WOLF_STATS_BONUS [2])
+    new StatBonusAbility(ABIL_STATS_BEAR , "Bear Coat"    , BEAR_STATS_BONUS [0], BEAR_STATS_BONUS [1], BEAR_STATS_BONUS [2])
+    new StatBonusAbility(ABIL_STATS_BONE , "Bone Coat"    , BONE_STATS_BONUS [0], BONE_STATS_BONUS [1], BONE_STATS_BONUS [2])
+    new StatBonusAbility(ABIL_STATS_IRON , "Iron Coat"    , IRON_STATS_BONUS [0], IRON_STATS_BONUS [1], IRON_STATS_BONUS [2])
+    new StatBonusAbility(ABIL_STATS_STEEL, "Steel Coat"   , STEEL_STATS_BONUS[0], STEEL_STATS_BONUS[1], STEEL_STATS_BONUS[2])
+    new StatBonusAbility(ABIL_STATS_BATTLE, "Anabolic Coat", BATTLE_STATS_BONUS[0], BATTLE_STATS_BONUS[1], BATTLE_STATS_BONUS[2])
+
+    new CoatDefinition(ITEM_ELK_SKIN_COAT  , ELK_SKIN_ICON  , SKIN_MODEL, "Elk Skin Coat"  , TT_ELK   , 27, asList(136 , 0   , 255), ABIL_ELK)
+    new CoatDefinition(ITEM_WOLF_SKIN_COAT , WOLF_SKIN_ICON , SKIN_MODEL, "Wolf Skin Coat" , TT_WOLF  , 49, asList(255 , 255 , 255), ABIL_WOLF)
+    new CoatDefinition(ITEM_BEAR_SKIN_COAT , BEAR_SKIN_ICON , SKIN_MODEL, "Bear Skin Coat" , TT_BEAR  , 70, asList(139 , 69  , 19 ), ABIL_BEAR)
+    new CoatDefinition(ITEM_BONE_COAT      , BONE_ICON      , BONE_MODEL, "Bone Coat"      , TT_BONE  , 47, asList(255 , 255 , 255), ABIL_BONE)
+    new CoatDefinition(ITEM_IRON_COAT      , IRON_ICON      , ARMOR_MODEL, "Iron Coat"     , TT_IRON  , 63, asList(255 , 255 , 255), ABIL_IRON)
+
+    new UsableCoatDefinition(ITEM_STEEL_COAT   , STEEL_ICON  , ARMOR_MODEL, "Steel Coat"   , TT_STEEL  , 68, asList(0   , 119 , 255 ), ABIL_STEEL)
+    new UsableCoatDefinition(ITEM_BATTLE_ARMOR , BATTLE_ICON , ARMOR_MODEL, "Battle Armor" , TT_BATTLE , 66, asList(255 , 0   , 128 ), ABIL_BATTLE)
+
+init
+    EventListener.onCast(ABIL_CAST_BATTLE) (unit caster) ->
+        let heroes = GetUnitsInRectMatching(bj_mapInitialPlayableArea, Condition(() -> begin
+            let filterUnit = GetFilterUnit()
+            return filterUnit.isType(UNIT_TYPE_HERO) and filterUnit.getOwner().isAllyOf(GetSpellAbilityUnit().getOwner())
+        end))
+        for hero in heroes
+            InstantDummyCaster.castTarget(caster.getOwner(), SPELL_ANTI_MAGIC, 1, Orders.antimagicshell, hero)

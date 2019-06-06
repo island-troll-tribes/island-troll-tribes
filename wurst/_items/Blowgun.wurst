@@ -15,20 +15,21 @@ import ID
 import UnitExtensions
 import ObjectIds
 import ClosureTimers
-import ObjectIdGenerator
 
-constant let ICON = Icons.bTNAlleriaFlute
-constant let ITEM_TOOLTIP = "Purchase |cffffcc00B|rlow Gun"
-constant let ITEM_TOOLTIP_EXT = "Used for shooting small things. Can be loaded with thistles or bones. Drag and drop items on the blowgun to load, click and use on your own troll to unload."
-constant let ITEM_DESCRIPTION = "A hollowed out piece of wood. If blown through, could be used to fire small projectiles such as thistles."
-constant let GROUND_MODEL_PATH = "Models\\BlowGun.mdx"
-constant let ABILITY_ID = compiletime(ABIL_ID_GEN.next())
-constant let THISTLE_ABILITY_ID = 'A01K'
-constant let THISTLE_HERO_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
-constant let DARKTHISTLE_ABILITY_ID = 'A01L'
-constant let BONE_ABILITY_ID = 'A015'
-constant let ITEM_ID = 'XIBP'
-constant let MAX_SLOTS = 15
+constant ICON = Icons.bTNAlleriaFlute
+constant ITEM_TOOLTIP = "Purchase |cffffcc00B|rlow Gun"
+constant ITEM_TOOLTIP_EXT = "Used for shooting small things. Can be loaded with thistles or bones. Drag and drop items on the blowgun to load, click and use on your own troll to unload."+
+                             " If your inventory is full, clicking on ammo type item close to your troll will load them into the blowgun."
+constant ITEM_DESCRIPTION = "A hollowed out piece of wood. If blown through, could be used to fire small projectiles such as thistles."
+constant GROUND_MODEL_PATH = "Models\\BlowGun.mdx"
+constant ABILITY_ID = compiletime(ABIL_ID_GEN.next())
+constant THISTLE_ABILITY_ID = 'A01K'
+constant THISTLE_HERO_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
+constant DARKTHISTLE_ABILITY_ID = 'A01L'
+constant BONE_ABILITY_ID = 'A015'
+constant ITEM_ID = 'XIBP'
+constant MAX_SLOTS = 15
+constant PICKUP_RANGE = 150.0
 
 @compiletime function createBlowpipeAbility()
     new AbilityDefinitionIllidanChannel(ABILITY_ID)
@@ -104,6 +105,7 @@ init
     registerInventoryEvent(EVENT_ITEM_INVENTORY.MOVE, () -> onItemMoved())
     EventListener.add(EVENT_PLAYER_UNIT_USE_ITEM, () -> onUse())
     EventListener.add(EVENT_PLAYER_UNIT_PICKUP_ITEM, () -> onPickup())
+    EventListener.add(EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, () -> onTargetOrder())
     cleanupTrigger = CreateTrigger()
     cleanupTrigger.addAction(function cleanupInstances)
     instances = new IterableMap<item, Blowpipe>()
@@ -297,6 +299,7 @@ function onPickup()
     var itemId = itm.getTypeId()
     var trigUnit =  GetTriggerUnit()
 
+    print(itm.getName())
     if itemId == ITEM_ID
         if not instances.has(itm)
             instances.put(itm, new Blowpipe(itm))
@@ -323,3 +326,22 @@ function onItemMoved()
     if u.itemInSlot(slotTo).getTypeId() == ITEM_ID
         if slotsPerItem.has(i.getTypeId())
             instances.get(u.itemInSlot(slotTo)).loadAmmo(u, i)
+
+function onTargetOrder()
+    let order = GetIssuedOrderId()
+    let u = GetOrderedUnit()
+    if order != Orders.smart or not u.isInventoryFull()
+        return
+
+    let target = GetOrderTargetItem()
+
+    //Smart pickup system -> simulate picking up meat like an item if full inventory, like in Bannars StackNSplit system
+    if (target != null
+        and target.isPickupable()
+        and slotsPerItem.has(target.getTypeId())
+        and u.isInventoryFull()
+        and u.getInventory().map(elem -> elem.getTypeId()).has(ITEM_ID))
+        let collisionSize = u.getCollisionSize()
+        let rangeSq = (PICKUP_RANGE + collisionSize).pow(2)
+        if u.getPos().distanceToSq(target.getPos()) <= rangeSq
+            instances.get(u.getItemById(ITEM_ID)).loadAmmo(u, target)

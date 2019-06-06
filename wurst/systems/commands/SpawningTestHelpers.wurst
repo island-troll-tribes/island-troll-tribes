@@ -14,6 +14,7 @@ import HashMap
 let unitSpawnList = new HashMap<string, LinkedList<int>>()
 ..put("trolls"      , TROLL_UNIT_LIST)
 ..put("mage"        , MAGE_CLASS_LIST)
+..put("tradeships"  , TRADE_SHIP_LIST)
 ..put("thief"       , THIEF_CLASS_LIST)
 ..put("scout"       , SCOUT_CLASS_LIST)
 ..put("hunter"      , HUNTER_CLASS_LIST)
@@ -115,12 +116,13 @@ init
                     print(SPAWN_HELP_MESSAGE)
                 else
                     let toSpawn = (unitList != null) ? unitList : itemList
+                    let owner = args.size() > 3 ? players[args.get(3).toInt() - 1] : triggerPlayer
                     pos.x += 100
                     pos.y -= (toSpawn.size() / 2) * 100
                     for elem in toSpawn
                         pos.y += 100
                         for i = count downto 1
                             if unitSpawnList.has(listName)
-                                createUnit(triggerPlayer, elem, pos, (270.0).asAngleDegrees())
+                                createUnit(owner, elem, pos, (270.0).asAngleDegrees())
                             else
                                 createItem(elem, pos)

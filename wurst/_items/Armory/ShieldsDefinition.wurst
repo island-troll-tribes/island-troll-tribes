@@ -59,8 +59,11 @@ public class Shield
     string iconPath = "ReplaceableTextures\\CommandButtons\\BTN"
     string abilities = ""
     string modelPath = ""
+    string hotkey = ""
+    int x = 0
+    int y = 0
 
-    construct(int id, string name, int abilId, real ignoreDamage, string tooltip, string iconPath, string modelPath, string abilities, int goldCost)
+    construct(int id, string name, int abilId, real ignoreDamage, string hotkey, string tooltip, string iconPath, string modelPath, string abilities, int goldCost)
         this.id = id
         this.name = name
         this.abilId = abilId
@@ -68,14 +71,18 @@ public class Shield
         this.goldCost = goldCost
         this.iconPath += iconPath+".blp"
         this.ignoreDamage = ignoreDamage
+        this.hotkey = hotkey
         this.abilities = abilities
-        if id != ITEM_BATTLE_SHIELD
-            this.abilities += ",A0DI" //A0DI refer to the 10% magic resistance ability
+        this.abilities += ",A0DI" //A0DI refer to the 10% magic resistance ability
         this.modelPath = modelPath
 
     function buildShield()
         buildItem()
         buildReduceDamageSpell()
+
+    function setBtnPos(int x, int y)
+        this.x = x
+        this.y = y
 
     function buildItem()
         new ItemDefinition(id, 'bspd')
@@ -89,13 +96,15 @@ public class Shield
         ..setDroppedWhenCarrierDies(true)
         ..setScalingValue(0.80)
         ..setActivelyUsed(true)
+        ..setButtonPositionX(x)
+        ..setButtonPositionY(y)
         ..setCooldownGroup("defend")
         ..setHitPoints(75)
         ..setLumberCost(goldCost)
         ..setLevelUnclassified(0)
         ..setPerishable(false)
         ..setPriority(0)
-        ..setTooltipBasic("Trade for "+name)
+        ..setTooltipBasic(makeToolTipNorm(hotkey, "Trade for "+name))
 
     function buildReduceDamageSpell()
         new AbilityDefinitionHardenedSkin(abilId)
@@ -108,11 +117,11 @@ public class Shield
 
 function getShield() returns LinkedList<Shield>
     return asList(
-        new Shield(ITEM_SHIELD        , "Basic Shield"  , ABILITY_BASIC_SHIELD_BLOCK_ID  , SHIELD_DAMAGE_BLOCK1 , BASIC_SHIELD_TOOLTIP  , "SteelArmor"         , MODEL_SHIELD       , BASIC_SHIELD_ABILITIES , 13),
-        new Shield(ITEM_BONE_SHIELD   , "Bone Shield"   , ABILITY_BONE_SHIELD_BLOCK_ID   , SHIELD_DAMAGE_BLOCK2 , BONE_SHIELD_TOOLTIP   , "ImprovedUnholyArmor", MODEL_BONE_SHIELD  , BONE_SHIELD_ABILITIES  , 20),
-        new Shield(ITEM_IRON_SHIELD   , "Iron Shield"   , ABILITY_IRON_SHIELD_BLOCK_ID   , SHIELD_DAMAGE_BLOCK3 , IRON_SHIELD_TOOLTIP   , "HumanArmorUpOne"    , MODEL_IRON_SHIELD  , IRON_SHIELD_ABILITIES  , 46),
-        new Shield(ITEM_STEEL_SHIELD  , "Steel Shield"  , ABILITY_STEEL_SHIELD_BLOCK_ID  , SHIELD_DAMAGE_BLOCK4 , STEEL_SHIELD_TOOLTIP  , "ThoriumArmor"       , MODEL_STEEL_SHIELD , STEEL_SHIELD_ABILITIES , 66),
-        new Shield(ITEM_BATTLE_SHIELD , "Battle Shield" , ABILITY_BATTLE_SHIELD_BLOCK_ID , SHIELD_DAMAGE_BLOCK4 , BATTLE_SHIELD_TOOLTIP , "ArcaniteArmor"      , MODEL_BATTLE_SHIELD, BATTLE_SHIELD_ABILITIES , 82)
+        new Shield(ITEM_SHIELD        , "Basic Shield"  , ABILITY_BASIC_SHIELD_BLOCK_ID  , SHIELD_DAMAGE_BLOCK1 , "A", BASIC_SHIELD_TOOLTIP  , "SteelArmor"         , MODEL_SHIELD       , BASIC_SHIELD_ABILITIES , 13),
+        new Shield(ITEM_BONE_SHIELD   , "Bone Shield"   , ABILITY_BONE_SHIELD_BLOCK_ID   , SHIELD_DAMAGE_BLOCK2 , "A", BONE_SHIELD_TOOLTIP   , "ImprovedUnholyArmor", MODEL_BONE_SHIELD  , BONE_SHIELD_ABILITIES  , 20),
+        new Shield(ITEM_IRON_SHIELD   , "Iron Shield"   , ABILITY_IRON_SHIELD_BLOCK_ID   , SHIELD_DAMAGE_BLOCK3 , "A", IRON_SHIELD_TOOLTIP   , "HumanArmorUpOne"    , MODEL_IRON_SHIELD  , IRON_SHIELD_ABILITIES  , 30)..setBtnPos(0, 1),
+        new Shield(ITEM_STEEL_SHIELD  , "Steel Shield"  , ABILITY_STEEL_SHIELD_BLOCK_ID  , SHIELD_DAMAGE_BLOCK4 , "W", STEEL_SHIELD_TOOLTIP  , "ThoriumArmor"       , MODEL_STEEL_SHIELD , STEEL_SHIELD_ABILITIES , 66)..setBtnPos(1, 0),
+        new Shield(ITEM_BATTLE_SHIELD , "Battle Shield" , ABILITY_BATTLE_SHIELD_BLOCK_ID , SHIELD_DAMAGE_BLOCK4 , "A", BATTLE_SHIELD_TOOLTIP , "ArcaniteArmor"      , MODEL_BATTLE_SHIELD, BATTLE_SHIELD_ABILITIES , 82)
     )
 
 @compiletime function createShieldSpell()

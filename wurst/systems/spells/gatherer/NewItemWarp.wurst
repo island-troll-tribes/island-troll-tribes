@@ -1,5 +1,6 @@
 package NewItemWarp
 
+import Radars
 import ChannelAbilityPreset
 import ID
 import Lodash
@@ -83,6 +84,7 @@ function onCast()
     var _itemPulledCount = 0
 
     forItemsInMap() i ->
+        removeRadarDummy(i)
         if i.getPos().distanceTo(caster.getPos()) < range and i.isPickupable() and _itemPulledCount < MAX_ITEM_PULLED
         and not i.isAllyFireAround(600, caster) // Doesn't pull item near an ally camp fire, I don't want to mess up my base
             new ItemPulled(caster, i)

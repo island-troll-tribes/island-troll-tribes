@@ -25,6 +25,8 @@ constant BEAR_HIDE_ICON = ICON_PATH.format("HideBear")
 constant BONE_ICON      = ICON_PATH.format("Bone")
 constant MAGIC_ICON     = ICON_PATH.format("MoonStone")
 constant MC_ICON        = ICON_PATH.format("ManaStone")
+constant THISTLES_ICON  = ICON_PATH.format("QuillSprayOff")
+constant DTHISTLES_ICON = ICON_PATH.format("QuillSpray")
 
 constant TINDER_MODEL    = Doodads.ruins_Shrub1
 constant STICK_MODEL     = Doodads.felwoodLogStraight
@@ -38,6 +40,7 @@ constant BEAR_HIDE_MODEL = "Models\\HideBear.mdx"
 constant BONE_MODEL      = Doodads.skull0
 constant MAGIC_MODEL     = Doodads.icecrown_Crystal3
 constant MC_MODEL        = Doodads.eyeOfSargeras
+constant THISTLES_MODEL  = Doodads.felwood_Thorns5
 
 constant STONE_DMG = 25.
 constant STONE_COOLDOWN   = 8.
@@ -56,6 +59,8 @@ constant TT_BEAR_HIDE = "A hide from a Bear, can be tanned to make armor."
 constant TT_BONE      = "A sharp bone that can be used to cut an opponent adding 2 to damage. Can be used to make bone armor and weapons."
 constant TT_MAGIC     = "A very rare and unpredictable activated Mana Complex. Use with extreme caution. Who knows what it will do."
 constant TT_MC        = "A glowing crystal of mana. Used to craft magic gear."
+constant TT_THISTLES  = "Some slightly poisonous thistles from a thistle bush. Use with the blowgun!"
+constant TT_DTHISTLES = "Inflicts depressing on the enemy unit zapping some energy and slowing. When combined with any other form of depression (spell or aura), the effects are increased."
 
 
 public class BasicMaterialDefinition extends IttItem
@@ -66,6 +71,10 @@ public class BasicMaterialDefinition extends IttItem
 class PerishableMaterialDefinition extends PerishableItem
     construct(int id, string icon, string model, string name, string toolTipExt, int cost, LinkedList<int> tinting, string abilities, real scale, string cooldownGrp)
         super(id, icon, model, name, toolTipExt, cost, scale, tinting, abilities, cooldownGrp, 1)
+        this.setClassification("Bonus")
+
+    construct(int id, string icon, string model, string name, string toolTipExt, int cost, LinkedList<int> tinting, string abilities, real scale, string cooldownGrp, int charge)
+        super(id, icon, model, name, toolTipExt, cost, scale, tinting, abilities, cooldownGrp, charge)
         this.setClassification("Bonus")
 
 class StoneThrowAbility extends SpearAbility
@@ -91,3 +100,5 @@ class StoneThrowAbility extends SpearAbility
     new BasicMaterialDefinition (ITEM_MANA_CRYSTAL     , MC_ICON        , MC_MODEL        , "Mana Crystal" , TT_MC        , 5  , asList(255 , 255 , 255 ), ""     , 0.25 )
     new PerishableMaterialDefinition (ITEM_STONE , STONE_ICON , STONE_MODEL , "Stone" , TT_STONE , 5 , asList(255 , 255 , 255 ), ABIL_STONE.toRawCode() , 0.33 , ABIL_SPEAR.toRawCode())
     new PerishableMaterialDefinition (ITEM_MAGIC , MAGIC_ICON , MAGIC_MODEL , "Magic" , TT_MAGIC , 5 , asList(0   , 0   , 255 ), ABIL_MAGIC.toRawCode() , 0.30 , "Asp6")
+    new PerishableMaterialDefinition (ITEM_THISTLES      , THISTLES_ICON , THISTLES_MODEL , "Thistles" , TT_THISTLES , 2  , asList(255 , 255 , 255 ), "", 0.75 , "Asp6", 3)
+    new PerishableMaterialDefinition (ITEM_DARK_THISTLES , THISTLES_ICON , THISTLES_MODEL , "Thistles" , TT_THISTLES , 10 , asList(0   , 0   , 0   ), "", 0.75 , "Asp6", 3)

@@ -1,5 +1,6 @@
 package SpawningTestHelpers
 
+import CheatPack
 import ChatCommands
 import Game
 import SimError
@@ -11,7 +12,7 @@ import LinkedList
 import IdListConstant
 import HashMap
 
-let unitSpawnList = new HashMap<string, LinkedList<int>>()
+let unitSpawnMap = new HashMap<string, LinkedList<int>>()
 ..put("trolls"      , TROLL_UNIT_LIST)
 ..put("mage"        , MAGE_CLASS_LIST)
 ..put("tradeships"  , TRADE_SHIP_LIST)
@@ -29,7 +30,7 @@ let unitSpawnList = new HashMap<string, LinkedList<int>>()
 ..put("pets"        , PETS_LIST)
 ..put("dragons"     , DRAGON_LIST)
 
-let itemSpawnList = new HashMap<string, LinkedList<int>>()
+let itemSpawnMap = new IterableMap<string, LinkedList<int>>()
 ..put("herbs"            , HERB_LIST)
 ..put("hides"            , HIDE_LIST)
 ..put("boots"            , BOOTS_LIST)
@@ -45,6 +46,7 @@ let itemSpawnList = new HashMap<string, LinkedList<int>>()
 ..put("cloaks"           , CLOAK_LIST)
 ..put("potions"          , POTION_LIST)
 ..put("kits"             , BUILDING_KIT_LIST)
+..put("others"           , STACKED_ITEM_LIST)
 
 let HELP_MESSAGE = (
     GOLD_COLOR + "Create units and items\n|r" +
@@ -62,6 +64,27 @@ let SPAWN_HELP_MESSAGE = (
     "To spawn herbs/materials/all building in order to test crafting\n"+
     "Example : "+SPECIAL_COLOR+"-spawn hunter\n|r"+GENERAL_COLOR+"Will spawn all hunter's class unit"
 )
+
+function spawnUnits(LinkedList<int> unitList, vec2 trollPos, int count, player owner)
+    var pos = trollPos
+
+    pos.x += 100
+    pos.y -= (unitList.size() / 2) * 100
+    for elem in unitList
+        pos.y += 100
+        for i = count downto 1
+            createUnit(owner, elem, pos, (270.0).asAngleDegrees())
+
+
+function spawnItems(LinkedList<int> itemList, vec2 trollPos, int count)
+    var pos = trollPos
+
+    pos.x += 100
+    pos.y -= (itemList.size() / 2) * 100
+    for elem in itemList
+        pos.y += 100
+        for i = count downto 1
+            createItem(elem, pos)
 
 init
     registerGameStartEvent() ->
@@ -105,24 +128,23 @@ init
                 var pos = troll.getPos()
                 var count = 1
                 let listName = args.get(1).toLowerCase()
-                var unitList = unitSpawnList.get(listName)
-                var itemList = itemSpawnList.get(listName)
+                var unitList = unitSpawnMap.get(listName)
+                var itemList = itemSpawnMap.get(listName)
 
                 print(listName)
+                if listName == "allitems"
+                    for key in itemSpawnMap
+                        spawnItems(itemSpawnMap.get(key), pos, 1)
+                        pos.x += 100
+                else if unitList == null and itemList == null
+                    print(SPAWN_HELP_MESSAGE)
+
                 if args.get(2).toInt() > 0
                     count = args.get(2).toInt()
 
-                if unitList == null and itemList == null
-                    print(SPAWN_HELP_MESSAGE)
                 else
-                    let toSpawn = (unitList != null) ? unitList : itemList
-                    let owner = args.size() > 3 ? players[args.get(3).toInt() - 1] : triggerPlayer
-                    pos.x += 100
-                    pos.y -= (toSpawn.size() / 2) * 100
-                    for elem in toSpawn
-                        pos.y += 100
-                        for i = count downto 1
-                            if unitSpawnList.has(listName)
-                                createUnit(owner, elem, pos, (270.0).asAngleDegrees())
-                            else
-                                createItem(elem, pos)
+                    if unitList != null
+                        let owner = args.size() > 3 ? players[args.get(3).toInt() - 1] : triggerPlayer
+                        spawnUnits(unitList, pos, count, owner)
+                    else
+                        spawnItems(itemList, pos, count)

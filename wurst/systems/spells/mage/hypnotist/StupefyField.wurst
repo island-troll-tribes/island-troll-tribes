@@ -83,11 +83,13 @@ function onCast()
 
 function onEndcast()
     var caster = GetSpellAbilityUnit()
-    if GetSpellAbilityId() == SPELL_STUPEFY and caster.hasAbility(REAL_AURA_STUPEFY)
+    var spell = GetSpellAbilityId()
+    if spell == SPELL_STUPEFY or spell == SPELL_DEMENTIA_MASTER_STUPEFY and caster.hasAbility(REAL_AURA_STUPEFY)
         caster.removeAbility(REAL_AURA_STUPEFY)
         caster.removeAbility('B00L') // Bams
         caster.removeAbility('B00M') // Bam2
 
 init
     registerSpellEffectEvent(SPELL_STUPEFY, () -> onCast())
+    registerSpellEffectEvent(SPELL_DEMENTIA_MASTER_STUPEFY, () -> onCast())
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST, () -> onEndcast())

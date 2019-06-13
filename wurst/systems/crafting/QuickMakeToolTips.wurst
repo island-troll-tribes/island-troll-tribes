@@ -1,12 +1,13 @@
 package QuickMakeToolTips
 import LegacyColors
-import CloakOfMana
+import ShieldsDefinition
+import ToolTipsUtils
 
 //Herb
 constant let SPECIAL_HERB       = SPECIAL_COLOR+"Special Herb|r"
 constant let RIVER_ROOT         = COLOR_TEAL+"River Root|r"
 constant let RIVER_STEM         = COLOR_GRAY+"River Stem|r"
-constant let BUTSU              = COLOR_GREEN+"Bustu|r"
+constant let ATHELAS_SEED       = COLOR_GREEN+"Athelas Seed|r"
 
 //Basic Materials
 constant let STONE              = COLOR_GRAY+"Stone|r"
@@ -26,7 +27,7 @@ constant let MAGIC              = "|cff4e90e7Magic|r"
 constant let WIND               = "|cff9570c0Spirit Wind|r"
 constant let WATER              = COLOR_TEAL+"Spirit Water|r"
 constant let ANABOLIC           = COLOR_ORANGE+"Anabolic Potion|r"
-constant let DARK_ROCK          = "|cff7b2ab1Dark Rock|r"
+constant let SPIRIT_DARKNESS    = "|cff7b2ab1Spirit Of Darkness|r"
 constant let IRON               = "|cffe03737Iron Ingot|r"
 constant let STEEL              = "|cffe03737Steel Ingot|r"
 constant let SPEAR              = HIGHLIGHT_COLOR+"Spear|r"
@@ -55,7 +56,7 @@ public let TANNERY_PLACEHOLDER_HIDE_USAGE_TOOLTIP = "It doesn't matter which hid
                                                     "as much stat as a battle armor made from a jungle bear skin coat, wolf & bear hide sell for good money"
 
 public let SPECIAL_MIX_WARNING = "\n\n|cffd32c2cWARNING : Quick Make should pick up the Special Herb in the following order : Blue/Yellow/Purple/Orange"+
-                                 ", if you have 3 blue and 2 yellow, it will use 3 blue and 1 yellow herb to make a disease potion for example,"+ 
+                                 ", if you have 3 blue and 2 yellow, it will use 3 blue and 1 yellow herb to make a disease potion for example,"+
                                  " it is recommended to use the Mix Herb ability to make sure it mixes the herb you want.|r"
 
 public let MIXING_SPELLBOOK_TOOLTIP       = "More Recipes here\n\nContains Quick Make spell for special herb recipes"
@@ -68,42 +69,42 @@ public let BUILDING_CRAFT_TOOLTIP         = "Look here to construct buildings, t
 
 // Mixing Pot
 
-public let HEALING_POTION_RECIPE          = "a Healing Potion, restore 65 hp to the target unit :\n\n1x " +BUTSU+ " + 1x " +RIVER_ROOT
-public let MANA_POTION_RECIPE             = "a Mana Potion, restore 65 mana to the consumer :\n\n1x " +BUTSU+ " + 1x " +RIVER_STEM
-public let CURE_ALL_RECIPE                = "a Cure All, remove positive/negative buff & effect on the target ally :\n\n2x "+BUTSU
-public let ESSENCE_BEES_RECIPE            = "an Essence of Bees, spawn multiple Bee Hive who attack your enemies :\n\n"+ 
+public let HEALING_POTION_RECIPE          = "a Healing Potion, restore 65 hp to the target unit :\n\n1x " +ATHELAS_SEED+ " + 1x " +RIVER_ROOT
+public let MANA_POTION_RECIPE             = "a Mana Potion, restore 65 mana to the consumer :\n\n1x " +ATHELAS_SEED+ " + 1x " +RIVER_STEM
+public let CURE_ALL_RECIPE                = "a Cure All, remove positive/negative buff & effect on the target ally :\n\n2x "+ATHELAS_SEED
+public let ESSENCE_BEES_RECIPE            = "an Essence of Bees, spawn multiple Bee Hive who attack your enemies :\n\n"+
                                             "2x "+SPECIAL_HERB+" 1 + 1x "+SPECIAL_HERB+ " 2 + 1x "+SPECIAL_HERB+" 3\nOr\n1x "+SPECIAL_HERB+" 1/2/3/4"+SPECIAL_MIX_WARNING
 public let TWIN_ISLANDS_POTION_RECIPE     = "a Twin Islands Potion, reveals the enemies Troll for 30 seconds (|cffe03737Current Quick Make doesn't work with Blue/Yellow Herb|r)"+
                                             " :\n\n3x "+GOLD_COLOR+"Yellow Herb|r + 3x "+COLOR_LIGHT_BLUE+"Blue Herb|r\n"+
                                             "Or\n3x |cff9c4dddPurple Herb|r + 3x "+COLOR_ORANGE+"Orange Herb|r"+SPECIAL_MIX_WARNING
 
 public let NETHER_POTION_RECIPE           = "a Nether Potion, cause the target to become immune to physical damage but amplify magic damage done to it. "+
-                                            makeDurationTips(15, 40, 20) + " :\n\n1x "+SPECIAL_HERB+" + 2x "+RIVER_STEM+" + 2x "+BUTSU
+                                            makeDurationTips(15, 40, 20) + " :\n\n1x "+SPECIAL_HERB+" + 2x "+RIVER_STEM+" + 2x "+ATHELAS_SEED
 
 public let DRUNKS_POTION_RECIPE           = "a Drunk Potion, cause the target to become drunk, silencing it, giving it 50% chance to miss, reduce attack speed by 10% and "+
-                                            "movement speed by 25%. " + makeDurationTips(7, 13, 25) + " :\n\n1x "+SPECIAL_HERB+" 1 + 2x "+BUTSU+" + 2x "+RIVER_ROOT+SPECIAL_MIX_WARNING
+                                            "movement speed by 25%. " + makeDurationTips(7, 13, 25) + " :\n\n1x "+SPECIAL_HERB+" 1 + 2x "+ATHELAS_SEED+" + 2x "+RIVER_ROOT+SPECIAL_MIX_WARNING
 
 public let FERVER_POTION_RECIPE           = "a Ferver Potion, consumer gain 30% attack speed and 8 armor. "+makeDurationTips(20, 20, 5)+
-                                            " :\n\n2x "+SPECIAL_HERB+" 1 + 1x "+SPECIAL_HERB+" 2 + 1x "+BUTSU+SPECIAL_MIX_WARNING
+                                            " :\n\n2x "+SPECIAL_HERB+" 1 + 1x "+SPECIAL_HERB+" 2 + 1x "+ATHELAS_SEED+SPECIAL_MIX_WARNING
 
 public let DISEASE_POTION_RECIPE          = "a Disease Potion, Biological warfare! Throw at an enemy to give him and all units in a 200 radius of them a disease."+
                                             "Last 25 seconds dealing 3 damage per second. Reduces healing received from items and potions by 30%:\n\n"+
                                             "2x "+SPECIAL_HERB+" 1 + 2x "+SPECIAL_HERB+" 2 + 1x "+RIVER_ROOT+"\nOr\n3 "+SPECIAL_HERB+" 1 + 1x "+SPECIAL_HERB+" 2 + 1x "+RIVER_ROOT+SPECIAL_MIX_WARNING
-                                            
+
 public let ANTI_MAGIC_POTION_RECIPE       = "an Anti-Magic Potion, cast anti-magic shield on target, blocking some spell cast & 100 magic damage. "+
-                                            makeDurationTips(25, 25, 1)+  " :\n\n1x "+SPECIAL_HERB+" + 1x "+BUTSU
+                                            makeDurationTips(25, 25, 1)+  " :\n\n1x "+SPECIAL_HERB+" + 1x "+ATHELAS_SEED
 
 public let ANABOLIC_POTION_RECIPE         = "an Anabolic Potion, increase consumer movement speed. "+makeDurationTips(10, 10, 60)+" :\n\n4x "+RIVER_STEM
-public let ORACLE_POTION_RECIPE           = "a Oracle Potion, grant true sight to the consumer. "+makeDurationTips(20, 20, 20)+" :\n\n1x "+SPECIAL_HERB+" + 2x "+BUTSU
+public let ORACLE_POTION_RECIPE           = "a Oracle Potion, grant true sight to the consumer. "+makeDurationTips(20, 20, 20)+" :\n\n1x "+SPECIAL_HERB+" + 2x "+ATHELAS_SEED
 public let ELEMENTAL_SHIELD_POTION_RECIPE = "an Elemental Shield Potion, grant lighting shield to the consumer, dealing 4 damage per second. "+
-                                            makeDurationTips(10, 10, 30)+ " :\n\n1x "+SPECIAL_HERB+" + 1x "+BUTSU+" + 1x "+RIVER_STEM
+                                            makeDurationTips(10, 10, 30)+ " :\n\n1x "+SPECIAL_HERB+" + 1x "+ATHELAS_SEED+" + 1x "+RIVER_STEM
 
 public let ACID_BOMB_RECIPE               = "an Acid Bomb, reduce 8 armor in a 200 radius area on target"+
                                             makeDurationTips(50, 50, 10)+ " :\n\n2x "+SPECIAL_HERB+" 1 + 2x "+SPECIAL_HERB+" 2 + 2x "+RIVER_STEM+"\nOr\n"+
                                             "3x "+SPECIAL_HERB+" 1 + 1x "+SPECIAL_HERB+" 2 + 2x "+RIVER_STEM+SPECIAL_MIX_WARNING
 public let BEE_HIVE_RECIPE                = "a Bee Hive, spawn a Bee Hive who attack your enemies :\n\n1x "+SPECIAL_HERB+" + 2x "+RIVER_STEM
-public let DARK_ROCK_RECIPE               = "a Dark Rock, dark essence used to create ominous artefact :\n\n1x "+RIVER_ROOT+" + 1x "+RIVER_STEM+" + 2x "+BUTSU
-public let OMNICURE_RECIPE                = "an Omicure, remove positive/negative buff & effect on all allied Trolls :\n\n2x "+BUTSU+" + 1x "+SPECIAL_HERB+" 1 + 1x "+SPECIAL_HERB+" 2"
+public let SPIRIT_DARKNESS_RECIPE         = "a Spirit Of Darkness, dark essence used to create ominous artefact :\n\n1x "+RIVER_ROOT+" + 1x "+RIVER_STEM+" + 2x "+ATHELAS_SEED
+public let OMNICURE_RECIPE                = "an Omicure, remove positive/negative buff & effect on all allied Trolls :\n\n2x "+ATHELAS_SEED+" + 1x "+SPECIAL_HERB+" 1 + 1x "+SPECIAL_HERB+" 2"
 public let GEM_OF_KNOWLEDGE_RECIPE        = "a Gem Of Knowledge, magical artifact increasing experience gained by 50%, doesn't work on hunter & beast master classes"+
                                             " :\n\n2x "+SPECIAL_HERB+" 1 + 2x "+SPECIAL_HERB+" 2\nOr\n3x "+SPECIAL_HERB+" 1 + 1x "+SPECIAL_HERB+" 2"+SPECIAL_MIX_WARNING
 public let SPIRIT_WIND_RECIPE             = "a Spirit Of Wind, used to craft quality gear, gives your hero +1 all attributes :\n\n2x "+RIVER_STEM
@@ -122,16 +123,16 @@ public let SPEAR_RECIPE       = "a Spear. Deals 40 damage on target, has 60% cha
 public let IRON_SPEAR_RECIPE  = "a Iron Spear. Deals 70 damage on target, has 60% chance of being recoverable :\n\n1x "                        +STICK+"/"+BONE+" + 1x "+IRON
 public let STEEL_SPEAR_RECIPE = "a Steel Spear. Deals 100 damage on target, has 60% chance of being recoverable :\n\n1x "                      +STICK+"/"+BONE+" + 1x "+STEEL
 public let DARK_SPEAR_RECIPE  = "a Dark Spear. Deals 40 damage and can zap anywhere from 40-60 energy on striking a target. Has 60% chance of "+
-                                        "being recoverable. :\n\n1x "+STICK+"/"+BONE+" + 1x "+DARK_ROCK
+                                        "being recoverable. :\n\n1x "+STICK+"/"+BONE+" + 1x "+SPIRIT_DARKNESS
 
 public let IRON_INGOT_RECIPE   = "an Iron Ingot. A Hard and shiny ingot of iron that could be used in production of powerful weapons :\n\n1x "      +STONE      +" + 1x "+FLINT
 public let STEEL_INGOT_RECIPE  = "a Steel Ingot. A Hard and shiny ingot of Steel that could be used in production of powerful weapons :\n\n2x "     +IRON       +" + 2x "+FLINT
 public let ENSNARE_TRAP_RECIPE = "an Ensnare Trap. Deals few ranged damage, can net trolls & animals, good for killing hawk :\n\n1x "               +TINDER     +" + 1x "+BONE +" + 1x "+STICK
 
-public let SHIELD_RECIPE       = "a Shield. Gives +2 Strenght, has 25% to block 4 damages and grant 10% magic resistance :\n\n1x "                  +ELK_HIDE   +" + 2x "+STICK
-public let BONE_SHIELD_RECIPE  = "a Bone Shield. Gives +1 Armor, +3 Strenght, has 25% to block 6 damages and grant 10% magic resistance :\n\n1x "   +SHIELD     +" + 5x "+BONE
-public let IRON_SHIELD_RECIPE  = "an Iron Shield. Gives +2 Armor, +6 Strenght, has 25% to block 10 damages and grant 10% magic resistance :\n\n1x " +SHIELD     +"+ 2x " +IRON
-public let STEEL_SHIELD_RECIPE = "a Steel Shield. Gives +4 Armor, +10 Strenght, has 25% to block 20 damages and grant 10% magic resistance :\n\n1x "+SHIELD     +"+ 2x " +STEEL
+public let SHIELD_RECIPE       = BASIC_SHIELD_TOOLTIP +"\n\n1x " +ELK_HIDE +" + 2x " +STICK
+public let BONE_SHIELD_RECIPE  = BONE_SHIELD_TOOLTIP  +"\n\n1x " +SHIELD   +" + 5x " +BONE
+public let IRON_SHIELD_RECIPE  = IRON_SHIELD_TOOLTIP  +"\n\n1x " +SHIELD   +"+ 2x "  +IRON
+public let STEEL_SHIELD_RECIPE = STEEL_SHIELD_TOOLTIP +"\n\n1x " +SHIELD   +"+ 2x "  +STEEL
 
 public let BONE_GLOVES_RECIPE  = "a Bone Gloves. Gives +2 Armor, +1 Damage and + 20% Attack Speed :\n\n1x "                                         +BASICGLOVES+" + 5x "+BONE
 public let IRON_GLOVES_RECIPE  = "an Iron Gloves. Gives +3 Armor, +2 Damage and + 25% Attack Speed :\n\n1x "                                        +BASICGLOVES+" + 2x "+IRON
@@ -165,8 +166,8 @@ public let CLOAK_FLAMES_RECIPE          = "a Cloak Of Flames. Deals 7 damage aro
 public let CLOAK_FROST_RECIPE           = "a Cloak Of Frost. Can cast a slow zone around wearer, slows attack and movement speed by 35% and deals 20 damages. "+
                                            makeDurationTips(4, 8, 40)+". Also passively grants +3 to all stats and +3 armor :\n\n1x "+MAGIC+COLOR_ORANGE+" + 1x Bone Coat|r + 1x "+WATER
 public let CLOAK_HEALING_RECIPE         = "a Cloak Of Healing. Can heal 150 hit point to surrounding allies, has 35 seconds cooldown. Also passively grants +3 to all stats and +3 armor "+
-                                          ":\n\n1x "+MAGIC+COLOR_ORANGE+" + 1x Bone Coat|r + 1x "+BUTSU
-public let CLOAK_MANA_RECIPE            = "a Cloak Of Mana. Can restore "+MANA_AMOUNT.toString()+" mana point to surrounding allies, has 35 seconds cooldown. Also passively grants +3 "+
+                                          ":\n\n1x "+MAGIC+COLOR_ORANGE+" + 1x Bone Coat|r + 1x "+ATHELAS_SEED
+public let CLOAK_MANA_RECIPE            = "a Cloak Of Mana. Can restore 100 mana point to surrounding allies, has 35 seconds cooldown. Also passively grants +3 "+
                                           "to all stats and +3 armor :\n\n1x "+MAGIC+COLOR_ORANGE+" + 1x Bone Coat|r + 1x "+RIVER_STEM
 
 // Workshop
@@ -175,11 +176,12 @@ public let BATTLE_GLOVES_RECIPE         = "a Battle Gloves. Provides warmth, +5 
                                           " on a 6 second cooldown. Attacking enemies reduces the cooldown of the critical strike by 1 second :\n\n1x "+SPECIAL_COLOR+"Bone Gloves|r + 1x "
                                           +STEEL+" + 1x "+IRON+" + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC
 public let BATTLE_AXE_RECIPE            = "a Battle Axe. Increase damage by 14, can cast purge, removing all buffs from a target unit and slowing it. "+makeDurationTips(5, 15, 60)+
-                                          " :\n\n1x "+STICK+" + 1x "+STEEL+" + 1x "+IRON+" + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC                                          
-public let BATTLE_ARMOR_RECIPE          = "a Battle Armor. Increase all stats by 4 and armor by 7, grants 20% magic resistance, can cast Anti-Magic on surrounding allies. "+makeDurationTips(10, 10, 75)+
-                                          " :\n\n1x "+SPECIAL_COLOR+"Bone Coat|r + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC
-public let BATTLE_SHIELD_RECIPE         = "a Battle Shield. Grants +7 armor, 25% chances of blocking 20 damage, blocks a targeted spell every 75 seconds. Can cast silence on targeted enemy and deals 25 damage"+
-                                           makeDurationTips(4, 16, 45)+" :\n\n1x "+SPECIAL_COLOR+"Bone Shield|r + 1x "+ELK_HIDE+" + 1x "+STEEL+" + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC
+                                          " :\n\n1x "+STICK+" + 1x "+STEEL+" + 1x "+IRON+" + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC
+public let BATTLE_ARMOR_RECIPE          = "A coat embedded with a protective mana layer. Increase all stats by {0}, Armor by {1} and provides warmth. Can cast Anti-Magic on "
+                                          .format(4..toToolTipGreen(), 7..toToolTipGreen())+ "Allies wherever they are :"+
+                                          "\n\n1x "+SPECIAL_COLOR+"Bone Coat|r + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC
+public let BATTLE_SHIELD_RECIPE         = BATTLE_SHIELD_TOOLTIP+
+                                           "\n\n1x "+SPECIAL_COLOR+"Bone Shield|r + 1x "+ELK_HIDE+" + 1x "+STEEL+" + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC
 public let ANABOLIC_BOOTS_RECIPE        = "an Anabolic Boots. Increase all stats by 4, armor by 5 and movement speed by 200, grants 10% evasion :\n\n1x "+
                                            SPECIAL_COLOR+"Bone Boots|r + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC+" + 2x "+ANABOLIC
 
@@ -193,21 +195,21 @@ public let ULTRA_POISON_SPEAR_RECIPE    = "an Ultra Poison Spear. Hurls a poison
                                           "Reduce attack speed by 50% and movement speed by 40%. Has 50% chance of being recoverable. "+makeDurationTips(40, 80, 2)+" :\n\n1x "+
                                           ULTRA_POISON+" + 1x "+SPEAR
 
-public let NETS_RECIPE                   = "a Nets. Can cast net on targeted enemy, locking them down, good for hunting animals and catch enemy troll. Has 3 charges. Last 2.5(10) seconds, has 15 seconds cooldown"+ 
+public let NETS_RECIPE                   = "a Nets. Can cast net on targeted enemy, locking them down, good for hunting animals and catch enemy troll. Has 3 charges. Last 2.5(10) seconds, has 15 seconds cooldown"+
                                            " :\n\n2x "+TINDER
-                                          
+
 public let BLOW_GUN_RECIPE               = "a BlowGun. Used for shooting small things. Can be loaded with thistles or bones. Drag and drops items on the blowgun to load,"+
                                           " click and use on your own troll to unload : \n\n1x "+STICK+" + 1x "+CLAY_BALL
-                                          
+
 public let DARK_THISTLES_RECIPE         = "a Dark thistles. Creates a special type of blowgun ammo. Instead of poisoning, dark thistles depress enemies and zap mana from them over time :"+
-                                          "\n\n1x "+COLOR_GREEN+"Thistles|r + 1x "+DARK_ROCK
-                                          
+                                          "\n\n1x "+COLOR_GREEN+"Thistles|r + 1x "+SPIRIT_DARKNESS
+
 public let SMOKE_BOMB_RECIPE            = "a Smoke Bomb. The Shell of an acorn containing the spirit of wind. When activated, Acorn releases the wind creating a smoke screen, has 3 charges :"+
                                           "\n\n1x "+GOLD_COLOR+"Acorn|r + 1x "+WIND
-                                          
+
 public let FIRE_BOMB_RECIPE             = "a Fire Bomb. A shell of destructible material that is highly flammable when thrown, deals 67 damage. Only damage ally/enemy buildings and trees, has 2 charges :"+
                                           "\n\n1x |cff9c4dddSmoke Bomb|r + 1x "+FLINT+" + 1x "+MC
-                                          
+
 public let EMP_RECIPE                   = "an EMP. When activated, disables all towers and enemy buildings around the user for 45 seconds :\n\n2x "+MC+" + 1x "+WIND+" + 1x "+WATER
 
 public let TRANSPORT_SHIP_RECIPE        = "a Transport Ship Kit. Build a ship which allows you to travel on water :\n\n2x "+STICK+" + 2x "+CLAY_BALL+" + 2x "+ELK_HIDE

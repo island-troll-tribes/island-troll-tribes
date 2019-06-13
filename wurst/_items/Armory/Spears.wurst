@@ -1,0 +1,145 @@
+package Spears
+import ClosureEvents
+import DummyCaster
+import Orders
+import ClosureTimers
+import PublicLibrary
+
+constant ABILITY_SPEAR_HIT_DETECTION = 'A0EH'
+constant DARK_SPEAR_CONSECUTIVE_REDUCTION_FACTOR = 0.6666
+
+public constant ABIL_SPEAR   = compiletime(ABIL_ID_GEN.next())
+public constant ABIL_IRON    = compiletime(ABIL_ID_GEN.next())
+public constant ABIL_STEEL   = compiletime(ABIL_ID_GEN.next())
+public constant ABIL_DARK    = compiletime(ABIL_ID_GEN.next())
+public constant ABIL_POISON  = compiletime(ABIL_ID_GEN.next())
+public constant ABIL_RPOISON = compiletime(ABIL_ID_GEN.next())
+public constant ABIL_UPOISON = compiletime(ABIL_ID_GEN.next())
+
+public constant DARK_SPEAR_MIN = 45.
+public constant DARK_SPEAR_MAX = 55.
+
+// If you change the following, update tooltip manually in SpearsDefinition
+public constant SPEAR_RESPAWN_CHANCE   = 0.666
+public constant IRON_RESPAWN_CHANCE    = 0.666
+public constant STEEL_RESPAWN_CHANCE   = 0.666
+public constant DARK_RESPAWN_CHANCE    = 0.4
+public constant POISON_RESPAWN_CHANCE  = 0.5
+public constant RPOISON_RESPAWN_CHANCE = 0.5
+public constant UPOISON_RESPAWN_CHANCE = 0.5
+
+enum SpearType
+    DarkSpear
+    UltraPoisonSpear
+    RefinedPoisonSpear
+    PoisonSpear
+    SteelSpear
+    IronSpear
+    Spear
+
+let spellToSpearType = new HashMap<int, SpearType>
+let spearListeners = new HashMap<unit, EventListener>()
+let darkSpearCounters = new HashMap<unit, int>()
+
+function onSpear(unit caster, unit target, SpearType spearType)
+    let dummyCaster = new DummyCaster()
+        ..delay(8)
+        ..owner(caster.getOwner())
+        ..origin(caster.getPos())
+    let dummy = dummyCaster.castTarget(ABILITY_SPEAR_HIT_DETECTION, 1, Orders.creepthunderbolt, target)
+
+    bindSpearDamageListener(dummy, target, spearType)
+
+function bindSpearDamageListener(unit dummy, unit target, SpearType spearType)
+    let listener = EventListener.add(EVENT_UNIT_DAMAGED) ->
+        let damaged = GetTriggerUnit()
+        if damaged == target and GetEventDamageSource() == dummy
+            if spearListeners.has(dummy)
+                destroy spearListeners.getAndRemove(dummy)
+                onSpearImpact(target, spearType)
+
+    spearListeners.put(dummy, listener)
+
+function onSpearImpact(unit target, SpearType spearType)
+    switch spearType
+        case UltraPoisonSpear
+            spawnItemChance(UPOISON_RESPAWN_CHANCE, ITEM_ULTRA_POISON_SPEAR, target.getPos())
+        case RefinedPoisonSpear
+            spawnItemChance(RPOISON_RESPAWN_CHANCE, ITEM_REFINED_POISON_SPEAR, target.getPos())
+        case PoisonSpear
+            spawnItemChance(POISON_RESPAWN_CHANCE, ITEM_POISON_SPEAR, target.getPos())
+        case DarkSpear
+            spawnItemChance(DARK_RESPAWN_CHANCE, ITEM_DARK_SPEAR, target.getPos())
+            real burnAmount = GetRandomReal(DARK_SPEAR_MIN, DARK_SPEAR_MAX)
+
+            //Reduction for consecutive spears
+            let currentCounters = getAndIncreaseDarkSpearCounter(target)
+            burnAmount *= DARK_SPEAR_CONSECUTIVE_REDUCTION_FACTOR.pow(currentCounters.toReal())
+            doAfter(1.00) ->
+                removeDarkSpearCounter(target)
+
+            ManaBurn(target, burnAmount)
+        case SteelSpear
+            spawnItemChance(STEEL_RESPAWN_CHANCE, ITEM_STEEL_SPEAR, target.getPos())
+        case IronSpear
+            spawnItemChance(IRON_RESPAWN_CHANCE, ITEM_IRON_SPEAR, target.getPos())
+        case Spear
+            spawnItemChance(SPEAR_RESPAWN_CHANCE, ITEM_SPEAR, target.getPos())
+
+    if target.isType(UNIT_TYPE_HERO) and not spearType == SpearType.DarkSpear
+        addSpearResistance(target)
+
+function getAndIncreaseDarkSpearCounter(unit target) returns int
+    //We return the old counter and increase by 1 here
+    if darkSpearCounters.has(target)
+        let currentCounters = darkSpearCounters.get(target)
+        darkSpearCounters.put(target, currentCounters + 1)
+        return currentCounters
+    else
+        darkSpearCounters.put(target, 1)
+        return 0
+
+function removeDarkSpearCounter(unit target)
+    //Deduct counters by 1 or remove from map if they go to 0
+    if darkSpearCounters.has(target)
+        let currentCounters = darkSpearCounters.get(target)
+        if currentCounters > 1
+            darkSpearCounters.put(target, currentCounters - 1)
+        else
+            darkSpearCounters.remove(target)
+
+function addSpearResistance(unit u)
+    SetPlayerAbilityAvailable(u.getOwner(), ABILITY_SPEAR_RESIST, false)
+    if not u.hasAbility(ABILITY_SPEAR_RESIST)
+        u.addAbility(ABILITY_SPEAR_RESIST)
+    else if u.getAbilityLevel(ABILITY_SPEAR_RESIST) < 6
+        u.incAbilityLevel(ABILITY_SPEAR_RESIST)
+
+    doAfter(1) ->
+        if u.getAbilityLevel(ABILITY_SPEAR_RESIST) > 1
+            u.decAbilityLevel(ABILITY_SPEAR_RESIST)
+        else
+            u.removeAbility(ABILITY_SPEAR_RESIST)
+
+function spawnItemChance(real chance, int itemId, vec2 pos)
+    if GetRandomReal(0, 1) <= chance
+        createItem(itemId, pos)
+
+function onSpell()
+    let caster = GetSpellAbilityUnit()
+    let target = GetSpellTargetUnit()
+    let spell = GetSpellAbilityId()
+    if spellToSpearType.has(spell)
+        onSpear(caster, target, spellToSpearType.get(spell))
+
+init
+    spellToSpearType.put(ABIL_SPEAR  , SpearType.Spear)
+    spellToSpearType.put(ABIL_IRON   , SpearType.IronSpear)
+    spellToSpearType.put(ABIL_STEEL  , SpearType.SteelSpear)
+    spellToSpearType.put(ABIL_DARK   , SpearType.DarkSpear)
+    spellToSpearType.put(ABIL_POISON , SpearType.PoisonSpear)
+    spellToSpearType.put(ABIL_RPOISON, SpearType.RefinedPoisonSpear)
+    spellToSpearType.put(ABIL_UPOISON, SpearType.UltraPoisonSpear)
+
+    EventListener.add(EVENT_PLAYER_UNIT_SPELL_EFFECT) ->
+        onSpell()

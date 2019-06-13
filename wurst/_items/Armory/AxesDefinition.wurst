@@ -1,0 +1,113 @@
+package AxesDefinition
+
+import Items
+import AbilityObjEditing
+import ItemObjEditing
+import Assets
+import ID
+import LinkedList
+import ObjectIds
+import ToolTipsUtils
+
+constant ABIL_DMG_STONE  = compiletime(ABIL_ID_GEN.next())
+constant ABIL_DMG_IRON   = compiletime(ABIL_ID_GEN.next())
+constant ABIL_DMG_STEEL  = compiletime(ABIL_ID_GEN.next())
+constant ABIL_DMG_MASHER = compiletime(ABIL_ID_GEN.next())
+constant ABIL_DMG_BATTLE = compiletime(ABIL_ID_GEN.next())
+
+constant ABIL_SILENCE = compiletime(ABIL_ID_GEN.next())
+constant ABIL_PURGE = compiletime(ABIL_ID_GEN.next())
+
+constant ABIL_STONE  = commaList(ABIL_DMG_STONE)
+constant ABIL_IRON   = commaList(ABIL_DMG_IRON)
+constant ABIL_STEEL  = commaList(ABIL_DMG_STEEL)
+constant ABIL_MASHER = commaList(ABIL_SILENCE, ABIL_DMG_MASHER)
+constant ABIL_BATTLE = commaList(ABIL_PURGE, ABIL_DMG_BATTLE)
+
+constant DMG_STONE  = 6
+constant DMG_IRON   = 8
+constant DMG_STEEL  = 12
+constant DMG_MASHER = 7
+constant DMG_BATTLE = 14
+
+constant SILENCE_DURATION_HERO = 4.
+constant SILENCE_DURATION_NORMAL = 12.
+constant PURGE_DURATION_HERO = 5.
+constant PURGE_DURATION_NORMAL = 15.
+
+constant SILENCE_CAST_RANGE = 350.
+constant PURGE_CAST_RANGE = 400.
+
+constant SILENCE_COOLDOWN = 45.
+constant PURGE_COOLDOWN = 60.
+
+constant SILENCE_AOE = 225.
+
+constant ST_MODEL = "Models\\StoneAxe.mdl"
+constant IA_MODEL = "Models\\IronAxe.mdl"
+constant SA_MODEL = "Models\\SteelAxe.mdl"
+constant BA_MODEL = "Models\\BattleAxe.mdl"
+constant MM_MODEL = "Models\\MageMasher.mdl"
+
+constant TT_COMMON = "Increases the attack damage of the unit by {0} when worn. Wielder can cut trees."
+
+constant TT_MM = TT_COMMON + " Can cast silence which has a {0} area of effect, lasting {1} seconds with a {2} second cooldown. "
+                            .format(SILENCE_AOE.toToolTipLightBlue(), SILENCE_DURATION_HERO.toToolTipLightBlue(), SILENCE_COOLDOWN.toToolTipLightBlue())+
+                             "Every hit burns {0} mana against mages, priests, and their subclasses.".format(6..toToolTipBlue())
+
+constant TT_BA = TT_COMMON + " Can cast purge, removes all buffs from a target unit, and slows its movement speed by a factor of <A0FA,DataA1>."+
+                             " Purged units will slowly regain their movement speed over <A0FA,Dur1> seconds." + makeToolTipCooldown(PURGE_COOLDOWN)
+
+class Axe extends IttItem
+    construct(int id, string icon, string model, string name, string hotkey, string toolTipExt, int damage, int cost, LinkedList<int> tinting, string abilities)
+        super(id, icon, model, name, hotkey, toolTipExt, cost, 0.70, tinting, abilities)
+        this.setAbilities(commaList(abilities, "A00W")) //A00W is the attack tree ability
+        this.setStockReplenishInterval(damage * 15)
+        this.setDescription(toolTipExt.format(damage.toReal().toToolTipRed()))
+        this.setTooltipExtended(toolTipExt.format(damage.toReal().toToolTipRed()))
+        this.setCooldownGroup("AIas")
+
+class UsableAxe extends Axe
+    construct(int id, string icon, string model, string name, string hotkey, string toolTipExt, int damage, int cost, LinkedList<int> tinting, string abilities)
+        super(id, icon, model, name, hotkey, toolTipExt, damage, cost, tinting, abilities)
+        this.setActivelyUsed(true)
+
+class Silence extends AbilityDefinitionSilenceItem
+    construct(int abilId, string name, real durationHero, real durationNormal, real cooldown, real castRange, real aoe)
+        super(abilId)
+        this.setName(name)
+        this.setAreaofEffect(1, aoe)
+        this.setManaCost(1, 10)
+        this.setDurationHero(1, durationHero)
+        this.setDurationNormal(1, durationNormal)
+        this.setCastRange(1, castRange)
+        this.setCooldown(1, cooldown)
+        this.setEditorSuffix("(Wurst)")
+
+class Purge extends AbilityDefinitionPurgeCreep
+    construct(int abilId, string name, real durationHero, real durationNormal, real cooldown, real castRange)
+        super(abilId)
+        this.setName(name)
+        this.setManaCost(1, 0)
+        this.setDurationHero(1, durationHero)
+        this.setDurationNormal(1, durationNormal)
+        this.setCastRange(1, castRange)
+        this.setCooldown(1, cooldown)
+        this.setEditorSuffix("(Wurst)")
+
+@compiletime function createAxes()
+    new AttackBonusAbility(ABIL_DMG_STONE , "Stone Axe" , DMG_STONE)
+    new AttackBonusAbility(ABIL_DMG_IRON  , "Iron Axe"  , DMG_IRON)
+    new AttackBonusAbility(ABIL_DMG_STEEL , "Steel Axe" , DMG_STEEL)
+    new AttackBonusAbility(ABIL_DMG_MASHER, "Masher Axe", DMG_MASHER)
+    new AttackBonusAbility(ABIL_DMG_BATTLE, "Battle Axe", DMG_BATTLE)
+
+    new Silence(ABIL_SILENCE, "Mage Masher Silence", SILENCE_DURATION_HERO, SILENCE_DURATION_NORMAL, SILENCE_COOLDOWN, SILENCE_CAST_RANGE, SILENCE_AOE)
+    new Purge(ABIL_PURGE, "Battle Axe Purge", PURGE_DURATION_HERO, PURGE_DURATION_NORMAL, PURGE_COOLDOWN, PURGE_CAST_RANGE)
+
+    new Axe(ITEM_STONE_AXE   , Icons.bTNOrcMeleeUpOne              , ST_MODEL , "Stone Axe"   , "A", TT_COMMON , DMG_STONE , 12, asList(255, 255 , 255 ), ABIL_STONE)
+    new Axe(ITEM_IRON_AXE    , Icons.bTNOrcMeleeUpTwo              , IA_MODEL , "Iron Axe"    , "S", TT_COMMON , DMG_IRON  , 25, asList(255, 255 , 255 ), ABIL_IRON)..setBtnPos(1, 1)
+    new Axe(ITEM_STEEL_AXE   , Icons.bTNSpiritWalkerAdeptTraining  , SA_MODEL , "Steel Axe"   , "Q", TT_COMMON , DMG_STEEL , 48, asList(120, 140 , 255 ), ABIL_STEEL)..setBtnPos(0, 0)
+
+    new UsableAxe(ITEM_BATTLE_AXE  , Icons.bTNOrcMeleeUpThree            , BA_MODEL , "Battle Axe"  , "A", TT_BA     , DMG_BATTLE, 60, asList(255, 255 , 255 ), ABIL_BATTLE)
+    new UsableAxe(ITEM_MAGE_MASHER , Icons.bTNSpiritWalkerMasterTraining , MM_MODEL , "Mage Masher" , "A", TT_MM     , DMG_MASHER, 40, asList(255, 65  , 65  ), ABIL_MASHER)

@@ -1,0 +1,41 @@
+package ManaPotion
+
+import PotionsDefinition
+import ID
+import LinkedList
+import ToolTipsUtils
+import ChannelAbilityPreset
+import ClosureEvents
+import Assets
+
+constant ABIL  = compiletime(ABIL_ID_GEN.next())
+
+constant CAST_RANGE = 500.
+constant MANA_RESTORED = 60.
+
+constant ICON  = ICON_PATH.format("PotionBlueSmall")
+constant MODEL = "Models\\PotionBlueLesser.mdl"
+constant TT    = "A dilute potion made from Athelas Seed. Instantly restores {0} Mana point to a target ally.".format(MANA_RESTORED.toToolTipLightBlue())
+
+constant TARGET_ALLOWED = "friend,ground,hero,invulnerable,organic,self,vulnerable"
+
+@compiletime function createAbil()
+    new ChannelAbilityPreset(ABIL, 1, true)
+    ..setName("Mana Potion")
+    ..setCheckDependencies(false)
+    ..setHeroAbility(false)
+    ..setItemAbility(true)
+    ..presetTargetTypes(Targettype.UNIT)
+    ..setManaCost(1, 0)
+    ..setCooldown(1, 0)
+    ..setCastRange(1, CAST_RANGE)
+    ..setRace(Race.Demon)
+    ..setEditorSuffix("(Wurst)")
+
+@compiletime function createManaPotion()
+    new PotionDefinition(ITEM_MANA_POTION_I, ICON, MODEL, "Mana Potion", "W", TT, 5, commaList(ABIL), 0.7, "A002", 120)
+
+init
+    EventListener.onTargetCast(ABIL) (unit caster, unit target) ->
+        target.addMana(MANA_RESTORED)
+        flashEffect(Abilities.aImaTarget, target, "origin")

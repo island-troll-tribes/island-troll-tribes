@@ -5,18 +5,49 @@ import ClosureTimers
 import HashMap
 import Orders
 import ID
+import Assets
+import ChannelAbilityPreset
+import Lodash
+import ToolTipsUtils
+import LegacyColors
 
-constant let NEL_ABILITY_ID = 'A06S'
-constant let KA_ABILITY_ID = 'A079'
-constant let LEZ_ABILITY_ID = 'A07A'
-constant let LOOP_INTERVAL = 0.03125
-constant let ORBIT_ANGULARSPEED = 80.
-constant let ORBIT_DISTANCE = 170.
-constant let MAX_RUNE_COUNT = 5
+// let NEL_ABILITY_ID = 'A06S' // Invoke Rune 1, Old GUI
+// let KA_ABILITY_ID  = 'A079' // Invoke Rune 2, Old GUI
+// let LEZ_ABILITY_ID = 'A07A' // Invoke Rune 3, Old GUI
 
-constant let RUNE_LEZ_EFFECT_PATH = "Doodads\\Cinematic\\GlowingRunes\\GlowingRunes4.mdl"
-constant let RUNE_NEL_EFFECT_PATH = "Doodads\\Cinematic\\GlowingRunes\\GlowingRunes6.mdl"
-constant let RUNE_KA_EFFECT_PATH = "Doodads\\Cinematic\\GlowingRunes\\GlowingRunes0.mdl"
+let MANACOST = 15
+let COOLDOWN  = 20.
+
+let TOOLTIP_NORM_NEL = "Summon Nel Rune"
+let TOOLTIP_NORM_KA  = "Summon Ka Rune"
+let TOOLTIP_NORM_LEZ = "Summon Lez Rune"
+
+let COOLDOWN_TOOLTIP = "Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
+let RUNE_TOOLTIP = "They circle the caster until activated and when activated they seek a nearby enemy and blast it with their element. 5 runes at a time max. "
+
+let TOOLTIP_EXT_NEL = "Summons a {0}Nel|r rune from dementia space. {0}Nel|r runes are commonly used in crippling spells. ".format(COLOR_GREEN)+RUNE_TOOLTIP+COOLDOWN_TOOLTIP
+let TOOLTIP_EXT_KA  = "Summons a {0}Ka|r rune from dementia space. {0}Ka|r runes are commonly used in fire spells. ".format(COLOR_RED)+RUNE_TOOLTIP+COOLDOWN_TOOLTIP
+let TOOLTIP_EXT_LEZ = "Summons a {0}Lez|r rune from dementia space. {0}Lez|r runes are commonly used in frost spells. ".format(COLOR_TEAL)+RUNE_TOOLTIP+COOLDOWN_TOOLTIP
+
+let ICON_NEL = "ReplaceableTextures\\CommandButtons\\BTNNelRune.blp"
+let ICON_KA  = "ReplaceableTextures\\CommandButtons\\BTNKaRune.blp"
+let ICON_LEZ = "ReplaceableTextures\\CommandButtons\\BTNLezRune.blp"
+
+let LOOP_INTERVAL      = 0.03125
+let ORBIT_ANGULARSPEED = 80.
+let ORBIT_DISTANCE     = 170.
+let MAX_RUNE_COUNT     = 5
+
+// Spells Casted by Runes
+let RUNE_SPELL_FIRE_BOLT    = 'A07C'
+let RUNE_SPELL_BURN         = 'A064'
+let RUNE_SPELL_NULL_DAMAGE  = 'A01Y'
+let RUNE_SPELL_DRUNKEN_HAZE = 'A03E'
+let RUNE_SPELL_FROST_NOVA   = 'A02A'
+
+let RUNE_LEZ_EFFECT_PATH = Doodads.glowingRunes4
+let RUNE_NEL_EFFECT_PATH = Doodads.glowingRunes6
+let RUNE_KA_EFFECT_PATH  = Doodads.glowingRunes0
 
 let dementiaRunesInstances = new HashMap<unit, DementiaRunesInstance>()
 let runeSpellsList = new LinkedList<DementiaRuneSpell>()
@@ -36,6 +67,28 @@ public class DementiaRuneSpell
         this.name = name
         this.spellId = spellId
         this.orderId = orderId
+
+class InvokeRune extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos, string toolTipNorm, string toolTipExt, string icon)
+        super(newAbilityId, 1, true)
+        this.setFollowThroughTime(1, 1)
+        this.setIconNormal(icon)
+        this.setCasterAttachmentPoint1("")
+        this.setTargetAttachmentPoint1("")
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setHeroAbility(false)
+        this.setManaCost(1, MANACOST)
+        this.setCooldown(1, COOLDOWN)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, toolTipNorm))
+        this.setTooltipNormalExtended(1, toolTipExt)
+        this.setHotkeyNormal(hotkey)
+        this.setName(toolTipNorm)
+
+@compiletime function createRuneSpells()
+    new InvokeRune(SPELL_INVOKE_RUNE_1, "W", new Pair(1, 0), TOOLTIP_NORM_NEL, TOOLTIP_EXT_NEL, ICON_NEL)
+    new InvokeRune(SPELL_INVOKE_RUNE_2, "E", new Pair(2, 0), TOOLTIP_NORM_KA , TOOLTIP_EXT_KA , ICON_KA)
+    new InvokeRune(SPELL_INVOKE_RUNE_3, "R", new Pair(3, 0), TOOLTIP_NORM_LEZ, TOOLTIP_EXT_LEZ, ICON_LEZ)
 
 class DementiaRune
     DementiaRunesInstance instance
@@ -141,11 +194,11 @@ function onCast()
     var ID = GetSpellAbilityId()
     Runes runeType = Runes.None
 
-    if ID == NEL_ABILITY_ID
+    if ID == SPELL_INVOKE_RUNE_1
         runeType = Runes.Nel
-    else if ID == LEZ_ABILITY_ID
+    else if ID == SPELL_INVOKE_RUNE_3
         runeType = Runes.Lez
-    else if ID == KA_ABILITY_ID
+    else if ID == SPELL_INVOKE_RUNE_2
         runeType = Runes.Ka
 
 
@@ -166,14 +219,15 @@ public function getRunesInstance(unit owner) returns DementiaRunesInstance
         return null
 
 function setupRuneSpellsList()
-    runeSpellsList.add(new DementiaRuneSpell("Firebolt", 'A07C', Orders.creepthunderbolt))
-    runeSpellsList.add(new DementiaRuneSpell("Soul burn", 'A064', Orders.soulburn))
-    runeSpellsList.add(new DementiaRuneSpell("Null damage", 'A01Y', Orders.cripple))
-    runeSpellsList.add(new DementiaRuneSpell("Drunken haze", 'A03E', Orders.drunkenhaze))
-    runeSpellsList.add(new DementiaRuneSpell("Frost nova", 'A02A', Orders.frostnova))
+    // Spells Casted by runes
+    runeSpellsList.add(new DementiaRuneSpell("Firebolt"     , RUNE_SPELL_FIRE_BOLT   , Orders.creepthunderbolt))
+    runeSpellsList.add(new DementiaRuneSpell("Soul burn"    , RUNE_SPELL_BURN        , Orders.soulburn))
+    runeSpellsList.add(new DementiaRuneSpell("Null damage"  , RUNE_SPELL_NULL_DAMAGE , Orders.cripple))
+    runeSpellsList.add(new DementiaRuneSpell("Drunken haze" , RUNE_SPELL_DRUNKEN_HAZE, Orders.drunkenhaze))
+    runeSpellsList.add(new DementiaRuneSpell("Frost nova"   , RUNE_SPELL_FROST_NOVA  , Orders.frostnova))
 
 init
     setupRuneSpellsList()
-    registerSpellEffectEvent(NEL_ABILITY_ID, () -> onCast())
-    registerSpellEffectEvent(KA_ABILITY_ID, () -> onCast())
-    registerSpellEffectEvent(LEZ_ABILITY_ID, () -> onCast())
+    registerSpellEffectEvent(SPELL_INVOKE_RUNE_1, () -> onCast())
+    registerSpellEffectEvent(SPELL_INVOKE_RUNE_2,  () -> onCast())
+    registerSpellEffectEvent(SPELL_INVOKE_RUNE_3, () -> onCast())

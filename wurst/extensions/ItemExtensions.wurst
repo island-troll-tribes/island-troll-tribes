@@ -27,3 +27,13 @@ public function item.isPinion() returns bool
 
 public function item.isAxeOrShield() returns bool
     return this.isAxe() or this.isShield()
+
+public function item.isAllyFireAround(real radius, unit caster) returns bool
+    var nearbyUnits = CreateGroup()..enumUnitsInRange(this.getPos(), radius)
+    while nearbyUnits.hasNext()
+        let u = nearbyUnits.next()
+        if not u.isEnemyOf(caster.getOwner()) and u.getTypeId() == UNIT_FIRE
+            nearbyUnits.destr()
+            return true
+    nearbyUnits.destr()
+    return false

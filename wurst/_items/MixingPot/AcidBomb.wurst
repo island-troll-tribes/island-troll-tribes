@@ -1,0 +1,43 @@
+package AcidBomb
+
+import PotionsDefinition
+import Assets
+import ID
+import LinkedList
+import AbilityObjEditing
+import ObjectIds
+import ToolTipsUtils
+
+//constant ABIL  = "A0AD"
+constant ABIL  = compiletime(ABIL_ID_GEN.next())
+constant ICON  = ICON_PATH.format("AcidBomb")
+constant MODEL = Buildings.barrelsUnit0
+
+constant ARMOR_PENALTY = 8.
+constant CAST_RANGE = 600.
+constant COOLDOWN = 10.
+constant DURATION = 50.
+constant TT    = "A bomb with nasty troll liquid from an unknown origin. Throw at a target to reduce their amor by {0}.".format(ARMOR_PENALTY.toToolTipRed()) +
+                 makeToolTipDuration(DURATION, COOLDOWN)
+
+@compiletime function createAbil()
+    new AbilityDefinitionAlchemistAcidBomb(ABIL)
+    ..setName("Acid Bomb")
+    ..setCheckDependencies(false)
+    ..setPrimaryDamage(1, 0)
+    ..setSecondaryDamage(1, 0)
+    ..setArmorPenalty(1, ARMOR_PENALTY.toInt())
+    ..setMissileSpeed(900)
+    ..setTargetsAllowed(1, "air,enemies,ground,neutral,organic")
+    ..setHeroAbility(false)
+    ..setItemAbility(true)
+    ..setManaCost(1, 0)
+    ..setDurationHero(1, DURATION)
+    ..setDurationNormal(1, DURATION)
+    ..setLevels(1)
+    ..setCastRange(1, CAST_RANGE)
+    ..setCooldown(1, COOLDOWN)
+    ..setEditorSuffix("(Wurst)")
+
+@compiletime function createAcidBomb()
+    new PotionDefinition(ITEM_ACID_BOMB, ICON, MODEL, "Acid Bomb", "A", TT, 40, asList(50, 255, 50), commaList(ABIL), 0.40, "A0B5", 180)

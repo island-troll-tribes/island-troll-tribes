@@ -1,0 +1,47 @@
+package MixHerb
+
+import ChannelAbilityPreset
+import ID
+import Lodash
+import Assets
+import ToolTipsUtils
+
+let COOLDOWN = 0.
+let MANACOST = 0
+let DURATION = 0
+let TOOLTIP_NORM = "Mix Herb"
+let TOOLTIP_EXTENDED = "Takes all the herbs in the pot and mixes them into a potion if a potion can be made. "+
+                        "All items in the pot are used except for non-herbs. If you add to many herbs of one type, "+
+                        "you lose the extra. Many powerful items can be made here so experiment and have fun.|nItems "+
+                        "with the |c00408000Herb|r tag are considered herbs."
+
+class MixHerbSpell extends AbilityDefinitionWindWalk
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setLevels(1)
+        this.presetManaCost(lvl -> MANACOST)
+        this.presetCooldown(lvl -> COOLDOWN)
+        this.setHeroAbility(false)
+        this.setItemAbility(false)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+        this.setIconNormal(Icons.bTNUnstableConcoction)
+        this.setIconResearch(Icons.bTNUnstableConcoction)
+        this.setIconTurnOff(Icons.bTNUnstableConcoction)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setAnimationNames("")
+        this.setArtCaster("")
+        this.setArtEffect("")
+        this.setArtTarget("")
+        this.setArtSpecial("")
+        this.setDurationHero(1, 0.01)
+        this.setDurationNormal(1, 0.01)
+        this.setEffectSound(Sounds.alchemistAcidBurnMissileDeath1)
+
+@compiletime function createMixHerbSpell()
+    new MixHerbSpell(SPELL_MIX_HERBS             , "R", new Pair(2, 1))
+    new MixHerbSpell(SPELL_POT_MIX_HERBS         , "X", new Pair(1, 2))
+    new MixHerbSpell(SPELL_OMNIGATHERER_MIX_HERBS, "Z", new Pair(0, 2))

@@ -1,0 +1,140 @@
+package BuildingKits
+
+import Items
+import ItemObjEditing
+import ID
+import AbilityObjEditing
+import Assets
+import ObjectIds
+
+constant ABIL_ENSNARE_TRAP = compiletime(ABIL_ID_GEN.next())
+constant ABIL_FIRE         = compiletime(ABIL_ID_GEN.next())
+constant ABIL_TENT         = compiletime(ABIL_ID_GEN.next())
+constant ABIL_TROLL_HUT    = compiletime(ABIL_ID_GEN.next())
+constant ABIL_SMOKEHOUSE   = compiletime(ABIL_ID_GEN.next())
+constant ABIL_STORAGE_HUT  = compiletime(ABIL_ID_GEN.next())
+constant ABIL_SPIRIT_WARD  = compiletime(ABIL_ID_GEN.next())
+constant ABIL_MUD_HUT      = compiletime(ABIL_ID_GEN.next())
+constant ABIL_TOWER        = compiletime(ABIL_ID_GEN.next())
+constant ABIL_ARMORY       = compiletime(ABIL_ID_GEN.next())
+constant ABIL_POT          = compiletime(ABIL_ID_GEN.next())
+constant ABIL_TANNERY      = compiletime(ABIL_ID_GEN.next())
+constant ABIL_WORKSHOP     = compiletime(ABIL_ID_GEN.next())
+constant ABIL_TP_BEACON    = compiletime(ABIL_ID_GEN.next())
+constant ABIL_WDH          = compiletime(ABIL_ID_GEN.next())
+constant ABIL_HATCHERY     = compiletime(ABIL_ID_GEN.next())
+constant ABIL_MAGIC_SEED   = compiletime(ABIL_ID_GEN.next())
+
+constant ICON_ARMORY       = ICON_PATH.format("Forge")
+constant ICON_ENSNARE_TRAP = ICON_PATH.format("COP")
+constant ICON_FIRE         = ICON_PATH.format("Fire")
+constant ICON_TENT         = ICON_PATH.format("Tent")
+constant ICON_TROLL_HUT    = ICON_PATH.format("SpiritLodge")
+constant ICON_SMOKEHOUSE   = ICON_PATH.format("RockTower")
+constant ICON_STORAGE_HUT  = ICON_PATH.format("ForestTrollHut1")
+constant ICON_SPIRIT_WARD  = ICON_PATH.format("AbsorbMagic")
+constant ICON_MUD_HUT      = ICON_PATH.format("GoldMine")
+constant ICON_TOWER        = ICON_PATH.format("OrcTower")
+constant ICON_POT          = ICON_PATH.format("MixingPot")
+constant ICON_TANNERY      = ICON_PATH.format("PigFarm")
+constant ICON_WORKSHOP     = ICON_PATH.format("TrollBurrow")
+constant ICON_TP_BEACON    = ICON_PATH.format("EnergyTower")
+constant ICON_WDH          = ICON_PATH.format("VoodooLounge")
+constant ICON_HATCHERY     = ICON_PATH.format("SnowOwl")
+constant ICON_MAGIC_SEED   = ICON_PATH.format("Root")
+
+constant MODEL_ARMORY       = Doodads.barricade0
+constant MODEL_ENSNARE_TRAP = Doodads.junkPile0
+constant MODEL_FIRE         = Doodads.firePitTrashed
+constant MODEL_TENT         = Doodads.emptyCrates0
+constant MODEL_TROLL_HUT    = Doodads.crates1
+constant MODEL_SMOKEHOUSE   = Doodads.barricade0
+constant MODEL_STORAGE_HUT  = Doodads.treasurePile0
+constant MODEL_SPIRIT_WARD  = Objects.humanCaptureFlag
+constant MODEL_MUD_HUT      = Doodads.crates0
+constant MODEL_TOWER        = Doodads.barricade0
+constant MODEL_POT          = Doodads.barricade1
+constant MODEL_TANNERY      = Buildings.barrelsUnit
+constant MODEL_WORKSHOP     = Doodads.barricade1
+constant MODEL_TP_BEACON    = Doodads.barricade0
+constant MODEL_WDH          = Units.tNTBarrel
+constant MODEL_HATCHERY     = Doodads.barricade1
+constant MODEL_MAGIC_SEED   = Objects.crystalShard
+
+constant TT_ARMORY       = "Creates a Armory at target location. Armory can be used to craft weapons and armors."
+constant TT_ENSNARE_TRAP = "Creates a defensive Ensnare Trap at target location."
+constant TT_FIRE         = "Creates a Camp Fire at a target location."
+constant TT_TENT         = "Creates a Tent at target location. Can use it to sleep."
+constant TT_TROLL_HUT    = "Creates a Troll Hut at target location. Can use it to sleep."
+constant TT_SMOKEHOUSE   = "Creates a Smoke House at target location. Can use it to sleep."
+constant TT_STORAGE_HUT  = "Creates a Storage Hut at target location. Can use it to sleep."
+constant TT_SPIRIT_WARD  = "Creates an active Spirit Ward when placed. A spirit ward can revive dead heroes. Place this like a building."
+constant TT_MUD_HUT      = "Creates a Mud Hut at target location. Mud huts provide a place to sleep and store items."
+constant TT_TOWER        = "Creates an Omnidefender Kit at target location. Omnidefenders are a highly customizeable defensive structure."
+constant TT_POT          = "Creates a Mixing Pot at target location. Can mix herbs to creates various potions."
+constant TT_TANNERY      = "Creates a Tannery at target location. A Tannery can make armor from skin."
+constant TT_WORKSHOP     = "Creates a Workshop at target location."
+constant TT_TP_BEACON    = "Creates a Teleport Beacon at target location. Teleport beacons can teleport friendly units short distances around it."
+constant TT_WDH          = "Creates a Witch Doctor's Hut at target location."
+constant TT_HATCHERY     = "Creates a Hatchery at target location."
+constant TT_MAGIC_SEED   = "This seed can grow a tree really fast when planted."
+
+public class BuildingKitDefinition extends PerishableItem
+    construct(int id, string icon, string model, string name, string hotkey, string toolTipExt, int cost, string abilities, real scale, int stockReplenish)
+        super(id, icon, model, name, hotkey, toolTipExt, cost, scale, abilities, "AIbl", 1)
+        this.setRequirements("")
+        this.setLevel(1)
+        this.setClassification("Charged")
+        this.setName(name + " Kit")
+        this.setStockReplenishInterval(stockReplenish)
+
+class BuildAbilityDefinition extends AbilityDefinitionBuildTinyCastle
+    construct(int id,  string icon, string name, real duration, int buildingId)
+        super(id)
+        this.setDurationHero(1, duration)
+        this.setDurationNormal(1, duration)
+        this.setName("Build " + name)
+        this.setIconNormal(icon)
+        this.setUnitCreatedperplayerrace(1, createUnitString(buildingId))
+
+    function createUnitString(int buildingId) returns string
+        return commaList(buildingId, buildingId, buildingId, buildingId)
+
+
+@compiletime function createBuildingKits()
+    new BuildAbilityDefinition(ABIL_ARMORY       , ICON_ARMORY       , "Armory"            , 10.0, UNIT_ARMORY)
+    new BuildAbilityDefinition(ABIL_ENSNARE_TRAP , ICON_ENSNARE_TRAP , "Ensnare Trap"      , 10.0, UNIT_ENSNARE_TRAP)
+    new BuildAbilityDefinition(ABIL_FIRE         , ICON_FIRE         , "Camp Fire"         , 7.0,  UNIT_FIRE)
+    new BuildAbilityDefinition(ABIL_TENT         , ICON_TENT         , "Tent"              , 7.0,  UNIT_TENT)
+    new BuildAbilityDefinition(ABIL_TROLL_HUT    , ICON_TROLL_HUT    , "Troll Hut"         , 10.0, UNIT_TROLL_HUT)
+    new BuildAbilityDefinition(ABIL_SMOKEHOUSE   , ICON_SMOKEHOUSE   , "Smoke House"       , 8.0,  UNIT_SMOKE_HOUSE)
+    new BuildAbilityDefinition(ABIL_STORAGE_HUT  , ICON_STORAGE_HUT  , "Storage Hut"       , 10.0, UNIT_STORAGE_HUT)
+    new BuildAbilityDefinition(ABIL_SPIRIT_WARD  , ICON_SPIRIT_WARD  , "Spirit Ward"       , 30.0, UNIT_SPIRIT_WARD)
+    new BuildAbilityDefinition(ABIL_MUD_HUT      , ICON_MUD_HUT      , "Mud Hut"           , 10.0, UNIT_MUD_HUT)
+    new BuildAbilityDefinition(ABIL_TOWER        , ICON_TOWER        , "Omnidefender"      , 10.0, UNIT_OMNITOWER)
+    new BuildAbilityDefinition(ABIL_POT          , ICON_POT          , "Mixing Pot"        , 10.0, UNIT_POT)
+    new BuildAbilityDefinition(ABIL_TANNERY      , ICON_TANNERY      , "Tannery"           , 10.0, UNIT_TANNERY)
+    new BuildAbilityDefinition(ABIL_WORKSHOP     , ICON_WORKSHOP     , "Workshop"          , 13.0, UNIT_WORKSHOP)
+    new BuildAbilityDefinition(ABIL_TP_BEACON    , ICON_TP_BEACON    , "Teleport Beacon"   , 10.0, UNIT_TELEPORTATION_BEACON)
+    new BuildAbilityDefinition(ABIL_WDH          , ICON_WDH          , "Witch Doctor's Hut", 10.0, UNIT_WITCH_DOCTORS_HUT)
+    new BuildAbilityDefinition(ABIL_HATCHERY     , ICON_HATCHERY     , "Hatchery"          , 10.0, UNIT_HATCHERY)
+    new BuildAbilityDefinition(ABIL_MAGIC_SEED   , ICON_MAGIC_SEED   , "Magic Seed"        , 5.0,  UNIT_BUILDING_TREE)
+
+    //Camp fire has gui spell because for some reason, demo gatherer cannot place the fire unless it's this spell
+    new BuildingKitDefinition(ITEM_ARMORY_KIT            , ICON_ARMORY       , MODEL_ARMORY       , "Armory"             , "S", TT_ARMORY       , 22 , commaList(ABIL_ARMORY       ), 1.0  , 30)..setBtnPos(1, 1)
+    new BuildingKitDefinition(ITEM_ENSNARE_TRAP_KIT      , ICON_ENSNARE_TRAP , MODEL_ENSNARE_TRAP , "Ensnare Trap"       , "Z", TT_ENSNARE_TRAP , 5  , commaList(ABIL_ENSNARE_TRAP ), 1.0  , 120)..setBtnPos(0, 2)
+    new BuildingKitDefinition(ITEM_FIRE_KIT              , ICON_FIRE         , MODEL_FIRE         , "Camp Fire"          , "F", TT_FIRE         , 5  , commaList('A001'         ), 1.0  , 30)..setBtnPos(3, 1)
+    new BuildingKitDefinition(ITEM_TENT_KIT              , ICON_TENT         , MODEL_TENT         , "Tent"               , "A", TT_TENT         , 13 , commaList(ABIL_TENT         ), 1.0  , 120)
+    new BuildingKitDefinition(ITEM_TROLL_HUT_KIT         , ICON_TROLL_HUT    , MODEL_TROLL_HUT    , "Troll Hut"          , "A", TT_TROLL_HUT    , 15 , commaList(ABIL_TROLL_HUT    ), 1.0  , 30)
+    new BuildingKitDefinition(ITEM_SMOKE_HOUSE_KIT       , ICON_SMOKEHOUSE   , MODEL_SMOKEHOUSE   , "Smoke House"        , "A", TT_SMOKEHOUSE   , 12 , commaList(ABIL_SMOKEHOUSE   ), 0.95 , 30)
+    new BuildingKitDefinition(ITEM_STORAGE_HUT_KIT       , ICON_STORAGE_HUT  , MODEL_STORAGE_HUT  , "Storage Hut"        , "D", TT_STORAGE_HUT  , 5 , commaList(ABIL_STORAGE_HUT  ), 1.0  , 30)..setBtnPos(2, 1)
+    new BuildingKitDefinition(ITEM_SPIRIT_WARD_KIT       , ICON_SPIRIT_WARD  , MODEL_SPIRIT_WARD  , "Spirit Ward"        , "A", TT_SPIRIT_WARD  , 16 , commaList(ABIL_SPIRIT_WARD  ), 1.4  , 120)
+    new BuildingKitDefinition(ITEM_MUD_HUT_KIT           , ICON_MUD_HUT      , MODEL_MUD_HUT      , "Mud Hut"            , "A", TT_MUD_HUT      , 15 , commaList(ABIL_MUD_HUT      ), 1.1  , 30)..setBtnPos(0, 1)
+    new BuildingKitDefinition(ITEM_OMNIDEFENDER_KIT      , ICON_TOWER        , MODEL_TOWER        , "Omnidefender"       , "V", TT_TOWER        , 10 , commaList(ABIL_TOWER        ), 1.0  , 120)..setBtnPos(3, 2)
+    new BuildingKitDefinition(ITEM_POT_KIT               , ICON_POT          , MODEL_POT          , "Mixing Pot"         , "A", TT_POT          , 18 , commaList(ABIL_POT          ), 1.25 , 30)
+    new BuildingKitDefinition(ITEM_TANNERY_KIT           , ICON_TANNERY      , MODEL_TANNERY      , "Tannery"            , "F", TT_TANNERY      , 21 , commaList(ABIL_TANNERY      ), 1.25 , 30)..setBtnPos(3, 1)
+    new BuildingKitDefinition(ITEM_WORKSHOP_KIT          , ICON_WORKSHOP     , MODEL_WORKSHOP     , "Workshop"           , "D", TT_WORKSHOP     , 20 , commaList(ABIL_WORKSHOP     ), 1.0  , 30)..setBtnPos(2, 1)
+    new BuildingKitDefinition(ITEM_TELEPORT_BEACON_KIT   , ICON_TP_BEACON    , MODEL_TP_BEACON    , "Teleport Beacon"    , "A", TT_TP_BEACON    , 20 , commaList(ABIL_TP_BEACON    ), 1.0  , 30)
+    new BuildingKitDefinition(ITEM_WITCH_DOCTORS_HUT_KIT , ICON_WDH          , MODEL_WDH          , "Witch Doctor's Hut" , "A", TT_WDH          , 24 , commaList(ABIL_WDH          ), 1.0  , 30)
+    new BuildingKitDefinition(ITEM_HATCHERY_KIT          , ICON_HATCHERY     , MODEL_HATCHERY     , "Hatchery"           , "A", TT_HATCHERY     , 24 , commaList(ABIL_HATCHERY     ), 1.0  , 30)
+    new BuildingKitDefinition(ITEM_MAGIC_SEED            , ICON_MAGIC_SEED   , MODEL_MAGIC_SEED   , "Magic Seed"         , "W", TT_MAGIC_SEED   , 8  , commaList(ABIL_MAGIC_SEED   ), 0.65 , 30)..setBtnPos(1, 0)

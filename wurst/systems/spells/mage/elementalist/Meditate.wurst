@@ -3,9 +3,12 @@ package Meditate
 import HashMap
 import ClosureEvents
 import ClosureTimers
-import AbilityObjEditing
 import Orders
 import OverCharge
+import ToolTipsUtils
+import ChannelAbilityPreset
+import Lodash
+import Assets
 
 constant let ABILITY_ID = 'ESMD'
 constant let COOLDOWN = 90.
@@ -14,45 +17,34 @@ constant let DURATION = 7.
 constant let PERIOD_INTERVAL = 0.2
 constant let MANA_PER_SECOND = 18.
 constant let SPELL_ICON = "ReplaceableTextures\\CommandButtons\\BTNMedidate.blp"
-constant let EFFECT_PATH = "Abilities\\Spells\\Undead\\DarkRitual\\DarkRitualTarget.mdl"
-constant let TOOLTIP_NORM = "|c00ffcc00M|r- Meditate"
-constant let TOOLTIP_EXT = "Channels to recover |c0080ffff120|r mana over 7 seconds. Cancels on damage."
+constant let EFFECT_PATH = Abilities.darkRitualTarget
+constant let TOOLTIP_NORM = "Meditate"
+constant let TOOLTIP_EXTENDED = "Channels to recover {0} mana over {1} seconds. Cancels on damage. Has {2} seconds cooldown."
+                                .format((MANA_PER_SECOND * DURATION).toToolTipTeal(), DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
 
+class Medidate extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 1, true)
+        this.setTargetType(1, 0)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setIconNormal(SPELL_ICON)
+        this.setIconResearch(SPELL_ICON)
+        this.setIconTurnOff(SPELL_ICON)
+        this.setHeroAbility(false)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.setDisableOtherAbilities(1, false)
+        this.setFollowThroughTime(1, DURATION)
+        this.setCastingTime(1, 0)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        this.setOptions(1, 1)
+        this.setCooldown(1, COOLDOWN)
+        this.setManaCost(1, MANACOST)
 
-@compiletime function createSpell()
-    new AbilityDefinitionIllidanChannel(ABILITY_ID)
-    ..setTargetType(1, 0)
-    ..setAnimationNames("")
-    ..setArtCaster("")
-    ..setArtEffect("")
-    ..setArtTarget("")
-    ..setArtSpecial("")
-    ..setButtonPositionNormalX(0)
-    ..setButtonPositionNormalY(1)
-    ..setButtonPositionResearchX(0)
-    ..setButtonPositionResearchY(1)
-    ..setIconNormal(SPELL_ICON)
-    ..setIconResearch(SPELL_ICON)
-    ..setIconTurnOff(SPELL_ICON)
-    ..setHeroAbility(false)
-    ..setItemAbility(false)
-    ..setLevels(1)
-    ..setHotkeyNormal("M")
-    ..setName("Meditate")
-    ..setDisableOtherAbilities(1, false)
-    ..setFollowThroughTime(1, DURATION)
-    ..setCastingTime(1, 0)
-    ..setTooltipNormal(1, TOOLTIP_NORM)
-    ..setTooltipNormalExtended(1, TOOLTIP_EXT)
-    ..setBaseOrderID(1, "bearform")
-    ..setOrderStringUseTurnOn("bearform")
-    ..setOrderStringActivate("bearform")
-    ..setOrderStringDeactivate("bearform")
-    ..setOrderStringTurnOff("bearform")
-    ..setOptions(1, 1)
-    ..setCooldown(1, COOLDOWN)
-    ..setManaCost(1, MANACOST)
-
+@compiletime function createMeditate()
+    new Medidate(ABILITY_ID, "D", new Pair(2, 1))
 
 HashMap<unit, MeditateInstance> instances = new HashMap<unit,MeditateInstance>()
 
@@ -61,7 +53,7 @@ class MeditateInstance
     bool isOvercharged
     unit caster
     var dmgTrig = CreateTrigger()
-    
+
     function manaLoop()
         //Special effects loop
         doPeriodicallyTimed(1, DURATION) fxloop ->
@@ -101,7 +93,7 @@ function onCast()
 
     if instances.has(caster)
         instances.getAndRemove(caster)
-    
+
     instances.put(caster, new MeditateInstance(caster, consumeOvercharge(caster)))
 
 function onDamage(unit target, real amount)

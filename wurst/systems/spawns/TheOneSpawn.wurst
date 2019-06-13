@@ -5,20 +5,18 @@ import ClosureTimers
 
 public let THE_ONE_REGION = CreateRegion()..addRect(gg_rct_TheOne)
 
-let spawnSpot = gg_rct_TheOne.getCenter()
+let spawnSpot = gg_rct_TheOneCliff.getLeftTop()
 
 public TheOne theOne = null
 
 public function spawnTheOne()
-    let bolt = addEffect("Doodads\\Cinematic\\Lightningbolt\\Lightningbolt.mdl", spawnSpot)
-    doAfter(5.0) ->
-        bolt.destr()
-
     if theOne == null
         doPeriodically(60) cb ->
             if theOne != null and theOne.getUnit().isAlive()
                 theOne.getUnit().addLevels(1, true)
-        theOne = new TheOne(players[PLAYER_NEUTRAL_AGGRESSIVE], spawnSpot, angle(0))
+        doAfter(1) () ->
+            theOne = new TheOne(players[PLAYER_NEUTRAL_AGGRESSIVE], spawnSpot, angle(0))
+            theOne.getUnit().issuePointOrder("breathoffrost", gg_rct_TheOne.getCenter())
     else
         theOne.getUnit().revive(spawnSpot, true)
 

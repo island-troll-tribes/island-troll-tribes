@@ -1,0 +1,70 @@
+package TwinIslandPotion
+import ClosureEvents
+import Orders
+import ClosureTimers
+import ClosureForGroups
+import BuffObjEditing
+import ID
+import PotionsDefinition
+import ToolTipsUtils
+import InstantDummyCaster
+import LinkedList
+import ChannelAbilityPreset
+
+constant ABIL      = compiletime(ABIL_ID_GEN.next())
+constant CAST_ABIL = compiletime(ABIL_ID_GEN.next())
+constant BUFF      = compiletime(BUFF_ID_GEN.next())
+
+constant ICON = ICON_PATH.format("PotionGreenSmall")
+constant MODEL = "Models\\PotionGreenSmall.mdl"
+
+constant DURATION = 30.
+constant TT = "Reveal enemy trolls upon use. Last {0} seconds.".format(DURATION.toToolTipLightBlue())
+
+@compiletime function createAbil()
+    new BuffDefinition(BUFF, 'Bult') // Ultravision
+    ..setName(1, "Twin Islands")
+    ..setIcon(ICON)
+    ..setIconNormal(1, ICON)
+    ..setTooltipNormal(1, "Revealed")
+    ..setTooltipNormalExtended(1, "Revealed for {0} seconds.".format(DURATION.toToolTipLightBlue()))
+
+    new AbilityDefinitionFaerieFire(ABIL)
+    ..setDummyAbility()
+    ..setDurationHero(1, DURATION)
+    ..setDurationNormal(1, DURATION)
+    ..setDefenseReduction(1, 0)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setArtEffect("")
+    ..setArtCaster("")
+    ..setArtTarget("")
+    ..setLevels(1)
+    ..setBuffs(1, BUFF.toRawCode())
+
+    new ChannelAbilityPreset(CAST_ABIL, 1, true)
+    ..presetTargetTypes(Targettype.NONE)
+    ..setManaCost(1, 0)
+    ..setCooldown(1, 0)
+    ..setItemAbility(true)
+    ..setHeroAbility(false)
+    ..setLevels(1)
+
+@compiletime function createTwinIslandPotion()
+    new PotionDefinition(ITEM_POTION_TWIN_ISLANDS, ICON, MODEL, "Twin Island Potion", "V", TT, 39, commaList(CAST_ABIL), 0.70, commaList(CAST_ABIL), 120)
+
+init
+    EventListener.onCast(CAST_ABIL) (unit caster) ->
+        let owner = caster.getOwner()
+        forUnitsAll() u ->
+            if u.getOwner().isEnemyOf(owner) and u.isAlive()
+                if udg_trolls.contains(u)
+                    PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 8, bj_MINIMAPPINGSTYLE_ATTACK, 255, 0, 0)
+                    //Temporary vision required by dummy
+                    var vis = createVision(owner, u.getPos(), 200, true)
+                    vis.start()
+                    doAfter(0.2) ->
+                        vis.destr()
+                    InstantDummyCaster.castTarget(owner, ABIL, 1, Orders.faeriefire, u)
+                else if u.getTypeId() == UNIT_SPIRIT_WARD
+                    PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 8, bj_MINIMAPPINGSTYLE_SIMPLE, 0, 0, 255)

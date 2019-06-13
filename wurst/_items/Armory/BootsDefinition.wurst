@@ -1,0 +1,120 @@
+package BootsDefinition
+
+import Items
+import AbilityObjEditing
+import ItemObjEditing
+import ObjectIds
+import ID
+import LegacyColors
+import LinkedList
+import ToolTipsUtils
+
+constant ABIL_STATS_ELK   = compiletime(ABIL_ID_GEN.next())
+constant ABIL_STATS_WOLF  = compiletime(ABIL_ID_GEN.next())
+constant ABIL_STATS_BEAR  = compiletime(ABIL_ID_GEN.next())
+constant ABIL_STATS_BONE  = compiletime(ABIL_ID_GEN.next())
+constant ABIL_STATS_IRON  = compiletime(ABIL_ID_GEN.next())
+constant ABIL_STATS_STEEL = compiletime(ABIL_ID_GEN.next())
+constant ABIL_STATS_ANABO = compiletime(ABIL_ID_GEN.next())
+
+constant ABIL_MS_SKIN  = compiletime(ABIL_ID_GEN.next())
+constant ABIL_MS_BONE  = compiletime(ABIL_ID_GEN.next())
+constant ABIL_MS_IRON  = compiletime(ABIL_ID_GEN.next())
+constant ABIL_MS_STEEL = compiletime(ABIL_ID_GEN.next())
+constant ABIL_MS_ANABO = compiletime(ABIL_ID_GEN.next())
+
+constant ABIL_EVASION_ANABO = compiletime(ABIL_ID_GEN.next())
+
+// If you change the armor ability, update tooltip please
+constant ABIL_EB  = commaList(ABIL_STATS_ELK  , ABIL_MS_SKIN,  'AId1')
+constant ABIL_WB  = commaList(ABIL_STATS_WOLF , ABIL_MS_SKIN , 'AId2')
+constant ABIL_BB  = commaList(ABIL_STATS_BEAR , ABIL_MS_SKIN , 'AId3')
+constant ABIL_BOB = commaList(ABIL_STATS_BONE , ABIL_MS_BONE , 'AId2')
+constant ABIL_IB  = commaList(ABIL_STATS_IRON , ABIL_MS_IRON , 'AId3')
+constant ABIL_SB  = commaList(ABIL_STATS_STEEL, ABIL_MS_STEEL, 'AId5')
+constant ABIL_AB  = commaList(ABIL_STATS_ANABO, ABIL_MS_ANABO, 'AId5')
+
+// Remember to check out the tooltip if you change the following
+// STR,AGI,INT
+constant ELK_STATS_BONUS   = [0, 0, 2]
+constant WOLF_STATS_BONUS  = [0, 0, 4]
+constant BEAR_STATS_BONUS  = [0, 0, 5]
+constant BONE_STATS_BONUS  = [0, 0, 3]
+constant IRON_STATS_BONUS  = [0, 0, 6]
+constant STEEL_STATS_BONUS = [0, 0, 10]
+constant ANABO_STATS_BONUS = [4, 4, 4]
+
+constant SKIN_MS_BONUS = 60
+constant BONE_MS_BONUS = 70
+constant IRON_MS_BONUS = 80
+constant STEEL_MS_BONUS = 100
+constant ANABO_MS_BONUS = 200
+
+constant ANABO_EVASION_CHANCE = 0.10
+
+constant IRON_ICON  = ICON_PATH.format("Boots")
+constant BONE_ICON  = ICON_PATH.format("BoneBoots")
+constant STEEL_ICON = ICON_PATH.format("SteelBoots")
+constant ANABO_ICON = ICON_PATH.format("WirtsOtherLeg")
+constant ELK_ICON   = ICON_PATH.format("ElkHideBoots")
+constant WOLF_ICON  = ICON_PATH.format("WolfHideBoots")
+constant BEAR_ICON  = ICON_PATH.format("BearHideBoots")
+
+constant EB_MODEL  = "Models\\SkinBoots.mdx"
+constant WB_MODEL  = "Models\\WolfHideBoots.mdx"
+constant BB_MODEL  = "Models\\BoneBoots.mdx"
+constant IB_MODEL  = "Models\\IronBoots.mdx"
+
+constant TT_BASIC = COLOR_ORANGE + "\nBasic Boots|r"  + COLOR_RED +  "\nNote : All basic Boots transmute into the same Bone/Iron/Steel Boots."
+constant TT_COMMON = "Increases Move Speed by {0}, Intelligence by {1}, Armor by {2} and provides warmth."
+constant TT_SKIN  = "A pair of boots made from animals pelt. " + TT_COMMON
+
+constant TT_ARMOR = "A pair of boots reinforced with metals. " + TT_COMMON
+constant TT_ANABO = "A pair of boots enhanced with alchemy engineering. Increase Move Speed by {0}, all stats by {1}, armor by {2} and grants {3} chance to evade an attack."
+                           .format(ANABO_MS_BONUS.toReal().toToolTipLightBlue(), 4..toToolTipGreen(), 5..toToolTipGreen(), ANABO_EVASION_CHANCE.toToolTipOrange())
+
+constant TT_ELK   = TT_SKIN .format(SKIN_MS_BONUS .toReal().toToolTipLightBlue(), ELK_STATS_BONUS  [2].toReal().toToolTipGreen(), 1..toToolTipGreen()) + TT_BASIC
+constant TT_WOLF  = TT_SKIN .format(SKIN_MS_BONUS .toReal().toToolTipLightBlue(), WOLF_STATS_BONUS [2].toReal().toToolTipGreen(), 2..toToolTipGreen()) + TT_BASIC
+constant TT_BEAR  = TT_SKIN .format(SKIN_MS_BONUS .toReal().toToolTipLightBlue(), BEAR_STATS_BONUS [2].toReal().toToolTipGreen(), 3..toToolTipGreen()) + TT_BASIC
+constant TT_BONE  = "A pair of boots reinforced with bones. "  + TT_COMMON
+                          .format(BONE_MS_BONUS.toReal().toToolTipLightBlue(), BONE_STATS_BONUS[2].toReal().toToolTipGreen(), 2..toToolTipGreen())
+
+constant TT_IRON  = TT_ARMOR.format(IRON_MS_BONUS .toReal().toToolTipLightBlue(), IRON_STATS_BONUS [2].toReal().toToolTipGreen(), 3..toToolTipGreen())
+constant TT_STEEL = TT_ARMOR.format(STEEL_MS_BONUS.toReal().toToolTipLightBlue(), STEEL_STATS_BONUS[2].toReal().toToolTipGreen(), 5..toToolTipGreen())
+
+class BootsDefinition extends IttItem
+    construct(int id, string icon, string model, string name, string hotkey, string toolTipExt, int cost, LinkedList<int> tinting, string abilities)
+        super(id, icon, model, name, hotkey, toolTipExt, cost, 1, tinting, abilities)
+        this.setClassification("Permanent")
+
+class Evasion extends AbilityDefinitionEvasioncreep
+    construct(int abilId, string name, real evasionChance)
+        super(abilId)
+        this.setName("Evasion ({0})".format(name))
+        this.setChancetoEvade(1, evasionChance)
+        this.setEditorSuffix("(Wurst)")
+
+@compiletime function createBoots()
+    new StatBonusAbility(ABIL_STATS_ELK  , "Elk Boots"     , ELK_STATS_BONUS  [0], ELK_STATS_BONUS  [1], ELK_STATS_BONUS  [2])
+    new StatBonusAbility(ABIL_STATS_WOLF , "Wolf Boots"    , WOLF_STATS_BONUS [0], WOLF_STATS_BONUS [1], WOLF_STATS_BONUS [2])
+    new StatBonusAbility(ABIL_STATS_BEAR , "Bear Boots"    , BEAR_STATS_BONUS [0], BEAR_STATS_BONUS [1], BEAR_STATS_BONUS [2])
+    new StatBonusAbility(ABIL_STATS_BONE , "Bone Boots"    , BONE_STATS_BONUS [0], BONE_STATS_BONUS [1], BONE_STATS_BONUS [2])
+    new StatBonusAbility(ABIL_STATS_IRON , "Iron Boots"    , IRON_STATS_BONUS [0], IRON_STATS_BONUS [1], IRON_STATS_BONUS [2])
+    new StatBonusAbility(ABIL_STATS_STEEL, "Steel Boots"   , STEEL_STATS_BONUS[0], STEEL_STATS_BONUS[1], STEEL_STATS_BONUS[2])
+    new StatBonusAbility(ABIL_STATS_ANABO, "Anabolic Boots", ANABO_STATS_BONUS[0], ANABO_STATS_BONUS[1], ANABO_STATS_BONUS[2])
+
+    new MoveSpeedBonusAbility(ABIL_MS_SKIN , "Skin Boots" , SKIN_MS_BONUS)
+    new MoveSpeedBonusAbility(ABIL_MS_BONE , "Bone Boots" , BONE_MS_BONUS)
+    new MoveSpeedBonusAbility(ABIL_MS_IRON , "Iron Boots" , IRON_MS_BONUS)
+    new MoveSpeedBonusAbility(ABIL_MS_STEEL, "Steel Boots", STEEL_MS_BONUS)
+    new MoveSpeedBonusAbility(ABIL_MS_ANABO, "Anabo Boots", ANABO_MS_BONUS)
+
+    new Evasion(ABIL_EVASION_ANABO, "Anabolic Boots", ANABO_EVASION_CHANCE)
+
+    new BootsDefinition(ITEM_ELK_SKIN_BOOTS  , ELK_ICON  , EB_MODEL, "Elk Skin Boots"  , "A", TT_ELK   , 19, asList(255 , 255, 255), ABIL_EB)
+    new BootsDefinition(ITEM_WOLF_SKIN_BOOTS , WOLF_ICON , WB_MODEL, "Wolf Skin Boots" , "A", TT_WOLF  , 33, asList(128 , 128, 128), ABIL_WB)
+    new BootsDefinition(ITEM_BEAR_SKIN_BOOTS , BEAR_ICON , WB_MODEL, "Bear Skin Boots" , "A", TT_BEAR  , 47, asList(128 , 128, 128), ABIL_BB)
+    new BootsDefinition(ITEM_BONE_BOOTS      , BONE_ICON , BB_MODEL, "Bone Boots"      , "A", TT_BONE  , 34, asList(255 , 255, 255), ABIL_BOB)
+    new BootsDefinition(ITEM_IRON_BOOTS      , IRON_ICON , IB_MODEL, "Iron Boots"      , "A", TT_IRON  , 55, asList(100 , 100, 100), ABIL_IB)..setBtnPos(0, 1)
+    new BootsDefinition(ITEM_STEEL_BOOTS     , STEEL_ICON, IB_MODEL, "Steel Boots"     , "A", TT_STEEL , 70, asList(0   , 119, 255), ABIL_SB)
+    new BootsDefinition(ITEM_ANABOLIC_BOOTS  , ANABO_ICON, IB_MODEL, "Anabolic Boots"  , "A", TT_ANABO , 70, asList(200 , 80 , 80 ), ABIL_AB)

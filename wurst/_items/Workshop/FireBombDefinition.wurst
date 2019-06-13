@@ -1,0 +1,90 @@
+package FireBombDefinition
+
+import Items
+import Assets
+import ID
+import LinkedList
+import ChannelAbilityPreset
+import ToolTipsUtils
+import ClosureEvents
+import InstantDummyCaster
+import ClosureTimers
+import Orders
+
+constant ABIL = compiletime(ABIL_ID_GEN.next())
+constant ABIL_BURN_UNIT = compiletime(ABIL_ID_GEN.next())
+constant ABIL_BURN_TREE = compiletime(ABIL_ID_GEN.next())
+constant DUMMY_UNIT = compiletime(UNIT_ID_GEN.next())
+
+constant ICON = ICON_PATH.format("LiquidFire")
+constant MODEL = "Models\\LiquidFire.mdx"
+constant DURATION = 5.
+constant COOLDOWN = 15.
+constant CAST_RANGE = 600.
+constant AOE = 200.
+
+constant FULL_DMG = 25.
+constant HALF_DMG = 10.
+
+constant TARGET_ALLOWED = "enemies,friend,neutral,self,structure,tree"
+constant TT = "A shell of destructible material that is highly flammable when thrown. Dealing approximatively {0} damage over {1} seconds. Good against buildings."
+                .format(80..toToolTipRed(), DURATION.toToolTipLightBlue())+ makeToolTipCooldown(COOLDOWN)
+
+class FireBombAbility extends AbilityDefinitionBallsofFire
+    construct(int abilId)
+        super(abilId)
+        this.setName("Fire Bomb Burn")
+        this.setDummyAbility()
+        this.setMissileArt(Abilities.batTrollMissile)
+        this.setMissileSpeed(700)
+        this.setLevels(1)
+        this.setBuildingReduction(1, 0.75)
+        this.setFullDamageDealt(1, FULL_DMG)
+        this.setFullDamageInterval(1, 2.10)
+        this.setHalfDamageDealt(1, HALF_DMG)
+        this.setHalfDamageInterval(1, 1)
+        this.setMaximumDamage(1, 0)
+        this.setDurationHero(1, DURATION)
+        this.setDurationNormal(1, DURATION)
+        this.setAreaofEffect(1, AOE)
+
+
+class FireBombFlamestrike extends AbilityDefinitionFlameStrikeCreep
+    construct(int abilId)
+        super(abilId)
+        this.setName("Fire Bomb Destroy Tree")
+        this.setDummyAbility()
+        this.setArtEffect("")
+        this.setArtSpecial("")
+        this.setFullDamageDealt(1, 0)
+        this.setHalfDamageDealt(1, 0)
+        this.setMaximumDamage(1, 0)
+        this.setBuffs(1, "")
+        this.setEffects(1, "")
+        this.setTargetsAllowed(1, "tree")
+        this.setCastingTime(1, 0)
+        this.setAreaofEffect(1, AOE)
+
+
+// The idea is to use burning oil ability from demolisher, create a hidden demolisher unit and attack target point
+// So we have a burning projectile, just to make sure damage start the moment projectile hit, because flamestrike is instant and has no missile
+@compiletime function createFireBomb()
+    new UnitDefinition(DUMMY_UNIT, 'ocat')
+    ..setModelFile("dummy.mdl")
+    ..setCollisionSize(0.0)
+    ..setAttack1DamageBase(1)
+    ..setNormalAbilities(commaList("Aloc", ABIL_BURN_UNIT.toRawCode()))
+    ..setHideMinimapDisplay(true)
+    ..setAttack1RangeMotionBuffer(0)
+    ..setMinimumAttackRange(0)
+
+    new FireBombAbility(ABIL_BURN_UNIT)
+    new FireBombFlamestrike(ABIL_BURN_TREE)
+    new ItemChannelCast(ABIL, "FireBomb", CAST_RANGE, AOE, COOLDOWN)
+    new PerishableItem(ITEM_FIRE_BOMB, ICON, MODEL, "Fire Bomb", "F", TT, 30, 1.20, asList(255, 255, 255), ABIL.toRawCode(), ABIL.toRawCode(), 2)..setBtnPos(3, 1)
+
+init
+    EventListener.onPointCast(ABIL) (unit caster, vec2 target) ->
+        createUnit(caster.getOwner(), DUMMY_UNIT, caster.getPos(), caster.getFacingAngle())..hide()..issuePointOrderById(Orders.attackground, target)..setTimedLife(2)
+        doAfter(1.5) () ->
+            InstantDummyCaster.castPoint(caster.getOwner(), ABIL_BURN_TREE, 1, Orders.flamestrike, target)

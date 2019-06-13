@@ -1,0 +1,122 @@
+package Metronome
+import RegisterEvents
+import Table
+import Orders
+import ClosureTimers
+import EventHelper
+import DummyCaster
+import AbilityObjEditing
+import Assets
+import Lodash
+import ID
+import ToolTipsUtils
+
+let MANACOST = 20
+let COOLDOWN = 45.
+let TOOLTIP = "Metronome"
+let TOOLTIP_EXTENDED = "Barrages enemies with random, chaining effects. Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
+let TARGET_ALLOWED = "air,enemies,ground,neutral,organic"
+
+class Metronome extends AbilityDefinitionFirelordSoulBurn
+    construct(int newAbility, string hotkey, Pair<int, int> buttonPos)
+        super(newAbility)
+        this.setDamageAmount(1, 0)
+        this.setDamagePenalty(1, 0)
+        this.setDamagePeriod(1, 0)
+        this.setIconNormal(Icons.bTNWandOfManaSteal)
+        this.setTargetsAllowed(1, TARGET_ALLOWED)
+        this.setHeroAbility(false)
+        this.setManaCost(1, MANACOST)
+        this.setDurationHero(1, 0.01)
+        this.setDurationNormal(1, 0.01)
+        this.setLevels(1)
+        this.setCooldown(1, COOLDOWN)
+        this.setName(TOOLTIP)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP))
+        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setHotkeyNormal(hotkey)
+
+@compiletime function createMetronome()
+    new Metronome(SPELL_METRONOME, "D", new Pair(2, 1))
+class MasterCaster
+    static constant impale        = 'A028'
+    static constant tsunami       = 'A038'
+    static constant frostNova     = 'A02A'
+    static constant poisonThistle = 'A01K'
+    static constant manaBurn      = 'A065'
+    static constant frostNovaUlt  = 'A02B' // 2 Different frostnova spells? This one does more damage, should be the one with blizzard effect
+
+constant table = new Table()
+
+function initSpellTable()
+    table.saveInt(0, MasterCaster.impale)
+    table.saveInt(1, MasterCaster.impale)
+    table.saveInt(2, MasterCaster.tsunami)
+    table.saveInt(3, MasterCaster.tsunami)
+    table.saveInt(4, MasterCaster.frostNova)
+    table.saveInt(5, MasterCaster.frostNova)
+    table.saveInt(6, MasterCaster.poisonThistle)
+    table.saveInt(7, MasterCaster.manaBurn)
+    table.saveInt(8, MasterCaster.manaBurn)
+    // Unlucky, lonely spell
+    table.saveInt(9, MasterCaster.frostNovaUlt)
+
+    table.saveInt(MasterCaster.impale       , Orders.impale)
+    table.saveInt(MasterCaster.tsunami      , Orders.carrionswarm)
+    table.saveInt(MasterCaster.frostNova    , Orders.frostnova)
+    table.saveInt(MasterCaster.poisonThistle, Orders.shadowstrike)
+    table.saveInt(MasterCaster.manaBurn     , Orders.manaburn)
+    table.saveInt(MasterCaster.frostNovaUlt , Orders.frostnova)
+
+function onCast()
+    var target = GetSpellTargetUnit()
+    var targetPos = getSpellTargetPos()
+    var pos = targetPos.polarOffset(GetRandomReal(0, 360).fromDeg(), GetRandomReal(0, 100))
+    var owner = GetSpellAbilityUnit().getOwner()
+    var abilityId = table.loadInt(9)
+
+    if GetRandomInt(0, 2) == 0
+        //Temporary vision required by dummy
+        var vis = createVision(owner, target.getPos(), 300, true)
+        vis.start()
+        doAfter(0.2) ->
+            vis.destr()
+        new DummyCaster()
+            ..owner(owner)
+            ..delay(1)
+            ..origin(pos)
+            ..castTarget(abilityId, 1, table.loadInt(abilityId), target)
+
+        return
+
+    abilityId = table.loadInt(GetRandomInt(0, 8))
+    //Temporary vision required by dummy
+    var vis2 = createVision(owner, target.getPos(), 300, true)
+    vis2.start()
+    doAfter(0.2) ->
+        vis2.destr()
+    new DummyCaster()
+        ..owner(owner)
+        ..delay(1)
+        ..origin(pos)
+        ..castTarget(abilityId, 1, table.loadInt(abilityId), target)
+
+    doPeriodicallyCounted(1.00, GetRandomInt(3, 5)) cb ->
+        //Temporary vision required by dummy
+        var vis3 = createVision(owner, target.getPos(), 300, true)
+        vis3.start()
+        doAfter(0.2) ->
+            vis3.destr()
+        abilityId = table.loadInt(GetRandomInt(0, 8))
+        pos = targetPos.polarOffset(GetRandomReal(0, 360).fromDeg(), GetRandomReal(0, 200))
+        new DummyCaster()
+            ..owner(owner)
+            ..delay(1)
+            ..origin(pos)
+            ..castTarget(abilityId, 1, table.loadInt(abilityId), target)
+
+init
+    initSpellTable()
+    registerSpellEffectEvent(SPELL_METRONOME, () -> onCast())

@@ -1,0 +1,36 @@
+package BlinkFlare
+
+import ClosureEvents
+import DummyCaster
+import ID
+import OrderIds
+import ClosureTimers
+import AbilityObjEditing
+import ObjectIdGenerator
+
+constant ABIL_ID = compiletime(ABIL_ID_GEN.next())
+
+@compiletime function createRevealShortRange()
+    new AbilityDefinitionFlare(ABIL_ID)
+        ..setDummyAbility()
+        ..setRequirements("")
+        ..setDetectionType(1, "")
+        ..setName("Reveal Short Range")
+        ..setDurationHero(1, 1)
+        ..setDurationNormal(1, 1)
+        ..setAreaofEffect(1, 450.)
+        ..setArtCaster("")
+        ..setEffects(1, "")
+        ..setEditorSuffix("(wurst)")
+
+function castFlare(unit caster)
+    doPeriodicallyTimed(1, 6) (CallbackCounted cb) ->
+        new DummyCaster()
+            ..owner(caster.getOwner())
+            ..origin(caster.getPos() + vec2(100,0))
+            ..castPoint(ABIL_ID, 1, Orders.flare, caster.getPos())
+
+init
+    EventListener.onCast(SPELL_CLOAK, caster -> castFlare(caster))
+    EventListener.onCast(SPELL_SUB_CLOAK, caster -> castFlare(caster))
+    EventListener.onCast(SPELL_ASSASSINATE, caster -> castFlare(caster))

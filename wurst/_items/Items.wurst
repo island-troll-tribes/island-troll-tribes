@@ -1,0 +1,142 @@
+package Items
+
+import ItemObjEditing
+import ChannelAbilityPreset
+import LinkedList
+import ToolTipsUtils
+import Assets
+
+public constant ICON_PATH = "ReplaceableTextures\\CommandButtons\\BTN{0}.blp"
+
+public class IttItem extends ItemDefinition
+    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, string abilities)
+        super(itemId, 'bspd')
+        this.setName(name)
+        this.setModelUsed(model)
+        this.setLumberCost(cost)
+        this.setInterfaceIcon(icon)
+        this.setDescription(toolTipExt)
+        this.setAbilities(abilities)
+        this.setScalingValue(scale)
+        this.setHotkey(hotkey)
+        this.setTooltipBasic(makeToolTipNorm(hotkey, "Trade for " + name))
+        this.setTooltipExtended(toolTipExt)
+        setCommonPart()
+
+    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, LinkedList<int> tinting, string abilities)
+        super(itemId, 'bspd')
+        this.setName(name)
+        this.setModelUsed(model)
+        this.setLumberCost(cost)
+        this.setInterfaceIcon(icon)
+        this.setDescription(toolTipExt)
+        this.setAbilities(abilities)
+        this.setHotkey(hotkey)
+        this.setTintingColor1Red(tinting.dequeue())
+        this.setTintingColor2Green(tinting.dequeue())
+        this.setTintingColor3Blue(tinting.dequeue())
+        this.setTooltipBasic(makeToolTipNorm(hotkey, "Trade for " + name))
+        this.setTooltipExtended(toolTipExt)
+        this.setScalingValue(scale)
+        setCommonPart()
+
+    function setCommonPart()
+        this.setGoldCost(0)
+        this.setDroppedWhenCarrierDies(true)
+        this.setHotkey("")
+        this.setLevel(0)
+        this.setHitPoints(75)
+        this.setClassification("Permanent")
+
+    function setBtnPos(int x, int y)
+        this.setButtonPositionX(x)
+        this.setButtonPositionY(y)
+
+public class UsableItem extends IttItem
+    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, LinkedList<int> tinting, string abilities, string cooldownGrp)
+        super(itemId, icon, model, name, hotkey, toolTipExt, cost, scale, tinting, abilities)
+        this.setActivelyUsed(true)
+        this.setCooldownGroup(cooldownGrp)
+
+    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, string abilities, string cooldownGrp)
+        super(itemId, icon, model, name, hotkey, toolTipExt, cost, scale, abilities)
+        this.setActivelyUsed(true)
+        this.setCooldownGroup(cooldownGrp)
+
+public class PerishableItem extends UsableItem
+    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, LinkedList<int> tinting, string abilities, string cooldownGrp, int charge)
+        super(itemId, icon, model, name, hotkey, toolTipExt, cost, scale, tinting, abilities, cooldownGrp)
+        this.setPerishable(true)
+        this.setNumberofCharges(charge)
+
+    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, string abilities, string cooldownGrp, int charge)
+        super(itemId, icon, model, name, hotkey, toolTipExt, cost, scale, abilities, cooldownGrp)
+        this.setPerishable(true)
+        this.setNumberofCharges(charge)
+
+//Item Abilities
+//Attack Bonus ability (Axes)
+public class AttackBonusAbility extends AbilityDefinitionAttackBonusPlus1
+    construct(int abilId, string name, int damage)
+        super(abilId)
+        this.setName("Attack Bonus ({0})".format(name))
+        this.setAttackBonus(1, damage)
+        this.setEditorSuffix("(Wurst)")
+
+// The stats bonus Ability for Item
+public class StatBonusAbility extends AbilityDefinitionAttributeModifierSkill
+    construct(int abilId, string name, int strength, int agility, int intelligence)
+        super(abilId)
+        this.setName("Stats Bonus ({0})".format(name))
+        this.setStrengthBonus(1, strength)
+        this.setAgilityBonus(1, agility)
+        this.setIntelligenceBonus(1, intelligence)
+        this.setEditorSuffix("(Wurst)")
+
+public class MoveSpeedBonusAbility extends AbilityDefinitionMoveSpeedBonus
+    construct(int abilId, string name, int speedBonus)
+        super(abilId)
+        this.setName("Move Speed Bonus ({0})".format(name))
+        this.setMovementSpeedBonus(1, speedBonus)
+        this.setEditorSuffix("(Wurst)")
+        if speedBonus == 200
+            this.setArtTarget(Abilities.faerieDragonMissile)
+            this.setTargetAttachments(2)
+            this.setTargetAttachmentPoint1("foot,left")
+            this.setTargetAttachmentPoint2("foot,right")
+
+public class AttackSpeedBonusAbility extends AbilityDefinitionAttackSpeedIncrease
+    construct(int abilId, string name, real attackSpeedBonus)
+        super(abilId)
+        this.setName("Attack Speed Bonus ({0})".format(name))
+        this.setAttackSpeedIncrease(1, attackSpeedBonus)
+        this.setEditorSuffix("(Wurst)")
+
+public class ItemChannelCast extends ChannelAbilityPreset
+    construct(int abilId, string name, Targettype targetType, real castRange, real cooldown)
+        super(abilId, 1, true)
+        this.setName(name + " Cast")
+        this.setCheckDependencies(false)
+        this.setHeroAbility(false)
+        this.setItemAbility(true)
+        this.presetTargetTypes(targetType)
+        this.setManaCost(1, 0)
+        this.setCooldown(1, cooldown)
+        this.setCastRange(1, castRange)
+        this.setEditorSuffix("(Wurst)")
+
+    construct(int abilId, string name, real castRange, real aoe, real cooldown)
+        super(abilId, 1, true)
+        this.setName(name + " Cast")
+        this.setCheckDependencies(false)
+        this.setHeroAbility(false)
+        this.setItemAbility(true)
+        this.setManaCost(1, 0)
+        this.presetTargetTypes(Targettype.POINT)
+        this.setCooldown(1, cooldown)
+        this.setCastRange(1, castRange)
+        this.setAreaofEffect(1, aoe)
+        this.presetOption(Option.TARGETIMAGE, true)
+        this.setFollowThroughTime(1, 1)
+        this.setAnimationNames("spell")
+        this.setEditorSuffix("(Wurst)")

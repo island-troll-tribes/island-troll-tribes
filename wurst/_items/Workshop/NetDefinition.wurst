@@ -1,0 +1,35 @@
+package NetDefinition
+
+import Items
+import Assets
+import ID
+import ObjectIds
+import AbilityObjEditing
+import ToolTipsUtils
+
+constant ABIL = compiletime(ABIL_ID_GEN.next())
+constant ICON = ICON_PATH.format("Ensnare")
+constant MODEL = Abilities.ensnareTarget
+constant DURATION_HERO = 2.50
+constant DURATION_NORMAL = 10.
+constant COOLDOWN = 15.
+constant CAST_RANGE = 600.
+constant TARGET_ALLOWED = "air,enemies,ground,neutral"
+constant TT = "A twine net that can be used to net opponents for {0}({1}) seconds.".format(DURATION_HERO.toToolTipOrange(), DURATION_NORMAL.toToolTipOrange())
+               + makeToolTipCooldown(COOLDOWN)
+
+class EnsnareItemAbil extends AbilityDefinitionEnsnareCreep
+    construct(int abilId, string name, real durationHero, real durationNormal, real cooldown, real castRange)
+        super(abilId)
+        this.setName(name + " Cast")
+        this.setDurationHero(1, durationHero)
+        this.setDurationNormal(1, durationNormal)
+        this.setCooldown(1, cooldown)
+        this.setCastRange(1, castRange)
+        this.setItemAbility(true)
+        this.setTargetsAllowed(1, TARGET_ALLOWED)
+        this.setEditorSuffix("(Wurst)")
+
+@compiletime function createNet()
+    new EnsnareItemAbil(ABIL, "Net", DURATION_HERO, DURATION_NORMAL, COOLDOWN, CAST_RANGE)
+    new PerishableItem(ITEM_NETS, ICON, MODEL, "Nets", "Z", TT, 4, 1, ABIL.toRawCode(), ABIL.toRawCode(), 3)..setBtnPos(0, 2)

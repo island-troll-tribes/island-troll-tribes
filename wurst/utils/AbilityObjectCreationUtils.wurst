@@ -5,6 +5,7 @@ import ObjectIdGenerator
 import Lodash
 import HashMap
 import LegacyColors
+import ToolTipsUtils
 
 public function createHiddenSpellbookWithAbilities(string abilityList) returns int
     let id = ABIL_ID_GEN.next()
@@ -34,6 +35,9 @@ public function createHiddenSpellbookWithAbilities(string abilityList) returns i
     ..presetSharedSpellCooldown(lvl -> false)
     return id
 
+/**
+A class to create spellbook ability
+**/
 public class SpellBookObject
     let id = '0'
     let name = "Page"
@@ -41,11 +45,12 @@ public class SpellBookObject
     let toolTip = "Hello there"
     let toolTipExt = "Welcome to our village"
     let btnPos = new Pair(0, 0)
-    let baseOrderId = ""
     private let abilityList = ""
     let icon = "ReplaceableTextures\\CommandButtons\\BTN"
+    let sharedCd = false
+    let cooldown = 0.
 
-    construct(int id, string name, string hotkey, string toolTipExt, string abilityList, Pair<int, int> btnPos, string baseOrderId, string icon)
+    construct(int id, string name, string hotkey, string toolTipExt, string abilityList, Pair<int, int> btnPos, string icon)
         this.id = id
         this.name = name
         this.hotkey = hotkey
@@ -53,20 +58,32 @@ public class SpellBookObject
         this.toolTipExt = toolTipExt
         this.abilityList = abilityList
         this.btnPos = btnPos
-        this.baseOrderId = baseOrderId
         this.icon += icon+".blp"
+
+    construct(int id, string name, string hotkey, string toolTipExt, string abilityList, Pair<int, int> btnPos, string icon, real cooldown)
+        this.id = id
+        this.name = name
+        this.hotkey = hotkey
+        this.toolTip = makeToolTipNorm(hotkey, name)
+        this.toolTipExt = toolTipExt+" Has {0} seconds cooldown.".format(cooldown.toToolTipLightBlue())
+        this.abilityList = abilityList
+        this.btnPos = btnPos
+        this.icon += icon+".blp"
+        this.cooldown = cooldown
+        this.sharedCd = true
 
     function buildSpellBook()
         new AbilityDefinitionSpellBook(id)
         ..setButtonPositionNormalX(btnPos.a)
         ..setButtonPositionNormalY(btnPos.b)
         ..setIconNormal(icon)
-        ..setHeroAbility(true)
+        ..setHeroAbility(false)
         ..setItemAbility(false)
         ..setLevels(1)
+        ..setLevelSkipRequirement(0)
         ..setTargetAttachmentPoint1("")
         ..setCasterAttachmentPoint1("")
-        ..setBaseOrderID(1, baseOrderId)
+        ..setBaseOrderID(1, "spellbook")
         ..setHotkeyNormal(hotkey)
         ..setName(name)
         ..setMaximumSpells(1, 11)
@@ -75,19 +92,39 @@ public class SpellBookObject
         ..setCooldown(1, 0)
         ..setTooltipNormal(1, toolTip)
         ..setTooltipNormalExtended(1, toolTipExt)
-        ..setSharedSpellCooldown(1, false)
+        ..setCooldown(1, cooldown)
+        ..setSharedSpellCooldown(1, sharedCd)
 
+/**
+A class to create hero spellbook ability
+**/
 public class HeroSpellBookObject extends SpellBookObject
     let level = 1
+    let reqLevel = 0
+    int skipLevel = 1
     let btnPos = new Pair(0, 0)
     let btnResPos = new Pair(0, 0)
+    let toolTipRes = ""
     let abilityList = new HashMap<int, string>
 
-    construct(int id, string name, string hotkey, string toolTip, HashMap<int, string> abilityList, Pair<int, int> btnPos, Pair<int, int> btnResPos, string baseOrderId,     string icon, int level)
-        super(id, name, hotkey, toolTip, "", btnPos, baseOrderId, icon)
+    construct(int id, string name, string hotkey, string toolTip, HashMap<int, string> abilityList, Pair<int, int> btnPos, string icon, int level, int reqLevel, int skipLevel)
+        super(id, name, hotkey, toolTip, "", btnPos, icon)
         this.abilityList = abilityList
         this.level = level
-        this.btnResPos = btnResPos
+        this.skipLevel = skipLevel
+        this.reqLevel = reqLevel
+        this.toolTipRes = GENERAL_COLOR + "Learn " + name
+
+    construct(int id, string name, string hotkey, string toolTip, HashMap<int, string> abilityList, Pair<int, int> btnPos, string icon, int level, int reqLevel, int skipLevel,
+             real cooldown)
+        super(id, name, hotkey, toolTip, "", btnPos, icon)
+        this.abilityList = abilityList
+        this.level = level
+        this.skipLevel = skipLevel
+        this.reqLevel = reqLevel
+        this.cooldown = cooldown
+        this.sharedCd = true
+
 
     override function buildSpellBook()
         new AbilityDefinitionSpellBook(id)
@@ -100,7 +137,9 @@ public class HeroSpellBookObject extends SpellBookObject
         ..setHeroAbility(true)
         ..setItemAbility(false)
         ..setLevels(level)
-        ..presetBaseOrderID(lvl -> baseOrderId)
+        ..setLevelSkipRequirement(skipLevel)
+        ..setRequiredLevel(reqLevel)
+        ..presetBaseOrderID(lvl -> "unsummon")
         ..setHotkeyLearn(hotkey)
         ..setHotkeyNormal(hotkey)
         ..setName(name)
@@ -108,6 +147,48 @@ public class HeroSpellBookObject extends SpellBookObject
         ..presetMinimumSpells(lvl -> 11)
         ..presetSpellList(lvl -> abilityList.get(lvl))
         ..presetCooldown(lvl -> 0)
-        ..presetTooltipNormal(lvl -> toolTip)
+        ..presetTooltipNormal(lvl -> toolTip + " - Level " + lvl.toString())
         ..presetTooltipNormalExtended(lvl -> toolTipExt)
-        ..presetSharedSpellCooldown(lvl -> false)
+        ..setTooltipLearn(makeToolTipLearn(toolTip))
+        ..setTooltipLearnExtended(toolTipExt)
+        ..presetCooldown(lvl -> cooldown)
+        ..presetSharedSpellCooldown(lvl -> sharedCd)
+
+/**
+Similar to Channel ability, but doesn't stop unit movement when casted
+**/
+public class DummyCastAbilityWindWalk extends AbilityDefinitionWindWalk
+    construct(int abilId, string name, real cooldown)
+        super(abilId)
+        this.setArtCaster("")
+        this.setArtEffect("")
+        this.setArtTarget("")
+        this.setArtSpecial("")
+        this.setHeroAbility(false)
+        this.setItemAbility(true)
+        this.setLevels(1)
+        this.setHotkeyNormal("A")
+        this.setName(name + " Cast")
+        this.setTooltipNormal(1, "dummy cast spell")
+        this.setTooltipNormalExtended(1, "dummy cast spell")
+        this.setCooldown(1, cooldown)
+        this.setManaCost(1, 0)
+        this.setAnimationNames("")
+        this.setDurationHero(1, 0.01)
+        this.setCastingTime(1, 0)
+        this.setDurationNormal(1, 0.01)
+        this.setEffectSound("")
+
+// Used to create a empty space in the spellbook, currently used in tannery quickmake spell
+public function createPlaceHolder() returns int
+    let abilId = ABIL_ID_GEN.next()
+
+    if compiletime
+        new AbilityDefinitionAuraSlow(abilId)
+            ..setName("PlaceHolder Ability")
+            ..setTargetsAllowed(1, "bridge")
+            ..setMovementSpeedFactor(1, 0)
+            ..setCastRange(1, 0.01)
+            ..setBuffs(1, "")
+            ..setEditorSuffix("(Wurst)")
+    return abilId

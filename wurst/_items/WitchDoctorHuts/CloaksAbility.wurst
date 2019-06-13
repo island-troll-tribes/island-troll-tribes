@@ -1,0 +1,178 @@
+package CloaksAbility
+
+import ChannelAbilityPreset
+import InstantDummyCaster
+import Orders
+import ClosureEvents
+import ClosureForGroups
+import Assets
+import ClosureTimers
+import BuffObjEditing
+
+public constant ABIL_HEAL = compiletime(ABIL_ID_GEN.next())
+public constant ABIL_MANA = compiletime(ABIL_ID_GEN.next())
+public constant ABIL_FROST = compiletime(ABIL_ID_GEN.next())
+public constant ABIL_FLAMES = compiletime(ABIL_ID_GEN.next())
+
+constant ABIL_DUMMY_HEAL = compiletime(ABIL_ID_GEN.next())
+constant ABIL_DUMMY_MANA = compiletime(ABIL_ID_GEN.next())
+constant ABIL_DUMMY_FROST = compiletime(ABIL_ID_GEN.next())
+
+constant HEAL_ICON = Icons.bTNReplenishHealth
+constant MANA_ICON = Icons.bTNReplenishMana
+constant FROST_ICON = "ReplaceableTextures\\CommandButtons\\BTNCloakOfFrost.blp"
+constant FLAMES_ICON = "ReplaceableTextures\\CommandButtons\\BTNCloakOfInferno.blp"
+
+constant HEAL_MODEL = "Models\\RejuvHealth.mdx"
+constant MANA_MODEL = "Models\\RejuvMana.mdx"
+constant FROST_MODEL = "Models\\SnowSteam.mdx"
+constant FLAMES_WEARER_MODEL = Abilities.immolationREDTarget
+constant FLAMES_TARGET_MODEL = Abilities.immolationRedDamage
+
+constant RESTORE_RADIUS   = 700.
+constant FROST_RADIUS  = 700.
+constant FLAMES_RADIUS = 300.
+
+public constant HEALTH_RESTORED = 150.
+public constant MANA_RESTORED   = 100.
+
+public constant FROST_DMG = 4.
+public constant FROST_MS_DEBUFF = 0.35
+public constant FROST_AS_DEBUFF = 0.35
+
+public constant FLAMES_DMG = 7.
+
+public constant RESTORE_COOLDOWN = 35.
+public constant FROST_COOLDOWN = 35.
+
+public constant RESTORE_DURATION = 5.
+public constant FROST_DURATION = 5.
+constant FROST_INTERVAL_PROC = 1.
+
+constant HEAL_BUFF_TT   = "This unit has Mana Rejuvenation; it is restoring mana points over time."
+constant MANA_BUFF_TT   = "This unit has Health Rejuvenation; it is healing hit points over time."
+constant FROST_CASTER_BUFF_TT  = "This unit is engulfed in a Ice Veil; it slows and damage nearby enemies over time."
+constant FROST_TARGET_BUFF_TT  = "This unit is cold; it is slowed."
+
+constant BUFF_HEAL = compiletime(BUFF_ID_GEN.next())
+constant BUFF_MANA = compiletime(BUFF_ID_GEN.next())
+constant BUFF_FLAMES = compiletime(BUFF_ID_GEN.next())
+constant BUFF_FROST_CASTER = compiletime(createDummyBuffObject("Frost Cloak Caster", FROST_CASTER_BUFF_TT,
+                            FROST_ICON, FROST_MODEL, "origin"))
+constant BUFF_FROST_TARGET = compiletime(createDummyBuffObject("Frost Cloak Target", FROST_TARGET_BUFF_TT,
+                            Icons.bTNFrost, Abilities.frostDamage, "chest"))
+
+class ItemCastDefinition extends ChannelAbilityPreset
+    construct(int abilId, string name, string orderId, real cooldown)
+        super(abilId, 1, true)
+        this.setDummyAbility()
+        this.setItemAbility(true)
+        this.setHeroAbility(false)
+        this.setCooldown(1, cooldown)
+        this.setName(name)
+        this.setBaseOrderID(1, orderId)
+        this.setEditorSuffix("(Wurst)")
+
+class RejuvBuffDefinition
+    construct(int buffId, string name, string icon, string artEffect, string toolTip)
+        new BuffDefinition(buffId, 'Brej') // Rejuvination
+        ..setName(1, name)
+        ..setIcon(icon)
+        ..setArtTarget(1, artEffect)
+        ..setTooltipNormal(1, name)
+        ..setTooltipNormalExtended(1, toolTip)
+        ..setEditorSuffix(1, "(Wurst)")
+
+class RejuvinationDefinition extends AbilityDefinitionRejuvinationcreep
+    construct(int abilId, string name, int rejuvBuff, string icon, real manaRestored, real healthRestored)
+        super(abilId)
+        this.setDummyAbility()
+        this.setHitPointsGained(1, healthRestored)
+        this.setManaPointsGained(1, manaRestored)
+        this.setDurationHero(1, RESTORE_DURATION)
+        this.setDurationNormal(1, RESTORE_DURATION)
+        this.setEditorSuffix("(Wurst)")
+        this.setName(name)
+        this.setBuffs(1, rejuvBuff.toRawCode())
+        this.setIconNormal(icon)
+
+class FrostVeilAbilityDefinition extends AbilityDefinitionAlchemistAcidBomb
+    construct(int abilId, string name, real duration, real damage)
+        super(abilId)
+        this.setDummyAbility()
+        this.setName(name)
+        this.setArmorPenalty(1, 0)
+        this.setMissileArt("")
+        this.setArtTarget(Abilities.frostArmorDamage)
+        this.setAttackSpeedReduction(1, -FROST_AS_DEBUFF)
+        this.setMovementSpeedReduction(1, -FROST_MS_DEBUFF)
+        this.setPrimaryDamage(1, damage)
+        this.setSecondaryDamage(1, 0)
+        this.setAreaofEffect(1, 1)
+        this.setBuffs(1, BUFF_FROST_TARGET.buffId.toRawCode())
+        this.setDurationHero(1, duration)
+        this.setDurationNormal(1, duration)
+        this.setEditorSuffix("(Wurst)")
+
+class ImmolationBuffDefinition
+    construct(int buffId, string name, string artTarget, string artSpecial)
+        new BuffDefinition(buffId, 'BEim') //Immolation
+        ..setName(1, name)
+        ..setArtTarget(1, artTarget)
+        ..setArtSpecial(1, artSpecial)
+        ..setTargetAttachmentPoint0(1, "chest")
+
+class ItemImmolationDefinition extends AbilityDefinitionPermanentImmolation
+    construct(int abilId, string name, real damage, int buffId, real AOE)
+        super(abilId)
+        this.setDamageperInterval(1, damage)
+        this.setAreaofEffect(1, AOE)
+        this.setName(name)
+        this.setBuffs(1, buffId.toRawCode())
+        this.setItemAbility(true)
+        this.setEditorSuffix("(Wurst)")
+
+@compiletime function createAbilities()
+    new RejuvBuffDefinition(BUFF_MANA, "Mana Rejuvenation", MANA_ICON, MANA_MODEL, HEAL_BUFF_TT)
+    new RejuvBuffDefinition(BUFF_HEAL, "Health Rejuvenation", HEAL_ICON, HEAL_MODEL, MANA_BUFF_TT)
+
+    new ItemCastDefinition(ABIL_HEAL , "Healing Cloak Cast", "locustswarm", RESTORE_COOLDOWN)
+    new ItemCastDefinition(ABIL_MANA , "Mana Cloak Cast"   , "locustswarm", RESTORE_COOLDOWN)
+    new ItemCastDefinition(ABIL_FROST, "Frost Cloak Cast"  , "locustswarm", FROST_COOLDOWN)
+
+    new RejuvinationDefinition(ABIL_DUMMY_HEAL, "Health Rejuv", BUFF_HEAL, HEAL_ICON, 0, HEALTH_RESTORED)
+    new RejuvinationDefinition(ABIL_DUMMY_MANA, "Health Rejuv", BUFF_MANA, MANA_ICON, MANA_RESTORED, 0)
+
+    new FrostVeilAbilityDefinition(ABIL_DUMMY_FROST, "Ice Veil Dummy", 1, FROST_DMG)
+
+    new ImmolationBuffDefinition(BUFF_FLAMES, "Red Immolation", FLAMES_WEARER_MODEL, FLAMES_TARGET_MODEL)
+    new ItemImmolationDefinition(ABIL_FLAMES, "Cloak of Flames Immolation", FLAMES_DMG, BUFF_FLAMES, FLAMES_RADIUS)
+
+function castRejuv(unit caster, int rejuvAbility)
+    forUnitsInRange(caster.getPos(), RESTORE_RADIUS) (unit u) ->
+        if u.isAlive() and u.getOwner().isAllyOf(caster.getOwner())
+            InstantDummyCaster.castTarget(caster.getOwner(), rejuvAbility, 1, Orders.rejuvination, u)
+
+//Could be better, but will do the job
+function castIceVeil(unit caster)
+    let owner = caster.getOwner()
+    caster.addAbility(BUFF_FROST_CASTER.abilId)
+    doAfter(FROST_DURATION) () ->
+        caster.removeAbility(BUFF_FROST_CASTER.abilId)
+
+    doPeriodicallyTimed(FROST_INTERVAL_PROC, FROST_DURATION) (CallbackCounted cb) ->
+        if not (caster.hasAbility(BUFF_FROST_CASTER.buffId))
+            destroy cb
+
+        forUnitsInRange(caster.getPos(), FROST_RADIUS) (unit u) ->
+            if u.isAlive() and u.getOwner().isEnemyOf(owner)
+                InstantDummyCaster.castTarget(owner, ABIL_DUMMY_FROST, 1, Orders.acidbomb, u)
+                u.setVertexColor(76, 125, 255, 255)
+                doAfter(1.25) () ->
+                    if not u.hasAbility(BUFF_FROST_TARGET.buffId)
+                        u.setVertexColor(255, 255, 255, 255)
+
+init
+    EventListener.onCast(ABIL_HEAL, caster -> castRejuv(caster, ABIL_DUMMY_HEAL))
+    EventListener.onCast(ABIL_MANA, caster -> castRejuv(caster, ABIL_DUMMY_MANA))
+    EventListener.onCast(ABIL_FROST, caster -> castIceVeil(caster))

@@ -1,0 +1,50 @@
+package EssenceOfBees
+
+import OnUnitEnterLeave
+import ID
+import ClosureTimers
+import Orders
+import GeometryUtils
+import TerrainUtils
+import InstantDummyCaster
+import Assets
+import Items
+
+constant HIVE_SPAWN_INTERVAL = 10.0
+constant LOCATION_ATTEMPTS = 20
+constant HIVE_SPAWN_MIN_RADIUS = 0.
+constant HIVE_SPAWN_MAX_RADIUS = 200.
+constant BEEHIVE_ABILITY_ID = 'A02C'
+
+constant ICON = Icons.bTNCrate
+constant MODEL = Doodads.emptyCrates1
+constant TT = "This is really good. Dont waste it. One primary hive releases bees, and if it is not killed, spawns lesser hives around it."
+
+function onEobEnter(unit hive)
+    let hivePos = hive.getPos()
+    let owner = hive.getOwner()
+    spawnChildHive(owner, hivePos)
+    doPeriodically(HIVE_SPAWN_INTERVAL) spawnerLoop ->
+        if hive.isAlive()
+            spawnChildHive(owner, hivePos)
+        else
+            destroy spawnerLoop
+
+function spawnChildHive(player owner, vec2 hivePos)
+    //Attempt multiple times to get a walkable pos
+    for i = 1 to LOCATION_ATTEMPTS
+        var randomAngle = randomAngle()
+        var randomDistance = GetRandomReal(HIVE_SPAWN_MIN_RADIUS, HIVE_SPAWN_MAX_RADIUS)
+        var spawnPos = hivePos.polarOffset(randomAngle, randomDistance)
+        if spawnPos.isTerrainWalkable()
+            InstantDummyCaster.castPoint(owner, BEEHIVE_ABILITY_ID, 1, Orders.summonfactory, spawnPos)
+            break
+
+@compiletime function createBeesHiveItem()
+    new PerishableItem(ITEM_ESSENCE_BEES, ICON, MODEL, "Essences of Bees", "E", TT, 45, 1, "A03Y", "AIin", 1)
+
+init
+    onEnter() ->
+        let maybeHive = getEnterLeaveUnit()
+        if maybeHive.getTypeId() == UNIT_UBER_HIVE
+            onEobEnter(maybeHive)

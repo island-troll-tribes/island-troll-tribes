@@ -1,0 +1,38 @@
+package HealingPotion
+
+import PotionsDefinition
+import ID
+import LinkedList
+import ToolTipsUtils
+import ChannelAbilityPreset
+import Assets
+
+public constant ABIL_HEAL_POT  = compiletime(ABIL_ID_GEN.next())
+//constant ABIL  = "A0DO"
+//constant ABIL_MANA = "A0DT"
+
+constant CAST_RANGE = 500.
+public constant POT_HEAL = 65.
+
+constant ICON  = ICON_PATH.format("LesserRejuvPotion")
+constant MODEL = "Models\\PotionPurpleLesser.mdl"
+constant TT    = "A dilute potion made from Athelas Seed. Instantly restores {0} Health point to a target ally.".format(POT_HEAL.toToolTipGreen())
+
+constant TARGET_ALLOWED = "friend,ground,hero,invulnerable,organic,self,vulnerable"
+
+@compiletime function createAbil()
+    new ChannelAbilityPreset(ABIL_HEAL_POT, 1, TRUE)
+    ..setName("Healing Potion")
+    ..setCheckDependencies(false)
+    ..setHeroAbility(false)
+    ..setItemAbility(true)
+    ..presetTargetTypes(Targettype.UNIT)
+    ..setManaCost(1, 0)
+    ..setCooldown(1, 0)
+    ..setArtTarget(Abilities.healingSalveTarget)
+    ..setCastRange(1, CAST_RANGE)
+    ..setRace(Race.Demon)
+    ..setEditorSuffix("(Wurst)")
+
+@compiletime function createHealingPotion()
+    new PotionDefinition(ITEM_HEALING_POTION_I, ICON, MODEL, "Healing Potion", "Q", TT, 5, commaList(ABIL_HEAL_POT), 0.7, "A002", 120)

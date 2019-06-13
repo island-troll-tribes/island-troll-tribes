@@ -1,0 +1,81 @@
+package ScrollsDefinition
+
+import ItemObjEditing
+import ID
+import LinkedList
+import ToolTipsUtils
+import ScrollsAbility
+import ObjectIds
+import Items
+
+constant ICON_PATH = "ReplaceableTextures\\CommandButtons\\BTN{0}.blp"
+
+constant FB_CD_GRP = "A00V" // Spear
+constant ER_CD_GRP = "A017" // Rootinated
+constant LD_CD_GRP = "A016" // Skeletal minions
+constant SO_CD_GRP = "ACif" // Frost Armor
+constant SS_CD_GRP = "AIha" // Item Healing Zone
+constant ST_CD_GRP = "A038" // Tsunami
+constant SC_CD_GRP = "S000" // Cyclone(New)
+
+constant FB_ABIL = commaList(ABIL_FIRE) // Fireball
+//constant FB_ABIL = "Awfb" // Fireball
+constant ER_ABIL = commaList(ABIL_ROOT) // Rootinated
+//constant ER_ABIL = "A017" // Rootinated
+constant LD_ABIL = commaList(ABIL_SKELETAL) // Skeletal minions
+//constant LD_ABIL = "A016" // Skeletal minions
+constant SO_ABIL = commaList(ABIL_STONE) // Frost Armor
+//constant SO_ABIL = "ACfa" // Frost Armor
+constant SS_ABIL = commaList(ABIL_HASTE) // Max Speed
+//constant SS_ABIL = "A0CD" // Max Speed
+constant ST_ABIL = commaList(ABIL_TSUNAMI) // Tsunami
+//constant ST_ABIL = "A038" // Tsunami
+constant SC_ABIL = commaList(ABIL_CYCLONE) // Cyclone(New)
+//constant SC_ABIL = "S000" // Cyclone(New)
+
+constant FB_ICON = ICON_PATH.format("ScrollOfHealing")
+constant ER_ICON = ICON_PATH.format("ScrollOfRegenerationGreen")
+constant LD_ICON = ICON_PATH.format("SnazzyScroll")
+constant SO_ICON = ICON_PATH.format("ScrollUber")
+constant SS_ICON = ICON_PATH.format("ScrollOfHaste")
+constant ST_ICON = ICON_PATH.format("SnazzyScrollPurple")
+constant SC_ICON = ICON_PATH.format("BansheeMaster")
+
+constant FB_MODEL = "Models\\ScrollRed.mdx"
+constant ER_MODEL = "Models\\ScrollRegen.mdx"
+constant LD_MODEL = "Models\\ScrollYellow.mdx"
+constant SO_MODEL = "Models\\ScrollOrange.mdx"
+constant SS_MODEL = "Models\\ScrollHaste.mdx"
+constant ST_MODEL = "Models\\ScrollPurple.mdx"
+constant SC_MODEL = "Models\\ScrollCyan.mdx"
+
+constant FB_TT = "Grants the hero the ability to cast fireball dealing {0} damage and stunning for 0.5 seconds."
+                 .format(FIRE_DMG.toToolTipRed()) + makeToolTipCooldown(FIRE_COOLDOWN)
+constant ER_TT = "Grants the hero the ability to cast entangling roots, locking the enemy in place for {0}({1}) seconds and dealing {2} damage per second."
+                 .format(ROOT_DURATION_HERO.toToolTipOrange(), ROOT_DURATION_NORMAL.toToolTipOrange(), ROOT_DMG.toToolTipRed()) + makeToolTipCooldown(ROOT_COOLDOWN)
+constant LD_TT = "Grants the hero the ability to cast living dead which summons two skeletal bodyguard for {0} seconds."
+                 .format(SKELETAL_DURATION_HERO.toToolTipLightBlue()) + makeToolTipCooldown(SKELETAL_COOLDOWN)
+constant SO_TT = "Grants the hero the ability to cast stone armor which increases the targets armor by {0} and slows the attack speed of melee attackers. Lasts {1} seconds."
+                 .format(STONE_ARMOR.toToolTipGreen(), STONE_DURATION.toToolTipLightBlue()) + makeToolTipCooldown(STONE_COOLDOWN)
+constant SS_TT = "Grant the Hero the ability to acquire maximum movement speed."+makeToolTipDuration(HASTE_DURATION, HASTE_COOLDOWN) + makeToolTipCooldown(HASTE_COOLDOWN)
+
+constant ST_TT = "Grants the hero the ability to cast Tsunami dealing {0} to heroes in a line. It deals extra to buildings, and can instantly put out fires."
+                 .format(TSUNAMI_DMG.toToolTipRed()) + makeToolTipCooldown(TSUNAMI_COOLDOWN)
+constant SC_TT = "Grants the hero the ability to cast Cyclone which tosses an enemy unit in the air for {0}({1}) seconds."
+                 .format(CYCLONE_DURATION_HERO.toToolTipLightBlue(), CYCLONE_DURATION_NORMAL.toToolTipLightBlue()) + makeToolTipCooldown(CYCLONE_COOLDOWN)
+
+
+class ScrollDefinition extends UsableItem
+    construct(int id, string icon, string model, string name, string hotkey, string toolTipExt, int cost, string abilities, real scale, string cooldownGroup)
+        super(id, icon, model, name, hotkey, toolTipExt, cost, scale, abilities, cooldownGroup)
+        this.setClassification("Charged")
+
+
+@compiletime function createScrolls()
+    new ScrollDefinition(ITEM_SCROLL_FIREBALL         , FB_ICON , FB_MODEL , "Scroll of Fireball"         , "E", FB_TT , 7 , FB_ABIL , 1.00, FB_CD_GRP )..setBtnPos(2, 0)
+    new ScrollDefinition(ITEM_SCROLL_ENTANGLING_ROOTS , ER_ICON , ER_MODEL , "Scroll of Entangling Roots" , "E", ER_TT , 6 , ER_ABIL , 1.00, ER_CD_GRP )..setBtnPos(2, 0)
+    new ScrollDefinition(ITEM_SCROLL_LIVING_DEAD      , LD_ICON , LD_MODEL , "Scroll of Living Dead"      , "Q", LD_TT , 7 , LD_ABIL , 1.00, LD_CD_GRP )..setBtnPos(0, 0)
+    new ScrollDefinition(ITEM_SCROLL_STONE_ARMOR      , SO_ICON , SO_MODEL , "Scroll of Stone Armor"      , "W", SO_TT , 9 , SO_ABIL , 1.00, SO_CD_GRP )..setBtnPos(1, 0)
+    new ScrollDefinition(ITEM_SCROLL_SWIFTNESS        , SS_ICON , SS_MODEL , "Scroll of Swiftness"        , "R", SS_TT , 10, SS_ABIL , 1.00, SS_CD_GRP )..setBtnPos(3, 0)
+    new ScrollDefinition(ITEM_SCROLL_TSUNAMI          , ST_ICON , ST_MODEL , "Scroll of Tsunami"          , "A", ST_TT , 9 , ST_ABIL , 1.00, ST_CD_GRP )
+    new ScrollDefinition(ITEM_SCROLL_CYCLONE          , SC_ICON , SC_MODEL , "Scroll of Cyclone"          , "R", SC_TT , 9 , SC_ABIL , 1.00, SC_CD_GRP )..setBtnPos(3, 0)

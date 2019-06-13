@@ -1,0 +1,21 @@
+package OmnicurePotion
+
+import PotionsDefinition
+import ID
+import LinkedList
+import ObjectIds
+import Omnicure
+import ClosureEvents
+
+constant ABIL = compiletime(ABIL_ID_GEN.next())
+//constant ABIL = SPELL_OMNICURE
+constant ICON = ICON_PATH.format("MinorRejuvPotion")
+constant MODEL = "Models\\PotionPurpleSmall.mdl"
+constant TT = "This potion is said to be able to cure all allies. Made from color herbs and Athelas Seed."
+
+@compiletime function createOmnicurePotion()
+    new OmnicureItem(ABIL)
+    new PotionDefinition(ITEM_OMNICURE, ICON, MODEL, "Omnicure Potion", "A", TT, 22, commaList(ABIL), 0.70, commaList(ABIL), 120)
+
+init
+    registerSpellEffectEvent(ABIL, function castOmnicure)

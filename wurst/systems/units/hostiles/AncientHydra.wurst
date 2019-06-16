@@ -9,6 +9,7 @@ import DiscoDuck
 import PublicLibrary
 import DummyCaster
 import Orders
+import DamageEvent
 
 constant SPELL_NETHER = 'A037'
 constant BUFF_NETHER = 'BHbn'
@@ -40,7 +41,10 @@ public class AncientHydra extends Hostile
         flashEffect(TELEPORT_MODEL, hydra, "overhead")
         callback = doPeriodically(4, cb -> attackCenter())
 
-        EventListener.add(hydra, EVENT_UNIT_DAMAGED, -> onAttacked())
+        DamageEvent.addListener() () ->
+            if DamageEvent.getSource() == hydra
+                onAttacked()
+        //EventListener.add(hydra, EVENT_UNIT_DAMAGED, -> onAttacked())
         EventListener.add(hydra, EVENT_PLAYER_UNIT_SPELL_EFFECT, -> onSpellEffect())
 
     function attackCenter()

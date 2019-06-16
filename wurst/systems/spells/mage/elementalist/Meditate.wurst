@@ -8,6 +8,7 @@ import OverCharge
 import ToolTipsUtils
 import ChannelAbilityPreset
 import Lodash
+import DamageEvent
 import Assets
 
 constant let ABILITY_ID = 'ESMD'
@@ -114,5 +115,5 @@ init
     registerSpellEffectEvent(ABILITY_ID, () -> onCast())
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST, () -> onEndCast())
 
-    EventListener.add(EVENT_UNIT_DAMAGED) ->
-        onDamage(GetTriggerUnit(), GetEventDamage().abs())
+    DamageEvent.addListener() ->
+        onDamage(DamageEvent.getTarget(), DamageEvent.getOriginalAmount().abs())

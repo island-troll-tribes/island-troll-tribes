@@ -7,10 +7,13 @@ import ID
 import ToolTipsUtils
 import ChannelAbilityPreset
 
+
 //Healing instances are handled in HealingItems.wurst
-constant ABIL_MEAT   = 'AIhx'
-constant ABIL_ACORN  = 'AIhx'
-constant ABIL_MACORN = 'AIhx'
+constant ABIL_HEALING = compiletime(ABIL_ID_GEN.next())
+
+constant ABIL_MEAT   = ABIL_HEALING
+constant ABIL_ACORN  = ABIL_HEALING
+constant ABIL_MACORN = ABIL_HEALING
 
 constant MEAT_ICON   = ICON_PATH.format("MonsterLure")
 constant ACORN_ICON  = ICON_PATH.format("Acorn")
@@ -28,7 +31,18 @@ constant TT_MEAT   = "A well done steak. Instantly heals {0} health point on use
 constant TT_ACORN  = "An acorn left by an animal. Restores {0} health point on use.".format(ACORN_HEAL.toToolTipGreen())
 constant TT_MACORN = "An acorn left by an animal. Restores {0} health point on use.".format(MACORN_HEAL.toToolTipGreen())
 
+class ItemHealingAbil extends AbilityDefinitionItemHealLesser
+    construct(int abilId, string name, string artTarget)
+        super(abilId)
+        this.setName(name)
+        this.setHitPointsGained(1, 0)
+        this.setArtTarget(artTarget)
+        this.setCooldown(1, 0)
+        this.setEditorSuffix("(Wurst)")
+
 @compiletime function createHealingItems()
+    new ItemHealingAbil(ABIL_HEALING, "Item Heal", Abilities.healTarget)
+
     new PerishableItem(ITEM_COOKED_MEAT , MEAT_ICON   , MEAT_MODEL   , "Cooked Meat" , "Q" ,TT_MEAT   , 2 , 0.85 , asList(255, 160 , 125 ), ABIL_MEAT   .toRawCode(), ABIL_MEAT   .toRawCode(), 1)
     new PerishableItem(ITEM_ACORN       , ACORN_ICON  , ACORN_MODEL  , "Acorn"       , "W" ,TT_ACORN  , 2 , 0.7    , asList(255, 255 , 255 ), ABIL_ACORN  .toRawCode(), ABIL_ACORN  .toRawCode(), 1)
     new PerishableItem(ITEM_MAGIC_ACORN , MACORN_ICON , MACORN_MODEL , "Magic Acorn" , "E" ,TT_MACORN , 10, 1    , asList(120, 100 , 255 ), ABIL_MACORN .toRawCode(), ABIL_MACORN .toRawCode(), 1)

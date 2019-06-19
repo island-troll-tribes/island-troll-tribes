@@ -2,6 +2,7 @@ package DamageTexts
 import ClosureEvents
 import LinkedList
 import ChatCommands
+import DamageEvent
 
 LinkedList<player> damageTextPlayers = new LinkedList<player>()
 
@@ -28,10 +29,11 @@ public function canPlayerSeeDamageText(player p, unit target) returns boolean
     return damageTextPlayers.has(p) and IsUnitVisible(target, p)
 
 init
-    EventListener.add(EVENT_UNIT_DAMAGED) ->
-        var damage = GetEventDamage().abs()
-        let attacker = GetEventDamageSource()
-        let target = GetTriggerUnit()
+    DamageEvent.addListener() ->
+    //EventListener.add(EVENT_UNIT_DAMAGED) ->
+        var damage = DamageEvent.getOriginalAmount().abs()
+        let attacker = DamageEvent.getSource()
+        let target = DamageEvent.getTarget()
         if damage >= 2 and damage <= 300 and attacker.getOwner().getId() != PLAYER_NEUTRAL_AGGRESSIVE and attacker.getOwner().getId() != PLAYER_NEUTRAL_PASSIVE
             damageTextTag(target, damage)
 

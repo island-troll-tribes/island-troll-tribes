@@ -9,8 +9,10 @@ import DiscoDuck
 import PublicLibrary
 import DummyCaster
 import Orders
+import DamageEvent
+import NetherPotion
 
-constant SPELL_NETHER = 'A037'
+constant SPELL_NETHER = ABIL_NETHER
 constant BUFF_NETHER = 'BHbn'
 
 
@@ -40,8 +42,13 @@ public class AncientHydra extends Hostile
         flashEffect(TELEPORT_MODEL, hydra, "overhead")
         callback = doPeriodically(4, cb -> attackCenter())
 
-        EventListener.add(hydra, EVENT_UNIT_DAMAGED, -> onAttacked())
-        EventListener.add(hydra, EVENT_PLAYER_UNIT_SPELL_EFFECT, -> onSpellEffect())
+        DamageEvent.addListener() () ->
+            if DamageEvent.getSource() == hydra
+                onAttacked()
+        //EventListener.add(hydra, EVENT_UNIT_DAMAGED, -> onAttacked())
+        //EventListener.add(hydra, EVENT_PLAYER_UNIT_SPELL_EFFECT, -> onSpellEffect())
+        EventListener.onTargetCast(SPELL_NETHER, (unit caster, unit target) -> onSpellEffect())
+
 
     function attackCenter()
         let hydra = getUnit()
@@ -82,12 +89,14 @@ public class AncientHydra extends Hostile
             attacker.setOwner(players[PLAYER_NEUTRAL_AGGRESSIVE], true)
 
     function onSpellEffect()
-        if GetSpellAbilityId() == SPELL_NETHER
+        let target = GetSpellAbilityUnit()
+        new DummyCaster()
+            ..owner(players[PLAYER_NEUTRAL_AGGRESSIVE])
+            ..origin(target.getPos() + vec2(100, 0))
+            ..castTarget(SPELL_NETHER, 1, Orders.banish, target)
+        //Nether is a projectile so we have to wait a bit before removing the buff, this is a quickFix
+        doAfter(0.1) () ->
             getUnit().removeAbility(BUFF_NETHER)
-            new DummyCaster()
-                ..owner(players[PLAYER_NEUTRAL_AGGRESSIVE])
-                ..origin(GetSpellAbilityUnit().getPos())
-                ..castTarget(SPELL_NETHER, 1, Orders.banish, GetSpellAbilityUnit())
 
 
 init

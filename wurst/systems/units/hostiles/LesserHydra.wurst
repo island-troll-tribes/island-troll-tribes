@@ -4,9 +4,11 @@ import Hostile
 import LinkedListModule
 import TimerUtils
 import ClosureEvents
+import Assets
+import DamageEvent
 
-constant let hydraSpawnModel = "Objects\\Spawnmodels\\Naga\\NagaDeath\\NagaDeath.mdl"
-constant let hydraDespawnModel = "Abilities\\Spells\\Other\\CrushingWave\\CrushingWaveDamage.mdl"
+constant let hydraSpawnModel = Objects.nagaDeath
+constant let hydraDespawnModel = Abilities.crushingWaveDamage
 
 
 public class LesserHydra extends Hostile
@@ -64,7 +66,10 @@ public class LesserHydra extends Hostile
 
     construct(vec2 pos)
         super(players[PLAYER_NEUTRAL_AGGRESSIVE], pos)
-        EventListener.add(getUnit(), EVENT_UNIT_DAMAGED, -> onAttacked())
+        DamageEvent.addListener() ->
+            if DamageEvent.getSource() == getUnit()
+                onAttacked()
+        //EventListener.add(getUnit(), EVENT_UNIT_DAMAGED, -> onAttacked())
         hydraDespawnTimer.start(60, function LesserHydra.despawn)
 
     override function postCreate()

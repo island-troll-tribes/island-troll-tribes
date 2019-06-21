@@ -4,23 +4,23 @@ import LinkedList
 import UnitExtensions
 import ID
 import RegisterEvents
-import Texttag
+import GameConfig
 
 public function mixIt(LinkedList<item> inv)
     inv.forEach() items ->
         if items.getTypeId() == ITEM_RIVER_ROOT
             items.remove()
-        if items.getTypeId() == ITEM_RIVER_STEM
+        else if items.getTypeId() == ITEM_RIVER_STEM
             items.remove()
-        if items.getTypeId() == ITEM_ATHELAS_SEED
+        else if items.getTypeId() == ITEM_ATHELAS_SEED
             items.remove()
-        if items.getTypeId() == ITEM_BLUE_HERB
+        else if items.getTypeId() == ITEM_BLUE_HERB
             items.remove()
-        if items.getTypeId() == ITEM_ORANGE_HERB
+        else if items.getTypeId() == ITEM_ORANGE_HERB
             items.remove()
-        if items.getTypeId() == ITEM_PURPLE_HERB
+        else if items.getTypeId() == ITEM_PURPLE_HERB
             items.remove()
-        if items.getTypeId() == ITEM_YELLOW_HERB
+        else if items.getTypeId() == ITEM_YELLOW_HERB
             items.remove()
 
 public function mix(unit caster)
@@ -36,7 +36,7 @@ public function mix(unit caster)
 
     int root = count.get(ITEM_RIVER_ROOT)
     int stem = count.get(ITEM_RIVER_STEM)
-    int butsu = count.get(ITEM_ATHELAS_SEED)
+    int athelas = count.get(ITEM_ATHELAS_SEED)
 
     specCount = blue + oran + purp + yell
 
@@ -50,8 +50,8 @@ public function mix(unit caster)
         specTypes += 1
 
     //Debug
-    //print("{0} root {1} stem {2} butsu {3} Blue {4} Orange {5} Purple {6} Yellow"
-    //.format(root.toString(), stem.toString(), butsu.toString(), blue.toString(), oran.toString(), purp.toString(), yell.toString()))
+    //print("{0} root {1} stem {2} athelas {3} Blue {4} Orange {5} Purple {6} Yellow"
+    //.format(root.toString(), stem.toString(), athelas.toString(), blue.toString(), oran.toString(), purp.toString(), yell.toString()))
 
     // Eob
     if specTypes > 2  and specCount > 3
@@ -66,21 +66,21 @@ public function mix(unit caster)
         return
 
     // Nether
-    if specCount > 0 and stem > 1 and butsu > 1
+    if specCount > 0 and stem > 1 and athelas > 1
         mixIt(inventory)
         caster.addItemById(ITEM_NETHER_POTION)
         return
 
     // Drunk
-    if specCount > 0 and root > 1 and butsu > 1
+    if specCount > 0 and root > 1 and athelas > 1
         mixIt(inventory)
         caster.addItemById(ITEM_DRUNKS_POTION)
         return
 
     // Fervor
-    if specCount > 2 and specTypes > 1 and butsu > 0
+    if specCount > 2 and specTypes > 1 and athelas > 0
         mixIt(inventory)
-        caster.addItemById(ITEM_FERVER_POTION)
+        caster.addItemById(gameConfig.getUseOldFervor() ? ITEM_FERVER_POTION: ITEM_NEW_FERVOR_POTION)
         return
 
     // Disease Potion
@@ -102,7 +102,7 @@ public function mix(unit caster)
         return
 
     // Spirit Of Darkness
-    if stem > 0 and root > 0 and butsu == 2
+    if stem > 0 and root > 0 and athelas == 2
         mixIt(inventory)
         caster.addItemById(ITEM_SPIRIT_DARKNESS)
         return
@@ -114,31 +114,31 @@ public function mix(unit caster)
         return
 
     // Elemental Shield Potion
-    if stem > 0 and butsu > 0 and specCount > 0
+    if stem > 0 and athelas > 0 and specCount > 0
         mixIt(inventory)
         caster.addItemById(ITEM_ELEMENTAL_SHIELD_POTION)
         return
 
     // Omnicure
-    if butsu > 1 and specTypes > 1
+    if athelas > 1 and specTypes > 1
         mixIt(inventory)
         caster.addItemById(ITEM_OMNICURE)
         return
 
     // Oracle
-    if butsu > 1 and specCount > 0
+    if athelas > 1 and specCount > 0
         mixIt(inventory)
         caster.addItemById(ITEM_ORACLE_POTION)
         return
 
     // Mana
-    if stem > 0 and butsu > 0
+    if stem > 0 and athelas > 0
         mixIt(inventory)
         caster.addItemById(ITEM_MANA_POTION_I)
         return
 
     // Healing
-    if root > 0 and butsu > 0
+    if root > 0 and athelas > 0
         mixIt(inventory)
         caster.addItemById(ITEM_HEALING_POTION_I)
         return
@@ -150,7 +150,7 @@ public function mix(unit caster)
         return
 
     // Anti Magic Potion
-    if specCount > 0 and butsu > 0
+    if specCount > 0 and athelas > 0
         mixIt(inventory)
         caster.addItemById(ITEM_ANTI_MAGIC_POTION)
         return
@@ -168,7 +168,7 @@ public function mix(unit caster)
         return
 
     // Cure All
-    if butsu > 1
+    if athelas > 1
         mixIt(inventory)
         caster.addItemById(ITEM_CURE_ALL)
         return

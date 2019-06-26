@@ -47,6 +47,7 @@ function replaceUnit(int newUnitId, unit oldUnit) returns unit
 
     for items in oldUnit.inventory()
         UnitAddItem(newUnit, items)
+    RemoveUnit(oldUnit)
     return newUnit
 
 function upgradeUnit(int newUnitId, unit oldUnit)
@@ -56,24 +57,33 @@ function upgradeUnit(int newUnitId, unit oldUnit)
     int agi = GetHeroAgi(oldUnit, false)
     int inte = GetHeroInt(oldUnit, false)
 
-    if oldUnit.getTypeId() == UNIT_BEAST_MASTER
-        gg_trg_Release_Pets.execute()
-    GroupRemoveUnit(udg_trolls, oldUnit)
-    GroupAddUnit(udg_trolls, newUnit)
-    udg_PUnits[GetPlayerId(owner)] = newUnit
     newUnit.setStr(str)
     newUnit.setAgi(agi)
     newUnit.setInt(inte)
+
+    //Change globals to new unit
+    GroupRemoveUnit(udg_trolls, oldUnit)
+    GroupAddUnit(udg_trolls, newUnit)
+    udg_PUnits[GetPlayerId(owner)] = newUnit
+
+    if newUnitId == UNIT_CHICKEN_FORM or newUnitId == UNIT_SHAPESHIFTER_WOLF
+        udg_parameterUnit = newUnit
+        TriggerExecute(gg_trg_Release_Pets)
+        SetPlayerTechResearched(owner, 'Roch', 1)
+    else if newUnitId == UNIT_TRUE_FORM or newUnitId == UNIT_ULTIMATE_FORM
+        udg_parameterUnit = newUnit
+        TriggerExecute(gg_trg_Rest_BM_SKills)
+        SetPlayerTechResearched(owner, 'Roch', 1)
+
 
     // "Preserve or release BM pet When subbing" -> no such thing in the current state
     // of the game so I didn't recode it
     // Edit : Nevermind, pet doesn't get realese, ended up with 4 wolfs (2 bm 2 wolf pet) in a game :o
 
+    //Avoid desync with localplayer check
     if GetLocalPlayer() == owner
         SelectUnit(newUnit, true)
         ForceUICancel()
-    oldUnit.getOwner()
-    RemoveUnit(oldUnit)
 
 function upgradeAction()
     let spell = GetLearnedSkill()

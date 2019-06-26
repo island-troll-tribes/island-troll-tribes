@@ -2,6 +2,7 @@ package PreventNet
 import RegisterEvents
 import UnitExtensions
 import ID
+import SimError
 
 public constant SPELL_WEB = 'Aweb'
 public constant SPELL_ENSNARE = 'Aens'
@@ -9,11 +10,13 @@ public constant SPELL_ENSNARE_TRAP = 'A0FR'
 public constant BUFF_ANTI_MAGIC_SHIELD = 'Bam2'
 
 function preventNet()
-    let t = GetSpellTargetUnit()
-    let c = GetSpellAbilityUnit()
-    if t.isTroll() and (t.getAbilityLevel(BUFF_ANTI_MAGIC_SHIELD) > 0 or t.getAbilityLevel(BUFF_ENSNARE_GROUND) > 0) and c.getTypeId() != UNIT_DISCO_DUCK and c.getTypeId() != UNIT_ONE
-        c.issueImmediateOrder("stop")
+    let target = GetSpellTargetUnit()
+    let caster = GetSpellAbilityUnit()
+    if target.isTroll() and (target.getAbilityLevel(BUFF_ANTI_MAGIC_SHIELD) > 0 or target.getAbilityLevel(BUFF_ENSNARE_GROUND) > 0) and caster.getTypeId() != UNIT_DISCO_DUCK and caster.getTypeId() != UNIT_ONE
+        caster.issueImmediateOrder("stop")
+        simError(caster.getOwner(), "Cannot ensnare target with Anti-Magic shield")
 
 init
-    registerSpellEffectEvent(SPELL_WEB, function preventNet)
+    //registerSpellEffectEvent(SPELL_WEB, function preventNet)
+    registerSpellEffectEvent(SPELL_HUNTER_WEB, function preventNet)
     registerSpellEffectEvent(SPELL_ENSNARE_TRAP, function preventNet)

@@ -15,6 +15,7 @@ import UnitEntity
 import initlater EatRawMeat
 import initlater Troll
 import Hostile
+import GameConfig
 import TerrainUtils
 
 let ITEM_RAW_MEAT = 'IRAW'
@@ -336,22 +337,25 @@ function isUnitMeatCarrier(unit u) returns bool
 init
     //Handle picking up meat normally to inventory
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
-        let maybeMeat = GetManipulatedItem()
-        let u = GetTriggerUnit()
-        if maybeMeat.getTypeId() == ITEM_RAW_MEAT
-            u.removeItem(maybeMeat)
-            if isUnitMeatCarrier(u)
-                unitTryPickupMeat(u, maybeMeat)
+        if not gameConfig.isOldMeatSystemEnabled()
+            let maybeMeat = GetManipulatedItem()
+            let u = GetTriggerUnit()
+            if maybeMeat.getTypeId() == ITEM_RAW_MEAT
+                u.removeItem(maybeMeat)
+                if isUnitMeatCarrier(u)
+                    unitTryPickupMeat(u, maybeMeat)
 
     //Setup smooth pickup event (ability to pick up raw meat with full inventory)
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER) ->
-        onTargetOrder()
+        if not gameConfig.isOldMeatSystemEnabled()
+            onTargetOrder()
 
     //Death event
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
-        let dying = GetTriggerUnit()
-        if meatInventoryInstances.has(dying)
-            meatInventoryInstances.get(dying).onOwnerDeath()
+        if not gameConfig.isOldMeatSystemEnabled()
+            let dying = GetTriggerUnit()
+            if meatInventoryInstances.has(dying)
+                meatInventoryInstances.get(dying).onOwnerDeath()
 
     //Setup pickup and drop abilities
     for i = 0 to 7

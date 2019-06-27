@@ -10,6 +10,8 @@ import SimError
 import LastOrder
 import ClosureTimers
 import TrollUnitTextConstant
+import GameConfig
+import EatRawMeat
 
 let FORM_IDS = [UNIT_SHAPESHIFTER_WOLF, UNIT_SHAPESHIFTER_BEAR, UNIT_SHAPESHIFTER_PANTHER, UNIT_SHAPESHIFTER_TIGER]
 let FORM_MAP = new HashMap<string, integer>()
@@ -86,11 +88,19 @@ function onCast(int newFormId)
                 ForceUICancel()
             selected.destr()
 
-    updateNewFormAbilities(owner, newFormId, caster)
+    //Making sure that shapeshifter has correct meat abilities when switching form
 
-    //Make sure new form has meat abilities
-    if meatInventoryInstances.has(caster)
-        meatInventoryInstances.get(caster).updateMeatAbilities()
+    if not gameConfig.isOldMeatSystemEnabled()
+        caster.removeAbility('Amel')
+        caster.removeAbility('Sch2')
+        caster.removeAbility(OLD_ABILITY_ID_EAT_RAW_MEAT)
+        //Make sure new form has meat cargo
+        if meatInventoryInstances.has(caster)
+            meatInventoryInstances.get(caster).updateMeatAbilities()
+        else
+            caster.addAbility(ABILITY_ID_PICKUPMEAT_TROLL)
+            caster.addAbility(ABILITY_ID_EAT_RAW_MEAT)
+    updateNewFormAbilities(owner, newFormId, caster)
 
 function updateNewFormAbilities(player owner, int newFormId, unit caster)
     switch newFormId

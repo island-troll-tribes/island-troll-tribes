@@ -1,0 +1,63 @@
+package TrollBattleCall
+
+import ChannelAbilityPreset
+import ID
+import Lodash
+import Assets
+import ToolTipsUtils
+import BuffObjEditing
+
+let MANACOST = 20
+let DURATION = 20.
+let AOE = 2000.
+let COOLDOWN = 60.
+let DAMAGE_BONUS = 0.20
+let ARMOR_BONUS = 1.0
+let MANA_REGEN = 1.0
+
+let TOOLTIP_NORM = "Troll Battle Call"
+let TOOLTIP_EXTENDED = ("Increase damage by {0} and defense by {1} of you and allied trolls around for {2} seconds. Medium range.")
+                        .format(DAMAGE_BONUS.toToolTipRed(), ARMOR_BONUS.toToolTipGreen(), COOLDOWN.toToolTipLightBlue())
+
+let BUFF_ID = compiletime(BUFF_ID_GEN.next())
+let ORIGINAL_BUFF_ID = 'BHad' // Devotion Aura
+
+function createBuff()
+    new BuffDefinition(BUFF_ID, ORIGINAL_BUFF_ID)
+    ..setTargetAttachments(1, 1)
+    ..setTargetAttachmentPoint0(1, "chest")
+    ..setIcon(Icons.bTNHowlOfTerror)
+    ..setArtTarget(1, Abilities.trollBeserkerTarget)
+    ..setTooltipNormal(1, TOOLTIP_NORM)
+    ..setTooltipNormalExtended(1, "This unit has heard a battle call, gaining damage and armor.")
+
+class TrollBattleCall extends AbilityDefinitionRoar
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setIconNormal(Icons.bTNHowlOfTerror)
+        this.setManaCost(1, MANACOST)
+        this.setCooldown(1, COOLDOWN)
+        this.setDurationHero(1, DURATION)
+        this.setDurationNormal(1, DURATION)
+        this.setAreaofEffect(1, AOE)
+        this.setDamageIncrease(1, DAMAGE_BONUS)
+        this.setDefenseIncrease(1, ARMOR_BONUS.toInt())
+        this.setManaRegen(1, MANA_REGEN)
+        this.setMissileArc(0.10)
+        this.setMissileArt(Abilities.murgulMagicMissile)
+        this.setArtCaster(Abilities.tauntCaster)
+        this.setMissileHomingEnabled(true)
+        this.setMissileSpeed(700)
+        this.setBuffs(1, toRawCode(BUFF_ID))
+
+
+@compiletime function createTrollBattleCall()
+    new TrollBattleCall(SPELL_TROLL_BATTLE_CALL, "R", new Pair(3, 0))
+    new TrollBattleCall(SPELL_SAGE_TROLL_BATTLE_CALL, "F", new Pair(3, 1))
+    createBuff()

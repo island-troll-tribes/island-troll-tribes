@@ -1,0 +1,124 @@
+package Beacon
+import HashMap
+import GameTimer
+import RegisterEvents
+import UnitExtensions
+import SimError
+import PlayerExtensions
+import PingMinimap
+import Assets
+import Lodash
+import ChannelAbilityPreset
+import ID
+import ToolTipsUtils
+
+// Old GUI
+// let SPELL_BEACON_CAST = 'A05M'
+// let SPELL_BEACON_QUERY2 = 'A05N'
+let BEACON_DURATION = 5. * 60.
+
+
+let COOLDOWN = 40.
+let MANACOST = 0
+let DURATION = 0
+let TOOLTIP_NORM = "Tracking Beacon"
+let HIDE_TOOLTIP_EXTENDED = ("Allows the tracker to put a tracking beacon on a unit. Tracking beacons remain inplace for {0} seconds or until you "+
+                            "place another one. Once placed, the location of the unit can be found with the Query Tracking Beacon skill. "+
+                            " Has {1} seconds cooldown.").format(BEACON_DURATION.toToolTipLightBlue() ,COOLDOWN.toToolTipLightBlue())
+let QUERY_TOOLTIP_EXTENDED = "Pings the location of the tracking beacon. Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
+let TARGET_ALLOWED = "enemies,ground,hero"
+
+
+
+class QueryTrackingBeacon extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 1, true)
+        this.presetManaCost(lvl -> MANACOST)
+        this.presetCooldown(lvl -> COOLDOWN)
+        this.setHeroAbility(false)
+        this.setItemAbility(false)
+        this.presetTargetTypes(Targettype.NONE)
+        this.setHotkeyNormal(hotkey)
+        this.setName("Query "+TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, "Query "+TOOLTIP_NORM))
+        this.presetTooltipNormalExtended(lvl -> QUERY_TOOLTIP_EXTENDED)
+        this.setIconNormal(Icons.bTNSpy)
+        this.setIconResearch(Icons.bTNSpy)
+        this.setIconTurnOff(Icons.bTNSpy)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setFollowThroughTime(1, 0.25)
+        this.setCasterAttachments(0)
+
+
+class HideTrackingBeacon extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 1, true)
+        this.presetManaCost(lvl -> MANACOST)
+        this.presetCooldown(lvl -> COOLDOWN)
+        this.setHeroAbility(false)
+        this.setItemAbility(false)
+        this.presetTargetTypes(Targettype.UNIT)
+        this.presetTargetsAllowed(lvl -> TARGET_ALLOWED)
+        this.setHotkeyNormal(hotkey)
+        this.setName("Hide "+TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, "Hide "+TOOLTIP_NORM))
+        this.presetTooltipNormalExtended(lvl -> HIDE_TOOLTIP_EXTENDED)
+        this.setIconNormal(Icons.bTNSpy)
+        this.setIconResearch(Icons.bTNSpy)
+        this.setIconTurnOff(Icons.bTNSpy)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setFollowThroughTime(1, 0.5)
+        this.setArtDuration(1, 0)
+        this.setCasterAttachments(0)
+
+@compiletime function createBeaconSpells()
+    new HideTrackingBeacon (SPELL_HIDE_BEACON , "R", new Pair(3, 0))
+    new QueryTrackingBeacon(SPELL_QUERY_BEACON, "A", new Pair(1, 1))
+
+class Beacon
+    player target
+    real timestamp
+
+    construct(player target)
+        this.target = target
+        this.timestamp = getElapsedGameTime()
+
+let beacons = new HashMap<player, Beacon>()
+
+function castBeacon()
+    let target = GetSpellTargetUnit()
+    let owner = GetSpellAbilityUnit().getOwner()
+
+    if not target.isTroll()
+        simError(owner, "Can't beacon that unit")
+        return
+
+    if beacons.has(owner)
+        beacons.remove(owner)
+
+    let beacon = new Beacon(target.getOwner())
+    beacons.put(owner, beacon)
+
+function queryBeacon()
+    let owner = GetSpellAbilityUnit().getOwner()
+
+    if not beacons.has(owner)
+        simError(owner, "No active beacon")
+        return
+
+    let beacon = beacons.get(owner)
+    if beacon.timestamp + BEACON_DURATION < getElapsedGameTime()
+        simError(owner, "No active beacon")
+        destroy beacon
+        beacons.remove(owner)
+        return
+
+    pingMinimapForForce(owner.getAllies(), beacon.target.getTroll().getPos(), color(255, 0, 0))
+
+init
+    // registerSpellEffectEvent(SPELL_BEACON_CAST, function castBeacon)
+    // registerSpellEffectEvent(SPELL_BEACON_QUERY2, function queryBeacon)
+    registerSpellEffectEvent(SPELL_HIDE_BEACON, function castBeacon)
+    registerSpellEffectEvent(SPELL_QUERY_BEACON, function queryBeacon)

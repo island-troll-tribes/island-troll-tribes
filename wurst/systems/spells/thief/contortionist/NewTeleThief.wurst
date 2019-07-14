@@ -1,0 +1,59 @@
+package NewTeleThief
+
+import ChannelAbilityPreset
+import ID
+import Lodash
+import Assets
+import ToolTipsUtils
+import BuffObjEditing
+import TeleGatherAbilityDefinition
+
+
+public let DUMMY_TELE_THIEF_ID = compiletime(ABIL_ID_GEN.next())
+public let BUFF_TELE_THIEF = compiletime(BUFF_ID_GEN.next())
+let BUFF_ORIGINAL_ID = 'BOac' // Healing buff
+
+public let TELE_THIEF_DURATION = 100.
+let COOLDOWN = 140.
+let MANACOST = 30
+let TOOLTIP_NORM = "Tele-Thief"
+let TOOLTIP_EXTENDED = "The thief uses a powerful magic designating the targeted fire as its tele-thiefing outlet. "+
+                       "While tele-thiefing, any item picked up near enemy buildings warps to the tele-thiefing outlet."
+                       +makeToolTipDuration(TELE_THIEF_DURATION, COOLDOWN)
+
+
+function createBuff()
+    new BuffDefinition(BUFF_TELE_THIEF, BUFF_ORIGINAL_ID)
+        ..setIcon(Icons.bTNSpellSteal)
+        ..setTargetAttachmentPoint0(1, "overhead")
+        ..setArtTarget(1, Abilities.serpentWardMissile)
+        ..setTooltipNormal(1, TOOLTIP_NORM)
+        ..setTooltipNormalExtended(1, "This unit is using Tele-Thief. Items picked up next to enemy buildings warp to its tele-thief outlet.")
+
+// Need this to cast the buff on the thief
+class TeleThiefDummyCasting extends TeleGatherDummyCasting
+    construct(int newAbilityId)
+        super(newAbilityId)
+        this.setLevels(1)
+        this.setHeroAbility(false)
+        this.setBuffs(1, toRawCode(BUFF_TELE_THIEF))
+        this.setDurationHero(1, TELE_THIEF_DURATION)
+        this.setDurationNormal(1, TELE_THIEF_DURATION)
+        this.setName("Tele-Thief person buff")
+
+class TeleThief extends TeleGatheringDefinition
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, hotkey, buttonPos)
+        this.setManaCost(1, MANACOST)
+        this.setCooldown(1, COOLDOWN)
+        this.setName(TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+        this.setDurationHero(1, TELE_THIEF_DURATION)
+        this.setDurationNormal(1, TELE_THIEF_DURATION)
+
+@compiletime function createTeleThief()
+    new TeleThief(SPELL_TELE_THIEF   , "W", new Pair(1, 0))
+    new TeleThief(SPELL_AS_TELE_THIEF, "S", new Pair(1, 1))
+    new TeleThiefDummyCasting(DUMMY_TELE_THIEF_ID)
+    createBuff()

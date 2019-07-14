@@ -2,17 +2,25 @@ package CookMeat
 import RegisterEvents
 import ID
 import ClosuresForItems
+import ClosureForGroups
+import GameConfig
 
 public constant SPELL_COOK_MEAT = 'A04B'
 @configurable let COOK_MEAT_RANGE = 600.0
 
 init
     registerSpellEffectEvent(SPELL_COOK_MEAT) ->
-        let fire = GetSpellAbilityUnit()
-        forItemsInMap() i ->
-            if i.getTypeId() == ITEM_RAW_MEAT and fire.getPos().distanceToSq(i.getPos()) <= COOK_MEAT_RANGE*COOK_MEAT_RANGE
-                let pos = i.getPos()
-                let charges = max(1, i.getCharges())
-                i.remove()
-                createItem(ITEM_COOKED_MEAT, pos)
-                    ..setCharges(charges)
+        let firePos = GetSpellAbilityUnit().getPos()
+        if gameConfig.isOldMeatSystemEnabled()
+            forUnitsInRange(firePos, COOK_MEAT_RANGE) (unit u) ->
+                if u.getTypeId() == UNIT_MEAT
+                    createItem(ITEM_COOKED_MEAT, u.getPos())
+                    u.remove()
+        else
+            forItemsInMap() i ->
+                if i.getTypeId() == ITEM_RAW_MEAT and firePos.distanceTo(i.getPos()) <= COOK_MEAT_RANGE
+                    let pos = i.getPos()
+                    let charges = max(1, i.getCharges())
+                    i.remove()
+                    createItem(ITEM_COOKED_MEAT, pos)
+                        ..setCharges(charges)

@@ -1,7 +1,8 @@
 package BeastMaster
 import ID
 import Troll
-
+import GameConfig
+import EatRawMeat
 
 public class BeastMaster extends Troll
     private static let unitTypeId = UNIT_BEAST_MASTER
@@ -20,6 +21,13 @@ public class BeastMaster extends Troll
 
     override function getTypeId() returns int
         return unitTypeId
+
+    override function postCreate()
+        super.postCreate()
+        if not gameConfig.isOldMeatSystemEnabled()
+            getUnit().removeAbility('Amel')
+            getUnit().removeAbility('Sch2')
+            getUnit().removeAbility(OLD_ABILITY_ID_EAT_RAW_MEAT)
 
 
 init

@@ -10,14 +10,21 @@ import ID
 import Orders
 import ItemObjEditing
 import UnitExtensions
+import ToolTipsUtils
+import Assets
 
-constant let COOLDOWN = 75.
-constant let SPELL_RADIUS = 800.
-constant let SPELL_ANTIMAGIC = 'A0F8'
-constant let SPELL_DAMAGE_REDUCTION = 'Alsr'
-constant let ABILITY_BATTLE_GEAR_STAT_BONUS = 'A0E7'
-constant let ABILITY_DUMMY_ID = compiletime(ABIL_ID_GEN.next())
-constant let ITEM_ABILITIES = commaList(ABILITY_DUMMY_ID, ABILITY_BATTLE_GEAR_STAT_BONUS, ABILITY_ARMOR_BONUS7, SPELL_DAMAGE_REDUCTION)
+constant COOLDOWN = 75.
+constant SPELL_RADIUS = 800.
+constant SPELL_ANTIMAGIC = 'A0F8'
+constant SPELL_DAMAGE_REDUCTION = 'Alsr'
+constant ABILITY_BATTLE_GEAR_STAT_BONUS = 'A0E7'
+constant ABILITY_DUMMY_ID = compiletime(ABIL_ID_GEN.next())
+constant ITEM_ABILITIES = commaList(ABILITY_DUMMY_ID, ABILITY_BATTLE_GEAR_STAT_BONUS, ABILITY_ARMOR_BONUS7)
+
+constant MODEL = "Models\\Armor.mdx"
+constant TOOLTIP = "Battle Armor"
+public constant BATTLE_ARMOR_TOOLTIP_EXTENDED = "Increase all stats by 4 and armor by 7, provide 20% resistance against spell, can cast Antimagic on surrounding allies."
+                            +makeToolTipCooldown(COOLDOWN)
 
 @compiletime function createDummyAbility()
     new AbilityDefinitionWindWalk(ABILITY_DUMMY_ID)
@@ -29,7 +36,7 @@ constant let ITEM_ABILITIES = commaList(ABILITY_DUMMY_ID, ABILITY_BATTLE_GEAR_ST
     ..setItemAbility(true)
     ..setLevels(1)
     ..setHotkeyNormal("A")
-    ..setName("Battle Armor Antimagic")
+    ..setName(TOOLTIP + " Antimagic")
     ..setTooltipNormal(1, "dummy spell")
     ..setTooltipNormalExtended(1, "dummy spell")
     ..setCooldown(1, COOLDOWN)
@@ -42,15 +49,17 @@ constant let ITEM_ABILITIES = commaList(ABILITY_DUMMY_ID, ABILITY_BATTLE_GEAR_ST
 
 @compiletime function createBattleArmor()
     new ItemDefinition(ITEM_BATTLE_ARMOR, 'bspd')
-    ..setName("Battle Armor")
+    ..setName(TOOLTIP)
     ..setAbilities(ITEM_ABILITIES)
-    ..setTooltipExtended("Increase all stats by 4 and armor by 7, provide 20% resistance against spell, can cast Antimagic on surrounding allies, 75 seconds cooldown")
-    ..setModelUsed("Doodads\\LordaeronSummer\\Terrain\\Crates\\Crates0.mdx")
+    ..setTooltipExtended(BATTLE_ARMOR_TOOLTIP_EXTENDED)
+    ..setModelUsed(MODEL)
     ..setGoldCost(0)
-    ..setInterfaceIcon("ReplaceableTextures\\CommandButtons\\BTNRobeOfTheMagi.blp")
-    ..setDescription("Increase all stats by 4 and armor by 7, provide 20% resistance against spell, can cast Antimagic on surrounding allies, 75 seconds cooldown")
+    ..setInterfaceIcon(Icons.bTNRobeOfTheMagi)
+    ..setDescription(BATTLE_ARMOR_TOOLTIP_EXTENDED)
     ..setDroppedWhenCarrierDies(true)
-    ..setScalingValue(0.80)
+    ..setTintingColor2Green(80)
+    ..setTintingColor3Blue(80)
+    ..setScalingValue(1.50)
     ..setActivelyUsed(true)
     ..setCooldownGroup("Item Move Speed Bonus")
     ..setHitPoints(75)
@@ -58,7 +67,7 @@ constant let ITEM_ABILITIES = commaList(ABILITY_DUMMY_ID, ABILITY_BATTLE_GEAR_ST
     ..setLevelUnclassified(2)
     ..setPerishable(false)
     ..setPriority(41)
-    ..setTooltipBasic("Trade for Battle Armor")
+    ..setTooltipBasic("Trade for "+TOOLTIP)
 
 function onCast()
     var caster = GetSpellAbilityUnit()

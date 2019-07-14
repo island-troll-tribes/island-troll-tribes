@@ -1,0 +1,332 @@
+package EarthGuardian
+import RegisterEvents
+import HashMap
+import LinkedList
+import ClosureForGroups
+import ClosureTimers
+import OverCharge
+import Orders
+import BuffObjEditing
+import DummyCaster
+import ChannelAbilityPreset
+import Assets
+import ToolTipsUtils
+import Lodash
+
+let ABILITY_ID = 'ESEF'
+let DUMMY_STUN_SPELL_ID = 'ESES'
+let DUMMY_BUFF_SPELL_ID = 'XSSB'
+let IMPACT_STUN_DURATION_HERO = 0.10
+let IMPACT_STUN_DURATION_NORMAL = 0.10
+let COOLDOWN = 35.
+let MANACOST = 25
+let ORB_ATTACK_RADIUS = 575.
+let ORB_ATTACK_COOLDOWN = 0.35
+let ORB_IMPACT_DAMAGE = 40.
+let ORB_IMPACT_DAMAGE_SAMETARGET = 10.
+let ORB_SAMETARGET_BUFF_MARKER_DURATION = 1.5
+let ORB_LIFETIME = 25.
+let ORB_SPEED = 650.
+let ORB_SPAWN_INTERVAL = 0.35
+let CHANNEL_DURATION = 0.35*7 //7 Projectiles
+let ORB_PERIODICINTERVAL_SPAWN = 0.05
+let ORB_PERIODICINTERVAL_LOOP = 0.03125
+let ORB_ANGULARORBITSPEED = 100.
+let ORB_ORBIT_RADIUS = 150.
+let ORB_ORBIT_HEIGHT = 140.
+let SPELL_ICON = Icons.bTNGolemStormBolt
+let TOOLTIP_NORM = "Earth Guardians"
+let TOOLTIP_EXT = ("Channels to conjure 7 orbs that circle around you, striking enemies that come close for {0} damage and stunning them very "+
+                  "briefly. Subsequent impacts on the same target do {1} damage. Has {2} seconds cooldown.").format(ORB_IMPACT_DAMAGE.toToolTipRed(),
+                  ORB_IMPACT_DAMAGE_SAMETARGET.toToolTipRed(), COOLDOWN.toToolTipLightBlue())
+
+let ORB_EFFECT_PATH = Abilities.ancientProtectorMissile
+let ORB_IMPACT_EFFECT = Objects.impaleTargetDust
+
+
+function createDummySpell()
+    new AbilityDefinitionFireBolt(DUMMY_STUN_SPELL_ID)
+    ..setAnimationNames("")
+    ..setMissileSpeed(20000)
+    ..setBuffs(1, "BSTN")
+    ..setMissileArt("")
+    ..setMissileHomingEnabled(true)
+    ..setCastRange(1, 9999)
+    ..setCooldown(1, 0)
+    ..setCastingTime(1, 0)
+    ..setDamage(1, 0)
+    ..setDurationHero(1, IMPACT_STUN_DURATION_HERO)
+    ..setDurationNormal(1, IMPACT_STUN_DURATION_NORMAL)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setManaCost(1, 0)
+    ..setRace(Race.Creeps)
+    ..setName("Orb stun Dummy Spell")
+
+function createDummyBuff()
+    new BuffDefinition('XSFB', 'Bclf')
+    ..setIcon(Icons.bTNResistantSkin)
+    ..setTooltipNormal(1, "Hit by earth orbs")
+    ..setTooltipNormalExtended(1, "Hit by earth orbs")
+
+function createBuffSpell()
+    new AbilityDefinitionAlchemistAcidBomb('XSSB')
+    ..setAnimationNames("")
+    ..setMissileSpeed(20000)
+    ..setBuffs(1, "XSFB")
+    ..setMissileArt("")
+    ..setMissileHomingEnabled(true)
+    ..setCastRange(1, 9999)
+    ..setCooldown(1, 0)
+    ..setCastingTime(1, 0)
+    ..setDurationHero(1, ORB_SAMETARGET_BUFF_MARKER_DURATION)
+    ..setDurationNormal(1, ORB_SAMETARGET_BUFF_MARKER_DURATION)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setManaCost(1, 0)
+    ..setRace(Race.Creeps)
+    ..setName("Orb stun Dummy Spell")
+    ..setArmorPenalty(1, 0)
+    ..setAreaofEffect(1, 1)
+    ..setAttackSpeedReduction(1, 0)
+    ..setMovementSpeedReduction(1, 0)
+    ..setSecondaryDamage(1, 0)
+    ..setPrimaryDamage(1, 0)
+
+class EarthGuardian extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 1, true)
+        this.setTargetType(1, 0)
+        this.setAnimationNames("spell,channel")
+        this.setIconNormal(SPELL_ICON)
+        this.setIconResearch(SPELL_ICON)
+        this.setIconTurnOff(SPELL_ICON)
+        this.setHeroAbility(false)
+        this.setHotkeyNormal(hotkey)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setName("Storm, Earth and Fire")
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.setTooltipNormalExtended(1, TOOLTIP_EXT)
+        this.setFollowThroughTime(1, CHANNEL_DURATION)
+        this.setCooldown(1, COOLDOWN)
+        this.setManaCost(1, MANACOST)
+
+@compiletime function createEarthGuardian()
+    new EarthGuardian(ABILITY_ID, "W", new Pair(1, 0))
+    createDummySpell()
+    createDummyBuff()
+    createBuffSpell()
+
+let instances = new HashMap<unit, EarthGuardianInstance>()
+
+class EarthGuardianOrb
+    EarthGuardianInstance instance
+    unit ownerUnit = null
+    real speed = ORB_SPEED
+    effect projectile = null
+    vec3 targetPos
+    unit targetUnit = null
+
+    construct (unit owner, EarthGuardianInstance earthGuardian, vec3 startPos)
+        ownerUnit = owner
+        instance = earthGuardian
+        projectile = addEffect(ORB_EFFECT_PATH, startPos)
+        projectile.setScale(0.65)
+        targetUnit = null
+
+    function moveTowardTargetPos()
+        //Update target location to targeted unit if one exists
+        if (targetUnit != null)
+            if (targetUnit.isAlive())
+                targetPos = targetUnit.getPos3Real()
+
+        //Limit movement by speed
+        var oldpos = projectile.getPos3()
+        vec3 newpos
+        if (oldpos.distanceTo(targetPos) <= ORB_SPEED * ORB_PERIODICINTERVAL_SPAWN)
+            newpos = targetPos
+            if (targetUnit != null)
+                onImpactEffect()
+        else
+            newpos = oldpos + oldpos.normalizedPointerTo(targetPos) * ORB_SPEED * ORB_PERIODICINTERVAL_SPAWN
+
+        projectile.setPos(newpos)
+
+    function updateTarget()
+        if (targetUnit == null and instance.orbLoopDuration >= 0.55)
+            tryToFindTarget()
+            //Put newly acquired target into timestamp map
+            if targetUnit != null
+                instance.targetedTimestampMap.put(targetUnit, instance.orbLoopDuration)
+        else if (targetUnit != null)
+            //If we have a target, check that its still valid and untarget if not
+            if not targetUnit.isAlive() or targetUnit.isInvulnerable() or not IsUnitVisible(targetUnit, ownerUnit.getOwner()) or not ownerUnit.getOwner().isEnemyOf(targetUnit.getOwner())
+                targetUnit = null
+
+    function tryToFindTarget()
+        var curPos = this.projectile.getPos()
+        targetUnit = null
+        forUnitsInRange(curPos, ORB_ATTACK_RADIUS) u ->
+            if isValidTarget(u)
+                //check if unit has been targeted previously by orb to check for target-specific cooldown
+                if (instance.targetedTimestampMap.has(u))
+                    if (instance.orbLoopDuration - instance.targetedTimestampMap.get(u) >= ORB_ATTACK_COOLDOWN)
+                        //Get the closest unit if multiples happen to come into range at once
+                        if (targetUnit != null)
+                            if (curPos.distanceToSq( targetUnit.getPos() ) > curPos.distanceToSq(u.getPos()))
+                                targetUnit = u
+                        else
+                            targetUnit = u
+                else
+                    //Get the closest unit if multiples happen to come into range at once
+                    if (targetUnit != null)
+                        if (curPos.distanceToSq( targetUnit.getPos() ) > curPos.distanceToSq(u.getPos()))
+                            targetUnit = u
+                    else
+                        targetUnit = u
+
+    function isValidTarget(unit u) returns boolean
+        return IsUnitVisible(u, ownerUnit.getOwner())
+            and not u.isType(UNIT_TYPE_STRUCTURE)
+            and not u.isHidden() and u.isAlive()
+            and not u.isInvulnerable()
+            and u.getOwner().isEnemyOf(ownerUnit.getOwner())
+
+    function updateLoop()
+        updateTarget()
+        moveTowardTargetPos()
+
+    function onImpactEffect()
+        if (targetUnit.isAlive() and not targetUnit.isInvulnerable())
+            if (targetUnit.hasAbility('XSFB')) //If hit previously by another orb
+                UnitDamageTarget(ownerUnit, targetUnit, ORB_IMPACT_DAMAGE_SAMETARGET, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
+            else
+                UnitDamageTarget(ownerUnit, targetUnit, ORB_IMPACT_DAMAGE, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
+            new DummyCaster()
+                ..owner(ownerUnit.getOwner())
+                ..origin(ownerUnit.getPos())
+                ..castTarget(DUMMY_STUN_SPELL_ID, 1, Orders.firebolt, targetUnit)
+            new DummyCaster()                 ..owner(ownerUnit.getOwner())
+                ..origin(ownerUnit.getPos())
+                ..castTarget(DUMMY_BUFF_SPELL_ID, 1, Orders.acidbomb, targetUnit)
+
+        var efx = addEffect(ORB_IMPACT_EFFECT, projectile.getPos3())
+        efx.setScale(1)
+        doAfter(3) ->
+            efx.destr()
+        destroy this
+
+
+    ondestroy
+        instance.orbs.remove(this)
+        projectile.destr()
+
+
+class EarthGuardianInstance
+    angle orbAngle
+    unit ownerUnit
+    bool isChanneling
+    bool isOvercharged
+    real orbLoopDuration
+    CallbackCounted orbLoopPeriodic
+    CallbackCounted orbCreationLoopPeriodic
+    let targetedTimestampMap = new HashMap<unit, real>()
+    LinkedList<EarthGuardianOrb> orbs = new LinkedList<EarthGuardianOrb>()
+
+    construct (unit caster, bool overcharged)
+        isOvercharged = overcharged
+        ownerUnit = caster
+        real channeledTime = 0
+        real _lastOrbCreatedTimestamp = 0
+        orbLoopDuration = 0
+        real orb_interval = ORB_SPAWN_INTERVAL
+        isChanneling = true
+
+        if not overcharged
+            //Create orbs via channeling if not overcharged
+            orbCreationLoopPeriodic = doPeriodicallyTimed(ORB_PERIODICINTERVAL_SPAWN, CHANNEL_DURATION) orbcreation ->
+                if (isChanneling)
+                    channeledTime = channeledTime + ORB_PERIODICINTERVAL_SPAWN
+                    //Avoid floating point errors in the interval check with the -0.01
+                    if (channeledTime - _lastOrbCreatedTimestamp >= orb_interval-0.01)
+                        orbs.push(new EarthGuardianOrb(ownerUnit, this, caster.getPos().withTerrainZ(ORB_ORBIT_HEIGHT)))
+                        _lastOrbCreatedTimestamp = channeledTime
+                else
+                    orbCreationLoopPeriodic.stop()
+        else
+            //Create orbs instantly if overcharged
+            int count = (CHANNEL_DURATION/ORB_SPAWN_INTERVAL).round()
+            for i = 1 to count
+                orbs.push(new EarthGuardianOrb(ownerUnit, this, caster.getPos().withTerrainZ(ORB_ORBIT_HEIGHT)))
+
+        this.startOrbLoop()
+
+
+    function startOrbLoop()
+        orbAngle = angle(0)
+
+        orbLoopPeriodic = doPeriodicallyTimed(ORB_PERIODICINTERVAL_LOOP, ORB_LIFETIME) orbLoop ->
+            orbLoopDuration += ORB_PERIODICINTERVAL_LOOP
+            //Check for destruction conditions first before accessing any objects
+            if (orbLoop.isLast() or (orbs.size() == 0 and not isChanneling))
+                if (not orbLoop.isLast()) //Make this stop in case the entry condition was orbs.size = 0
+                    orbLoop.stop()
+                destroy this
+            else
+                orbLoopUpdate()
+
+    function orbLoopUpdate()
+        orbAngle = angle(orbAngle.radians() + ORB_PERIODICINTERVAL_LOOP * ORB_ANGULARORBITSPEED * DEGTORAD)
+        int orbsWithoutTarget = 0
+
+        //Calculate orb angles and set them to spin around user
+        for o in orbs
+            if (o.targetUnit == null)
+                orbsWithoutTarget += 1
+        angle orbOffset = angle(bj_PI/4)
+        if (orbsWithoutTarget != 0)
+            orbOffset = angle(2 * bj_PI / orbsWithoutTarget )
+
+        //When we have angle offset amount per orb, apply it to orbs
+        int i = 0
+        for o in orbs
+            angle indexOrbAngle = orbAngle + orbOffset * i.toReal()
+            if (o.targetUnit == null)
+                o.targetPos = ownerUnit.getPos().withTerrainZ(ORB_ORBIT_HEIGHT).offset2d(indexOrbAngle, ORB_ORBIT_RADIUS)
+            o.updateLoop()
+            i = i + 1
+
+    ondestroy
+        orbs.forEach(o -> destroy o)
+        destroy orbs
+
+        destroy targetedTimestampMap
+
+        if instances.has(ownerUnit)
+            if (instances.get(ownerUnit) == this)
+                instances.remove(ownerUnit)
+
+function onCast()
+    var caster = GetSpellAbilityUnit()
+
+    //Destroy previous instance
+    if instances.has(caster)
+        var prev_instance = instances.get(caster)
+        prev_instance.orbLoopPeriodic.stop()
+
+
+    var earthGuardian = new EarthGuardianInstance(caster, consumeOvercharge(caster))
+    instances.put(caster, earthGuardian)
+
+function onEndCast()
+    if GetSpellAbilityId() == ABILITY_ID
+        var caster = GetSpellAbilityUnit()
+        var instance = instances.get(caster)
+        instance.isChanneling = false
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST, () -> onEndCast())

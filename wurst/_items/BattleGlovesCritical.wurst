@@ -1,7 +1,6 @@
 package BattleGlovesCritical
 
 import AbilityObjEditing
-import ObjectIdGenerator
 import ObjectIds
 import HashMap
 import ClosureEvents
@@ -9,12 +8,13 @@ import ClosureTimers
 import DamageType
 import ID
 import AbilityObjectCreationUtils
+import DamageEvent
 
-let CRITICAL_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
-let SPELLBOOK_ABILITY_ID = compiletime(createHiddenSpellbookWithAbilities(toRawCode(CRITICAL_ABILITY_ID)))
-let COOLDOWN = 6.
-let COOLDOWN_SKIP_PER_ATTACK = 1.
-let MULTIPLIER = 1.6
+constant CRITICAL_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
+constant SPELLBOOK_ABILITY_ID = compiletime(createHiddenSpellbookWithAbilities(toRawCode(CRITICAL_ABILITY_ID)))
+public constant COOLDOWN = 6.
+public constant COOLDOWN_SKIP_PER_ATTACK = 1.
+public constant MULTIPLIER = 1.6
 
 @compiletime function createCriticalAbility()
     new AbilityDefinitionBladeMasterCriticalStrike(CRITICAL_ABILITY_ID)
@@ -62,10 +62,12 @@ function onDropGloves(unit u)
         destroy instances.getAndRemove(u)
 
 init
-    EventListener.add(EVENT_UNIT_DAMAGED) ->
-        if getDamageType() == DamageType.ATTACK
-            let victim = GetTriggerUnit()
-            let attacker = GetEventDamageSource()
+    DamageEvent.addListener() () ->
+    //EventListener.add(EVENT_UNIT_DAMAGED) ->
+        if DamageEvent.getType() == DamageType.ATTACK
+        //if getDamageType() == DamageType.ATTACK
+            let victim = DamageEvent.getTarget()
+            let attacker = DamageEvent.getSource()
             if instances.has(attacker) and not victim.isType(UNIT_TYPE_STRUCTURE) and not victim.getOwner().isAllyOf(attacker.getOwner())
                 instances.get(attacker).onEnemyAttackDamage()
 

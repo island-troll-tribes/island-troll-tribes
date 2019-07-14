@@ -3,6 +3,12 @@ import ChatCommands
 import GameConfig
 import ClosureForGroups
 import ClosureTimers
+import ID
+import TheOneDefinition
+import InstantDummyCaster
+import OrderIds
+import Assets
+import ErrorHandling
 
 constant let DEFAULT_GRAVITY = 175.
 constant let MAX_TURNSPEED = 3.
@@ -17,7 +23,7 @@ init
                     performJump(u, u.getPos().polarOffset(angle(0), 400))
         else
             printTimedToPlayer("Requires test mode!", 5., triggerPlayer)
-        
+
 public function performJump(unit u, vec2 targetPos)
     let distance = u.getPos().distanceTo(targetPos)
     let groundSpeed = 1.5 * distance
@@ -30,7 +36,7 @@ public function performJump(unit u, vec2 targetPos)
     //Skip to the actual backflip portion of the animation
     u.setTimeScale(8)
     doAfter(0.05) ->
-        u.setTimeScale(0.85) 
+        u.setTimeScale(0.85)
     //Reset animation to stand after jumping
     doAfter(distance / groundSpeed) ->
         u.setAnimation("stand")
@@ -108,6 +114,10 @@ class JumpInstance
         u.setTurnSpeed(this.originalTurnspeed)
         u.setPathing(true)
         u.setFlyHeight(u.getDefaultFlyHeight(), HEIGHT_CHANGE_RATE)
+        if u.getTypeId() == UNIT_ONE
+            if InstantDummyCaster.castImmediate(u.getOwner(), JUMP_STOMP_ID, 1, OrderIds.creepthunderclap, u.getPos()) == false
+                error("Jump Stomp cast failed")
+            flashEffect(Abilities.warStompCaster, u.getPos())
 
     ondestroy
         finishJump()

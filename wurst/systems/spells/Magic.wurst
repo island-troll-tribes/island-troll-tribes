@@ -1,11 +1,14 @@
 package Magic
 import RegisterEvents
 import DummyCaster
+import InstantDummyCaster
 import TheOneSpawn
 import Mammoth
 import DiscoDuck
 import PublicLibrary
 import Orders
+import Assets
+import ClosureTimers
 
 init
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_USE_ITEM) ->
@@ -14,31 +17,42 @@ init
             let chance = GetRandomReal(0, 1)
 
             itemLower(1)
-
-            if user.isInRegion(THE_ONE_REGION) and canSpawnTheOne()
-                spawnTheOne()
-            else if Mammoth.getInstance().isDead() and DiscoDuck.getInstance() == null
-                new DiscoDuck()
-            else if chance < 0.1
-                user.setHP(user.getMaxHP() * 0.3)
-                user.setMana(user.getMaxMana() * 0.3)
-            else if chance < 0.2
-                user.setHP(user.getMaxHP() * 0.06)
-                user.setMana(user.getMaxMana() * 0.02)
-            else if chance < 0.3
-                SetTimeOfDay(24)
-            else if chance < 0.4
-                user.removeLevels(1)
-            else if chance < 0.6
-                new DummyCaster()
-                    ..delay(3)
-                    ..owner(user.getOwner())
-                    ..castTarget('ANfs', 1, Orders.flamestrike, user)
-            else if chance < 0.7
-                user.addXp(500, true)
-            else if chance < 0.9
-                user.setHP(user.getMaxHP())
-                user.setMana(user.getMaxMana())
-            else
-                createItem(ITEM_MANA_CRYSTAL, user.getPos())
-                createItem(ITEM_MANA_CRYSTAL, user.getPos())
+            InstantDummyCaster.castTarget(user.getOwner(), SPELL_CURE_ALL, 1, "autodispel", user)
+            doAfter(1) () ->
+                if user.isInRegion(THE_ONE_REGION) and canSpawnTheOne()
+                    spawnTheOne()
+                else if Mammoth.getInstance().isDead() and DiscoDuck.getInstance() == null
+                    flashEffect(Abilities.darkPortalTarget, user, "origin")
+                    new DiscoDuck()
+                else if chance < 0.1
+                    flashEffect(Abilities.deathCoilSpecialArt, user, "origin")
+                    user.setHP(user.getMaxHP() * 0.3)
+                    user.setMana(user.getMaxMana() * 0.3)
+                else if chance < 0.2
+                    flashEffect(Objects.orcLargeDeathExplode, user, "origin")
+                    user.setHP(user.getMaxHP() * 0.06)
+                    user.setMana(user.getMaxMana() * 0.02)
+                else if chance < 0.3
+                    SetTimeOfDay(24)
+                    let fx = addEffect(Abilities.starfallCaster, user, "origin")
+                    doAfter(2) () ->
+                        fx.destr()
+                else if chance < 0.4
+                    flashEffect(Abilities.aIsoTarget, user, "chest")
+                    user.removeLevels(1)
+                else if chance < 0.6
+                    new DummyCaster()
+                        ..delay(3)
+                        ..owner(user.getOwner())
+                        ..origin(user.getPos() + vec2(100,0))
+                        ..castTarget('ANfs', 1, Orders.flamestrike, user)
+                else if chance < 0.7
+                    flashEffect(Abilities.aIemTarget,  user, "origin")
+                    user.addXp(500, true)
+                else if chance < 0.9
+                    flashEffect(Abilities.aIreTarget,  user, "origin")
+                    user.setHP(user.getMaxHP())
+                    user.setMana(user.getMaxMana())
+                else
+                    flashEffect(Abilities.blinkTarget, createItem(ITEM_MANA_CRYSTAL, user.getPos()).getPos())
+                    flashEffect(Abilities.blinkTarget, createItem(ITEM_MANA_CRYSTAL, user.getPos()).getPos())

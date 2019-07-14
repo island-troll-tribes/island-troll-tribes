@@ -1,0 +1,67 @@
+package SpearsDefinition
+
+import ItemObjEditing
+import Assets
+import ID
+import LinkedList
+import ToolTipsUtils
+
+constant ABIL_SP = "A00V" // Spear Spell BasedOff Hurl Boulder spell, 40 DMG
+constant ABIL_IS = "A01P" // Iron Spear Spell BasedOff Hurl Boulder spell, 70 DMG
+constant ABIL_SS = "A01Q" // Steel Spear Spell BasedOff Hurl Boulder spell, 100 DMG
+constant ABIL_DS = "A05S" // Dark Spear Spell BasedOff Hurl Boulder spell, 40 DMG
+
+constant ABIL_PS  = "A00Y" // Poison Spear 1
+constant ABIL_RPS = "A00Z" // Poison Spear 2
+constant ABIL_UPS = "A00X" // Poison Spear 3
+
+constant ICON_PS  = "ReplaceableTextures\\CommandButtons\\BTNPoisonSpear.blp"
+constant ICON_UPS = "ReplaceableTextures\\CommandButtons\\BTNUltraPoisonSpear.blp"
+
+constant DESC_COMMON = "A spear you throw at enemy. Dealing {0} damage on striking"
+constant TT_COMMON   = "A spear with one use. Deals {0} damage on striking a target. " + "Has {0} chance of being recoverable.".format(0.60.toToolTipLightBlue())
+
+constant DESC_DS = "A spear you throw at enemy, deals {0} damage and zap " + "{0} to {1} energy on hit.".format(40..toToolTipPurple(), 60..toToolTipPurple())
+constant TT_DS   = "A spear with one use. Deals {0} damage and can zap anywhere from " + "{0} to {1} energy on target hit. Has {2} chance of being recoverable."
+                    .format(40..toToolTipPurple(), 60..toToolTipPurple(), 0.60.toToolTipLightBlue())
+
+constant DESC_PS = DESC_COMMON + " Also poison the target."
+constant TT_PS   = "Hurls a poisoned spear at a target enemy unit, dealing {0} initial damage and {1} damage every " + "{0} seconds. ".format(3..toToolTipLightBlue())+
+                   "{2} attack speed and {3} movement decrease. " + "Has {0} chance of being recoverable. ".format(0.50.toToolTipLightBlue()) + "Last {4} seconds."
+
+
+class Spear extends ItemDefinition
+    construct(int id, string icon, string name, string desc, string toolTipExt, real damage, int cost, LinkedList<int> tinting, string abilities)
+        super(id, 'hlst') //Heatlh Stone
+        this.setAbilities(abilities)
+        this.setInterfaceIcon(icon)
+        this.setCooldownGroup("A00V")
+        this.setDescription(desc.format(damage.toToolTipRed()))
+        this.setDroppedWhenCarrierDies(true)
+        this.setTintingColor1Red(tinting.dequeue())
+        this.setTintingColor2Green(tinting.dequeue())
+        this.setTintingColor3Blue(tinting.dequeue())
+        this.setModelUsed(Doodads.obstacle0)
+        this.setGoldCost(0)
+        this.setLevel(1)
+        this.setLumberCost(cost)
+        this.setName(name)
+        this.setScalingValue(0.75)
+        this.setTooltipBasic("Trade for " + name)
+        this.setTooltipExtended(toolTipExt.format(damage.toToolTipRed()))
+
+class PoisonSpear extends Spear
+    construct(int id, string icon, string name, real iniDmg, real poisonDmg, real asFactor, real msFactor, int cost, LinkedList<int> tinting, string abilities)
+        super(id, icon, name, DESC_PS, TT_PS.format(iniDmg.toToolTipRed(), poisonDmg.toToolTipGreen(), asFactor.toToolTipOrange(),
+              msFactor.toToolTipOrange(), 40..toToolTipLightBlue()), iniDmg, cost, tinting, abilities)
+
+
+@compiletime function createSpears()
+    new Spear(ITEM_SPEAR       , Icons.bTNSteelRanged       , "Spear"       , DESC_COMMON, TT_COMMON, 40  , 4  , asList(255 , 255 , 255 ), ABIL_SP)
+    new Spear(ITEM_IRON_SPEAR  , Icons.bTNStrengthOfTheMoon , "Iron Spear"  , DESC_COMMON, TT_COMMON, 70  , 11 , asList(200 , 200 , 200 ), ABIL_IS)
+    new Spear(ITEM_STEEL_SPEAR , Icons.bTNThoriumRanged     , "Steel Spear" , DESC_COMMON, TT_COMMON, 100 , 23 , asList(150 , 150 , 150 ), ABIL_SS)
+    new Spear(ITEM_DARK_SPEAR  , Icons.bTNArcaniteRanged    , "Dark Spear"  , DESC_DS    , TT_DS    , 40  , 20 , asList(0   , 0   , 0   ), ABIL_DS)
+
+    new PoisonSpear(ITEM_POISON_SPEAR        , ICON_PS                   , "Poison Spear", 20, 6,  0.30, 0.20, 10, asList(100, 255, 100), ABIL_PS)
+    new PoisonSpear(ITEM_REFINED_POISON_SPEAR, Icons.bTNEnvenomedSpear   , "Refined Poison Spear", 30, 10, 0.40, 0.30, 14, asList(100, 255, 100), ABIL_RPS)
+    new PoisonSpear(ITEM_ULTRA_POISON_SPEAR  , ICON_UPS                  , "Ultra Poison Spear", 40, 16, 0.50, 0.40, 19, asList(100, 255, 100), ABIL_UPS)

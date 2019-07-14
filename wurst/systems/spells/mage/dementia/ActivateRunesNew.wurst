@@ -10,23 +10,82 @@ import ClosureTimers
 import LodashExtensions
 import LegacyColors
 import ID
+import Lodash
+import Assets
+import ToolTipsUtils
+import ChannelAbilityPreset
 
-constant let ABILITY_ID = 'A07B'
-constant let REQUIREMENT_ABILITY_ID = 'A07D'
-constant let PORTAL_OFFSET = 350.
-constant let RUNE_CAST_RADIUS = 350.
-constant let SUMMON_EFFECT_PATH = "Abilities\\Spells\\Orc\\AncestralSpirit\\AncestralSpiritCaster.mdl"
+//let ABILITY_ID = 'A07B' // Activates Runes, Old GUI
+//let REQUIREMENT_ABILITY_ID = 'A07D' // Dementia Summoning
+let PORTAL_OFFSET = 350.
+let RUNE_CAST_RADIUS = 350.
+let SUMMON_EFFECT_PATH = Abilities.ancestralSpiritCaster
+
+let KA = COLOR_RED+"Ka|r"
+let NEL = COLOR_GREEN+"Nel|r"
+let LEZ = COLOR_LIGHT_BLUE+"Lez|r"
+
+let KA_RECIPE = KA+" "+LEZ+" "+KA+" "+NEL+" "+KA
+let NEL_RECIPE = NEL+" "+NEL+" "+KA+" "+NEL+" "+LEZ
+let LEZ_RECIPE = LEZ+" "+NEL+" "+LEZ+" "+LEZ+" "+KA
+let SUMMONS_RECIPE = KA_RECIPE+"\n"+NEL_RECIPE+"\n"+LEZ_RECIPE+"\n"
+
+let COOLDOWN = 10.
+let DEMENTIA_SUMMON_TOOLTIP_NORM     = "Dementia Summoning"
+let DEMENTIA_SUMMON_TOOLTIP_EXTENDED = ("Passively gives the Dementia Master the ability to summon a monster from dementia space using Dementia Runes. "+
+                                       "Summoning must be performed close to the center of an open dark gate and you must have a correct rune order. "+
+                                       "The Dementia Master managed to decipher the following rune order from the ancient dark book.\n"+
+                                       SUMMONS_RECIPE+"{0}Warning! Dementia Summonings can be unpredictable and dangerous. No creature wants "+
+                                       "to be summoned for no reason!|r").format(COLOR_RED)
+
+let ACTIVATE_RUNES_TOOLTIP_NORM     = "Activates Runes"
+let ACTIVATE_RUNES_TOOLTIP_EXTENDED = "Casting this spell causes nearby runes to become active and seek targets. Runes will seek any enemies inside "+
+                                      "a dark gate if the caster casts this inside the gate as well. This skill can also be used in a gate to perform "+
+                                      "a dementia summoning. Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
+
+class DementiaSummoning extends AbilityDefinitionEvasioncreep
+    construct(int newAbilityId, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setChancetoEvade(1, 0)
+        this.setIconNormal(Icons.pASBTNGenericSpellImmunity)
+        this.setName(DEMENTIA_SUMMON_TOOLTIP_NORM)
+        this.setTooltipNormal(1, makeToolTipNormAura(DEMENTIA_SUMMON_TOOLTIP_NORM))
+        this.setTooltipNormalExtended(1, DEMENTIA_SUMMON_TOOLTIP_EXTENDED)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+
+class ActivateRunes extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 1, true)
+        this.setArtTarget("")
+        this.setArtEffect("")
+        this.setIconNormal(Icons.bTNFaerieFire)
+        this.setArtCaster("")
+        this.setTargetAttachmentPoint1("")
+        this.setCasterAttachmentPoint1("")
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setHeroAbility(false)
+        this.setCooldown(1, COOLDOWN)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, ACTIVATE_RUNES_TOOLTIP_NORM))
+        this.setTooltipNormalExtended(1, ACTIVATE_RUNES_TOOLTIP_EXTENDED)
+        this.setName(ACTIVATE_RUNES_TOOLTIP_NORM)
+        this.setHotkeyNormal(hotkey)
+
+@compiletime function createSpells()
+    new ActivateRunes(SPELL_ACTIVATE_RUNE, "A", new Pair(0, 0))
+    new DementiaSummoning(SPELL_DEMENTIA_SUMMONING, new Pair(1, 0))
 
 LinkedList<SummonData> summonsList = new LinkedList<SummonData>()
 
 public class SummonData
-    LinkedList<Runes> runeOrder
+    OwnedLinkedList<Runes> runeOrder
     string name
     int orderId
     real cooldown
     int summonUnitID
     construct(Runes r1, Runes r2, Runes r3, Runes r4, Runes r5, string name, int orderId, real cooldown, int summonUnitID)
-        runeOrder = new LinkedList<Runes>()
+        runeOrder = new OwnedLinkedList<Runes>()
         runeOrder.push(r1)
         runeOrder.push(r2)
         runeOrder.push(r3)
@@ -84,17 +143,17 @@ function Runes.toString() returns string
             print("ERROR: Unsupported rune type")
             return ""
 
-function findMatchingSummonData(LinkedList<Runes> runes) returns SummonData
+function findMatchingSummonData(OwnedLinkedList<Runes> runes) returns SummonData
     for summonInfo in summonsList
         if summonInfo.runeOrder.equals(runes)
             return summonInfo
     return null
 
 function trySummonDemon(unit caster, DementiaRunesInstance runesInstance, DarkPortalInstance portalInstance) returns bool
-    if runesInstance != null and portalInstance != null and runesInstance.runes.size() > 0 and caster.hasAbility(REQUIREMENT_ABILITY_ID)
+    if runesInstance != null and portalInstance != null and runesInstance.runes.size() > 0 and caster.hasAbility(SPELL_DEMENTIA_SUMMONING)
         if portalInstance.isUnitInsidePortal(caster)
             //Have portal, and standing inside portal
-            var runeSequence = new LinkedList<Runes>()
+            var runeSequence = new OwnedLinkedList<Runes>()
             for r in runesInstance.runes
                 runeSequence.push(r.runeType)
 
@@ -116,15 +175,16 @@ function doSummon(SummonData summon, DarkPortalInstance portalInstance, player o
     //On the right timing after spawned effect, do actions
     doAfter(1.25) ->
         efx.destr()
-        printTimedToPlayer(GENERAL_COLOR + "You have summoned " + summon.name + GENERAL_COLOR + "!|r", 4, owner)
+        PlaySound(Sounds.shadowHunterReady1)
+        printTimedToPlayer(GENERAL_COLOR + "You have summoned " + summon.name + GENERAL_COLOR + "!|r", 5, owner)
         portalInstance.summons.push(new Summon(createUnit(owner, summon.summonUnitID, portalInstance.centerPos, angle(-90 * DEGTORAD)), summon.cooldown, summon.orderId))
 
 
 function initSummonsData()
-    summonsList.push(new SummonData(Runes.Ka, Runes.Lez, Runes.Ka, Runes.Nel, Runes.Ka, "|c00ff0000Kalezka Nelka|r", Orders.acidbomb, 1, UNIT_LOCUST_FIRE_LORD))
-    summonsList.push(new SummonData(Runes.Lez, Runes.Nel, Runes.Lez, Runes.Lez, Runes.Ka, "|c00005a95Leznel Lezlezka|r", Orders.thunderbolt, 1, UNIT_LOCUST_WATER_LORD))
-    summonsList.push(new SummonData(Runes.Nel, Runes.Nel, Runes.Ka, Runes.Nel, Runes.Lez, "|c0075f041Nelnelka Nellez|r", Orders.soulburn, 1.5, UNIT_LOCUST_GHOST))
+    summonsList.push(new SummonData(Runes.Ka , Runes.Lez, Runes.Ka , Runes.Nel, Runes.Ka , COLOR_RED   + "Kalezka Nelka|r"  , Orders.acidbomb   , 1  , UNIT_LOCUST_FIRE_LORD))
+    summonsList.push(new SummonData(Runes.Lez, Runes.Nel, Runes.Lez, Runes.Lez, Runes.Ka , COLOR_TEAL  + "Leznel Lezlezka|r", Orders.thunderbolt, 1  , UNIT_LOCUST_WATER_LORD))
+    summonsList.push(new SummonData(Runes.Nel, Runes.Nel, Runes.Ka , Runes.Nel, Runes.Lez, COLOR_GREEN + "Nelnelka Nellez|r", Orders.soulburn   , 1.5, UNIT_LOCUST_GHOST))
 
 init
     initSummonsData()
-    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerSpellEffectEvent(SPELL_ACTIVATE_RUNE, () -> onCast())

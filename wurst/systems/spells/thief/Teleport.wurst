@@ -1,0 +1,33 @@
+package Teleport
+
+import ChannelAbilityPreset
+import ID
+import Lodash
+import ToolTipsUtils
+
+
+let MAX_RANGE = 600.
+let COOLDOWN = 30.
+let MANACOST = 0
+let DURATION = 0
+let TOOLTIP_NORM = "Teleport"
+let TOOLTIP_EXTENDED = "The thief teleports a short distance. Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
+
+class Teleport extends AbilityDefinitionWardenBlink
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setLevels(1)
+        this.setHeroAbility(false)
+        this.setCheckDependencies(false)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setManaCost(1, MANACOST)
+        this.setCooldown(1, COOLDOWN)
+        this.setMaximumRange(1, MAX_RANGE)
+
+@compiletime function createTeleport()
+    new Teleport(SPELL_TELEPORT, "R", new Pair(2, 1))

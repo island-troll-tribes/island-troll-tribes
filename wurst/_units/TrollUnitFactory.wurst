@@ -1,0 +1,157 @@
+package TrollUnitFactory
+
+import UnitObjEditing
+import UnitIds
+import ObjectIds
+import Lodash
+import Soundsets
+import HashMap
+import LinkedList
+import TrollUnitTextConstant
+
+public abstract class TrollUnit
+    int id = 0
+    int baseDamage = 10
+    int properNameUsed = 3
+    int speedBase = 300
+    int baseHpMana = 192
+    int startingStats = 1
+    real cooldownTime = 2
+    real scalingValue = 1.0
+    string name = "Troll"
+    string properName = "The PlaceHolder Troll"
+    string model = ""
+    string soundSet = Soundsets.forestTrollShadowPriest
+    string iconInterface = "ReplaceableTextures\\CommandButtons\\BTN"
+    string iconScoreScreen = "ReplaceableTextures\\CommandButtons\\BTN"
+    string hotkey = "Q"
+    string heroAbilities = ""
+    string normalAbilities = ""
+    string toolTipBasic = "Pick "
+    string toolTipAwaken = "Revive "
+    string toolTipRevive = "Revive"
+    string toolTipExtented = "Troll PlaceHolder is an awesome Troll, always faithful to his job of placeholder"
+    Pair<int, int> buttonPos = new Pair(0, 0)
+    Pair<int, int> sightRadius = new Pair(900, 900)
+
+    construct(int id, int baseDamage, int properNameUsed, int speedBase, real cooldownTime, real scalingValue,
+     string name, string toolTipExtended, string model, string icon, string hotkey, string properName,
+     string heroAbilities, string normalAbilities, string soundSet, Pair<int, int> buttonPos, Pair<int, int> sightRadius)
+
+        this.id = id
+        this.name = name
+        this.baseDamage = baseDamage
+        this.properNameUsed = properNameUsed
+        this.speedBase = speedBase
+        this.cooldownTime = cooldownTime
+        this.scalingValue = scalingValue
+        this.name = name
+        this.properName = properName
+        this.toolTipExtented = toolTipExtended
+        this.toolTipBasic += name
+        this.toolTipAwaken += name
+        this.toolTipRevive += name
+        this.model = model
+        this.iconInterface += icon+".blp"
+        this.iconScoreScreen += icon+".blp"
+        this.hotkey = hotkey
+        this.soundSet = soundSet
+        this.buttonPos = buttonPos
+        this.sightRadius = sightRadius
+        this.heroAbilities = heroAbilities
+
+        for key in trollInventoryAbilityMap
+            if trollInventoryAbilityMap.get(key).has(id)
+                this.normalAbilities += commaList(key)
+        this.normalAbilities += ","+BASIC_TROLL_SPELLS+","+normalAbilities
+
+    function buildUnit()
+        new HeroDefinition(id, UnitIds.blademaster)
+        ..setUpgradesUsed("")
+        ..setRequierementsForTier(2, "")
+        ..setRequierementsForTier(3, "")
+        ..setHeroAbilities(heroAbilities)
+        ..setNormalAbilities(normalAbilities)
+        ..setAttack1Range(128)
+        ..setAttack1DamageNumberofDice(1)
+        ..setAttack1DamageBase(baseDamage)
+        ..setAttack1DamageSidesperDie(1)
+        ..setAttack1CooldownTime(cooldownTime)
+        ..setAttack2DamageNumberofDice(1)
+        ..setAttack2DamageBase(baseDamage)
+        ..setAttack2DamageSidesperDie(1)
+        ..setAttack2CooldownTime(cooldownTime)
+        ..setAttack2TargetsAllowed("debris,ground,item,structure,tree,ward")
+        ..setAttack2WeaponSound(WeaponSound.MetalHeavySlice)
+        ..setAttack2Range(128)
+        ..setAttack2WeaponType(WeaponType.Normal)
+        ..setAnimationRunSpeed(290)
+        ..setAnimationWalkSpeed(290)
+        ..setModelFile(model)
+        ..setIconScoreScreen(iconScoreScreen)
+        ..setIconGameInterface(iconInterface)
+        ..setUnitSoundSet(soundSet)
+        ..setSpeedBase(speedBase)
+        ..setTurnRate(1.80)
+        ..setButtonPositionX(buttonPos.a)
+        ..setButtonPositionY(buttonPos.b)
+        ..setScalingValue(scalingValue)
+        ..setAllowCustomTeamColor(true)
+        ..setStartingStrength(startingStats)
+        ..setStrengthPerLevel(1.00)
+        ..setStartingAgility(startingStats)
+        ..setAgilityPerLevel(1.0)
+        ..setStartingIntelligence(startingStats)
+        ..setIntelligencePerLevel(1.00)
+        ..setManaMaximum(baseHpMana)
+        ..setManaRegeneration(0)
+        ..setManaInitialAmount(200)
+        ..setHitPointsMaximumBase(baseHpMana)
+        ..setHitPointsRegenerationRate(0)
+        ..setSightRadiusDay(sightRadius.a)
+        ..setSightRadiusNight(sightRadius.b)
+        ..setLumberCost(3)
+        ..setFoodCost(0)
+        ..setGoldCost(0)
+        ..setStockStartDelay(5)
+        ..setStockReplenishInterval(1)
+        ..setStockMaximum(1)
+        ..setTooltipBasic(toolTipBasic)
+        ..setTooltipExtended(toolTipExtented)
+        ..setTooltipAwaken(toolTipAwaken)
+        ..setTooltipRevive(toolTipRevive)
+        ..setName(name)
+        ..setProperNames(properName)
+        ..setProperNamesUsed(properNameUsed)
+        ..setHotkey(hotkey)
+
+// This isn't pretty to look at, might need to give it more thought
+public class SuperSubTrollUnit extends TrollUnit
+    construct(int id, int baseDamage, int properNameUsed, int speedBase, real cooldownTime, real scalingValue,
+            string name, string toolTipExtended, string model, string icon, string hotkey, string properName,
+            string heroAbilities, string normalAbilities, string soundSet, Pair<int, int> buttonPos, Pair<int, int> sightRadius)
+
+        super(id, baseDamage, properNameUsed, speedBase, cooldownTime, scalingValue, name, toolTipExtended, model, icon,
+            hotkey, properName, heroAbilities, normalAbilities, soundSet, buttonPos, sightRadius)
+        this.baseHpMana = 210
+        this.startingStats = 9
+
+public class SubTrollUnit extends TrollUnit
+    construct(int id, int baseDamage, int properNameUsed, int speedBase, real cooldownTime, real scalingValue,
+            string name, string toolTipExtended, string model, string icon, string hotkey, string properName,
+            string heroAbilities, string normalAbilities, string soundSet, Pair<int, int> buttonPos, Pair<int, int> sightRadius)
+
+        super(id, baseDamage, properNameUsed, speedBase, cooldownTime, scalingValue, name, toolTipExtended, model, icon,
+            hotkey, properName, heroAbilities, normalAbilities, soundSet, buttonPos, sightRadius)
+        this.baseHpMana = 192
+        this.startingStats = 6
+
+public class UnSubTrollUnit extends TrollUnit
+    construct(int id, int baseDamage, int properNameUsed, int speedBase, real cooldownTime, real scalingValue,
+            string name, string toolTipExtended, string model, string icon, string hotkey, string properName,
+            string heroAbilities, string normalAbilities, string soundSet, Pair<int, int> buttonPos, Pair<int, int> sightRadius)
+
+        super(id, baseDamage, properNameUsed, speedBase, cooldownTime, scalingValue, name, toolTipExtended, model, icon,
+            hotkey, properName, heroAbilities, normalAbilities, soundSet, buttonPos, sightRadius)
+        this.baseHpMana = 192
+        this.startingStats = 1

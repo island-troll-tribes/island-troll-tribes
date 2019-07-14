@@ -1,16 +1,15 @@
 package ScoutRadars
 
-import AbilityObjEditing
 import Assets
 import LegacyColors
 import LinkedList
 import ClosureEvents
 import ClosureForGroups
-import ObjectIdGenerator
-import ObjectIds
 import UnitExtensions
+import IdListConstant
 import ID
 import ToolTipsUtils
+import ChannelAbilityPreset
 
 constant let SPELL_PING_ELK            = compiletime(ABIL_ID_GEN.next())
 constant let SPELL_PING_HAWK           = compiletime(ABIL_ID_GEN.next())
@@ -21,10 +20,9 @@ constant let SPELL_PING_TRADESHIP      = compiletime(ABIL_ID_GEN.next())
 constant let SPELL_PING_HOSTILE_ANIMALS= compiletime(ABIL_ID_GEN.next())
 constant let UNSUB_RADAR_PING          = compiletime(UNIT_ID_GEN.next())
 constant let TROLLS                    = compiletime(UNIT_ID_GEN.next())
-constant let SHADOW_SIGHT              = 'A07V'
 
 public constant let ADVANCED_RADAR_SPELLBOOK = commaList(SPELL_PING_ELK, SPELL_PING_HAWK, SPELL_PING_HOSTILE_ANIMALS, SPELL_PING_BUILDING, SPELL_PING_TROLL,
-                                                  SPELL_PING_LIVING_CLAY, SPELL_PING_TRADESHIP, SHADOW_SIGHT) //Shadow sight, don't have much place to put it any more :/
+                                                  SPELL_PING_LIVING_CLAY, SPELL_PING_TRADESHIP, SPELL_SHADOW_SIGHT) //Shadow sight, don't have much place to put it any more :/
 
 constant let HOSTILE_ANIMALS_LIST = asList(UNIT_SNAKE, UNIT_JUNGLE_WOLF, UNIT_JUNGLE_BEAR, UNIT_PANTHER,
                                     UNIT_ALIGATOR_MAN           , UNIT_ONE                    , UNIT_MAMMOTH             , UNIT_DISCO_DUCK, UNIT_ANCIENT_HYDRA,
@@ -40,10 +38,10 @@ constant let BUILDING_LIST        = asList(UNIT_FIRE,      UNIT_SMOKE_HOUSE,    
 
 constant let TRADESHIP_LIST       = asList(UNIT_TRADE_SHIP_1, UNIT_TRADE_SHIP_2, UNIT_TRADE_SHIP_3, UNIT_TRADE_SHIP_4, UNIT_TRADE_SHIP_5, UNIT_TRADE_SHIP_6)
 
-constant let DONT_PING_THOSE_LIST = asList(UNIT_HAWK, UNIT_FISH, UNIT_GREEN_FISH)
+constant let DONT_PING_THOSE_LIST = asList(UNIT_HAWK, UNIT_FISH, UNIT_GREEN_FISH, UNIT_MEAT)
 
 constant let COOLDOWN = 30.
-constant let TOOL_TIP_COOLDOWN = " Has "+COOLDOWN.toInt().toString()+" seconds cooldown."
+constant let TOOL_TIP_COOLDOWN = " Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
 constant let MANACOST = 0
 constant let RADAR_RANGE = 3000.
 constant let IMPROVED_RADAR_RANGE = 4500.
@@ -58,7 +56,7 @@ public class RadarSpell
     let btnPositionY = 0
     let baseOrderId = "avatar"
     let cooldown = COOLDOWN
-    let manaCost = 0
+    let manaCost = 10
 
     construct(string unitToPing, string toolTip, string iconPath, int id, int btnX, int btnY, string hotkey, string baseOrderId, int manaCost, string color)
         this.name = GENERAL_COLOR+"[" + SPECIAL_COLOR + hotkey + GENERAL_COLOR + "] - " + this.name + color + unitToPing + "|r"
@@ -72,31 +70,19 @@ public class RadarSpell
         this.manaCost = manaCost
 
     function buildSpell()
-        new AbilityDefinitionIllidanChannel(id)
+        new ChannelAbilityPreset(id, 1, true)
             ..setTargetType(1, 0)
             ..setAnimationNames("spell")
-            ..setArtCaster("")
-            ..setArtEffect("")
-            ..setArtTarget("")
-            ..setArtSpecial("")
             ..setButtonPositionNormalX(btnPositionX)
             ..setButtonPositionNormalY(btnPositionY)
-            ..setButtonPositionResearchX(3)
-            ..setButtonPositionResearchY(0)
             ..setIconNormal(iconPath)
-            ..setIconResearch(iconPath)
-            ..setIconTurnOff(iconPath)
             ..setHeroAbility(false)
             ..setItemAbility(false)
-            ..setLevels(3)
             ..setHotkeyNormal(hotkey)
             ..setName(name)
             ..setDisableOtherAbilities(1, false)
             ..setTooltipNormal(1, name)
             ..setTooltipNormalExtended(1, toolTip)
-            ..presetBaseOrderID(lvl -> baseOrderId)
-            ..setOrderStringActivate("channel")
-            ..setOrderStringUseTurnOn("channel")
             ..presetOptions(lvl -> 1)
             ..presetCooldown(lvl -> cooldown)
             ..presetManaCost(lvl -> manaCost)
@@ -106,15 +92,16 @@ function getRadarSpells() returns LinkedList<RadarSpell>
     return asList(
         //Unsub Scout Radar Spell
         new RadarSpell("Elk|r"+GENERAL_COLOR+" and "+COLOR_RED+"Hostile Units" , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , SPELL_PING_ENEMY, 2, 1, "R", "stormbolt" , 0, COLOR_GREEN  ),
+        new RadarSpell("Elk|r"+GENERAL_COLOR+" and "+COLOR_RED+"Hostile Units" , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , SPELL_SPY_PING_ENEMY, 2, 1, "A", "stormbolt" , 0, COLOR_GREEN  ),
 
         //Advanced Radar Spells
-        new RadarSpell("Elk"              , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , SPELL_PING_ELK             , 0, 0, "Q", "bloodlust" , MANACOST, COLOR_GREEN      ),
-        new RadarSpell("Hawk"             , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , SPELL_PING_HAWK            , 0, 0, "W", "curseon"   , MANACOST, COLOR_TEAL       ),
-        new RadarSpell("Hostile Animals"  , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , SPELL_PING_HOSTILE_ANIMALS , 0, 0, "E", "curseoff"  , MANACOST, COLOR_RED        ),
-        new RadarSpell("Hostile Building" , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , SPELL_PING_BUILDING        , 0, 0, "R", "blizzard"  , MANACOST, COLOR_ORANGE     ),
-        new RadarSpell("Trolls"           , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , SPELL_PING_TROLL           , 0, 0, "A", "banish"    , MANACOST, COLOR_RED        ),
-        new RadarSpell("Living Clay"      , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , SPELL_PING_LIVING_CLAY     , 0, 0, "S", "blink"     , MANACOST, COLOR_PINK       ),
-        new RadarSpell("Trade Ship"       , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , SPELL_PING_TRADESHIP       , 0, 0, "D", "cripple"   , MANACOST, GOLD_COLOR       )
+        new RadarSpell("Elk"              , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , SPELL_PING_ELK             , 0, 0, "Q", "locustswarm" , MANACOST, COLOR_GREEN      ),
+        new RadarSpell("Hawk"             , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , SPELL_PING_HAWK            , 0, 0, "W", "manashieldon"   , MANACOST, COLOR_TEAL       ),
+        new RadarSpell("Hostile Animals"  , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , SPELL_PING_HOSTILE_ANIMALS , 0, 0, "E", "manaflareoff"  , MANACOST, COLOR_RED        ),
+        new RadarSpell("Hostile Building" , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , SPELL_PING_BUILDING        , 0, 0, "R", "manaflareon"  , MANACOST, COLOR_ORANGE     ),
+        new RadarSpell("Trolls"           , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , SPELL_PING_TROLL           , 0, 0, "A", "manashieldoff"    , MANACOST, COLOR_RED        ),
+        new RadarSpell("Living Clay"      , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , SPELL_PING_LIVING_CLAY     , 0, 0, "S", "howlofterror"     , MANACOST, COLOR_PINK       ),
+        new RadarSpell("Trade Ship"       , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , SPELL_PING_TRADESHIP       , 0, 0, "D", "thunderclap"   , MANACOST, GOLD_COLOR       )
     )
 
 function onCast(LinkedList<int> unitId, real red, real green, real blue)
@@ -122,7 +109,7 @@ function onCast(LinkedList<int> unitId, real red, real green, real blue)
     var casterPos = caster.getPos()
     var owner = caster.getOwner()
     var range = RADAR_RANGE
-    var efx = addEffect("Abilities\\Spells\\Human\\Thunderclap\\ThunderClapCaster.mdl", casterPos)
+    var efx = addEffect(Abilities.thunderclapCaster, casterPos)
     efx.setScale(1.5)
     efx.setTimeScale(1.5)
     efx.destr()
@@ -132,13 +119,13 @@ function onCast(LinkedList<int> unitId, real red, real green, real blue)
 
     forUnitsInRange(caster.getPos(), range) u ->
         if u.getOwner().isEnemyOf(caster.getOwner())
-            
+
             //Unsub scout Radar
             if unitId.has(UNSUB_RADAR_PING)
                 if u.getTypeId() == UNIT_ELK
                     PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 5, bj_MINIMAPPINGSTYLE_SIMPLE, 0, 255, 0)
                 else if DONT_PING_THOSE_LIST.has(u.getTypeId()) == false
-                    PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 5, bj_MINIMAPPINGSTYLE_SIMPLE, 255, 0, 0)             
+                    PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 5, bj_MINIMAPPINGSTYLE_SIMPLE, 255, 0, 0)
             else if unitId.has(u.getTypeId())
                 PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 5, bj_MINIMAPPINGSTYLE_SIMPLE, red, green, blue)
             else if unitId.has(TROLLS) and u.isTroll()
@@ -146,42 +133,21 @@ function onCast(LinkedList<int> unitId, real red, real green, real blue)
 
         //Will ping tradeship
         else if unitId.has(u.getTypeId()) and TRADESHIP_LIST.has(u.getTypeId())
-            PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 5, bj_MINIMAPPINGSTYLE_SIMPLE, red, green, blue) 
+            PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 5, bj_MINIMAPPINGSTYLE_SIMPLE, red, green, blue)
 
-            
 
 @compiletime
 function buildSpells()
     getRadarSpells().forEach(spell -> spell.buildSpell())
 
-@compiletime function createSpellBook() 
-    new AbilityDefinitionSpellBook(SPELL_ADVANCED_RADAR_SPELLBOOK_ID)
-        ..setButtonPositionNormalX(2)
-        ..setButtonPositionNormalY(1)
-        ..setButtonPositionResearchX(0)
-        ..setButtonPositionResearchY(0)
-        ..setIconNormal(Icons.bTNSpy)
-        ..setHeroAbility(true)
-        ..setItemAbility(false)
-        ..setLevels(1)
-        ..setTargetAttachmentPoint1("")
-        ..setCasterAttachmentPoint1("")
-        ..presetBaseOrderID(lvl -> "stormbolt")
-        ..setHotkeyNormal("E")
-        ..setName("Advanced Radar")
-        ..presetMaximumSpells(lvl -> 11)
-        ..presetMinimumSpells(lvl -> 11)
-        ..presetSpellList(lvl -> ADVANCED_RADAR_SPELLBOOK)
-        ..presetCooldown(lvl -> COOLDOWN)
-        ..presetTooltipNormal(lvl -> makeToolTipNorm("E", "Advanced Radar"))
-        ..presetTooltipNormalExtended(lvl -> "An improved better radar to locate unit around him with high precision")
-        ..presetSharedSpellCooldown(lvl -> false)
-
 init
-    registerSpellEffectEvent(SPELL_PING_ENEMY , () -> onCast(asList (UNSUB_RADAR_PING), 0 , 0 , 255 ))
-    registerSpellEffectEvent(SPELL_PING_ELK , () -> onCast(asList (UNIT_ELK) , 0 , 255 , 0 ))
-    registerSpellEffectEvent(SPELL_PING_HAWK , () -> onCast(asList (UNIT_HAWK) , 0 , 255 , 255 ))
-    registerSpellEffectEvent(SPELL_PING_HOSTILE_ANIMALS , () -> onCast(HOSTILE_ANIMALS_LIST , 255 , 128 , 0 ))
-    registerSpellEffectEvent(SPELL_PING_BUILDING , () -> onCast(BUILDING_LIST , 255 , 102 , 102 ))
-    registerSpellEffectEvent(SPELL_PING_TRADESHIP , () -> onCast(TRADESHIP_LIST , 255 , 255 , 0 ))
-    registerSpellEffectEvent(SPELL_PING_LIVING_CLAY , () -> onCast(asList (UNIT_LIVING_CLAY), 255 , 0 , 255 ))
+    registerSpellEffectEvent(SPELL_PING_ENEMY       , () -> onCast(asList(UNSUB_RADAR_PING) , 0   , 0   , 255 ))
+    registerSpellEffectEvent(SPELL_SPY_PING_ENEMY   , () -> onCast(asList(UNSUB_RADAR_PING) , 0   , 0   , 255 ))
+    registerSpellEffectEvent(SPELL_PING_ELK         , () -> onCast(asList(UNIT_ELK)         , 0   , 255 , 0   ))
+    registerSpellEffectEvent(SPELL_PING_HAWK        , () -> onCast(asList(UNIT_HAWK)        , 0   , 255 , 255 ))
+    registerSpellEffectEvent(SPELL_PING_LIVING_CLAY , () -> onCast(asList(UNIT_LIVING_CLAY) , 255 , 0   , 255 ))
+    registerSpellEffectEvent(SPELL_PING_TROLL       , () -> onCast(TROLL_UNIT_LIST          , 255 , 0   , 255 ))
+
+    registerSpellEffectEvent(SPELL_PING_HOSTILE_ANIMALS , () -> onCast(HOSTILE_ANIMALS_LIST                   , 255 , 128 , 0   ))
+    registerSpellEffectEvent(SPELL_PING_BUILDING        , () -> onCast(BUILDING_LIST                          , 255 , 102 , 102 ))
+    registerSpellEffectEvent(SPELL_PING_TRADESHIP       , () -> onCast(TRADESHIP_LIST                         , 255 , 255 , 0   ))

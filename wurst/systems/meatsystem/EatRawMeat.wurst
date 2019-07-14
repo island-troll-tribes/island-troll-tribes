@@ -6,12 +6,17 @@ import ClosureEvents
 import ClosureTimers
 import MeatSystem
 import HashMap
+import ObjectIdGenerator
+import ToolTipsUtils
 
+public let OLD_ABILITY_ID_EAT_RAW_MEAT = compiletime(ABIL_ID_GEN.next())
 public let ABILITY_ID_EAT_RAW_MEAT = 'XERW'
 public let ABILITY_ID_EAT_RAW_MEAT_DISABLED = 'XERD'
 let CHANNEL_TIME = 2.
 let HP_PER_SECOND = 12.5
 let SFX_PATH = "Objects\\Spawnmodels\\Human\\HumanBlood\\BloodElfSpellThiefBlood.mdl"
+
+constant TOOLTIP_EXTENDED = "Eats a nearby corpse for 25 |cffd67a7aheath|r."
 
 @compiletime function createEatRawMeat()
     new AbilityDefinitionIllidanChannel(ABILITY_ID_EAT_RAW_MEAT)
@@ -46,6 +51,18 @@ let SFX_PATH = "Objects\\Spawnmodels\\Human\\HumanBlood\\BloodElfSpellThiefBlood
         ..setOptions(1, 1)
         ..setCooldown(1, 0.5)
         ..setManaCost(1, 0)
+
+    new AbilityDefinitionCannibalize(OLD_ABILITY_ID_EAT_RAW_MEAT)
+        ..setCheckDependencies(false)
+        ..setMaxHitPoints(1, 40)
+        ..setButtonPositionNormalX(2)
+        ..setDurationHero(1, 2.40)
+        ..setDurationNormal(1, 2.40)
+        ..setCastRange(1, 128)
+        ..setHotkeyNormal("D")
+        ..setTooltipNormal(1, makeToolTipNorm("D", "Eat Raw Meat"))
+        ..setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        ..setName("Old Eat Raw Meat")
 
 @compiletime function createEatRawMeatDisabled()
     new AbilityDefinitionBladeMasterCriticalStrike(ABILITY_ID_EAT_RAW_MEAT_DISABLED)

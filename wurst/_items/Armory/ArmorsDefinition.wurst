@@ -1,0 +1,74 @@
+package ArmorsDefinition
+
+import ItemObjEditing
+import Assets
+import ID
+import LinkedList
+import ToolTipsUtils
+
+constant ABIL_EB = "A00M,A0DZ" //DMG Bonus +5
+constant ABIL_WB = "A00M,AId2,A0E1" //DMG Bonus +8
+constant ABIL_BB = "A00M,A0DZ" //DMG Bonus +12
+constant ABIL_BOB = "AId2,A0E4,A00N" //Purge, DMG Bonus +14
+constant ABIL_IB = "AId3,A0E9,A00O" //Silence, DMG Bonus +7
+constant ABIL_SB = "AId5,A0E5,A00P" //Silence, DMG Bonus +7
+
+constant ICON_PATH = "ReplaceableTextures\\CommandButtons\\BTN{0}.blp"
+
+constant IRON_BOOTS_ICON      = ICON_PATH.format("Boots")
+constant BONE_BOOTS_ICON      = ICON_PATH.format("BoneBoots")
+constant STEEL_BOOTS_ICON     = ICON_PATH.format("SteelBoots")
+constant ELK_SKIN_BOOTS_ICON  = ICON_PATH.format("ElkHideBoots")
+constant WOLF_SKIN_BOOTS_ICON = ICON_PATH.format("WolfHideBoots")
+constant BEAR_SKIN_BOOTS_ICON = ICON_PATH.format("BearHideBoots")
+
+constant EB_MODEL  = "Models\\SkinBoots.mdl"
+constant WB_MODEL  = "Models\\WolfHideBoots.mdl"
+constant BB_MODEL  = "Models\\BoneBoots.mdl"
+constant IB_MODEL  = "Models\\IronBoots.mdl"
+
+constant TT_COMMON = "Increases Movespeed by {0}, Int by {1}"
+
+constant TT_SKIN_BOOT = TT_COMMON + " and provides warmth."
+constant TT_ARMOR_BOOT = TT_COMMON + ", Armor by {2} and provides warmth."
+constant TT_BONE_BOOT = TT_ARMOR_BOOT + " All basic boots transmute into the same bone/iron/steel boots."
+
+class ArmorsDefinition extends ItemDefinition
+    construct(int id, string icon, string model, string name, string desc, string toolTipExt, int cost, LinkedList<int> tinting, string abilities)
+        super(id, 'bpsd')
+        this.setAbilities(abilities)
+        this.setInterfaceIcon(icon)
+        this.setDescription(desc)
+        this.setDroppedWhenCarrierDies(true)
+        this.setTintingColor1Red(tinting.dequeue())
+        this.setTintingColor2Green(tinting.dequeue())
+        this.setTintingColor3Blue(tinting.dequeue())
+        this.setModelUsed(model)
+        this.setGoldCost(0)
+        this.setHotkey("")
+        this.setLevel(0)
+        this.setLumberCost(cost)
+        this.setName(name)
+        this.setTooltipBasic("Trade for " + name)
+        this.setTooltipExtended(toolTipExt)
+
+class BootsDefinition extends ArmorsDefinition
+    construct(int id, string icon, string model, string name, string toolTipExt, int cost, LinkedList<int> tinting, string abilities)
+        super(id, icon, model, name, toolTipExt, toolTipExt, cost, tinting, abilities)
+        this.setCooldownGroup("AIsp")
+
+function string.bootFormat(real msBonus, real intBonus) returns string
+    let bootDescription = this.format(msBonus.toToolTipOrange(), intBonus.toToolTipLightBlue())
+    return bootDescription
+
+function string.bootFormat(real msBonus, real intBonus, real armorBonus) returns string
+    let bootDescription = this.format(msBonus.toToolTipOrange(), intBonus.toToolTipLightBlue(), armorBonus.toToolTipGreen())
+    return bootDescription
+
+@compiletime function createArmors()
+    //new BootsDefinition(ITEM_ELK_SKIN_BOOTS  , ELK_SKIN_BOOTS_ICON  , EB_MODEL, "Elk Skin Boots"  , TT_SKIN_BOOT  .bootFormat(60, 2     ) , 19, asList(255 , 255, 255), ABIL_EB)
+    //new BootsDefinition(ITEM_WOLF_SKIN_BOOTS , WOLF_SKIN_BOOTS_ICON , WB_MODEL, "Wolf Skin Boots" , TT_ARMOR_BOOT .bootFormat(60, 4  , 2) , 33, asList(128 , 128, 128), ABIL_WB)
+    //new BootsDefinition(ITEM_BEAR_SKIN_BOOTS , BEAR_SKIN_BOOTS_ICON , WB_MODEL, "Bear Skin Boots" , TT_ARMOR_BOOT .bootFormat(60, 5  , 3) , 47, asList(128 , 128, 128), ABIL_BB)
+    //new BootsDefinition(ITEM_BONE_BOOTS      , BONE_BOOTS_ICON      , BB_MODEL, "Bone Boots"      , TT_BONE_BOOT  .bootFormat(70, 3  , 2) , 34, asList(255 , 255, 255), ABIL_BOB)
+    //new BootsDefinition(ITEM_IRON_BOOTS      , IRON_BOOTS_ICON      , IB_MODEL, "Iron Boots"      , TT_ARMOR_BOOT .bootFormat(80, 6  , 3) , 55, asList(100 , 100, 100), ABIL_IB)
+    //new BootsDefinition(ITEM_STEEL_BOOTS     , STEEL_BOOTS_ICON     , IB_MODEL, "Steel Boots"     , TT_ARMOR_BOOT .bootFormat(60, 10, 3 ) , 70, asList(0   , 119, 255), ABIL_SB)

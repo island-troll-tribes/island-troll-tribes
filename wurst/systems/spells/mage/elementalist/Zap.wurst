@@ -10,20 +10,14 @@ import TimerUtils
 import HashMap
 import Lodash
 import OverCharge
-import Abilities
 import ToolTipsUtils
-import DummyCaster
+import InstantDummyCaster
+import Assets
+import ObjectIds
+import ID
 
-public let ABILITY_ID = 'XEZS'
-let SLOW_ABILITY_ID   = 'AEZD'
-let BUFF_ZAP1_AURA    = 'BEZA'
-let BUFF_ZAP2_AURA    = 'BEZB'
-let BUFF_ZAP1         = 'BEZC'
-let BUFF_ZAP1_STR     = "BEZC"
-let BUFF_ZAP2         = 'BEZD'
-let BUFF_ZAP2_STR     = "BEZE"
-let BUFF_ZAP_SLOW     = "BEZS"
-let BUFF_ZAP_SLOW_INT = 'BEZT'
+let SLOW_ABILITY_ID   = compiletime(ABIL_ID_GEN.next())
+let BUFF_ZAP_SLOW     = compiletime(ABIL_ID_GEN.next())
 let BUFF_STATIS_TRAP  = 'Bstt' // original Statis trap buff
 
 let CAST_RANGE = 800.
@@ -50,53 +44,23 @@ let TOOLTIP_EXTENDED = ("Zaps the target for {0} damage. Stacks charges on the t
                        .format(MAIN_DAMAGE.toToolTipRed(), CHARGE_AS_SLOW.toToolTipOrange(), CHARGE_DAMAGE.toToolTipRed(), CHARGE_DURATION.toToolTipLightBlue(),
                        COOLDOWN.toToolTipLightBlue())
 
+constant ZAP1 = compiletime(createDummyBuffObject("Zap 1", "1 Zap Charge", Icons.bTNStasisTrap, Abilities.farseerMissile, "chest"))
+constant ZAP2 = compiletime(createDummyBuffObject("Zap 2", "2 Zap Charge", Icons.bTNStasisTrap, Abilities.farseerMissile, "chest"))
+
 
 function createBuffs()
-    new BuffDefinition(BUFF_ZAP_SLOW_INT, BUFF_STATIS_TRAP)
+    new BuffDefinition(BUFF_ZAP_SLOW, BUFF_STATIS_TRAP)
     ..setArtTarget(1, "")
     ..setTooltipNormal(1, "Zap Slow")
     ..setTooltipNormalExtended(1, "Slowed by Zap spell")
 
-    new BuffDefinition(BUFF_ZAP1, BUFF_STATIS_TRAP)
-    ..setArtTarget(1, "")
-    ..setTooltipNormal(1, "Zap 1")
-    ..setTooltipNormalExtended(1, "1 Zap Charge")
-
-    new BuffDefinition(BUFF_ZAP2, BUFF_STATIS_TRAP)
-    ..setArtTarget(1, "")
-    ..setTooltipNormal(1, "Zap 2")
-    ..setTooltipNormalExtended(1, "2 Zap Charges")
-
-function createDummyAuras()
-    new AbilityDefinitionAuraSlow(BUFF_ZAP1_AURA)
-    ..setArtTarget(Abilities.farseerMissile)
-    ..setTargetAttachmentPoint1("chest")
-    ..setMovementSpeedFactor(1, 0)
-    ..setAreaofEffect(1, 0)
-    ..setBuffs(1, BUFF_ZAP1_STR)
-    ..setDurationHero(1, CHARGE_DURATION)
-    ..setDurationNormal(1, CHARGE_DURATION)
-    ..setTargetsAllowed(1, "self")
-    ..setName("Zap 1")
-
-    new AbilityDefinitionAuraSlow(BUFF_ZAP2_AURA)
-    ..setArtTarget(Abilities.farseerMissile)
-    ..setTargetAttachmentPoint1("chest")
-    ..setMovementSpeedFactor(1, 0)
-    ..setAreaofEffect(1, 0)
-    ..setBuffs(1, BUFF_ZAP2_STR)
-    ..setDurationHero(1, CHARGE_DURATION)
-    ..setDurationNormal(1, CHARGE_DURATION)
-    ..setTargetsAllowed(1, "self")
-    ..setName("Zap 2")
-
 function createSlowDummySpell()
-    new AbilityDefinitionSlowCreep(BUFF_ZAP1)
+    new AbilityDefinitionSlowCreep(SLOW_ABILITY_ID)
     ..setArtTarget("")
     ..setArtCaster("")
     ..setAttackSpeedFactor(1, CHARGE_AS_SLOW)
     ..setMovementSpeedFactor(1, CHARGE_MS_SLOW)
-    ..setBuffs(1, BUFF_ZAP_SLOW)
+    ..setBuffs(1, BUFF_ZAP_SLOW.toRawCode())
     ..setCastRange(1, 1500)
     ..setCastingTime(1, 0)
     ..setCooldown(1, 0)
@@ -125,9 +89,8 @@ class Zap extends AbilityDefinitionChainLightningcreep
         this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
 
 @compiletime function createZap()
-    new Zap(ABILITY_ID, "Q", new Pair(0, 0))
+    new Zap(SPELL_ZAP, "Q", new Pair(0, 0))
     createBuffs()
-    createDummyAuras()
     createSlowDummySpell()
 
 let timerMap = new HashMap<unit, timer>()
@@ -161,28 +124,28 @@ function handleBuff(unit caster, unit target)
     if timerMap.has(target)
         timerMap.getAndRemove(target).release()
 
-    if target.hasAbility(BUFF_ZAP2_AURA)
+    if target.hasAbility(ZAP2.abilId)
         //Zap2 -> Charges explosion
-        target.removeAbility(BUFF_ZAP1_AURA)
-        target.removeAbility(BUFF_ZAP2_AURA)
+        target.removeAbility(ZAP1.abilId)
+        target.removeAbility(ZAP2.abilId)
         zapChargeExplosion(caster, target)
-    else if target.hasAbility( BUFF_ZAP1_AURA )
+    else if target.hasAbility( ZAP1.abilId )
         //Zap 1 -> 2
-        target.removeAbility(BUFF_ZAP1_AURA)
-        target.addAbility(BUFF_ZAP2_AURA)
+        target.removeAbility(ZAP1.abilId)
+        target.addAbility(ZAP2.abilId)
         let t = getTimer()
         t.doAfter(CHARGE_REMOVE_TIME) ->
-            target.removeAbility(BUFF_ZAP2_AURA)
+            target.removeAbility(ZAP2.abilId)
             timerMap.remove(target)
         timerMap.put(target, t)
 
     else
         //0 -> >Zap 1
-        target.addAbility(BUFF_ZAP1_AURA)
+        target.addAbility(ZAP1.abilId)
 
         let t = getTimer()
         t.doAfter(CHARGE_REMOVE_TIME) ->
-            target.removeAbility(BUFF_ZAP1_AURA)
+            target.removeAbility(ZAP1.abilId)
             timerMap.remove(target)
         timerMap.put(target, t)
 
@@ -199,15 +162,11 @@ function onCastEffects(unit caster, unit target, bool isOvercharged)
 function zapChargeExplosion(unit caster, unit target)
     //Main target bonus effects
     if (target.isAlive() and not target.isInvulnerable())
-        new DummyCaster()
-            ..owner(caster.getOwner())
-            ..origin(caster.getPos())
-            ..castTarget(SLOW_ABILITY_ID, 1, Orders.slow, target)
+        InstantDummyCaster.castTarget(caster.getOwner(), SLOW_ABILITY_ID, 1, Orders.slow, target)
         UnitDamageTarget(caster, target, CHARGE_DAMAGE, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
 
     //Charge explosion SFX
-    var efx = AddSpecialEffectTargetUnitBJ("chest", target, EFFECT_PATH)
-    efx.setScale(0.8)
+    var efx = AddSpecialEffectTargetUnitBJ("chest", target, EFFECT_PATH)..setScale(0.8)
     doAfter(3)->
         efx.destr()
 
@@ -241,4 +200,4 @@ class IntObject
         this.value = value
 
 init
-    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerSpellEffectEvent(SPELL_ZAP, () -> onCast())

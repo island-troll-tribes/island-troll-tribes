@@ -27,9 +27,10 @@ constant WDH_SPELLBOOK = commaList(SPELL_QM_SCROLL_FIREBALL, SPELL_QM_SCROLL_CYC
 
 constant WORKSHOP_SPELLBOOK = commaList(SPELL_QM_SMOKE_BOMB,SPELL_QM_FIRE_BOMB,SPELL_QM_EMP,SPELL_QM_TRANSPORT_SHIP, SPELL_QM_SONAR_COMPASS,SPELL_QM_DARK_THISTLES)
 
-constant BUILDING_CRAFT_SPELLBOOK = commaList(SPELL_QM_CAMP_FIRE_KIT, SPELL_QM_TENT_KIT, SPELL_QM_TROLL_HUT_KIT, SPELL_QM_MUD_HUT_KIT,
+public constant BUILDING_CRAFT_SPELLBOOK = commaList(SPELL_QM_CAMP_FIRE_KIT, SPELL_QM_TENT_KIT, SPELL_QM_TROLL_HUT_KIT, SPELL_QM_MUD_HUT_KIT,
                                                   SPELL_QM_ARMORY_KIT, SPELL_QM_WORKSHOP_KIT, SPELL_QM_MIXING_POT_KIT, SPELL_QM_WITCH_DOCTORS_HUT_KIT,
-                                                  SPELL_QM_TANNERY_KIT, SPELL_QM_OMNI_TOWER_KIT, SPELL_QM_TELEPORT_BEACON_KIT)
+                                                  SPELL_QM_TANNERY_KIT, SPELL_QM_OMNI_TOWER_KIT, SPELL_BUILDING_CRAFT_SECOND_SPELLBOOK_ID)
+constant BUILDING_CRAFT_SECOND_SPELLBOOK = commaList(SPELL_QM_SMOKE_HOUSE_KIT, SPELL_QM_STORAGE_HUT_KIT, SPELL_QM_TELEPORT_BEACON_KIT, SPELL_QM_HATCHERY_KIT)
 
 public class QuickMakeSpell
     let hotkey = ""
@@ -239,6 +240,7 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
         new QuickMakeSpell("Tips on Stat" , "" , "SelectHeroOn" , PLACEHOLDER_STAT_TOOLTIP_SPELL , 3, 0, "", SPECIAL_COLOR, TANNERY_PLACEHOLDER_STAT_TOOLTIP, "manashieldoff"),
         new QuickMakeSpell("Tips on Hide" , "" , "SelectHeroOn" , PLACEHOLDER_HIDE_TOOLTIP_SPELL , 3, 1, "", SPECIAL_COLOR, TANNERY_PLACEHOLDER_HIDE_USAGE_TOOLTIP, "manashieldon"),
 
+
         // Buildings
         // First three aren't added to master crafter because it's useless, button position set to 0 since they're in a spellbook
         new QuickMakeSpell("Camp Fire Kit"         , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+CAMP_FIRE_KIT_RECIPE         , "Fire"                 , SPELL_QM_CAMP_FIRE_KIT         , 0, 0, "Q", SPECIAL_COLOR, QM_BUILD_TOOLIP, "resurrection"),
@@ -253,12 +255,12 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
         new QuickMakeSpell("Witch Doctors Hut Kit" , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+WITCH_DOCTORS_HUT_KIT_RECIPE , "VoodooLounge"         , SPELL_QM_WITCH_DOCTORS_HUT_KIT , 3, 1, "F", SPECIAL_COLOR, QM_BUILD_TOOLIP, "creepanimatedead"),
         new QuickMakeSpell("Tannery Kit"           , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+TANNERY_KIT_RECIPE           , "PigFarm"              , SPELL_QM_TANNERY_KIT           , 0, 2, "Z", SPECIAL_COLOR, QM_BUILD_TOOLIP, "thunderclap"),
         new QuickMakeSpell("Omnitower Kit"         , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+OMNI_TOWER_KIT_RECIPE        , "OrcTower"             , SPELL_QM_OMNI_TOWER_KIT        , 1, 2, "X", SPECIAL_COLOR, QM_BUILD_TOOLIP, "warstomp"),
-        new QuickMakeSpell("Teleport Beacon Kit"   , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+TELEPORT_BEACON_KIT_RECIPE   , "EnergyTower"          , SPELL_QM_TELEPORT_BEACON_KIT   , 2, 2, "C", SPECIAL_COLOR, QM_BUILD_TOOLIP, "defend"),
 
-        // No places for those, put position and hotkey value for master crafter, except smoke house
-        new QuickMakeSpell("Smoke House Kit"       , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+SMOKE_HOUSE_KIT_RECIPE       , "RockTower"            , SPELL_QM_SMOKE_HOUSE_KIT       , 0, 0, "V", SPECIAL_COLOR, QM_BUILD_TOOLIP, "divineshield"),
+        // Second Buildings Page
+        new QuickMakeSpell("Smoke House Kit"       , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+SMOKE_HOUSE_KIT_RECIPE       , "RockTower"            , SPELL_QM_SMOKE_HOUSE_KIT       , 0, 0, "Q", SPECIAL_COLOR, QM_BUILD_TOOLIP, "divineshield"),
         new QuickMakeSpell("Storage Hut Kit"       , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+STORAGE_HUT_KIT_RECIPE       , "ForestTrollHut1"      , SPELL_QM_STORAGE_HUT_KIT       , 1, 0, "W", SPECIAL_COLOR, QM_BUILD_TOOLIP, "summongrizzly"),
-        new QuickMakeSpell("Hatchery Kit"          , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+HATCHERY_KIT_RECIPE          , "SnowOwl"              , SPELL_QM_HATCHERY_KIT          , 2, 0, "E", SPECIAL_COLOR, QM_BUILD_TOOLIP, "summonwareagle")
+        new QuickMakeSpell("Teleport Beacon Kit"   , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+TELEPORT_BEACON_KIT_RECIPE   , "EnergyTower"          , SPELL_QM_TELEPORT_BEACON_KIT   , 2, 0, "E", SPECIAL_COLOR, QM_BUILD_TOOLIP, "defend"),
+        new QuickMakeSpell("Hatchery Kit"          , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+HATCHERY_KIT_RECIPE          , "SnowOwl"              , SPELL_QM_HATCHERY_KIT          , 3, 0, "R", SPECIAL_COLOR, QM_BUILD_TOOLIP, "summonwareagle")
     )
 
 // Additional pages created here
@@ -270,7 +272,8 @@ function getQuickMakeSpellBookSpells() returns LinkedList<QuickMakeSpellBook>
         new QuickMakeSpellBook(SPELL_WDH_SPELLBOOK_ID       , "More Witch Doctors Hut Quick Make Page", "C", WDH_SPELLBOOK_TOOLTIP     , WDH_SPELLBOOK       , 2, 2 , "spellbook"),
         new QuickMakeSpellBook(SPELL_WORKSHOP_SPELLBOOK_ID  , "More Workshop Quick Make Page"         , "C", WORKSHOP_SPELLBOOK_TOOLTIP, WORKSHOP_SPELLBOOK  , 2, 2 , "spellbook"),
 
-        new QuickMakeSpellBook(SPELL_BUILDING_CRAFT_SPELLBOOK_ID  , "Buildings Craft Recipe"         , "B", BUILDING_CRAFT_TOOLTIP, BUILDING_CRAFT_SPELLBOOK  , 0, 1 , "charm", "BasicStruct")
+        new QuickMakeSpellBook(SPELL_BUILDING_CRAFT_SPELLBOOK_ID       , "Buildings Craft Recipe"  , "B", BUILDING_CRAFT_TOOLTIP, BUILDING_CRAFT_SPELLBOOK       , 0, 1 , "charm", "BasicStruct"),
+        new QuickMakeSpellBook(SPELL_BUILDING_CRAFT_SECOND_SPELLBOOK_ID, "More Buildings Recipe"   , "C", BUILDING_CRAFT_TOOLTIP, BUILDING_CRAFT_SECOND_SPELLBOOK, 2, 2 , "blight")
     )
 
 @compiletime

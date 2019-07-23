@@ -1,0 +1,169 @@
+package PlayerScore
+
+import HashMap
+import LinkedList
+import Tribe
+import ChatCommands
+import ClosureEvents
+import Game
+import DamageEvent
+import UnitExtensions
+import StringExtensions
+import HealingSystem
+import ClosureTimers
+import LocalObjectIDs
+import ColorUtils
+import GameConfig
+import PlayerExtensions
+
+public constant animalName = new IterableMap<int, string>()
+..put(UNIT_ELK, "Elk" )
+..put(UNIT_HAWK, "Hawk" )
+..put(UNIT_SNAKE, "Snake" )
+..put(UNIT_JUNGLE_WOLF, "Jungle Wolf" )
+..put(UNIT_JUNGLE_BEAR, "Jungle Bear" )
+..put(UNIT_PANTHER, "Panther" )
+
+ // A hashMap to link a player to its score
+public let playerScores = new HashMap<player, PlayerScore>
+
+
+/**
+Store the player's animals kill count, damage dealt to troll, healing done to ally and gold acquired from selling stuff
+**/
+class PlayerScore
+
+    static function createScoreMap()
+        let tribes = Tribe.getTribes()
+
+        for tribe in tribes
+            for member in tribe.getMembers()
+                playerScores.put(member, new PlayerScore(member))
+
+    static function initialize()
+        registerTribeInitializationFinishEvent(function createScoreMap)
+
+    IterableMap<LinkedList<int>, int> playerKill
+    int damageTroll = 0
+    int healTroll = 0
+    int meatEaten = 0
+    int goldAmount = 0
+    int previousGoldAmount = 0
+    player _player
+
+    construct(player _player)
+        this._player = _player
+        playerKill = new IterableMap<LinkedList<int>, int>()
+        ..put(asList(UNIT_ELK, UNIT_ELK_ADOLESCENT, UNIT_ADULT_ELK), 0)
+        ..put(asList(UNIT_HAWK, UNIT_HAWK_ADOLESCENT, UNIT_ALPHA_HAWK), 0)
+        ..put(asList(UNIT_SNAKE), 0)
+        ..put(asList(UNIT_JUNGLE_WOLF, UNIT_ADULT_JUNGLE_WOLF), 0)
+        ..put(asList(UNIT_JUNGLE_BEAR, UNIT_ADULT_JUNGLE_BEAR), 0)
+        ..put(asList(UNIT_PANTHER, UNIT_ELDER_PANTHER), 0)
+
+    function addGold()
+        previousGoldAmount = this._player.getLumber()
+        //nulltimer neccessary here to get the gold before the sold event gold are added to the player
+        nullTimer() ->
+            goldAmount += this._player.getLumber() - previousGoldAmount
+
+    function removeGold()
+        if gameConfig.isTeamGoldEnabled()
+            for member in this._player.getTribe().getMembers()
+                playerScores.get(member).previousGoldAmount = member.getLumber()
+        else
+            playerScores.get(this._player).previousGoldAmount = this._player.getLumber()
+
+    //Add healing from the healing system, only priest spells are handled at this moment
+    function addHeal(int heal)
+        healTroll += heal
+
+    function addDamage(int damage)
+        damageTroll += damage
+
+    function addKill(int unitId)
+        for unitType in playerKill
+            if unitType.has(unitId)
+                let killCount = playerKill.get(unitType)
+                playerKill.put(unitType, killCount + 1)
+
+    function addMeatEaten()
+        meatEaten++
+
+    function displayKill()
+        for unitType in playerKill
+            print(playerKill.get(unitType))
+
+    function printScore()
+        var msg = ("Damage dealt (troll) : "  .color(GOLD_COLOR) + "{0}\n".color(SPECIAL_COLOR)+
+                   "Healing done (allies)  : ".color(GOLD_COLOR) + "{1}\n".color(SPECIAL_COLOR)+
+                   "Gold acquired : "         .color(GOLD_COLOR) + "{2}\n".color(SPECIAL_COLOR)+
+                   "Meat Eaten : "            .color(GOLD_COLOR) + "{3}\n".color(SPECIAL_COLOR)
+                   ).format(damageTroll.toString(), healTroll.toString(), goldAmount.toString(), meatEaten.toString())
+
+        for unitType in playerKill
+            msg += "{0} kill count : ".color(GOLD_COLOR) + "{1}\n".format(animalName.get(unitType.getFirst()), playerKill.get(unitType).toString())
+        printTimedToPlayer(msg, 10, this._player)
+
+
+init
+    PlayerScore.initialize()
+    registerGameStartEvent() ->
+        // Register kill count if unit has been killed by a player
+        EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
+            let dead = GetDyingUnit()
+            let killerOwner = GetKillingUnit().getOwner()
+            if killerOwner != players[PLAYER_NEUTRAL_AGGRESSIVE]
+                and killerOwner != players[PLAYER_NEUTRAL_PASSIVE]
+                playerScores.get(killerOwner).addKill(dead.getTypeId())
+
+        // Register damage dealt amount if unit damaged is a troll
+        DamageEvent.addListener() () ->
+            let attackerOwner = DamageEvent.getSource().getOwner()
+            let target = DamageEvent.getTarget()
+            let dmgAmount = DamageEvent.getAmount()
+
+            if attackerOwner != players[PLAYER_NEUTRAL_AGGRESSIVE]
+                and attackerOwner != players[PLAYER_NEUTRAL_PASSIVE]
+                and target.getOwner().isEnemyOf(attackerOwner)
+                and target.isTroll()
+                and playerScores.has(attackerOwner)
+                playerScores.get(attackerOwner).addDamage(dmgAmount.toInt())
+
+        // Register healing amount if player heals an ally
+        onUnitHealed() ->
+            let instance = getHealingInstance()
+            let caster = instance.getCaster()
+            let target = instance.getTarget()
+
+            if caster != target
+                let healAmount = instance.getAmount()
+                playerScores.get(caster.getOwner()).addHeal(healAmount.toInt())
+
+        // Register cooked meat eaten amount
+        EventListener.add(EVENT_PLAYER_UNIT_USE_ITEM) ->
+            let itm = GetManipulatedItem()
+            let itemId = itm.getTypeId()
+            let user = GetManipulatingUnit()
+            let userOwner = user.getOwner()
+
+            if (itemId == ITEM_COOKED_MEAT or itemId == ITEM_SMOKED_MEAT) and user.isTroll() and playerScores.has(userOwner)
+                playerScores.get(userOwner).addMeatEaten()
+
+        // This event is triggered when a player BUY an item
+        EventListener.add(EVENT_PLAYER_UNIT_SELL_ITEM) ->
+            let owner = GetBuyingUnit().getOwner()
+
+            // TODO: Find a way to handle case where tribe ownership is enabled
+            // and player buy from a building
+            playerScores.get(owner).removeGold()
+
+        // Register gold acquired
+        EventListener.add(EVENT_PLAYER_UNIT_PAWN_ITEM) ->
+            let owner = GetTriggerUnit().getOwner()
+            playerScores.get(owner).addGold()
+
+        // Dunno if I should let player see their score during the game, but I'll let this
+        // here as trial, might be useful for debug
+        registerCommandAll("score") (player triggerPlayer, LinkedList<string> arguments) ->
+            playerScores.get(triggerPlayer).printScore()

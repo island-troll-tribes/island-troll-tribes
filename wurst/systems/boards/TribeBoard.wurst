@@ -119,9 +119,12 @@ class TribeBoard
 init
     registerGameStartEvent() ->
         nullTimer() ->
-            Tribe.getTribes().each(tribe -> new TribeBoard(tribe))
+            //Need to do this so tribeboard is initialized after scoreBoard, otherwise tribeboard won't display
+            doAfter(0.5) () ->
+                Tribe.getTribes().each(tribe -> new TribeBoard(tribe))
 
         registerPlayerEvent(EVENT_PLAYER_LEAVE) ->
-            TribeBoard
-                .findForPlayer(GetTriggerPlayer())
-                .fixDisplay()
+            if not GetTriggerPlayer().isObserver() and not GetTriggerPlayer().isObserverNew()
+                TribeBoard
+                    .findForPlayer(GetTriggerPlayer())
+                    .fixDisplay()

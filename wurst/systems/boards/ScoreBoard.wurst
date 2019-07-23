@@ -1,0 +1,219 @@
+package ScoreBoard
+
+import Game
+import ClosureTimers
+import Boards
+import LinkedList
+import LegacyColors
+import PlayerExtensions
+import HashMap
+import Assets
+import PlayerScore
+import Lodash
+import TrollUnitTextConstant
+
+constant UPDATE_PERIOD = 1.0
+constant KILL_COLUMN_WIDTH = 0.055
+constant STAT_LABEL_WIDTH = 0.09
+
+constant boardItemLabel = asList(new Pair("Elk", Icons.bTNStag),
+                                 new Pair("Hawk", Icons.bTNWarEagle ),
+                                 new Pair("Snake", Icons.bTNWindSerpent ),
+                                 new Pair("Wolf", Icons.bTNTimberWolf ),
+                                 new Pair("Bear", Icons.bTNFrostBear ),
+                                 new Pair("Panther", "ReplaceableTextures\\CommandButtons\\BTNPanther.blp"),
+                                 new Pair("Damage Dealt", Icons.bTNCriticalStrike),
+                                 new Pair("Healing Done", Icons.bTNHeal),
+                                 new Pair("Gold Acquired", Icons.bTNMGExchange),
+                                 new Pair("Meat Eaten", Icons.bTNMonsterLure)
+                                )
+
+/**
+Display players's score on a board, supposed to be displayed to observers
+**/
+public class ScoreBoard
+    static multiboard board = CreateMultiboard()
+    CallbackPeriodic cb
+
+    construct()
+        this.cb = doPeriodically(UPDATE_PERIOD, cb -> updateBoard())
+        createBoard()
+
+    function createBoard()
+        var playerNbr = 0
+        for i = 0 to bj_MAX_PLAYERS - 1
+            if not players[i].isObserver() and players[i].isIngame()
+                playerNbr++
+
+        board
+        ..setColumnCount(12)
+        ..setRowCount(playerNbr + 1)
+        ..setTitle("Score Board")
+        ..display(false)
+        ..minimalize(true)
+
+        createLabel()
+        createBoardContent()
+
+    function createLabel()
+        var row = 0
+        var column = 0
+
+        //First Row
+        //Player Label
+        board
+        .getItem(row, column)
+        ..setStyle(true, false)
+        ..setValue(GOLD_COLOR + "Player")
+        ..setWidth(0.1)
+        ..release()
+        column++
+
+        //Level Label
+        board
+        .getItem(row, column)
+        ..setStyle(true, false)
+        ..setValue(HIGHLIGHT_COLOR + "Level")
+        ..setWidth(0.05)
+        ..release()
+        column++
+
+        //Init Player Kill & Score Label
+        for label in boardItemLabel
+            board
+            .getItem(row, column)
+            ..setStyle(true, true)
+            ..setValue(HIGHLIGHT_COLOR + label.a)
+            ..setIcon(label.b)
+            ..setWidth(column < 8 ? KILL_COLUMN_WIDTH : STAT_LABEL_WIDTH)
+            ..release()
+            column++
+
+    function createBoardContent()
+        var row = 1
+        for i = 0 to bj_MAX_PLAYERS - 1
+            if not players[i].isObserver() and players[i].isIngame()
+                let score = playerScores.get(players[i])
+                var column = 0
+
+                //Player label
+                board
+                .getItem(row, column)
+                ..setStyle(true, false)
+                ..setValue(players[i].getNameColored())
+                ..setWidth(0.1)
+                ..release()
+                column++
+
+                //Level Label
+                board
+                .getItem(row, column)
+                ..setStyle(true, true)
+                ..setWidth(0.05)
+                ..release()
+                column++
+
+                //PlayerKill Label
+                for j = 0 to score.playerKill.size() - 1
+                    board
+                    .getItem(row, column)
+                    ..setStyle(true, false)
+                    ..setWidth(KILL_COLUMN_WIDTH)
+                    ..release()
+                    column++
+
+                //Damage dealt to troll label
+                board
+                .getItem(row, column)
+                ..setStyle(true, false)
+                ..setValueColor(255, 0, 0, 255)
+                ..setWidth(STAT_LABEL_WIDTH)
+                ..release()
+                column++
+
+                //Healing done label
+                board
+                .getItem(row, column)
+                ..setStyle(true, false)
+                ..setValueColor(0, 255, 0, 255)
+                ..setWidth(STAT_LABEL_WIDTH)
+                ..release()
+                column++
+
+                //Gold acquired Label
+                board
+                .getItem(row, column)
+                ..setStyle(true, false)
+                ..setValueColor(255, 255, 0, 255)
+                ..setWidth(STAT_LABEL_WIDTH)
+                ..release()
+                column++
+
+                //Meat eaten Label
+                board
+                .getItem(row, column)
+                ..setStyle(true, false)
+                ..setValueColor(255, 161, 0, 255)
+                ..setWidth(STAT_LABEL_WIDTH)
+                ..release()
+                row++
+
+    function updateBoard()
+        var row = 1
+
+        board.setTitle(getGameTimersBoardTitle())
+
+        for i = 0 to bj_MAX_PLAYERS - 1
+            if not players[i].isObserver() and players[i].isIngame()
+                let score = playerScores.get(players[i])
+                var column = 1
+
+                //Player Level Label
+                board
+                .getItem(row, column)
+                ..setValue(players[i].getTroll().getLevel().toString())
+                ..setIcon(trollIcons.get(players[i].getTroll().getTypeId()))
+                ..release()
+                column++
+
+                //PlayerKill Label
+                for unitType in score.playerKill
+                    board
+                    .getItem(row, column)
+                    ..setValue(score.playerKill.get(unitType).toString())
+                    ..release()
+                    column++
+
+                //Damage dealt to troll label
+                board
+                .getItem(row, column)
+                ..setValue(score.damageTroll.toString())
+                ..release()
+                column++
+
+                //Healing done label
+                board
+                .getItem(row, column)
+                ..setValue(score.healTroll.toString())
+                ..release()
+                column++
+
+                //Gold acquired Label
+                board
+                .getItem(row, column)
+                ..setValue(score.goldAmount.toString())
+                ..release()
+                column++
+
+                //Meat eaten Label
+                board
+                .getItem(row, column)
+                ..setValue(score.meatEaten.toString())
+                ..release()
+
+                row += 1
+
+init
+    registerGameStartEvent() ->
+        nullTimer() ->
+            new ScoreBoard()

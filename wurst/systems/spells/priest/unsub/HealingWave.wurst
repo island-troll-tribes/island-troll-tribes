@@ -66,7 +66,7 @@ class HealingWaveInstance
         waveBounce(target, caster, true)
 
     function waveBounce(unit target, unit previousTarget, bool isFirstBounce)
-        new HealingInstance(target, this.healingAmount, HealingType.ABILITY)
+        new HealingInstance(target, this.caster, this.healingAmount, HealingType.ABILITY)
 
         var lightningFxPath = isFirstBounce ? LIGHTNING_HEALING_WAWE_PRIMARY : LIGHTNING_HEALING_WAWE_SEECONDARY
         attachLightningFX(previousTarget, target, lightningFxPath, 1.5)
@@ -120,19 +120,13 @@ class HealingWaveInstance
     ondestroy
         destroy this.targetsHit
 
+function onCast()
+    var caster = GetSpellAbilityUnit()
+    var target = GetSpellTargetUnit()
+    new HealingWaveInstance(caster, target, HEAL_AMOUNT, BOUNCE_COUNT.toInt())
+
 init
     // Don't know how to make it simplier
-    registerSpellEffectEvent(SPELL_HEALING_WAVE) ->
-        var caster = GetSpellAbilityUnit()
-        var target = GetSpellTargetUnit()
-        new HealingWaveInstance(caster, target, HEAL_AMOUNT, BOUNCE_COUNT.toInt())
-
-    registerSpellEffectEvent(SPELL_MH_HEALING_WAVE) ->
-        var caster = GetSpellAbilityUnit()
-        var target = GetSpellTargetUnit()
-        new HealingWaveInstance(caster, target, HEAL_AMOUNT, BOUNCE_COUNT.toInt())
-
-    registerSpellEffectEvent(SPELL_SAGE_HEALING_WAVE) ->
-        var caster = GetSpellAbilityUnit()
-        var target = GetSpellTargetUnit()
-        new HealingWaveInstance(caster, target, HEAL_AMOUNT, BOUNCE_COUNT.toInt())
+    registerSpellEffectEvent(SPELL_HEALING_WAVE, () ->  onCast())
+    registerSpellEffectEvent(SPELL_MH_HEALING_WAVE, () ->  onCast())
+    registerSpellEffectEvent(SPELL_SAGE_HEALING_WAVE, () ->  onCast())

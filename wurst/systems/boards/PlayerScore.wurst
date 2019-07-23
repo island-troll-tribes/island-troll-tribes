@@ -1,0 +1,148 @@
+package PlayerScore
+
+import HashMap
+import LinkedList
+import ID
+import Tribe
+import ChatCommands
+import ClosureEvents
+import Game
+import DamageEvent
+import UnitExtensions
+import HealingSystem
+import LegacyColors
+import ClosureTimers
+
+public constant animalName = new IterableMap<int, string>()
+..put(UNIT_ELK, "Elk" )
+..put(UNIT_HAWK, "Hawk" )
+..put(UNIT_SNAKE, "Snake" )
+..put(UNIT_JUNGLE_WOLF, "Jungle Wolf" )
+..put(UNIT_JUNGLE_BEAR, "Jungle Bear" )
+..put(UNIT_PANTHER, "Panther" )
+
+public let playerScores = new HashMap<player, PlayerScore>
+
+/**
+Store the player's animals kill count, damage dealt to troll, healing done to ally and gold acquired from selling stuff
+**/
+class PlayerScore
+
+    static function createScoreMap()
+        let tribes = Tribe.getTribes()
+
+        for tribe in tribes
+            for member in tribe.getMembers()
+                playerScores.put(member, new PlayerScore(member))
+
+    static function initialize()
+        registerTribeInitializationFinishEvent(function createScoreMap)
+
+    IterableMap<LinkedList<int>, int> playerKill
+    int damageTroll = 0
+    int healTroll = 0
+    int meatEaten = 0
+    int goldAmount = 0
+    int previousGoldAmount = 0
+    player _player
+
+    construct(player _player)
+        this._player = _player
+        playerKill = new IterableMap<LinkedList<int>, int>()
+        ..put(asList(UNIT_ELK, UNIT_ELK_ADOLESCENT, UNIT_ADULT_ELK), 0)
+        ..put(asList(UNIT_HAWK, UNIT_HAWK_ADOLESCENT, UNIT_ALPHA_HAWK), 0)
+        ..put(asList(UNIT_SNAKE), 0)
+        ..put(asList(UNIT_JUNGLE_WOLF, UNIT_ADULT_JUNGLE_WOLF), 0)
+        ..put(asList(UNIT_JUNGLE_BEAR, UNIT_ADULT_JUNGLE_BEAR), 0)
+        ..put(asList(UNIT_PANTHER, UNIT_ELDER_PANTHER), 0)
+
+    function addGold()
+        previousGoldAmount = _player.getLumber()
+        //nulltimer neccessary here to get the gold before the sold event gold are added to the player
+        nullTimer() ->
+            goldAmount += _player.getLumber() - previousGoldAmount
+
+    //Add healing from the healing system, only priest spells are handled at this moment
+    function addHeal(int heal)
+        healTroll += heal
+
+    function addDamage(int damage)
+        damageTroll += damage
+
+    function addKill(int unitId)
+        for unitType in playerKill
+            if unitType.has(unitId)
+                let killCount = playerKill.get(unitType)
+                playerKill.put(unitType, killCount + 1)
+
+    function addMeatEaten()
+        meatEaten++
+
+    function displayKill()
+        for unitType in playerKill
+            print(playerKill.get(unitType))
+
+    function printScore()
+        var msg = (GOLD_COLOR + "Damage dealt (troll) :  {0}{1}\n|r"+
+                   GOLD_COLOR + "Healing done (allies)  : {0}{2}\n|r"+
+                   GOLD_COLOR + "Gold acquired : {0}{3}\n|r"+
+                   GOLD_COLOR + "Meat Eaten : {0}{4}\n|r"
+                   ).format(SPECIAL_COLOR, damageTroll.toString(), healTroll.toString(), goldAmount.toString(), meatEaten.toString())
+
+        for unitType in playerKill
+            msg += GOLD_COLOR + "{0} kill count : {1}{2}\n|r".format(animalName.get(unitType.getFirst()), SPECIAL_COLOR, playerKill.get(unitType).toString())
+        printTimedToPlayer(msg, 10, _player)
+
+
+init
+    PlayerScore.initialize()
+    registerGameStartEvent() ->
+        EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
+            let dead = GetDyingUnit()
+            let killerOwner = GetKillingUnit().getOwner()
+            if killerOwner != players[PLAYER_NEUTRAL_AGGRESSIVE]
+                and killerOwner != players[PLAYER_NEUTRAL_PASSIVE]
+                playerScores.get(killerOwner).addKill(dead.getTypeId())
+
+        DamageEvent.addListener() () ->
+            let attackerOwner = DamageEvent.getSource().getOwner()
+            let target = DamageEvent.getTarget()
+            let dmgAmount = DamageEvent.getAmount()
+
+            if attackerOwner != players[PLAYER_NEUTRAL_AGGRESSIVE]
+                and attackerOwner != players[PLAYER_NEUTRAL_PASSIVE]
+                and target.getOwner().isEnemyOf(attackerOwner)
+                and target.isTroll()
+                and playerScores.has(attackerOwner)
+                playerScores.get(attackerOwner).addDamage(dmgAmount.toInt())
+
+        onUnitHealed() ->
+            let instance = getHealingInstance()
+            let caster = instance.getCaster()
+            let target = instance.getTarget()
+
+            if caster != target
+                let healAmount = instance.getAmount()
+                playerScores.get(caster.getOwner()).addHeal(healAmount.toInt())
+
+        EventListener.add(EVENT_PLAYER_UNIT_USE_ITEM) ->
+            let itm = GetManipulatedItem()
+            let itemId = itm.getTypeId()
+            let user = GetManipulatingUnit()
+            let userOwner = user.getOwner()
+
+            if (itemId == ITEM_COOKED_MEAT or itemId == ITEM_SMOKED_MEAT) and user.isTroll() and playerScores.has(userOwner)
+                print(userOwner.getName())
+                playerScores.get(userOwner).addMeatEaten()
+
+        EventListener.add(EVENT_PLAYER_UNIT_SELL_ITEM) ->
+            let owner = GetTriggerUnit().getOwner()
+            playerScores.get(owner).previousGoldAmount = owner.getLumber()
+
+        // Lazy handling, don't work correctly with team gold
+        EventListener.add(EVENT_PLAYER_UNIT_PAWN_ITEM) ->
+            let owner = GetTriggerUnit().getOwner()
+            playerScores.get(owner).addGold()
+
+        registerCommandAll("score") (player triggerPlayer, LinkedList<string> arguments) ->
+            playerScores.get(triggerPlayer).printScore()

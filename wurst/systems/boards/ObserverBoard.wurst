@@ -1,7 +1,7 @@
 package ObserverBoard
 import LinkedList
 import Tribe
-import GameMode
+import Game
 import PlayerExtensions
 import PublicLibrary
 import StringUtils
@@ -11,6 +11,7 @@ import Lodash
 import DialogExtensions
 import RegisterEvents
 import Dialog
+import ScoreBoard
 
 let OPTION_NAME_COLOR = colorA(180, 180, 180, 255)
 let OPTION_VALUE_COLOR = colorA(115, 152, 255, 255)
@@ -179,14 +180,16 @@ function getObservers() returns LinkedList<player>
     return observers
 
 init
-    GameMode.onModeSelectionFinish() ->
+    registerGameStartEvent() ->
         let observers = getObservers()
         for observer in observers
-            let options = asList<ObserverBoardControl>(
-                new ObserverBoardVisionControl(observer),
-                new ObserverBoardZoomControl(observer)
-            )
-            new ObserverBoard(observer, options)
+            nullTimer() () ->
+                ScoreBoard.board.display(observer, true)
+            // let options = asList<ObserverBoardControl>(
+            //     new ObserverBoardVisionControl(observer),
+            //     new ObserverBoardZoomControl(observer)
+            // )
+            // new ObserverBoard(observer, options)
 
         destroy observers
 

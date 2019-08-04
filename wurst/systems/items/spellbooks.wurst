@@ -1,0 +1,41 @@
+package spellbooks
+
+// Stanard library imports:
+import InventoryEvent
+import LinkedList
+
+// Third-party imports:
+
+// Local imports:
+import ItemExtensions
+
+// Removes and replaces an item to prevent a glitch prevent spellbook access.
+function resetItem(unit u, int slot)
+    print("resetting " + u.getName() + "slot" + slot.toString())
+    var itm = u.removeItemFromSlot(slot)
+    print("removed item " + itm.getName())
+    u.addItemHandle(itm)
+    print("added item back")
+
+
+function onMoved()
+    var slotFrom = getInventorySlotFrom()
+    var slotTo = getInventorySlotTo()
+    var u = getInventoryManipulatingUnit()
+    var itm = getInventoryManipulatedItem()
+
+    // Moving an item in place does not lock spellbooks.
+    if slotFrom == slotTo
+        return
+
+    // Reset each item, as necessary.
+    for slot in asList(slotFrom, slotTo)
+        if u.itemInSlot(slot).isSpellbook()
+            resetItem(u, slot)
+
+
+
+
+
+init
+    registerInventoryEvent(EVENT_ITEM_INVENTORY.MOVE, () -> onMoved())

@@ -1,7 +1,16 @@
 package UnitExtensions
-import StackNSplit
+
+// Standard library imports:
+import ClosureTimers
+import ItemObjEditing
 import LinkedList
+import Orders
+
+// Third-party imports:
+import StackNSplit
 import Lodash
+
+// Local imports:
 import GameConfig
 import PublicLibrary
 import Brambles
@@ -9,6 +18,36 @@ import Brambles
 public let BUFF_ENSNARE_GROUND = 'Beng'
 public let BUFF_ENSNARE_AIR = 'Bena'
 public let BUFF_ENTANGLE = 'BEer'
+
+// Create a list of orders in order to access by slot number.
+let slotOrders = [
+    SpecialOrders.itemdrag00,
+    SpecialOrders.itemdrag01,
+    SpecialOrders.itemdrag02,
+    SpecialOrders.itemdrag03,
+    SpecialOrders.itemdrag04,
+    SpecialOrders.itemdrag05
+]
+
+constant DUMMY_ITEM_ID = compiletime(ITEM_ID_GEN.next())
+@compiletime function createDummyItem()
+    new ItemDefinition(DUMMY_ITEM_ID, 'bspd')
+
+/**
+    Adds an item by handle to the given slot.
+*/
+public function unit.addItemHandleToSlot(item itm, int targetSlot)
+    // Compute the list of intervening empty slots.
+    let emptySlots = filter(slot -> UnitItemInSlot(this, slot) == null,
+                            range(0, targetSlot).toList())
+    // Fill each intervening slot.
+    for _ in emptySlots
+        this.addItemById(DUMMY_ITEM_ID)
+    // Add the item to the first available slot, which is now the target slot.
+    this.addItemHandle(itm)
+    // Remove the dummy items.
+    for slot in emptySlots
+        UnitItemInSlot(this, slot).remove()
 
 public function unit.getHeroSkillPoints() returns integer
     return GetHeroSkillPoints(this)

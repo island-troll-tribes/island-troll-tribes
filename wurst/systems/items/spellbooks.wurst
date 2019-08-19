@@ -1,29 +1,32 @@
 package spellbooks
 
-// Stanard library imports:
-import InventoryEvent
+// Standard library imports:
+import ClosureTimers
 import LinkedList
 
 // Third-party imports:
+import InventoryEvent
 
 // Local imports:
 import ItemExtensions
+import UnitExtensions
 
-// Removes and replaces an item to prevent a glitch prevent spellbook access.
+// Removes and replaces the item in the given slot.
 function resetItem(unit u, int slot)
-    print("resetting " + u.getName() + "slot" + slot.toString())
-    var itm = u.removeItemFromSlot(slot)
-    print("removed item " + itm.getName())
-    u.addItemHandle(itm)
-    print("added item back")
-
+    print("Removing item in slot " + slot.toString())
+    u.addItemHandleToSlot(u.removeItemFromSlot(slot), slot)
 
 function onMoved()
-    var slotFrom = getInventorySlotFrom()
-    var slotTo = getInventorySlotTo()
-    var u = getInventoryManipulatingUnit()
-    var itm = getInventoryManipulatedItem()
+    // Extract the relevant state.
+    let slotFrom = getInventorySlotFrom()
+    let slotTo = getInventorySlotTo()
+    let u = getInventoryManipulatingUnit()
 
+    // Schedule the correction after the inventory movement has finished.
+    nullTimer() ->
+        onMoved(slotFrom, slotTo, u)
+
+function onMoved(int slotFrom, int slotTo, unit u)
     // Moving an item in place does not lock spellbooks.
     if slotFrom == slotTo
         return
@@ -32,10 +35,6 @@ function onMoved()
     for slot in asList(slotFrom, slotTo)
         if u.itemInSlot(slot).isSpellbook()
             resetItem(u, slot)
-
-
-
-
 
 init
     registerInventoryEvent(EVENT_ITEM_INVENTORY.MOVE, () -> onMoved())

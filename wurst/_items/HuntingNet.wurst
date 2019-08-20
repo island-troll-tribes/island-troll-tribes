@@ -1,0 +1,112 @@
+package HuntingNet
+
+
+import AbilityObjEditing
+import PublicLibrary
+import ItemObjEditing
+import Assets
+import ClosureEvents
+import ClosureTimers
+import ObjectIds
+import UnitExtensions
+import HashSet
+import SimError
+
+constant ABILITY_DUMMY_ID = compiletime(ABIL_ID_GEN.next())
+let BUFF_HUNTED = 'Hntd'
+let netDuration = 0.0
+let HERO_DURATION = 2.5
+let NORMAL_DURATION = 8.0
+let COOLDOWN = 10.
+let CAST_RANGE = 700.
+public constant BUFF_ANTI_MAGIC_SHIELD = 'Bam2'
+
+let targets = new HashSet<int>()
+..add(UNIT_FISH)
+..add(UNIT_GREEN_FISH)
+
+constant ICON = "ReplaceableTextures\\CommandButtons\\BTNHuntingNet.blp"
+constant MODEL = Abilities.ensnareTarget
+constant TT = "A net primarily used for hunting. If the animal dies while ensnared the net will be retrievable"
+
+
+@compiletime function createDummyAbility()
+    new AbilityDefinitionEnsnare(ABILITY_DUMMY_ID)
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..setIconNormal(Icons.bTNGreaterInvisibility)
+    ..setIconResearch(Icons.bTNGreaterInvisibility)
+    ..setIconTurnOff(Icons.bTNGreaterInvisibility)
+    ..setHeroAbility(false)
+    ..setItemAbility(true)
+    ..setLevels(1)
+    ..setHotkeyNormal("A")
+    ..setName("TrueSight")
+    ..setTooltipNormal(1, "dummy spell")
+    ..setTooltipNormalExtended(1, "dummy spell")
+    ..setCooldown(1, COOLDOWN)
+    ..setManaCost(1, 0)
+    ..setAnimationNames("")
+    ..setDurationHero(1, HERO_DURATION)
+    ..setCastingTime(1, 0)
+    ..setDurationNormal(1, NORMAL_DURATION)
+    ..setEffectSound("")
+    ..setCastRange(1, CAST_RANGE)
+
+@compiletime function createHuntingNet()
+    new ItemDefinition(ITEM_HUNTING_NET, 'rst1')
+    ..setName("Hunting Net")
+    ..setAbilities(toRawCode(ABILITY_DUMMY_ID))
+    ..setTooltipBasic("A net for Hunting")
+    ..setHotkey("")
+    ..setTooltipExtended(TT)
+    ..setDroppedWhenCarrierDies(true)
+    ..setLumberCost(8)
+    ..setGoldCost(0)
+    ..setModelUsed(MODEL)
+    ..setScalingValue(1)
+    ..setInterfaceIcon(ICON)
+    ..setDescription("Reusable net as long as target dies while ensnared")
+    ..setLevel(0)
+    ..setCanBeSoldToMerchants(true)
+    ..setActivelyUsed(true)
+    ..setHitPoints(75)
+    ..setIgnoreCooldown(false)
+    ..setNumberofCharges(1)
+    ..setPerishable(true)
+    ..setCooldownGroup("Aens")
+ 
+function moveTarget()
+    let caster = GetSpellAbilityUnit()
+    let target = GetSpellTargetUnit()
+    if target.isType(UNIT_TYPE_FLYING) or targets.has(target.getTypeId())
+        target.setPos(caster.getPos())
+    
+function preventNet()
+    let target = GetSpellTargetUnit()
+    let caster = GetSpellAbilityUnit()
+    if target.isTroll() and (target.getAbilityLevel(BUFF_ANTI_MAGIC_SHIELD) > 0 or target.getAbilityLevel(BUFF_ENSNARE_GROUND) > 0) and caster.getTypeId() != UNIT_DISCO_DUCK and caster.getTypeId() != UNIT_ONE
+        caster.issueImmediateOrder("stop")
+        simError(caster.getOwner(), "Cannot ensnare target with Anti-Magic shield")
+        
+function onHuntNet()
+    let target = GetSpellTargetUnit()
+    let pos = target.getPos()
+    if target.isTroll()
+        doPeriodicallyTimed(0.1, 2.5) netCounter ->
+            if not target.isAlive()
+                createItem(ITEM_HUNTING_NET, pos)
+                netCounter.stop()
+    else
+        doPeriodicallyTimed(0.1, 8.0) netCounter ->
+            if not target.isAlive()
+                createItem(ITEM_HUNTING_NET, pos)
+                netCounter.stop()
+    
+init
+    registerSpellEffectEvent(ABILITY_DUMMY_ID) ->
+        preventNet()
+        moveTarget()
+        onHuntNet()

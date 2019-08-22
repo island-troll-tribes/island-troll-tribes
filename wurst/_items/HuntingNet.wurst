@@ -9,21 +9,14 @@ import ClosureEvents
 import ClosureTimers
 import ObjectIds
 import UnitExtensions
-import HashSet
-import SimError
+import PreventNet
+import Ensnare
 
-constant ABILITY_DUMMY_ID = compiletime(ABIL_ID_GEN.next())
-let BUFF_HUNTED = 'Hntd'
-let netDuration = 0.0
+constant HUNTING_NET_ENSNARE = compiletime(ABIL_ID_GEN.next())
 let HERO_DURATION = 2.5
 let NORMAL_DURATION = 13.
 let COOLDOWN = 12.
 let CAST_RANGE = 700.
-public constant BUFF_ANTI_MAGIC_SHIELD = 'Bam2'
-
-let targets = new HashSet<int>()
-..add(UNIT_FISH)
-..add(UNIT_GREEN_FISH)
 
 constant ICON = "ReplaceableTextures\\CommandButtons\\BTNHuntingNet.blp"
 constant MODEL = Abilities.ensnareTarget
@@ -31,7 +24,7 @@ constant TT = "A net primarily used for hunting. If the animal dies while ensnar
 
 
 @compiletime function createDummyAbility()
-    new AbilityDefinitionEnsnare(ABILITY_DUMMY_ID)
+    new AbilityDefinitionEnsnare(HUNTING_NET_ENSNARE)
     ..setArtCaster("")
     ..setArtEffect("")
     ..setArtTarget("")
@@ -58,7 +51,7 @@ constant TT = "A net primarily used for hunting. If the animal dies while ensnar
 @compiletime function createHuntingNet()
     new ItemDefinition(ITEM_HUNTING_NET, 'rst1')
     ..setName("Hunting Net")
-    ..setAbilities(toRawCode(ABILITY_DUMMY_ID))
+    ..setAbilities(toRawCode(HUNTING_NET_ENSNARE))
     ..setTooltipBasic("A net for Hunting")
     ..setHotkey("")
     ..setTooltipExtended(TT)
@@ -78,35 +71,23 @@ constant TT = "A net primarily used for hunting. If the animal dies while ensnar
     ..setPerishable(true)
     ..setCooldownGroup("Aens")
  
-function moveTarget()
-    let caster = GetSpellAbilityUnit()
-    let target = GetSpellTargetUnit()
-    if target.isType(UNIT_TYPE_FLYING) or targets.has(target.getTypeId())
-        target.setPos(caster.getPos())
-    
-function preventNet()
-    let target = GetSpellTargetUnit()
-    let caster = GetSpellAbilityUnit()
-    if target.isTroll() and (target.getAbilityLevel(BUFF_ANTI_MAGIC_SHIELD) > 0 or target.getAbilityLevel(BUFF_ENSNARE_GROUND) > 0) and caster.getTypeId() != UNIT_DISCO_DUCK and caster.getTypeId() != UNIT_ONE
-        caster.issueImmediateOrder("stop")
-        simError(caster.getOwner(), "Cannot ensnare target with Anti-Magic shield")
         
 function onHuntNet()
     let target = GetSpellTargetUnit()
     let pos = target.getPos()
+    real NET_DURATION = 0.
     if target.isTroll()
-        doPeriodicallyTimed(0.1, 2.5) netCounter ->
-            if not target.isAlive()
-                createItem(ITEM_HUNTING_NET, pos)
-                netCounter.stop()
-    else
-        doPeriodicallyTimed(0.1, 13.0) netCounter ->
-            if not target.isAlive()
-                createItem(ITEM_HUNTING_NET, pos)
-                netCounter.stop()
+        NET_DURATION = HERO_DURATION
+    else 
+        NET_DURATION = NORMAL_DURATION
+    doPeriodicallyTimed(ANIMATION_PERIOD, NET_DURATION) netCounter ->
+        if not target.isAlive()
+            createItem(ITEM_HUNTING_NET, pos)
+            netCounter.stop()
+    
     
 init
-    registerSpellEffectEvent(ABILITY_DUMMY_ID) ->
+    registerSpellEffectEvent(HUNTING_NET_ENSNARE) ->
         preventNet()
         moveTarget()
         onHuntNet()

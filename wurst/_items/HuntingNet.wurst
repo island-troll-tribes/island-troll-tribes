@@ -76,10 +76,7 @@ function onHuntNet()
     let target = GetSpellTargetUnit()
     let pos = target.getPos()
     real NET_DURATION = 0.
-    if target.isTroll()
-        NET_DURATION = HERO_DURATION
-    else 
-        NET_DURATION = NORMAL_DURATION
+    NET_DURATION = (target.isTroll())? HERO_DURATION : NORMAL_DURATION
     doPeriodicallyTimed(ANIMATION_PERIOD, NET_DURATION) netCounter ->
         if not target.isAlive()
             createItem(ITEM_HUNTING_NET, pos)
@@ -87,7 +84,8 @@ function onHuntNet()
     
     
 init
-    registerSpellEffectEvent(HUNTING_NET_ENSNARE) ->
+    registerSpellEffectEvent(HUNTING_NET_ENSNARE) ->// TODO moveTarget and onHuntNet need to be conditional based on preventNet
         preventNet()
         moveTarget()
         onHuntNet()
+

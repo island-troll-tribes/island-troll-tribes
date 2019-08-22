@@ -1,0 +1,40 @@
+package spellbooks
+
+// Standard library imports:
+import ClosureTimers
+import LinkedList
+
+// Third-party imports:
+import InventoryEvent
+
+// Local imports:
+import ItemExtensions
+import UnitExtensions
+
+// Removes and replaces the item in the given slot.
+function resetItem(unit u, int slot)
+    print("Removing item in slot " + slot.toString())
+    u.addItemHandleToSlot(u.removeItemFromSlot(slot), slot)
+
+function onMoved()
+    // Extract the relevant state.
+    let slotFrom = getInventorySlotFrom()
+    let slotTo = getInventorySlotTo()
+    let u = getInventoryManipulatingUnit()
+
+    // Schedule the correction after the inventory movement has finished.
+    nullTimer() ->
+        onMoved(slotFrom, slotTo, u)
+
+function onMoved(int slotFrom, int slotTo, unit u)
+    // Moving an item in place does not lock spellbooks.
+    if slotFrom == slotTo
+        return
+
+    // Reset each item, as necessary.
+    for slot in asList(slotFrom, slotTo)
+        if u.itemInSlot(slot).isSpellbook()
+            resetItem(u, slot)
+
+init
+    registerInventoryEvent(EVENT_ITEM_INVENTORY.MOVE, () -> onMoved())

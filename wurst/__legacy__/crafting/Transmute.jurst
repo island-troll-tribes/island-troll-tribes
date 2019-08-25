@@ -428,11 +428,10 @@ library Transmute initializer onInit requires ID, FilterTypeIsThing, IsTypeThing
                 set i[e] = GetItemTypeId(t[e])
                 set e = e +1
             endloop
-            if i[0] == ITEM_CLAY_BALL and i[1] == ITEM_MANA_CRYSTAL then
+            if i[0] == ITEM_CLAY_BALL and i[1] == ITEM_MAGIC then
                 call RemoveItem(t[0])
-                call RemoveItem(t[1])
                 call UnitAddItemByIdSwapped( ITEM_LIVING_CLAY, GetTriggerUnit() )
-                call itemLower(2)
+                call itemLower(1)
             endif
             if i[0] == ITEM_ANABOLIC_POTION and i[1] == ITEM_MANA_CRYSTAL then
                 call RemoveItem(t[0])
@@ -564,6 +563,15 @@ library Transmute initializer onInit requires ID, FilterTypeIsThing, IsTypeThing
                 call RemoveItem(t[1])
                 call UnitAddItemByIdSwapped( ITEM_BLOW_GUN, GetTriggerUnit() )
                 call itemLower(2)
+            endif
+            if i[0] == ITEM_NETS and i[1] == ITEM_STONE
+                if GetItemCharges(t[0]) > 1 then
+                    call SetItemCharges(t[0], GetItemCharges(t[0]) - 1 )
+                else
+                    call RemoveItem(t[0])
+                endif
+                call RemoveItem(t[1])
+                call UnitAddItemByIdSwapped( ITEM_HUNTING_NET, GetTriggerUnit() )
             endif
             if i[0] == ITEM_POISON and i[1] == ITEM_SPEAR then
                 if GetItemCharges(t[0]) > 1 then

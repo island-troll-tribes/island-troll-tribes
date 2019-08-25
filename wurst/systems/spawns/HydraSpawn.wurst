@@ -1,15 +1,17 @@
 package HydraSpawn
-import RegisterEvents
 import AncientHydra
 import ClosuresForItems
 import ID
+import ClosureEvents
 import LinkedList
+import GameConfig
+import ClosureForGroups
+import Assets
 
-
-constant let hydraAltarSfx = "Units\\NightElf\\Wisp\\WispExplode.mdl"
+constant HYDRA_ALTAR_SFX = Units.wispExplode
 
 function maybeSummonHydra()
-    let altar = GetManipulatingUnit()
+    let altar = GetSellingUnit()
 
     if altar.getTypeId() != UNIT_OMINOUS_ALTAR
         return
@@ -40,29 +42,46 @@ function maybeSummonHydra()
         default
             return
 
-    let meats = new LinkedList<item>()
-    forItemsInMap() itm ->
-        if itm.getTypeId() == ITEM_RAW_MEAT and itm.getPos().distanceToSq(altar.getPos()) <= 600*600
-            meats.push(itm)
 
-    if meats.size() < 4
+    if gameConfig.isOldMeatSystemEnabled()
+        let meats = new LinkedList<unit>()
+        forUnitsInRange(altar.getPos(), 400) (unit u) ->
+            if u.getTypeId() == UNIT_MEAT
+                meats.push(u)
+        if meats.size() < 4
+            destroy meats
+            return
+
+        for meat in meats
+            createItem(ITEM_COOKED_MEAT, meat.getPos())
+            meat.remove()
+
         destroy meats
-        return
 
-    for meat in meats
-        createItem(ITEM_COOKED_MEAT, meat.getPos())
-        meat.remove()
+    else
+        let meats = new LinkedList<item>()
+        forItemsInMap() itm ->
+            if itm.getTypeId() == ITEM_RAW_MEAT and itm.getPos().distanceTo(altar.getPos()) <= 400
+                meats.push(itm)
 
-    destroy meats
+        if meats.size() < 4
+            destroy meats
+            return
+
+        for meat in meats
+            createItem(ITEM_COOKED_MEAT, meat.getPos())
+            meat.remove()
+
+        destroy meats
 
     mushroom.remove()
     riverRoot.remove()
     elkHide.remove()
     herb.remove()
 
-    flashEffect(hydraAltarSfx, altar, "chest")
+    flashEffect(HYDRA_ALTAR_SFX, altar, "overhead")
     new AncientHydra(spawn.getCenter())
 
 
 init
-    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM, function maybeSummonHydra)
+    EventListener.add(EVENT_PLAYER_UNIT_SELL_ITEM, () -> maybeSummonHydra())

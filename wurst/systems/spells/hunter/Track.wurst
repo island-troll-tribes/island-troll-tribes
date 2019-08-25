@@ -8,7 +8,7 @@ import LegacyColors
 import ToolTipsUtils
 import BuffObjEditing
 
-let ICON = "ReplaceableTextures\\CommandButtons\\BTNTrack.blp"
+let ICON = "ReplaceableTextures\\CommandButtons\\ATCTrack.blp"
 
 let BUFF_ID = compiletime(BUFF_ID_GEN.next())
 let BUFF_ORIGINAL_ID = 'Bafe'
@@ -45,6 +45,8 @@ class Track extends AbilityDefinitionFaerieFire
                                          DURATION - (4 - lvl) * DURATION_INCREASE_VALUE, COOLDOWN - lvl * COOLDOWN_DECREASE_VALUE))
         this.setButtonPositionNormalX(buttonPos.a)
         this.setButtonPositionNormalY(buttonPos.b)
+        this.setButtonPositionTurnOffX(buttonPos.a)
+        this.setButtonPositionTurnOffY(buttonPos.b)
         this.setIconNormal(ICON)
         this.setIconTurnOff(ICON)
         this.setIconResearch(ICON)
@@ -59,24 +61,18 @@ class Track extends AbilityDefinitionFaerieFire
         this.setHeroAbility(true)
         this.presetDefenseReduction(lvl -> lvl)
 
-class GreaterTrack extends AbilityDefinitionFaerieFirecreep
+class GreaterTrack extends Track
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
-        super(newAbilityId)
-        this.setHotkeyNormal(hotkey)
-        this.setName(TOOLTIP_NORM)
+        super(newAbilityId, hotkey, buttonPos)
         this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, "Greater "+TOOLTIP_NORM))
         this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED.format("4"))
         this.setButtonPositionNormalX(buttonPos.a)
         this.setButtonPositionNormalY(buttonPos.b)
-        this.setIconNormal(ICON)
-        this.setManaCost(1, MANACOST)
+        this.setButtonPositionTurnOffX(buttonPos.a)
+        this.setButtonPositionTurnOffY(buttonPos.b)
         this.presetCooldown(lvl -> COOLDOWN)
         this.presetDurationHero(lvl -> DURATION)
         this.presetDurationNormal(lvl -> DURATION)
-        this.presetTargetsAllowed(lvl -> TARGET_ALLOWED)
-        this.presetCastRange(lvl -> CAST_RANGE)
-        this.presetBuffs(lvl -> toRawCode(BUFF_ID))
-        this.setCheckDependencies(false)
         this.setHeroAbility(false)
         this.setLevels(1)
         this.presetDefenseReduction(lvl -> ARMOR_REDUCED)

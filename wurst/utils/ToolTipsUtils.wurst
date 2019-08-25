@@ -3,7 +3,9 @@ package ToolTipsUtils
 import LegacyColors
 
 function real.formatForTooltip() returns string
-    if this < 1 and this > 0
+    if this > 1 and this - this.toInt() != 0
+        return this.toString()
+    else if this < 1 and this > 0
         return R2I(this * 100).toString()+"%"
     else
         return this.toInt().toString()
@@ -34,6 +36,10 @@ public function makeToolTipCooldown(real COOLDOWN) returns string
 
 public function makeToolTipDuration(real DURATION, real COOLDOWN) returns string
     let toolTip = " Lasts {0} seconds, has {1} seconds cooldown.".format(DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
+    return toolTip
+
+public function makeToolTipDuration(real DURATION_HERO, real DURATION_NORMAL, real COOLDOWN) returns string
+    let toolTip = " Lasts {0}({1}) seconds, has {2} seconds cooldown.".format(DURATION_HERO.toToolTipLightBlue(), DURATION_NORMAL.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
     return toolTip
 
 public function real.toToolTip() returns string
@@ -74,3 +80,6 @@ public function real.toToolTipPink() returns string
 
 public function real.toToolTipBrown() returns string
     return (COLOR_BROWN + this.formatForTooltip() + "|r")
+
+public function int.formatStat() returns string
+    return (this.toReal().toToolTipGreen())

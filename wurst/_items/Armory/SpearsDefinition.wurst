@@ -29,6 +29,7 @@ constant DESC_PS = DESC_COMMON + " Also poison the target."
 constant TT_PS   = "Hurls a poisoned spear at a target enemy unit, dealing {0} initial damage and {1} damage every " + "{0} seconds. ".format(3..toToolTipLightBlue())+
                    "{2} attack speed and {3} movement decrease. " + "Has {0} chance of being recoverable. ".format(0.50.toToolTipLightBlue()) + "Last {4} seconds."
 
+constant MODEL = "Models\\Spears.mdx"
 
 class Spear extends ItemDefinition
     construct(int id, string icon, string name, string desc, string toolTipExt, real damage, int cost, LinkedList<int> tinting, string abilities)
@@ -41,7 +42,7 @@ class Spear extends ItemDefinition
         this.setTintingColor1Red(tinting.dequeue())
         this.setTintingColor2Green(tinting.dequeue())
         this.setTintingColor3Blue(tinting.dequeue())
-        this.setModelUsed(Doodads.obstacle0)
+        this.setModelUsed(MODEL)
         this.setGoldCost(0)
         this.setLevel(1)
         this.setLumberCost(cost)
@@ -50,6 +51,8 @@ class Spear extends ItemDefinition
         this.setTooltipBasic("Trade for " + name)
         this.setTooltipExtended(toolTipExt.format(damage.toToolTipRed()))
 
+
+
 class PoisonSpear extends Spear
     construct(int id, string icon, string name, real iniDmg, real poisonDmg, real asFactor, real msFactor, int cost, LinkedList<int> tinting, string abilities)
         super(id, icon, name, DESC_PS, TT_PS.format(iniDmg.toToolTipRed(), poisonDmg.toToolTipGreen(), asFactor.toToolTipOrange(),
@@ -57,7 +60,7 @@ class PoisonSpear extends Spear
 
 
 @compiletime function createSpears()
-    new Spear(ITEM_SPEAR       , Icons.bTNSteelRanged       , "Spear"       , DESC_COMMON, TT_COMMON, 40  , 4  , asList(255 , 255 , 255 ), ABIL_SP)
+    //new Spear(ITEM_SPEAR       , Icons.bTNSteelRanged       , "Spear"       , DESC_COMMON, TT_COMMON, 40  , 4  , asList(255 , 255 , 255 ), ABIL_SP)
     new Spear(ITEM_IRON_SPEAR  , Icons.bTNStrengthOfTheMoon , "Iron Spear"  , DESC_COMMON, TT_COMMON, 70  , 11 , asList(200 , 200 , 200 ), ABIL_IS)
     new Spear(ITEM_STEEL_SPEAR , Icons.bTNThoriumRanged     , "Steel Spear" , DESC_COMMON, TT_COMMON, 100 , 23 , asList(150 , 150 , 150 ), ABIL_SS)
     new Spear(ITEM_DARK_SPEAR  , Icons.bTNArcaniteRanged    , "Dark Spear"  , DESC_DS    , TT_DS    , 40  , 20 , asList(0   , 0   , 0   ), ABIL_DS)

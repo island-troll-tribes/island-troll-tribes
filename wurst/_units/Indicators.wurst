@@ -1,0 +1,48 @@
+package Indicators
+
+// Standard-library imports:
+import HashMap
+
+// Local imports:
+import Game
+import ID
+
+// A mapping of IDs from indicator units to actual units.
+// Indicator IDs should not be referenced anywhere else.
+let mapping = new IterableMap<int, int>()
+    ..put('d001', UNIT_HIDDEN_STASH)
+    ..put('d100', UNIT_ATHELAS_BUSH)
+    ..put('d101', UNIT_BLUE_HERB_BUSH)
+    ..put('d102', UNIT_MUSHROOM_COLONY)
+    ..put('d103', UNIT_ORANGE_HERB_BUSH)
+    ..put('d104', UNIT_PURPLE_HERB_BUSH)
+    ..put('d105', UNIT_SCOUTS_BUSH)
+    ..put('d106', UNIT_THIEFS_BUSH)
+    ..put('d107', UNIT_THISTLE_SHRUB)
+    ..put('d108', UNIT_WATER_HERB_BUSH)
+    ..put('d109', UNIT_YELLOW_HERB_BUSH)
+    ..put('d110', UNIT_MASTER_CASTER)
+    ..put('d111', UNIT_OMINOUS_ALTAR)
+    ..put('d112', UNIT_BONFIRE)
+    ..put('d113', UNIT_TROLL_MERCHANT)
+    ..put('d114', UNIT_ALIGATOR_MAN)
+    ..put('d115', UNIT_ELDER_PANTHER)
+    ..put('d116', UNIT_MAMMOTH)
+
+init
+    mapping.forEach() (integer source, integer target) ->
+        ENUM_GROUP.enumUnitsOfType(source, null)
+        // GroupEnumUnitsOfType(ENUM_GROUP, UnitId2String(source), null)
+        print("Key: " + source.toString() + " String: " + UnitId2String(source) + " Num matches: " + ENUM_GROUP.size().toString())
+
+        for indicator in ENUM_GROUP
+            // Extract the relevant information from the indicator.
+            let owner = indicator.getOwner()
+            let pos   = indicator.getPos()
+            let angle = indicator.getFacingAngle()
+
+            // Remove the indicator once it is no longer needed.
+            indicator.remove()
+
+            // Create the actual unit.
+            createUnit(owner, target, pos, angle)

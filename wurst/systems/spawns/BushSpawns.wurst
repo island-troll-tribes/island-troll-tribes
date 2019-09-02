@@ -3,8 +3,8 @@ import HashMap
 import ItemPoolExtensions
 import ClosureTimers
 import ID
-import LegacyTriggers
 import UnitExtensions
+import Indicators
 
 let bushes = CreateGroup()
 let BUSH_SPAWN_PERIOD = 0.1
@@ -36,6 +36,7 @@ function addItemToBush(unit bush)
             herb.remove()
 
 public function addItemsToBushes()
+    print("# bushes: " + bushes.size().toString())
     let iter = bushes.iterator()
     doPeriodicallyCounted(BUSH_SPAWN_PERIOD, bushes.size()) cb ->
         addItemToBush(iter.next())
@@ -43,15 +44,6 @@ public function addItemsToBushes()
             iter.close()
 
 init
-    GroupEnumUnitsInRect(bushes, GetWorldBounds(), Filter(() -> begin
-        let filter = GetFilterUnit()
-        return filter.isType(UNIT_TYPE_ANCIENT) and filter.isType(UNIT_TYPE_STRUCTURE)
-    end))
-
-    for bush in bushes
-        if bush.getOwner().getId() == PLAYER_NEUTRAL_AGGRESSIVE
-            bush.setOwner(players[PLAYER_NEUTRAL_PASSIVE], true)
-
     new BushPool(UNIT_THIEFS_BUSH)
     ..addItem(ITEM_NETS, 15)
     ..addItem(ITEM_MANA_CRYSTAL, 15)
@@ -97,3 +89,7 @@ init
     new BushPool(UNIT_WATER_HERB_BUSH)
     ..addItem(ITEM_RIVER_ROOT, 2)
     ..addItem(ITEM_RIVER_STEM, 3)
+
+    GroupEnumUnitsInRect(bushes, GetWorldBounds(), Filter(() -> begin
+        return BushPool.map.has(GetFilterUnit().getTypeId())
+    end))

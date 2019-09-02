@@ -4,7 +4,6 @@ package PingHerbs
 import ClosureTimers
 import ForceExtensions
 import HashMap
-import RegisterEvents
 import SimError
 
 // Local imports:
@@ -15,13 +14,13 @@ import PlayerExtensions
 import StringExtensions
 
 // The duration for the help message.
-constant MSG_DURATION = 10.
+public constant MSG_DURATION = 10.
 
 // The duration for the minimap pings.
-constant PING_DURATION = 4.
+public constant PING_DURATION = 4.
 
 // The maximum number of pings allowed on the minimap at once.
-constant MAX_PINGS = 16.
+public constant MAX_PINGS = 16.
 
 public class Pingable
     integer id
@@ -31,14 +30,12 @@ public class Pingable
         this.id = _id
         this.itsColor = _itsColor
 
-Pingable pinger
-
 let pingers = new IterableMap<string, Pingable>()
     ..put("purple",   new Pingable(UNIT_PURPLE_HERB_BUSH, color(255,   0, 255)))
     ..put("blue",     new Pingable(UNIT_BLUE_HERB_BUSH,   color(  0,   0, 255)))
     ..put("orange",   new Pingable(UNIT_ORANGE_HERB_BUSH, color(255, 155,   0)))
     ..put("yellow",   new Pingable(UNIT_YELLOW_HERB_BUSH, color(255, 255,   0)))
-    ..put("athelas",    new Pingable(UNIT_ATHELAS_BUSH,    color(255, 255, 255)))
+    ..put("athelas",  new Pingable(UNIT_ATHELAS_BUSH,     color(255, 255, 255)))
     ..put("mushroom", new Pingable(UNIT_MUSHROOM_COLONY,  color(165,  42,  42)))
     ..put("thistle",  new Pingable(UNIT_THISTLE_SHRUB,    color(100, 100, 100)))
     ..put("thief",    new Pingable(UNIT_THIEFS_BUSH,      color(153,  50, 204)))
@@ -51,17 +48,15 @@ init
     registerCommandAll("ping") (triggerPlayer, args) ->
         let query = args.get(1)
         if query == ""
-            printTimedToPlayer("Usage: '-ping type' where type is one of:".color(GENERAL_COLOR), 10, triggerPlayer)
+            printTimedToPlayer("Usage: '-ping type' where type is one of:".color(GENERAL_COLOR), MSG_DURATION, triggerPlayer)
             for iter in pingers
                 let msg = DASH + iter.toLowerCase().color(pingers.get(iter).itsColor)
                 printTimedToPlayer(msg, MSG_DURATION, triggerPlayer)
         else if pingers.has(query)
-            pinger = pingers.get(query)
+            // Look up units that match the given query.
+            let pinger = pingers.get(query)
             let units = CreateGroup()
-                ..enumUnitsInRect(
-                    GetWorldBounds(),
-                    Filter(() -> pinger.id == GetFilterUnit().getTypeId())
-                )
+                ..enumUnitsOfType(pinger.id, null)
 
             // Ping matches over time to avoid cancelling previous pings.
             doPeriodically(PING_DURATION / MAX_PINGS) cb ->
@@ -71,5 +66,6 @@ init
                         target.getPos(), PING_DURATION, bj_MINIMAPPINGSTYLE_SIMPLE, pinger.itsColor)
                 else
                     units.close()
+                    destroy cb
         else
             simError(triggerPlayer, "Cannot ping {0}".format(query))

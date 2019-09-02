@@ -4,7 +4,6 @@ package Indicators
 import HashMap
 
 // Local imports:
-import Game
 import ID
 
 // A mapping of IDs from indicator units to actual units.
@@ -30,11 +29,12 @@ let mapping = new IterableMap<int, int>()
     ..put('d116', UNIT_MAMMOTH)
 
 init
+    // Replace indicators one type at a time.
     mapping.forEach() (integer source, integer target) ->
+        // Find all matching indicators for the current type.
         ENUM_GROUP.enumUnitsOfType(source, null)
-        // GroupEnumUnitsOfType(ENUM_GROUP, UnitId2String(source), null)
-        print("Key: " + source.toString() + " String: " + UnitId2String(source) + " Num matches: " + ENUM_GROUP.size().toString())
 
+        // Replace each indicator with the corresponding unit.
         for indicator in ENUM_GROUP
             // Extract the relevant information from the indicator.
             let owner = indicator.getOwner()

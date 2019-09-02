@@ -1,9 +1,13 @@
 package BushSpawns
+
+// Standard library imports:
 import HashMap
-import ItemPoolExtensions
 import ClosureTimers
+
+// Local imports:
+import GameMode
 import ID
-import LegacyTriggers
+import ItemPoolExtensions
 import UnitExtensions
 
 let bushes = CreateGroup()
@@ -43,15 +47,6 @@ public function addItemsToBushes()
             iter.close()
 
 init
-    GroupEnumUnitsInRect(bushes, GetWorldBounds(), Filter(() -> begin
-        let filter = GetFilterUnit()
-        return filter.isType(UNIT_TYPE_ANCIENT) and filter.isType(UNIT_TYPE_STRUCTURE)
-    end))
-
-    for bush in bushes
-        if bush.getOwner().getId() == PLAYER_NEUTRAL_AGGRESSIVE
-            bush.setOwner(players[PLAYER_NEUTRAL_PASSIVE], true)
-
     new BushPool(UNIT_THIEFS_BUSH)
     ..addItem(ITEM_NETS, 15)
     ..addItem(ITEM_MANA_CRYSTAL, 15)
@@ -97,3 +92,9 @@ init
     new BushPool(UNIT_WATER_HERB_BUSH)
     ..addItem(ITEM_RIVER_ROOT, 2)
     ..addItem(ITEM_RIVER_STEM, 3)
+
+    // Schedule this later because it requires replacing indicators first.
+    GameMode.onModeSelectionFinish() ->
+        GroupEnumUnitsInRect(bushes, GetWorldBounds(), Filter(() -> begin
+            return BushPool.map.has(GetFilterUnit().getTypeId())
+        end))

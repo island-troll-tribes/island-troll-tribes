@@ -1,10 +1,14 @@
 package BushSpawns
+
+// Standard library imports:
 import HashMap
-import ItemPoolExtensions
 import ClosureTimers
+
+// Local imports:
+import GameMode
 import ID
+import ItemPoolExtensions
 import UnitExtensions
-import Indicators
 
 let bushes = CreateGroup()
 let BUSH_SPAWN_PERIOD = 0.1
@@ -89,6 +93,8 @@ init
     ..addItem(ITEM_RIVER_ROOT, 2)
     ..addItem(ITEM_RIVER_STEM, 3)
 
-    GroupEnumUnitsInRect(bushes, GetWorldBounds(), Filter(() -> begin
-        return BushPool.map.has(GetFilterUnit().getTypeId())
-    end))
+    // Schedule this later because it requires replacing indicators first.
+    GameMode.onModeSelectionFinish() ->
+        GroupEnumUnitsInRect(bushes, GetWorldBounds(), Filter(() -> begin
+            return BushPool.map.has(GetFilterUnit().getTypeId())
+        end))

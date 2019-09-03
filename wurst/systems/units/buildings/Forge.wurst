@@ -1,0 +1,35 @@
+package Forge
+
+import Building
+import DropItems
+import ID
+import UnitObjEditing
+
+public class Forge extends Building
+    private static let unitTypeId = UNIT_FORGE
+    
+    static function initialize()
+        register(unitTypeId, building -> new Forge(building))
+    
+    construct(unit whichUnit)
+        super(whichUnit)
+
+    override function getTypeId() returns int
+        return unitTypeId
+
+    override function postCreate()
+        super.postCreate()
+
+        getUnit().addAbility(SPELL_QM_IRON_INGOT)
+        getUnit().addAbility(SPELL_QM_STEEL_INGOT)
+
+
+@compiletime function createPlayerBuildings()
+    new BuildingDefinition(UNIT_FORGE, 'rst1')
+    ..setNormalAbilities("A044")
+    ..setNormalAbilities("Aall")
+    ..setModelFile("imports\\model\\Forge.mdx")
+
+
+init
+    Forge.initialize()

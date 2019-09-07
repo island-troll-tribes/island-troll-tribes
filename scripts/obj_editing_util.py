@@ -1,4 +1,4 @@
-#!python3.6
+#!/usr/bin/python3.6
 from itertools import filterfalse
 
 def S2I(id):

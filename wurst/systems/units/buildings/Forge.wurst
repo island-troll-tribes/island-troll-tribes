@@ -1,9 +1,25 @@
 package Forge
 
 import Building
-import DropItems
 import ID
 import UnitObjEditing
+import ObjectIds
+import DropItems
+
+constant MODEL       = "Models\\Forge.mdx"
+let NAME             = "Forge"
+let NORMAL_ABILITIES = commaList("A044", "Aall")   //Normal abilities (Inventory(building) and Shop Sharing allied bldg)
+let BASE_ID          = 'hhou'                      //Human Farm building ID
+let BUILD_TIME       = 25
+let MAX_HP           = 260
+let VISION_DAY       = 1600
+let VISION_NIGHT     = 1000
+let TOOLTIP_EXT      = "A building used to make ingots from stone and flint"
+let TOOLTIP_BASIC    = "A Forge to make ingots"
+let SCALING_VALUE    = .75
+let COLLISION_SIZE   = 72.
+let SELECTION_SCALE  = 2.5
+let BASE_DEFENSE     = 5
 
 public class Forge extends Building
     private static let unitTypeId = UNIT_FORGE
@@ -22,14 +38,38 @@ public class Forge extends Building
 
         getUnit().addAbility(SPELL_QM_IRON_INGOT)
         getUnit().addAbility(SPELL_QM_STEEL_INGOT)
+        getUnit().addAbility(SPELL_QM_IRON_AXE)
+        getUnit().addAbility(SPELL_QM_STEEL_AXE)
+        getUnit().addAbility(SPELL_DROP_ITEMS)
+        getUnit().addAbility(SPELL_ARMOR_SPELLBOOK_ID)
+        getUnit().addAbility(SPELL_QM_SPEAR)
+        getUnit().addAbility(SPELL_QM_IRON_SPEAR)
+        getUnit().addAbility(SPELL_QM_STEEL_SPEAR)
+        getUnit().addAbility(SPELL_QM_DARK_SPEAR)
+        getUnit().addAbility(SPELL_QM_MAGE_MASHER)
+        getUnit().addAbility(SPELL_FORGE_SPELLBOOK_ID)
 
 
 @compiletime function createPlayerBuildings()
-    new BuildingDefinition(UNIT_FORGE, 'rst1')
-    ..setNormalAbilities("A044")
-    ..setNormalAbilities("Aall")
-    ..setModelFile("imports\\model\\Forge.mdx")
-
+    new BuildingDefinition(UNIT_FORGE, BASE_ID)
+    ..setNormalAbilities(NORMAL_ABILITIES)
+    ..setModelFile(MODEL)
+    ..setCanDropItemsOnDeath(true)
+    ..setBuildTime(BUILD_TIME)
+    ..setHitPointsMaximumBase(MAX_HP)
+    ..setIsaBuilding(true)
+    ..setSightRadiusDay(VISION_DAY)
+    ..setSightRadiusNight(VISION_NIGHT)
+    ..setName(NAME)
+    ..setTooltipExtended(TOOLTIP_EXT)
+    ..setTooltipBasic(TOOLTIP_BASIC)
+    ..setScalingValue(SCALING_VALUE)
+    ..setCollisionSize(COLLISION_SIZE)
+    ..setSelectionScale(SELECTION_SCALE)
+    ..setDefenseBase(BASE_DEFENSE)
+    ..setPathingMap("PathTextures\\4x4SimpleSolid.tga")
+    ..setFoodProduced(0)
+    ..setUnitSoundSet("WarMill")
 
 init
     Forge.initialize()

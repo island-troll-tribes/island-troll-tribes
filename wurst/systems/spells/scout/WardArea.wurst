@@ -62,17 +62,17 @@ class SpyWardAreaSpell extends WardAreaSpell
 
 function onCast()
     let caster = GetSpellAbilityUnit()
-    var wardNbr = 3
-
-    if GetSpellAbilityId() == SPELL_WARD_AREA
-        wardNbr = caster.getAbilityLevel(SPELL_WARD_AREA)
+    var wardNbr = GetSpellAbilityId() == SPELL_WARD_AREA
+        ? caster.getAbilityLevel(SPELL_WARD_AREA)
+        : 3
 
     for i = wardNbr downto 0
         var pos = caster.getPos()
         pos.x += GetRandomReal(-500, 500)
         pos.y += GetRandomReal(-500, 500)
-        createUnit(caster.getOwner(), UNIT_LIVING_CLAY, pos, (270.0).asAngleDegrees())..setTimedLife(240. + 120 * wardNbr)..setAnimation("birth")
-//        UnitApplyTimedLife(ward, 'Bhwd', 240. + 120 * wardNbr) // Bhwd -> healing ward buff
+        createUnit(caster.getOwner(), UNIT_LIVING_CLAY, pos, (270.0).asAngleDegrees())
+            ..setTimedLife(240. + 120 * wardNbr)
+            ..setAnimation("birth")
 
 init
     registerSpellEffectEvent(SPELL_WARD_AREA, () -> onCast())

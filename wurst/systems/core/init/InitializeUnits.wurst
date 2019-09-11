@@ -3,6 +3,7 @@ import ClosureForGroups
 import ID
 import RecipeBooks
 import TheOneHut
+import UnitExtensions
 
 public destructable MAMMOTH_GATE
 public unit MAMMOTH = null
@@ -13,7 +14,7 @@ init
     EnumDestructablesInRect(GetWorldBounds(), null) ->
         let d = GetEnumDestructable()
         if d.getTypeId() == 'ZTg4'
-            MAMMOTH_GATE = d
+            MAMMOTH_GATE = d..setInvulnerable(true)
 
     forUnitsAll() u ->
         if u.getTypeId() == UNIT_MAMMOTH
@@ -21,7 +22,7 @@ init
         if u.getTypeId() == UNIT_CRAFT_MASTER
             MASTER_CRAFTER = u
         if u.getTypeId() == UNIT_OMINOUS_ALTAR
-            OMINOUS_ALTAR = u
+            OMINOUS_ALTAR = u..addItemToStock(ITEM_HYDRA_HINT, 1, 1)
 
     createUnit(players[PLAYER_NEUTRAL_PASSIVE], UNIT_ARMORY_RECIPE_HOLDER            , vec2(2300.0, -10780.0), (270.0).asAngleDegrees())
     createUnit(players[PLAYER_NEUTRAL_PASSIVE], UNIT_WORKSHOP_RECIPE_HOLDER          , vec2(2000.0, -10780.0), (270.0).asAngleDegrees())

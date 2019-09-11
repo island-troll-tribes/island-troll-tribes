@@ -1,0 +1,22 @@
+package PetDeath
+
+// Standard library imports:
+import ClosureTimers
+import RegisterEvents
+import EventHelper
+
+// Local imports:
+import LegacyColors
+import PetAbilities
+import Pets
+
+
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
+        if EventData.getDyingUnit().isPet()
+            let owner = EventData.getDyingUnit().getOwner()
+            if localPlayer.isAllyOf(owner)
+                print(GENERAL_COLOR + "A pet has died!")
+
+            nullTimer() ->
+                setPetAbilities(owner, false)

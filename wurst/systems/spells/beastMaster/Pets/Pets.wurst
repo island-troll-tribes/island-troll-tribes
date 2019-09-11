@@ -1,0 +1,85 @@
+package Pets
+
+// Standard library imports:
+import HashMap
+import LinkedList
+
+// Local imports:
+import ID
+
+let growthChains = new LinkedList<LinkedList<int>>()
+    ..push(asList(
+        UNIT_FAWN,
+        UNIT_ELK_ADOLESCENT,
+        UNIT_ADULT_ELK
+    ))
+    ..push(asList(
+        UNIT_WOLF_PUP,
+        UNIT_JUNGLE_WOLF,
+        UNIT_ADULT_ELK
+    ))
+    ..push(asList(
+        UNIT_FAWN,
+        UNIT_ELK_ADOLESCENT,
+        UNIT_ADULT_JUNGLE_WOLF
+    ))
+    ..push(asList(
+        UNIT_HAWK_HATCHLING,
+        UNIT_HAWK_ADOLESCENT,
+        UNIT_ALPHA_HAWK
+    ))
+    ..push(asList(
+        UNIT_FOREST_DRAGON_HATCHLING,
+        UNIT_FOREST_DRAGON,
+        UNIT_GREATER_FOREST_DRAGON
+    ))
+    ..push(asList(
+        UNIT_RED_DRAGON_HATCHLING,
+        UNIT_RED_DRAGON,
+        UNIT_GREATER_RED_DRAGON
+    ))
+    ..push(asList(
+        UNIT_BRONZE_DRAGON_HATCHLING,
+        UNIT_BRONZE_DRAGON,
+        UNIT_GREATER_BRONZE_DRAGON
+    ))
+    ..push(asList(
+        UNIT_NETHER_DRAGON_HATCHLING,
+        UNIT_NETHER_DRAGON,
+        UNIT_GREATER_NETHER_DRAGON
+    ))
+
+let emptyChain = new LinkedList<int>()
+
+let pets = new IterableMap<player, unit>()
+
+public function unit.getPetGrowthChain() returns LinkedList<int>
+    // Iterate over the chains until a match is found.
+    for chain in growthChains
+        if chain.has(this.getTypeId())
+            return chain
+
+    // Return an empty chain if the unit is not a pet.
+    return emptyChain
+
+public function player.getPet() returns unit
+    return pets.get(this)
+
+public function player.addPet(unit pet)
+    pets.put(this, pet)
+
+public function player.removePet()
+    pets.getAndRemove(this)
+
+// A unit is a pet if it belongs to a growth chain.
+public function unit.isPet() returns bool
+    return this.getPetGrowthChain().size() > 0
+
+public function group.enumPets()
+    // Ensure that the group is empty.
+    this.clear()
+
+    // Enumerate over the pets for all players.
+    pets.forEach() (player key, unit value) ->
+        if value != null
+            this.addUnit(value)

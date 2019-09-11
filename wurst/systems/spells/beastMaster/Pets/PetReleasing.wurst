@@ -1,0 +1,35 @@
+package PetReleasing
+
+// Standard library imports:
+import ClosureEvents
+
+// Local imports:
+import ID
+import PetAbilities
+import Pets
+
+public function releasePet(unit caster)
+    // Look up the pet.
+    let pet = caster.getOwner().getPet()
+
+    // Deregister the pet.
+    caster.getOwner().removePet()
+
+    // Revert the available abilities.
+    setPetAbilities(caster.getOwner(), false)
+
+    // Compute the new owner.
+    let owner =  pet.getPetGrowthChain().indexOf(pet.getTypeId()) == 0
+        ? PLAYER_NEUTRAL_PASSIVE
+        : PLAYER_NEUTRAL_AGGRESSIVE
+
+    // Transfer the ownership of the pet.
+    pet.setOwner(Player(owner), true)
+
+    // Notify the owning tribe.
+    if localPlayer.isAllyOf(caster.getOwner())
+        print("A pet was released!")
+
+init
+    EventListener.onCast(SPELL_PET_RELEASE) (unit caster) ->
+        releasePet(caster)

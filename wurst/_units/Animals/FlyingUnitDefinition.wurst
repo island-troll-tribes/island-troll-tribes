@@ -1,17 +1,32 @@
 package FlyingUnitDefinition
 
-import UnitObjEditing
-import ID
+// Standard library imports:
 import Assets
+import UnitObjEditing
+import ObjectIds
+import LinkedList
 
-constant HAWK_ABIL = "Awan,AInv,ANtr" // Wander, inventory, true sight neutral
-constant HAWK_HATCHLING_ABIL = "S00E,A03T,A03V,A03W,A03U,A03S" // Dark Hatch transmute, owl gathering radius, owl health, owl inventory, owl movement radius, owl speed
-constant TAMED_HAWK_ABIL = "S00F,A03T,A03V,A03W,A03U,A03S" // Dark Mid transmute, owl gathering radius, owl health, owl inventory, owl movement radius, owl speed // Dark Hatch transmute, owl gathering radius, owl health, owl inventory, owl movement radius, owl speed
-constant ALPHA_HAWK_ABIL = "S00G,A03T,A03V,A03W,A03U,A03S" // Dark High transmute, owl gathering radius, owl health, owl inventory, owl movement radius, owl speed
+// Local imports:
+import ID
 
-constant NETHER_HATCHING_ABIL = "A03T,A03V,A03W,A03U,A03S" // owl gathering radius, owl health, owl inventory, owl movement radius, owl speed
-constant NETHER_DRAKE_ABIL = "A05R,A03T,A03V,A03W,A03U,A03S" // Tele gather (hawk), owl gathering radius, owl health, owl inventory, owl movement radius, owl speed
-constant GREATER_NETHER_DRAKE_ABIL = "A05R,A03T,A03V,A03W,A03U,A03S" // Tele gather (hawk), owl gathering radius, owl health, owl inventory, owl movement radius, owl speed
+// The abilities for a standard hawk.
+constant HAWK_ABIL = commaList(
+    AbilityIds.wander,
+    AbilityIds.inventory,
+    AbilityIds.trueSight1
+)
+
+// The abilities for a tamed hawk, which may be incremented during growth.
+public let hawkAbilities = asList(
+    'A03T',  // Gathering Radius
+    'A03V',  // Health
+    'A03W',  // Inventory
+    'A03U',  // Movement Radius
+    'A03S'   // Movement Speed
+)
+
+// TODO: Use commaList for lists.
+constant TAMED_HAWK_ABIL = hawkAbilities.joinBy((int i) -> i.toRawCode(), ",")
 
 class HawkDefinition extends UnitDefinition
     construct(int unitId)
@@ -36,7 +51,7 @@ class HawkDefinition extends UnitDefinition
 class HawkHatchlingDefinition extends TamedHawkDefinition
     construct(int unitId)
         super(unitId)
-        this.setNormalAbilities(HAWK_HATCHLING_ABIL)
+        this.setNormalAbilities(TAMED_HAWK_ABIL)
         this.setScalingValue(0.5)
         this.setMovementHeightMinimum(400)
         this.setSpeedBase(300)
@@ -75,7 +90,7 @@ class BronzeDragonHatchlingDefinition extends HawkHatchlingDefinition
 class NetherDragonHatchlingDefinition extends HawkHatchlingDefinition
     construct(int unitId)
         super(unitId)
-        this.setNormalAbilities(NETHER_HATCHING_ABIL)
+        this.setNormalAbilities(TAMED_HAWK_ABIL)
         this.setName("Nether Dragon Hatchling")
         this.setModelFile(Units.netherDragon)
         this.setIconGameInterface(Icons.bTNNetherDragon)
@@ -122,7 +137,7 @@ class BronzeDragonDefinition extends TamedHawkDefinition
 class NetherDragonDefinition extends TamedHawkDefinition
     construct(int unitId)
         super(unitId)
-        this.setNormalAbilities(NETHER_DRAKE_ABIL)
+        this.setNormalAbilities(TAMED_HAWK_ABIL)
         this.setModelFile(Units.netherDragon)
         this.setIconGameInterface(Icons.bTNNetherDragon)
         this.setName("Tamed Nether Dragon")
@@ -134,7 +149,7 @@ class NetherDragonDefinition extends TamedHawkDefinition
 class AlphaHawkDefinition extends TamedHawkDefinition
     construct(int unitId)
         super(unitId)
-        this.setNormalAbilities(ALPHA_HAWK_ABIL)
+        this.setNormalAbilities(TAMED_HAWK_ABIL)
         this.setName("Alpha Hawk")
         this.setLevel(15)
         this.setSpeedBase(220)
@@ -169,7 +184,7 @@ class GreaterBronzeDragonDefinition extends GreaterForestDragonDefinition
 class GreaterNetherDragonDefinition extends GreaterForestDragonDefinition
     construct(int unitId)
         super(unitId)
-        this.setNormalAbilities(GREATER_NETHER_DRAKE_ABIL)
+        this.setNormalAbilities(TAMED_HAWK_ABIL)
         this.setModelFile(Units.netherDragon)
         this.setIconGameInterface(Icons.bTNBronzeDragon)
         this.setName("Greater Nether Dragon")

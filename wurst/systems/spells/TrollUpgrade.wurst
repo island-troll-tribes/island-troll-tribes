@@ -1,11 +1,14 @@
-package NewTrollUpgrade
+package TrollUpgrade
 
-import ID
+// Standard library imports:
 import HashMap
 import RegisterEvents
-import LegacyTriggers
+
+// Local imports:
+import ID
 import MeatSystem
-import ReleasePet
+import Pets
+import PetReleasing
 
 public constant trollUpgradeMap = new HashMap<int, int>()
 ..put(SPELL_WARRIOR         , UNIT_WARRIOR)
@@ -31,23 +34,29 @@ public constant trollUpgradeMap = new HashMap<int, int>()
 ..put(SPELL_HERB_MASTER     , UNIT_HERB_MASTER)
 ..put(SPELL_OMNIGATHERER    , UNIT_OMNIGATHERER)
 
-function replaceUnit(int newUnitId, unit oldUnit) returns unit
+public function replaceUnit(int newUnitId, unit oldUnit) returns unit
+    return replaceUnit(newUnitId, oldUnit, true)
+
+public function replaceUnit(int newUnitId, unit oldUnit, bool remove) returns unit
     let owner = GetOwningPlayer(oldUnit)
     let pos = oldUnit.getPos()
     let angle = oldUnit.getFacingAngle()
 
     ShowUnit(oldUnit, false)
     let newUnit = createUnit(owner, newUnitId, pos, angle)
-    newUnit.setMana(oldUnit.getMana())
-    newUnit.setHP(oldUnit.getHP())
+    newUnit.setHP(newUnit.getMaxHP()     * oldUnit.getHP()   / oldUnit.getMaxHP()  )
+    if oldUnit.getMana() > 0
+        newUnit.setMana(newUnit.getMaxMana() * oldUnit.getMana() / oldUnit.getMaxMana())
 
-    //Transfer raw meat inventory
+    // Transfer raw meat inventory, if necessary.
     if meatInventoryInstances.has(oldUnit)
         meatInventoryInstances.get(oldUnit).transferMeatInventoryToUnit(newUnit)
 
     for items in oldUnit.inventory()
         UnitAddItem(newUnit, items)
-    RemoveUnit(oldUnit)
+
+    if remove
+        RemoveUnit(oldUnit)
     return newUnit
 
 function upgradeUnit(int newUnitId, unit oldUnit)
@@ -66,19 +75,10 @@ function upgradeUnit(int newUnitId, unit oldUnit)
     GroupAddUnit(udg_trolls, newUnit)
     udg_PUnits[GetPlayerId(owner)] = newUnit
 
+    // Release the pet, if necessary.
     if newUnitId == UNIT_CHICKEN_FORM or newUnitId == UNIT_SHAPESHIFTER_WOLF
-        udg_parameterUnit = newUnit
-        TriggerExecute(gg_trg_Release_Pets)
-        SetPlayerTechResearched(owner, 'Roch', 1)
-    else if newUnitId == UNIT_TRUE_FORM or newUnitId == UNIT_ULTIMATE_FORM
-        udg_parameterUnit = newUnit
-        TriggerExecute(gg_trg_Rest_BM_SKills)
-        SetPlayerTechResearched(owner, 'Roch', 1)
-
-
-    // "Preserve or release BM pet When subbing" -> no such thing in the current state
-    // of the game so I didn't recode it
-    // Edit : Nevermind, pet doesn't get realese, ended up with 4 wolfs (2 bm 2 wolf pet) in a game :o
+        if owner.getPet() != null
+            releasePet(newUnit)
 
     //Avoid desync with localplayer check
     if GetLocalPlayer() == owner

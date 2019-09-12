@@ -1,26 +1,36 @@
 package NewSniff
 
+// Standard library imports:
 import ChannelAbilityPreset
-import ID
+import ClosureEvents
+import ClosureTimers
+import InstantDummyCaster
+import OrderIds
+import SimError
+
+// Third-party imports:
+import HashMap
 import Lodash
-import Assets
+
+// Local imports:
+import ForceExtensions
+import ID
 import ToolTipsUtils
-import BuffObjEditing
-import ObjectIds
-import RegisterEvents
+import PlayerExtensions
+import UnitExtensions
 
 let ICON = "ReplaceableTextures\\CommandButtons\\BTNPoisonousSmell.blp"
 
 let CAST_RANGE = 0
 let COOLDOWN = 3.
 let MANACOST = 1
-let DURATION = 0.
+let DURATION = 15.
+let EFFECT_DURATION = 5.
 let AOE = 40.
 let TOOLTIP_NORM = "Sniff"
-let TOOLTIP_EXTENDED = "Using hid penguin-like sense of smell, the tracker can sniff a hide or bone. "+
+let TOOLTIP_EXTENDED = "Using his supreme sense of smell, the tracker can sniff a hide or bone. "+
                         "If the animal was killed recently, the tracker will pickup the scent of whoever killed it"+
                         ". He can also sniff items dropped by enemies.".format(DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
-let TARGET_ALLOWED = "item"
 
 class Sniff extends ChannelAbilityPreset
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
@@ -29,8 +39,8 @@ class Sniff extends ChannelAbilityPreset
         this.presetCooldown(lvl -> COOLDOWN)
         this.setHeroAbility(false)
         this.setItemAbility(false)
-        this.presetTargetTypes(Targettype.POINT)
-        this.presetTargetsAllowed(lvl -> TARGET_ALLOWED)
+        this.presetTargetTypes(Targettype.UNIT)
+        this.presetTargetsAllowed(lvl -> TargetsAllowed.item_t)
         this.setHotkeyNormal(hotkey)
         this.setName(TOOLTIP_NORM)
         this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM))
@@ -55,9 +65,89 @@ class Sniff extends ChannelAbilityPreset
 @compiletime function createSniff()
     new Sniff(SPELL_SNIFF, "W", new Pair(1, 0))
 
-//function onCast()
-// Work In Progress
+
+// A mapping from item to the most recent manipulating unit and the current count.
+let items = new HashMap<item, Pair<unit, int>>()
+
+function onCast(unit caster, item target)
+    print("Caster: " + caster.getName())
+    print("Target: " + target.getName())
+    // Look up the most recent manipulating unit.
+    let state = items.get(target)
+
+    // Exit if the item was not manipulated recent.
+    if state == null
+        simError(caster.getOwner(), "Could not pick up a scent.")
+        return
+
+    // Exit if the manipulator is dead and cannot be pinged.
+    if not state.a.isAlive()
+        simError(caster.getOwner(), "The quarry is no longer alive.")
+        return
+
+    print("Found quarry: " + state.a.getName())
+    // Ping the manipulator.
+    caster.getOwner().getAllies().pingUnitsForForce(
+        state.a.getPos(),
+        EFFECT_DURATION,
+        bj_MINIMAPPINGSTYLE_SIMPLE,
+        state.a.isAllyOf(caster.getOwner())
+            ? "green".toColor()
+            : "red"  .toColor()
+    )
+
+    // Track an enemy.
+    if not state.a.isAllyOf(caster.getOwner())
+        InstantDummyCaster.castTarget(
+            caster.getOwner(),
+            SPELL_TRACKER_TRACK,
+            1,
+            OrderIds.faeriefire,
+            state.a
+        )
+
+function onManipulation(unit caster, item target)
+    // Ignore irrelevant manipulators, such as bushes.
+    if caster.getOwner() == Player(PLAYER_NEUTRAL_PASSIVE)
+        return
+
+    print("Caster: " + caster.getName())
+    print("Target: " + target.getName())
+
+    // Lookup the current state for the item.
+    let state = items.has(target)
+        ? items.get(target)
+        : new Pair(caster, 1)
+
+    // Supply a new state, as necessary.
+    if items.has(target)
+        items.put(target, state)
+    // Otherwise update the existing state.
+    else
+        state.a = caster
+        state.b += 1
+
+    // Remove the value later.
+    doAfter(DURATION) ->
+        print("Removing reference for " + target.getName())
+        // Decrement the reference counter.
+        state.b -= 1
+
+        // Remove the state if it no longer has references.
+        if state.b == 0
+            items.remove(target)
+
 
 
 init
-    //registerSpellEffectEvent(SPELL_SNIFF, () -> onCast())
+    EventListener.onCast(SPELL_SNIFF) (unit caster) ->
+        print("Cast spell.")
+        onCast(caster, EventData.getSpellTargetItem())
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
+        print("Grabbed item.")
+        onManipulation(EventData.getManipulatingUnit(), EventData.getManipulatedItem())
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DROP_ITEM) ->
+        print("Dropped item.")
+        onManipulation(EventData.getManipulatingUnit(), EventData.getManipulatedItem())

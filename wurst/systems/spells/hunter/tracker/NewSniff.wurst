@@ -29,10 +29,14 @@ let TRACK_DURATION = 15.
 let MATCH_DURATION = 5.
 let AOE = 40.
 let TOOLTIP_NORM = "Sniff"
-let TOOLTIP_EXTENDED = "" +
+let TOOLTIP_EXTENDED = (
     "Using his supreme sense of smell, the tracker can locate his quarry by "  +
-    "sniffing an item the target has recently handled, including the remains " +
-    "of an animal killed by them."
+    "sniffing an item the target has handled in the last {0} seconds, "        +
+    "including the remains of an animal killed by them."
+).format(
+    TRAIL_DURATION.toToolTipLightBlue()
+)
+
 
 class Sniff extends ChannelAbilityPreset
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
@@ -65,6 +69,7 @@ class Sniff extends ChannelAbilityPreset
         this.setCasterAttachments(0)
 
 @compiletime function createSniff()
+    print(TOOLTIP_EXTENDED)
     new Sniff(SPELL_SNIFF, "W", new Pair(1, 0))
 
 // The ability used to track the quarry.
@@ -96,7 +101,6 @@ function onCast(unit caster, item target)
     if not state.a.isAlive()
         simError(caster.getOwner(), "The quarry is no longer alive.")
         return
-
     // Ping the manipulator.
     caster.getOwner().getAllies().pingUnitsForForce(
         state.a.getPos(),

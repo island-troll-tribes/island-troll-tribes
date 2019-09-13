@@ -17,20 +17,22 @@ import ForceExtensions
 import ID
 import ToolTipsUtils
 import PlayerExtensions
-import UnitExtensions
+import Track
 
 let ICON = "ReplaceableTextures\\CommandButtons\\BTNPoisonousSmell.blp"
 
 let CAST_RANGE = 0
 let COOLDOWN = 3.
-let MANACOST = 1
-let DURATION = 15.
-let EFFECT_DURATION = 5.
+let MANACOST = 0
+let TRAIL_DURATION = 300.
+let TRACK_DURATION = 15.
+let MATCH_DURATION = 5.
 let AOE = 40.
 let TOOLTIP_NORM = "Sniff"
-let TOOLTIP_EXTENDED = "Using his supreme sense of smell, the tracker can sniff a hide or bone. "+
-                        "If the animal was killed recently, the tracker will pickup the scent of whoever killed it"+
-                        ". He can also sniff items dropped by enemies.".format(DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
+let TOOLTIP_EXTENDED = "" +
+    "Using his supreme sense of smell, the tracker can locate his quarry by "  +
+    "sniffing an item the target has recently handled, including the remains " +
+    "of an animal killed by them."
 
 class Sniff extends ChannelAbilityPreset
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
@@ -65,13 +67,23 @@ class Sniff extends ChannelAbilityPreset
 @compiletime function createSniff()
     new Sniff(SPELL_SNIFF, "W", new Pair(1, 0))
 
+// The ability used to track the quarry.
+class SniffTrack extends GreaterTrack
+    construct(int newAbilityId)
+        super(newAbilityId, "", new Pair(0, 0))
+        this.presetDefenseReduction(lvl -> 0)
+        this.presetDurationHero(lvl -> TRACK_DURATION)
+        this.presetDurationNormal(lvl -> TRACK_DURATION)
+
+
+@compiletime function createTrack()
+    new SniffTrack(SPELL_SNIFF_TRACK)
+
 
 // A mapping from item to the most recent manipulating unit and the current count.
 let items = new HashMap<item, Pair<unit, int>>()
 
 function onCast(unit caster, item target)
-    print("Caster: " + caster.getName())
-    print("Target: " + target.getName())
     // Look up the most recent manipulating unit.
     let state = items.get(target)
 
@@ -85,11 +97,10 @@ function onCast(unit caster, item target)
         simError(caster.getOwner(), "The quarry is no longer alive.")
         return
 
-    print("Found quarry: " + state.a.getName())
     // Ping the manipulator.
     caster.getOwner().getAllies().pingUnitsForForce(
         state.a.getPos(),
-        EFFECT_DURATION,
+        MATCH_DURATION,
         bj_MINIMAPPINGSTYLE_SIMPLE,
         state.a.isAllyOf(caster.getOwner())
             ? "green".toColor()
@@ -98,56 +109,62 @@ function onCast(unit caster, item target)
 
     // Track an enemy.
     if not state.a.isAllyOf(caster.getOwner())
+        // Grant temporary vision for the dummy caster.
+        let vision = createVision(
+            caster.getOwner(),
+            state.a.getPos(),
+            300,
+            true
+        )
+
+        // Track the quarry.
         InstantDummyCaster.castTarget(
             caster.getOwner(),
-            SPELL_TRACKER_TRACK,
+            SPELL_SNIFF_TRACK,
             1,
             OrderIds.faeriefire,
             state.a
         )
 
-function onManipulation(unit caster, item target)
+        // Remove the vision.
+        vision.destr()
+
+
+public function onMove(unit caster, item target)
     // Ignore irrelevant manipulators, such as bushes.
     if caster.getOwner() == Player(PLAYER_NEUTRAL_PASSIVE)
         return
 
-    print("Caster: " + caster.getName())
-    print("Target: " + target.getName())
-
-    // Lookup the current state for the item.
-    let state = items.has(target)
-        ? items.get(target)
-        : new Pair(caster, 1)
+    // Look up the previous state for the item.
+    var prev = items.getAndRemove(target)
 
     // Supply a new state, as necessary.
-    if items.has(target)
-        items.put(target, state)
-    // Otherwise update the existing state.
+    if prev == null
+        items.put(target, new Pair(caster, 1))
+    // Otherwise update and replace the existing state.
     else
-        state.a = caster
-        state.b += 1
+        items.put(target, new Pair(caster, prev.b + 1))
+        destroy prev
 
     // Remove the value later.
-    doAfter(DURATION) ->
-        print("Removing reference for " + target.getName())
-        // Decrement the reference counter.
-        state.b -= 1
+    doAfter(TRAIL_DURATION) ->
+        // Look up the new state for the item.
+        let curr = items.getAndRemove(target)
 
-        // Remove the state if it no longer has references.
-        if state.b == 0
-            items.remove(target)
+        // Decrement the reference counter if references remain.
+        if curr.b > 1
+            items.put(target, new Pair(curr.a, curr.b - 1))
 
+        // Destroy the previous state.
+        destroy curr
 
 
 init
     EventListener.onCast(SPELL_SNIFF) (unit caster) ->
-        print("Cast spell.")
         onCast(caster, EventData.getSpellTargetItem())
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
-        print("Grabbed item.")
-        onManipulation(EventData.getManipulatingUnit(), EventData.getManipulatedItem())
+        onMove(EventData.getManipulatingUnit(), EventData.getManipulatedItem())
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DROP_ITEM) ->
-        print("Dropped item.")
-        onManipulation(EventData.getManipulatingUnit(), EventData.getManipulatedItem())
+        onMove(EventData.getManipulatingUnit(), EventData.getManipulatedItem())

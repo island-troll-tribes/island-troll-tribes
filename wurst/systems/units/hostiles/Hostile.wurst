@@ -1,15 +1,22 @@
 package Hostile
-import LinkedList
-import UnitEntity
-import ExpiringRawMeat
-import TerrainUtils
+
+// Standard library imports:
 import ClosureTimers
+import EventHelper
+import LinkedList
+import TerrainUtils
+
+// Local imports:
+import ExpiringRawMeat
+import GameConfig
+import GeometryUtils
+import ID
+import NewSniff
+import UnitEntity
+
 import initlater GreenFish
 import initlater Fish
 import initlater Hawk
-import ID
-import GameConfig
-import GeometryUtils
 
 public let MEAT_DROP_OFFSET_DISTANCE = 85.
 
@@ -44,11 +51,19 @@ public abstract class Hostile extends UnitEntity
         let numCorpses = (getNumCorpses() * udg_FOOD_FOR_KILL_PROPORTION).round()
         let drops = getDrops()
         let numDrops = drops.size()
+        let killer = EventData.getKillingUnit()
 
         if numDrops != 0
             let dropsIter = drops.iterator()
             doPeriodicallyCounted(ANIMATION_PERIOD, numDrops) cb ->
-                createItem(dropsIter.next(), pos)
+                // Create the drop.
+                let drop = createItem(dropsIter.next(), pos)
+
+                // Register the drop for sniffing.
+                if killer != null
+                    onMove(killer, drop)
+
+                // Deallocate resources when finished
                 if cb.isLast()
                     dropsIter.close()
                     destroy drops

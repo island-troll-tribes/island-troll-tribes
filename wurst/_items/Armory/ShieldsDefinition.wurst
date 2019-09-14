@@ -49,6 +49,12 @@ constant MODEL_IRON_SHIELD   = "Models\\IronShield.mdx"
 constant MODEL_STEEL_SHIELD  = "Models\\SteelShield.mdx"
 constant MODEL_BATTLE_SHIELD = "Models\\BattleShield.mdx"
 
+class AttackTypes
+    static constant melee   = 1
+    static constant ranged  = 2
+    static constant special = 4
+    static constant spells  = 8
+
 public class Shield
     int id = 0
     int abilId = 0
@@ -120,7 +126,7 @@ function getShield() returns LinkedList<Shield>
     ..setArtTarget(Abilities.replenishHealthCaster)
     ..setEffectSound("MetalHeavyBashFlesh")
     ..setMissileArt("")
-    ..setAttacksPrevented(1, '9') //9 is the number to prevent melee attack & spells
+    ..presetAttacksPrevented(lvl -> AttackTypes.melee.bitOr(AttackTypes.spells))
     ..setChanceToMiss(1, 0)
     ..setAttackSpeedModifier(1, 0)
     ..setMovementSpeedModifier(1, 0)

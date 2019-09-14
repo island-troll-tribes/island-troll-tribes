@@ -1,0 +1,91 @@
+package ClayExplosion
+
+// Standard library imports:
+import ClosureEvents
+import InstantDummyCaster
+import LinkedList
+import ObjEditingNatives
+import OrderIds
+import ObjectIds
+import TerrainUtils
+
+// Third-party imports:
+import Lodash
+
+// Local imports:
+import GeometryUtils
+import ID
+
+// The maximum allowed distance per axis between the caster and each ward.
+let RANGE = 3000.
+
+// The bounds on the number of wards placed.
+let MIN_WARDS = 8
+let MAX_WARDS = 12
+
+@compiletime function createDummyAbility()
+    createObjectDefinition("w3a", 'A00L', 'ANcl')
+        ..setLvlDataString("aani", 0, 0, "spell,throw")
+        ..setLvlDataString("acat", 0, 0, "Abilities\\Weapons\\GryphonRiderMissile\\GryphonRiderMissileTarget.mdl")
+        ..setLvlDataUnreal("Ncl1", 1, 1, 1.0)
+        ..setLvlDataInt("Ncl5", 1, 5, 0)
+        ..setLvlDataString("Ncl6", 1, 6, "massteleport")
+        ..setLvlDataString("aeat", 0, 0, "")
+        ..setLvlDataInt("aher", 0, 0, 0)
+        ..setLvlDataInt("aite", 0, 0, 1)
+        ..setLvlDataInt("alev", 0, 0, 1)
+        ..setLvlDataString("anam", 0, 0, "Clay Explosion")
+        ..setLvlDataString("aord", 0, 0, "corporealform")
+        ..setLvlDataString("atat", 0, 0, "")
+        ..setLvlDataString("ata0", 0, 0, "")
+
+
+@compiletime function create_w3t_I03E()
+    createObjectDefinition("w3t", ITEM_CLAY_EXPLOSION, 'wswd')
+        ..setString("iabi", "A00L")
+        ..setString("iico", "ReplaceableTextures\\CommandButtons\\BTNGreenSentryWard.blp")
+        ..setString("icla", "Purchasable")
+        ..setString("icid", ABILITY_WARD_DESTROY.toRawCode())
+        ..setString("ides", "Conjures a ball of living clay to view the area")
+        ..setInt("idrp", 1)
+        ..setString("ifil", "Objects\\InventoryItems\\tomeBrown\\tomeBrown.mdl")
+        ..setInt("igol", 0)
+        ..setInt("ilev", 0)
+        ..setInt("ilum", 10)
+        ..setString("unam", "Clay Explosion")
+        ..setString("utip", "Trade for Clay Explosion")
+        ..setString("utub", "Drops many wards in the area around the caster")
+        ..setInt("iuse", 1)
+
+function onCast(unit caster)
+    // Compute the region to consider for placing wards.
+    let area = RectFromCenterSizeBJ(
+        GetUnitLoc(caster),
+        RANGE,
+        RANGE
+    )
+
+    // Place the wards.
+    for _ = 1 to GetRandomInt(MIN_WARDS, MAX_WARDS)
+        // Repeat trials until successful.
+        while true
+            // Pick a random point nearby.
+            let target = area.randomPoint()
+
+            // Only place wards where the enemy can destroy them
+            if target.isTerrainWalkable()
+                createUnit(
+                    caster.getOwner(),
+                    UNIT_LIVING_CLAY,
+                    target,
+                    randomAngle()
+                )
+                break
+
+    // Deallocate the region once it is no longer needed.
+    area.remove()
+
+
+init
+    EventListener.onCast('A00L') (unit caster) ->
+        onCast(caster)

@@ -1,0 +1,52 @@
+package DarkThistle
+
+// Standard library imports:
+import ClosureEvents
+import ClosureTimers
+import ObjEditingNatives
+
+// Local imports:
+import PublicLibrary
+
+// The number of ticks for which mana is burned.
+let NUM_TICK = 6
+
+// The interval in seconds between ticks.
+let LEN_TICK = 1.
+
+// The amount of mana burned per tick.
+let DAMAGE = 2.
+
+@compiletime function createDarkThistle()
+    createObjectDefinition("w3a", ABILITY_DARK_THISTLE, 'AEsh')
+        ..setLvlDataString("aart", 0, 0, "ReplaceableTextures\\CommandButtons\\BTNEnvenomedSpear.blp")
+        ..setLvlDataString("abuf", 1, 0, "B00E")
+        ..setLvlDataInt("achd", 0, 0, 0)
+        ..setLvlDataUnreal("acdn", 1, 0, 3.0)
+        ..setLvlDataInt("amcs", 1, 0, 0)
+        ..setLvlDataUnreal("Esh1", 1, 1, 1.0)
+        ..setLvlDataUnreal("Esh2", 1, 2, 0.2)
+        ..setLvlDataUnreal("Esh3", 1, 3, 0.2)
+        ..setLvlDataUnreal("Esh4", 1, 4, 0.5)
+        ..setLvlDataUnreal("Esh5", 1, 5, 20.0)
+        ..setLvlDataUnreal("adur", 1, 0, 16.0)
+        ..setLvlDataString("ansf", 0, 0, "(New)")
+        ..setLvlDataInt("aher", 0, 0, 0)
+        ..setLvlDataUnreal("ahdu", 1, 0, 12.0)
+        ..setLvlDataString("ahky", 0, 0, "")
+        ..setLvlDataInt("aite", 0, 0, 1)
+        ..setLvlDataInt("alev", 0, 0, 1)
+        ..setLvlDataString("amat", 0, 0, "Abilities\\Weapons\\BristleBackMissile\\BristleBackMissile.mdl")
+        ..setLvlDataInt("amho", 0, 0, 0)
+        ..setLvlDataInt("amsp", 0, 0, 2100)
+        ..setLvlDataString("anam", 0, 0, "Dark Thistle")
+        ..setLvlDataUnreal("aran", 1, 0, 3000.0)
+        ..setLvlDataString("atar", 1, 0, "air,enemies,ground,neutral,organic,terrain")
+
+function onCast(unit _, unit target)
+    doPeriodicallyCounted(LEN_TICK, NUM_TICK) (CallbackCounted cb) ->
+        ManaBurn(target, DAMAGE)
+
+init
+    EventListener.onTargetCast(ABILITY_DARK_THISTLE) (unit caster, unit target) ->
+        onCast(caster, target)

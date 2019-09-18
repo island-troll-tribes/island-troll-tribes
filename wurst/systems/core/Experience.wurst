@@ -1,16 +1,20 @@
 package Experience
-import RegisterEvents
-import PlayerExtensions
-import UnitExtensions
-import MathUtils
+
+// Standard library imports:
 import ClosureTimers
-import Classes
 import LinkedList
-import GroupExtensions
-import UnitEntity
+import RegisterEvents
+
+// Local imports:
+import Classes
 import BeastMaster
+import GroupUtils
 import Hunter
-import PublicLibrary
+import ID
+import MathUtils
+import PlayerExtensions
+import UnitEntity
+import UnitExtensions
 
 constant creepExp = [3, 25]
 constant heroExp = [0, 100, 120, 160, 220, 300]
@@ -37,24 +41,34 @@ function performExperienceGain()
     if killer.getOwner().isAllyOf(dead.getOwner())
         return
 
-    let heroes = GetUnitsInRangeMatching(expRange, dead.getX(), dead.getY(), Condition(() -> begin
-        let filterUnit = GetFilterUnit()
-        return filterUnit.isType(UNIT_TYPE_HERO) and filterUnit.getOwner().isAllyOf(GetKillingUnit().getOwner()) and filterUnit.isAlive()
-    end))
+    // Enumerate all allies that will share the experience.
+    let heroes = ENUM_GROUP
+        ..enumUnitsInRange(killer.getPos(), expRange, null)
+        .asList()
+        .filter(
+            target -> (
+                target.isType(UNIT_TYPE_HERO) and
+                target.isAllyOf(killer) and
+                target.isAlive() and
+                target != killer
+            )
+        )
 
+    // Add the appropriate unit responsible for the kill.
     if killer.isType(UNIT_TYPE_HERO)
-        heroes.addUnit(killer)
-    else if killer.getName() == "Dummy Caster" or killer.getTypeId() == UNIT_MASTER_CASTER
-        heroes.addUnit(killer.getOwner().getTroll())
+        heroes.add(killer)
+    else
+        heroes.add(killer.getOwner().getTroll())
 
-    let count = heroes.size()
     let deadUnitLevel = dead.getLevel()
-    let baseExp = dead.isType(UNIT_TYPE_HERO) ? heroExp[deadUnitLevel] : creepExp[deadUnitLevel]
+    let baseExp = dead.isType(UNIT_TYPE_HERO)
+        ? heroExp[deadUnitLevel]
+        : creepExp[deadUnitLevel]
     let reduceExpGain = dead.getOwner().getId() == PLAYER_NEUTRAL_AGGRESSIVE
 
-    for hero from heroes
+    for hero in heroes
         let multiplier = getMultiplier(hero)
-        var experience = floor(baseExp * multiplier / count)
+        var experience = floor(baseExp * multiplier / heroes.size())
         var level = hero.getLevel()
         var heroCurrentXp = hero.getXp()
 
@@ -65,7 +79,9 @@ function performExperienceGain()
                 experience = floor(experience * GOK_MULTIPLIER)
 
         while experience > 0
-            let expReduction = reduceExpGain ? max(0.4, 0.9 - 0.1 * level) : 1.0
+            let expReduction = reduceExpGain
+                ? max(0.4, 0.9 - 0.1 * level)
+                : 1.0
             let expThisLevel = expPerLevel[level] - heroCurrentXp
             let expGain = (experience * expReduction).toInt()
             if expGain > expThisLevel
@@ -77,6 +93,11 @@ function performExperienceGain()
                 experience = 0
 
         hero.setXp(heroCurrentXp)
+
+    // Deallocate the structures used.
+    destroy heroes
+
+
 
 init
     for i = 2 to 30
@@ -90,17 +111,23 @@ init
         players[i].setHandicapXP(0)
 
     doPeriodically(ANIMATION_PERIOD) (cb) ->
-        for troll in udg_trolls
+        for troll in getTrolls()
             let owner = troll.getOwner()
             if (troll.getMana() < 1 or troll.getHeat() < 1) and troll.isAlive()
                 let pos = troll.getPos()
                 let killer = ENUM_GROUP
-                    ..enumUnitsInRange(pos, expRange, Filter(() -> begin
-                        return GetFilterUnit().getOwner().getTroll() != null
-                    end))
-                    .toLinkedList()
+                    ..enumUnitsInRange(
+                        pos,
+                        expRange,
+                        Filter(() -> GetFilterUnit().getOwner().getTroll() != null)
+                    )
+                    .asList()
                     .filter(x -> not x.getOwner().isAllyOf(owner))
-                    ..sortWith((a, b) -> (a.getPos().distanceToSq(pos) - b.getPos().distanceToSq(pos)).toInt())
+                    ..sortWith(
+                        (a, b) -> (
+                            a.getPos().distanceToSq(pos) - b.getPos().distanceToSq(pos)
+                        ).toInt()
+                    )
                     .getFirst()
 
                 if killer == null

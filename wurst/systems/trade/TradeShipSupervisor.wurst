@@ -1,11 +1,15 @@
 package TradeShipSupervisor
-import TradeShipStop
+
+// Standard library imports:
+import ClosureEvents
+import ClosureTimers
 import HashMap
 import LinkedList
-import ClosureTimers
-import ClosureEvents
-import ErrorHandling
 import Orders
+
+// Local imports:
+import TradeShipStop
+import ErrorHandling
 
 let TRADE_SHIP_PAUSE_TIME_DEST = 0
 let TRADE_SHIP_PAUSE_TIME_SELL = 0
@@ -52,13 +56,13 @@ public class TradeShipSupervisor
     function onIssuedOrder()
         if not this.orderListenerEnabled
             return
-        if GetIssuedOrderId() != Orders.smart and GetIssuedOrderId() != Orders.move
+        if GetIssuedOrderId() != OrderIds.smart and GetIssuedOrderId() != OrderIds.move
             return
         this.orderListenerEnabled = false
         switch state
             case MOVING
                 let orderId = GetIssuedOrderId()
-                let targetPos = getOrderPos()
+                let targetPos = EventData.getOrderPos()
                 let nextStopPos = nextStop.getPos()
                 if orderId != Orders.move or targetPos.distanceToSq(nextStopPos) > 10000.0
                     ship.issuePointOrder("move", nextStopPos)

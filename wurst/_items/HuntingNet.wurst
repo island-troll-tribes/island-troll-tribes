@@ -1,16 +1,18 @@
 package HuntingNet
 
-
+// Standard library imports:
 import AbilityObjEditing
-import PublicLibrary
-import ItemObjEditing
 import Assets
 import ClosureEvents
 import ClosureTimers
+import ItemObjEditing
 import ObjectIds
+
+// Local imports:
+import Ensnare
+import ID
 import UnitExtensions
 import PreventNet
-import Ensnare
 
 constant HUNTING_NET_ENSNARE = compiletime(ABIL_ID_GEN.next())
 let HERO_DURATION = 2.5
@@ -75,8 +77,7 @@ constant TT = "A net primarily used for hunting. If the animal dies while ensnar
 function onHuntNet()
     let target = GetSpellTargetUnit()
     let pos = target.getPos()
-    real NET_DURATION = 0.
-    NET_DURATION = target.isTroll() ? HERO_DURATION : NORMAL_DURATION
+    let NET_DURATION = target.isTroll() ? HERO_DURATION : NORMAL_DURATION
     doPeriodicallyTimed(ANIMATION_PERIOD, NET_DURATION) netCounter ->
         if not target.isAlive()
             createItem(ITEM_HUNTING_NET, pos)

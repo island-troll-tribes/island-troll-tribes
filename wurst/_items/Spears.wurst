@@ -1,9 +1,15 @@
 package Spears
+
+// Standard library imports:
 import ClosureEvents
-import DummyCaster
-import Orders
 import ClosureTimers
-import PublicLibrary
+import DummyCaster
+import HashMap
+import Orders
+
+// Local imports:
+import ID
+import UnitExtensions
 
 let ABILITY_SPEAR_HIT_DETECTION = 'A0EH'
 let DARK_SPEAR_CONSECUTIVE_REDUCTION_FACTOR = 0.6666
@@ -52,13 +58,14 @@ function onSpearImpact(unit target, SpearType spearType)
             spawnItemChance(0.4, ITEM_DARK_SPEAR, target.getPos())
             real burnAmount = GetRandomReal(45, 55)
 
-            //Reduction for consecutive spears
+            // Reduce mana damage for consecutive spears.
             let currentCounters = getAndIncreaseDarkSpearCounter(target)
             burnAmount *= DARK_SPEAR_CONSECUTIVE_REDUCTION_FACTOR.pow(currentCounters.toReal())
             doAfter(1.00) ->
                 removeDarkSpearCounter(target)
 
-            ManaBurn(target, burnAmount)
+            // Perform the mana reduction.
+            target.burnMana(burnAmount)
         case SteelSpear
             spawnItemChance(0.666, ITEM_STEEL_SPEAR, target.getPos())
         case IronSpear
@@ -80,7 +87,7 @@ function getAndIncreaseDarkSpearCounter(unit target) returns int
         return 0
 
 function removeDarkSpearCounter(unit target)
-    //Deduct counters by 1 or remove from map if they go to 0
+    // Deduct counters by 1 or remove from map if they go to 0
     if darkSpearCounters.has(target)
         let currentCounters = darkSpearCounters.get(target)
         if currentCounters > 1

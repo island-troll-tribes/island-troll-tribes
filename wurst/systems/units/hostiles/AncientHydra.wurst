@@ -1,15 +1,20 @@
 package AncientHydra
-import Hostile
-import LesserHydra
-import ClosureTimers
-import ClosureForGroups
-import UnitExtensions
+
+// Standard library imports:
+import Assets
 import ClosureEvents
-import DiscoDuck
-import PublicLibrary
+import ClosureForGroups
+import ClosureTimers
 import DummyCaster
 import Orders
+
+// Local imports:
+import Hostile
 import ID
+import LesserHydra
+import SoundUtils
+import StringExtensions
+import UnitExtensions
 
 constant SPELL_NETHER = 'A037'
 
@@ -35,9 +40,9 @@ public class AncientHydra extends Hostile
             ..addSleep(false)
             ..setCreepGuard(false)
 
-        HornSound()
-        printTimed(COLOR_RED + "The ancient hydra has been summoned!", 5)
-        flashEffect(TELEPORT_MODEL, hydra, "overhead")
+        playMammothHorn()
+        printTimed("The ancient hydra has been summoned!".color("red".toColor()), 5)
+        flashEffect(Abilities.massTeleportCaster, hydra, "overhead")
         callback = doPeriodically(4, cb -> attackCenter())
 
         EventListener.add(hydra, EVENT_UNIT_DAMAGED, -> onAttacked())

@@ -1,7 +1,12 @@
 package StatLoss
-import Game
+
+// Standard library imports:
 import ClosureTimers
+
+// Local imports:
+import Game
 import GameConfig
+import GroupUtils
 import IsTypeThing
 
 constant BUFF_CAMO_ID = 'B009'
@@ -15,7 +20,7 @@ init
         let maxHeat = gameConfig.getMaxHeat()
 
         doPeriodically(gameConfig.getStatGainInterval()) cb ->
-            for troll in udg_trolls
+            for troll in getTrolls()
                 let owner = troll.getOwner()
                 var heat = owner.getGold()
 
@@ -37,7 +42,7 @@ init
                 owner.setGold(min(maxHeat, heat))
 
         doPeriodically(gameConfig.getStatLossInterval()) cb ->
-            for troll in udg_trolls
+            for troll in getTrolls()
                 var heatLoss = lossAmount
                 var energyLoss = lossAmount
                 var healthLoss = lossAmount

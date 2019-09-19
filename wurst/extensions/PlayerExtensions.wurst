@@ -7,8 +7,8 @@ import HashSet
 // Local imports:
 import CameraUtils
 import ForceExtensions
-import GroupUtils
 import initlater Tribe
+import UnitExtensions
 
 let newObs = new HashSet<player>()
 
@@ -37,11 +37,12 @@ public function player.isObserver() returns bool
 
 public function player.removeTroll()
     // Remove both references to the current troll.
-    removeTroll(trolls.getAndRemove(this))
+    trolls.getAndRemove(this).deregisterTroll()
 
 public function player.setTroll(unit troll)
     // Ensure that each player only has one troll each.
-    trolls.put(this..removeTroll(), troll)
+    trolls.put(this..removeTroll(), troll..registerTroll())
+
 
 public function player.getTroll() returns unit
     return trolls.get(this)

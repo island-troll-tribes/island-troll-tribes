@@ -1,0 +1,91 @@
+package LivingClay
+
+// Standard library imports:
+import AbilityObjEditing
+import Assets
+import EventHelper
+import ItemObjEditing
+import ObjectIds
+import RegisterEvents
+
+// Local imports:
+import ID
+import LocalAssets
+
+@configurable let CLAY_WARD_LIMIT_RANGE = 500.0
+@configurable let CLAY_WARD_LIMIT_MAX_WARDS = 10
+
+let PLACE_ABIL_ID = compiletime(ABIL_ID_GEN.next())
+
+let TOOLTIP = "" +
+    "Places a sentry ward to watch the nearby area. Lasts indefinitely until " +
+    "approached, at which point it explodes and damages nearby enemies."
+
+@compiletime function createLivingClayDamageAbility()
+    new AbilityDefinitionDeathDamageAOEmine(ABILITY_WARD_DESTROY)
+        ..presetFullDamageRadius(lvl -> 200.)
+        ..presetFullDamageAmount(lvl -> 10.)
+        ..presetPartialDamageRadius(lvl -> 400)
+        ..presetPartialDamageAmount(lvl -> 5.)
+
+@compiletime function createLivingClayUnit()
+    new UnitDefinition(UNIT_LIVING_CLAY, UnitIds.goblinlandmine)
+        ..setNormalAbilities(commaList(
+            // Makes the unit invisible and ignored for pathing.
+            AbilityIds.ghost,
+            // Makes the unit deal damage on death.
+            ABILITY_WARD_DESTROY,
+            // Makes the unit die when approached.
+            AbilityIds.mineexploding
+        ))
+        ..setIconGameInterface(LocalIcons.bTNGreenSentryWard)
+        ..setArmorType(ArmorType.Small)
+        ..setModelFile(Units.sentryWard)
+        ..setName("Living Clay")
+        ..setSightRadiusNight(700)
+        ..setSightRadiusDay(1400)
+
+@compiletime function createLivingClaySummonAbility()
+    new AbilityDefinitionItemPlaceMine(PLACE_ABIL_ID)
+        ..presetUnitType(lvl -> UNIT_LIVING_CLAY.toRawCode())
+
+
+@compiletime function createLivingClayItem()
+    new ItemDefinition(ITEM_LIVING_CLAY, ItemIds.sentryWards)
+        ..setAbilities(commaList(PLACE_ABIL_ID))
+        ..setInterfaceIcon(LocalIcons.bTNGreenSentryWard)
+        ..setModelUsed(Units.sentryWard)
+        ..setNumberofCharges(3)
+        ..setCooldownGroup(PLACE_ABIL_ID.toRawCode())
+        ..setDroppedWhenCarrierDies(true)
+        ..setGoldCost(0)
+        ..setLumberCost(8)
+        ..setName("Living Clay")
+        ..setTooltipBasic("Purchase Living Clay")
+        ..setTooltipExtended(TOOLTIP)
+        ..setScalingValue(0.5)
+
+function onCreate(unit target)
+    // Exit the unit created is not a ward.
+    if target.getTypeId() != UNIT_LIVING_CLAY
+        return
+
+    // Enumerate over all nearby units.
+    ENUM_GROUP.enumUnitsInRange(
+        target.getPos(),
+        CLAY_WARD_LIMIT_RANGE,
+        Filter(-> GetFilterUnit().getTypeId() == UNIT_LIVING_CLAY)
+    )
+
+    // Undo the placement.
+    if ENUM_GROUP.size() > CLAY_WARD_LIMIT_MAX_WARDS
+        // Create a replacement ward.
+        createItem(ITEM_LIVING_CLAY, target.getPos())
+            ..setCharges(1)
+
+        // Removed the placed ward without exploding it.
+        target.remove()
+
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SUMMON) ->
+        onCreate(EventData.getSummounedUnit())

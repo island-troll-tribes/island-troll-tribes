@@ -1,11 +1,16 @@
 package Hints
+
+// Standard library imports:
 import ClosureTimers
 import LinkedList
+
+// Local imports:
 import ChatCommands
 import Game
 import InitializeUnits
 import LegacyColors
 import PingMinimap
+import PlayerExtensions
 
 let TIME_BETWEEN_HINTS = 50.0
 let HINTS_OFF_MESSAGE = GENERAL_COLOR + "Your hints are now " + GOLD_COLOR + "off" + GENERAL_COLOR + "."
@@ -60,11 +65,11 @@ public function displayNextHint(LLIterator<Hint> iterator)
         iterator.reset()
 
 public function doPeriodicDisplay(LinkedList<Hint> hintList)
-        let iterator = hintList.iterator()
-        doPeriodically(TIME_BETWEEN_HINTS, (cb) -> displayNextHint(iterator))
+    let iterator = hintList.iterator()
+    doPeriodically(TIME_BETWEEN_HINTS, (cb) -> displayNextHint(iterator))
 
 public function checkStat(unit troll)
-    if not troll.isAlive()
+    if troll == null or not troll.isAlive()
         return
 
     let owner = troll.getOwner()
@@ -80,7 +85,7 @@ public function checkStat(unit troll)
         printTimedToPlayer(COLOR_RED + "Your heat is low, go stand by a fire!", 3, owner)
 
 init
-     registerGameStartEvent() ->
+    registerGameStartEvent() ->
         let hintList = asList(
             new Hint("If you are new to this game, reading the quest log Surviving & Crafting, you should."),
             new Hint("For help on building, refer to these shops or for some basics, the quest log.", gg_rct_vision.getCenter()),
@@ -109,6 +114,5 @@ init
         Hint.initialize()
         doPeriodicDisplay(hintList)
         doPeriodically(3) cb ->
-            for troll in udg_trolls
-                if IsPlayerInForce(troll.getOwner(), Hint.playersF)
-                    checkStat(troll)
+            Hint.playersF.forEach() ->
+                checkStat(GetEnumPlayer().getTroll())

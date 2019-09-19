@@ -1,16 +1,20 @@
 package Commands
+
+// Standard library imports:
+import HashMap
 import LinkedList
+
+// Local imports:
 import ChatCommands
-import StringExtensions
-import PlayerExtensions
-import UnitExtensions
 import ChatUtils
 import Game
 import GameMode
-import PublicLibrary
+import LegacyColors
+import PlayerExtensions
+import StringExtensions
 import TribeBoard
 import Tribe
-import StringUtils
+import UnitExtensions
 
 class PlayerAllianceSetting
     string name
@@ -56,11 +60,9 @@ init
             ClearTextMessages()
 
     registerCommandAll("c") (triggerPlayer, args) ->
-        let id = triggerPlayer.getId()
         let zoom = args.get(1).toReal()
         let msg = "Current zoom is {0} (default 0)".format(zoom.toInt().toString().color(ENERGY_COLOR))
-        ZOOM_DISTANCE[id] = zoom
-        ZoomSetCamera(id)
+        triggerPlayer.setZoom(zoom)
         printTimedToPlayer(msg, 5, triggerPlayer)
 
     registerCommandAll("rn") (triggerPlayer, args) ->

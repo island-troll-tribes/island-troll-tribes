@@ -1,12 +1,15 @@
 package DiscoDuck
-import Hostile
-import ItemPoolExtensions
-import PublicLibrary
+
+// Standard library imports:
+import Assets
 import LinkedList
 
-
-public constant string TELEPORT_MODEL = "Abilities\\Spells\\Human\\MassTeleport\\MassTeleportCaster.mdl"
-
+// Local imports:
+import Hostile
+import ID
+import ItemPoolExtensions
+import SoundUtils
+import StringExtensions
 
 public class DiscoDuck extends Hostile
     private static let unitTypeId = UNIT_DISCO_DUCK
@@ -30,9 +33,9 @@ public class DiscoDuck extends Hostile
     construct()
         super(players[PLAYER_NEUTRAL_AGGRESSIVE], gg_rct_discoduck.getCenter(), (315.0).asAngleDegrees())
 
-        HornSound()
-        printTimed(COLOR_RED + "The disco duck has been summoned!", 5)
-        flashEffect(TELEPORT_MODEL, getUnit(), "overhead")
+        playMammothHorn()
+        printTimed("The disco duck has been summoned!".color("red".toColor()), 5)
+        flashEffect(Abilities.massTeleportCaster, getUnit(), "overhead")
 
         if instance == null
             instance = this

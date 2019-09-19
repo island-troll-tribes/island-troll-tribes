@@ -1,0 +1,26 @@
+package CameraUtils
+
+// Standard library imports:
+import ClosureTimers
+import HashMap
+
+let zooms = new HashMap<player, real>()
+
+public function setZoom(player target, real zoom)
+    // Update the mapping for later use.
+    zooms.put(target, zoom)
+
+    // Respond immediately as well.
+    if target == localPlayer
+        updateZoom()
+
+public function getZoom(player target) returns real
+    return zooms.get(target)
+
+function updateZoom()
+    CAMERA_FIELD_ZOFFSET.set(zooms.get(localPlayer), 1.)
+    CAMERA_FIELD_FARZ.set(5000., 0.)
+
+init
+    doPeriodically(1.) (CallbackPeriodic cb) ->
+        updateZoom()

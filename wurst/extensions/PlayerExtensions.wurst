@@ -1,10 +1,18 @@
 package PlayerExtensions
-import initlater Tribe
-import PublicLibrary
-import ForceExtensions
+
+// Standard library imports:
+import HashMap
 import HashSet
 
+// Local imports:
+import CameraUtils
+import ForceExtensions
+import initlater Tribe
+import UnitExtensions
+
 let newObs = new HashSet<player>()
+
+let trolls = new HashMap<player, unit>()
 
 public function player.getTribe() returns Tribe
     return Tribe.ofPlayer(this)
@@ -27,8 +35,17 @@ public function player.setColor(playercolor color, bool changeExisting)
 public function player.isObserver() returns bool
     return IsPlayerObserver(this) or newObs.has(this)
 
+public function player.removeTroll()
+    // Remove both references to the current troll.
+    trolls.getAndRemove(this).deregisterTroll()
+
+public function player.setTroll(unit troll)
+    // Ensure that each player only has one troll each.
+    trolls.put(this..removeTroll(), troll..registerTroll())
+
+
 public function player.getTroll() returns unit
-    return GetPlayerTroll(this)
+    return trolls.get(this)
 
 public function player.makeObserver()
     this.setState(PLAYER_STATE_OBSERVER, 1)
@@ -47,3 +64,9 @@ public function player.setupObs()
         SetPlayerAllianceStateBJ(otherPlayer, this, bj_ALLIANCE_NEUTRAL_VISION)
 
     SetPlayerAllianceStateBJ(this, players[PLAYER_NEUTRAL_AGGRESSIVE], bj_ALLIANCE_NEUTRAL)
+
+public function player.setZoom(real zoom)
+    setZoom(this, zoom)
+
+public function player.getZoom() returns real
+    return getZoom(this)

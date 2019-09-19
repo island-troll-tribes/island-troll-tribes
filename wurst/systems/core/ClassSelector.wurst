@@ -1,16 +1,23 @@
 package ClassSelector
-import RegisterEvents
-import LinkedList
+
+// Local imports:
 import ClosureTimers
-import TimerUtils
-import UnitExtensions
-import PlayerExtensions
-import UnitPoolExtensions
+import HashMap
+import LinkedList
+import RegisterEvents
+
+// Third-party imports:
 import LodashExtensions
+
+// Local imports:
 import GameConfig
-import GameMode
+import ID
+import LegacyColors
+import PlayerExtensions
 import Tribe
-import PublicLibrary
+import UnitExtensions
+import UnitPoolExtensions
+import TimerUtils
 
 let UNIT_TROLL_TOTEM = 'o00H'
 
@@ -179,14 +186,13 @@ public class ClassSelector
 
         setClassUnavailable(trollId)
         totem.removeUnitFromStock(trollId)
-        udg_trolls.addUnit(troll)
-        udg_PUnits[owner.getId()] = troll
+        owner.setTroll(troll)
 
         troll
-        ..modifySkillPoints(-1)
-        ..suspendXp(true)
-        ..pause()
-        ..setHeat(gameConfig.getMaxHeat())
+            ..modifySkillPoints(-1)
+            ..suspendXp(true)
+            ..pause()
+            ..setHeat(gameConfig.getMaxHeat())
 
         if gameConfig.isStartWithFire()
             troll.addItemById(ITEM_FIRE_KIT)
@@ -201,8 +207,7 @@ public class ClassSelector
 
         setClassAvailable(trollId)
         totem.addUnitToStock(trollId, 0, 1)
-        udg_trolls.removeUnit(troll)
-        udg_PUnits[owner.getId()] = null
+        owner.removeTroll()
 
         troll.remove()
         sold.remove()

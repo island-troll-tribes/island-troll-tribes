@@ -1,0 +1,80 @@
+package FervorPotion
+
+// Standard library imports:
+import ClosureEvents
+import InstantDummyCaster
+import LinkedList
+import ObjEditingNatives
+import OrderIds
+
+// Third-party imports:
+import Lodash
+
+// Local imports:
+import ID
+
+let ABILITY_PAIRS = asList(
+    new Pair(SPELL_PUMP_UP,       OrderIds.bloodlust),
+    new Pair(ABILITY_FROST_ARMOR, OrderIds.frostarmor)
+)
+
+let DEBUFF_RANGE = 512.
+
+@compiletime function createItem()
+    createObjectDefinition("w3t", ITEM_FERVOR_POTION, 'pman')
+        ..setString("iabi", "A03Z")
+        ..setString("iico", "ReplaceableTextures\\CommandButtons\\BTNGreaterInvulneralbility.blp")
+        ..setString("icid", "A03G")
+        ..setString("ides", "Made from very special ingredients")
+        ..setInt("idrp", 1)
+        ..setString("ifil", "Models\\PotionInvulnerability.mdl")
+        ..setInt("igol", 0)
+        ..setString("uhot", "")
+        ..setInt("ilum", 25)
+        ..setString("unam", "Ferver Potion")
+        ..setString("ureq", "")
+        ..setInt("isst", 0)
+        ..setString("utip", "Trade for Ferver Potion")
+        ..setString("utub", "Drink this potion when you want to kill lots of stuff. It increases your attack and movement speed as well as hurts enemies around you.|n|c00ff0000Stimulant|r")
+
+@compiletime function createDummyAbility()
+    createObjectDefinition("w3a", 'A03Z', 'ANcl')
+        ..setLvlDataString("aani", 0, 0, "spell,throw")
+        ..setLvlDataString("acat", 0, 0, "")
+        ..setLvlDataString("acap", 0, 0, "")
+        ..setLvlDataUnreal("acdn", 1, 0, 5.0)
+        ..setLvlDataUnreal("Ncl1", 1, 1, 1.0)
+        ..setLvlDataInt("Ncl5", 1, 5, 0)
+        ..setLvlDataString("Ncl6", 1, 6, "avatar")
+        ..setLvlDataString("aeat", 0, 0, "")
+        ..setLvlDataInt("aher", 0, 0, 0)
+        ..setLvlDataInt("aite", 0, 0, 1)
+        ..setLvlDataInt("alev", 0, 0, 1)
+        ..setLvlDataString("anam", 0, 0, "Fervor Cast")
+
+function onCast(unit caster)
+    // Buff the caster.
+    for abilityPair in ABILITY_PAIRS
+        InstantDummyCaster.castTarget(
+            caster.getOwner(),
+            abilityPair.a,
+            1,
+            abilityPair.b,
+            caster
+        )
+
+    // Debuff nearby enemies.
+    for target in ENUM_GROUP..enumUnitsInRange(caster.getPos(), DEBUFF_RANGE)
+        if target.isEnemyOf(caster.getOwner()) and target.isType(UNIT_TYPE_HERO)
+            InstantDummyCaster.castTarget(
+                caster.getOwner(),
+                ABILITY_THISTLE,
+                1,
+                OrderIds.shadowstrike,
+                target
+            )
+
+
+init
+    EventListener.onCast('A03Z') (unit caster) ->
+        onCast(caster)

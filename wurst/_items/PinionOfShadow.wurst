@@ -1,0 +1,147 @@
+package PinionOfShadow
+
+// Standard library imports:
+import AbilityObjEditing
+import Assets
+import ClosureEvents
+import ClosureTimers
+
+// Third-party imports:
+import HashMap
+import Lodash
+
+// Local imports:
+import ID
+
+// The frequency in seconds at which the state is advanced.
+let TICK_FREQUENCY = 5.
+
+// The percentage towards the completion the state is advanced per tick.
+let TICK_PERCENTAGE = 1
+
+// The maximum percentange movement speed increase obtainable.
+let MAX_SPEED = 100
+
+// The tooltip used for the buff.
+let BUFF_TOOLTIP = "" +
+    "This unit is melding with its shadow; it has increased movement and " +
+    "eventually only its shadow will be visible."
+
+let TOOLTIP = "" +
+    "One of Disc0-Duck's legendary quills. This quill binds with its owner, " +
+    "slowly turning it into shadows.|n" +
+    "Provides +5 to stats, +3 armor, and 15% evasion.|n" +
+    "As shadow fusion increases, movement speed increases." +
+    "The bearer can also temporarily blend into the shadows to become " +
+    "completely invisible."
+
+@compiletime function create_w3a_A0FX()
+    createObjectDefinition("w3a", 'A0FX', 'AIx5')
+        ..setLvlDataString("anam", 0, 0, "Pinion Stat Bonus")
+
+@compiletime function create_w3a_A0FV()
+    createObjectDefinition("w3a", 'A0FV', 'AOwk')
+        ..setLvlDataUnreal("acdn", 1, 0, 45.0)
+        ..setLvlDataInt("amcs", 1, 0, 0)
+        ..setLvlDataUnreal("Owk2", 1, 2, 1.0)
+        ..setLvlDataUnreal("Owk3", 1, 3, 0.0)
+        ..setLvlDataInt("Owk4", 1, 4, 0)
+        ..setLvlDataUnreal("adur", 1, 0, 6.0)
+        ..setLvlDataInt("aher", 0, 0, 0)
+        ..setLvlDataUnreal("ahdu", 1, 0, 6.0)
+        ..setLvlDataInt("aite", 0, 0, 1)
+        ..setLvlDataInt("alev", 0, 0, 1)
+        ..setLvlDataString("anam", 0, 0, "ShadowPinion Invisibility")
+
+@compiletime function create_w3a_A0FW()
+    createObjectDefinition("w3a", 'A0FW', 'ACev')
+        ..setLvlDataInt("aite", 0, 0, 1)
+        ..setLvlDataString("anam", 0, 0, "ShadowPinion Evasion")
+
+@compiletime function createPinionofShadow()
+    createObjectDefinition("w3t", 'I03Y', 'bspd')
+        ..setString("iabi", "A0FW,A0FX,A0FV,AId3")
+        ..setString("iico", Icons.bTNHeartOfAszune)
+        ..setInt("iclb", 0)
+        ..setInt("iclg", 0)
+        ..setInt("iclr", 0)
+        ..setString("ides", "A very rare legendary item.")
+        ..setInt("idrp", 1)
+        ..setString("ifil", Units.phoenixEgg)
+        ..setInt("igol", 0)
+        ..setString("uhot", "")
+        ..setInt("ilev", 0)
+        ..setInt("ilum", 300)
+        ..setString("unam", "Disc0-Duck's Pinion of Shadow")
+        ..setInt("ipaw", 0)
+        ..setReal("isca", 0.5)
+        ..setInt("isel", 0)
+        ..setString("utip", "This item should not be for sale")
+        ..setString("utub", TOOLTIP)
+        ..setInt("iusa", 1)
+
+// A mapping from a unit to its current state and the timer for it.
+let states = new HashMap<unit, Pair<int, CallbackPeriodic>>()
+
+function onGrab(unit owner)// Each unit is only allowed to hold a single state.
+    // Ignore the event if the unit already has the item.
+    if states.has(owner)
+        // The item will be dropped due to inventory limits.
+        return
+
+    // Periodically advance the state.
+    let cb = doPeriodically(TICK_FREQUENCY) (CallbackPeriodic cb) ->
+        advanceState(owner)
+
+    // Store the state.
+    states.put(owner, new Pair(100, cb))
+
+public function onDrop(unit owner)
+    // Remove the state for the individual and destroy the update timer.
+    destroy states.getAndRemove(owner).b
+
+    // Reset the transparance of the unit.
+    owner.setVertexColor(COLOR_WHITE)
+
+    // Flash an effect to obscure the vertex color change.
+    flashEffect(Abilities.animateDeadTarget, owner, AttachmentPoints.origin)
+
+    // Reset the movement speed.
+    owner.setMoveSpeed(owner.getDefaultMovespeed())
+
+public function advanceState(unit owner)
+    // Retrieve the state for the owner.
+    let state = states.get(owner)
+
+    // Exit if the state is already maximal.
+    if state.a == 0
+        return
+
+    // Mark the advancement.
+    state.a -= TICK_PERCENTAGE
+
+    // Update the coloring of the unit.
+    owner.setVertexColor(
+        // The tint advances towards black.
+        PercentTo255(state.a.toReal()),
+        PercentTo255(state.a.toReal()),
+        PercentTo255(state.a.toReal()),
+        // The alpha channel advances towards transparency.
+        PercentTo255(state.a.toReal())
+    )
+
+    // Increase the movement speed of the unit.
+    owner.setMoveSpeed(
+        owner.getDefaultMovespeed() + PercentToInt(100. - state.a, MAX_SPEED)
+    )
+
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
+        // Only track owners of the correct item.
+        if EventData.getManipulatedItem().getTypeId() == ITEM_DD_PINION_SHADOW
+            onGrab(EventData.getManipulatingUnit())
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DROP_ITEM) ->
+        // Only track owners of the correct item.
+        if EventData.getManipulatedItem().getTypeId() == ITEM_DD_PINION_SHADOW
+            onDrop(EventData.getManipulatingUnit())

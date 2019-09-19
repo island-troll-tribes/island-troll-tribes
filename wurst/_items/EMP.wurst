@@ -1,0 +1,87 @@
+package EMP
+
+// Standard library imports:
+import Assets
+import ClosureEvents
+import ClosureTimers
+import ObjEditingNatives
+
+// Local imports:
+import ID
+import UnitExtensions
+
+// The maximum allowed distance between the caster and each target.
+let RANGE = 3000.
+
+// The duration in seconds that buildings will be disabled for.
+let DURATION = 45.
+
+
+@compiletime function create_w3a_A06N()
+    createObjectDefinition("w3a", 'A06N', 'ANcl')
+        ..setLvlDataString("acat", 0, 0, "Units\\NightElf\\Wisp\\WispExplode.mdl")
+        ..setLvlDataUnreal("acdn", 1, 0, 180.0)
+        ..setLvlDataUnreal("Ncl1", 1, 1, 0.0)
+        ..setLvlDataInt("Ncl3", 1, 3, 1)
+        ..setLvlDataUnreal("Ncl4", 1, 4, 1.0)
+        ..setLvlDataInt("Ncl5", 1, 5, 0)
+        ..setLvlDataString("Ncl6", 1, 6, "dreadlordinferno")
+        ..setLvlDataString("aeat", 0, 0, "Units\\NightElf\\Wisp\\WispExplode.mdl")
+        ..setLvlDataInt("aher", 0, 0, 0)
+        ..setLvlDataInt("aite", 0, 0, 1)
+        ..setLvlDataInt("alev", 0, 0, 1)
+        ..setLvlDataString("anam", 0, 0, "EMP")
+        ..setLvlDataString("atat", 0, 0, "Units\\NightElf\\Wisp\\WispExplode.mdl")
+        ..setLvlDataString("auar", 0, 0, "ReplaceableTextures\\CommandButtons\\BTNWispSplode.blp")
+
+@compiletime function create_w3t_I03M()
+    createObjectDefinition("w3t", ITEM_EMP, 'mnst')
+        ..setString("iabi", "A06N")
+        ..setString("iico", "ReplaceableTextures\\CommandButtons\\BTNWispSplode.blp")
+        ..setInt("ubpx", 1)
+        ..setInt("ubpy", 2)
+        ..setInt("iclg", 0)
+        ..setInt("iclr", 0)
+        ..setString("ides", "Temporarily disables all buildings nearby when used.")
+        ..setInt("idrp", 1)
+        ..setString("ifil", "Doodads\\Cinematic\\EyeOfSargeras\\EyeOfSargeras.mdl")
+        ..setInt("igol", 0)
+        ..setInt("ilev", 0)
+        ..setInt("ilum", 31)
+        ..setString("unam", "EMP")
+        ..setInt("ilvo", 0)
+        ..setInt("iper", 0)
+        ..setReal("isca", 0.5)
+        ..setString("utip", "Purchase EMP")
+        ..setString("utub", "Disables all towers around the user for 45 seconds, Also removes enemy Wards in the area. Cooldown 180s")
+        ..setInt("iuse", 0)
+
+function onCast(unit caster)
+    // Enumerate each possible target.
+    for target in ENUM_GROUP..enumUnitsInRange(caster.getPos(), RANGE)
+        if not target.isEnemyOf(caster)
+            skip
+        else if target.getTypeId() == UNIT_LIVING_CLAY
+            // Add and then destroy the visible effect.
+            addEffect(Abilities.dispelMagicTarget, target.getPos()).destr()
+
+            // Explode and kill the target
+            target.explode()
+        else if target.isEnemyDefense()
+            // Disable the target.
+            target.pause()
+
+            // Mark that the target is disabled.
+            let marker = target.addEffect(
+                Abilities.talkToMe,
+                AttachmentPoints.overhead
+            )
+
+            // Undo these effects later.
+            doAfter(DURATION) ->
+                target.unpause()
+                marker.destr()
+
+init
+    EventListener.onCast('A06N') (unit caster) ->
+        onCast(caster)

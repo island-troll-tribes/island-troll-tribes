@@ -1,19 +1,21 @@
 package UnitExtensions
 
 // Standard library imports:
-import ClosureTimers
+import HashMap
 import ItemObjEditing
 import LinkedList
-import Orders
 
 // Third-party imports:
 import StackNSplit
 import Lodash
 
 // Local imports:
-import GameConfig
-import PublicLibrary
 import Brambles
+import Construction
+import GameConfig
+import GroupUtils
+import IsTypeThing
+import ManaBurn
 
 public let BUFF_ENSNARE_GROUND = 'Beng'
 public let BUFF_ENSNARE_AIR = 'Bena'
@@ -150,12 +152,6 @@ public function unit.dropItems(int count)
 public function unit.dropItems()
     this.dropItems(this.inventorySize())
 
-public function unit.setUserDataEx(int data)
-    SetUnitUserDataEx(this, data)
-
-public function unit.getUserDataEx() returns int
-    return GetUnitUserDataEx(this)
-
 public function unit.addSleep(bool value)
     UnitAddSleep(this, value)
 
@@ -223,3 +219,15 @@ public function unit.isEnemyBuildingAround(real radius) returns bool
 public function unit.isEnemyDefense() returns bool
     return this.getTypeId() == UNIT_ENSNARE_TRAP
         or this.getTypeId() == UNIT_OMNITOWER
+
+public function unit.isConstructing() returns bool
+    return isConstructing(this)
+
+public function unit.burnMana(real damage)
+    burnMana(this, damage)
+
+public function unit.registerTroll()
+    addTroll(this)
+
+public function unit.deregisterTroll()
+    removeTroll(this)

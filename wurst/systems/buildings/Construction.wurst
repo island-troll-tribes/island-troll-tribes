@@ -1,11 +1,23 @@
 package Construction
-import RegisterEvents
-import UnitExtensions
 
+// Standard library imports:
+import EventHelper
+import RegisterEvents
+
+let constructing = CreateGroup()
+
+public function isConstructing(unit target) returns bool
+    return constructing.contains(target)
 
 init
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_CONSTRUCT_START) ->
-        GetTriggerUnit().setUserDataEx(5)
+        constructing.addUnit(GetTriggerUnit())
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_CONSTRUCT_FINISH) ->
-        GetTriggerUnit().setUserDataEx(0)
+        constructing.removeUnit(EventData.getConstructedStructure())
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_CONSTRUCT_CANCEL) ->
+        constructing.removeUnit(EventData.getCancelledStructure())
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
+        constructing.removeUnit(EventData.getDyingUnit())

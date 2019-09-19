@@ -4,7 +4,6 @@ import UnitExtensions
 import ClosureTimers
 import GameConfig
 import TimerUtils
-import TimerDialog
 import ChatCommands
 import LinkedList
 import Game
@@ -36,6 +35,13 @@ function respawnTimeHandler(player triggerPlayer, LinkedList<string> args)
     let respawnTime = quadraticReviveDelay(numSeconds)
     let msg = "{0}Respawn time: |r{1}{2}s|r".format(GENERAL_COLOR, ENERGY_COLOR, respawnTime.toInt().toString())
     printTimedToPlayer(msg, 10, triggerPlayer)
+
+function compare(unit a, unit b) returns int
+    let aType = a.isType(UNIT_TYPE_STRUCTURE).toInt()
+    let bType = a.isType(UNIT_TYPE_STRUCTURE).toInt()
+    return aType == bType
+        ? a.getLevel() - b.getLevel()
+        : aType - bType
 
 init
     registerCommandAll("rt", (triggerPlayer, args) -> respawnTimeHandler(triggerPlayer, args))
@@ -90,14 +96,8 @@ init
 
                         let units = ENUM_GROUP
                             ..enumUnitsOfForce(owner.getAllies())
-                            .toLinkedList()
-                            ..sortWith((a, b) -> begin
-                                let aType = a.isType(UNIT_TYPE_STRUCTURE).toInt()
-                                let bType = a.isType(UNIT_TYPE_STRUCTURE).toInt()
-                                return aType == bType
-                                    ? a.getLevel() - b.getLevel()
-                                    : aType - bType
-                            end)
+                            .asList()
+                            ..sortWith((a, b) -> compare(a, b))
 
                         let spawnOn = units.getFirst()
                         let pos = spawnOn.getPos()

@@ -1,12 +1,17 @@
 package GoldTrading
+
+// Standard library imports:
 import LinkedList
-import ChatCommands
 import SimError
+
+// Local imports:
+import ColorUtils
+import ChatCommands
+import Game
+import GameConfig
 import PlayerExtensions
 import PlayerUtils
-import Game
-import LegacyColors
-import GameConfig
+import StringExtensions
 
 CommandHandler giveGold = (player giver, LinkedList<string> args) -> begin
     let tribeId = giver.getTribe().getId()
@@ -23,7 +28,7 @@ CommandHandler giveGold = (player giver, LinkedList<string> args) -> begin
         simError(giver, "You cannot trade with yourself")
     else if target.getTribe().getId() != tribeId
         simError(giver, "You cannot trade with that player")
-    else if players[playerId].isIngame() == false
+    else if not players[playerId].isIngame()
         simError(giver, "This player has left the game")
     else
         giver.subLumber(amount)

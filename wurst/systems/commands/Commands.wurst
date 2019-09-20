@@ -7,9 +7,9 @@ import LinkedList
 // Local imports:
 import ChatCommands
 import ChatUtils
+import ColorUtils
 import Game
 import GameMode
-import LegacyColors
 import PlayerExtensions
 import StringExtensions
 import TribeBoard
@@ -38,22 +38,32 @@ let settings = new HashMap<string, PlayerAllianceSetting>()
 
 function handlePlayerAllianceSettingToggle(player triggerPlayer, LinkedList<string> args)
     let setting = settings.get(args.get(0))
-    let newValue = args.size() > 1 ? args.get(1).isConfirmation() : not setting.values.get(triggerPlayer)
-    let msg = "{0} has turned {1} {2}".format(triggerPlayer.getNameColored(), setting.name.color(SPECIAL_COLOR), newValue.toOnOff().color(ENERGY_COLOR))
+    let newValue = args.size() > 1
+        ? args.get(1).isConfirmation()
+        : not setting.values.get(triggerPlayer)
+    let msg = "{0} has turned {1} {2}".format(
+        triggerPlayer.getNameColored(),
+        setting.name.color(SPECIAL_COLOR),
+        newValue.toOnOff().color(ENERGY_COLOR)
+    )
     DisplayTimedTextToForce(triggerPlayer.getAllies(), 5, msg)
     setting.values.put(triggerPlayer, newValue)
     triggerPlayer.getTribe().getMembers().forEach() member ->
         if member != triggerPlayer
-            triggerPlayer.setPlayerAlliance(member, setting.setting, setting.invertSetting ? not newValue : newValue)
+            triggerPlayer.setPlayerAlliance(
+                member,
+                setting.setting,
+                setting.invertSetting ? not newValue : newValue
+            )
 
     if setting.setting == ALLIANCE_SHARED_ADVANCED_CONTROL
         TribeBoard.findForPlayer(triggerPlayer).fixDisplay()
 
 init
     settings
-    ..put("ac", new PlayerAllianceSetting("advanced control", ALLIANCE_SHARED_ADVANCED_CONTROL))
-    ..put("sc", new PlayerAllianceSetting("share control", ALLIANCE_SHARED_CONTROL))
-    ..put("p", new PlayerAllianceSetting("private mode", ALLIANCE_SHARED_VISION, true))
+        ..put("ac", new PlayerAllianceSetting("advanced control", ALLIANCE_SHARED_ADVANCED_CONTROL))
+        ..put("sc", new PlayerAllianceSetting("share control", ALLIANCE_SHARED_CONTROL))
+        ..put("p", new PlayerAllianceSetting("private mode", ALLIANCE_SHARED_VISION, true))
 
     registerCommandAll("clear") (triggerPlayer, args) ->
         if localPlayer == triggerPlayer
@@ -72,7 +82,11 @@ init
                 .map(member -> member.getNameColored())
                 .joinBy(", ")
 
-            printTimedToPlayer(GENERAL_COLOR + tribe.getName() + ": " + names, 10, triggerPlayer)
+            printTimedToPlayer(
+                tribe.getName().color(GENERAL_COLOR) + ": " + names,
+                10,
+                triggerPlayer
+            )
 
     registerCommandAll("recipes") (triggerPlayer, args) ->
         let msg = "{0}Ok, here are the build help locations.\nYou can see the recipe for every item and building by selecting the wards, take time to read".format(GENERAL_COLOR)
@@ -119,13 +133,12 @@ init
 
         registerCommandAll("crafting") (triggerPlayer, args) ->
             let msg = (
-                GENERAL_COLOR+
                 "Pick up the materials in the right order on the first go, they will be transmuted into the item you want to craft.\n"+
                 "Crafting recipes are displayed on the ward bottom side of the map, you have to select the ward, type -recipes if you can't find them.\n"+
                 "Building are crafted by your troll or the master crafter, gears & weapons are crafted by the building.\n"+
-                HIGHLIGHT_COLOR+"Example1|r" + GENERAL_COLOR +" : recipe for camp fire kit is tinder flint stick, which you have to put a tinder in your first inventory slot, flint in the second & stick in the third\n"+
-                HIGHLIGHT_COLOR+"Example2|r" + GENERAL_COLOR +" : recipe for iron ingot is stone flint in armory, stone in slot 1 & flint in slot 2 of the armory\n"+
-                HIGHLIGHT_COLOR+"Example3|r" + GENERAL_COLOR +" : recipe for iron axe is bone/stick iron ingot iron ingot in armory, so put either stick or bone in slot 1, iron ingot in slot 2 & 3 of the armory\n"+
+                "Example 1".color(HIGHLIGHT_COLOR) + ": recipe for camp fire kit is tinder flint stick, which you have to put a tinder in your first inventory slot, flint in the second & stick in the third\n"+
+                "Example 2".color(HIGHLIGHT_COLOR) + ": recipe for iron ingot is stone flint in armory, stone in slot 1 & flint in slot 2 of the armory\n"+
+                "Example 3".color(HIGHLIGHT_COLOR) + ": recipe for iron axe is bone/stick iron ingot iron ingot in armory, so put either stick or bone in slot 1, iron ingot in slot 2 & 3 of the armory\n"+
                 "You can also use quickmake skill to craft faster in the building, read the tooltips in building for more information.\n"+
                 "Type -clear to clear off those hints."
             )

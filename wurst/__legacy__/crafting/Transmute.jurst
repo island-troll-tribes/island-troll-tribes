@@ -54,7 +54,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 call RemoveItem(t[1])
                 call RemoveItem(t[2])
                 call RemoveItem(t[3])
-                set added = CreateItem(ITEM_ARMORY_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+                set added = CreateItem(ITEM_FORGE_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
                 call UnitAddItem(GetTriggerUnit(), added)
                 call lowerItem(4)
             endif
@@ -92,7 +92,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 call RemoveItem(t[1])
                 call RemoveItem(t[2])
                 call RemoveItem(t[3])
-                set added = CreateItem(ITEM_STORAGE_HUT_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+                set added = CreateItem(ITEM_WORKSHOP_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
                 call UnitAddItem(GetTriggerUnit(), added)
                 call lowerItem(4)
             endif
@@ -100,7 +100,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
                 call RemoveItem(t[2])
-                set added = CreateItem(ITEM_WORKSHOP_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+                set added = CreateItem(ITEM_ARMORY_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
                 call UnitAddItem(GetTriggerUnit(), added)
                 call lowerItem(1)
             endif
@@ -189,23 +189,39 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
             endif
         endif
     //End of Troll Inventory Item Creation
-    //Begging of Armory Item Creation
-        if uid == UNIT_ARMORY and not isConstructing(GetTriggerUnit()) then
+    //Beginning of Forge Item Creation
+        if uid == UNIT_FORGE and not isConstructing(GetTriggerUnit()) then
             loop
                 exitwhen e > 5
                 set t[e] = UnitItemInSlot(GetTriggerUnit(), e)
                 set i[e] = GetItemTypeId(t[e])
                 set e = e +1
             endloop
-            set bol1 = IsItemPole(t[1])
-            if i[0] == ITEM_TINDER and bol1 and i[2] == ITEM_STICK then
+            if i[0] == ITEM_STONE and i[1] == ITEM_FLINT then
+                call RemoveItem(t[0])
+                call RemoveItem(t[1])
+                set added = CreateItem(ITEM_IRON_INGOT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+                call UnitAddItem(GetTriggerUnit(), added)
+                call lowerItem(2)
+            endif
+            if i[0] == ITEM_IRON_INGOT and i[1] == ITEM_IRON_INGOT and i[2] == ITEM_FLINT and i[3] == ITEM_FLINT then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
                 call RemoveItem(t[2])
-                set added = CreateItem(ITEM_ENSNARE_TRAP_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+                call RemoveItem(t[3])
+                set added = CreateItem(ITEM_STEEL_INGOT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
                 call UnitAddItem(GetTriggerUnit(), added)
-                call lowerItem(3)
+                call lowerItem(2)
             endif
+            set bol1 = IsItemPole(t[1])
+            if i[0] == ITEM_STONE and bol1 then
+                call RemoveItem(t[0])
+                call RemoveItem(t[1])
+                set added = CreateItem(ITEM_SPEAR, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+                call UnitAddItem(GetTriggerUnit(), added)
+                call lowerItem(2)
+            endif
+            //Forge Armor
             set bol1 = IsItemBasicBoots(t[0])
             if bol1 and i[1] == ITEM_BONE and i[2] == ITEM_BONE and i[3] == ITEM_BONE and i[4] == ITEM_BONE and i[5] == ITEM_BONE then
                 call RemoveItem(t[0])
@@ -287,48 +303,6 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 set added = CreateItem(ITEM_STEEL_COAT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
                 call UnitAddItem(GetTriggerUnit(), added)
             endif
-            if i[0] == ITEM_STONE and i[1] == ITEM_FLINT then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                set added = CreateItem(ITEM_IRON_INGOT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
-                call UnitAddItem(GetTriggerUnit(), added)
-                call lowerItem(2)
-            endif
-            if i[0] == ITEM_IRON_INGOT and i[1] == ITEM_IRON_INGOT and i[2] == ITEM_FLINT and i[3] == ITEM_FLINT then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call RemoveItem(t[2])
-                call RemoveItem(t[3])
-                set added = CreateItem(ITEM_STEEL_INGOT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
-                call UnitAddItem(GetTriggerUnit(), added)
-                call lowerItem(2)
-            endif
-            set bol1 = IsItemPole(t[1])
-            if i[0] == ITEM_STONE and bol1 then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                set added = CreateItem(ITEM_SPEAR, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
-                call UnitAddItem(GetTriggerUnit(), added)
-                call lowerItem(2)
-            endif
-            set bol1 = IsItemPole(t[0])
-            if bol1 and i[1] == ITEM_FLINT and i[2] == ITEM_FLINT then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call RemoveItem(t[2])
-                set added = CreateItem(ITEM_FLINT_AXE, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
-                call UnitAddItem(GetTriggerUnit(), added)
-                call lowerItem(3)
-            endif
-            set bol1 = IsItemPole(t[0])
-            if bol1 and i[1] == ITEM_STONE and i[2] == ITEM_STONE then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call RemoveItem(t[2])
-                set added = CreateItem(ITEM_STONE_AXE, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
-                call UnitAddItem(GetTriggerUnit(), added)
-                call lowerItem(3)
-            endif
             set bol1 = IsItemPole(t[0])
             if bol1 and i[1] == ITEM_IRON_INGOT and i[2] == ITEM_IRON_INGOT then
                 call RemoveItem(t[0])
@@ -377,7 +351,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 call UnitAddItemByIdSwapped( ITEM_MAGE_MASHER, GetTriggerUnit() )
                 call lowerItem(2)
             endif
-            //Regular Shield VVVVVVVVVVVVVVVV any hide/stick/stick
+            //Shields
             set bol1 = IsItemHide(t[0])
             if bol1 and i[1] == ITEM_STICK and i[2] == ITEM_STICK then
                 call RemoveItem(t[0])
@@ -417,6 +391,103 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 call RemoveItem(t[2])
                 set added = CreateItem(ITEM_STEEL_SHIELD, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
                 call UnitAddItem(GetTriggerUnit(), added)
+            endif
+            // End Forge Armor
+        endif
+    //Begging of Armory Item Creation
+        if uid == UNIT_ARMORY and not isConstructing(GetTriggerUnit()) then
+            loop
+                exitwhen e > 5
+                set t[e] = UnitItemInSlot(GetTriggerUnit(), e)
+                set i[e] = GetItemTypeId(t[e])
+                set e = e +1
+            endloop
+            // set bol1 = IsItemPole(t[0])
+            // if bol1 and i[1] == ITEM_FLINT and i[2] == ITEM_FLINT then
+            //     call RemoveItem(t[0])
+            //     call RemoveItem(t[1])
+            //     call RemoveItem(t[2])
+            //     set added = CreateItem(ITEM_FLINT_AXE, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+            //     call UnitAddItem(GetTriggerUnit(), added)
+            //     call lowerItem(3)
+            // endif
+            // set bol1 = IsItemPole(t[0])
+            // if bol1 and i[1] == ITEM_STONE and i[2] == ITEM_STONE then
+            //     call RemoveItem(t[0])
+            //     call RemoveItem(t[1])
+            //     call RemoveItem(t[2])
+            //     set added = CreateItem(ITEM_STONE_AXE, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+            //     call UnitAddItem(GetTriggerUnit(), added)
+            //     call lowerItem(3)
+            // endif
+            if i[0] ==  ITEM_STICK and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_STEEL_INGOT and i[3] == ITEM_SPIRIT_WIND and i[4] == ITEM_SPIRIT_WATER and i[5] == ITEM_MANA_CRYSTAL then
+                call RemoveItem(t[0])
+                call RemoveItem(t[1])
+                call RemoveItem(t[2])
+                call RemoveItem(t[3])
+                call RemoveItem(t[4])
+                call RemoveItem(t[5])
+                call UnitAddItemByIdSwapped( ITEM_BATTLE_AXE, GetTriggerUnit() )
+                call lowerItem(1)
+            endif
+            if i[0] == ITEM_BONE_COAT and i[1] == ITEM_SPIRIT_WIND and i[2] == ITEM_SPIRIT_WATER and i[3] == ITEM_MANA_CRYSTAL then
+                call RemoveItem(t[0])
+                call RemoveItem(t[1])
+                call RemoveItem(t[2])
+                call RemoveItem(t[3])
+                call UnitAddItemByIdSwapped( ITEM_BATTLE_ARMOR, GetTriggerUnit() )
+                call lowerItem(1)
+            endif
+            if i[0] == ITEM_BONE_BOOTS and i[1] == ITEM_SPIRIT_WIND and i[2] == ITEM_SPIRIT_WATER and i[3] == ITEM_MANA_CRYSTAL and i[4] == ITEM_ANABOLIC_POTION and i[5] == ITEM_ANABOLIC_POTION then
+                call RemoveItem(t[0])
+                call RemoveItem(t[1])
+                call RemoveItem(t[2])
+                call RemoveItem(t[3])
+                if GetItemCharges(t[4]) > 1 then
+                    call SetItemCharges(t[4], GetItemCharges(t[4]) - 1 )
+                else
+                    call RemoveItem(t[4])
+                endif
+                if GetItemCharges(t[5]) > 1 then
+                    call SetItemCharges(t[5], GetItemCharges(t[5]) - 1 )
+                else
+                    call RemoveItem(t[5])
+                endif
+                call UnitAddItemByIdSwapped( ITEM_ANABOLIC_BOOTS, GetTriggerUnit() )
+                call lowerItem(1)
+            endif
+            if i[0] == ITEM_BONE_BOOTS and i[1] == ITEM_SPIRIT_WIND and i[2] == ITEM_SPIRIT_WATER and i[3] == ITEM_MANA_CRYSTAL and i[4] == ITEM_ANABOLIC_POTION and GetItemCharges(t[4]) > 1 then
+                call RemoveItem(t[0])
+                call RemoveItem(t[1])
+                call RemoveItem(t[2])
+                call RemoveItem(t[3])
+                if GetItemCharges(t[4]) > 2 then
+                    call SetItemCharges(t[4], GetItemCharges(t[4]) - 2 )
+                else
+                    call RemoveItem(t[4])
+                endif
+                call UnitAddItemByIdSwapped( ITEM_ANABOLIC_BOOTS, GetTriggerUnit() )
+                call lowerItem(1)
+            endif
+            if i[0] == ITEM_BONE_GLOVES and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_STEEL_INGOT and i[3] == ITEM_SPIRIT_WIND and i[4] == ITEM_SPIRIT_WATER and i[5] == ITEM_MANA_CRYSTAL then
+                call RemoveItem(t[0])
+                call RemoveItem(t[1])
+                call RemoveItem(t[2])
+                call RemoveItem(t[3])
+                call RemoveItem(t[4])
+                call RemoveItem(t[5])
+                call UnitAddItemByIdSwapped( ITEM_BATTLE_GLOVES, GetTriggerUnit() )
+                call lowerItem(1)
+            endif
+            if i[0] == ITEM_BONE_SHIELD and i[1] == ITEM_ELK_HIDE and i[2] == ITEM_STEEL_INGOT and i[3] == ITEM_SPIRIT_WIND and i[4] == ITEM_SPIRIT_WATER and i[5] == ITEM_MANA_CRYSTAL then
+                call RemoveItem(t[0])
+                call RemoveItem(t[1])
+                call RemoveItem(t[2])
+                call RemoveItem(t[3])
+                call RemoveItem(t[4])
+                call RemoveItem(t[5])
+                call UnitAddItemByIdSwapped( ITEM_BATTLE_SHIELD, GetTriggerUnit() )
+                call lowerItem(1)
             endif
         endif
     //End of Armory Item Creation
@@ -596,17 +667,16 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
             endif
             //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             //Battle AxeVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-            if i[0] ==  ITEM_STICK and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_IRON_INGOT and i[3] == ITEM_SPIRIT_WIND and i[4] == ITEM_SPIRIT_WATER and i[5] == ITEM_MANA_CRYSTAL then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call RemoveItem(t[2])
-                call RemoveItem(t[3])
-                call RemoveItem(t[4])
-                call RemoveItem(t[5])
-                call UnitAddItemByIdSwapped( ITEM_BATTLE_AXE, GetTriggerUnit() )
-                call lowerItem(1)
-            endif
-            //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            // if i[0] ==  ITEM_STICK and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_IRON_INGOT and i[3] == ITEM_SPIRIT_WIND and i[4] == ITEM_SPIRIT_WATER and i[5] == ITEM_MANA_CRYSTAL then
+            //     call RemoveItem(t[0])
+            //     call RemoveItem(t[1])
+            //     call RemoveItem(t[2])
+            //     call RemoveItem(t[3])
+            //     call RemoveItem(t[4])
+            //     call RemoveItem(t[5])
+            //     call UnitAddItemByIdSwapped( ITEM_BATTLE_AXE, GetTriggerUnit() )
+            //     call lowerItem(1)
+            // endif
             if i[0] == ITEM_IRON_INGOT and i[1] == ITEM_FLINT then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -701,22 +771,37 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 call UnitAddItemByIdSwapped( ITEM_EMP, GetTriggerUnit() )
                 call lowerItem(2)
             endif
-            if i[0] == ITEM_BONE_SHIELD and i[1] == ITEM_ELK_HIDE and i[2] == ITEM_STEEL_INGOT and i[3] == ITEM_SPIRIT_WIND and i[4] == ITEM_SPIRIT_WATER and i[5] == ITEM_MANA_CRYSTAL then
-                call RemoveItem(t[0])
-                call RemoveItem(t[1])
-                call RemoveItem(t[2])
-                call RemoveItem(t[3])
-                call RemoveItem(t[4])
-                call RemoveItem(t[5])
-                call UnitAddItemByIdSwapped( ITEM_BATTLE_SHIELD, GetTriggerUnit() )
-                call lowerItem(1)
-            endif
+            // if i[0] == ITEM_BONE_SHIELD and i[1] == ITEM_ELK_HIDE and i[2] == ITEM_STEEL_INGOT and i[3] == ITEM_SPIRIT_WIND and i[4] == ITEM_SPIRIT_WATER and i[5] == ITEM_MANA_CRYSTAL then
+            //     call RemoveItem(t[0])
+            //     call RemoveItem(t[1])
+            //     call RemoveItem(t[2])
+            //     call RemoveItem(t[3])
+            //     call RemoveItem(t[4])
+            //     call RemoveItem(t[5])
+            //     call UnitAddItemByIdSwapped( ITEM_BATTLE_SHIELD, GetTriggerUnit() )
+            //     call lowerItem(1)
+            // endif
             if i[0] == ITEM_SMOKE_BOMB and i[1] == ITEM_FLINT and i[2] == ITEM_MANA_CRYSTAL then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
                 call RemoveItem(t[2])
                 call UnitAddItemByIdSwapped( ITEM_FIRE_BOMB, GetTriggerUnit() )
                 call lowerItem(2)
+            endif
+            set bol1 = IsItemPole(t[1])
+            if i[0] == ITEM_TINDER and bol1 and i[2] == ITEM_STICK then
+                call RemoveItem(t[0])
+                call RemoveItem(t[1])
+                call RemoveItem(t[2])
+                set added = CreateItem(ITEM_ENSNARE_TRAP_KIT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+                call UnitAddItem(GetTriggerUnit(), added)
+                call lowerItem(3)
+            endif
+            if i[0] == ITEM_SPIRIT_WIND and i[1] == ITEM_SPIRIT_WATER then
+                call RemoveItem(t[0])
+                call RemoveItem(t[1])
+                set added = CreateItem(ITEM_MANA_CRYSTAL, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
+                call UnitAddItem(GetTriggerUnit(), added)
             endif
     //      if i[0] == ITEM_SPEAR and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_STEEL_INGOT and i[3] == ITEM_SPIRIT_WIND and i[4] == ITEM_SPIRIT_WATER and i[5] == ITEM_MANA_CRYSTAL then
     //          call RemoveItem(t[0])

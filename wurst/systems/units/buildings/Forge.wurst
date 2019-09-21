@@ -1,35 +1,34 @@
-package Armory
+package Forge
 
 import Building
-import DropItems
 import ID
 import UnitObjEditing
 import ObjectIds
+import DropItems
+import LocalAssets
 
-
-constant MODEL       = "Models\\Armory.mdx"
-let NAME             = "Armory"
-let ICON             = "ReplaceableTextures\\CommandButtons\\BTNArmory.blp"
+constant MODEL       = LocalBuildings.forge
+let NAME             = "Forge"
+let ICON             = LocalIcons.btnForgeKit
 let NORMAL_ABILITIES = commaList("A044", "Aall")   //Normal abilities (Inventory(building) and Shop Sharing allied bldg)
 let BASE_ID          = 'hhou'                      //Human Farm building ID
 let BUILD_TIME       = 25
 let MAX_HP           = 260
 let VISION_DAY       = 1600
 let VISION_NIGHT     = 1000
-let TOOLTIP_EXT      = "A building used to make end game battle gear"
-let TOOLTIP_BASIC    = "A building to make battle gear"
+let TOOLTIP_EXT      = "A building used to make ingots from stone and flint"
+let TOOLTIP_BASIC    = "A Forge to make ingots"
 let SCALING_VALUE    = .75
 let COLLISION_SIZE   = 72.
 let SELECTION_SCALE  = 2.5
 let BASE_DEFENSE     = 5
 
-
-public class Armory extends Building
-    private static let unitTypeId = UNIT_ARMORY
-
+public class Forge extends Building
+    private static let unitTypeId = UNIT_FORGE
+    
     static function initialize()
-        register(unitTypeId, building -> new Armory(building))
-
+        register(unitTypeId, building -> new Forge(building))
+    
     construct(unit whichUnit)
         super(whichUnit)
 
@@ -39,16 +38,22 @@ public class Armory extends Building
     override function postCreate()
         super.postCreate()
 
+        getUnit().addAbility(SPELL_QM_IRON_INGOT)
+        getUnit().addAbility(SPELL_QM_STEEL_INGOT)
+        getUnit().addAbility(SPELL_QM_IRON_AXE)
+        getUnit().addAbility(SPELL_QM_STEEL_AXE)
         getUnit().addAbility(SPELL_DROP_ITEMS)
-        getUnit().addAbility(SPELL_QM_ANABOLIC_BOOTS)
-        getUnit().addAbility(SPELL_QM_BATTLE_ARMOR)
-        getUnit().addAbility(SPELL_QM_BATTLE_GLOVES)
-        getUnit().addAbility(SPELL_QM_BATTLE_AXE)
-        getUnit().addAbility(SPELL_QM_BATTLE_SHIELD)
-        // getUnit().addAbility(SPELL_QM_STONE_AXE)
+        getUnit().addAbility(SPELL_ARMOR_SPELLBOOK_ID)
+        getUnit().addAbility(SPELL_QM_SPEAR)
+        getUnit().addAbility(SPELL_QM_IRON_SPEAR)
+        getUnit().addAbility(SPELL_QM_STEEL_SPEAR)
+        getUnit().addAbility(SPELL_QM_DARK_SPEAR)
+        getUnit().addAbility(SPELL_QM_MAGE_MASHER)
+        getUnit().addAbility(SPELL_FORGE_SPELLBOOK_ID)
+
 
 @compiletime function createPlayerBuildings()
-    new BuildingDefinition(UNIT_ARMORY, BASE_ID)
+    new BuildingDefinition(UNIT_FORGE, BASE_ID)
     ..setNormalAbilities(NORMAL_ABILITIES)
     ..setModelFile(MODEL)
     ..setCanDropItemsOnDeath(true)
@@ -73,4 +78,4 @@ public class Armory extends Building
     ..setLumberCost(21)
 
 init
-    Armory.initialize()
+    Forge.initialize()

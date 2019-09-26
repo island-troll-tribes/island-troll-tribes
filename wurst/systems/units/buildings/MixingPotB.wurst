@@ -2,6 +2,28 @@ package MixingPotB
 
 import Building
 import ID
+import UnitObjEditing
+import ObjectIds
+import LocalAssets
+
+
+constant MODEL       = LocalBuildings.mixingPot
+let NAME             = "Mixing Pot"
+let ICON             = LocalIcons.btnMixingPot
+let NORMAL_ABILITIES = commaList("A06P,A044," + toRawCode(ABILITY_SHOP_SHARING))   //Normal abilities
+let BASE_ID          = 'hhou'                                                      //Human Farm building ID
+let BUILD_TIME       = 25
+let MAX_HP           = 260
+let VISION_DAY       = 1600
+let VISION_NIGHT     = 1000
+let TOOLTIP_EXT      = "This pot is so big it is able to hold large amounts of boiling water. Inside, herbs can be mixed into potions."
+let TOOLTIP_BASIC    = "You can mix herbs inside this pot."
+let SCALING_VALUE    = 2.
+let COLLISION_SIZE   = 144.0
+let SELECTION_SCALE  = 2.5
+let BASE_DEFENSE     = 0
+let SOUND_SET        = "TempleOfTides"
+let PATHING_MAP      = "PathTextures\\4x4SimpleSolid.tga"
 
 public class MixingPot extends Building
     private static let unitTypeId = UNIT_POT
@@ -29,6 +51,29 @@ public class MixingPot extends Building
         getUnit().addAbility(SPELL_QM_SPIRIT_WATER)
         getUnit().addAbility(SPELL_QM_SPIRIT_DARKNESS)
         getUnit().addAbility(SPELL_MIXING_POT_SPELLBOOK_ID)
+
+@compiletime function createPlayerBuildings()
+    new BuildingDefinition(UNIT_POT, BASE_ID)
+    ..setNormalAbilities(NORMAL_ABILITIES)
+    ..setModelFile(MODEL)
+    ..setCanDropItemsOnDeath(true)
+    ..setBuildTime(BUILD_TIME)
+    ..setHitPointsMaximumBase(MAX_HP)
+    ..setIsaBuilding(true)
+    ..setSightRadiusDay(VISION_DAY)
+    ..setSightRadiusNight(VISION_NIGHT)
+    ..setName(NAME)
+    ..setTooltipExtended(TOOLTIP_EXT)
+    ..setTooltipBasic(TOOLTIP_BASIC)
+    ..setScalingValue(SCALING_VALUE)
+    ..setCollisionSize(COLLISION_SIZE)
+    ..setSelectionScale(SELECTION_SCALE)
+    ..setDefenseBase(BASE_DEFENSE)
+    ..setPathingMap(PATHING_MAP)
+    ..setFoodProduced(0)
+    ..setUnitSoundSet(SOUND_SET)
+    ..setIconGameInterface(ICON)
+    ..setLumberCost(21)
 
 init
     MixingPot.initialize()

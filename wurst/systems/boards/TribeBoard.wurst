@@ -1,20 +1,28 @@
 package TribeBoard
-import RegisterEvents
-import Game
+
+// Standard library imports:
+import Assets
 import ClosureTimers
-import Tribe
-import LinkedList
-import LodashExtensions
-import LegacyColors
-import PlayerExtensions
 import HashMap
+import LinkedList
+import RegisterEvents
+
+// Third-party imports:
+import LodashExtensions
+
+// Local imports:
+import ColorUtils
 import Boards
+import Game
+import PlayerExtensions
+import StringExtensions
+import Tribe
 
 let PERIOD = 1.0
 
-let ICON_COOKED_MEAT = "ReplaceableTextures\\CommandButtons\\BTNMonsterLure.blp"
-let ICON_SLEEP = "ReplaceableTextures\\PassiveButtons\\PASBTNElunesBlessing.blp"
-let ICON_HEAT = "ReplaceableTextures\\CommandButtons\\BTNInnerFireOn.blp"
+let ICON_COOKED_MEAT = Icons.bTNMonsterLure
+let ICON_SLEEP = Icons.pASBTNElunesBlessing
+let ICON_HEAT = Icons.pASBTNIncinerate
 
 class TribeBoard
     static let boards = new HashMap<player, thistype>()
@@ -35,41 +43,41 @@ class TribeBoard
         let members = tribe.getMembers()
 
         board = CreateMultiboard()
-        ..setColumnCount(4)
-        ..setRowCount(members.size())
-        ..setTitle("Team Stats")
+            ..setColumnCount(4)
+            ..setRowCount(members.size())
+            ..setTitle("Team Stats")
 
         var row = 0
         for member in members
             boards.put(member, this)
 
             board
-            .getItem(row, 0)
-            ..setStyle(true, false)
-            ..setValue(HIGHLIGHT_COLOR + member.getName())
-            ..setWidth(0.1)
-            ..release()
+                .getItem(row, 0)
+                ..setStyle(true, false)
+                ..setValue(member.getName().color(HIGHLIGHT_COLOR))
+                ..setWidth(0.1)
+                ..release()
 
             board
-            .getItem(row, 1)
-            ..setStyle(true, true)
-            ..setIcon(ICON_COOKED_MEAT)
-            ..setWidth(0.04)
-            ..release()
+                .getItem(row, 1)
+                ..setStyle(true, true)
+                ..setIcon(ICON_COOKED_MEAT)
+                ..setWidth(0.04)
+                ..release()
 
             board
-            .getItem(row, 2)
-            ..setStyle(true, true)
-            ..setIcon(ICON_SLEEP)
-            ..setWidth(0.04)
-            ..release()
+                .getItem(row, 2)
+                ..setStyle(true, true)
+                ..setIcon(ICON_SLEEP)
+                ..setWidth(0.04)
+                ..release()
 
             board
-            .getItem(row, 3)
-            ..setStyle(true, true)
-            ..setIcon(ICON_HEAT)
-            ..setWidth(0.04)
-            ..release()
+                .getItem(row, 3)
+                ..setStyle(true, true)
+                ..setIcon(ICON_HEAT)
+                ..setWidth(0.04)
+                ..release()
 
             board.display(member, true)
 
@@ -86,25 +94,25 @@ class TribeBoard
             let troll = member.getTroll()
 
             board
-            .getItem(row, 1)
-            ..setValue(HEALTH_COLOR + troll.getHP().toInt().toString())
-            ..release()
+                .getItem(row, 1)
+                ..setValue(troll.getHP().toInt().toString().color(HEALTH_COLOR))
+                ..release()
 
             board
-            .getItem(row, 2)
-            ..setValue(ENERGY_COLOR + troll.getMana().toInt().toString())
-            ..release()
+                .getItem(row, 2)
+                ..setValue(troll.getMana().toInt().toString().color(ENERGY_COLOR))
+                ..release()
 
             board
-            .getItem(row, 3)
-            ..setValue(GOLD_COLOR + member.getGold().toString())
-            ..release()
+                .getItem(row, 3)
+                ..setValue(member.getGold().toString().color(COLOR_GOLD))
+                ..release()
 
             if not member.isIngame()
                 board
-                .getItem(row, 0)
-                ..setValue(GRAY_COLOR + member.getName())
-                ..release()
+                    .getItem(row, 0)
+                    ..setValue(member.getName().color(GRAY_COLOR))
+                    ..release()
 
             row += 1
 
@@ -112,8 +120,8 @@ class TribeBoard
         doAfter(0.5) ->
             for member in tribe.getMembers()
                 board
-                ..display(member, false)
-                ..display(member, true)
+                    ..display(member, false)
+                    ..display(member, true)
 
 
 init

@@ -1,10 +1,17 @@
 package AbilityObjectCreationUtils
 
+// Standard library imports:
 import AbilityObjEditing
-import ObjectIdGenerator
-import Lodash
 import HashMap
-import LegacyColors
+import LinkedList
+import ObjectIdGenerator
+
+// Third-party imports:
+import Lodash
+
+// Local imports:
+import ColorUtils
+import StringExtensions
 import ToolTipsUtils
 
 public function createHiddenSpellbookWithAbilities(string abilityList) returns int
@@ -54,7 +61,11 @@ public class SpellBookObject
         this.id = id
         this.name = name
         this.hotkey = hotkey
-        this.toolTip = GENERAL_COLOR+"[" + SPECIAL_COLOR + hotkey + GENERAL_COLOR + "] - " + this.name + "|r"
+        this.toolTip = asList(
+            "[".color(GENERAL_COLOR),
+            hotkey.color(SPECIAL_COLOR),
+            ("] - " + this.name).color(GENERAL_COLOR)
+        ).join()
         this.toolTipExt = toolTipExt
         this.abilityList = abilityList
         this.btnPos = btnPos
@@ -113,7 +124,7 @@ public class HeroSpellBookObject extends SpellBookObject
         this.level = level
         this.skipLevel = skipLevel
         this.reqLevel = reqLevel
-        this.toolTipRes = GENERAL_COLOR + "Learn " + name
+        this.toolTipRes = ("Learn " + name).color(GENERAL_COLOR)
 
     construct(int id, string name, string hotkey, string toolTip, HashMap<int, string> abilityList, Pair<int, int> btnPos, string icon, int level, int reqLevel, int skipLevel,
              real cooldown)

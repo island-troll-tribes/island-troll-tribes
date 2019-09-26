@@ -1,29 +1,34 @@
 package ActivateRunesNew
-import DarkGateNew
-import DementiaRunesNew
-import ClosureForGroups
-import Orders
+
+// Standard library imports:
+import Assets
+import ChannelAbilityPreset
 import ClosureEvents
+import ClosureForGroups
+import ClosureTimers
 import DummyCaster
 import LinkedList
-import ClosureTimers
-import LodashExtensions
-import LegacyColors
-import ID
-import Lodash
-import Assets
-import ToolTipsUtils
-import ChannelAbilityPreset
+import Orders
 
-//let ABILITY_ID = 'A07B' // Activates Runes, Old GUI
-//let REQUIREMENT_ABILITY_ID = 'A07D' // Dementia Summoning
+// Third-party imports:
+import Lodash
+import LodashExtensions
+
+// Local imports:
+import ColorUtils
+import DarkGateNew
+import DementiaRunesNew
+import ID
+import StringExtensions
+import ToolTipsUtils
+
 let PORTAL_OFFSET = 350.
 let RUNE_CAST_RADIUS = 350.
 let SUMMON_EFFECT_PATH = Abilities.ancestralSpiritCaster
 
-let KA = COLOR_RED+"Ka|r"
-let NEL = COLOR_GREEN+"Nel|r"
-let LEZ = COLOR_LIGHT_BLUE+"Lez|r"
+let KA  = "Ka".color(COLOR_RED)
+let NEL = "Nel".color(COLOR_GREEN)
+let LEZ = "Lez".color(COLOR_LIGHT_BLUE)
 
 let KA_RECIPE = KA+" "+LEZ+" "+KA+" "+NEL+" "+KA
 let NEL_RECIPE = NEL+" "+NEL+" "+KA+" "+NEL+" "+LEZ
@@ -35,8 +40,8 @@ let DEMENTIA_SUMMON_TOOLTIP_NORM     = "Dementia Summoning"
 let DEMENTIA_SUMMON_TOOLTIP_EXTENDED = ("Passively gives the Dementia Master the ability to summon a monster from dementia space using Dementia Runes. "+
                                        "Summoning must be performed close to the center of an open dark gate and you must have a correct rune order. "+
                                        "The Dementia Master managed to decipher the following rune order from the ancient dark book.\n"+
-                                       SUMMONS_RECIPE+"{0}Warning! Dementia Summonings can be unpredictable and dangerous. No creature wants "+
-                                       "to be summoned for no reason!|r").format(COLOR_RED)
+                                       SUMMONS_RECIPE)+("Warning! Dementia Summonings can be unpredictable and dangerous. No creature wants "+
+                                       "to be summoned for no reason!|r").color(COLOR_RED)
 
 let ACTIVATE_RUNES_TOOLTIP_NORM     = "Activates Runes"
 let ACTIVATE_RUNES_TOOLTIP_EXTENDED = "Casting this spell causes nearby runes to become active and seek targets. Runes will seek any enemies inside "+
@@ -176,14 +181,14 @@ function doSummon(SummonData summon, DarkPortalInstance portalInstance, player o
     doAfter(1.25) ->
         efx.destr()
         PlaySound(Sounds.shadowHunterReady1)
-        printTimedToPlayer(GENERAL_COLOR + "You have summoned " + summon.name + GENERAL_COLOR + "!|r", 5, owner)
+        printTimedToPlayer("You have summoned ".color(GENERAL_COLOR) + summon.name + "!".color(GENERAL_COLOR), 5, owner)
         portalInstance.summons.push(new Summon(createUnit(owner, summon.summonUnitID, portalInstance.centerPos, angle(-90 * DEGTORAD)), summon.cooldown, summon.orderId))
 
 
 function initSummonsData()
-    summonsList.push(new SummonData(Runes.Ka , Runes.Lez, Runes.Ka , Runes.Nel, Runes.Ka , COLOR_RED   + "Kalezka Nelka|r"  , Orders.acidbomb   , 1  , UNIT_LOCUST_FIRE_LORD))
-    summonsList.push(new SummonData(Runes.Lez, Runes.Nel, Runes.Lez, Runes.Lez, Runes.Ka , COLOR_TEAL  + "Leznel Lezlezka|r", Orders.thunderbolt, 1  , UNIT_LOCUST_WATER_LORD))
-    summonsList.push(new SummonData(Runes.Nel, Runes.Nel, Runes.Ka , Runes.Nel, Runes.Lez, COLOR_GREEN + "Nelnelka Nellez|r", Orders.soulburn   , 1.5, UNIT_LOCUST_GHOST))
+    summonsList.push(new SummonData(Runes.Ka , Runes.Lez, Runes.Ka , Runes.Nel, Runes.Ka , "Kalezka Nelka".color(COLOR_RED)    , Orders.acidbomb   , 1  , UNIT_LOCUST_FIRE_LORD))
+    summonsList.push(new SummonData(Runes.Lez, Runes.Nel, Runes.Lez, Runes.Lez, Runes.Ka , "Leznel Lezlezka".color(COLOR_TEAL) , Orders.thunderbolt, 1  , UNIT_LOCUST_WATER_LORD))
+    summonsList.push(new SummonData(Runes.Nel, Runes.Nel, Runes.Ka , Runes.Nel, Runes.Lez, "Nelnelka Nellez".color(COLOR_GREEN), Orders.soulburn   , 1.5, UNIT_LOCUST_GHOST))
 
 init
     initSummonsData()

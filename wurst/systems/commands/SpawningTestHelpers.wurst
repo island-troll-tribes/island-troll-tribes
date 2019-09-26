@@ -1,64 +1,80 @@
 package SpawningTestHelpers
 
-import ChatCommands
-import Game
-import SimError
-import PlayerExtensions
-import GameConfig
-import IDUtils
-import LegacyColors
-import LinkedList
-import IdListConstant
+// Standard library imports:
 import HashMap
+import LinkedList
+import SimError
 
-let unitSpawnList = new HashMap<string, LinkedList<int>>()
-..put("trolls"      , TROLL_UNIT_LIST)
-..put("mage"        , MAGE_CLASS_LIST)
-..put("thief"       , THIEF_CLASS_LIST)
-..put("scout"       , SCOUT_CLASS_LIST)
-..put("hunter"      , HUNTER_CLASS_LIST)
-..put("priest"      , PRIEST_CLASS_LIST)
-..put("gatherer"    , GATHERER_CLASS_LIST)
-..put("strolls"     , SUB_TROLL_UNIT_LIST)
-..put("utrolls"     , UNSUB_TROLL_UNIT_LIST)
-..put("beastmaster" , BEASTMASTER_CLASS_LIST)
-..put("buildings"   , CRAFTING_BUILDING_LIST)
-..put("sstrolls"    , SUPERSUB_TROLL_UNIT_LIST)
-..put("animals"     , HOSTILE_ANIMALS_LIST)
-..put("pets"        , PETS_LIST)
-..put("dragons"     , DRAGON_LIST)
+// Third-pary imports:
+import Lodash
+import LodashExtensions
 
-let itemSpawnList = new HashMap<string, LinkedList<int>>()
-..put("herbs"            , HERB_LIST)
-..put("hides"            , HIDE_LIST)
-..put("boots"            , BOOTS_LIST)
-..put("gloves"           , GLOVES_LIST)
-..put("coats"            , COAT_LIST)
-..put("materials"        , MATERIAL_LIST)
-..put("craftedmaterials" , CRAFTED_MATERIAL_LIST)
-..put("axes"             , AXE_LIST)
-..put("shields"          , SHIELD_LIST)
-..put("battles"          , BATTLE_ITEM_LIST)
-..put("spears"           , SPEAR_LIST)
-..put("scrolls"          , SCROLL_LIST)
-..put("cloaks"           , CLOAK_LIST)
-..put("potions"          , POTION_LIST)
+// Local imports:
+import ChatCommands
+import ColorUtils
+import Game
+import GameConfig
+import IdListConstant
+import IDUtils
+import PlayerExtensions
+import StringExtensions
 
-let HELP_MESSAGE = (
-    GOLD_COLOR + "Create units and items\n|r" +
-    GENERAL_COLOR +"-create [pid] [count] [player]\n\n" +
-    "Where pid is for example, UNIT_PANTHER or ITEM_ARMORY_KIT" +
-    "\ncount the number of spawn\nplayer the player which own the unit, player must be > 0\n" +
-    "pid are listed in wurst/_legacy_/lib/IDUtils.wurst\n\n|r"+
-    GOLD_COLOR + "Example : \"-create UNIT_PANTHER 2 1\" will spawn 2 panther for player 1\n\n|r"+
-    GOLD_COLOR+"Can also use -spawn to create multiple items/units at once\n|r"
+let units = new OwnedIterableMap<string, LinkedList<int>>()
+    ..put("trolls"          , TROLL_UNIT_LIST)
+    ..put("mage"            , MAGE_CLASS_LIST)
+    ..put("thief"           , THIEF_CLASS_LIST)
+    ..put("scout"           , SCOUT_CLASS_LIST)
+    ..put("hunter"          , HUNTER_CLASS_LIST)
+    ..put("priest"          , PRIEST_CLASS_LIST)
+    ..put("gatherer"        , GATHERER_CLASS_LIST)
+    ..put("strolls"         , SUB_TROLL_UNIT_LIST)
+    ..put("utrolls"         , UNSUB_TROLL_UNIT_LIST)
+    ..put("beastmaster"     , BEASTMASTER_CLASS_LIST)
+    ..put("buildings"       , CRAFTING_BUILDING_LIST)
+    ..put("sstrolls"        , SUPERSUB_TROLL_UNIT_LIST)
+    ..put("animals"         , HOSTILE_ANIMALS_LIST)
+    ..put("pets"            , PETS_LIST)
+    ..put("dragons"         , DRAGON_LIST)
+
+let items = new OwnedIterableMap<string, LinkedList<int>>()
+    ..put("herbs"           , HERB_LIST)
+    ..put("hides"           , HIDE_LIST)
+    ..put("boots"           , BOOTS_LIST)
+    ..put("gloves"          , GLOVES_LIST)
+    ..put("coats"           , COAT_LIST)
+    ..put("materials"       , MATERIAL_LIST)
+    ..put("craftedmaterials", CRAFTED_MATERIAL_LIST)
+    ..put("axes"            , AXE_LIST)
+    ..put("shields"         , SHIELD_LIST)
+    ..put("battles"         , BATTLE_ITEM_LIST)
+    ..put("spears"          , SPEAR_LIST)
+    ..put("scrolls"         , SCROLL_LIST)
+    ..put("cloaks"          , CLOAK_LIST)
+    ..put("potions"         , POTION_LIST)
+
+let spawns = new OwnedIterableMap<string, LinkedList<int>>()
+    ..addAll(units)
+    ..addAll(items)
+
+let CREATE_HELP_MESSAGE = compiletime(
+    asList(
+        "Create units and items using:".color(GOLD_COLOR),
+        "-create [pid] [count] [player]".color(ENERGY_COLOR),
+        "[pid] is the ID of the object, e.g. UNIT_PANTHER,",
+        "[count] is the number of copies to spawn,",
+        "[player] is the index of the player to own created units.",
+        "For example, to spawn two panthers for player one, use:",
+        "-create UNIT_PANTHER 2 1".color(ENERGY_COLOR)
+    ).joinBy("\n")
 )
 
-let SPAWN_HELP_MESSAGE = (
-    GOLD_COLOR+"Spawn multiple units and items at once\n|r"+
-    GENERAL_COLOR +"-spawn herbs/materials/craftedmaterials/buildings/trollclassname/uTrolls/sTrolls/ssTrolls/trolls [count]\n"+
-    "To spawn herbs/materials/all building in order to test crafting\n"+
-    "Example : "+SPECIAL_COLOR+"-spawn hunter\n|r"+GENERAL_COLOR+"Will spawn all hunter's class unit"
+let SPAWN_HELP_MESSAGE = compiletime(
+    asList(
+        "Spawn multiple units or items at once using:".color(GOLD_COLOR),
+        "-spawn [{0}]".format(spawns.keys().joinBy(BAR)).color(ENERGY_COLOR),
+        "For example, to spawn each type of hunter, use:",
+        "-spawn hunter".color(ENERGY_COLOR)
+    ).joinBy("\n")
 )
 
 init
@@ -72,7 +88,7 @@ init
                     nbrArg = (args.get(2).toInt())
 
                 if id <= 0
-                    print(HELP_MESSAGE)
+                    print(CREATE_HELP_MESSAGE)
                 else
                     let owner = args.size() > 3 ? players[args.get(3).toInt() - 1] : triggerPlayer
                     let troll = triggerPlayer.getTroll()
@@ -92,33 +108,27 @@ init
                         simError(triggerPlayer, "Cannot spawn {0}".format(idStr))
 
             registerCommandAll("hostile") (triggerPlayer, args) ->
-                let units = CreateGroup()..enumUnitsSelected(triggerPlayer, null)
-                for u from units
-                    u.setOwner(players[PLAYER_NEUTRAL_AGGRESSIVE], true)
-                units.destr()
+                for target from ENUM_GROUP..enumUnitsSelected(triggerPlayer, null)
+                    target.setOwner(players[PLAYER_NEUTRAL_AGGRESSIVE], true)
 
-            // It's alte, I am tired, didn't spend much thought on this following code, but it works
             registerCommandAll("spawn") (triggerPlayer, args) ->
                 let troll = triggerPlayer.getTroll()
                 var pos = troll.getPos()
-                var count = 1
                 let listName = args.get(1).toLowerCase()
-                var unitList = unitSpawnList.get(listName)
-                var itemList = itemSpawnList.get(listName)
+                let toSpawn = spawns.get(listName)
+                let count = args.get(2).toInt() > 0
+                    ? args.get(2).toInt()
+                    : 1
 
-                if args.get(2).toInt() > 0
-                    count = args.get(2).toInt()
-
-                if unitList == null and itemList == null
+                if toSpawn == null
                     print(SPAWN_HELP_MESSAGE)
                 else
-                    let toSpawn = (unitList != null) ? unitList : itemList
                     pos.x += 100
                     pos.y -= (toSpawn.size() / 2) * 100
                     for elem in toSpawn
                         pos.y += 100
                         for i = count downto 1
-                            if unitSpawnList.has(listName)
+                            if units.has(listName)
                                 createUnit(triggerPlayer, elem, pos, (270.0).asAngleDegrees())
                             else
                                 createItem(elem, pos)

@@ -1,12 +1,16 @@
 package Sleep
+
+// Standard library imports:
 import RegisterEvents
 import HashMap
+
+// Local imports:
+import ColorUtils
 import ChatCommands
 import ChatUtils
+import ID
 import StringExtensions
 import UnitExtensions
-import ID
-import LegacyColors
 
 public constant SPELL_SLEEP_INSIDE = 'A004'
 public constant SPELL_SLEEP_OUTSIDE = 'A007'
@@ -17,16 +21,15 @@ init
     registerSpellEffectEvent(SPELL_SLEEP_INSIDE) ->
         let building = GetSpellAbilityUnit()
         let hero = GetSpellTargetUnit()
-        var energy = building.getTypeId() == UNIT_TENT ? 80.0 : 200.0
+        let energy = building.getTypeId() == UNIT_TENT ? 80.0 : 200.0
         hero.addMana(energy)
 
     registerSpellEffectEvent(SPELL_SLEEP_OUTSIDE) ->
-        let hero = GetSpellTargetUnit()
-        hero
-        ..addMana(80)
-        ..subHP(20)
-        ..subHeat(20)
-        
+        GetSpellTargetUnit()
+            ..addMana(80)
+            ..subHP(20)
+            ..subHeat(20)
+
     registerSpellEffectEvent(SPELL_SLEEP_OUTSIDE) ->
         let caster = GetSpellAbilityUnit()
         let target = GetSpellTargetUnit()
@@ -36,6 +39,6 @@ init
     registerCommandAll("sleep") (triggerPlayer, args) ->
         let currentValue = protectionEnabled.get(triggerPlayer)
         let newValue = args.size() == 1 ? not currentValue : args.get(0).isConfirmation()
-        let msg = "{0}Sleep protection turned|r {1}".format(GENERAL_COLOR, newValue.toOnOff().color(GOLD_COLOR))
+        let msg = "{0}Sleep protection turned|r {1}".format(GENERAL_COLOR.toColorString(), newValue.toOnOff().color(GOLD_COLOR))
         printTimedToPlayer(msg, 5, triggerPlayer)
         protectionEnabled.put(triggerPlayer, newValue)

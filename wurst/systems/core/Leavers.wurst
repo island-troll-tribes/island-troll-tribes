@@ -1,9 +1,23 @@
 package Leavers
+
+// Standard library imports:
+import LinkedList
 import RegisterEvents
-import PlayerExtensions
+
+// Local imports:
+import ColorUtils
 import Game
 import GameConfig
-import LegacyColors
+import PlayerExtensions
+import StringExtensions
+
+let GOLD_MSG = compiletime(
+    asList(
+        "They left you".color(GENERAL_COLOR),
+        "{0}".color(GOLD_COLOR),
+        "gold.".color(GENERAL_COLOR)
+    ).joinBy(" ")
+)
 
 function handlePlayerLeave()
     let leaver = GetTriggerPlayer()
@@ -12,7 +26,8 @@ function handlePlayerLeave()
         return
 
     let allies = leaver.getTribe().getMembers()
-    let alliesInGame = allies.filter(member -> member != leaver and member.isIngame())
+    let alliesInGame = allies
+        .filter(member -> member != leaver and member.isIngame())
     let alliesInGameCount = alliesInGame.size()
 
     if alliesInGameCount == 0
@@ -24,9 +39,9 @@ function handlePlayerLeave()
 
     for member in alliesInGame
         leaver
-        ..setPlayerAlliance(member, ALLIANCE_SHARED_VISION, true)
-        ..setPlayerAlliance(member, ALLIANCE_SHARED_CONTROL, true)
-        ..setPlayerAlliance(member, ALLIANCE_SHARED_ADVANCED_CONTROL, true)
+            ..setPlayerAlliance(member, ALLIANCE_SHARED_VISION, true)
+            ..setPlayerAlliance(member, ALLIANCE_SHARED_CONTROL, true)
+            ..setPlayerAlliance(member, ALLIANCE_SHARED_ADVANCED_CONTROL, true)
 
     if gameConfig.isTeamGoldEnabled()
         return
@@ -41,13 +56,12 @@ function handlePlayerLeave()
             goldGiven += 1
             goldLeftover -= 1
         if goldGiven > 0
-            let msg = "{0}They left you {1}{2}{3} gold|r".format(GENERAL_COLOR, GOLD_COLOR, goldGiven.toString(), GENERAL_COLOR)
-            printTimedToPlayer(msg, DEBUG_MSG_DURATION, member)
+            member.print(GOLD_MSG.format(goldGiven.toString()), 10)
             member.addLumber(goldPerPlayer)
 
 init
     registerPlayerEvent(EVENT_PLAYER_LEAVE) ->
-        print(GetTriggerPlayer().getNameColored() + " has left the game")
+        print(GetTriggerPlayer().getNameColored() + " has left the game.")
 
     registerGameStartEvent() ->
         registerPlayerEvent(EVENT_PLAYER_LEAVE, function handlePlayerLeave)

@@ -1,54 +1,61 @@
 package QuickMakeToolTips
-import LegacyColors
+
+// Local imports:
+import ColorUtils
 import CloakOfMana
 import BattleArmor
 import ShieldsDefinition
+import StringExtensions
 import ToolTipsUtils
 
-//Herb
-constant let SPECIAL_HERB       = SPECIAL_COLOR+"Special Herb|r"
-constant let RIVER_ROOT         = COLOR_TEAL+"River Root|r"
-constant let RIVER_STEM         = COLOR_GRAY+"River Stem|r"
-constant let ATHELAS_SEED       = COLOR_GREEN+"Athelas Seed|r"
+// Herbs
+constant let SPECIAL_HERB       = "Special Herb".color(SPECIAL_COLOR)
+constant let BLUE_HERB          = "Blue Herb".color(COLOR_BLUE)
+constant let ORANGE_HERB        = "Orange Herb".color(COLOR_ORANGE)
+constant let PURPLE_HERB        = "Purple Herb".color(COLOR_PURPLE)
+constant let YELLOW_HERB        = "Yellow Herb".color(COLOR_YELLOW)
+constant let RIVER_ROOT         = "River Root".color(COLOR_TEAL)
+constant let RIVER_STEM         = "River Stem".color(COLOR_GRAY)
+constant let ATHELAS_SEED       = "Athelas Seed".color(COLOR_GREEN)
 
-//Basic Materials
-constant let STONE              = COLOR_GRAY+"Stone|r"
-constant let FLINT              = "|cffe03737Flint|r"
-constant let TINDER             = COLOR_GREEN+"Tinder|r"
-constant let BONE               = GOLD_COLOR+"Bone|r"
-constant let STICK              = "|cff00ff00Stick|r"
-constant let MC                 = COLOR_LIGHT_BLUE+"Mana Crystal|r"
-constant let ELK_HIDE           = COLOR_ORANGE+"Elk Hide|r"
-constant let JUNGLE_WOLF_HIDE   = COLOR_ORANGE+"Jungle Wolf Hide|r"
-constant let JUNGLE_BEAR_HIDE   = COLOR_ORANGE+"Jungle Bear Hide|r"
-constant let CLAY_BALL          = COLOR_ORANGE+"Clay Ball|r"
-constant let MUSHROOM           = COLOR_GREEN+"Mushroom|r"
-constant let MAGIC              = "|cff4e90e7Magic|r"
+// Basic Materials
+constant let STONE              = "Stone".color(COLOR_GRAY)
+constant let FLINT              = "Flint".color(COLOR_RED)
+constant let TINDER             = "Tinder".color(COLOR_GREEN)
+constant let BONE               = "Bone".color(GOLD_COLOR)
+constant let STICK              = "Stick".color(COLOR_DARK_GREEN)
+constant let MC                 = "Mana Crystal".color(COLOR_LIGHT_BLUE)
+constant let ELK_HIDE           = "Elk Hide".color(COLOR_ORANGE)
+constant let JUNGLE_WOLF_HIDE   = "Jungle Wolf Hide".color(COLOR_ORANGE)
+constant let JUNGLE_BEAR_HIDE   = "Jungle Bear Hide".color(COLOR_ORANGE)
+constant let CLAY_BALL          = "Clay Ball".color(COLOR_ORANGE)
+constant let MUSHROOM           = "Mushroom".color(COLOR_GREEN)
+constant let MAGIC              = "Magic".color(COLOR_BLUE)
 
-//Crafted Materials
-constant let WIND               = "|cff9570c0Spirit Wind|r"
-constant let WATER              = COLOR_TEAL+"Spirit Water|r"
-constant let ANABOLIC           = COLOR_ORANGE+"Anabolic Potion|r"
-constant let SPIRIT_DARKNESS          = "|cff7b2ab1Spirit Of Darkness|r"
-constant let IRON               = "|cffe03737Iron Ingot|r"
-constant let STEEL              = "|cffe03737Steel Ingot|r"
-constant let SPEAR              = HIGHLIGHT_COLOR+"Spear|r"
-constant let POISON             = COLOR_GREEN+"Poison|r"
-constant let ULTRA_POISON       = COLOR_GREEN+"Ultra Poison|r"
-constant let SHIELD             = "|cffe08823Shield|r"
-constant let BASICGLOVES        = "|cffe08823Any Basic Gloves|r"
-constant let BASICCOAT          = "|cffe08823Any Basic Coat|r"
-constant let BASICBOOTS         = "|cffe08823Any Basic Boots|r"
-constant let NETS               = COLOR_LIGHT_BLUE+"NETS|r"
+// Crafted Materials
+constant let WIND               = "Spirit of Wind".color(COLOR_LAVENDER)
+constant let WATER              = "Spirit of Water".color(COLOR_NAVY)
+constant let DARKNESS           = "Spirit of Darkness".color(COLOR_PURPLE)
+constant let ANABOLIC           = "Anabolic Potion".color(COLOR_MAROON)
+constant let IRON               = "Iron Ingot".color(COLOR_RED)
+constant let STEEL              = "Steel Ingot".color(COLOR_RED)
+constant let SPEAR              = "Spear".color(HIGHLIGHT_COLOR)
+constant let POISON             = "Poison".color(COLOR_GREEN)
+constant let ULTRA_POISON       = "Ultra Poison".color(COLOR_GREEN)
+constant let SHIELD             = "Shield".color(COLOR_PEANUT)
+constant let BASICGLOVES        = "Any Basic Gloves".color(COLOR_PEANUT)
+constant let BASICCOAT          = "Any Basic Coat".color(COLOR_PEANUT)
+constant let BASICBOOTS         = "Any Basic Boots".color(COLOR_PEANUT)
+constant let NETS               = "Nets".color(COLOR_LIGHT_BLUE)
 
 public let QM_TOOLIP        = "This Quick Make ability will find the nearest material and craft the said item, "+
                               "material have to be either on the ground or inside the building inventory. "+
-                              "For more information about items, type "+GOLD_COLOR+"-recipes"+COLOR_LIGHT_BLUE+", all the items are listed there."
+                              "For more information about items, type " + "-recipes".color(GOLD_COLOR) + ", all the items are listed there."
 
 public let QM_BUILD_TOOLIP  = "If you do not have enough inventory to craft to pick all items, you can use the craft master 5000 at the center of the map. "+
                               "This Quick Make ability will find the nearest material and craft the said building, "+
                               "material have to be either on the ground just next to the unit or inside its inventory. "+
-                              "For more information abouts item, type "+GOLD_COLOR+"-recipes"+COLOR_LIGHT_BLUE+", all the items are listed there."
+                              "For more information abouts item, type " + "-recipes".color(GOLD_COLOR) + ", all the items are listed there."
 
 public let MIX_TOOLTIP       = "Mix those Herb together to get "
 public let TRANSMUTE_TOOLTIP = "Put those materials in the correct order to get "
@@ -58,9 +65,9 @@ public let TANNERY_PLACEHOLDER_STAT_TOOLTIP = "1 Strenght give +8 health point, 
 public let TANNERY_PLACEHOLDER_HIDE_USAGE_TOOLTIP = "It doesn't matter which hide you use to make superior gear, a battle armor made from an elk skin coat will give "+
                                                     "as much stat as a battle armor made from a jungle bear skin coat, wolf & bear hide sell for good money"
 
-public let SPECIAL_MIX_WARNING = "\n\n|cffd32c2cWARNING : Quick Make should pick up the Special Herb in the following order : Blue/Yellow/Purple/Orange"+
-                                 ", if you have 3 blue and 2 yellow, it will use 3 blue and 1 yellow herb to make a disease potion for example,"+
-                                 " it is recommended to use the Mix Herb ability to make sure it mixes the herb you want.|r"
+public let SPECIAL_MIX_WARNING = ("\n\nWarning : Quick Make should pick up the Special Herb in the following order : Blue/Yellow/Purple/Orange"+
+                                  ", if you have 3 blue and 2 yellow, it will use 3 blue and 1 yellow herb to make a disease potion for example,"+
+                                  " it is recommended to use the Mix Herb ability to make sure it mixes the herb you want.").color(COLOR_RED)
 
 public let MIXING_SPELLBOOK_TOOLTIP       = "More Recipes here\n\nContains Quick Make spell for special herb recipes"
 public let ARMOR_SPELLBOOK_TOOLTIP        = "More Recipes here\n\nContains Quick Make spell for Armor items recipes"
@@ -76,9 +83,9 @@ public let MANA_POTION_RECIPE             = "a Mana Potion, restore 65 mana to t
 public let CURE_ALL_RECIPE                = "a Cure All, remove positive/negative buff & effect on the target ally :\n\n2x "+ATHELAS_SEED
 public let ESSENCE_BEES_RECIPE            = "an Essence of Bees, spawn multiple Bee Hive who attack your enemies :\n\n"+
                                             "2x "+SPECIAL_HERB+" 1 + 1x "+SPECIAL_HERB+ " 2 + 1x "+SPECIAL_HERB+" 3\nOr\n1x "+SPECIAL_HERB+" 1/2/3/4"+SPECIAL_MIX_WARNING
-public let TWIN_ISLANDS_POTION_RECIPE     = "a Twin Islands Potion, reveals the enemies Troll for 30 seconds (|cffe03737Current Quick Make doesn't work with Blue/Yellow Herb|r)"+
-                                            " :\n\n3x "+GOLD_COLOR+"Yellow Herb|r + 3x "+COLOR_LIGHT_BLUE+"Blue Herb|r\n"+
-                                            "Or\n3x |cff9c4dddPurple Herb|r + 3x "+COLOR_ORANGE+"Orange Herb|r"+SPECIAL_MIX_WARNING
+public let TWIN_ISLANDS_POTION_RECIPE     = "a Twin Islands Potion, reveals the enemies Troll for 30 seconds " + "(Current Quick Make doesn't work with Blue/Yellow Herb)".color(COLOR_RED) +
+                                            " :\n\n3x "+ YELLOW_HERB + " + 3x " + BLUE_HERB + "\n"+
+                                            "Or\n3x " + PURPLE_HERB + " + 3x " + ORANGE_HERB + SPECIAL_MIX_WARNING
 
 public let NETHER_POTION_RECIPE           = "a Nether Potion, cause the target to become immune to physical damage but amplify magic damage done to it."+ makeToolTipDuration(15, 40, 20) + "\n\n1x "+SPECIAL_HERB+" + 2x "+RIVER_STEM+" + 2x "+ATHELAS_SEED
 
@@ -149,7 +156,7 @@ public let STONE_AXE_RECIPE   = "a Stone Axe. Increase damage by 6, allows tree 
 public let MAGE_MASHER_RECIPE = "a Mage Masher. Increase damage by 7, can cast silence and burns 6 mana per attack against mage/priest"+
                                          " and their subclasses  :\n\n1x "+STICK+"/"+BONE+" + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC
 public let DARK_SPEAR_RECIPE  = "a Dark Spear. Deals 40 damage and can zap anywhere from 40-60 energy on striking a target. Has 60% chance of "+
-                                        "being recoverable. :\n\n1x "+SPIRIT_DARKNESS + "1x "+STICK+"/"+BONE 
+                                        "being recoverable. :\n\n1x "+DARKNESS + "1x "+STICK+"/"+BONE
 public let ENSNARE_TRAP_RECIPE = "an Ensnare Trap. Deals few ranged damage, can net trolls & animals, good for killing hawk :\n\n1x "               +TINDER     +" + 1x "+BONE +" + 1x "+STICK
 
 
@@ -169,27 +176,27 @@ public let SPIRIT_WARD_RECIPE           = "a Spirit Ward. Can be used to revive 
 public let POISON_RECIPE                = "a Poison salve. Can be used to craft poison spear :\n\n3x "+MUSHROOM
 public let ULTRA_POISON_RECIPE          = "an Ultra Poison salve. Can be used to craft ultra poison spear :\n\n2x "+POISON
 
-public let CLOAK_FLAMES_RECIPE          = "a Cloak Of Flames. Deals 7 damage around wearer, grants +3 to all stats and +3 armor :\n\n1x "+MAGIC+COLOR_ORANGE+" + 1x Bone Coat|r + 1x "+FLINT
+public let CLOAK_FLAMES_RECIPE          = "a Cloak Of Flames. Deals 7 damage around wearer, grants +3 to all stats and +3 armor :\n\n1x "+MAGIC+" + 1x Bone Coat".color(COLOR_ORANGE) + " + 1x "+FLINT
 public let CLOAK_FROST_RECIPE           = "a Cloak Of Frost. Can cast a slow zone around wearer, slows attack and movement speed by 35% and deals 20 damages. "+
-                                           makeToolTipDuration(4, 8, 40)+". Also passively grants +3 to all stats and +3 armor :\n\n1x "+MAGIC+COLOR_ORANGE+" + 1x Bone Coat|r + 1x "+WATER
+                                           makeToolTipDuration(4, 8, 40)+". Also passively grants +3 to all stats and +3 armor :\n\n1x "+MAGIC+" + 1x Bone Coat".color(COLOR_ORANGE) + " + 1x "+WATER
 public let CLOAK_HEALING_RECIPE         = "a Cloak Of Healing. Can heal 150 hit point to surrounding allies, has 35 seconds cooldown. Also passively grants +3 to all stats and +3 armor "+
-                                          ":\n\n1x "+MAGIC+COLOR_ORANGE+" + 1x Bone Coat|r + 1x "+ATHELAS_SEED
+                                          ":\n\n1x "+MAGIC+" + 1x Bone Coat".color(COLOR_ORANGE) + " + 1x " +ATHELAS_SEED
 public let CLOAK_MANA_RECIPE            = "a Cloak Of Mana. Can restore "+MANA_AMOUNT.toString()+" mana point to surrounding allies, has 35 seconds cooldown. Also passively grants +3 "+
-                                          "to all stats and +3 armor :\n\n1x "+MAGIC+COLOR_ORANGE+" + 1x Bone Coat|r + 1x "+RIVER_STEM
+                                          "to all stats and +3 armor :\n\n1x "+MAGIC+" + 1x Bone Coat".color(COLOR_ORANGE) + " + 1x "+RIVER_STEM
 
 // Workshop
 
 public let BATTLE_GLOVES_RECIPE         = "a Battle Gloves. Provides warmth, +5 armor, increase all stats by 4, grants 30% attack speed and a critical strike for 1.6x damage"+
-                                          " on a 6 second cooldown. Attacking enemies reduces the cooldown of the critical strike by 1 second :\n\n1x "+SPECIAL_COLOR+"Bone Gloves|r + 2x "
-                                          +STEEL+" + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC
+                                          " on a 6 second cooldown. Attacking enemies reduces the cooldown of the critical strike by 1 second :\n\n"
+                                          +"1x Bone Gloves".color(COLOR_ORANGE) + " + 2x "+STEEL+" + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC
 public let BATTLE_AXE_RECIPE            = "a Battle Axe. Increase damage by 14, can cast purge, removing all buffs from a target unit and slowing it. "+makeToolTipDuration(5, 15, 60)+
                                           "\n\n1x "+STICK+" + 2x "+STEEL+" + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC
 public let BATTLE_ARMOR_RECIPE          = BATTLE_ARMOR_TOOLTIP_EXTENDED+makeToolTipDuration(10, 10, 75)+
-                                          "\n\n1x "+SPECIAL_COLOR+"Bone Coat|r + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC
+                                          "\n\n"+"1x Bone Coat".color(COLOR_ORANGE) + " + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC
 public let BATTLE_SHIELD_RECIPE         = BATTLE_SHIELD_TOOLTIP+
-                                           "\n\n1x "+SPECIAL_COLOR+"Bone Shield|r + 1x "+ELK_HIDE+" + 1x "+STEEL+" + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC
-public let ANABOLIC_BOOTS_RECIPE        = "an Anabolic Boots. Increase all stats by 4, armor by 5 and movement speed by 200, grants 10% evasion :\n\n1x "+
-                                           SPECIAL_COLOR+"Bone Boots|r + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC+" + 2x "+ANABOLIC
+                                           "\n\n"+"1x Bone Shield".color(COLOR_ORANGE) + " + 1x " +ELK_HIDE+" + 1x "+STEEL+" + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC
+public let ANABOLIC_BOOTS_RECIPE        = "an Anabolic Boots. Increase all stats by 4, armor by 5 and movement speed by 200, grants 10% evasion :\n\n"+
+                                           "1x Bone Coat".color(COLOR_ORANGE) + " + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC+" + 2x "+ANABOLIC
 
 public let POISON_SPEAR_RECIPE          = "a Poison Spear. Hurls a poisoned spear at a targeted enemy unit, dealing 20 initial damage and 6 damage every 3 seconds."+
                                           "Reduce attack speed by 30% and movement speed by 20%. Has 50% chance of being recoverable. "+makeToolTipDuration(40, 80, 2)+"\n\n1x "+
@@ -212,13 +219,13 @@ public let BLOW_GUN_RECIPE               = "a BlowGun. Used for shooting small t
                                           " click and use on your own troll to unload : \n\n1x "+STICK+" + 1x "+CLAY_BALL
 
 public let DARK_THISTLES_RECIPE         = "a Dark thistles. Creates a special type of blowgun ammo. Instead of poisoning, dark thistles depress enemies and zap mana from them over time :"+
-                                          "\n\n1x "+COLOR_GREEN+"Thistles|r + 1x "+SPIRIT_DARKNESS
+                                          "\n\n1x "+"Thistles".color(COLOR_GREEN) + " 1x "+DARKNESS
 
 public let SMOKE_BOMB_RECIPE            = "a Smoke Bomb. The Shell of an acorn containing the spirit of wind. When activated, Acorn releases the wind creating a smoke screen, has 3 charges :"+
-                                          "\n\n1x "+GOLD_COLOR+"Acorn|r + 1x "+WIND
+                                          "\n\n1x "+"Acorn".color(GOLD_COLOR) + " 1x "+WIND
 
 public let FIRE_BOMB_RECIPE             = "a Fire Bomb. A shell of destructible material that is highly flammable when thrown, deals 67 damage. Only damage ally/enemy buildings and trees, has 2 charges :"+
-                                          "\n\n1x |cff9c4dddSmoke Bomb|r + 1x "+FLINT+" + 1x "+MC
+                                          "\n\n1x " + "Smoke Bomb".color(COLOR_PURPLE) +  " 1x "+FLINT+" + 1x "+MC
 
 public let EMP_RECIPE                   = "an EMP. When activated, disables all towers and enemy buildings around the user for 45 seconds :\n\n2x "+MC+" + 1x "+WIND+" + 1x "+WATER
 
@@ -282,7 +289,7 @@ public let TANNERY_KIT_RECIPE = "a Tannery Kit. A kit used to build a Tannery, a
 public let WITCH_DOCTORS_HUT_KIT_RECIPE = "a Witch Doctors Hut Kit. A kit used to build a Witch Doctors Hut, a place where you can craft magical items :\n\n"+
                                   "1x "+STICK+" + 1x "+MC+" + 1x "+STICK+" + 1x "+MC+" + 1x "+STICK
 
-public let HATCHERY_KIT_RECIPE = "a Hatchery Kit. A kit used to build a Hatchery, a place where you can hatch hawk eggs,"+COLOR_RED+" you need a Beast Master to tame the hatched animal|r :\n\n"+
+public let HATCHERY_KIT_RECIPE = "a Hatchery Kit. A kit used to build a Hatchery, a place where you can hatch hawk eggs," + " you need a Beast Master to tame the hatched animal".color(COLOR_RED) +":\n\n"+
                                   "3x "+STONE+" + 3x "+STICK
 
 public let TELEPORT_BEACON_KIT_RECIPE = "a Teleport Beacon Kit. A kit used to build a Teleport Beacon, can be used to blink yourself on the other side of the beacon :\n\n"+
@@ -292,7 +299,7 @@ public let OMNI_TOWER_KIT_RECIPE = "a Omnitower Kit. A kit used to build an Omni
                                   "1x "+STONE+" + 3x "+STICK
 
 public let TROLL_HUT_KIT_RECIPE = "a Troll Hut Kit. A kit used to build a Troll Hut, a very good place to sleep :\n\n"+
-                                  "1x "+COLOR_GRAY+"Tent Kit|r + 1x "+ELK_HIDE+" + 1x "+CLAY_BALL
-        
+                                  "1x "+"Tent Kit".color(COLOR_GRAY) + " 1x "+ELK_HIDE+" + 1x "+CLAY_BALL
+
 public let FORGE_KIT_RECIPE     = "A Forge Kit. A kit used to build a Forge, a place to craft ingots and basic weapons :\n\n"+
                                    "1x "+FLINT+" 3x "+STONE

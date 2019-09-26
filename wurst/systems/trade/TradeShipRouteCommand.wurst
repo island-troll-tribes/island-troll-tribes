@@ -1,9 +1,13 @@
 package TradeShipRouteCommand
-import ChatCommands
-import TradeShipStop
-import TradeShipInitializer
+
+// Standard library imports:
 import ClosureTimers
-import LegacyColors
+
+// Local imports:
+import ChatCommands
+import ColorUtils
+import TradeShipInitializer
+import TradeShipStop
 
 public class TradeShipRoutePing
     TradeShipStop stop
@@ -45,18 +49,18 @@ public class TradeShipRoutePing
 
             if stop == null
                 destroy cb
-                destroy this    
+                destroy this
 
 init
     registerCommandAll("trade-routes") (triggerPlayer, args) ->
-        printTimedToPlayer(GENERAL_COLOR + "At the start of the game, two boats will spawn from opposite sides of the map", 10, triggerPlayer)
-        printTimedToPlayer(GENERAL_COLOR + "The first boats will randomly spawn at either N & S or E & W", 10, triggerPlayer)
-        printTimedToPlayer(GENERAL_COLOR + "The east/west route will follow these paths, making stops at the blue pings", 10, triggerPlayer)
+        printTimedToPlayer(GENERAL_COLOR.toColorString() + "At the start of the game, two boats will spawn from opposite sides of the map", 10, triggerPlayer)
+        printTimedToPlayer(GENERAL_COLOR.toColorString() + "The first boats will randomly spawn at either N & S or E & W", 10, triggerPlayer)
+        printTimedToPlayer(GENERAL_COLOR.toColorString() + "The east/west route will follow these paths, making stops at the blue pings", 10, triggerPlayer)
 
         getTradeShipCoordinator().getPairs().forEach() pair ->
             new TradeShipRoutePing(pair.getFirst(), triggerPlayer, 255, 255, 0)
 
         doAfter(12) ->
-            printTimedToPlayer(GENERAL_COLOR + "The north/south route will follow these paths, making stops at the blue pings", 10, triggerPlayer)
+            printTimedToPlayer(GENERAL_COLOR.toColorString() + "The north/south route will follow these paths, making stops at the blue pings", 10, triggerPlayer)
             getTradeShipCoordinator().getPairs().forEach() pair ->
                 new TradeShipRoutePing(pair.getLast(), triggerPlayer, 255, 255, 0)

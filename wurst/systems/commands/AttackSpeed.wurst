@@ -1,11 +1,21 @@
 package AttackSpeed
+
+// Local imports:
 import ChatCommands
-import LegacyColors
+import ColorUtils
+import StringExtensions
 
 init
     registerCommandAll("as") (triggerPlayer, args) ->
-        let weaponIndex = args.size() > 1 ? args.get(1).toInt() : 1
-        let selected = GetUnitsSelectedAll(triggerPlayer)
-        let speed = selected.next().getAttackCooldown(weaponIndex)
-        selected.destr()
-        printTimedToPlayer("{0}Attack Speed|r: {1}".format(ENERGY_COLOR, speed.toString()), 10, triggerPlayer)
+        // Fetch the desired statistic.
+        let speed = ENUM_GROUP
+            ..enumUnitsSelected(triggerPlayer, null)
+            .next()
+            .getAttackCooldown(args.size() > 1 ? args.get(1).toInt() : 1)
+
+        // Display the statistic.
+        printTimedToPlayer(
+            "Attack Speed".color(ENERGY_COLOR) + ": "  + speed.toString(),
+            10,
+            triggerPlayer
+        )

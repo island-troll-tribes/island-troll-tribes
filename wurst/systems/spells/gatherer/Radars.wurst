@@ -1,15 +1,17 @@
 package Radars
 
+// Standard library imports:
 import Assets
-import Tribe
-import ToolTipsUtils
-import LinkedList
-import IsTypeThing
-import LegacyColors
-import ClosureTimers
-import ClosureEvents
-import ClosuresForItems
 import ChannelAbilityPreset
+import ClosureEvents
+import ClosureTimers
+import LinkedList
+
+// Local imports:
+import ClosuresForItems
+import IsTypeThing
+import ToolTipsUtils
+import Tribe
 
 constant COOLDOWN = 50.
 constant CASTTIME = 1.
@@ -67,14 +69,14 @@ class Radar
     string orderId = "channel"
     string icon = "ReplaceableTextures\\CommandButtons\\BTN{0}.blp"
 
-    construct(int id, string itemName, string toolTipExt, string icon, string hotkey, int buttonPosX, int buttonPosY, string color, string orderId)
+    construct(int id, string itemName, string toolTipExt, string icon, string hotkey, int buttonPosX, int buttonPosY, string orderId)
         this.id = id
         this.hotkey   = hotkey
         this.name     += itemName
         this.toolTipExt  = toolTipExt
         this.buttonPosX  = buttonPosX
         this.buttonPosY  = buttonPosY
-        this.toolTip  = GENERAL_COLOR+"[" + color + hotkey + GENERAL_COLOR + "] - " + this.name + "|r"
+        this.toolTip  = makeToolTipNorm(hotkey, this.name)
         this.orderId = orderId
         this.icon = this.icon.format(icon)
 
@@ -215,13 +217,13 @@ function areHostilesNearItem(player p, item itm) returns bool
 
 function getRadarSpells() returns LinkedList<Radar>
     return asList(
-        new Radar(SPELL_ID_FIND_TINDER   , "Tinders"       , TOOLTIP_EXT_FIND_TINDER   , "ShimmerWeed"     , "Q", 2, 0, SPECIAL_COLOR, "taunt"),
-        new Radar(SPELL_ID_FIND_STICK    , "Sticks"        , TOOLTIP_EXT_FIND_STICK    , "NatureTouchGrow" , "W", 2, 0, SPECIAL_COLOR, "tranquility"),
-        new Radar(SPELL_ID_FIND_MUSHROOM , "Mushrooms"     , TOOLTIP_EXT_FIND_MANA     , "Mushroom"        , "E", 2, 0, SPECIAL_COLOR, "waterelemental"),
-        new Radar(SPELL_ID_FIND_CLAYBALL , "Clay Balls"    , TOOLTIP_EXT_FIND_CLAYBALL , "ThunderLizardEgg", "R", 2, 0, SPECIAL_COLOR, "unbearform"),
-        new Radar(SPELL_ID_FIND_FLINT    , "Flints"        , TOOLTIP_EXT_FIND_FLINT    , "StaffOfSanctuary", "A", 2, 0, SPECIAL_COLOR, "bearform"),
-        new Radar(SPELL_ID_FIND_STONE    , "Stones"        , TOOLTIP_EXT_FIND_STONE    , "GolemStormBolt"  , "S", 3, 0, SPECIAL_COLOR, "unflamingarrows"),
-        new Radar(SPELL_ID_FIND_MANA     , "Mana Crystals" , TOOLTIP_EXT_FIND_MANA     , "ManaStone"       , "D", 2, 0, SPECIAL_COLOR, "unrobogoblin")
+        new Radar(SPELL_ID_FIND_TINDER   , "Tinders"       , TOOLTIP_EXT_FIND_TINDER   , "ShimmerWeed"     , "Q", 2, 0, "taunt"),
+        new Radar(SPELL_ID_FIND_STICK    , "Sticks"        , TOOLTIP_EXT_FIND_STICK    , "NatureTouchGrow" , "W", 2, 0, "tranquility"),
+        new Radar(SPELL_ID_FIND_MUSHROOM , "Mushrooms"     , TOOLTIP_EXT_FIND_MANA     , "Mushroom"        , "E", 2, 0, "waterelemental"),
+        new Radar(SPELL_ID_FIND_CLAYBALL , "Clay Balls"    , TOOLTIP_EXT_FIND_CLAYBALL , "ThunderLizardEgg", "R", 2, 0, "unbearform"),
+        new Radar(SPELL_ID_FIND_FLINT    , "Flints"        , TOOLTIP_EXT_FIND_FLINT    , "StaffOfSanctuary", "A", 2, 0, "bearform"),
+        new Radar(SPELL_ID_FIND_STONE    , "Stones"        , TOOLTIP_EXT_FIND_STONE    , "GolemStormBolt"  , "S", 3, 0, "unflamingarrows"),
+        new Radar(SPELL_ID_FIND_MANA     , "Mana Crystals" , TOOLTIP_EXT_FIND_MANA     , "ManaStone"       , "D", 2, 0, "unrobogoblin")
     )
 
 @compiletime function buildRadarSpells()

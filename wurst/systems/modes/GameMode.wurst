@@ -12,11 +12,21 @@ import LodashExtensions
 
 // Local imports:
 import ChatCommands
-import LegacyColors
+import ColorUtils
+import StringExtensions
 import TimerUtils
 
 
 let MODES_TIME_LIMIT = 60.0
+
+let DISPLAY_STRING = compiletime(
+    asList(
+        "-{0} ".color(GOLD_COLOR),
+        "(".color(COLOR_GRAY),
+        "{1}".color(SPECIAL_COLOR),
+        ")".color(COLOR_GRAY)
+    ).join()
+)
 
 public interface GameModeHandler
     function run(GameMode mode, LinkedList<string> args)
@@ -35,8 +45,8 @@ public class GameMode
                 modePlayer = players[i]
                 break
 
-        print(modePlayer.getNameColored() + GENERAL_COLOR + " can choose game modes.|r")
-        printTimedToPlayer(GENERAL_COLOR + "You can select modes|r", 10, modePlayer)
+        print(modePlayer.getNameColored() + " can choose game modes.".color(GENERAL_COLOR))
+        printTimedToPlayer("You can select modes.".color(GENERAL_COLOR), 10, modePlayer)
 
         nullTimer() ->
             createModeBoard()
@@ -47,7 +57,7 @@ public class GameMode
             endModeSelection()
 
         registerCommandAll("modes") (triggerPlayer, args) ->
-            printTimedToPlayer(GENERAL_COLOR + "Modes:|r", 15, triggerPlayer)
+            printTimedToPlayer("Modes:".color(GENERAL_COLOR), 15, triggerPlayer)
             printTimedToPlayer(getEnabledModes(), 15, triggerPlayer)
 
     static function getEnabledModes() returns string
@@ -134,7 +144,7 @@ public class GameMode
 
                 return CreateQuestBJ(
                     bj_QUESTTYPE_OPT_DISCOVERED,
-                    GOLD_COLOR + category + " Modes (" + (i + 1).toString() + ")",
+                    (category + " Modes (" + (i + 1).toString() + ")").color(GOLD_COLOR),
                     contents,
                     Icons.bTNBansheeMaster
                 )
@@ -184,7 +194,7 @@ public class GameMode
         list.add(this)
 
     function getDisplayString() returns string
-        return "{0}-{1}|r {2}(|r{3}{4}|r{5})|r".format(GOLD_COLOR, name, GRAY_COLOR, SPECIAL_COLOR, abbrev, GRAY_COLOR)
+        return DISPLAY_STRING.format(name, abbrev)
 
     function registerFor(player modesPlayer, string command)
         registerCommand(modesPlayer, command, (enablePlayer, args) -> enable(args))
@@ -212,4 +222,4 @@ public class GameMode
         print(msg)
 
     function error(string msg)
-        print(RED_COLOR + msg)
+        print(msg.color(RED_COLOR))

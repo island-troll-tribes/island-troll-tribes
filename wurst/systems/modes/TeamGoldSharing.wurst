@@ -1,16 +1,21 @@
 package TeamGoldSharing
-import GameConfig
-import GameMode
-import LegacyColors
-import ChatUtils
-import Game
-import RegisterEvents
+
+// Standard library imports:
 import ClosureTimers
-import Tribe
-import ID
+import RegisterEvents
 
 // Third-party imports:
 import Lodash
+
+// Local imports:
+import ChatUtils
+import ColorUtils
+import Game
+import GameConfig
+import GameMode
+import ID
+import StringExtensions
+import Tribe
 
 function syncTribeGold(unit whichUnit, boolean useMin)
     nullTimer() ->
@@ -38,7 +43,7 @@ init
     new GameMode("team-gold", "tg", "Pro", "Players on a team share gold in the same pool") (mode, args) ->
         let enabled = args.size() > 1 ? args.get(0).isConfirmation() : true
         gameConfig.setTeamGoldEnabled(enabled)
-        mode.message(GOLD_COLOR + "Team gold|r " + enabled.toOnOff() + "!")
+        mode.message("Team gold ".color(COLOR_GOLD) + enabled.toOnOff() + "!")
 
     registerGameStartEvent() ->
         if gameConfig.isTeamGoldEnabled()

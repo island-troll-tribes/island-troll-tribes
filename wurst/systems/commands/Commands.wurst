@@ -10,6 +10,7 @@ import ChatUtils
 import ColorUtils
 import Game
 import GameMode
+import PingMinimap
 import PlayerExtensions
 import StringExtensions
 import TribeBoard
@@ -89,17 +90,37 @@ init
             )
 
     registerCommandAll("recipes") (triggerPlayer, args) ->
-        let msg = "{0}Ok, here are the build help locations.\nYou can see the recipe for every item and building by selecting the wards, take time to read".format(GENERAL_COLOR)
-        PingMinimapForPlayer(triggerPlayer, gg_rct_vision.getCenterX(), gg_rct_vision.getCenterY(), 5)
-        PanCameraToForPlayer(triggerPlayer, gg_rct_vision.getCenterX(), gg_rct_vision.getCenterY())
-        printTimedToPlayer(msg, 5, triggerPlayer)
+        pingMinimapForPlayer(
+            triggerPlayer,
+            gg_rct_vision.getCenter(),
+            5
+        )
+        triggerPlayer.panCameraTo(gg_rct_vision.getCenter())
+        printTimedToPlayer(
+            compiletime(
+                asList(
+                    "The recipes are here.",
+                    "Select a totem next to a unit to view recipes for it."
+                ).joinBy("\n")
+            ),
+            5,
+            triggerPlayer
+        )
 
     registerCommandAll("obs") (triggerPlayer, args) ->
-        printTimedToPlayer(GENERAL_COLOR + "You are now an observer", 10, triggerPlayer)
+        printTimedToPlayer(
+            "You are now an observer.".color(GENERAL_COLOR),
+            10,
+            triggerPlayer
+        )
         triggerPlayer.makeObserver()
 
     registerCommandAll("obs-new") (triggerPlayer, args) ->
-        printTimedToPlayer(GENERAL_COLOR + "You are now an observer", 10, triggerPlayer)
+        printTimedToPlayer(
+            "You are now an observer.".color(GENERAL_COLOR),
+            10,
+            triggerPlayer
+        )
         triggerPlayer.makeObserverNew()
 
     GameMode.onModeSelectionFinish() ->

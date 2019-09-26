@@ -13,6 +13,17 @@ import PlayerExtensions
 import PlayerUtils
 import StringExtensions
 
+// The base message used for notifying users of the exchange.
+let MSG = compiletime(
+    asList(
+        "{0}".color(GENERAL_COLOR),  // The action: Sent | Received.
+        "{1}",                       // The amount, an integer.
+        "gold".color(GOLD_COLOR),    // A constant.
+        "{2}".color(GENERAL_COLOR),  // The preposition: to | from.
+        "{3}"                        // The name of the counterparty.
+    ).joinBy(" ")
+)
+
 CommandHandler giveGold = (player giver, LinkedList<string> args) -> begin
     let tribeId = giver.getTribe().getId()
     let playerId = findPlayerIdByStringMatchingTribe(args.get(1), tribeId)
@@ -31,14 +42,33 @@ CommandHandler giveGold = (player giver, LinkedList<string> args) -> begin
     else if not players[playerId].isIngame()
         simError(giver, "This player has left the game")
     else
+        // Perform the transaction.
         giver.subLumber(amount)
         target.addLumber(amount)
 
-        let targetMessage = "{0}You received|r {1}{2} gold|r{3} from |r{4}".format(GENERAL_COLOR, amount.toString(), GOLD_COLOR, GENERAL_COLOR, giver.getNameColored())
-        printTimedToPlayer(targetMessage, 10, target)
+        // Notify the target.
+        printTimedToPlayer(
+            MSG.format(
+                "Received",
+                amount.toString(),
+                "from",
+                giver.getNameColored()
+            ),
+            10,
+            target
+        )
 
-        let giverMessage = "{0}Sent|r {1}{2} gold|r{3} to |r{4}".format(GENERAL_COLOR, GOLD_COLOR, amount.toString(), GENERAL_COLOR, target.getNameColored())
-        printTimedToPlayer(giverMessage, 10, giver)
+        // Notify the giver.
+        printTimedToPlayer(
+            MSG.format(
+                "Sent",
+                amount.toString(),
+                "to",
+                target.getNameColored()
+            ),
+            10,
+            target
+        )
 end
 
 init

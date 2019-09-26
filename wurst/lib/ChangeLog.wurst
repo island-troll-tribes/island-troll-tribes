@@ -1,15 +1,26 @@
 package ChangeLog
 
 // Standard library imports:
+import Assets
 import ClosureTimers
 import HashMap
 import LinkedList
+import Quest
 import SimError
+
+// Third-party imports:
+// TODO: Use this once .join is supported.
+// import LodashExtensions
 
 // Local imports:
 import ChatCommands
 import ColorUtils
+import StringExtensions
 import StringUtils
+
+// Formatting strings used to display messages.
+let TITLE_MSG = "Changelog for ".color(ENERGY_COLOR) + "{0}".color(GOLD_COLOR)
+let ENTRY_MSG = DASH + "{0}".color(GOLD_COLOR)
 
 public class ChangeLog
     static let versions = new HashMap<string, thistype>()
@@ -36,10 +47,15 @@ public class ChangeLog
         list.add(this)
 
     function getVersionString() returns string
-        return "v{0}.{1}{2}".format(this.major.toString(), this.minor.toString(), this.rev.toString())
+        return "v{0}.{1}{2}".format(
+            this.major.toString(),
+            this.minor.toString(),
+            this.rev.toString()
+        )
 
     function add(string change)
-        this.changes.add(change)
+        // TODO: Do not format here once Lodash supports changes.joinBy.
+        this.changes.add(ENTRY_MSG.format(change))
 
     static function getVersion(string which) returns thistype
         if versions.has(which)
@@ -52,27 +68,37 @@ public class ChangeLog
             sorted = true
         return list
 
+    function getTitle() returns string
+        return TITLE_MSG.format(this.getVersionString())
+
+    function getDescription() returns string
+        // TODO: Use changes.map here once Lodash supports changes.joinBy.
+        return this.changes.joinBy("\n")
+
+    function toString() returns string
+        return this.getTitle() + "\n" + this.getDescription()
+
+
     static function handler(player triggerPlayer, LinkedList<string> args)
-        var changelog = ChangeLog.ordered().getFirst()
-        if args.size() > 1
-            changelog = ChangeLog.getVersion(args.get(1))
+        let changelog = args.size() > 1
+            ? ChangeLog.getVersion(args.get(1))
+            : ChangeLog.ordered().getFirst()
 
         if changelog == null
             simError(triggerPlayer, "Invalid changelog specified.")
         else
-            let title = "{0}Change Log for {1}{2}".format(ENERGY_COLOR, GOLD_COLOR, changelog.getVersionString())
-            printTimedToPlayer(title, 15, triggerPlayer)
-            for change in changelog.changes
-                printTimedToPlayer("{0}{1}{2}".format(DASH, GENERAL_COLOR, change), 15, triggerPlayer)
+            printTimedToPlayer(changelog.toString(), 15, triggerPlayer)
 
 init
-    registerCommandAll("changelog", (triggerPlayer, args) -> ChangeLog.handler(triggerPlayer, args))
-    registerCommandAll("cl", (triggerPlayer, args) -> ChangeLog.handler(triggerPlayer, args))
+    registerCommandAll("changelog") (triggerPlayer, args) ->
+        ChangeLog.handler(triggerPlayer, args)
+    registerCommandAll("cl") (triggerPlayer, args) ->
+        ChangeLog.handler(triggerPlayer, args)
 
     nullTimer() ->
         for changelog in ChangeLog.ordered()
-            let title = "{0}Change Log for {1}{2}".format(SPECIAL_COLOR, GOLD_COLOR, changelog.getVersionString())
-            let changes = changelog.changes.foldl<string>("", (string change, string memo) -> begin
-                return memo + DASH + GENERAL_COLOR + change + "|r|n"
-            end)
-            CreateQuestBJ(bj_QUESTTYPE_REQ_DISCOVERED, title, changes, "ReplaceableTextures\\CommandButtons\\BTNBerserkForTrolls.blp")
+            new Quest(true)
+                ..setTitle(changelog.getTitle())
+                ..setDescription(changelog.getDescription())
+                ..setIcon(Icons.bTNBerserkForTrolls)
+                ..setState(QuestState.DISCOVERED)

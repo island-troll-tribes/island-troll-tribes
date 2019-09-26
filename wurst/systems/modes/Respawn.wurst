@@ -1,17 +1,22 @@
 package Respawn
-import RegisterEvents
-import UnitExtensions
+
+// Standard library imports:
 import ClosureTimers
-import GameConfig
-import TimerUtils
-import ChatCommands
 import LinkedList
+import RegisterEvents
+
+// Local imports:
+import ChatCommands
+import ColorUtils
 import Game
+import GameConfig
 import GroupExtensions
-import PlayerExtensions
 import ForcedDuel
 import InitializeUnits
-import LegacyColors
+import PlayerExtensions
+import StringExtensions
+import TimerUtils
+import UnitExtensions
 
 public constant GRACE_PERIOD_REVIVE_DELAY = 10.0
 public constant GRACE_PERIOD_TIMER = getTimer()
@@ -33,7 +38,8 @@ function revive(unit dyingUnit, player owner)
 function respawnTimeHandler(player triggerPlayer, LinkedList<string> args)
     let numSeconds = args.size() > 1 ? args.get(1).toReal() * 60 : GAME_TIMER.getElapsed()
     let respawnTime = quadraticReviveDelay(numSeconds)
-    let msg = "{0}Respawn time: |r{1}{2}s|r".format(GENERAL_COLOR, ENERGY_COLOR, respawnTime.toInt().toString())
+    let msg = "{0}Respawn time: |r{1}{2}s|r".format(
+        GENERAL_COLOR.toColorString(), ENERGY_COLOR.toColorString(), respawnTime.toInt().toString())
     printTimedToPlayer(msg, 10, triggerPlayer)
 
 function compare(unit a, unit b) returns int
@@ -51,7 +57,7 @@ init
         if gameConfig.isGracePeriodEnabled()
             let numSeconds = gameConfig.getGracePeriodDurationMinutes() * 60
             GRACE_PERIOD_TIMER.start(numSeconds) ->
-                let msg = "{0}Grace period is over. Now you will not be automatically revived when you die! You can still be revived if your team builds a |c00ff0000Spirit Ward|r{1}!|r".format(GENERAL_COLOR, GENERAL_COLOR)
+                let msg = "{0}Grace period is over. Now you will not be automatically revived when you die! You can still be revived if your team builds a |c00ff0000Spirit Ward|r{1}!|r".format(GENERAL_COLOR.toColorString(), GENERAL_COLOR.toColorString())
                 printTimed(msg, 15)
                 MAMMOTH_GATE.kill()
                 MAMMOTH_GATE.setAnimation("death alternate")
@@ -66,7 +72,8 @@ init
             let owner = dyingUnit.getOwner()
 
             if isGracePeriodActive()
-                let msg = "{0}Grace period has not ended, your troll will revive in {1} seconds|r".format(GENERAL_COLOR, GRACE_PERIOD_REVIVE_DELAY.toInt().toString())
+                let msg = "{0}Grace period has not ended, your troll will revive in {1} seconds|r".format(
+                    GENERAL_COLOR.toColorString(), GRACE_PERIOD_REVIVE_DELAY.toInt().toString())
                 printTimedToPlayer(msg, 10, owner)
 
                 doAfter(GRACE_PERIOD_REVIVE_DELAY) ->
@@ -77,7 +84,7 @@ init
                 let delay = quadraticReviveDelay(seconds)
 
                 if gameConfig.isForcedDuelEnabled() and delay >= DUEL_TIMER.getRemaining()
-                    let msg = "Forced duel approaching, your troll will not revive"
+                    let msg = "Forced duel approaching, your troll will not revive."
                     printTimedToPlayer(msg, 10, owner)
 
                 else

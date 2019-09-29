@@ -4,7 +4,6 @@ package Merchants
 import Assets
 import ObjectIds
 import UnitObjEditing
-import ObjEditingNatives
 
 // Local imports:
 import ID
@@ -26,7 +25,8 @@ function createMerchant(int newId, int oldId) returns UnitDefinition
         ..setHideMinimapDisplay(true)
 
 function createMerchantShip(int newId) returns UnitDefinition
-    return createMerchant(newId, UnitIds.nightelfdestroyer)
+    return createMerchant(newId, UnitIds.orcishtransportship)
+        ..setName("Merchant Ship")
         ..setUnitClassification(
             commaList(
                 UnitClasses.mechanical,
@@ -35,7 +35,7 @@ function createMerchantShip(int newId) returns UnitDefinition
             )
         )
         ..setTurnRate(0.4)
-        ..setSpeedBase(520)
+        ..setSpeedBase(120)
         ..setCollisionSize(0)
         ..setAcquisitionRange(0)
 
@@ -47,15 +47,18 @@ function createMerchantShip(int newId) returns UnitDefinition
                 AbilityIds.invulnerable
             )
         )
-        ..setModelFile("Dummy.mdl")
+        // Allow the gold mine icon to appear.
         ..setHideMinimapDisplay(false)
+        // Disable the model, which blocks selecting and targeting.
+        ..setModelFile(LocalUnits.dummy)
+        // Remove the shadow so the unit has no visual impact.
         ..setShadowImageUnit(UnitShadow.none)
+        // Prevent collision with placed directly on another unit.
         ..setMovementType(MovementType.Fly)
         ..setSpeedBase(0)
 
 @compiletime function createMerchantShip1()
     createMerchantShip(UNIT_TRADE_SHIP_1)
-        ..setName("Merchant Ship (Basic Items)")
         ..setModelFile(Units.orcishTransportShip)
         ..setItemsSold(
             commaList(
@@ -76,7 +79,6 @@ function createMerchantShip(int newId) returns UnitDefinition
 
 @compiletime function createMerchantShip2()
     createMerchantShip(UNIT_TRADE_SHIP_2)
-        ..setName("Merchant Ship (Intermediate Items)")
         ..setModelFile(Units.humanTransportShip1)
         ..setItemsSold(
             commaList(
@@ -97,7 +99,6 @@ function createMerchantShip(int newId) returns UnitDefinition
 
 @compiletime function createMerchantShip3()
     createMerchantShip(UNIT_TRADE_SHIP_3)
-        ..setName("Merchant Ship (Advanced Items")
         ..setModelFile(Units.orcishDestroyerShip1)
         ..setItemsSold(
             commaList(
@@ -118,7 +119,6 @@ function createMerchantShip(int newId) returns UnitDefinition
 
 @compiletime function createMerchantShip4()
     createMerchantShip(UNIT_TRADE_SHIP_4)
-        ..setName("Merchant Ship (Crafting Items)")
         ..setModelFile(Units.humanDestroyerShip1)
         ..setItemsSold(
             commaList(
@@ -139,7 +139,6 @@ function createMerchantShip(int newId) returns UnitDefinition
 
 @compiletime function createMerchantShip5()
     createMerchantShip(UNIT_TRADE_SHIP_5)
-        ..setName("Merchant Ship (Basic Equipment)")
         ..setModelFile(Units.nightElfDestroyerShip1)
         ..setItemsSold(
             commaList(
@@ -160,7 +159,6 @@ function createMerchantShip(int newId) returns UnitDefinition
 
 @compiletime function createMerchantShip6()
     createMerchantShip(UNIT_TRADE_SHIP_6)
-        ..setName("Merchant Ship (Advanced Equipment")
         ..setModelFile(Units.nightElfBattleship)
         ..setItemsSold(
             commaList(

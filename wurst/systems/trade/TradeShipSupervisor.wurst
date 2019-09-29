@@ -1,15 +1,18 @@
 package TradeShipSupervisor
 
 // Standard library imports:
+import Assets
 import ClosureEvents
 import ClosureTimers
+import ErrorHandling
 import HashMap
 import LinkedList
 import Orders
 
 // Local imports:
+import LocalAssets
+import PingMinimap
 import TradeShipStop
-import ErrorHandling
 
 let TRADE_SHIP_PAUSE_TIME_DEST = 0
 let TRADE_SHIP_PAUSE_TIME_SELL = 0
@@ -29,6 +32,7 @@ public class TradeShipSupervisor
         ..addAction(function TradeShipSupervisor.handleEnterRegion)
 
     unit ship
+    unit dummy
     bool orderListenerEnabled = true
     TradeShipStop firstStop
     TradeShipStop nextStop
@@ -43,15 +47,45 @@ public class TradeShipSupervisor
             ships.get(enteringUnit).processEnterRegion()
 
     construct(TradeShipStop firstStop, int shipId)
-        ship = createUnit(players[PLAYER_NEUTRAL_PASSIVE], shipId, firstStop.getPos(), angle(0))
-        ship.setPathing(false)
-        ship.addAbility(GHOST_VIS_ID)
+        // Look up the next stop in order to place the ship facing it.
         nextStop = firstStop.getNext()
+
+        // Create the ship.
+        ship = createUnit(
+            players[0],
+            shipId,
+            firstStop.getPos(),
+            firstStop.getPos().angleTo(nextStop.getPos())
+        )
+
+        // Create the dummy unit used to display the gold mine minimap icon.
+        dummy = createUnit(
+            players[PLAYER_NEUTRAL_PASSIVE],
+            LocalUnitIds.dummyGoldMine,
+            firstStop.getPos(),
+            firstStop.getPos().angleTo(nextStop.getPos())
+        )
+
+        // Disable the pathing to prevent players from blocking the ship.
+        ship.setPathing(false)
+
+        // Update the location of the dummy to match the ship periodically.
+        doPeriodically(1.) (CallbackPeriodic cb) ->
+            dummy.setXY(ship.getPos())
+
+        // Register the unit for later listeners.
         ships.put(ship, this)
+
+        // Begin the trade route.
         moveToNextStop()
-        EventListener.add(ship, EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, -> onIssuedOrder())
-        EventListener.add(ship, EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER, -> onIssuedOrder())
-        EventListener.add(ship, EVENT_PLAYER_UNIT_ISSUED_ORDER, -> onIssuedOrder())
+
+        // Prevent players from issuing orders using the shared control glitch.
+        EventListener.add(ship, EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER) ->
+            onIssuedOrder()
+        EventListener.add(ship, EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER) ->
+            onIssuedOrder()
+        EventListener.add(ship, EVENT_PLAYER_UNIT_ISSUED_ORDER) ->
+            onIssuedOrder()
 
     function onIssuedOrder()
         if not this.orderListenerEnabled
@@ -64,6 +98,8 @@ public class TradeShipSupervisor
                 let orderId = GetIssuedOrderId()
                 let targetPos = EventData.getOrderPos()
                 let nextStopPos = nextStop.getPos()
+                print("Issuing order")
+                pingMinimap(nextStop.getPos())
                 if orderId != Orders.move or targetPos.distanceToSq(nextStopPos) > 10000.0
                     ship.issuePointOrder("move", nextStopPos)
             case STOPPED
@@ -82,23 +118,26 @@ public class TradeShipSupervisor
         listeners.forEach(listener -> listener.run(this))
 
     function moveToNextStop()
+        // Exit if the ship is already moving.
         if state == TradeShipSupervisorState.MOVING
             return
 
         state = TradeShipSupervisorState.MOVING
+        // Enable order for this ship so that it may be move.
         this.orderListenerEnabled = false
         ship.issuePointOrder("move", nextStop.getPos())
+        print("Issuing order")
+        pingMinimap(nextStop.getPos())
         this.orderListenerEnabled = true
         destroyCallback()
 
-        //Possibly deprecated now that we have an order listener to stop controlling the boat
-        //its here just in case make sure nothing mysterious can stop the boats
         callback = doPeriodically(1.0) cb ->
             this.orderListenerEnabled = false
             ship.issuePointOrder("move", nextStop.getPos())
             this.orderListenerEnabled = true
 
     function pause(real duration)
+        // Exit if the ship is already stopped.
         if state == TradeShipSupervisorState.STOPPED
             return
 
@@ -108,17 +147,17 @@ public class TradeShipSupervisor
 
     function removeShip()
         ships.remove(ship)
+        dummy.remove()
         ship.remove()
-        destroyCallback()
         state = TradeShipSupervisorState.EXITED
+        destroy callback
         ship = null
 
     function setNextStop()
-        let hasFork = nextStop.hasFork()
-        if hasFork and numForksReached > 3
+        if nextStop.hasFork() and numForksReached > 3
             nextStop = nextStop.getFork()
         else
-            numForksReached += hasFork.toInt()
+            numForksReached++
             nextStop = nextStop.getNext()
 
     private function processEnterRegion()
@@ -142,11 +181,6 @@ public class TradeShipSupervisor
         for listener in listeners
             destroy listener
         destroy listeners
-
-        if callback != null
-            destroy callback
-            callback = null
-            error("TradeShipSupervisorError: destroyed while callback not null")
 
         if ship != null
             removeShip()

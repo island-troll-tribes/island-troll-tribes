@@ -90,26 +90,12 @@ public class TradeShipSupervisor
         // Exit if this listener is diabled.
         if not this.orderListenerEnabled
             return
-        // Exit if the order is not issuable by a player.
-        if GetIssuedOrderId() != OrderIds.smart and GetIssuedOrderId() != OrderIds.move
-            return
 
         // Disable the listener so that a new order may be issued.
         this.orderListenerEnabled = false
-        switch state
-            // Correct the destination if moving.
-            case MOVING
-                let orderId = GetIssuedOrderId()
-                let targetPos = EventData.getOrderPos()
-                let nextStopPos = nextStop.getPos()
-                if orderId != Orders.move or targetPos.distanceToSq(nextStopPos) > 10000.0
-                    ship.issuePointOrder("move", nextStopPos)
-            // Prevent movement if stopped.
-            case STOPPED
-                ship.issueImmediateOrder("stop")
-            // Orders cannot be made if the ship has exited.
-            case EXITED
-                skip
+
+        // Override the order issued by the player with the correct one.
+        ship.issuePointOrderById(OrderIds.move, nextStop.getPos())
 
         // Reenable the listener once the correction has been made.
         this.orderListenerEnabled = true
@@ -147,7 +133,9 @@ public class TradeShipSupervisor
         state = TradeShipSupervisorState.STOPPED
 
         // Continue along the route after the given duration.
-        doAfter(duration, -> moveToNextStop())
+        doAfter(duration) ->
+            setNextStop()
+            moveToNextStop()
 
     function removeShip()
         ships.remove(ship)
@@ -173,7 +161,6 @@ public class TradeShipSupervisor
             removeShip()
         else
             pause(nextStop.getPauseTime())
-            setNextStop()
 
         triggerListeners()
 

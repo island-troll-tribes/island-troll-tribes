@@ -1,0 +1,198 @@
+package Merchants
+
+// Standard library imports:
+import Assets
+import ObjectIds
+import UnitObjEditing
+
+// Local imports:
+import ID
+import LocalAssets
+
+function createMerchant(int newId, int oldId) returns UnitDefinition
+    return new UnitDefinition(newId, oldId)
+        ..setNormalAbilities(
+            commaList(
+                AbilityIds.invulnerable,
+                AbilityIds.shopPurchaseItem,
+                AbilityIds.ghostVisible,
+                LocalAbilityIds.selectHero
+            )
+        )
+        ..setAttacksEnabled(0)
+        ..setHitPointsMaximumBase(500000)
+        ..setManaMaximum(0)
+        ..setHideMinimapDisplay(true)
+
+function createMerchantShip(int newId) returns UnitDefinition
+    return createMerchant(newId, UnitIds.orcishtransportship)
+        ..setName("Merchant Ship")
+        ..setUnitClassification(
+            commaList(
+                UnitClasses.mechanical,
+                UnitClasses.neutral,
+                UnitClasses.walkable
+            )
+        )
+        ..setTurnRate(0.4)
+        ..setSpeedBase(120)
+        ..setCollisionSize(0)
+        ..setAcquisitionRange(0)
+
+@compiletime function createDummyGoldMineShip()
+    createMerchantShip(LocalUnitIds.dummyGoldMine)
+        ..setNormalAbilities(
+            commaList(
+                AbilityIds.goldMineability,
+                AbilityIds.invulnerable
+            )
+        )
+        // Allow the gold mine icon to appear.
+        ..setHideMinimapDisplay(false)
+        // Disable the model, which blocks selecting and targeting.
+        ..setModelFile(LocalUnits.dummy)
+        // Remove the shadow so the unit has no visual impact.
+        ..setShadowImageUnit(UnitShadow.none)
+        // Prevent collision with placed directly on another unit.
+        ..setMovementType(MovementType.Fly)
+        ..setSpeedBase(0)
+
+@compiletime function createMerchantShip1()
+    createMerchantShip(UNIT_TRADE_SHIP_1)
+        ..setModelFile(Units.orcishTransportShip)
+        ..setItemsSold(
+            commaList(
+                ITEM_CLAY_BALL,
+                ITEM_MAGIC,
+                ITEM_SPEAR,
+                ITEM_BLOW_GUN,
+                ITEM_ENSNARE_TRAP_KIT,
+                ITEM_STONE,
+                ITEM_MUD_HUT_KIT,
+                ITEM_FORGE_KIT,
+                ITEM_STORAGE_HUT_KIT,
+                ITEM_FIRE_KIT,
+                ITEM_STICK,
+                ITEM_FLINT
+            )
+        )
+
+@compiletime function createMerchantShip2()
+    createMerchantShip(UNIT_TRADE_SHIP_2)
+        ..setModelFile(Units.humanTransportShip1)
+        ..setItemsSold(
+            commaList(
+                ITEM_MUD_HUT_KIT,
+                ITEM_FLINT,
+                ITEM_FORGE_KIT,
+                ITEM_WORKSHOP_KIT,
+                ITEM_TANNERY_KIT,
+                ITEM_IRON_INGOT,
+                ITEM_SMOKE_HOUSE_KIT,
+                ITEM_ENSNARE_TRAP_KIT,
+                ITEM_OMNIDEFENDER_KIT,
+                ITEM_MAGIC_SEED,
+                ITEM_STONE,
+                ITEM_MANA_CRYSTAL
+            )
+        )
+
+@compiletime function createMerchantShip3()
+    createMerchantShip(UNIT_TRADE_SHIP_3)
+        ..setModelFile(Units.orcishDestroyerShip1)
+        ..setItemsSold(
+            commaList(
+                ITEM_SCROLL_FIREBALL,
+                ITEM_SCROLL_LIVING_DEAD,
+                ITEM_SCROLL_STONE_ARMOR,
+                ITEM_SCROLL_SWIFTNESS,
+                ITEM_FORGE_KIT,
+                ITEM_TANNERY_KIT,
+                ITEM_WORKSHOP_KIT,
+                ITEM_MUD_HUT_KIT,
+                ITEM_STEEL_INGOT,
+                ITEM_SPIRIT_WATER,
+                ITEM_ANTI_MAGIC_POTION,
+                ITEM_CURE_ALL
+            )
+        )
+
+@compiletime function createMerchantShip4()
+    createMerchantShip(UNIT_TRADE_SHIP_4)
+        ..setModelFile(Units.humanDestroyerShip1)
+        ..setItemsSold(
+            commaList(
+                ITEM_WORKSHOP_KIT,
+                ITEM_TANNERY_KIT,
+                ITEM_SCROLL_LIVING_DEAD,
+                ITEM_SCROLL_STONE_ARMOR,
+                ITEM_ANTI_MAGIC_POTION,
+                ITEM_CURE_ALL,
+                ITEM_SPIRIT_WIND,
+                ITEM_STEEL_INGOT,
+                ITEM_FLINT,
+                ITEM_STONE,
+                ITEM_MANA_CRYSTAL,
+                ITEM_MAGIC
+            )
+        )
+
+@compiletime function createMerchantShip5()
+    createMerchantShip(UNIT_TRADE_SHIP_5)
+        ..setModelFile(Units.nightElfDestroyerShip1)
+        ..setItemsSold(
+            commaList(
+                ITEM_SCROLL_LIVING_DEAD,
+                ITEM_SCROLL_STONE_ARMOR,
+                ITEM_SCROLL_ENTANGLING_ROOTS,
+                ITEM_SCROLL_CYCLONE,
+                ITEM_IRON_SHIELD,
+                ITEM_IRON_AXE,
+                ITEM_NETS,
+                ITEM_SMOKE_BOMB,
+                ITEM_POISON,
+                ITEM_SPIRIT_DARKNESS,
+                ITEM_IRON_INGOT,
+                ITEM_STEEL_INGOT
+            )
+        )
+
+@compiletime function createMerchantShip6()
+    createMerchantShip(UNIT_TRADE_SHIP_6)
+        ..setModelFile(Units.nightElfBattleship)
+        ..setItemsSold(
+            commaList(
+                ITEM_STEEL_AXE,
+                ITEM_STEEL_SHIELD,
+                ITEM_SCROLL_ENTANGLING_ROOTS,
+                ITEM_SCROLL_CYCLONE,
+                ITEM_IRON_BOOTS,
+                ITEM_IRON_COAT,
+                ITEM_IRON_GLOVES,
+                ITEM_MAGIC,
+                ITEM_EMP,
+                ITEM_NETS,
+                ITEM_SPIRIT_DARKNESS,
+                ITEM_ULTRA_POISON
+            )
+        )
+
+@compiletime function createTrollMerchant()
+    createMerchant(UNIT_TROLL_MERCHANT, UnitIds.foresttrollshadowpriest)
+        ..setName("Troll Merchant")
+        ..setItemsSold(
+            commaList(
+                ITEM_ANABOLIC_POTION,
+                ITEM_POTION_TWIN_ISLANDS,
+                ITEM_DISEASE_POTION,
+                ITEM_DRUNKS_POTION,
+                ITEM_SPIRIT_DARKNESS,
+                ITEM_ESSENCE_BEES,
+                ITEM_ULTRA_POISON_SPEAR,
+                ITEM_STEEL_INGOT,
+                ITEM_ACID_BOMB,
+                ITEM_STEEL_SHIELD,
+                ITEM_STEEL_AXE,
+                ITEM_MAGIC
+            )
+        )

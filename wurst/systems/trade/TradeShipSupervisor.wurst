@@ -87,18 +87,14 @@ public class TradeShipSupervisor
             onIssuedOrder()
 
     function onIssuedOrder()
-        // Exit if this listener is diabled.
+        // Exit if this listener is disabled, which prevents infinite recursion.
         if not this.orderListenerEnabled
             return
 
-        // Disable the listener so that a new order may be issued.
-        this.orderListenerEnabled = false
-
-        // Override the order issued by the player with the correct one.
-        ship.issuePointOrderById(OrderIds.move, nextStop.getPos())
-
-        // Reenable the listener once the correction has been made.
-        this.orderListenerEnabled = true
+        // Allow immediate orders, such as selling, to execute.
+        nullTimer() ->
+            // Ensure that the ship does not deviate from its path.
+            issueMoveOrder()
 
     function getState() returns TradeShipSupervisorState
         return state
@@ -117,13 +113,19 @@ public class TradeShipSupervisor
         // Register the new state.
         state = TradeShipSupervisorState.MOVING
 
-        // Enable order for this ship so that it may be move.
+        // Issue the required order.
+        issueMoveOrder()
+
+    function issueMoveOrder()
+        // Prevent the next issued order from generating another order.
         this.orderListenerEnabled = false
-        ship.issuePointOrder("move", nextStop.getPos())
+
+        // Move the ship to the next stop.
+        ship.issuePointOrderById(OrderIds.move, nextStop.getPos())
+
+        // Reenable the listener once the path is set.
         this.orderListenerEnabled = true
 
-    // A "stop" order would be required to prevent the unit from returning due
-    // to guarding, but this is prevented by the unit having no attack data.
     function pause(real duration)
         // Exit if the ship is already stopped.
         if state == TradeShipSupervisorState.STOPPED

@@ -6,16 +6,17 @@ import LinkedList
 
 // Local imports:
 import FlyingUnitDefinition
-import TrollUpgrade
+import MathUtils
 import Pets
 import Hawk
+import Transformation
 import UnitEntity
 
 // The frequency for which pet growth is checked.
 let GROWTH_FREQUENCY = 4.
 
 // The probability that a pet will advance.
-let GROWTH_RATE = 0.02
+let GROWTH_RATE = 1.
 
 function checkGrowth(unit pet)
     // Look up the growth chain for the pet.
@@ -28,26 +29,14 @@ function checkGrowth(unit pet)
     if next == 0 or GetRandomReal(0., 1.) > GROWTH_RATE
         return
 
-    // Remove the old unit from being tracked.
-    pet.getOwner().removePet()
-
-    // Replace the pet.
-    let replacement = replaceUnit(next, pet, false)
-
-    // Register the replacement.
-    replacement.getOwner().addPet(replacement)
+    // Transform the pet to its next stage.
+    transformUnit(pet, next)
 
     // Increment hawk abilities.
     if UnitEntity.findForUnit(pet) instanceof Hawk
-        for abilityId in hawkAbilities
-            // Calculate the new ability level.
-            let level = pet.getAbilityLevel(abilityId) + GetRandomInt(0, 1)
-
-            // Set the ability level for the replacement
-            replacement.setAbilityLevel(abilityId, level.clamp(1, 6))
-
-    // Remove the old pet once it is no longer needed.
-    pet.remove()
+        for abilityID in hawkAbilities
+            if flipCoin() and pet.getAbilityLevel(abilityID) < 6
+                pet.incAbilityLevel(abilityID)
 
 init
     doPeriodically(GROWTH_FREQUENCY) (CallbackPeriodic cb) ->

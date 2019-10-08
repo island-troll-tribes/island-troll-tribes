@@ -7,6 +7,7 @@ import ClosureEvents
 import ID
 import PetAbilities
 import Pets
+import TrollUpgrade
 
 public function releasePet(unit caster)
     // Look up the pet.
@@ -33,3 +34,9 @@ public function releasePet(unit caster)
 init
     EventListener.onCast(SPELL_PET_RELEASE) (unit caster) ->
         releasePet(caster)
+
+    // Release pets if the new class does not have them.
+    registerPreprocessor(UNIT_BEAST_MASTER) (unit origin, int targetID) ->
+        if targetID == UNIT_CHICKEN_FORM or targetID == UNIT_SHAPESHIFTER_WOLF
+            if origin.getOwner().getPet() != null
+                releasePet(origin)

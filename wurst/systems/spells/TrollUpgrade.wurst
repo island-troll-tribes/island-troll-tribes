@@ -1,96 +1,168 @@
 package TrollUpgrade
 
 // Standard library imports:
+import EventHelper
 import HashMap
+import LinkedList
 import RegisterEvents
 
 // Local imports:
 import ID
+import Transformation
+
+// TODO: Remove these once the "-om" mode is removed.
+import GameConfig
+import EatRawMeat
 import MeatSystem
-import Pets
-import PetReleasing
-import PlayerExtensions
 
+public interface Callback
+    function run(unit origin, int targetID)
+
+let preprocessors = new HashMap<int, LinkedList<Callback>>()
+let postprocessors = new HashMap<int, LinkedList<Callback>>()
+
+function runProcessors(unit origin, int targetID, LinkedList<Callback> list)
+    // Exit if no callbacks were registered.
+    if list == null
+        return
+
+    // Execute each callback.
+    list.forEach() (Callback t) ->
+        t.run(origin, targetID)
+
+
+function registerCallback(int originID, Callback cb, HashMap<int, LinkedList<Callback>> map)
+    // Add a new list, as necessary.
+    if not map.has(originID)
+        // Create the new list with the given callback.
+        map.put(
+            originID,
+            new LinkedList<Callback>()..add(cb)
+        )
+    // Add the callback to the existing list otherwise.
+    else
+        map.get(originID).add(cb)
+
+public function registerPreprocessor(int originID, Callback cb)
+    registerCallback(originID, cb, preprocessors)
+
+public function registerPostprocessor(int originID, Callback cb)
+    registerCallback(originID, cb, postprocessors)
+
+
+// TODO: Build this out automatically.
 public constant trollUpgradeMap = new HashMap<int, int>()
-..put(SPELL_WARRIOR         , UNIT_WARRIOR)
-..put(SPELL_TRACKER         , UNIT_TRACKER)
-..put(SPELL_JUGGERNAUT      , UNIT_JUGGERNAUT)
-..put(SPELL_ELEMENTALIST    , UNIT_ELEMENTALIST_NEW)
-..put(SPELL_HYPNOTIST       , UNIT_HYPNOTIST)
-..put(SPELL_DEMENTIA_MASTER , UNIT_DEMENTIA_MASTER)
-..put(SPELL_BOOSTER         , UNIT_BOOSTER)
-..put(SPELL_MASTER_HEALER   , UNIT_MASTER_HEALER)
-..put(SPELL_SAGE            , UNIT_SAGE)
-..put(SPELL_CHICKEN         , UNIT_CHICKEN_FORM)
-..put(SPELL_SHAPESHIFTER    , UNIT_SHAPESHIFTER_WOLF)
-..put(SPELL_ULTIMATE_FORM   , UNIT_ULTIMATE_FORM)
-..put(SPELL_ESCAPE_ARTIST   , UNIT_ESCAPE_ARTIST)
-..put(SPELL_CONTORTIONIST   , UNIT_CONTORTIONIST)
-..put(SPELL_ASSASSIN        , UNIT_ASSASSIN)
-..put(SPELL_OBSERVER        , UNIT_OBSERVER)
-..put(SPELL_TRAPPER         , UNIT_TRAPPER)
-..put(SPELL_SPY             , UNIT_SPY)
-..put(SPELL_RADAR_GATHERER  , UNIT_RADAR_GATHERER)
-..put(SPELL_HERB_MASTER     , UNIT_HERB_MASTER)
-..put(SPELL_OMNIGATHERER    , UNIT_OMNIGATHERER)
+    ..put(SPELL_WARRIOR,          UNIT_WARRIOR)
+    ..put(SPELL_TRACKER,          UNIT_TRACKER)
+    ..put(SPELL_JUGGERNAUT,       UNIT_JUGGERNAUT)
+    ..put(SPELL_ELEMENTALIST,     UNIT_ELEMENTALIST_NEW)
+    ..put(SPELL_HYPNOTIST,        UNIT_HYPNOTIST)
+    ..put(SPELL_DEMENTIA_MASTER,  UNIT_DEMENTIA_MASTER)
+    ..put(SPELL_BOOSTER,          UNIT_BOOSTER)
+    ..put(SPELL_MASTER_HEALER,    UNIT_MASTER_HEALER)
+    ..put(SPELL_SAGE,             UNIT_SAGE)
+    ..put(SPELL_CHICKEN,          UNIT_CHICKEN_FORM)
+    ..put(SPELL_SHAPESHIFTER,     UNIT_SHAPESHIFTER_WOLF)
+    ..put(SPELL_ULTIMATE_FORM,    UNIT_ULTIMATE_FORM)
+    ..put(SPELL_ESCAPE_ARTIST,    UNIT_ESCAPE_ARTIST)
+    ..put(SPELL_CONTORTIONIST,    UNIT_CONTORTIONIST)
+    ..put(SPELL_ASSASSIN,         UNIT_ASSASSIN)
+    ..put(SPELL_OBSERVER,         UNIT_OBSERVER)
+    ..put(SPELL_TRAPPER,          UNIT_TRAPPER)
+    ..put(SPELL_SPY,              UNIT_SPY)
+    ..put(SPELL_RADAR_GATHERER,   UNIT_RADAR_GATHERER)
+    ..put(SPELL_HERB_MASTER,      UNIT_HERB_MASTER)
+    ..put(SPELL_OMNIGATHERER,     UNIT_OMNIGATHERER)
 
-public function replaceUnit(int newUnitId, unit oldUnit) returns unit
-    return replaceUnit(newUnitId, oldUnit, true)
+// TODO: Do this while creating the classes.
+@compiletime function registerTransformations()
+    // Hunter
+    registerTransformation(UNIT_HUNTER, UNIT_WARRIOR)
+    registerTransformation(UNIT_HUNTER, UNIT_TRACKER)
+    registerTransformation(UNIT_HUNTER, UNIT_JUGGERNAUT)
+    registerTransformation(UNIT_WARRIOR, UNIT_JUGGERNAUT)
+    registerTransformation(UNIT_TRACKER, UNIT_JUGGERNAUT)
 
-public function replaceUnit(int newUnitId, unit oldUnit, bool remove) returns unit
-    let owner = GetOwningPlayer(oldUnit)
-    let pos = oldUnit.getPos()
-    let angle = oldUnit.getFacingAngle()
+    // Beastmaster
+    registerTransformation(UNIT_BEAST_MASTER, UNIT_SHAPESHIFTER_WOLF)
+    registerTransformation(UNIT_BEAST_MASTER, UNIT_CHICKEN_FORM)
+    registerTransformation(UNIT_BEAST_MASTER, UNIT_ULTIMATE_FORM)
+    registerTransformation(UNIT_SHAPESHIFTER_WOLF, UNIT_ULTIMATE_FORM)
+    registerTransformation(UNIT_CHICKEN_FORM, UNIT_ULTIMATE_FORM)
+/*
+    //
+    registerTransformation(, )
+    registerTransformation(, )
+    registerTransformation(, )
+    registerTransformation(, )
+    registerTransformation(, )
 
-    ShowUnit(oldUnit, false)
-    let newUnit = createUnit(owner, newUnitId, pos, angle)
-    newUnit.setHP(newUnit.getMaxHP()     * oldUnit.getHP()   / oldUnit.getMaxHP()  )
-    if oldUnit.getMana() > 0
-        newUnit.setMana(newUnit.getMaxMana() * oldUnit.getMana() / oldUnit.getMaxMana())
+    //
+    registerTransformation(, )
+    registerTransformation(, )
+    registerTransformation(, )
+    registerTransformation(, )
+    registerTransformation(, )
 
-    // Transfer raw meat inventory, if necessary.
-    if meatInventoryInstances.has(oldUnit)
-        meatInventoryInstances.get(oldUnit).transferMeatInventoryToUnit(newUnit)
+    //
+    registerTransformation(, )
+    registerTransformation(, )
+    registerTransformation(, )
+    registerTransformation(, )
+    registerTransformation(, )
 
-    for items in oldUnit.inventory()
-        UnitAddItem(newUnit, items)
+    //
+    registerTransformation(, )
+    registerTransformation(, )
+    registerTransformation(, )
+    registerTransformation(, )
+    registerTransformation(, ) */
 
-    if remove
-        RemoveUnit(oldUnit)
-    return newUnit
 
-function upgradeUnit(int newUnitId, unit oldUnit)
-    let newUnit = replaceUnit(newUnitId, oldUnit)
-    let owner = GetOwningPlayer(oldUnit)
-    int str = GetHeroStr(oldUnit, false)
-    int agi = GetHeroAgi(oldUnit, false)
-    int inte = GetHeroInt(oldUnit, false)
+function upgradeUnit(unit origin, int targetID)
+    // Preprocess the unit.
+    runProcessors(origin, targetID, preprocessors.get(origin.getTypeId()))
 
-    newUnit.setStr(str)
-    newUnit.setAgi(agi)
-    newUnit.setInt(inte)
+    // Transform the unit.
+    transformUnit(origin, targetID)
 
-    //Change globals to new unit
-    owner.setTroll(newUnit)
+    // Postprocess the unit.
+    runProcessors(origin, targetID, preprocessors.get(origin.getTypeId()))
 
-    // Release the pet, if necessary.
-    if newUnitId == UNIT_CHICKEN_FORM or newUnitId == UNIT_SHAPESHIFTER_WOLF
-        if owner.getPet() != null
-            releasePet(newUnit)
+    // Reset the experience for the unit.
+    origin.setXp(0, false)
 
-    //Avoid desync with localplayer check
-    if GetLocalPlayer() == owner
-        SelectUnit(newUnit, true)
+    // Exit out of the ability menu.
+    if GetLocalPlayer() == origin.getOwner()
         ForceUICancel()
 
-function upgradeAction()
-    let spell = GetLearnedSkill()
-    let oldUnit = GetLearningUnit()
-    var _newUnitId = 0
+    // TODO: Remove this once the "-om" mode is removed.
+    if gameConfig.isOldMeatSystemEnabled()
+        origin.addAbility(OLD_ABILITY_ID_EAT_RAW_MEAT)
+        origin.addAbility(ABILITY_PICKUP_MEAT)
+        origin.addAbility(ABILITY_CARGO_HOLD)
+    else
+        origin.addAbility(ABILITY_ID_PICKUPMEAT_TROLL)
+        origin.addAbility(ABILITY_ID_EAT_RAW_MEAT)
 
-    _newUnitId = trollUpgradeMap.get(spell)
-    if _newUnitId != 0
-        upgradeUnit(_newUnitId, oldUnit)
+
+function onLearn(unit origin, int abilityID)
+    // Look up the transformation denoted by the learned ability.
+    let targetID = trollUpgradeMap.get(abilityID)
+
+    // Exit if the skill does not mark an upgrade.
+    if targetID == 0
+        return
+
+    // Perform the upgrade.
+    upgradeUnit(origin, targetID)
 
 init
-    registerPlayerUnitEvent(EVENT_PLAYER_HERO_SKILL, () -> upgradeAction())
+    registerPlayerUnitEvent(EVENT_PLAYER_HERO_SKILL) ->
+        onLearn(
+            EventData.getLearningUnit(),
+            EventData.getLearnedSkill()
+        )
+
+    // Register the transformations at runtime.
+    registerTransformations()

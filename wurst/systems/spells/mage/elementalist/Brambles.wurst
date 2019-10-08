@@ -35,7 +35,8 @@ let SLOW_DURATION = 1.2
 let OVERCHARGE_ENTANGLE_DURATION = 3.
 let DAMAGE_PER_SECOND = 8.
 let ROOT_CREATION_PERIOD = 0.25
-let UPDATE_LOOP_INTERVAL = 0.03125
+let UPDATE_LOOP_INTERVAL = 0.12500    //Quadrupled the interval to reduce lag
+let DAMAGE_ADJUST = 4.                //Used to adjust damage since interval was changed
 let SPELL_ICON = Icons.bTNEntanglingRoots
 let ROOTS_EFFECT_PATH = Abilities.entanglingRootsTarget
 let TOOLTIP_NORM = "Brambles"
@@ -199,7 +200,7 @@ class BramblesInstance
                             if dummy.castTarget(DUMMY_ENTANGLE_SPELL_ID, 1, Orders.entanglingroots, u) != null
                                 snaredTargets.push(u)
                         if not loopDamagedTargets.has(u)
-                            UnitDamageTarget(ownerUnit, u, DAMAGE_PER_SECOND*UPDATE_LOOP_INTERVAL, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
+                            UnitDamageTarget(ownerUnit, u, DAMAGE_PER_SECOND*UPDATE_LOOP_INTERVAL/DAMAGE_ADJUST, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
                             loopDamagedTargets.push(u)
 
             destroy loopDamagedTargets

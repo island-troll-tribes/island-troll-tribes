@@ -1,0 +1,74 @@
+package HashingMap
+
+// Standard library imports:
+import HashMap
+
+public abstract class Hash<K, T>
+    protected abstract function call(K key) returns T
+
+public class HashingMap<K, V, T>
+    // The previously hashed keys.
+    IterableMap<T, K> keys
+
+    // The stored values.
+    HashMap<T, V> values
+
+    // The function used to hash keys.
+    Hash<K, T> hashFunction
+
+    /** Constructs the map with the given transform */
+    construct(Hash<K, T> hashFunction)
+        // Initialize the mappings used internal.
+        keys = new IterableMap<T, K>()
+        values = new HashMap<T, V>()
+
+        // Store the given hash function.
+        this.hashFunction = hashFunction
+
+    /** Calls the hash function the mapping uses */
+    function hash(K key) returns T
+        return hashFunction.call(key)
+
+    /** Whether a value exists under the given key or not */
+    function has(K key) returns boolean
+        return values.has(hashFunction.call(key))
+
+    /** Saves the given value under the given key */
+    function put(K key, V value)
+        let hash = hashFunction.call(key)
+        keys.put(hash, key)
+        values.put(hash, value)
+
+    /** Retrieves the value saved under the given key */
+    function get(K key) returns V
+        return values.get(hashFunction.call(key))
+
+    /** Removes the value saved under the given key */
+    function remove(K key)
+        let hash = hashFunction.call(key)
+        keys.remove(hash)
+        values.remove(hash)
+
+    /** Retrieves the value saved under the given key and removes it */
+    function getAndRemove(K key) returns V
+        let result = get(key)
+        remove(key)
+        return result
+
+    /** Returns the number of keys stored **/
+    function size() returns int
+        return values.size()
+
+    function flush()
+        keys.flush()
+        values.flush()
+
+    /** Executes the closure for each key-value pair */
+    function forEach(IMItrClosure<K, V> itr)
+        keys.forEach() (T hash, K key) ->
+            itr.run(key, values.get(hash))
+
+    ondestroy
+        destroy keys
+        destroy values
+        destroy hashFunction

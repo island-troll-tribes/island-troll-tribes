@@ -7,28 +7,34 @@ import ClosureEvents
 import ID
 import PetAbilities
 import Pets
+import Tribe
+import StringExtensions
+import ColorUtils
 
 public function releasePet(unit caster)
     // Look up the pet.
-    let pet = caster.getOwner().getPet()
+    let originalOwner = caster.getOwner()
+    let pet = originalOwner.getPet()
 
     // Deregister the pet.
-    caster.getOwner().removePet()
+    originalOwner.removePet()
 
     // Revert the available abilities.
-    setPetAbilities(caster.getOwner(), false)
+    setPetAbilities(originalOwner, false)
 
     // Compute the new owner.
-    let owner =  pet.getPetGrowthChain().indexOf(pet.getTypeId()) == 0
+    let newOwner =  pet.getPetGrowthChain().indexOf(pet.getTypeId()) == 0
         ? PLAYER_NEUTRAL_PASSIVE
         : PLAYER_NEUTRAL_AGGRESSIVE
 
     // Transfer the ownership of the pet.
-    pet.setOwner(Player(owner), true)
+    pet.setOwner(Player(newOwner), true)
 
     // Notify the owning tribe.
-    if localPlayer.isAllyOf(caster.getOwner())
-        print("A pet was released!")
+    let tribe = Tribe.ofPlayer(originalOwner)
+    if tribe != null
+        tribe.getMembers().forEach() (player member) ->
+            member.print("A pet was released!".color(GENERAL_COLOR))
 
 init
     EventListener.onCast(SPELL_PET_RELEASE) (unit caster) ->

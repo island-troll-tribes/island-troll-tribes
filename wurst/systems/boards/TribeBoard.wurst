@@ -17,6 +17,7 @@ import Game
 import PlayerExtensions
 import StringExtensions
 import Tribe
+import EventHelper
 
 let PERIOD = 1.0
 
@@ -130,6 +131,8 @@ init
             Tribe.getTribes().each(tribe -> new TribeBoard(tribe))
 
         registerPlayerEvent(EVENT_PLAYER_LEAVE) ->
-            TribeBoard
-                .findForPlayer(GetTriggerPlayer())
-                .fixDisplay()
+            let leaver = EventData.getTriggerPlayer()
+            if Tribe.ofPlayer(leaver) != null
+                TribeBoard
+                    .findForPlayer(leaver)
+                    .fixDisplay()

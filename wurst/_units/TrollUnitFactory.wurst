@@ -1,12 +1,19 @@
 package TrollUnitFactory
 
-import UnitObjEditing
-import UnitIds
-import ObjectIds
-import Lodash
-import Soundsets
+// Standard library imports:
+import Assets
 import HashMap
 import LinkedList
+import ObjectIdGenerator
+import ObjectIds
+import StringUtils
+import UnitObjEditing
+
+// Third-party imports:
+import Lodash
+
+// Local imports:
+import AbilityObjectCreationUtils
 import TrollUnitTextConstant
 
 public abstract class TrollUnit
@@ -25,7 +32,7 @@ public abstract class TrollUnit
     string iconInterface = "ReplaceableTextures\\CommandButtons\\BTN"
     string iconScoreScreen = "ReplaceableTextures\\CommandButtons\\BTN"
     string hotkey = "Q"
-    string heroAbilities = ""
+    LinkedList<string> heroAbilities
     string normalAbilities = ""
     string toolTipBasic = "Pick "
     string toolTipAwaken = "Revive "
@@ -58,19 +65,36 @@ public abstract class TrollUnit
         this.soundSet = soundSet
         this.buttonPos = buttonPos
         this.sightRadius = sightRadius
-        this.heroAbilities = heroAbilities
-
         for key in trollInventoryAbilityMap
             if trollInventoryAbilityMap.get(key).has(id)
                 this.normalAbilities += commaList(key)
         this.normalAbilities += ","+BASIC_TROLL_SPELLS+","+normalAbilities
+
+        // TODO: Do this directly.
+        // Remove the first listed ability, leaving only transformation markers.
+        this.heroAbilities = heroAbilities.split(",")..dequeue()
+        if this.heroAbilities.size() > 0
+            let subclassMenuID = ABIL_ID_GEN.next()
+
+            // Create the spellbook
+            new SpellBookObject(
+                subclassMenuID,
+                "Subclass Menu",
+                "T",
+                "Choose a subclass.",
+                this.heroAbilities.joinBy(","),
+                new Pair(3, 1),
+                "StatUp"
+            )..buildSpellBook()
+
+            this.normalAbilities += ","+subclassMenuID.toRawCode()
 
     function buildUnit()
         new HeroDefinition(id, UnitIds.blademaster)
         ..setUpgradesUsed("")
         ..setRequierementsForTier(2, "")
         ..setRequierementsForTier(3, "")
-        ..setHeroAbilities(heroAbilities)
+        ..setHeroAbilities("")
         ..setNormalAbilities(normalAbilities)
         ..setAttack1Range(128)
         ..setAttack1DamageNumberofDice(1)

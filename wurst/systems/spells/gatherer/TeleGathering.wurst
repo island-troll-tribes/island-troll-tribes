@@ -1,20 +1,22 @@
 package TeleGathering
-import HashMap
+
+// Standard library imports:
 import Assets
 import ClosureTimers
 import ClosureEvents
+import HashMap
 import InstantDummyCaster
-import ID
-import UnitExtensions
-import Thief
-import HerbMaster
-import Omnigatherer
-import Gatherer
-import UnitEntity
-import ClosuresForItems
+import LinkedList
 import TerrainUtils
+
+// Local imports:
+import ClosuresForItems
+import ID
 import NewTeleThief
 import TeleGatherAbilityDefinition
+import Thief
+import UnitEntity
+import UnitExtensions
 
 let SORT_DISTANCE_INCREMENT = 110
 let SORT_DISTANCE_BASE = 30
@@ -24,6 +26,18 @@ let TELEGATHER_DISABLE_DISTANCE_SQ = 700*700
 
 HashMap<unit, TeleGatherInstance> instances = new HashMap<unit, TeleGatherInstance>()
 HashMap<unit, SortingCache> cachedSortingPositions = new HashMap<unit, SortingCache>()
+
+// TODO: Use a tagging system for this.
+let HERBS = asList(
+    ITEM_RIVER_ROOT,
+    ITEM_RIVER_STEM,
+    ITEM_ATHELAS_SEED,
+    ITEM_BLUE_HERB,
+    ITEM_ORANGE_HERB,
+    ITEM_YELLOW_HERB,
+    ITEM_PURPLE_HERB,
+    ITEM_MUSHROOM
+)
 
 function IterableMap<int, SortingPosition>.deepCopy() returns IterableMap<int, SortingPosition>
     let map = new IterableMap<int, SortingPosition>
@@ -59,6 +73,7 @@ class TeleGatherInstance
     unit teleTarget
     real duration
     real lifetime = 0
+    bool allowHerbs
     UnitEntity casterEntity
     CallbackPeriodic pollingLoop
     IterableMap<int, SortingPosition> sortingPositions
@@ -66,11 +81,12 @@ class TeleGatherInstance
     int sortDistanceOffset = SORT_DISTANCE_INCREMENT
     int teleAbilityToCast = DUMMY_TELE_GATHER_ID
 
-    construct(unit caster, unit teleTarget, real duration)
+    construct(unit caster, unit teleTarget, real duration, bool allowHerbs)
         var teleAbilityCastLevel = 1
 
         this.caster = caster
         this.casterEntity = UnitEntity.findForUnit(this.caster)
+        this.allowHerbs = allowHerbs
 
         // Just fixing correct spell value for the ability to cast on caster
 
@@ -108,18 +124,9 @@ class TeleGatherInstance
         if itemType == ITEM_RAW_MEAT
             return false
 
-        //Skip herbs if not herb-gatherer
-        if not this.casterEntity instanceof HerbMaster and not this.casterEntity instanceof Omnigatherer
-        and not this.casterEntity instanceof Thief
-            if itemType == ITEM_RIVER_ROOT
-                or itemType == ITEM_RIVER_STEM
-                or itemType == ITEM_ATHELAS_SEED
-                or itemType == ITEM_BLUE_HERB
-                or itemType == ITEM_ORANGE_HERB
-                or itemType == ITEM_YELLOW_HERB
-                or itemType == ITEM_PURPLE_HERB
-                or itemType == ITEM_MUSHROOM
-                return false
+        // Skip herbs if not herb-gatherer
+        if not this.allowHerbs and HERBS.indexOf(itemType) != -1
+            return false
 
         return true
 
@@ -195,15 +202,15 @@ class TeleGatherInstance
             if instances.get(this.caster) == this
                 instances.remove(this.caster)
 
-function onTeleGatherCast()
+function onTeleGatherCast(bool allowHerbs)
     let caster = GetSpellAbilityUnit()
     let target = GetSpellTargetUnit()
     var duration = 0.
     switch GetSpellAbilityId()
         case SPELL_TELE_GATHER_OMNI
             duration = 30. + 20 * 4
-        case SPELL_TELE_GATHER
-            duration = 30. + 20. * caster.getAbilityLevel(SPELL_TELE_GATHER)
+        case SPELL_TELE_RADAR_GATHER
+            duration = 30. + 20. * caster.getAbilityLevel(SPELL_TELE_RADAR_GATHER)
         case SPELL_TELE_THIEF
             duration = TELE_THIEF_DURATION
         case SPELL_AS_TELE_THIEF
@@ -212,20 +219,23 @@ function onTeleGatherCast()
     if instances.has(caster)
         destroy instances.getAndRemove(caster)
 
-    instances.put(caster, new TeleGatherInstance(caster, target, duration))
+    instances.put(caster, new TeleGatherInstance(caster, target, duration, allowHerbs))
 
 init
-    registerSpellEffectEvent(SPELL_TELE_GATHER) ->
-        onTeleGatherCast()
+    registerSpellEffectEvent(SPELL_TELE_RADAR_GATHER) ->
+        onTeleGatherCast(false)
+
+    registerSpellEffectEvent(SPELL_TELE_HERB_GATHER) ->
+        onTeleGatherCast(true)
 
     registerSpellEffectEvent(SPELL_TELE_GATHER_OMNI) ->
-        onTeleGatherCast()
+        onTeleGatherCast(true)
 
     registerSpellEffectEvent(SPELL_TELE_THIEF) ->
-        onTeleGatherCast()
+        onTeleGatherCast(true)
 
     registerSpellEffectEvent(SPELL_AS_TELE_THIEF) ->
-        onTeleGatherCast()
+        onTeleGatherCast(true)
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
         let dying = GetTriggerUnit()

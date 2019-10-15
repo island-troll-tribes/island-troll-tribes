@@ -1,54 +1,16 @@
 package TrollUpgrade
 
 // Standard library imports:
+import ClosureTimers
 import EventHelper
 import HashMap
-import LinkedList
 import RegisterEvents
 
 // Local imports:
+import AutoSkill
+import Classes
 import ID
 import Transformation
-
-// TODO: Remove these once the "-om" mode is removed.
-import GameConfig
-import EatRawMeat
-import MeatSystem
-
-public interface Callback
-    function run(unit origin, int targetID)
-
-let preprocessors = new HashMap<int, LinkedList<Callback>>()
-let postprocessors = new HashMap<int, LinkedList<Callback>>()
-
-function runProcessors(unit origin, int targetID, LinkedList<Callback> list)
-    // Exit if no callbacks were registered.
-    if list == null
-        return
-
-    // Execute each callback.
-    list.forEach() (Callback t) ->
-        t.run(origin, targetID)
-
-
-function registerCallback(int originID, Callback cb, HashMap<int, LinkedList<Callback>> map)
-    // Add a new list, as necessary.
-    if not map.has(originID)
-        // Create the new list with the given callback.
-        map.put(
-            originID,
-            new LinkedList<Callback>()..add(cb)
-        )
-    // Add the callback to the existing list otherwise.
-    else
-        map.get(originID).add(cb)
-
-public function registerPreprocessor(int originID, Callback cb)
-    registerCallback(originID, cb, preprocessors)
-
-public function registerPostprocessor(int originID, Callback cb)
-    registerCallback(originID, cb, postprocessors)
-
 
 // TODO: Build this out automatically.
 public constant trollUpgradeMap = new HashMap<int, int>()
@@ -89,62 +51,71 @@ public constant trollUpgradeMap = new HashMap<int, int>()
     registerTransformation(UNIT_BEAST_MASTER, UNIT_ULTIMATE_FORM)
     registerTransformation(UNIT_SHAPESHIFTER_WOLF, UNIT_ULTIMATE_FORM)
     registerTransformation(UNIT_CHICKEN_FORM, UNIT_ULTIMATE_FORM)
-/*
-    //
-    registerTransformation(, )
-    registerTransformation(, )
-    registerTransformation(, )
-    registerTransformation(, )
-    registerTransformation(, )
 
-    //
-    registerTransformation(, )
-    registerTransformation(, )
-    registerTransformation(, )
-    registerTransformation(, )
-    registerTransformation(, )
+    // Priest
+    registerTransformation(UNIT_PRIEST, UNIT_BOOSTER)
+    registerTransformation(UNIT_PRIEST, UNIT_MASTER_HEALER)
+    registerTransformation(UNIT_PRIEST, UNIT_SAGE)
+    registerTransformation(UNIT_BOOSTER, UNIT_SAGE)
+    registerTransformation(UNIT_MASTER_HEALER, UNIT_SAGE)
 
-    //
-    registerTransformation(, )
-    registerTransformation(, )
-    registerTransformation(, )
-    registerTransformation(, )
-    registerTransformation(, )
+    // Mage
+    registerTransformation(UNIT_MAGE, UNIT_ELEMENTALIST_NEW)
+    registerTransformation(UNIT_MAGE, UNIT_HYPNOTIST)
+    registerTransformation(UNIT_MAGE, UNIT_DEMENTIA_MASTER)
+    registerTransformation(UNIT_ELEMENTALIST_NEW, UNIT_DEMENTIA_MASTER)
+    registerTransformation(UNIT_HYPNOTIST, UNIT_DEMENTIA_MASTER)
 
-    //
-    registerTransformation(, )
-    registerTransformation(, )
-    registerTransformation(, )
-    registerTransformation(, )
-    registerTransformation(, ) */
+    // Scout
+    registerTransformation(UNIT_SCOUT, UNIT_TRAPPER)
+    registerTransformation(UNIT_SCOUT, UNIT_OBSERVER)
+    registerTransformation(UNIT_SCOUT, UNIT_SPY)
+    registerTransformation(UNIT_TRAPPER, UNIT_SPY)
+    registerTransformation(UNIT_OBSERVER, UNIT_SPY)
+
+    // Gatherer
+    registerTransformation(UNIT_GATHERER, UNIT_RADAR_GATHERER)
+    registerTransformation(UNIT_GATHERER, UNIT_HERB_MASTER)
+    registerTransformation(UNIT_GATHERER, UNIT_OMNIGATHERER)
+    registerTransformation(UNIT_RADAR_GATHERER, UNIT_OMNIGATHERER)
+    registerTransformation(UNIT_HERB_MASTER, UNIT_OMNIGATHERER)
+
+    // Thief
+    registerTransformation(UNIT_THIEF, UNIT_CONTORTIONIST)
+    registerTransformation(UNIT_THIEF, UNIT_ESCAPE_ARTIST)
+    registerTransformation(UNIT_THIEF, UNIT_ASSASSIN)
+    registerTransformation(UNIT_CONTORTIONIST, UNIT_ASSASSIN)
+    registerTransformation(UNIT_ESCAPE_ARTIST, UNIT_ASSASSIN)
 
 
 function upgradeUnit(unit origin, int targetID)
-    // Preprocess the unit.
-    runProcessors(origin, targetID, preprocessors.get(origin.getTypeId()))
+    // Save the statistics for the unit for restoration after level reduction.
+    // TODO: Avoid level resetting.
+    let str = origin.getStr(false)
+    let agi = origin.getAgi(false)
+    let inT = origin.getInt(false)
 
     // Transform the unit.
     transformUnit(origin, targetID)
 
-    // Postprocess the unit.
-    runProcessors(origin, targetID, preprocessors.get(origin.getTypeId()))
-
     // Reset the experience for the unit.
-    origin.setXp(0, false)
+    // TODO: Avoid level resetting.
+    origin.removeLevels(30)
+
+    // Restore the statistics.
+    // TODO: Avoid level resetting.
+    origin.setStr(str)
+    origin.setAgi(agi)
+    origin.setInt(inT)
+
+    // Apply autoskilling with the corrected level.
+    // TODO: Remove level correction and use a transformation callback.
+    // TODO: Move this to AutoSkill package.
+    autoSkill(origin)
 
     // Exit out of the ability menu.
     if GetLocalPlayer() == origin.getOwner()
         ForceUICancel()
-
-    // TODO: Remove this once the "-om" mode is removed.
-    if gameConfig.isOldMeatSystemEnabled()
-        origin.addAbility(OLD_ABILITY_ID_EAT_RAW_MEAT)
-        origin.addAbility(ABILITY_PICKUP_MEAT)
-        origin.addAbility(ABILITY_CARGO_HOLD)
-    else
-        origin.addAbility(ABILITY_ID_PICKUPMEAT_TROLL)
-        origin.addAbility(ABILITY_ID_EAT_RAW_MEAT)
-
 
 function onLearn(unit origin, int abilityID)
     // Look up the transformation denoted by the learned ability.
@@ -154,14 +125,25 @@ function onLearn(unit origin, int abilityID)
     if targetID == 0
         return
 
-    // Perform the upgrade.
-    upgradeUnit(origin, targetID)
+    // Verify that the level requirements are meant.
+    // TODO: Enforce this using an automatic upgrade / research system.
+    if getTrollClassType(targetID) == ClassType.SUPER_CLASS and origin.getLevel() < 9
+        origin.getOwner().print("You must be at least level 9 to choose that class.")
+        return
+    if getTrollClassType(targetID) == ClassType.SUB_CLASS and origin.getLevel() < 6
+        origin.getOwner().print("You must be at least level 6 to choose that class.")
+        return
+
+    // Perform the upgrade after allowing casting to finish.
+    // TODO: Remove this once a helper unit performs the casting.
+    nullTimer() ->
+        upgradeUnit(origin, targetID)
 
 init
-    registerPlayerUnitEvent(EVENT_PLAYER_HERO_SKILL) ->
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_CAST) ->
         onLearn(
-            EventData.getLearningUnit(),
-            EventData.getLearnedSkill()
+            EventData.getSpellAbilityUnit(),
+            EventData.getSpellAbilityId()
         )
 
     // Register the transformations at runtime.

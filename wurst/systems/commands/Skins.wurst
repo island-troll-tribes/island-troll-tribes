@@ -8,9 +8,11 @@ import OnUnitEnterLeave
 
 // Local imports:
 import ChatCommands
+import Classes
 import ColorUtils
 import Feature
 import ID
+import IDUtils
 import PlayerFeature
 import StringExtensions
 import Transformation
@@ -42,27 +44,23 @@ class CustomSkin
         this.newUnitTypeId = newUnitTypeId
         this.featureName = featureName
         customSkinList.put(unitTypeId, this)
+
+        // Register the transformation used to provide the model.
         registerTransformation(unitTypeId, newUnitTypeId)
+
+        // Register the transformation used to inverse the change.
+        registerTransformation(newUnitTypeId, unitTypeId)
+
+        // Undo the transformation prior to any other ones.
+        registerPriorEffect() (unit target, int unitID) ->
+            // Verify that the current transformation involves this skin.
+            if target.getTypeId() == newUnitTypeId
+                // Avoid repeating this callback recursively.
+                transformUnit(target, unitTypeId)
 
     static function setupTrigger()
         // TODO: This won't fire when sub-classes are picked.
         // TODO: Fix this by adding a callback system for transformations.
-        onEnter() ->
-            let enteringUnit = getEnterLeaveUnit()
-            if customSkinList.has(enteringUnit.getTypeId())
-                print("This unit has a skin")
-                let skin = customSkinList.get(enteringUnit.getTypeId())
-                let owner = enteringUnit.getOwner()
-                if PlayerFeature.isPlayerEnabled(owner, skin.featureName)
-                    owner.print(MSG.format(skin.featureName), TIMEOUT)
-
-                    registerCommand(enteringUnit.getOwner(), skin.featureName) (triggerPlayer, args) ->
-                        printTimedToPlayer("Activating skin!".color(GENERAL_COLOR), 5.0, owner)
-                        deregisterCommand(enteringUnit.getOwner(), skin.featureName)
-                        transformUnit(enteringUnit, skin.newUnitTypeId)
-
-                    doAfter(TIMEOUT) ->
-                        deregisterCommand(enteringUnit.getOwner(), skin.featureName)
 
 // This function is called externally.
 @compiletime function buildSkins()
@@ -73,10 +71,47 @@ class CustomSkin
     new CustomSkin(UNIT_BOOSTER,       UNIT_BOOSTER_1,       "skin-booster-1")
     new CustomSkin(UNIT_ELEMENTALIST,  UNIT_ELEMENTALIST_1,  "skin-ele-1"    )
 
+function onEnterHandler(unit target)
+    // Store the original type ID of the target.
+    let originID = target.getTypeId()
+
+    // Look up the feature corresponding to the custom skin for the unit.
+    let skin = CustomSkin.customSkinList.get(originID)
+
+    // Exit if the unit does not have a skin.
+    if skin == null
+        return
+
+    // Exit if the owner is not enabled for the custom skins.
+    if not PlayerFeature.isPlayerEnabled(target.getOwner(), skin.featureName)
+        return
+
+    // Notify the owner of the option to use the custom skin.
+    target.getOwner().print(MSG.format(skin.featureName), TIMEOUT)
+
+    // Register the command used to switch to the custom skin.
+    registerCommand(target.getOwner(), skin.featureName) (owner, args) ->
+        // Transform the unit to impart the custom skin.
+        transformUnit(target, skin.newUnitTypeId)
+
+    // Prevent the user from using the transformation during gameplay.
+    doAfter(TIMEOUT) ->
+        deregisterCommand(target.getOwner(), skin.featureName)
 
 init
     buildSkins()
-    CustomSkin.setupTrigger()
+
+    // Register the callback used to handle skins for new units.
+    onEnter() ->
+        onEnterHandler(getEnterLeaveUnit())
+
+    // Register the callback used to handle skins for sub-classes.
+    registerAfterEffect() (unit target, int unitID) ->
+        // Verify that the unit changed classes.
+        if getTrollClassType(target) != getTrollClassType(unitID)
+            onEnterHandler(target)
+
+
 
     PlayerFeature
         .get("WorldEdit")

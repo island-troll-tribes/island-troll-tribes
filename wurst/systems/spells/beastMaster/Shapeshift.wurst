@@ -6,6 +6,7 @@ import ClosureEvents
 import ClosureTimers
 import LastOrder
 import LinkedList
+import OrderIds
 
 // Local imports:
 import ID
@@ -27,8 +28,8 @@ let FORM_IDS = asList(
 let DUMMY_IDS = asList(
     SPELL_TRANSFORM_WOLF,
     SPELL_TRANSFORM_BEAR,
-    SPELL_TRANSFORM_TIGER,
-    SPELL_TRANSFORM_PANTHER
+    SPELL_TRANSFORM_PANTHER,
+    SPELL_TRANSFORM_TIGER
 )
 
 // The unit currently being transformed.
@@ -47,12 +48,16 @@ public let ABILITY_ID_PROWL = 'A0GF'
             if originID != targetID
                 registerTransformation(originID, targetID)
 
+// TODO: Remove logic regarding orders once a non-interrupting ability is used.
 function onCast(unit origin, int targetID)
+    // Save the previous order for later use.
+    let previousOrder = origin.getLastOrder().prev
+
+    // Stop the unit in order to prevent it from using the channel ability.
+    origin.issueImmediateOrderById(OrderIds.stop)
+
     // Reissue the previous order afterwards.
     nullTimer() ->
-        // Fetch the previous order.
-        let previousOrder = origin.getLastOrder().prev
-
         // Compute the type of the previous order.
         let orderType = previousOrder == null
             ? null

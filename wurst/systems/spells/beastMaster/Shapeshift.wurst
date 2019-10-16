@@ -4,9 +4,13 @@ package Shapeshift
 import Assets
 import ClosureEvents
 import ClosureTimers
+import HashMap
 import LastOrder
-import LinkedList
 import OrderIds
+
+// Third-party imports:
+import Lodash
+import LodashExtensions
 
 // Local imports:
 import ID
@@ -16,35 +20,22 @@ import Transformation
 // TODO: Order transformations globally.
 import Skins
 
-// The list of forms that the shapeshifter can assume.
-let FORM_IDS = asList(
-    UNIT_SHAPESHIFTER_WOLF,
-    UNIT_SHAPESHIFTER_BEAR,
-    UNIT_SHAPESHIFTER_PANTHER,
-    UNIT_SHAPESHIFTER_TIGER
-)
-
 // The list of abilities used to transform.
-let DUMMY_IDS = asList(
-    SPELL_TRANSFORM_WOLF,
-    SPELL_TRANSFORM_BEAR,
-    SPELL_TRANSFORM_PANTHER,
-    SPELL_TRANSFORM_TIGER
-)
+let TRANSFORMATIONS = new OwnedIterableMap<int, int>()
+    ..put(SPELL_TRANSFORM_WOLF,    UNIT_SHAPESHIFTER_WOLF)
+    ..put(SPELL_TRANSFORM_BEAR,    UNIT_SHAPESHIFTER_BEAR)
+    ..put(SPELL_TRANSFORM_PANTHER, UNIT_SHAPESHIFTER_PANTHER)
+    ..put(SPELL_TRANSFORM_TIGER,   UNIT_SHAPESHIFTER_TIGER)
+
+let FORMS = TRANSFORMATIONS.values()
 
 // The unit currently being transformed.
 // TODO: Remove this if forces support closures.
 unit originGlobal
 
-public let ABILITY_ID_VICIOUS_STRIKES_ORB = 'A0GG'
-public let ABILITY_ID_VICIOUS_STRIKES_ACTIVE = 'A0GH'
-public let ABILITY_ID_BEARS_BULWARK = 'A0GE'
-public let ABILITY_ID_WOLFS_HUNGER = 'A0GD'
-public let ABILITY_ID_PROWL = 'A0GF'
-
 @compiletime function registerTransformations()
-    for originID in FORM_IDS
-        for targetID in FORM_IDS
+    for originID in FORMS
+        for targetID in FORMS
             if originID != targetID
                 registerTransformation(originID, targetID)
 
@@ -60,7 +51,7 @@ function onCast(unit origin, int targetID)
     nullTimer() ->
         // Compute the type of the previous order.
         let orderType = previousOrder == null
-            ? null
+            ? OrderType.IMMEDIATE
             : previousOrder.orderType
 
         // Issue the previous order if it is still applicable.
@@ -97,15 +88,17 @@ function onCast(unit origin, int targetID)
 
 init
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_CAST) ->
-        // Look up the corresponding unit for the ability being cast.
-        let index = DUMMY_IDS.indexOf(EventData.getSpellAbilityId())
+        // Look up the transformation indicated by the ability.
+        let formID = TRANSFORMATIONS.get(EventData.getSpellAbilityId())
 
-        // Execute the appropriate transformation if there is a match.
-        if index != -1
-            onCast(
-                EventData.getSpellAbilityUnit(),
-                FORM_IDS.get(index)
-            )
+        // Execute the appropriate transformation, as necessary
+        if formID != 0
+            onCast(EventData.getSpellAbilityUnit(), formID)
 
     // Register the transformations at runtime.
     registerTransformations()
+
+    // Undo the shapeshifting prior to other transformations.
+    registerPriorEffect() (unit target, int unitID) ->
+        if not FORMS.has(unitID)
+            transformUnit(target, UNIT_SHAPESHIFTER_WOLF)

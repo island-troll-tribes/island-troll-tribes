@@ -1,0 +1,118 @@
+package Transformation
+
+// Standard library imports:
+import AbilityObjEditing
+import LinkedList
+import ObjectIds
+import ObjectIdGenerator
+
+// Third-party imports:
+import Lodash
+
+// Local imports:
+import HashingMap
+import IDUtils
+
+@configurable let BASE_ID = 'AZ00'
+
+
+public interface Callback
+    function run(unit target, int unitID)
+
+// Use a sub-class as a type alias.
+// TODO: Use bool instead of int once the compiler is fixed.
+public class Callbacks extends OwnedLinkedList<Pair<int, Callback>>
+
+// The list of callbacks to apply before or after the transformation.
+let prior = new Callbacks()
+let after = new Callbacks()
+
+// Generator of ability IDs used for transformations.
+let GEN = new IdGenerator(BASE_ID)
+
+// Mapping of old and new unit IDs to the ability ID used for transforming.
+let abilities = new HashingMap<Pair<int, int>, int>(
+    key -> StringHash(key.a.toString() + key.b.toString())
+)
+
+public function registerPriorEffect(Callback cb)
+    prior.push(new Pair(1, cb))
+
+public function registerAfterEffect(Callback cb)
+    after.push(new Pair(1, cb))
+
+// This must be called during compile time and run time for each desired pair
+// and the order of pairs for which it is called must match between the two.
+public function registerTransformation(int originID, int targetID)
+    // Construct the key used for the registration.
+    let key = new Pair(originID, targetID)
+
+    // Do not allow overwrites.
+    if abilities.has(key)
+        destroy key
+        return
+
+    // Compute the ability ID to use.
+    let abilityID = GEN.next()
+
+    // Create the ability used for the transformation.
+    if compiletime
+        new AbilityDefinitionBearform(abilityID)
+            ..presetNormalFormUnit(lvl -> targetID.toRawCode())
+            ..presetAlternateFormUnit(lvl -> originID.toRawCode())
+
+    // Register the ability.
+    abilities.put(key, abilityID)
+
+
+function runCallbacks(Callbacks callbacks, unit target, int unitID)
+    // Consider each callback in turn.
+    for pair in callbacks
+        // Only process currently enabled callbacks.
+        if pair.a > 0
+            // Disable the callback so that it cannot recurse.
+            pair.a--
+
+            // Run the callback.
+            pair.b.run(target, unitID)
+
+            // Enable the callback after application.
+            pair.a++
+
+public function transformUnit(unit origin, int targetID)
+    // Apply any callbacks registered as preceding the transformation.
+    runCallbacks(prior, origin, targetID)
+
+    // Store the original type ID for the unit, following the callbacks.
+    let originID = origin.getTypeId()
+
+    // Exit if the unit is already the desired type.
+    if originID == targetID
+        return
+
+    // Create the key for the transformation.
+    let key = new Pair(originID, targetID)
+
+    // Look up the ability that will be used.
+    let abilityID = abilities.get(key)
+
+    // Exit if an ability was not registered beforehand.
+    if abilityID == 0
+        origin.getOwner().print(
+            "Failed to transform unit: {0} -> {1}".format(
+                ID2S(key.a),
+                ID2S(key.b)
+            )
+        )
+    else
+        // Add the ability in order to automatially transform the unit.
+        origin.addAbility(abilityID)
+
+        // Remove the ability once it is no longer needed.
+        origin.removeAbility(abilityID)
+
+        // Apply any callbacks registered as succeeding the transformation.
+        runCallbacks(after, origin, originID)
+
+    // Destroy local resources.
+    destroy key

@@ -6,6 +6,11 @@ import LinkedList
 
 // Local imports:
 import ID
+import Transformation
+
+// Used only to order transformation registry.
+// TODO: Order transformations globally.
+import Shapeshift
 
 let growthChains = new LinkedList<LinkedList<int>>()
     ..push(asList(
@@ -83,3 +88,13 @@ public function group.enumPets()
     pets.forEach() (player key, unit value) ->
         if value != null
             this.addUnit(value)
+
+// Register all abilities required for pet growth.
+@compiletime function registerTransformations()
+    for chain in growthChains
+        for i = 0 to chain.size() - 2
+            registerTransformation(chain.get(i), chain.get(i + 1))
+
+init
+    // Register the transformations at runtime.
+    registerTransformations()

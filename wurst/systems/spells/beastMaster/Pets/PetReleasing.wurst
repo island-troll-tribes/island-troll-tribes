@@ -4,12 +4,14 @@ package PetReleasing
 import ClosureEvents
 
 // Local imports:
+import Classes
+import ColorUtils
 import ID
 import PetAbilities
 import Pets
-import Tribe
 import StringExtensions
-import ColorUtils
+import Transformation
+import Tribe
 
 public function releasePet(unit caster)
     // Look up the pet.
@@ -36,6 +38,27 @@ public function releasePet(unit caster)
         tribe.getMembers().forEach() (player member) ->
             member.print("A pet was released!".color(GENERAL_COLOR))
 
+// Releases the pet upon choosing a sub-class.
+function handleTransformation(unit origin, int targetID)
+    // Exit if the unit is not originally a base class.
+    if getTrollClassType(origin) != ClassType.BASE_CLASS
+        return
+
+    // Exit if the unit is not becoming a sub-class.
+    if getTrollClassType(targetID) != ClassType.SUB_CLASS
+        return
+
+    // Exit if the unit does not currently own a pet.
+    if origin.getOwner().getPet() == null
+        return
+
+    // Release the pet if all conditions are met.
+    releasePet(origin)
+
 init
     EventListener.onCast(SPELL_PET_RELEASE) (unit caster) ->
         releasePet(caster)
+
+    // Release pets if the new class does not have them.
+    registerPriorEffect() (unit target, int unitID) ->
+        handleTransformation(target, unitID)

@@ -2,6 +2,7 @@ package MedallionOfCourage
 
 // Stanard library imports:
 import AbilityObjEditing
+import EventHelper
 import HashMap
 import LinkedList
 import ObjectIds
@@ -66,8 +67,7 @@ function getMedallionDummySpells() returns LinkedList<MedallionDummySpell>
     getMedallionDummySpells().forEach(elem -> elem.buildSpell())
 
 // Medallion item cast
-function onCast()
-    let caster = GetSpellAbilityUnit()
+function onCast(unit caster, item target)
     let owner = caster.getOwner()
     let unitId = caster.getTypeId()
     var _superSubUpgradeId = 0
@@ -75,7 +75,7 @@ function onCast()
     if unitId == UNIT_HUNTER or unitId == UNIT_BEAST_MASTER
         simError(owner, "This unit cannot use this item, read the item description")
         return
-    if  SUB_TROLL_UNIT_LIST.has(unitId) or SUPERSUB_TROLL_UNIT_LIST.has(unitId)
+    if SUB_TROLL_UNIT_LIST.has(unitId) or SUPERSUB_TROLL_UNIT_LIST.has(unitId)
         simError(owner, "You need to be a basic troll (mage, priest, thief, scout, gatherer) in order to use this item")
         return
 
@@ -87,12 +87,17 @@ function onCast()
             printTimedToPlayer(medalHint, 5, owner)
             SetPlayerAbilityAvailable(owner, _superSubUpgradeId, false)
             caster.addAbility(_superSubUpgradeId)
-            caster.removeItemById(ITEM_MEDALLION_COURAGE)
+            target.remove()
         else
             simError(owner, "This unit already used the medallion of Courage")
 
 init
-    registerSpellEffectEvent(SPELL_SUPERSUB_COURAGE, () -> onCast())
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_USE_ITEM) ->
+        if EventData.getManipulatedItem().getTypeId() == ITEM_MEDALLION_COURAGE
+            onCast(
+                EventData.getManipulatingUnit(),
+                EventData.getManipulatedItem()
+            )
 
     for i = 12 downto 0
         SetPlayerAbilityAvailable(players[i], ABILITY_MEU_DUMMY, false)

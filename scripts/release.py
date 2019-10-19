@@ -51,7 +51,24 @@ def build_parser():
     parser.add_argument("--repo",    help="Name of the repository to update.")
     parser.add_argument("--owner",   help="Location of the target repository.")
     parser.add_argument("--remote",  help="Name of the corresponding remote.")
-    parser.add_argument("--release", action="store_true")
+
+    # Add the arguments for the result.
+    result = parser.add_mutually_exclusive_group(required=True)
+    result.add_argument(
+        "--release",
+        help="Create a release.",
+        action="store_true"
+    )
+    result.add_argument(
+        "--update",
+        help="Update the tree.",
+        action="store_true"
+    )
+    result.add_argument(
+        "--dry-run",
+        help="Print the change.",
+        action="store_true"
+    )
 
     # Add the arguments for credentials, validated later.
     parser.add_argument("--token",    help="PAT used for GitHub.")
@@ -211,12 +228,22 @@ def update_repo(remote, files, version):
     # Construct the repository, based on the working directory.
     repo = Repo()
 
-    # Create the commit.
+    # Add all modified files to the index.
     repo.index.add(files)
-    repo.index.commit(f"Updated configuration for {version} release.")
+
+    # Create the commit.
+    commit = repo.index.commit(f"Updated configuration for {version} release.")
 
     # Push the commit.
-    print(repo.remote(remote).push()[0].flags)
+    result = repo.remote(remote).push()[0]
+
+    # Validate the result against the 1024 error bit.
+    if result.flags & 1 << 10:
+        # Undo the latest commit.
+        repo.head.reset(commit.parents[0])
+
+        # Notify the user of the failure
+        exit(f"Push failure: {result.summary.strip()}")
 
 
 # Constructs the GitHub repository object based on the local git project.
@@ -310,5 +337,5 @@ if __name__ == "__main__":
             tag=version,
             name=version,
             message=changelog.join("\n"),
-            target_commitsh=repo.get_branch("master"),
+            target_commitish=repo.get_branch("master"),
         ).upload_asset(target)

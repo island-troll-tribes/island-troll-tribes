@@ -4,6 +4,7 @@
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 from configparser import ConfigParser
 from functools import partial
+from getpass import getpass
 from itertools import takewhile
 from operator import methodcaller
 from os import chdir
@@ -53,10 +54,10 @@ def build_parser():
     parser.add_argument("--remote",  help="Name of the corresponding remote.")
     parser.add_argument("--release", action="store_true")
 
-    # Add the arguments for credentials, validated later.
-    parser.add_argument("--token",    help="PAT used for GitHub.")
-    parser.add_argument("--username", help="Username for GitHub.")
-    parser.add_argument("--password", help="Password for GitHub.")
+    # Add the arguments for GitHub credentials.
+    login = parser.add_mutually_exclusive_group(required=True)
+    login.add_argument("--token",    help="PAT used for GitHub.")
+    login.add_argument("--username", help="Username for GitHub.")
 
     # Create the argument group used to indicate the version upgrade.
     group = parser.add_mutually_exclusive_group(required=True)
@@ -213,10 +214,18 @@ def update_repo(remote, files, version):
 
     # Create the commit.
     repo.index.add(files)
-    repo.index.commit(f"Updated configuration for {version} release.")
+    commit = repo.index.commit(f"Updated configuration for {version} release.")
 
     # Push the commit.
-    print(repo.remote(remote).push()[0].flags)
+    result = repo.remote(remote).push()[0]
+
+    # Validate the result against the 1024 error bit.
+    if result.flags & 1 << 10:
+        # Undo the latest commit.
+        repo.index.reset(commit.parents[0])
+
+        # Notify the user of the failure
+        exit(f"Push failure: {result.summary.strip()}")
 
 
 # Constructs the GitHub repository object based on the local git project.
@@ -251,10 +260,8 @@ if __name__ == "__main__":
     # Create the client for GitHub interaction.
     if args.token:
         github = Github(args.token)
-    elif args.username and args.password:
-        github = Github(args.username, args.pasword)
     else:
-        parser.error("Insufficient GitHub credentials given.")
+        github = Github(args.username, getpass())
 
     # Look up the repository.
     repo = github.get_repo(get_repo(args.remote))

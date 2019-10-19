@@ -52,7 +52,24 @@ def build_parser():
     parser.add_argument("--repo",    help="Name of the repository to update.")
     parser.add_argument("--owner",   help="Location of the target repository.")
     parser.add_argument("--remote",  help="Name of the corresponding remote.")
-    parser.add_argument("--release", action="store_true")
+
+    # Add the arguments for the result.
+    result = parser.add_mutually_exclusive_group(required=True)
+    result.add_argument(
+        "--release",
+        help="Create a release.",
+        action="store_true"
+    )
+    result.add_argument(
+        "--update",
+        help="Update the tree.",
+        action="store_true"
+    )
+    result.add_argument(
+        "--dry-run",
+        help="Print the change.",
+        action="store_true"
+    )
 
     # Add the arguments for GitHub credentials.
     login = parser.add_mutually_exclusive_group(required=True)
@@ -212,8 +229,10 @@ def update_repo(remote, files, version):
     # Construct the repository, based on the working directory.
     repo = Repo()
 
-    # Create the commit.
+    # Add all modified files to the index.
     repo.index.add(files)
+
+    # Create the commit.
     commit = repo.index.commit(f"Updated configuration for {version} release.")
 
     # Push the commit.
@@ -222,7 +241,7 @@ def update_repo(remote, files, version):
     # Validate the result against the 1024 error bit.
     if result.flags & 1 << 10:
         # Undo the latest commit.
-        repo.index.reset(commit.parents[0])
+        repo.head.reset(commit.parents[0])
 
         # Notify the user of the failure
         exit(f"Push failure: {result.summary.strip()}")
@@ -281,14 +300,14 @@ if __name__ == "__main__":
         minor = 0
         patch = "a"
     # Block the minor version from exceeding three digits.
-    elif args.minor != 999:
+    elif args.minor and args.minor != 999:
         minor += 1
         patch = "a"
     # Block the patch version from exceeding a lowercase letter.
     elif patch != "z":
         patch = chr(ord(patch) + 1)
     else:
-        parser.error("Cannot increment patch version further.")
+        parser.error("Cannot increment version further.")
 
     # Update the version.
     version = f"v{major}.{minor}{patch}"
@@ -300,7 +319,7 @@ if __name__ == "__main__":
     config = update_config(version)
 
     # Write the changelog package.
-    changelog = write_changelog(major, minor, patch, changelog)
+    package = write_changelog(major, minor, patch, changelog)
 
     # Update the build file for the map.
     build, filename = update_build(version)
@@ -310,12 +329,14 @@ if __name__ == "__main__":
 
     # TODO: Integrate the two workflows once the build can be ran inbetween.
     # Update the repository with the modified files.
-    if not args.release:
-        update_repo(args.remote, [changelog, config, build], version)
+    if args.dry_run:
+        print("Changelog:", *changelog, sep="\n")
+    elif args.update:
+        update_repo(args.remote, [package, config, build], version)
     else:
         repo.create_git_release(
             tag=version,
             name=version,
-            message=changelog.join("\n"),
-            target_commitsh=repo.get_branch("master"),
+            message="\n".join(changelog),
+            target_commitish=repo.get_branch("master"),
         ).upload_asset(target)

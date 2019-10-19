@@ -3,6 +3,7 @@
 # Standard library imports:
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 from configparser import ConfigParser
+from functools import partial
 from itertools import takewhile
 from operator import methodcaller
 from os import chdir
@@ -44,10 +45,13 @@ def build_parser():
     )
 
     # Add the independent arguments.
-    parser.add_argument("--last",   help="SHA of the last release.")
-    parser.add_argument("--path",   help="Path of the project.")
-    parser.add_argument("--base",   help="Path of the map.")
-    parser.add_argument("--remote", help="Name of the remote to update.")
+    parser.add_argument("--last",    help="SHA of the last release.")
+    parser.add_argument("--path",    help="Path of the project.")
+    parser.add_argument("--base",    help="Path of the map.")
+    parser.add_argument("--repo",    help="Name of the repository to update.")
+    parser.add_argument("--owner",   help="Location of the target repository.")
+    parser.add_argument("--remote",  help="Name of the corresponding remote.")
+    parser.add_argument("--release", action="store_true")
 
     # Add the arguments for credentials, validated later.
     parser.add_argument("--token",    help="PAT used for GitHub.")
@@ -95,8 +99,11 @@ def update_build(version):
     with open(path) as target:
         build = load(target, Loader=Loader)
 
-    # Construct the name of the map.
-    name = f"Island Troll Tribes {version}"
+    # Look up the previous name of the map.
+    name = build["buildMapData"]["name"]
+
+    # Construct the new name for the map.
+    name = f"{name.rsplit(maxsplit=1)[0]} {version}"
 
     # Strip whitespace for the filename to ease access.
     filename = ".".join(name.split())
@@ -185,14 +192,18 @@ def get_args():
 
 
 # Build the output map file using `grill` from WurstScript.
-def build_map(base):
-    # Output the command used for later reference.
-    return run(
+def build_map(base, target):
+    # Run the command used to build the map
+    command = run(
         # Forward the list of arguments from the arguments file.
         ["grill", "build", base, *get_args()],
         # Capture the output to avoid excessive noise.
         capture_output=True
     )
+
+    # Validate that the build succeeded, independent of the return code.
+    if not exists(target):
+        exit(f"Wurst build failed: {' '.join(command.args)}")
 
 
 # Updates the remote using basic git, rather than the GitHub API.
@@ -206,6 +217,25 @@ def update_repo(remote, files, version):
 
     # Push the commit.
     print(repo.remote(remote).push()[0].flags)
+
+
+# Constructs the GitHub repository object based on the local git project.
+def get_repo(remote):
+    # Fetch the URL for the given remote.
+    url = Repo().remote(remote).url
+
+    # List the patterns a GitHub repository URL can assume.
+    patterns = [
+        "git@github.com:{}/{}.git",
+        "https://github.com/{}/{}.git",
+    ]
+
+    # Attempt to parse the URL.
+    if not (match := first(map(partial(search, string=url), patterns))):
+        exit(f"Invalid remote URL: {url}")
+
+    # Construct and output the repository target.
+    return "/".join(match)
 
 
 if __name__ == "__main__":
@@ -227,7 +257,7 @@ if __name__ == "__main__":
         parser.error("Insufficient GitHub credentials given.")
 
     # Look up the repository.
-    repo = github.get_repo("island-troll-tribes/island-troll-tribes")
+    repo = github.get_repo(get_repo(args.remote))
 
     # Fetch the previous version.
     version = get_version(repo)
@@ -268,16 +298,17 @@ if __name__ == "__main__":
     # Update the build file for the map.
     build, filename = update_build(version)
 
-    # Build the map once updates are finished.
-    # command = build_map(args.base)
-    # print(command)
-
     # Compute the expected location of the built map.
     target = join("_build", f"{filename}.w3x")
 
-    # Validate that the build succeeded, indepdent of the return code.
-    # if not exists(target):
-    #     exit(f"Wurst build failed: {' '.join(command.args)}")
-
+    # TODO: Integrate the two workflows once the build can be ran inbetween.
     # Update the repository with the modified files.
-    update_repo(args.remote, [changelog, config, build], version)
+    if not args.release:
+        update_repo(args.remote, [changelog, config, build], version)
+    else:
+        repo.create_git_release(
+            tag=version,
+            name=version,
+            message=changelog.join("\n"),
+            target_commitsh=repo.get_branch("master"),
+        ).upload_asset(target)

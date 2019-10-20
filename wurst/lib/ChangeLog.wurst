@@ -20,7 +20,7 @@ import StringUtils
 
 // Formatting strings used to display messages.
 let TITLE_MSG = "Changelog for ".color(ENERGY_COLOR) + "{0}".color(GOLD_COLOR)
-let ENTRY_MSG = DASH + "{0}".color(GOLD_COLOR)
+let ENTRY_MSG = DASH + "{0}".color(GENERAL_COLOR)
 
 public class ChangeLog
     static let versions = new HashMap<string, thistype>()
@@ -87,7 +87,12 @@ public class ChangeLog
         if changelog == null
             simError(triggerPlayer, "Invalid changelog specified.")
         else
-            printTimedToPlayer(changelog.toString(), 15, triggerPlayer)
+            // Precede the changes with the title.
+            triggerPlayer.print(changelog.getTitle(), 15)
+
+            // Print each line individually to avoid truncation.
+            for change in changelog.changes
+                triggerPlayer.print(change, 15)
 
 init
     registerCommandAll("changelog") (triggerPlayer, args) ->

@@ -10,6 +10,10 @@ import UnitIndexer
 
 // Local imports:
 import LocalAssets
+import PlayerExtensions
+
+// The maximum number of meat allowed to be carried per unit.
+let MAX_COUNT = 8
 
 // The number of corpses stored, per unit.
 let counts = new HashMap<unit, int>
@@ -34,6 +38,7 @@ let counts = new HashMap<unit, int>
 
 function onEnter(unit target)
     // Exit if the unit is not the dummy for gathering meat.
+    print("unit enter: " + target.getHandleId().toString())
     if target.getTypeId() != LocalUnitIds.dummyMeatGather
         return
 
@@ -45,9 +50,17 @@ function onCast(unit caster)
     counts.put(caster, counts.get(caster) + 1)
     print("New Count for " + caster.getName() + ": " + counts.get(caster).toString())
 
+function onOrder()
+    if EventData.getOrderedUnit().getOwner().getTribe() != null
+        print(EventData.getOrderedUnit().getName() + ": " + EventData.getIssuedOrderId().toString())
+
 init
     EventListener.onCast(LocalAbilityIds.gatherMeat) (unit caster) ->
         onCast(caster)
 
     onUnitIndex() ->
         onEnter(getIndexingUnit())
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_ORDER, function onOrder)
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER, function onOrder)
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, function onOrder)

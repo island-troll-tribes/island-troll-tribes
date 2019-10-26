@@ -1,0 +1,284 @@
+package MoveCorpses
+
+// Standard library imports:
+import Assets
+import ChannelAbilityPreset
+import ClosureEvents
+import ClosureTimers
+import LinkedList
+import HashMap
+import HashList
+import Orders
+
+// Local imports:
+import DummyCorpse
+import LocalAssets
+import UnitExtensions
+
+// The maximum number of corpses allowed to be carried per unit.
+@configurable let MAX_COUNT = 8
+
+// The location of the abilities on the X-axis.
+@configurable let POSITION_X = 0
+
+// The location of the abilities on the Y-axis.
+@configurable let POSITION_Y = 2
+
+// The time it takes to grab a single corpse.
+@configurable let GRAB_TIME = 0.33
+
+// The time it takes to drop a single corpse.
+@configurable let DROP_TIME = 0.
+
+// The icons used for the grab abilities.
+@configurable let GRAB_ICONS = asList(
+    LocalIcons.btnCorpseGrab0,
+    LocalIcons.btnCorpseGrab1,
+    LocalIcons.btnCorpseGrab2,
+    LocalIcons.btnCorpseGrab3,
+    LocalIcons.btnCorpseGrab4,
+    LocalIcons.btnCorpseGrab5,
+    LocalIcons.btnCorpseGrab6,
+    LocalIcons.btnCorpseGrab7
+)
+
+// The icons used for the drop abilities.
+@configurable let DROP_ICONS = asList(
+    LocalIcons.btnCorpseDrop1,
+    LocalIcons.btnCorpseDrop2,
+    LocalIcons.btnCorpseDrop3,
+    LocalIcons.btnCorpseDrop4,
+    LocalIcons.btnCorpseDrop5,
+    LocalIcons.btnCorpseDrop6,
+    LocalIcons.btnCorpseDrop7,
+    LocalIcons.btnCorpseDrop8
+)
+
+// The IDs used for the grab abilities.
+@configurable let GRAB_IDS = asList(
+    LocalAbilityIds.corpseGrab0,
+    LocalAbilityIds.corpseGrab1,
+    LocalAbilityIds.corpseGrab2,
+    LocalAbilityIds.corpseGrab3,
+    LocalAbilityIds.corpseGrab4,
+    LocalAbilityIds.corpseGrab5,
+    LocalAbilityIds.corpseGrab6,
+    LocalAbilityIds.corpseGrab7
+)
+
+// The IDs used for the drop abilities.
+@configurable let DROP_IDS = asList(
+    LocalAbilityIds.corpseDrop1,
+    LocalAbilityIds.corpseDrop2,
+    LocalAbilityIds.corpseDrop3,
+    LocalAbilityIds.corpseDrop4,
+    LocalAbilityIds.corpseDrop5,
+    LocalAbilityIds.corpseDrop6,
+    LocalAbilityIds.corpseDrop7,
+    LocalAbilityIds.corpseDrop8
+)
+
+// The number of corpses each unit is carrying.
+let counts = new HashMap<unit, int>
+
+// The units whose orders are ignored.
+let disabled = new HashList<unit>
+
+// The order IDs used to indicate switching abilities.
+let switches = asList(
+    OrderIds.raisedeadon,
+    OrderIds.raisedeadoff
+)
+
+@compiletime function createDummyMeatGather()
+    new UnitDefinition(LocalUnitIds.dummyMeatGather, UnitIds.deer)
+
+// Used to grab meat via a Raise Dead effect.
+@compiletime function createGrabCorpse()
+    for index = 0 to MAX_COUNT - 1
+        new AbilityDefinitionRaiseDead(GRAB_IDS.get(index))
+            ..setIconNormal(GRAB_ICONS.get(index))
+            // The two abilities share the same slot.
+            ..setButtonPositionNormalX(POSITION_X)
+            ..setButtonPositionNormalY(POSITION_Y)
+            // The hotkey is not positional.
+            ..setHotkeyNormal("C")
+            // The corpse is removed without an effect.
+            ..setArtEffect("")
+            // The ability only ever summons a single dummy unit.
+            ..setLevels(1)
+            ..presetUnitTypeOne(lvl -> commaList(LocalUnitIds.dummyMeatGather))
+            ..presetUnitsSummonedTypeOne(lvl -> 1)
+            ..presetUnitsSummonedTypeTwo(lvl -> 0)
+            ..presetManaCost(lvl -> 0)
+            ..presetCastingTime(lvl -> GRAB_TIME)
+            ..presetCooldown(lvl -> 0)
+            // The radius from which the order can be issued.
+            ..presetAreaofEffect(lvl -> 800)
+            // The ability is cast at melee range.
+            ..presetCastRange(lvl -> 128)
+            ..presetTooltipNormal(lvl -> "|c00ffcc00C|r - Grab Corpse")
+            ..presetTooltipNormalExtended(lvl -> "Capacity: {0} / {1}".format(index.toString(), MAX_COUNT.toString()))
+
+
+// Used to drop meat via a Channel effect.
+@compiletime function createDropCorpse()
+    for index = 0 to MAX_COUNT - 1
+        new ChannelAbilityPreset(DROP_IDS.get(index), 1, true)
+            ..setIconNormal(DROP_ICONS.get(index))
+            // The two abilities share the same slot.
+            ..setButtonPositionNormalX(POSITION_X)
+            ..setButtonPositionNormalY(POSITION_Y)
+            // The hotkey is not positional.
+            ..setHotkeyNormal("C")
+            // There is not a target.
+            ..presetTargetTypes(Targettype.NONE)
+            ..makeUnitSpell(0, 0)
+            ..setName("Drop Corpse")
+            ..setDisableOtherAbilities(1, false)
+            ..presetOption(Option.VISIBLE, true)
+            ..presetTooltipNormal(lvl -> "|c00ffcc00C|r - Drop Corpse")
+            ..presetTooltipNormalExtended(lvl -> "Capacity: {0} / {1}".format((index + 1).toString(), MAX_COUNT.toString()))
+            ..presetCastingTime(lvl -> DROP_TIME)
+
+function switchAbilities(unit target) returns bool
+    // Look up the state for the unit.
+    let count = counts.get(target)
+
+    // Exit if a switch is not viable.
+    // if count == 0 or count == MAX_COUNT
+    //     return false
+
+    // Look up the correponding abilities on the two tracks.
+    let grabID = GRAB_IDS.get(count)
+    let dropID = DROP_IDS.get(count)
+    print("Grab: " + grabID.toRawCode() + " Drop: " + dropID.toRawCode())
+
+    // Compute the old ability.
+    let oldID = target.hasAbility(grabID)
+        ? grabID
+        : dropID
+
+    // Compute the new ability.
+    let newID = (count == 0)
+        ? grabID
+        : ((count == MAX_COUNT)
+            ? dropID
+            : (target.hasAbility(grabID)
+                ? dropID
+                : grabID))
+    print("Old: " + oldID.toRawCode() + " New: " + newID.toRawCode())
+
+    // Remove the current ability.
+    target.removeAbility(oldID)
+
+    // Add the corresponding ability.
+    target.addAbility(newID)
+
+    // Ensure that the ability is maintained during transformation.
+    target.makeAbilityPermanent(newID, true)
+
+    // Indicate success.
+    return true
+
+function onDrop(unit caster)
+    print("drop")
+    // Create the corpse that is dropped.
+    createCorpse(caster.getPos())
+
+    // Decrement the virtual counter for the unit.
+    let count = counts.get(caster) - 1
+
+    // Update the state.
+    counts.put(caster, count)
+
+    // Remove the current ability.
+    caster.removeAbility(DROP_IDS.get(count + 1))
+
+    // Update the ability.
+    if count > 0
+        // Increment the ability.
+        caster.addAbility(DROP_IDS.get(count))
+
+        // Ensure that the ability is maintained during transformation.
+        caster.makeAbilityPermanent(DROP_IDS.get(count), true)
+    // Switch abilities if the unit can not grab additional corpses.
+    else
+        switchAbilities(caster)
+
+function onGrab(unit caster, unit target)
+    print(caster.getName() + " current meat count " + counts.get(caster).toString())
+
+    // Exit if the unit is not the dummy for gathering meat.
+    if target.getTypeId() != LocalUnitIds.dummyMeatGather
+        return
+
+    // Remove the target, as its purpose is only to trigger this event.
+    target.remove()
+
+    // Increment the virtual counter for the unit.
+    let count = counts.get(caster) + 1
+
+    // Update the state.
+    counts.put(caster, count)
+
+    // Remove the current ability.
+    caster.removeAbility(GRAB_IDS.get(count - 1))
+
+    // Update the ability.
+    if count < MAX_COUNT
+        // Increment the ability.
+        caster.addAbility(GRAB_IDS.get(count))
+
+        // Ensure that the ability is maintained during transformation.
+        caster.makeAbilityPermanent(GRAB_IDS.get(count), true)
+    // Switch abilities if the unit can not grab additional corpses.
+    else
+        switchAbilities(caster)
+
+function onOrder(unit target, int orderID)
+    // TODO: Change this logic to be based on whether the unit has the meat ability.
+    if not target.isTroll()
+        return
+
+    if disabled.has(target)
+        return
+
+    // Look up the corresponding index for the order ID.
+    let index = switches.indexOf(orderID)
+
+    // Exit if the order ID does not indicate a switch.
+    if index == -1
+        return
+
+    print("going to issue the opposite order" + target.getName())
+    print(orderID)
+    print(switches.get(1 - index))
+
+    // Wait for the current order to finish before counteracting it.
+    nullTimer() ->
+        // Disable this listener to prevent recursion.
+        disabled.add(target)
+
+        // Issue the opposite order.
+        // target.issueImmediateOrderById(switches.get(1 - index))
+
+        // Enable this listener again.
+        disabled.remove(target)
+
+        // Switch the abilities, as requested.
+        // switchAbilities(target)
+
+init
+    // Pad the lists to ease lookup.
+    GRAB_IDS.push(0)
+    DROP_IDS.addtoStart(0)
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SUMMON) ->
+        onGrab(EventData.getSummoningUnit(), EventData.getSummonedUnit())
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_EFFECT) ->
+        if DROP_IDS.has(EventData.getSpellAbilityId())
+            onDrop(EventData.getSpellAbilityUnit())
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_ORDER) ->
+        onOrder(EventData.getOrderedUnit(), EventData.getIssuedOrderId())

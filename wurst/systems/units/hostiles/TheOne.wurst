@@ -3,6 +3,20 @@ import ID
 import BonyAnimal
 import LinkedList
 import TheOneDefinition
+import UnitExtensions
+import ClosureEvents
+import ClosureTimers
+import JumpSystem
+import Assets
+
+
+public let THE_ONE_REGION = CreateRegion()..addRect(gg_rct_TheOne)    //The Region The One rests in
+let spawnSpot = gg_rct_TheOneCliff.getLeftTop()                       //The Cliff The One initially spawns on
+
+bool THE_ONE_IN_AREA = false    //Used to check if The One is in THE_ONE_REGION
+int TROLLS_IN_AREA   = 0        //Used to count Trolls in THE_ONE_REGION
+
+public TheOne theOne = null
 
 
 public class TheOne extends BonyAnimal
@@ -38,6 +52,54 @@ public class TheOne extends BonyAnimal
 
     override function postDeath()
 
+//Spawns The One
+public function spawnTheOne()
+    if theOne == null
+        //Every sixty seconds The One levels up
+        doPeriodically(60) cb ->
+            if theOne != null and theOne.getUnit().isAlive()
+                theOne.getUnit().addLevels(1, true)
+        doAfter(1) () ->
+            //Initial spawn of The One
+            theOne = new TheOne(players[PLAYER_NEUTRAL_AGGRESSIVE], spawnSpot, angle(0))
+            performJump(theOne.getUnit(), gg_rct_TheOne.getCenter())
+    else
+        //Repeated spawns of The One
+        theOne.getUnit().revive(spawnSpot, true)
+        doAfter(1) () ->
+            performJump(theOne.getUnit(), gg_rct_TheOne.getCenter())
+
+public function canSpawnTheOne() returns boolean
+    return theOne == null or not theOne.getUnit().isAlive()
+
+function toggleInvulnerability(unit currentUnit, bool entering)
+    if currentUnit.getTypeId() == UNIT_ONE
+        //Determine if the one is entering or leaving THE_ONE_REGION
+        THE_ONE_IN_AREA = entering ? true : false
+    if currentUnit.isTroll()
+        if entering
+            //Troll entered THE_ONE_REGION
+            TROLLS_IN_AREA++
+        else 
+            //Troll left THE_ONE_REGION
+            TROLLS_IN_AREA--
+    //If atleast one troll and The One are in THE_ONE_REGION
+    if THE_ONE_IN_AREA and TROLLS_IN_AREA > 0
+        theOne.getUnit().removeAbility(AbilityIds.invulnerable)
+    else if theOne != null
+        theOne.getUnit().addAbility(AbilityIds.invulnerable)
+
+    
 
 init
     TheOne.initialize()
+    CreateTrigger()
+    ..registerEnterRegion(THE_ONE_REGION, null)
+    ..addAction() ->
+        toggleInvulnerability(GetTriggerUnit(), true)
+    CreateTrigger()
+    ..registerLeaveRegion(THE_ONE_REGION, null)
+    ..addAction() ->
+        toggleInvulnerability(GetTriggerUnit(), false)
+    EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
+        toggleInvulnerability(GetTriggerUnit(), false)

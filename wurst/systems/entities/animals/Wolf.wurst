@@ -1,0 +1,31 @@
+package Wolf
+
+// Standard library imports:
+import HashMap
+
+// Local imports:
+import ID
+import RearingAnimal
+
+// The number of corpses dropped per unit type.
+let typeIDs = new IterableMap<int, int>()
+    ..put(UNIT_JUNGLE_WOLF,       4)
+    ..put(UNIT_ADULT_JUNGLE_WOLF, 8)
+
+public class Wolf extends RearingAnimal
+    construct(unit whichUnit)
+        super(whichUnit)
+
+    override function getHideTypeId() returns int
+        return ITEM_JUNGLE_WOLF_HIDE
+
+    override function getChild() returns int
+        return UNIT_WOLF_PUP
+
+    override function getNumCorpses() returns int
+        return typeIDs.get(getUnit().getTypeId())
+
+
+init
+    typeIDs.forEach() (integer typeID, integer value) ->
+        Wolf.register(typeID, target -> new Wolf(target))

@@ -1,0 +1,54 @@
+package Mammoth
+import ID
+import Hostile
+import LinkedList
+
+
+public class Mammoth extends Hostile
+    private static let unitTypeId = UNIT_MAMMOTH
+    private static thistype instance
+
+    static function initialize()
+        register(unitTypeId, mammoth -> new Mammoth(mammoth))
+
+    static function getInstance() returns thistype
+        return instance
+
+    var dead = false
+
+    construct(unit whichUnit)
+        super(whichUnit)
+
+    override function postCreate()
+        super.postCreate()
+
+        if instance == null
+            instance = this
+
+    override function getDrops() returns LinkedList<int>
+        let drops = super.getDrops()
+            ..add(ITEM_HORN_MAMMOTH)
+            ..add(ITEM_MEDALLION_COURAGE)
+            ..add(ITEM_BONE)
+            ..add(ITEM_BONE)
+            ..add(ITEM_BONE)
+            ..add(ITEM_BONE)
+            ..add(ITEM_BONE)
+        return drops
+
+    override function getNumCorpses() returns int
+        return 16
+
+    override function onDeath()
+        dead = true
+        super.onDeath()
+
+    override function postDeath()
+        getUnit().remove()
+
+    function isDead() returns boolean
+        return dead
+
+
+init
+    Mammoth.initialize()

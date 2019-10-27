@@ -1,0 +1,77 @@
+package TameableFawn
+
+// Standard library imports:
+import EventHelper
+import Orders
+import RegisterEvents
+
+// Local imports:
+import ChatUtils
+import ColorUtils
+import GameConfig
+import GameMode
+import ID
+import InstantDummyCaster
+import StringExtensions
+import UnitEntity
+import UnitExtensions
+import UnitUtils
+
+// TODO: This doesn't account for taming a mechanical critter, which is allowed
+// TODO: because mechanical critters are  always targeted as neutral.
+
+function isFawn(unit target) returns bool
+    return target.getTypeId() == UNIT_FAWN and
+        target.getOwner() == players[PLAYER_NEUTRAL_PASSIVE]
+
+function onDrop(unit caster, item target)
+    // Exit if the mode is not enabled.
+    if not gameConfig.isTameableFawnEnabled()
+        return
+
+    // Exit if the item is not an acorn.
+    if target.getTypeId() != ITEM_ACORN
+        return
+
+    // Exit if the unit is not a troll.
+    if not caster.isTroll()
+        return
+
+    // Find the closest fawn.
+    let fawn = findNearestUnit(
+        caster.getPos(),
+        300,
+        -> isFawn(GetFilterUnit())
+    )
+
+    // Exit if no match was found.
+    if fawn == null
+        return
+
+    // Cache the position for later use.
+    let position = fawn.getPos()
+
+    // Remove the fawn.
+    destroy UnitEntity.findForUnit(fawn)
+
+    // Convert the unit to a mechanical critter.
+    // TODO: Guarantee the type of unit created.
+    InstantDummyCaster.castImmediate(
+        caster.getOwner(),
+        ABILITY_ELK_CRITTER_ID,
+        1,
+        Orders.mechanicalcritter,
+        position
+    )
+
+    // Consume the acorn.
+    target.setCharges(target.getCharges() - 1)
+
+init
+    new GameMode("tameable-fawn", "tf", "Testing", "Tame fawns with acorns") (mode, args) ->
+        let value = args.size() > 1 ? args.get(0).isConfirmation() : true
+        gameConfig.setTameableFawnEnabled(value)
+        mode.message("Taming fawns enabled by placing acorns near them.".color(ENERGY_COLOR))
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DROP_ITEM) ->
+        onDrop(EventData.getManipulatingUnit(), EventData.getManipulatedItem())

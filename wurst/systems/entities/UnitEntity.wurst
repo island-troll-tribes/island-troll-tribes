@@ -1,0 +1,131 @@
+package UnitEntity
+
+// Standard library imports:v
+import ClosureTimers
+import HashMap
+import ObjectIds
+import RegisterEvents
+import UnitIndexer
+
+// Third-party imports:
+import Lodash
+
+// Local imports:
+import Transformation
+
+// The entity corresponding to each unit.
+let instances = new HashMap<unit, UnitEntity>()
+
+// The UnitEntity corresponding to each type ID.
+let factories = new HashMap<int, Function<unit, UnitEntity>>()
+
+public abstract class UnitEntity
+    static function register(int unitTypeId, Function<unit, thistype> factory)
+        factories.put(unitTypeId, factory)
+
+    static function findForUnit(unit whichUnit) returns thistype
+        if instances.has(whichUnit)
+            return instances.get(whichUnit)
+        else
+            return null
+
+    static function onDeath(unit target)
+        // Look up the entity for the dying unit.
+        let entity = UnitEntity.findForUnit(target)
+
+        // Fire the event, as necessary.
+        if entity != null
+            entity.onDeath()
+
+    static function onIndex(unit target)
+        if target.getOwner() == players[0]
+            print(target.getName() + target.getTypeId().toRawCode())
+
+        // Exit if the unit was already assigned an entity.
+        if UnitEntity.findForUnit(target) != null
+            return
+
+        // Look up the factory for the type.
+        let factory = factories.get(target.getTypeId())
+
+        // Exit if the unit is not registered within the entity framework.
+        if factory == null
+            return
+
+        // Create the entity.
+        factory.call(target)
+
+    static function onTransformation(unit target)
+        // Look up the entity for the unit.
+        let entity = UnitEntity.findForUnit(target)
+
+        // Exit if the unit is not registered within the entity framework.
+        if entity == null
+            return
+
+        print("transformed unit has entity")
+
+        // Look up the factory for the new type ID.
+        let factory = factories.get(target.getTypeId())
+
+        // Exit if the new type ID is not registered within the entity framework.
+        if factory == null
+            return
+
+        print("there is a new entity to use")
+
+        // Disable the removal of the unit within its entity.
+        entity.removeUnit = false
+
+        // Destroy the old entity.
+        destroy entity
+
+        // Create an entity for the new type.
+        factory.call(target)
+
+    private unit theUnit
+
+    private bool removeUnit = true
+
+    construct(unit whichUnit)
+        theUnit = whichUnit
+        postCreate()
+
+    function postCreate()
+        instances.put(theUnit, this)
+
+    function getUnit() returns unit
+        return theUnit
+
+    function getPos() returns vec2
+        return theUnit.getPos()
+
+    function removeUnit()
+        if theUnit != null and removeUnit
+            theUnit.remove()
+            theUnit = null
+
+    function onDeath()
+        postDeath()
+
+    function postDeath()
+        nullTimer(-> destroy this)
+
+    ondestroy
+        instances.remove(theUnit)
+        removeUnit()
+
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
+        UnitEntity.onDeath(GetDyingUnit())
+
+    onUnitIndex() ->
+        // Cache the state for later use.
+        let target = getIndexingUnit()
+
+        // Wait for the unit to finish being indexed.
+        nullTimer() ->
+            UnitEntity.onIndex(target)
+
+    registerAfterEffect() (unit target, int unitID) ->
+        UnitEntity.onTransformation(target)

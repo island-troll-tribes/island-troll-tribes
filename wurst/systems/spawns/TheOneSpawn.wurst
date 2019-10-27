@@ -1,7 +1,12 @@
 package TheOneSpawn
-import TheOne
+
+// Standard library imports:
 import ClosureTimers
 
+// Local imports:
+import ID
+import TheOne
+import UnitEntity
 
 public let THE_ONE_REGION = CreateRegion()..addRect(gg_rct_TheOne)
 
@@ -15,8 +20,19 @@ public function spawnTheOne()
             if theOne != null and theOne.getUnit().isAlive()
                 theOne.getUnit().addLevels(1, true)
         doAfter(1) () ->
-            theOne = new TheOne(players[PLAYER_NEUTRAL_AGGRESSIVE], spawnSpot, angle(0))
-            theOne.getUnit().issuePointOrder("breathoffrost", gg_rct_TheOne.getCenter())
+            // Spawn the unit.
+            let instance = createUnit(
+                players[PLAYER_NEUTRAL_AGGRESSIVE],
+                UNIT_ONE,
+                spawnSpot,
+                spawnSpot.angleTo(gg_rct_TheOne.getCenter())
+            )
+
+            // Order the unit to jump into the arena.
+            instance.issuePointOrder("breathoffrost", gg_rct_TheOne.getCenter())
+
+            // Cache the instance.
+            theOne = UnitEntity.findForUnit(instance) castTo TheOne
     else
         theOne.getUnit().revive(spawnSpot, true)
 

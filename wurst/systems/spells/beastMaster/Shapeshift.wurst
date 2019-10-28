@@ -119,15 +119,18 @@ init
         if FORMS.has(target.getTypeId())
             ABILITIES.forEach() (integer formID, LinkedList<integer> abilIDs) ->
                 abilIDs.forEach() (integer abilID) ->
-                    // Remove the permanency prior to other transformations.
-                    target.makeAbilityPermanent(abilID, FORMS.has(unitID))
+                    // Add permanency, as necessary.
+                    if FORMS.has(unitID)
+                        target.makeAbilityPermanent(abilID, true)
+                    // Manually remove abilities in case permanency is ignored.
+                    else
+                        target.removeAbility(abilID)
 
     // Enable the correct ability for the unit.
     // TODO: Automate permanency tracking for all tranformations.
     // TODO: Use BlzUnitDisableAbility per unit.
     registerAfterEffect() (unit target, int unitID) ->
         if FORMS.has(target.getTypeId())
-            print(target.getName())
             ABILITIES.forEach() (integer formID, LinkedList<integer> abilIDs) ->
                 abilIDs.forEach() (integer abilID) ->
                     target.getOwner().setAbilityAvailable(

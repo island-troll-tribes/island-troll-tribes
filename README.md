@@ -20,10 +20,4 @@ When merging a PR, please ensure that these comments on kept in the squashed com
 
 ## Releasing 
 
-The release process for the map is automated via `scripts/release.py`. Because Wurst does not support a CLI, this must be executed in separate steps:
-
-1. Run the update script `./release.py --update`, which will construct the changelog package and modify the configuration to reflect the new version.
-2. Build the map within VS Code using the `wurst: Build your map via wurst.build (into /_build)` command.
-3. Release the map using `./release.py --release`, which will create a GitHub release for this repository.
-
-Please see `./release.py -h` for a description of additional arguments that are required.
+The release process for the map is automated via `scripts/release.py`, e.g. `./scripts/release.py --username [username] --patch`. Please see `./release.py -h` for a description of additional arguments that are required.

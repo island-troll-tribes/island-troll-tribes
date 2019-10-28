@@ -52,24 +52,8 @@ def build_parser():
     parser.add_argument("--repo",    help="Name of the repository to update.")
     parser.add_argument("--owner",   help="Location of the target repository.")
     parser.add_argument("--remote",  help="Name of the corresponding remote.")
-
-    # Add the arguments for the result.
-    result = parser.add_mutually_exclusive_group(required=True)
-    result.add_argument(
-        "--release",
-        help="Create a release.",
-        action="store_true"
-    )
-    result.add_argument(
-        "--update",
-        help="Update the tree.",
-        action="store_true"
-    )
-    result.add_argument(
-        "--dry-run",
-        help="Print the change.",
-        action="store_true"
-    )
+    parser.add_argument("--dry-run", help="Disable publishing changes.",
+                        action="store_true")
 
     # Add the arguments for GitHub credentials.
     login = parser.add_mutually_exclusive_group(required=True)
@@ -327,13 +311,17 @@ if __name__ == "__main__":
     # Compute the expected location of the built map.
     target = join("_build", f"{filename}.w3x")
 
-    # TODO: Integrate the two workflows once the build can be ran inbetween.
     # Update the repository with the modified files.
     if args.dry_run:
         print("Changelog:", *changelog, sep="\n")
-    elif args.update:
-        update_repo(args.remote, [package, config, build], version)
     else:
+        # Verify that the map can be built.
+        build_map(args.base, target)
+
+        # Push the changes.
+        update_repo(args.remote, [package, config, build], version)
+
+        # Release the changes.
         repo.create_git_release(
             tag=version,
             name=version,

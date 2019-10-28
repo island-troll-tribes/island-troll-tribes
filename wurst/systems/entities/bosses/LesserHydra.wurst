@@ -1,0 +1,107 @@
+package LesserHydra
+
+// Standard library imports:
+import LinkedListModule
+import TimerUtils
+import ClosureEvents
+
+// Local imports:
+import GeometryUtils
+import Hostile
+import ID
+
+constant let hydraSpawnModel = "Objects\\Spawnmodels\\Naga\\NagaDeath\\NagaDeath.mdl"
+constant let hydraDespawnModel = "Abilities\\Spells\\Other\\CrushingWave\\CrushingWaveDamage.mdl"
+
+
+public class LesserHydra extends Hostile
+    use LinkedListModule
+
+    private static let unitTypeId = UNIT_LESSER_HYDRA
+    private static let hydraDespawnTimer = getTimer()
+    private static var hydraTimerStarted = false
+    private static let hydraTimer = getTimer()
+
+    static function initialize()
+        register(unitTypeId, hydra -> new LesserHydra(hydra))
+
+    static function onLesserHydraDeath()
+        var numAlive = 0
+        for hydra in LesserHydra
+            if hydra.getUnit().isAlive()
+                numAlive += 1
+
+        if numAlive == 0
+            hydraTimerStarted = false
+            hydraTimer.pause()
+            hydraDespawnTimer.pause()
+
+            for hydra in LesserHydra
+                hydra.dropLoot()
+                destroy hydra
+
+        if not hydraTimerStarted
+            hydraTimerStarted = true
+            hydraTimer.start(2.5, function spawnAdditional)
+
+    static function despawn()
+        hydraTimerStarted = false
+        hydraTimer.pause()
+        hydraDespawnTimer.pause()
+
+        for hydra in LesserHydra
+            flashEffect(hydraDespawnModel, hydra.getPos())
+            destroy hydra
+
+    static function spawnAdditional()
+        hydraTimerStarted = false
+        hydraDespawnTimer.start(60, function despawn)
+
+        for hydra in LesserHydra
+            if not hydra.getUnit().isAlive()
+                hydra.maybeSpawnAdditional()
+
+    var deathPos = vec2(0, 0)
+    var spawnedAdditional = false
+
+    construct(unit whichUnit)
+        super(whichUnit)
+        EventListener.add(getUnit(), EVENT_UNIT_DAMAGED, -> onAttacked())
+        hydraDespawnTimer.start(60, function LesserHydra.despawn)
+
+    override function postCreate()
+        super.postCreate()
+        flashEffect(hydraSpawnModel, getUnit(), "head")
+
+    override function getNumCorpses() returns int
+        return 4
+
+    function dropLoot()
+        for i = 0 to 2
+            createItem(ITEM_HYDRA_SCALE, deathPos)
+
+    function maybeSpawnAdditional()
+        if not spawnedAdditional
+            spawnedAdditional = true
+            for i = 0 to 1
+                createUnit(
+                    players[PLAYER_NEUTRAL_AGGRESSIVE],
+                    UNIT_LESSER_HYDRA,
+                    deathPos,
+                    randomAngle()
+                )
+
+    function onAttacked()
+        hydraDespawnTimer.start(60, function despawn)
+
+    override function postDeath()
+
+    override function onDeath()
+        deathPos = getPos()
+        super.onDeath()
+        onLesserHydraDeath()
+        removeUnit()
+
+
+init
+    LesserHydra.initialize()

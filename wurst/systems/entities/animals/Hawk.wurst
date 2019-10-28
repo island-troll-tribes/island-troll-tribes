@@ -1,0 +1,55 @@
+package Hawk
+
+// Standard library imports:
+import ClosureForGroups
+import LinkedList
+
+// Local imports:
+import BonyAnimal
+import Classes
+import ID
+
+let types = asList(
+    UNIT_HAWK,
+    UNIT_HAWK_HATCHLING,
+    UNIT_HAWK_ADOLESCENT,
+    UNIT_ALPHA_HAWK,
+    UNIT_BRONZE_DRAGON,
+    UNIT_BRONZE_DRAGON_HATCHLING,
+    UNIT_GREATER_BRONZE_DRAGON,
+    UNIT_FOREST_DRAGON,
+    UNIT_FOREST_DRAGON_HATCHLING,
+    UNIT_GREATER_FOREST_DRAGON,
+    UNIT_NETHER_DRAGON,
+    UNIT_NETHER_DRAGON_HATCHLING,
+    UNIT_GREATER_NETHER_DRAGON,
+    UNIT_RED_DRAGON,
+    UNIT_RED_DRAGON_HATCHLING,
+    UNIT_GREATER_RED_DRAGON
+)
+
+public class Hawk extends BonyAnimal
+    private static let unitTypeId = UNIT_HAWK
+
+    static function initialize()
+        register(unitTypeId, hawk -> new Hawk(hawk))
+
+    construct(unit whichUnit)
+        super(whichUnit)
+
+    override function getDrops() returns LinkedList<int>
+        let drops = super.getDrops()
+            ..add(ITEM_HAWK_EGG)
+
+        forNearestUnit(getPos(), 400, Filter(-> begin
+            return getTrollBaseClass(GetFilterUnit()) == UNIT_BEAST_MASTER
+        end), bm -> begin
+            if bm != null
+                drops.add(ITEM_HAWK_EGG)
+        end)
+
+        return drops
+
+init
+    for typeID in types
+        Hawk.register(typeID, target -> new Hawk(target))

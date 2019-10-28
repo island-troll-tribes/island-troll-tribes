@@ -1,30 +1,28 @@
 package ResourceSpawns
-import ID
-import HashMap
-import LinkedList
-import GameTimer
-import Game
-import Interpolation
-import ErrorHandling
-import TerrainUtils
+
+// Standard library imports:
 import ClosureTimers
-import GameConfig
-import BushSpawns
-import Pool
-import Elk
-import Panther
-import Bear
-import Wolf
-import Snake
-import Hawk
-import GreenFish
-import Fish
+import ErrorHandling
+import HashMap
+import Interpolation
+import LinkedList
+import TerrainUtils
+
+// Third-party imports:
 import Lodash
-import UnitEntity
+
+// Local imports:
+import BushSpawns
+import ID
+import Game
+import GameTimer
+import GameConfig
+import GeometryUtils
+import Pool
 
 let itemSpawnInfoMap = new IterableMap<int, SpawnInfo>()
 let animalSpawnInfoMap = new IterableMap<int, SpawnInfo>()
-let animalSpawnFunctions = new HashMap<int, BiFunction<real, real, UnitEntity>>()
+let animalSpawnFunctions = new HashMap<int, VoidBiFunction<real, real>>()
 let islandSpawnList = new LinkedList<IslandSpawner>()
 let FISH_PER_AREA = 1
 var gameStartTime = 0.
@@ -60,7 +58,7 @@ class ItemSpawnInfo extends SpawnInfo
 
 class IslandSpawner
     private constant Pool<rect> spawnRegionsPool = null
-    private Pool<BiFunction<real, real, UnitEntity>> animalPool = null
+    private Pool<VoidBiFunction<real, real>> animalPool = null
     private let spawnsPerType = new HashMap<int, int>()
     private let referenceItemCount = new HashMap<int,real>()
     int itemsSpawnCount
@@ -113,7 +111,7 @@ class IslandSpawner
         if this.animalPool != null
             destroy this.animalPool
 
-        this.animalPool = new Pool<BiFunction<real, real, UnitEntity>>
+        this.animalPool = new Pool<VoidBiFunction<real, real>>
         for id in animalSpawnInfoMap
             let spawnInfo = animalSpawnInfoMap.get(id)
             this.animalPool.add((spawnInfo.getTimeAdjustedSpawnWeight() * gameConfig.getHostileSpawnRate()).ceil(), animalSpawnFunctions.get(id))
@@ -246,11 +244,16 @@ function initAnimalSpawnInfo()
     new AnimalSpawnInfo(UNIT_JUNGLE_BEAR, 0, 45, 240)
     new AnimalSpawnInfo(UNIT_PANTHER, 0, 45, 240)
 
-    animalSpawnFunctions.put(UNIT_ELK, (x, y) -> new Elk(vec2(x,y)))
-    animalSpawnFunctions.put(UNIT_SNAKE, (x, y) -> new Snake(vec2(x,y)))
-    animalSpawnFunctions.put(UNIT_JUNGLE_WOLF, (x, y) -> new Wolf(vec2(x,y)))
-    animalSpawnFunctions.put(UNIT_JUNGLE_BEAR, (x, y) -> new Bear(vec2(x,y)))
-    animalSpawnFunctions.put(UNIT_PANTHER, (x, y) -> new Panther(vec2(x,y)))
+    animalSpawnFunctions.put(UNIT_ELK) (x, y) ->
+        createUnit(players[PLAYER_NEUTRAL_AGGRESSIVE], UNIT_ELK, vec2(x, y), randomAngle())
+    animalSpawnFunctions.put(UNIT_SNAKE) (x, y) ->
+        createUnit(players[PLAYER_NEUTRAL_AGGRESSIVE], UNIT_SNAKE, vec2(x, y), randomAngle())
+    animalSpawnFunctions.put(UNIT_JUNGLE_WOLF) (x, y) ->
+        createUnit(players[PLAYER_NEUTRAL_AGGRESSIVE], UNIT_JUNGLE_WOLF, vec2(x, y), randomAngle())
+    animalSpawnFunctions.put(UNIT_JUNGLE_BEAR) (x, y) ->
+        createUnit(players[PLAYER_NEUTRAL_AGGRESSIVE], UNIT_JUNGLE_BEAR, vec2(x, y), randomAngle())
+    animalSpawnFunctions.put(UNIT_PANTHER) (x, y) ->
+        createUnit(players[PLAYER_NEUTRAL_AGGRESSIVE], UNIT_PANTHER, vec2(x, y), randomAngle())
 
 function initIslandSpawners()
     let nwSpawns = new Pool<rect>()
@@ -297,16 +300,30 @@ function adjustBaseSpawnrates()
     udg_FOOD_BASE = max(.15,udg_FOOD_BASE-0.3)
 
 function spawnFishOrHawk(rect spawnRect)
-    if udg_ITEM_LIMIT_MODE and udg_FISH_CURRENT < udg_FISH_MAX
-        let rand = GetRandomInt(1, 13)
-        let spawnPoint = spawnRect.randomPoint()
-        if rand <= 4
-            new Hawk(spawnPoint)
-        else if rand <= 6
-            new GreenFish(spawnPoint)
-        else
-            new Fish(spawnPoint)
-        udg_FISH_CURRENT += 1
+    // Exit if the spawn limit has been reached.
+    if udg_ITEM_LIMIT_MODE and udg_FISH_CURRENT >= udg_FISH_MAX
+        return
+
+    // Randomly choose the location to spawn the new unit.
+    let spawnPoint = spawnRect.randomPoint()
+
+    // Randomly choose a type of unit to spawn.
+    // TODO: Use a pool object to choose randomly.
+    let rand = GetRandomInt(1, 13)
+    let targetID = rand <= 4
+        ? UNIT_HAWK
+        : (rand <= 6 ? UNIT_FISH : UNIT_GREEN_FISH)
+
+    // Increment the counter tracking the total number of river-based animals.
+    udg_FISH_CURRENT += 1
+
+    // Spawn a unit of the selected type.
+    createUnit(
+        players[PLAYER_NEUTRAL_AGGRESSIVE],
+        targetID,
+        spawnPoint,
+        randomAngle()
+    )
 
 function spawnFishAndHawks()
     doPeriodicallyCounted(ANIMATION_PERIOD * 2, FISH_PER_AREA) fishHawkLoop ->

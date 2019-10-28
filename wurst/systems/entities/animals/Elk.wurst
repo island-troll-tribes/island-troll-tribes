@@ -1,0 +1,33 @@
+package Elk
+
+// Standard library imports:
+import HashMap
+
+// Local imports:
+import ID
+import RearingAnimal
+
+// The number of corpses dropped per unit type.
+let typeIDs = new IterableMap<int, int>()
+    ..put(UNIT_ELK,            3)
+    ..put(UNIT_ELK_ADOLESCENT, 6)
+    ..put(UNIT_ADULT_ELK,      7)
+
+
+public class Elk extends RearingAnimal
+    construct(unit whichUnit)
+        super(whichUnit)
+
+    override function getHideTypeId() returns int
+        return ITEM_ELK_HIDE
+
+    override function getChild() returns int
+        return UNIT_FAWN
+
+    override function getNumCorpses() returns int
+        return typeIDs.get(getUnit().getTypeId())
+
+
+init
+    typeIDs.forEach() (integer typeID, integer value) ->
+        Elk.register(typeID, target -> new Elk(target))

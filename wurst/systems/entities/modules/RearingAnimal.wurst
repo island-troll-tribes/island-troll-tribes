@@ -1,0 +1,51 @@
+package RearingAnimal
+
+// Standard library imports:
+import LinkedList
+
+// Third-party imports:
+import LodashExtensions
+
+// Local imports:
+import BeastMaster
+import BonyAnimal
+import GameConfig
+import GeometryUtils
+import UnitEntity
+
+function unit.hasBaby() returns bool
+    // Randomly choose whether the unit will drop a pet.
+    return GetRandomReal(0, 1) <= udg_PET_CHANCE + 0.05 * ENUM_GROUP
+        ..enumUnitsInRange(this.getPos(), 400, null)
+        .asList()
+        .filter(target -> UnitEntity.findForUnit(target) instanceof BeastMaster)
+        .map(target -> target.getLevel())
+        ..add(0)
+        .max()
+
+public abstract class RearingAnimal extends BonyAnimal
+    construct(unit whichUnit)
+        super(whichUnit)
+
+    abstract function getHideTypeId() returns int
+
+    abstract function getChild() returns int
+
+    override function postCreate()
+        super.postCreate()
+
+    override function getDrops() returns LinkedList<int>
+        let drops = super.getDrops()
+            ..add(getHideTypeId())
+        return drops
+
+    override function onDeath()
+        if getUnit().hasBaby() or gameConfig.isTameableFawnEnabled()
+            createUnit(
+                players[PLAYER_NEUTRAL_PASSIVE],
+                getChild(),
+                getPos(),
+                randomAngle()
+            )
+
+        super.onDeath()

@@ -6,11 +6,10 @@ import LinkedList
 
 // Local imports:
 import AbilityObjectCreationUtils
-import ColorUtils
 import ID
 import QuickMakeToolTips
-import StringExtensions
 import ToolTipsUtils
+import Transformation
 
 constant COOLDOWN = 1.
 
@@ -372,3 +371,11 @@ function getQuickMakeSpellBookSpells() returns LinkedList<QuickMakeSpellBook>
 function buildSpells()
     getQuickMakeSpells().forEach(spell -> spell.buildSpell())
     getQuickMakeSpellBookSpells().forEach(spell -> spell.buildSpellBook())
+
+init
+    registerAfterEffect() (unit target, int unitID) ->
+        // Refresh the spellbook to fix access issues.
+        // TODO: Figure out why only this spellbook breaks.
+        if target.hasAbility(SPELL_BUILDING_CRAFT_SPELLBOOK_ID)
+            target.removeAbility(SPELL_BUILDING_CRAFT_SPELLBOOK_ID)
+            target.addAbility(SPELL_BUILDING_CRAFT_SPELLBOOK_ID)

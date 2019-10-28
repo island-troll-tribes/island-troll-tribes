@@ -6,7 +6,9 @@ import ClosureEvents
 import ClosureTimers
 import HashMap
 import LastOrder
+import LinkedList
 import OrderIds
+import ObjectIds
 
 // Third-party imports:
 import Lodash
@@ -26,6 +28,14 @@ let TRANSFORMATIONS = new OwnedIterableMap<int, int>()
     ..put(SPELL_TRANSFORM_BEAR,    UNIT_SHAPESHIFTER_BEAR)
     ..put(SPELL_TRANSFORM_PANTHER, UNIT_SHAPESHIFTER_PANTHER)
     ..put(SPELL_TRANSFORM_TIGER,   UNIT_SHAPESHIFTER_TIGER)
+
+// The unique abilities per form.
+// TODO: Automate permanency tracking for all tranformations.
+let ABILITIES = new IterableMap<int, LinkedList<int>>()
+    ..put(UNIT_SHAPESHIFTER_WOLF,    asList(SPELL_WOLF_HUNGER))
+    ..put(UNIT_SHAPESHIFTER_BEAR,    asList(SPELL_BEAR_BULWARK))
+    ..put(UNIT_SHAPESHIFTER_PANTHER, asList(SPELL_PANTHER_PROWL))
+    ..put(UNIT_SHAPESHIFTER_TIGER,   asList(SPELL_TIGER_VICIOUS_STRIKE, 'A0GH'))
 
 let FORMS = TRANSFORMATIONS.values()
 
@@ -66,10 +76,6 @@ function onCast(unit origin, int targetID)
         ..setScale(2)
         ..destr()
 
-    //Refresh the instance of Building quickmake spellbook to fix bug
-    origin.removeAbility(SPELL_BUILDING_CRAFT_SPELLBOOK_ID)
-    origin.addAbility(SPELL_BUILDING_CRAFT_SPELLBOOK_ID)
-
     // Capture the current unit.
     // TODO: Remove this if forces support closures.
     originGlobal = origin
@@ -106,3 +112,25 @@ init
     registerPriorEffect() (unit target, int unitID) ->
         if FORMS.has(target.getTypeId()) and not FORMS.has(unitID)
             transformUnit(target, UNIT_SHAPESHIFTER_WOLF)
+
+    // Make each unique ability permanent to preserve cooldown.
+    // TODO: Automate permanency tracking for all tranformations.
+    registerPriorEffect() (unit target, int unitID) ->
+        if FORMS.has(target.getTypeId())
+            ABILITIES.forEach() (integer formID, LinkedList<integer> abilIDs) ->
+                abilIDs.forEach() (integer abilID) ->
+                    // Remove the permanency prior to other transformations.
+                    target.makeAbilityPermanent(abilID, FORMS.has(unitID))
+
+    // Enable the correct ability for the unit.
+    // TODO: Automate permanency tracking for all tranformations.
+    // TODO: Use BlzUnitDisableAbility per unit.
+    registerAfterEffect() (unit target, int unitID) ->
+        if FORMS.has(target.getTypeId())
+            print(target.getName())
+            ABILITIES.forEach() (integer formID, LinkedList<integer> abilIDs) ->
+                abilIDs.forEach() (integer abilID) ->
+                    target.getOwner().setAbilityAvailable(
+                        abilID,
+                        target.getTypeId() == formID
+                    )

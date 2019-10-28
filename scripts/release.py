@@ -52,7 +52,7 @@ def build_parser():
     parser.add_argument("--repo",    help="Name of the repository to update.")
     parser.add_argument("--owner",   help="Location of the target repository.")
     parser.add_argument("--remote",  help="Name of the corresponding remote.")
-    parser.add_argument("--dry-run", help="Output the changelog only.",
+    parser.add_argument("--dry-run", help="Disable publishing changes.",
                         action="store_true")
 
     # Add the arguments for GitHub credentials.

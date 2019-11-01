@@ -1,0 +1,266 @@
+package LightGateNew
+import RegisterEvents
+import HashMap
+import LinkedList
+import ClosureTimers
+import Orders
+import ID
+import ClosureForGroups
+import DummyCaster
+import Assets
+import Pool
+import ChannelAbilityPreset
+import Lodash
+import ToolTipsUtils
+
+let GROW_DURATION = 10.
+let MINIMUM_GROW_DURATION = 1.5
+let DURATION_MAX = 40.
+let ORB_COUNT = 7
+let ORB_LOOP_INTERVAL = 0.03125
+let ORB_ANGULARSPEED_SUMMON = 80.
+let ORB_ANGULARSPEED_ACTIVE = 10.
+let SPELLCAST_INTERVAL_FASTEST = 2.
+let SPELLCAST_INTERVAL_START = 3.
+let PORTAL_GROWSPEED = 100.
+let SPELLCAST_EFFECT_PATH = Abilities.holyBoltSpecialArt
+let ORB_EFFECT_PATH = Abilities.faerieDragonMissile
+
+let lightGateInstances = new HashMap<unit, LightGateInstance>()
+let spellPool = new Pool<OrbSpell>()
+
+let COOLDOWN = 70.
+let MANACOST = 70
+let TOOLTIP_NORM = "Open Light Gate"
+let TOOLTIP_EXTENDED = "The Sage summons an extraordinary amount of white magic forming it into balls of energy. "+
+                        "The energy balls form a ring and slowly dissipate, casting boosting spells on all allies "+
+                        "within as they do. The longer this spell is channeled, the longer the gate remains open and "+
+                        "the more spells the energy balls cast. "
+
+
+let TARGET_ALLOWED = "targetAllowed"
+
+class OpenLightGate extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 1, true)
+        this.presetManaCost(lvl -> MANACOST)
+        this.presetCooldown(lvl -> COOLDOWN)
+        this.setHeroAbility(false)
+        this.setItemAbility(false)
+        this.presetTargetTypes(Targettype.NONE)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+        this.setIconNormal(Icons.bTNSell)
+        this.setIconResearch(Icons.bTNSell)
+        this.setIconTurnOff(Icons.bTNSell)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setFollowThroughTime(1, GROW_DURATION)
+        this.setAnimationNames("spell,throw")
+        this.setArtEffect("")
+        this.setArtTarget("")
+        this.setArtCaster("")
+        this.setBaseOrderID(1, "waterelemental")
+        this.setTargetAttachmentPoint("")
+        this.setCasterAttachmentPoint("")
+
+@compiletime function createOpenLightGate()
+    new OpenLightGate(SPELL_LIGHT_GATE, "E", new Pair(0, 0))
+
+class OrbSpell
+    int spellId
+    int orderId
+    int checkBuff
+    string name
+    construct(string name, int spellId, int orderId, int checkBuff)
+        this.spellId = spellId
+        this.orderId = orderId
+        this.name = name
+        this.checkBuff = checkBuff
+
+class PortalOrb
+    LightGateInstance instance
+    effect orbFX = null
+    vec3 pos
+
+    construct (LightGateInstance portal, vec3 startPos)
+        instance = portal
+        pos = startPos
+        orbFX = addEffect(ORB_EFFECT_PATH, startPos)
+        orbFX.setScale(2)
+
+    function setPos(vec3 newpos)
+        pos = newpos
+        orbFX.setPos(pos)
+
+    function setFacing(angle facing)
+        orbFX.setRoll(facing)
+
+    function castRandomSpell(unit target) returns bool
+        var owner = instance.ownerUnit.getOwner()
+        OrbSpell randomSpell = spellPool.random()
+        if randomSpell.checkBuff != 0 //If target already has the buff of a buff spell, dont cast it
+            if target.hasAbility(randomSpell.checkBuff)
+                return false
+
+        let caster = new DummyCaster()
+            ..owner(owner)
+            ..origin(this.pos.toVec2())
+        let dummy = caster.castTarget(randomSpell.spellId, 1, randomSpell.orderId, target)
+        if dummy != null
+            addEffect(SPELLCAST_EFFECT_PATH, this.pos).destr()
+            return true
+        return false
+
+    ondestroy
+        instance.orbs.remove(this)
+        orbFX.destr()
+
+public class LightGateInstance
+    angle orbAngle
+    unit ownerUnit
+    bool isChanneling
+    real portalRadius
+    real elapsedLifetime
+    real channeledTime
+    real lastSpellCastTimestamp
+    real spellIntervalCurrent
+    real durationBuildup
+    vec3 centerPos
+    CallbackCounted portalActiveLoop = null
+    CallbackCounted portalCreationLoop = null
+    LinkedList<PortalOrb> orbs = new LinkedList<PortalOrb>()
+
+    construct (unit caster, vec3 pos)
+        ownerUnit = caster
+        isChanneling = true
+        portalRadius = 50
+        centerPos = pos
+        elapsedLifetime = 0
+        channeledTime = 0
+        durationBuildup = 0
+        lastSpellCastTimestamp = -9999
+        orbAngle = angle(0)
+        spellIntervalCurrent = SPELLCAST_INTERVAL_START
+        startPortalCreation()
+
+    function startPortalCreation()
+        for i = 1 to ORB_COUNT
+            orbs.push(new PortalOrb(this, centerPos))
+
+        portalCreationLoop = doPeriodicallyTimed(ORB_LOOP_INTERVAL, GROW_DURATION) portalGrowLoop ->
+            if not isChanneling or portalGrowLoop.isLast()
+                portalGrowLoop.stop()
+                this.startPortalLoop()
+            else
+                portalGrowLoopUpdate()
+
+    function portalGrowLoopUpdate()
+        //Avoid creating vision on every loop cycle with mod check
+        if (portalCreationLoop.getCount() mod 30 == 0)
+            var vis = createVision(ownerUnit.getOwner(), centerPos.toVec2(), portalRadius+256, true)
+            vis.start()
+            //Should be the full duration of portal calculated below for vision mods destruction
+            doAfter(durationBuildup + GROW_DURATION - elapsedLifetime) ->
+                vis.destr()
+
+        //Update things that change with channeling time
+        spellIntervalCurrent = SPELLCAST_INTERVAL_START - (SPELLCAST_INTERVAL_START - SPELLCAST_INTERVAL_FASTEST) * (elapsedLifetime/GROW_DURATION)
+        elapsedLifetime += ORB_LOOP_INTERVAL
+        channeledTime += ORB_LOOP_INTERVAL
+        portalRadius += ORB_LOOP_INTERVAL * PORTAL_GROWSPEED
+        durationBuildup = (channeledTime / GROW_DURATION) * DURATION_MAX
+        orbAngle = angle(orbAngle.radians() + ORB_LOOP_INTERVAL * ORB_ANGULARSPEED_SUMMON * DEGTORAD)
+
+        //Move orbs around
+        updateOrbAngles()
+
+    function randomOrbCastSpell()
+        var orb = this.orbs.get( GetRandomInt(0, orbs.size() - 1))
+        var centerPosVec2 = centerPos.toVec2()
+
+        //Find random target and cast + spawn effect on orb
+        let targets = CreateGroup()..enumUnitsInRange(centerPosVec2, portalRadius)
+        targets.forEachIn(u -> begin
+            if not isValidTarget(u)
+                targets.removeUnit(u)
+        end)
+        let target = targets.getRandomUnit()
+        targets.destr()
+        if target != null
+            if orb.castRandomSpell(target)
+                this.lastSpellCastTimestamp = this.elapsedLifetime
+
+    function updateOrbAngles()
+        //Calculate orb angles and set it
+        angle orbOffset = angle((360 / orbs.size())*DEGTORAD)
+        int i = 0
+        for o in orbs
+            angle indexOrbAngle = orbAngle + orbOffset * i.toReal()
+            o.setPos(centerPos.offset2d(indexOrbAngle, portalRadius))
+            o.setFacing(o.pos.angleTo2d(centerPos))
+            i = i + 1
+
+    function startPortalLoop()
+        if channeledTime < MINIMUM_GROW_DURATION
+            destroy this
+        else
+            portalActiveLoop = doPeriodicallyTimed(ORB_LOOP_INTERVAL, durationBuildup) portalLoop ->
+                //Check for destruction conditions first before accessing any objects
+                if (portalLoop.isLast())
+                    destroy this
+                else
+                    portalLoopUpdate()
+
+    function portalLoopUpdate()
+        //Check time since last spell was cast and cast
+        if (this.elapsedLifetime - this.lastSpellCastTimestamp >= this.spellIntervalCurrent)
+            randomOrbCastSpell()
+        elapsedLifetime += ORB_LOOP_INTERVAL
+        orbAngle = angle(orbAngle.radians() + ORB_LOOP_INTERVAL * ORB_ANGULARSPEED_ACTIVE * DEGTORAD)
+        updateOrbAngles()
+
+    function isValidTarget(unit t) returns boolean
+        return not t.isInvulnerable() and not t.isType(UNIT_TYPE_STRUCTURE) and t.isAlive() and IsUnitVisible(t, ownerUnit.getOwner())
+
+    ondestroy
+        orbs.forEach(o -> destroy o)
+        destroy orbs
+
+        if lightGateInstances.has(ownerUnit)
+            if (lightGateInstances.get(ownerUnit) == this)
+                lightGateInstances.remove(ownerUnit)
+
+function onCast()
+    var caster = GetSpellAbilityUnit()
+
+    //Destroy previous instance
+    if lightGateInstances.has(caster)
+        var prev_instance = lightGateInstances.get(caster)
+        if prev_instance.portalActiveLoop != null
+            prev_instance.portalActiveLoop.stop()
+        if prev_instance.portalActiveLoop != null
+            prev_instance.portalActiveLoop.stop()
+
+    //Spawn the portal, a bit higher than the caster on Z axis
+    lightGateInstances.put(caster, new LightGateInstance(caster, caster.getPos3Real() + vec3(0, 0, 50)))
+
+function onEndCast()
+    if GetSpellAbilityId() == SPELL_LIGHT_GATE
+        var caster = GetSpellAbilityUnit()
+        var instance = lightGateInstances.get(caster)
+        instance.isChanneling = false
+
+function initSpellPool()
+    spellPool.add(1, new OrbSpell("Healing wave", SPELL_HEALING_WAVE, Orders.healingwave, 0     ))
+    spellPool.add(1, new OrbSpell("Spirit link" , SPELL_SPIRIT_LINK , Orders.spiritlink , 'Bspl'))
+    spellPool.add(2, new OrbSpell("Ranged heal" , SPELL_RANGED_HEAL , Orders.heal       , 0     ))
+    spellPool.add(2, new OrbSpell("Pump up"     , SPELL_PUMP_UP     , Orders.bloodlust  , 'B00O'))
+    spellPool.add(2, new OrbSpell("Inner fire"  , ABILITY_INNER_FIRE, Orders.innerfire  , 'BHds'))
+
+init
+    initSpellPool()
+    registerSpellEffectEvent(SPELL_LIGHT_GATE, () -> onCast())
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST, () -> onEndCast())

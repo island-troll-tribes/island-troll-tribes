@@ -1,0 +1,135 @@
+package OverCharge
+
+// Standard library imports:
+import AbilityObjEditing
+import Assets
+import BuffObjEditing
+import ClosureEvents
+import ClosureTimers
+import HashMap
+
+// Third-party imports:
+import Lodash
+
+// Local imports:
+import ColorUtils
+import TimerUtils
+import ToolTipsUtils
+
+let ABILITY_ID = 'ESOC'
+let DUMMY_AURA_ID = 'ESOA'
+let DUMMY_AURA_BUFF_INT = 'ESOB'
+let DUMMY_AURA_BUFF_STR = "ESOB"
+let COOLDOWN = 16.
+let MANACOST = 12
+let DURATION = 10.
+
+let OVERCHARGE_DAMAGE_MULTIPLIER = 0.3 // For Frost Blast
+
+let BUFF_STASIS = 'Bstt' // original Statis trap buff
+let SPELL_ICON = Icons.bTNFeedBack
+let AURA_EFFECT_PATH = Abilities.manaFlareBase
+let TOOLTIP_NORM = "Overcharge"
+let TOOLTIP_EXTENDED = (
+    "Causes the next spell you cast to have a bonus effect, last {4} seconds."+
+    "\n\n{0}Zap|r\n"          + "Forks to three targets."+
+    "\n\n{0}Meteor|r\n"       + "Set the ground on fire dealing {1}15|r damage per second for {2}7|r seconds."+
+    "\n\n{0}FrostBlast|r\n"   + "Shoots out out 7 projectiles in quick succession, dealing {3} of the normal damage."+
+    "\n\n{0}Earthguardian|r\n"+ "Instantly summons all 7 orbs."+
+    "\n\n{0}Brambles|r\n"     + "Additionally roots targets for {2}3|r seconds."+
+    "\n\n{0}Meditate|r\n"     + "Can meditate while moving. Cancels on damage."
+).format(
+    SPECIAL_COLOR.toColorString(),
+    COLOR_RED.toColorString(),
+    COLOR_LIGHT_BLUE.toColorString(),
+    OVERCHARGE_DAMAGE_MULTIPLIER.toToolTipOrange(),
+    DURATION.toToolTipLightBlue()
+)
+
+function createDummyAuras()
+    new AbilityDefinitionAuraSlow(DUMMY_AURA_ID)
+    ..setArtTarget(AURA_EFFECT_PATH)
+    ..setTargetAttachmentPoint1("hand,right")
+    ..setTargetAttachmentPoint("hand,left")
+    ..setTargetAttachments(2)
+    ..setBuffs(1, DUMMY_AURA_BUFF_STR)
+    ..setMovementSpeedFactor(1, 0)
+    ..setAreaofEffect(1, 0)
+    ..setDurationHero(1, 15)
+    ..setDurationNormal(1, 15)
+    ..setTargetsAllowed(1, "self")
+    ..setName("Overcharged")
+
+function createBuffs()
+    new BuffDefinition(DUMMY_AURA_BUFF_INT, BUFF_STASIS)
+    ..setArtTarget(1, "")
+    ..setTooltipNormal(1, TOOLTIP_NORM)
+    ..setTooltipNormalExtended(1, "Next spellcast is empowered.")
+    ..setIcon(SPELL_ICON)
+    ..setIconNormal(1, SPELL_ICON)
+    ..setTargetAttachments(1, 2)
+
+class OverCharge extends AbilityDefinitionWindWalk
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setIconNormal(SPELL_ICON)
+        this.setIconResearch(SPELL_ICON)
+        this.setIconTurnOff(SPELL_ICON)
+        this.setHeroAbility(false)
+        this.setLevels(1)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        this.setCooldown(1, COOLDOWN)
+        this.setManaCost(1, MANACOST)
+        this.setDurationHero(1, 0.01)
+        this.setCastingTime(1, 0)
+        this.setDurationNormal(1, 0)
+        this.setEffectSound("")
+        this.setBuffs(1, "")
+
+@compiletime function createOverCharge()
+    new OverCharge(ABILITY_ID, "A", new Pair(0, 1))
+    createDummyAuras()
+    createBuffs()
+
+
+HashMap<unit, timer> removalTimers = new HashMap<unit,timer>()
+
+public function isUnitOvercharged(unit u) returns bool
+    if (u.hasAbility(DUMMY_AURA_ID))
+        return true
+    else
+        return false
+
+public  function consumeOvercharge(unit u) returns bool
+    if isUnitOvercharged(u)
+        u.removeAbility(DUMMY_AURA_ID)
+        if removalTimers.has(u)
+            removalTimers.getAndRemove(u).release()
+        return true
+    else
+        return false
+
+function onCast()
+    var caster = GetSpellAbilityUnit()
+
+    //Reset existing timer
+    if removalTimers.has(caster)
+        caster.removeAbility(DUMMY_AURA_ID)
+        removalTimers.getAndRemove(caster).release()
+
+    caster.addAbility(DUMMY_AURA_ID)
+
+    //Create timer to remove buff after duration
+    let t = getTimer()
+    t.doAfter(DURATION) ->
+        caster.removeAbility(DUMMY_AURA_ID)
+        removalTimers.remove(caster)
+    removalTimers.put(caster, t)
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())

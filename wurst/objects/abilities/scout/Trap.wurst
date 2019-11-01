@@ -1,0 +1,319 @@
+package Trap
+
+// Standard library imports:
+import Assets
+import AbilityObjEditing
+import BuffObjEditing
+import ChannelAbilityPreset
+import ClosureEvents
+import ClosureForGroups
+import DummyCaster
+import ErrorHandling
+import HashMap
+import InstantDummyCaster
+import ObjectIdGenerator
+import ObjectIds
+import Orders
+import RegisterEvents
+
+// Third-party imports:
+import Lodash
+
+// Local imports:
+import UnitExtensions
+import ID
+import ToolTipsUtils
+
+constant TRAP_CAST_RANGE = 100.
+constant TRAP_ACTIVATION_DELAY = 5.
+
+constant BEAR_TRAP_COOLDOWN   = 60.
+constant SPIKED_TRAP_COOLDOWN = 60.
+constant TRACK_TRAP_COOLDOWN  = 60.
+
+constant BEAR_TRAP_DURATION   = 240.
+constant SPIKED_TRAP_DURATION = 240.
+constant TRACK_TRAP_DURATION  = 240.
+
+constant TRAP_EFFECT_RADIUS   = 200.
+
+constant BEAR_TRAP_LOCK_DURATION = 5.
+constant SPIKED_TRAP_SLOW_DURATION = 5.
+constant SPIKED_TRAP_MS_SLOW = 0.80
+
+constant MANACOST = 10
+
+
+constant TOOLTIP_NORM_TRACK_TRAP  = "Tracking Trap"
+constant TOOLTIP_NORM_SPIKED_TRAP = "Spiked Trap"
+constant TOOLTIP_NORM_BEAR_TRAP = "Bear Trap"
+
+constant ABILITY_TRAP_EXPLOSION   = compiletime(ABIL_ID_GEN.next())
+constant ABILITY_BEAR_TRAP_LOCK   = compiletime(ABIL_ID_GEN.next())
+
+constant ABILITY_SPIKED_TRAP_SLOW = compiletime(ABIL_ID_GEN.next())
+constant BUFF_SPIKED_TRAP_SLOW    = compiletime(BUFF_ID_GEN.next())
+
+constant BUFF_BEAR_TRAP_LOCK_GROUND = compiletime(BUFF_ID_GEN.next())
+constant BUFF_BEAR_TRAP_LOCK_AIR    = compiletime(BUFF_ID_GEN.next())
+
+constant BUFF_SPIKED_TRAP_ORIGINAL_ID = 'Bcri'
+constant BUFF_BEAR_TRAP_GROUND_ORIGINAL_ID = 'Beng'
+constant BUFF_BEAR_TRAP_AIR_ORIGINAL_ID    = 'Bena'
+
+constant SPIKED_TRAP_PATH    = "Models\\Spiketrap.mdx"
+constant BEAR_TRAP_PATH      = "Models\\BearTrap.mdx"
+constant BEAR_TRAP_BUFF_PATH = "Models\\BearTrapBuff.mdx"
+
+constant BEAR_TRAP_ICON = "ReplaceableTextures\\CommandButtons\\BTNBearTrap.blp"
+
+constant TOOLTIP_EXTENDED_TRACK_TRAP = ("Troll walking through this trap will get tracked, having their position revealed and armor reduced by {0} for {1} seconds. "+
+                                        "Track Trap last {2} seconds, has {3} seconds cooldown.")
+                                        .format(4..toToolTipRed(), 30..toToolTipLightBlue(), TRACK_TRAP_DURATION.toToolTipLightBlue(), TRACK_TRAP_COOLDOWN.toToolTipLightBlue())
+
+constant TOOLTIP_EXTENDED_SPIKED_TRAP = "An itchy trap, troll who walks on it will get slowed by {0} for {1} seconds. Spiked Trap last {2} seconds, has {3} seconds cooldown."
+                               .format(SPIKED_TRAP_MS_SLOW.toToolTipOrange(), SPIKED_TRAP_SLOW_DURATION.toToolTipOrange(), SPIKED_TRAP_DURATION.toToolTipLightBlue(),
+                               SPIKED_TRAP_COOLDOWN.toToolTipLightBlue())
+
+constant TOOLTIP_EXTENDED_BEAR_TRAP = "Troll walking through this trap will be immobilized for {0} seconds. Bear Trap last {1} seconds, has {2} seconds cooldown."
+                               .format(BEAR_TRAP_LOCK_DURATION.toToolTipOrange(), BEAR_TRAP_DURATION.toToolTipLightBlue(), BEAR_TRAP_COOLDOWN.toToolTipLightBlue())
+
+// Buff
+function createBuff()
+    new BuffDefinition(BUFF_SPIKED_TRAP_SLOW, BUFF_SPIKED_TRAP_ORIGINAL_ID)
+        ..setIcon(Icons.bTNMeatapult)
+        ..setArtTarget(1, Objects.humanBloodCinematicEffect)
+        ..setTargetAttachmentPoint0(1, "chest")
+        ..setTooltipNormal(1, "Spike Trap Slow")
+        ..setTooltipNormalExtended(1, "This unit has been crippled by an spiked trap, it's movement speed has been greatly reduced.")
+
+    new BuffDefinition(BUFF_BEAR_TRAP_LOCK_GROUND, BUFF_BEAR_TRAP_GROUND_ORIGINAL_ID)
+        ..setIcon(Icons.bTNMeatapult)
+        ..setArtTarget(1, BEAR_TRAP_BUFF_PATH)
+        ..setTargetAttachmentPoint0(1, "origin")
+        ..setTooltipNormal(1, "Bear Trap Lock")
+        ..setTooltipNormalExtended(1, "This unit has been crippled by an spiked trap, it's movement speed has been greatly reduced.")
+
+    new BuffDefinition(BUFF_BEAR_TRAP_LOCK_AIR, BUFF_BEAR_TRAP_AIR_ORIGINAL_ID)
+        ..setIcon(BEAR_TRAP_ICON)
+        ..setArtTarget(1, BEAR_TRAP_BUFF_PATH)
+        ..setTargetAttachmentPoint0(1, "origin")
+        ..setTooltipNormal(1, "Bear Trap Lock")
+        ..setTooltipNormalExtended(1, "This unit is stuck in a bear trap, it can't move for a short period.")
+
+//Trap Unit Definition
+class TrapUnit extends UnitDefinition
+    construct(int newUnitId, string name)
+        super(newUnitId, UnitIds.goblinlandmine)
+        this.setNormalAbilities(commaList("Aeth",  ABILITY_TRAP_EXPLOSION.toRawCode()))
+        this.setName(name)
+        this.setIconGameInterface(Icons.bTNStasisTrap)
+        this.setModelFile(Units.stasisTotem)
+        this.setHitPointsMaximumBase(15)
+        this.setDeathTimeseconds(3)
+        this.setSightRadiusDay(200)
+        this.setSightRadiusNight(200)
+
+class SpikedTrapUnit extends TrapUnit
+    construct(int newUnitId, string name)
+        super(newUnitId, name)
+        this.setIconGameInterface(Icons.bTNMeatapult)
+        this.setModelFile(SPIKED_TRAP_PATH)
+        this.setScalingValue(1)
+
+class BearTrapUnit extends TrapUnit
+    construct(int newUnitId, string name)
+        super(newUnitId, name)
+        this.setIconGameInterface(Icons.bTNMeatapult)
+        this.setModelFile(BEAR_TRAP_PATH)
+        this.setScalingValue(1)
+
+//Explosion spell
+function createTrapExplosionSpell()
+    new AbilityDefinitionMine(ABILITY_TRAP_EXPLOSION)
+        ..setButtonPositionNormalX(0)
+        ..setButtonPositionNormalY(1)
+        ..setCastRange(1, TRAP_EFFECT_RADIUS)
+        ..setActivationDelay(1, TRAP_ACTIVATION_DELAY)
+        ..setTargetsAllowed(1, "hero")
+
+//Spell Slow
+class SpikedTrapSlowDummy extends AbilityDefinitionCripple
+    construct(int newAbility)
+        super(newAbility)
+        this.setDummyAbility()
+        this.setIconNormal(Icons.bTNMeatapult)
+        this.setDurationHero(1, SPIKED_TRAP_SLOW_DURATION)
+        this.setDamageReduction(1, 0)
+        this.setAttackSpeedReduction(1, 0)
+        this.setMovementSpeedReduction(1, SPIKED_TRAP_MS_SLOW)
+        this.setBuffs(1, BUFF_SPIKED_TRAP_SLOW.toRawCode())
+
+//Spell Bear Trap lockdown
+class BearTrapLockDummy extends AbilityDefinitionEnsnareCreep
+    construct(int newAbility)
+        super(newAbility)
+        this.setMissileArt("")
+        this.setName(TOOLTIP_NORM_BEAR_TRAP + " Dummy")
+        this.setDummyAbility()
+        this.setDurationHero(1, BEAR_TRAP_LOCK_DURATION)
+        this.setDurationNormal(1, BEAR_TRAP_LOCK_DURATION)
+        this.setTargetsAllowed(1, "enemies,ground,hero")
+        this.setEditorSuffix("(Wurst)")
+        this.setBuffs(1, commaList(BUFF_BEAR_TRAP_LOCK_AIR, BUFF_BEAR_TRAP_LOCK_GROUND))
+
+class PlaceTrapSpell extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos, string animationName, string icon, string toolTipNorm, string toolTipExt, real cooldown)
+        super(newAbilityId, 1, true)
+        this.presetManaCost(lvl -> MANACOST)
+        this.presetCooldown(lvl -> cooldown)
+        this.setHeroAbility(false)
+        this.setItemAbility(false)
+        this.presetTargetTypes(Targettype.POINT)
+        this.setHotkeyNormal(hotkey)
+        this.setName(toolTipNorm)
+        this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, toolTipNorm))
+        this.presetTooltipNormalExtended(lvl -> toolTipExt)
+        this.setIconNormal(icon)
+        this.setIconResearch(icon)
+        this.setIconTurnOff(icon)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.presetFollowThroughTime(lvl -> 1)
+        this.setAreaofEffect(1, TRAP_EFFECT_RADIUS)
+        this.presetOption(Option.TARGETIMAGE, true)
+        this.setCastRange(1, TRAP_CAST_RANGE)
+        this.setAnimationNames(animationName)
+
+class PlaceTrackTrapSpell extends PlaceTrapSpell
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, hotkey, buttonPos, "spell,throw", Icons.bTNStasisTrap, TOOLTIP_NORM_TRACK_TRAP, TOOLTIP_EXTENDED_TRACK_TRAP, TRACK_TRAP_COOLDOWN)
+
+class PlaceSpikedTrapSpell extends PlaceTrapSpell
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, hotkey, buttonPos, "spell,slam", Icons.bTNMeatapult, TOOLTIP_NORM_SPIKED_TRAP, TOOLTIP_EXTENDED_SPIKED_TRAP, SPIKED_TRAP_COOLDOWN)
+
+class PlaceBearTrapSpell extends PlaceTrapSpell
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, hotkey, buttonPos, "spell,slam", BEAR_TRAP_ICON, TOOLTIP_NORM_BEAR_TRAP, TOOLTIP_EXTENDED_BEAR_TRAP, BEAR_TRAP_COOLDOWN)
+
+
+//Place trap spell definition
+// class TrackTrapSpell extends AbilityDefinitionItemPlaceMine
+//     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+//         super(newAbilityId)
+//         this.setRequirements("")
+//         this.setLevels(3)
+//         this.setHeroAbility(true)
+//         this.setLevelSkipRequirement(0)
+//         this.setHotkeyNormal(hotkey)
+//         this.setName(TOOL_TIP_NORM_TRACK_TRAP)
+//         this.presetTooltipNormal(lvl -> makeToolTipNormHero(hotkey, TOOL_TIP_NORM_TRACK_TRAP, lvl))
+//         this.presetTooltipNormalExtended(lvl -> TOOL_TIP_EXT_TRACK_TRAP.format(TRAP_DURATION.toToolTipLightBlue(), (TRACK_TRAP_COOLDOWN - lvl * 30).toToolTipLightBlue()))
+//         this.setTooltipLearn(makeToolTipLearn(TOOL_TIP_NORM_TRACK_TRAP))
+//         this.setTooltipLearnExtended(makeToolTipLearn(TOOL_TIP_EXT_TRACK_TRAP.format(TRAP_DURATION.toToolTipLightBlue(), COLOR_LIGHT_BLUE+"150/120/90|r")))
+//         this.setButtonPositionNormalX(buttonPos.a)
+//         this.setButtonPositionNormalY(buttonPos.b)
+//         this.setIconNormal(Icons.bTNStasisTrap)
+//         this.setIconResearch(Icons.bTNStasisTrap)
+//         this.presetManaCost(lvl -> MANACOST)
+//         this.presetCooldown(lvl -> TRACK_TRAP_COOLDOWN - lvl * 30)
+//         this.presetDurationNormal(lvl -> TRAP_DURATION)
+//         this.presetUnitType(lvl -> toRawCode(UNIT_TRAP))
+//         this.setAnimationNames("spell,throw")
+//         this.presetCastRange(lvl -> 100)
+//         this.presetAreaofEffect(lvl -> TRAP_EFFECT_RADIUS)
+
+// class SpyTrackTrapSpell extends TrackTrapSpell
+//     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+//         super(newAbilityId, hotkey, buttonPos)
+//         this.setLevels(1)
+//         this.setHeroAbility(false)
+//         this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOL_TIP_NORM_TRACK_TRAP))
+//         this.setTooltipNormalExtended(1, TOOL_TIP_EXT_TRACK_TRAP.format(TRAP_DURATION.toToolTipLightBlue(), (TRACK_TRAP_COOLDOWN - 90).toToolTipLightBlue()))
+//         this.setCooldown(1, TRACK_TRAP_COOLDOWN - 90)
+
+// class SpikedTrapSpell extends AbilityDefinitionShadowHunterSerpentWard
+//     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+//         super(newAbilityId)
+//         this.setHeroAbility(false)
+//         this.setLevels(1)
+//         this.setRequirements("")
+//         this.setAnimationNames("spell,slam")
+//         this.setButtonPositionNormalX(buttonPos.a)
+//         this.setButtonPositionNormalY(buttonPos.b)
+//         this.setIconNormal(Icons.bTNMeatapult)
+//         this.setManaCost(1, MANACOST)
+//         this.setHotkeyNormal(hotkey)
+//         this.setName(TOOL_TIP_NORM_SPIKED_TRAP)
+//         this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOL_TIP_NORM_SPIKED_TRAP))
+//         this.setTooltipNormalExtended(1, TOOL_TIP_EXT_SPIKED_TRAP)
+//         this.setCastRange(1, 100)
+//         this.setDurationNormal(1, SPIKED_TRAP_DURATION)
+//         this.setCooldown(1, SPIKED_TRAP_COOLDOWN)
+//         this.setSummonedUnitType(1, UNIT_SPIKED_TRAP.toRawCode())
+
+// class BearTrapSpell extends AbilityDefinitionHealingWard
+//     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+//         super(newAbilityId)
+//         this.setCheckDependencies(false)
+//         this.setAnimationNames("spell,slam")
+//         this.setCastRange(1, 100)
+//         this.setDurationHero(1, 20)
+//         this.setDurationNormal(1, 180)
+//         this.setWardUnitType(1, UNIT_BEAR_TRAP.toRawCode())
+//         this.setBuffs(1, "")
+//         this.setManaCost(1, MANACOST)
+//         this.setHotkeyNormal(hotkey)
+//         this.setAreaofEffect(1, TRAP_EFFECT_RADIUS)
+//         this.setButtonPositionNormalX(buttonPos.a)
+//         this.setButtonPositionNormalY(buttonPos.b)
+
+@compiletime function createTrapSpells()
+    createBuff()
+    new TrapUnit      (UNIT_TRAP       , "Track Trap" )
+    new SpikedTrapUnit(UNIT_SPIKED_TRAP, "Spiked Trap")
+    new BearTrapUnit  (UNIT_BEAR_TRAP, "Bear Trap")
+
+    new SpikedTrapSlowDummy(ABILITY_SPIKED_TRAP_SLOW)
+    new BearTrapLockDummy(ABILITY_BEAR_TRAP_LOCK)
+
+    new PlaceTrackTrapSpell(SPELL_TRACK_TRAP, "Q", new Pair(0, 0))
+    new PlaceSpikedTrapSpell(SPELL_SPIKED_TRAP, "W", new Pair(1, 0))
+    new PlaceBearTrapSpell(SPELL_BEAR_TRAP, "E", new Pair(2, 0))
+    new PlaceBearTrapSpell(SPELL_SPY_BEAR_TRAP, "S", new Pair(1, 1))
+    // new TrackTrapSpell    (SPELL_TRACK_TRAP     , "W", new Pair(0, 0))
+    // new SpyTrackTrapSpell (SPELL_SPY_TRACK_TRAP , "W", new Pair(0, 0))
+    // new SpikedTrapSpell   (SPELL_SPIKED_TRAP    , "Q", new Pair(1, 0))
+    // new BearTrapSpell     (SPELL_BEAR_TRAP      , "E", new Pair(2, 0))
+
+    createTrapExplosionSpell()
+
+
+let trapList = new HashMap<int, Pair<int, int>>()
+    ..put(UNIT_TRAP       , new Pair(SPELL_TRACKER_TRACK     , Orders.faeriefire))
+    ..put(UNIT_SPIKED_TRAP, new Pair(ABILITY_SPIKED_TRAP_SLOW, Orders.cripple   ))
+    ..put(UNIT_BEAR_TRAP  , new Pair(ABILITY_BEAR_TRAP_LOCK  , Orders.ensnare   ))
+
+function onTrapDeath(unit trap)
+    forUnitsInRange(trap.getPos(), TRAP_EFFECT_RADIUS + 25) u ->
+        let trapId = trap.getTypeId()
+        if u.isTroll() and u.getOwner().isEnemyOf(trap.getOwner()) and not (u.hasAbility('Bams') or u.hasAbility('Bam2'))
+            if InstantDummyCaster.castTarget(trap.getOwner(), trapList.get(trapId).a, 1, trapList.get(trapId).b, u) == false
+                error("Trap failed, this isn't supposed to happen, report this please.")
+
+init
+    EventListener.onPointCast(SPELL_TRACK_TRAP) (unit caster, vec2 target) ->
+        createUnit(caster.getOwner(), UNIT_TRAP, target, (270.0).asAngleDegrees())..setAnimation("birth")..setTimedLife(TRACK_TRAP_DURATION)
+    EventListener.onPointCast(SPELL_SPIKED_TRAP) (unit caster, vec2 target) ->
+        createUnit(caster.getOwner(), UNIT_SPIKED_TRAP, target, (270.0).asAngleDegrees())..setAnimation("birth")..setTimedLife(SPIKED_TRAP_DURATION)
+    EventListener.onPointCast(SPELL_BEAR_TRAP) (unit caster, vec2 target) ->
+        createUnit(caster.getOwner(), UNIT_BEAR_TRAP, target, (270.0).asAngleDegrees())..setAnimation("birth")..setTimedLife(BEAR_TRAP_DURATION)
+    EventListener.onPointCast(SPELL_SPY_BEAR_TRAP) (unit caster, vec2 target) ->
+        createUnit(caster.getOwner(), UNIT_BEAR_TRAP, target, (270.0).asAngleDegrees())..setAnimation("birth")..setTimedLife(BEAR_TRAP_DURATION)
+
+    EventListener.add(EVENT_PLAYER_UNIT_DEATH) () ->
+        let dyingUnit = GetDyingUnit()
+
+        if trapList.has(dyingUnit.getTypeId())
+            onTrapDeath(dyingUnit)

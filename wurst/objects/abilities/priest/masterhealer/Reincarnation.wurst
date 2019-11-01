@@ -1,0 +1,33 @@
+package Reincarnation
+
+// Standard library imports:
+import ChannelAbilityPreset
+
+// Third-party imports:
+import Lodash
+
+// Local imports:
+import ColorUtils
+import ID
+import ToolTipsUtils
+
+let COOLDOWN = 240.
+let MANACOST = 100.
+let TOOLTIP_NORM = "Reincarnation"
+let TOOLTIP_EXTENDED = ("When killed, the Master Healer will come back to life. Has {0} seconds cooldown.{1}Warning :|r You need to have {2} "+
+                       "mana when you die to be reincarnated.").format(COOLDOWN.toToolTipLightBlue(), COLOR_RED.toColorString(), MANACOST.toToolTipLightBlue())
+
+class Reincarnation extends AbilityDefinitionTaurenChieftainReincarnation
+    construct(int newAbilityId, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setName(TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> makeToolTipNormAura(TOOLTIP_NORM))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setManaCost(1, MANACOST.toInt())
+        this.setCooldown(1, COOLDOWN)
+
+
+@compiletime function createReincarnation()
+    new Reincarnation(SPELL_REINCARNATION, new Pair(0, 2))

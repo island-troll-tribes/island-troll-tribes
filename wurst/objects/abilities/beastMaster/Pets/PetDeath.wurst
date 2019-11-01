@@ -1,0 +1,26 @@
+package PetDeath
+
+// Standard library imports:
+import ClosureTimers
+import RegisterEvents
+import EventHelper
+
+// Local imports:
+import ColorUtils
+import PetAbilities
+import Pets
+import StringExtensions
+import Tribe
+
+
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
+        if EventData.getDyingUnit().isPet()
+            let owner = EventData.getDyingUnit().getOwner()
+            let tribe = Tribe.ofPlayer(owner)
+            if tribe != null
+                tribe.getMembers().forEach() (player member) ->
+                    member.print("A pet has died!".color(GENERAL_COLOR))
+
+            nullTimer() ->
+                setPetAbilities(owner, false)

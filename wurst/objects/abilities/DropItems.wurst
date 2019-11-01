@@ -1,0 +1,28 @@
+package DropItems
+
+// Standard library imports:
+import Assets
+import ChannelAbilityPreset
+import RegisterEvents
+
+// Local imports:
+import ID
+import UnitExtensions
+
+@compiletime function createDropItems() returns AbilityDefinitionIllidanChannel
+    return new ChannelAbilityPreset(SPELL_DROP_ITEMS, 1, true)
+        ..setIconNormal(Icons.bTNUndeadLoad)
+        ..setButtonPositionNormalX(3)
+        ..setButtonPositionNormalY(2)
+        ..makeUnitSpell(0, 0.5)
+        ..setHotkeyNormal("V")
+        ..setName("Quick Drop Items")
+        ..presetTooltipNormal(lvl -> "[|c00FF7F00V|r] Quick Drop Items")
+        ..presetTooltipNormalExtended(lvl -> "Drops all the items in this unit on the ground.")
+
+function onCast(unit caster)
+    caster.dropItems()
+
+init
+    registerSpellEffectEvent(SPELL_DROP_ITEMS) ->
+        onCast(GetSpellAbilityUnit())

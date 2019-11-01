@@ -1,0 +1,87 @@
+package DepressionOrb
+import RegisterEvents
+import Orders
+import ClosureTimers
+import ClosureForGroups
+import EventHelper
+import ID
+import DummyCaster
+import Icons
+import Lodash
+import ToolTipsUtils
+import ChannelAbilityPreset
+
+// @configurable constant int ABILITY_ID = 'A04R' // Old GUI Depression Orb
+// @configurable constant int DUMMY_ABILITY_ID = 'A025' // Old GUI Depress Spell
+@configurable constant int DUMMY_ID = UNIT_LOCUST
+@configurable constant int BUFF_ID = 'B099'
+@configurable constant real INTERVAL = 0.05
+@configurable constant real DURATION = 3
+@configurable constant real TURN_SPEED = 360
+@configurable constant real MOVE_SPEED = 275
+@configurable constant real START_DISTANCE = 50
+@configurable constant real TURN_DISTANCE = 100
+@configurable constant real RADIUS = 400
+
+constant INTERVAL_TURN_SPEED = INTERVAL * TURN_SPEED
+constant INTERVAL_MOVE_SPEED = INTERVAL * MOVE_SPEED
+
+let MANACOST = 20
+let COOLDOWN = 30.
+
+let ANIMATION_NAME = "channel,spell"
+let TOOLTIP_NORM = "Depression Orb"
+let TOOLTIP_EXTENDED = ("The Hypnotist uses powerful magic to create an wisp of pure hatred and depression. The wisp is projected at opponents "+
+                       "and it depresses all who get near it. Depressed opponents have slightly reduced speed and experience severe energy shortages. "+
+                       "Has {0} seconds cooldown.").format(COOLDOWN.toToolTipLightBlue())
+
+
+class DepressionOrb extends ChannelAbilityPreset
+    construct(int newAbility, string hotkey, Pair<int , int> buttonPos)
+        super(newAbility, 1, true)
+        this.setName(TOOLTIP_NORM)
+        this.setHotkeyNormal(hotkey)
+        this.setCooldown(1, COOLDOWN)
+        this.setManaCost(1, MANACOST)
+        this.setIconNormal(Icons.bTNOrbOfCorruption)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.setArtDuration(1, 0)
+        this.setTargetType(1, 2)
+        this.setAnimationNames(ANIMATION_NAME)
+        this.setHeroAbility(false)
+        this.setTargetAttachmentPoint1("")
+        this.setCasterAttachmentPoint1("")
+
+@compiletime function createDepressionOrb()
+    new DepressionOrb(SPELL_DEPRESSION_ORB, "R", new Pair(3, 0))
+
+function onCast()
+    var caster = GetSpellAbilityUnit()
+    var owner = caster.getOwner()
+    var pos = caster.getPos()
+    var angle = pos.angleTo(getSpellTargetPos())
+    var dummyAngle = angle(0)
+    var dummy = createUnit(owner, DUMMY_ID, pos.polarOffset(angle, START_DISTANCE), dummyAngle)
+
+    doPeriodicallyTimed(INTERVAL, DURATION) cb ->
+        dummyAngle += (INTERVAL_TURN_SPEED).fromDeg()
+        pos = pos.polarOffset(angle, INTERVAL_MOVE_SPEED)
+        var dpos = pos.polarOffset(dummyAngle, TURN_DISTANCE)
+        dummy.setXY(dpos)
+
+        //Avoid spamming darts at too high interval before buff gets applied resulting in multiple darts
+        if (cb.getCount() mod 7 == 0)
+            forUnitsInRange(dummy.getPos(), RADIUS) u ->
+                if not u.hasAbility(BUFF_DEPRESSED_ARROW)
+                    new DummyCaster()
+                        ..owner(owner)
+                        ..origin(dpos)
+                        ..castTarget(SPELL_DEPRESS, 1, Orders.acidbomb, u)
+        if cb.isLast()
+            dummy.kill()
+
+init
+    registerSpellEffectEvent(SPELL_DEPRESSION_ORB, () -> onCast())

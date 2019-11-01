@@ -1,0 +1,122 @@
+package JumpSystem
+import ChatCommands
+import GameConfig
+import ClosureForGroups
+import ClosureTimers
+import ID
+import TheOneDefinition
+import InstantDummyCaster
+import OrderIds
+import Assets
+import ErrorHandling
+
+constant let DEFAULT_GRAVITY = 175.
+constant let MAX_TURNSPEED = 3.
+constant let HEIGHT_CHANGE_RATE = 10000.
+constant let CROWFORM_ID = 'Amrf'
+
+init
+    registerCommandAll("jump") (triggerPlayer, args) ->
+        if (gameConfig.isTestModeEnabled() == true)
+            forUnitsSelected(triggerPlayer) u ->
+                if (u.isType(UNIT_TYPE_HERO))
+                    performJump(u, u.getPos().polarOffset(angle(0), 400))
+        else
+            printTimedToPlayer("Requires test mode!", 5., triggerPlayer)
+
+public function performJump(unit u, vec2 targetPos)
+    let distance = u.getPos().distanceTo(targetPos)
+    let groundSpeed = 1.5 * distance
+    new JumpInstance(u, targetPos)
+
+    //Play backflip animation
+    u.pause()
+    u.setAnimation(2)
+    //Skip to the actual backflip portion of the animation
+    u.setTimeScale(8)
+    doAfter(0.05) ->
+        u.setTimeScale(0.85)
+    //Reset animation to stand after jumping
+    doAfter(distance / groundSpeed) ->
+        u.setAnimation("stand")
+        u.unpause()
+        u.setTimeScale(1)
+
+class JumpInstance
+    unit u
+    vec3 velocity
+    vec2 targetPos
+    real gravity = DEFAULT_GRAVITY
+    real originalFlyHeight
+    real height = 0
+    real flightTime = 0.67
+    real originalTurnspeed
+    angle ang
+
+    construct(unit u, vec2 targetPos, real duration, real gravity)
+        this.gravity = gravity
+        this.u = u
+        this.targetPos = targetPos
+        this.flightTime = duration
+        let groundSpeed = u.getPos().distanceTo(targetPos)/duration
+        let velZ = (gravity * this.flightTime) / 2
+        let velXY = u.getPos().angleTo(targetPos).toVec(groundSpeed)
+        this.velocity = velXY.withZ(velZ)
+        this.ang = velXY.getAngle()
+        startJump()
+
+    construct(unit u, vec2 targetPos, real duration)
+        this.u = u
+        this.targetPos = targetPos
+        this.flightTime = duration
+        let groundSpeed = u.getPos().distanceTo(targetPos)/duration
+        let velZ = (gravity * this.flightTime) / 2
+        let velXY = u.getPos().angleTo(targetPos).toVec(groundSpeed)
+        this.velocity = velXY.withZ(velZ)
+        this.ang = velXY.getAngle()
+        startJump()
+
+    construct(unit u, vec2 targetPos)
+        this.u = u
+        this.targetPos = targetPos
+        let groundSpeed = u.getPos().distanceTo(targetPos)/this.flightTime
+        let velZ = (gravity * this.flightTime) / 2
+        let velXY = u.getPos().angleTo(targetPos).toVec(groundSpeed)
+        this.velocity = velXY.withZ(velZ)
+        this.ang = velXY.getAngle()
+        startJump()
+
+    function startJump()
+        //Set pathing off so we can actually fly over thing
+        u.setPathing(false)
+        //Add crowform to enable flying height adjustment
+        u.addAbility(CROWFORM_ID)
+        u.removeAbility(CROWFORM_ID)
+        this.originalTurnspeed = u.getTurnSpeed()
+        u.setTurnSpeed(MAX_TURNSPEED)
+        doPeriodicallyTimed(ANIMATION_PERIOD, this.flightTime) cb ->
+            updateLoop()
+            if cb.isLast()
+                //Destructor finishes the jump
+                destroy this
+
+    function updateLoop()
+        u.setFacing(ang)
+        u.setPos(u.getPos() + this.velocity.toVec2() * ANIMATION_PERIOD)
+        this.height += this.velocity.z
+        this.velocity.z -= this.gravity * ANIMATION_PERIOD
+        u.setFlyHeight(this.height, HEIGHT_CHANGE_RATE)
+
+    function finishJump()
+        u.setPos(targetPos)
+        u.setFacing(ang)
+        u.setTurnSpeed(this.originalTurnspeed)
+        u.setPathing(true)
+        u.setFlyHeight(u.getDefaultFlyHeight(), HEIGHT_CHANGE_RATE)
+        if u.getTypeId() == UNIT_ONE
+            if InstantDummyCaster.castImmediate(u.getOwner(), JUMP_STOMP_ID, 1, OrderIds.creepthunderclap, u.getPos()) == false
+                error("Jump Stomp cast failed")
+            flashEffect(Abilities.warStompCaster, u.getPos())
+
+    ondestroy
+        finishJump()

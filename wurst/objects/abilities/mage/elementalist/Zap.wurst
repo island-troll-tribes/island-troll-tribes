@@ -1,0 +1,203 @@
+package Zap
+
+import RegisterEvents
+import ClosureTimers
+import Orders
+import AbilityObjEditing
+import BuffObjEditing
+import ClosureForGroups
+import TimerUtils
+import HashMap
+import Lodash
+import OverCharge
+import ToolTipsUtils
+import InstantDummyCaster
+import Assets
+import ObjectIds
+import ID
+
+let SLOW_ABILITY_ID   = compiletime(ABIL_ID_GEN.next())
+let BUFF_ZAP_SLOW     = compiletime(ABIL_ID_GEN.next())
+let BUFF_STATIS_TRAP  = 'Bstt' // original Statis trap buff
+
+let CAST_RANGE = 800.
+let COOLDOWN = 3.
+let CHARGE_DURATION = 15.
+let MANACOST = 8
+let MAIN_DAMAGE = 20.
+let EXPLOSION_FORK_AMOUNT = 2
+let OVERCHARGE_FORK_AMOUNT = 3
+let OVERCHARGE_FORK_AOE = 400.
+let CHARGE_BOUNCE_RADIUS = 400.
+let CHARGE_DAMAGE = 35.
+let CHARGE_REMOVE_TIME = 12.
+let CHARGE_AS_SLOW = 0.75
+let CHARGE_MS_SLOW = 0.75
+let CHARGE_SLOW_DURATION_HERO = 2.
+let CHARGE_SLOW_DURATION_NORM = 3.
+let EFFECT_PATH = Abilities.purgeBuffTarget
+let BOUNCE_IMPACT_EFFECT_PATH = Abilities.boltImpact
+let TOOLTIP_NORM = "Zap"
+let TOOLTIP_EXTENDED = ("Zaps the target for {0} damage. Stacks charges on the target and on the third charge, they explode slowing movement and attack "+
+                       "speed by {1} and dealing {2} bonus damage and causing another Zap to be cast on other units nearby. Charge last {3} seconds. "+
+                        "Has {4} seconds cooldown.")
+                       .format(MAIN_DAMAGE.toToolTipRed(), CHARGE_AS_SLOW.toToolTipOrange(), CHARGE_DAMAGE.toToolTipRed(), CHARGE_DURATION.toToolTipLightBlue(),
+                       COOLDOWN.toToolTipLightBlue())
+
+constant ZAP1 = compiletime(createDummyBuffObject("Zap 1", "1 Zap Charge", Icons.bTNStasisTrap, Abilities.farseerMissile, "chest"))
+constant ZAP2 = compiletime(createDummyBuffObject("Zap 2", "2 Zap Charge", Icons.bTNStasisTrap, Abilities.farseerMissile, "chest"))
+
+
+function createBuffs()
+    new BuffDefinition(BUFF_ZAP_SLOW, BUFF_STATIS_TRAP)
+    ..setArtTarget(1, "")
+    ..setTooltipNormal(1, "Zap Slow")
+    ..setTooltipNormalExtended(1, "Slowed by Zap spell")
+
+function createSlowDummySpell()
+    new AbilityDefinitionSlowCreep(SLOW_ABILITY_ID)
+    ..setArtTarget("")
+    ..setArtCaster("")
+    ..setAttackSpeedFactor(1, CHARGE_AS_SLOW)
+    ..setMovementSpeedFactor(1, CHARGE_MS_SLOW)
+    ..setBuffs(1, BUFF_ZAP_SLOW.toRawCode())
+    ..setCastRange(1, 1500)
+    ..setCastingTime(1, 0)
+    ..setCooldown(1, 0)
+    ..setDurationHero(1, CHARGE_SLOW_DURATION_HERO)
+    ..setDurationNormal(1, CHARGE_SLOW_DURATION_NORM)
+    ..setManaCost(1, 0)
+    ..setTargetsAllowed(1, "air,allies,enemies,ground")
+    ..setName("Zap Dummy Slow")
+
+class Zap extends AbilityDefinitionChainLightningcreep
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setDamageReductionperTarget(1, 0)
+        this.setDamageperTarget(1, 0)
+        this.setNumberofTargetsHit(1, 1)
+        this.setAreaofEffect(1, 1)
+        this.setCastRange(1, CAST_RANGE)
+        this.setCastingTime(1, 0)
+        this.setCooldown(1, COOLDOWN)
+        this.setManaCost(1, MANACOST)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+
+@compiletime function createZap()
+    new Zap(SPELL_ZAP, "Q", new Pair(0, 0))
+    createBuffs()
+    createSlowDummySpell()
+
+let timerMap = new HashMap<unit, timer>()
+
+function onCast()
+    var caster = GetSpellAbilityUnit()
+    var target = GetSpellTargetUnit()
+    onCastEffects(caster, target, consumeOvercharge(caster))
+
+function handleOverchargeFork(unit caster, unit target)
+    //Create new object for counting targets hit inside closure
+    var targetsHit = new IntObject(1)
+    forUnitsInRange(target.getPos(), OVERCHARGE_FORK_AOE) u ->
+        if (isValidTarget(u, caster) and not u == target)
+            //Limit hit count
+            if targetsHit.value < OVERCHARGE_FORK_AMOUNT
+                targetsHit.value = targetsHit.value + 1
+                onCastEffects(caster, u, false)
+                var targetFX = AddSpecialEffectTargetUnitBJ("origin", u, BOUNCE_IMPACT_EFFECT_PATH)
+                var lightningFX = addLightning(LIGHTNING_CHAIN_LIGHTNING_SEECONDARY, true, caster.getPos3Real(), u.getPos3Real())
+                doPeriodicallyTimed(0.05, 0.5) ofxUpdater ->
+                    lightningFX.move(true, caster.getPos3Real(), u.getPos3Real())
+                    if ofxUpdater.isLast()
+                        lightningFX.destr()
+                        targetFX.destr()
+
+    //Cleanup after closure
+    destroy targetsHit
+
+function handleBuff(unit caster, unit target)
+    if timerMap.has(target)
+        timerMap.getAndRemove(target).release()
+
+    if target.hasAbility(ZAP2.abilId)
+        //Zap2 -> Charges explosion
+        target.removeAbility(ZAP1.abilId)
+        target.removeAbility(ZAP2.abilId)
+        zapChargeExplosion(caster, target)
+    else if target.hasAbility( ZAP1.abilId )
+        //Zap 1 -> 2
+        target.removeAbility(ZAP1.abilId)
+        target.addAbility(ZAP2.abilId)
+        let t = getTimer()
+        t.doAfter(CHARGE_REMOVE_TIME) ->
+            target.removeAbility(ZAP2.abilId)
+            timerMap.remove(target)
+        timerMap.put(target, t)
+
+    else
+        //0 -> >Zap 1
+        target.addAbility(ZAP1.abilId)
+
+        let t = getTimer()
+        t.doAfter(CHARGE_REMOVE_TIME) ->
+            target.removeAbility(ZAP1.abilId)
+            timerMap.remove(target)
+        timerMap.put(target, t)
+
+function onCastEffects(unit caster, unit target, bool isOvercharged)
+    doAfter(0.08) ->
+        //Overcharged spell acts like forked lightning
+        if (isOvercharged)
+            handleOverchargeFork(caster, target)
+
+        //Main target damage
+        UnitDamageTarget(caster, target, MAIN_DAMAGE, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
+        handleBuff(caster, target)
+
+function zapChargeExplosion(unit caster, unit target)
+    //Main target bonus effects
+    if (target.isAlive() and not target.isInvulnerable())
+        InstantDummyCaster.castTarget(caster.getOwner(), SLOW_ABILITY_ID, 1, Orders.slow, target)
+        UnitDamageTarget(caster, target, CHARGE_DAMAGE, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
+
+    //Charge explosion SFX
+    var efx = AddSpecialEffectTargetUnitBJ("chest", target, EFFECT_PATH)..setScale(0.8)
+    doAfter(3)->
+        efx.destr()
+
+    //Also zap nearby targets in radius
+    zapTargetsInRadius(caster, target, CHARGE_BOUNCE_RADIUS, EXPLOSION_FORK_AMOUNT)
+
+function isValidTarget(unit target, unit caster) returns bool
+    unit u = target
+    return u.isAlive() and u.getOwner().isEnemyOf(caster.getOwner()) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isInvulnerable()
+
+function zapTargetsInRadius(unit caster, unit originalTarget, real radius, int maxTargets)
+    vec3 targetPos = originalTarget.getPos3Real()
+    let targetsHit = new IntObject(0)
+    forUnitsInRange(targetPos.toVec2(), radius) u ->
+        if (isValidTarget(u, caster) and not u == originalTarget and targetsHit.value < maxTargets)
+            targetsHit.value += 1
+            onCastEffects(caster, u, false)
+            var targetFX = AddSpecialEffectTargetUnitBJ("origin", u, BOUNCE_IMPACT_EFFECT_PATH)
+            var lightningFX = addLightning(LIGHTNING_CHAIN_LIGHTNING_SEECONDARY, true, originalTarget.getPos3Real(), u.getPos3Real())
+            doPeriodicallyTimed(0.05, 0.5) fxUpdater ->
+                lightningFX.move(true, originalTarget.getPos3Real(), u.getPos3Real())
+                if fxUpdater.isLast()
+                    lightningFX.destr()
+                    targetFX.destr()
+    destroy targetsHit
+
+class IntObject
+    int value
+
+    construct(int value)
+        this.value = value
+
+init
+    registerSpellEffectEvent(SPELL_ZAP, () -> onCast())

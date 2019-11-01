@@ -1,0 +1,72 @@
+package Indicators
+
+// Standard-library imports:
+import ClosureTimers
+import HashMap
+import LinkedList
+
+// Local imports:
+import ID
+
+public interface Callback
+    function run(unit target)
+
+// A mapping of IDs from indicator units to actual units.
+// Indicator IDs should not be referenced anywhere else.
+let indicators = new IterableMap<int, int>()
+    ..put('d110', UNIT_CRAFT_MASTER)
+    ..put('d111', UNIT_OMINOUS_ALTAR)
+    ..put('d112', UNIT_BONFIRE)
+    ..put('d113', UNIT_TROLL_MERCHANT)
+    ..put('d114', UNIT_ALIGATOR_MAN)
+    ..put('d115', UNIT_ELDER_PANTHER)
+    ..put('d116', UNIT_MAMMOTH)
+
+let callbacks = new IterableMap<int, LinkedList<Callback>>()
+
+public function registerIndicator(int originID, int targetID)
+    indicators.put(originID, targetID)
+
+public function registerCallback(int targetID, Callback cb)
+    // Look up the list of callbacks for the given type.
+    var list = callbacks.get(targetID)
+
+    // Build a default element, as necessary.
+    if list == null
+        // Create a new list.
+        list = new LinkedList<Callback>()
+
+        // Register the list for later user.
+        callbacks.put(targetID, list)
+
+    // Register the callback.
+    list.add(cb)
+
+init
+    // Delay to ensure that all indicators are registered prior to execution.
+    nullTimer() ->
+        // Replace indicators one type at a time.
+        indicators.forEach() (integer originID, integer targetID) ->
+            // Find all matching indicators for the current type.
+            ENUM_GROUP.enumUnitsOfType(originID, null)
+
+            // Replace each indicator with the corresponding unit.
+            for origin in ENUM_GROUP
+                // Extract the relevant information from the indicator.
+                let owner = origin.getOwner()
+                let pos   = origin.getPos()
+                let angle = origin.getFacingAngle()
+
+                // Remove the indicator once it is no longer needed.
+                origin.remove()
+
+                // Create the actual unit.
+                let target = createUnit(owner, targetID, pos, angle)
+
+                // Look up the callbacks for this indicator.
+                let list = callbacks.get(targetID)
+
+                // Execute each callback, as necessary.
+                if list != null
+                    list.forEach() (Callback cb) ->
+                        cb.run(target)

@@ -1,0 +1,42 @@
+package NullDamage
+
+import AbilityObjEditing
+import ID
+import Icons
+import Lodash
+import ToolTipsUtils
+
+let AS_SLOW = 0.25
+let MS_SLOW = 0.10
+let DAMAGE_REDUCED = 0.50
+
+let MANACOST = 20
+let COOLDOWN = 45.
+let HERO_DURATION = 10.
+let NORMAL_DURATION = 30.
+let TOOLTIP_NORM = "Null Damage"
+let TOOLTIP_EXTENDED = "Reduce target damage by {0}, attack speed by {1} and movement speed by {2} for {3}/{4} seconds. Has {5} seconds cooldown. "
+                        .format(DAMAGE_REDUCED.toToolTipRed(), AS_SLOW.toToolTipOrange(), MS_SLOW.toToolTipOrange(),
+                        HERO_DURATION.toToolTipLightBlue(), NORMAL_DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
+
+class NullDamage extends AbilityDefinitionCripplecreep
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setName(TOOLTIP_NORM)
+        this.setHotkeyNormal(hotkey)
+        this.setManaCost(1, MANACOST)
+        this.setCooldown(1, COOLDOWN)
+        this.setDurationHero(1, HERO_DURATION)
+        this.setIconNormal(Icons.bTNCripple)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setDurationNormal(1, NORMAL_DURATION)
+        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.setAttackSpeedReduction(1, AS_SLOW)
+        this.setMovementSpeedReduction(1, MS_SLOW)
+        this.setDamageReduction(1, DAMAGE_REDUCED)
+
+@compiletime function createNullDamage()
+    new NullDamage(SPELL_NULL_DAMAGE, "E", new Pair(1, 1))
+    new NullDamage(SPELL_NULL_DAMAGE_SUB, "W", new Pair(1, 0))

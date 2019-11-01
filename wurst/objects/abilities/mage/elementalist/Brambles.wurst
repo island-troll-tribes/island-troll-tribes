@@ -1,0 +1,262 @@
+package Brambles
+
+import ClosureEvents
+import ClosureTimers
+import OverCharge
+import Assets
+import ClosureForGroups
+import Orders
+import DummyRecycler
+import BuffObjEditing
+import LinkedList
+import MapBounds
+import InstantDummyCaster
+import DummyCaster
+import Lodash
+import ChannelAbilityPreset
+import ToolTipsUtils
+import ID
+
+public let BUFF_ENTANGLE_BRAMBLES_ID = compiletime(BUFF_ID_GEN.next())
+let SLOW_BUFF = 'Bfro'
+let ABILITY_ID = 'ESBR'
+let DUMMY_SLOW_SPELL_ID     = compiletime(ABIL_ID_GEN.next())
+let DUMMY_ENTANGLE_SPELL_ID = compiletime(ABIL_ID_GEN.next())
+let DUMMY_VISION_BONUS_ID   = compiletime(ABIL_ID_GEN.next())
+let DUMMY_SLOW_BUFF         = compiletime(BUFF_ID_GEN.next())
+let COOLDOWN = 32.
+let MANACOST = 16
+let RANGE = 700.
+let DURATION = 6.
+let EFFECT_AOE = 200.
+let MS_SLOW = 0.75
+let AS_SLOW = 0.25
+let SLOW_DURATION = 1.2
+let OVERCHARGE_ENTANGLE_DURATION = 3.
+let DAMAGE_PER_SECOND = 8.
+let ROOT_CREATION_PERIOD = 0.25
+let UPDATE_LOOP_INTERVAL = 0.12500    //Quadrupled the interval to reduce lag
+let DAMAGE_ADJUST = 4.                //Used to adjust damage since interval was changed
+let SPELL_ICON = Icons.bTNEntanglingRoots
+let ROOTS_EFFECT_PATH = Abilities.entanglingRootsTarget
+let TOOLTIP_NORM = "Brambles"
+let TOOLTIP_EXTENDED = ("Causes brambles to surface from underground in a straight line, and units who stand in the brambles receive "+
+                       "{0} damage per second and have their movement speed slowed by {1}, attack speed slowed by {2}. The brambles last {3} seconds. "+
+                       "Has {4} seconds cooldown.").format(DAMAGE_PER_SECOND.toToolTipRed(), MS_SLOW.toToolTipOrange(), AS_SLOW.toToolTipOrange(),
+                       DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
+
+function createDummyVisionAbility()
+    new AbilityDefinitionSightBonus(DUMMY_VISION_BONUS_ID)
+    ..setSightRangeBonus(1, 256)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+
+function createBuff()
+    new BuffDefinition(DUMMY_SLOW_BUFF, SLOW_BUFF)
+    ..setTooltipNormal(1, TOOLTIP_NORM)
+    ..setTooltipNormalExtended(1, "Slowed and damaged by brambles.")
+    ..setIcon(SPELL_ICON)
+    ..setIconNormal(1, SPELL_ICON)
+    ..setArtTarget(1, "")
+    ..setArtSpecial(1, "")
+
+function createEntangleBuff()
+    new BuffDefinition(BUFF_ENTANGLE_BRAMBLES_ID, SLOW_BUFF)
+    ..setTooltipNormal(1, TOOLTIP_NORM)
+    ..setTooltipNormalExtended(1, "Rooted by brambles.")
+    ..setIcon(SPELL_ICON)
+    ..setIconNormal(1, SPELL_ICON)
+    ..setArtTarget(1, ROOTS_EFFECT_PATH)
+    ..setTargetAttachmentPoint0(1, "origin")
+    ..setTargetAttachments(1, 1)
+    ..setArtSpecial(1, "")
+
+function createDummySlow()
+    new AbilityDefinitionSlowCreep(DUMMY_SLOW_SPELL_ID)
+    ..setLevels(1)
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..presetBuffs(lvl -> toRawCode(DUMMY_SLOW_BUFF))
+    ..presetCastingTime(lvl -> 0)
+    ..presetCastRange(lvl -> 9999)
+    ..presetAreaofEffect(lvl -> 0)
+    ..presetManaCost(lvl -> 0)
+    ..presetCooldown(lvl -> 0)
+    ..presetAttackSpeedFactor(lvl -> AS_SLOW)
+    ..presetMovementSpeedFactor(lvl -> MS_SLOW)
+    ..presetDurationHero(lvl -> SLOW_DURATION)
+    ..presetDurationNormal(lvl -> SLOW_DURATION)
+    ..setLevelSkipRequirement(0)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+
+function createDummyEntangle()
+    new AbilityDefinitionEntanglingRootscreep(DUMMY_ENTANGLE_SPELL_ID)
+    ..setMissileArt("")
+    ..setMissileHomingEnabled(true)
+    ..setMissileSpeed(99999)
+    ..setLevels(1)
+    ..setArtCaster("")
+    ..setArtEffect("")
+    ..setArtTarget("")
+    ..setArtSpecial("")
+    ..setTargetAttachmentPoint("")
+    ..setTargetAttachments(0)
+    ..presetBuffs(lvl -> toRawCode(BUFF_ENTANGLE_BRAMBLES_ID))
+    ..presetCastingTime(lvl -> 0)
+    ..presetDamageperSecond(lvl -> 0)
+    ..presetCastRange(lvl -> 9999)
+    ..presetAreaofEffect(lvl -> 0)
+    ..presetManaCost(lvl -> 0)
+    ..presetCooldown(lvl -> 0)
+    ..presetDurationHero(lvl -> OVERCHARGE_ENTANGLE_DURATION)
+    ..presetDurationNormal(lvl -> OVERCHARGE_ENTANGLE_DURATION)
+    ..setLevelSkipRequirement(0)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+
+class Brambles extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 1, true)
+        this.setTargetType(1, 0)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setIconNormal(SPELL_ICON)
+        this.setIconResearch(SPELL_ICON)
+        this.setIconTurnOff(SPELL_ICON)
+        this.setHeroAbility(false)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.setCastingTime(1, 0)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        this.setOptions(1, 1)
+        this.setCooldown(1, COOLDOWN)
+        this.setManaCost(1, MANACOST)
+        this.setTargetType(1, 3)
+        this.setCastRange(1, RANGE)
+
+@compiletime function createBrambles()
+    new Brambles(ABILITY_ID, "S", new Pair(1, 1))
+    createDummyVisionAbility()
+    createBuff()
+    createEntangleBuff()
+    createDummySlow()
+    createDummyEntangle()
+
+class BramblesInstance
+    unit ownerUnit
+    player owner
+    angle ang
+    vec2 startPos
+    bool isOvercharged
+    LinkedList<unit> rootDummies = null
+    LinkedList<unit> snaredTargets = null
+    LinkedList<effect> rootEffects = null
+    CallbackPeriodic effectLoop = null
+
+    construct(unit ownerUnit, vec2 pos, angle ang, bool isOvercharged)
+        this.ownerUnit = ownerUnit
+        this.owner = ownerUnit.getOwner()
+        this.ang = ang
+        this.startPos = pos
+        this.rootDummies = new LinkedList<unit>()
+        this.snaredTargets = new LinkedList<unit>()
+        this.rootEffects = new LinkedList<effect>()
+        this.isOvercharged = isOvercharged
+        startPropagation()
+
+    function startPropagation()
+        int rootCount = (RANGE / (EFFECT_AOE*0.75)).ceil()
+        real rootRange = RANGE / rootCount
+        //Root creation
+        doPeriodicallyCounted(ROOT_CREATION_PERIOD, rootCount) cb ->
+            let rootPos = startPos.polarOffset(this.ang, rootRange * (rootEffects.size()+1))
+            rootDummies.push(createRootDummy(rootPos, angle(0)))
+            rootEffects.push(createRootEffect(rootPos, angle(GetRandomReal(-bj_PI, bj_PI))))
+
+        startEffectLoop()
+        doAfter(DURATION) ->
+            destroy this
+
+    function startEffectLoop()
+        effectLoop = doPeriodically(UPDATE_LOOP_INTERVAL) cb ->
+            //Linkedlist to prevent double damaging units
+            LinkedList<unit> loopDamagedTargets = new LinkedList<unit>()
+
+            for root in rootEffects
+                let rootPos = root.getPos()
+                forUnitsInRange(rootPos, EFFECT_AOE) u ->
+                    if isValidTarget(u)
+                        if not u.hasAbility(DUMMY_SLOW_BUFF)
+                            InstantDummyCaster.castTarget(owner, DUMMY_SLOW_SPELL_ID, 1, Orders.slow, u)
+                        if not snaredTargets.has(u) and isOvercharged
+                            let dummy = new DummyCaster()
+                                ..owner(owner)
+                                ..origin(ownerUnit.getPos())
+                            if dummy.castTarget(DUMMY_ENTANGLE_SPELL_ID, 1, Orders.entanglingroots, u) != null
+                                snaredTargets.push(u)
+                        if not loopDamagedTargets.has(u)
+                            UnitDamageTarget(ownerUnit, u, DAMAGE_PER_SECOND*UPDATE_LOOP_INTERVAL/DAMAGE_ADJUST, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
+                            loopDamagedTargets.push(u)
+
+            destroy loopDamagedTargets
+
+    function createRootEffect(vec2 pos, angle ang) returns effect
+        let fx = addEffect(ROOTS_EFFECT_PATH, pos.withTerrainZ(-70))
+        fx.setRoll(ang)
+        fx.setScale(2.4)
+        fx.setTimeScale(3)
+        doAfter(0.325) ->
+            fx.setTimeScale(0.6)
+        return fx
+
+    function createRootDummy(vec2 pos, angle ang) returns unit
+        let dummy = DummyRecycler.get(pos, ang)
+        dummy.setOwner(owner, false)
+        dummy.addAbility(DUMMY_VISION_BONUS_ID)
+        dummy.setAbilityLevel(DUMMY_VISION_BONUS_ID, 1)
+        return dummy
+
+    function cleanupDummy(unit dummy)
+        dummy.removeAbility(DUMMY_VISION_BONUS_ID)
+        dummy.setOwner(DUMMY_PLAYER, false)
+        dummy.setPos(boundMax)
+        DummyRecycler.recycle(dummy)
+
+    function isValidTarget(unit target) returns bool
+        return target.getOwner().isEnemyOf(owner)
+            and not target.isInvulnerable()
+            and not target.isType(UNIT_TYPE_FLYING)
+            and target.isAlive()
+            and not target.isHidden()
+            and not target.isType(UNIT_TYPE_STRUCTURE)
+
+    ondestroy
+        for dummy in rootDummies
+            cleanupDummy(dummy)
+        destroy rootDummies
+
+        for fx in rootEffects
+            fx.setTimeScale(3)
+            fx.destr()
+        destroy rootEffects
+
+        destroy snaredTargets
+        destroy effectLoop
+
+function onCast()
+    let caster = GetSpellAbilityUnit()
+    let casterPos = caster.getPos()
+    let targetX = GetSpellTargetX()
+    let targetY = GetSpellTargetY()
+    let targetPos = vec2(targetX, targetY)
+    let targetAngle = casterPos.angleTo(targetPos)
+    let isOverCharged = consumeOvercharge(caster)
+    new BramblesInstance(caster, caster.getPos(), targetAngle, isOverCharged)
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())

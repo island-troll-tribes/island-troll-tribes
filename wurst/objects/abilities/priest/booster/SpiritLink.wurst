@@ -1,0 +1,33 @@
+package SpiritLink
+
+import AbilityObjEditing
+import Assets
+import ToolTipsUtils
+import Lodash
+import ID
+import ObjectIds
+
+let BUFF_ID = compiletime(BUFF_ID_GEN.next())
+let COOLDOWN = 30.
+let MANACOST = 20
+let DURATION = 20.
+let AOE = 4000.
+let TOOLTIP_NORM = "Spirit Link"
+
+class SpiritLink extends AbilityDefinitionSpiritLink
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setIconNormal(Icons.bTNSpiritLink)
+        this.setCooldown(1, COOLDOWN)
+        this.setDurationHero(1, DURATION)
+        this.setDurationNormal(1, DURATION)
+        this.setManaCost(1, MANACOST)
+        this.setAreaofEffect(1, AOE)
+        this.setName(TOOLTIP_NORM)
+        this.setHotkeyNormal(hotkey)
+        this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+
+@compiletime function createSpells()
+    new SpiritLink(SPELL_SPIRIT_LINK, "A", new Pair(0, 1))

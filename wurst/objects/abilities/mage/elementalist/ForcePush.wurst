@@ -1,0 +1,111 @@
+package ForcePush
+
+import RegisterEvents
+import ClosureTimers
+import ClosureForGroups
+import AbilityObjEditing
+import BuffObjEditing
+import OverCharge
+import Orders
+import ITTKnockback
+import DummyCaster
+
+constant let ABILITY_ID = 'XFPS'
+constant let DUMMY_STUN_ABILITY_ID = 'XFPD'
+constant let RADIUS = 285.
+constant let CAST_TIME = 0.35
+constant let COOLDOWN = 60.
+constant let MS_SLOW = 0.85
+constant let MANACOST = 35
+constant let SLOW_DURATION = 0.8
+constant let KNOCKBACK_SPEED = 485.
+constant let OVERCHARGE_KNOCKBACK_MULTIPLIER = 1.4
+constant let OVERCHARGE_STUN_DURATION = 1.
+
+constant let SLIDE_EFFECT_PATH = "Objects\\Spawnmodels\\Undead\\ImpaleTargetDust\\ImpaleTargetDust.mdl"
+constant let EFFECT_PATH = "Abilities\\Spells\\NightElf\\BattleRoar\\RoarCaster.mdl"
+constant let TOOLTIP_NORMAL =  "|c00ffcc00E|r - Force Push"
+constant let TOOLTIP_NORMAL_EXT = "Causes a force wave to radiate outwards from you, knocking back nearby enemy units."
+
+@compiletime function createBuffs()
+    new BuffDefinition('XFPB', 'BHtc')
+    ..setIcon("ReplaceableTextures\\CommandButtons\\BTNGolemThunderclap.blp")
+    ..setName(1, "Force Push")
+    ..setTooltipNormal(1, "Force Push")
+    ..setTooltipNormalExtended(1, "Knocked back by force push.")
+    ..setArtTarget(1, "")
+
+@compiletime function createSpell()
+    new AbilityDefinitionThunderClapCreep('XFPS')
+    ..setButtonPositionNormalX(2)
+    ..setButtonPositionNormalY(0)
+    ..setButtonPositionResearchX(2)
+    ..setButtonPositionResearchY(0)
+    ..setArtCaster("")
+    ..setCasterAttachmentPoint("")
+    ..setArtTarget("")
+    ..setIconNormal("ReplaceableTextures\\CommandButtons\\BTNGolemThunderclap.blp")
+    ..setAreaofEffect(1, RADIUS-15)
+    ..setBuffs(1, "XFPB")
+    ..setCastRange(1, 0)
+    ..setCastingTime(1, CAST_TIME)
+    ..setCooldown(1, COOLDOWN)
+    ..setDurationHero(1, SLOW_DURATION+0.05)
+    ..setDurationNormal(1, SLOW_DURATION+0.05)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setManaCost(1, MANACOST)
+    ..setHotkeyNormal("E")
+    ..setName("Force Push")
+    ..setTooltipNormal(1, TOOLTIP_NORMAL)
+    ..setTooltipNormalExtended(1, TOOLTIP_NORMAL_EXT)
+    ..setMovementSpeedReduction(1, MS_SLOW)
+    ..setAttackSpeedReduction(1, 0)
+    ..setDamage(1, 0)
+
+@compiletime function createStunDummySpell()
+    new AbilityDefinitionFireBolt(DUMMY_STUN_ABILITY_ID)
+    ..setAnimationNames("")
+    ..setMissileSpeed(80000)
+    ..setMissileArt("")
+    ..setMissileHomingEnabled(true)
+    ..setCastingTime(1, 0)
+    ..setBuffs(1, "BSTN")
+    ..setCastRange(1, 9999)
+    ..setCooldown(1, 0)
+    ..setDamage(1, 0)
+    ..setDurationHero(1, OVERCHARGE_STUN_DURATION)
+    ..setDurationNormal(1, OVERCHARGE_STUN_DURATION)
+    ..setHeroAbility(false)
+    ..setItemAbility(false)
+    ..setLevels(1)
+    ..setManaCost(1, 0)
+    ..setRace(Race.Creeps)
+    ..setName("Forcepush overcharged Stun Dummy Spell")
+
+function onCast()
+    var caster = GetSpellAbilityUnit()
+    var owner = caster.getOwner()
+    var pos = caster.getPos()
+    bool isOvercharged = consumeOvercharge(caster)
+
+    //SFX
+    var efx = addEffect(EFFECT_PATH, pos)
+    efx..setTimeScale(3)..setScale(0.75)
+    doAfter(3, () -> efx.destr())
+
+    //Add to list all units effected
+    forUnitsInRange(pos, RADIUS) u ->
+        if u.getOwner().isEnemyOf(owner) and not u.isType(UNIT_TYPE_FLYING) and u.isAlive()
+            if not isOvercharged
+                ITTKnockback.add(u, KNOCKBACK_SPEED, pos.angleTo(u.getPos()), angle( bj_PI / 2))
+            else if isOvercharged
+                ITTKnockback.add(u, KNOCKBACK_SPEED * OVERCHARGE_KNOCKBACK_MULTIPLIER, pos.angleTo(u.getPos()), angle( bj_PI / 2))
+                new DummyCaster()
+                    ..owner(owner)
+                    ..origin(caster.getPos())
+                    ..castTarget(DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, u)
+
+init
+    registerSpellEffectEvent(ABILITY_ID, () -> onCast())

@@ -1,0 +1,56 @@
+package PetSleep
+
+// Standard library imports:
+import ClosureEvents
+import InstantDummyCaster
+import ObjEditingNatives
+import OrderIds
+import SimError
+
+// Local imports:
+import ID
+import Pets
+
+// The ID for the ability used to put a pet to sleep.
+public let SLEEP_ID = compiletime(ABIL_ID_GEN.next())
+
+// The amount the pet is healed for when sleeping.
+let HEALING_AMOUNT = 60.
+
+@compiletime function createSleepSpell()
+    createObjectDefinition("w3a", SLEEP_ID, 'AUsl')
+        ..setLvlDataString("aart", 0, 0, "ReplaceableTextures\\PassiveButtons\\PASBTNElunesBlessing.blp")
+        ..setLvlDataInt("abpx", 0, 0, 3)
+        ..setLvlDataUnreal("acdn", 1, 0, 30.0)
+        ..setLvlDataInt("amcs", 1, 0, 0)
+        ..setLvlDataUnreal("Usl1", 1, 1, 1.0)
+        ..setLvlDataUnreal("adur", 1, 0, 10.0)
+        ..setLvlDataString("ansf", 0, 0, "(pet, self)")
+        ..setLvlDataUnreal("ahdu", 1, 0, 10.0)
+        ..setLvlDataString("ahky", 0, 0, "")
+        ..setLvlDataInt("alev", 0, 0, 1)
+        ..setLvlDataInt("arlv", 0, 0, 2)
+        ..setLvlDataUnreal("aran", 1, 0, 99999.0)
+        ..setLvlDataString("atar", 1, 0, "ground,nonhero")
+
+init
+    EventListener.onCast(SPELL_PET_SLEEP) (unit caster) ->
+        // Lookup the pet for the caster.
+        let pet = caster.getOwner().getPet()
+
+        // Verify that the player has a pet, which should be guaranteed.
+        if pet == null
+            simError(caster.getOwner(), "You do not have pet.")
+        // Perform the actions associated with a sleeping pet.
+        else
+            // Put the pet to sleep.
+            InstantDummyCaster.castTarget(
+                pet.getOwner(),
+                SLEEP_ID,
+                1,
+                OrderIds.sleep,
+                pet
+            )
+
+            // Heal the pet.
+            pet.addHP(HEALING_AMOUNT)

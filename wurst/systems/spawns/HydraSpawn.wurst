@@ -10,14 +10,20 @@ import LinkedList
 import ClosuresForItems
 import GameConfig
 import ID
+import UnitExtensions
 
 constant HYDRA_ALTAR_SFX = Units.wispExplode
 
 function maybeSummonHydra()
     let altar = GetSellingUnit()
+    let target = GetSoldItem()
 
-    if altar.getTypeId() != UNIT_OMINOUS_ALTAR
+    if target.getTypeId() != ITEM_HYDRA_HINT
         return
+
+    // Undo the transaction, which is only used to fire this event.
+    target.remove()
+    altar.addItemToStock(ITEM_HYDRA_HINT, 1, 1)
 
     let mushroom = altar.itemInSlot(1)
     if mushroom.getTypeId() != ITEM_MUSHROOM

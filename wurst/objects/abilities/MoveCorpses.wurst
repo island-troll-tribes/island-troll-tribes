@@ -4,6 +4,7 @@ package MoveCorpses
 import Assets
 import ChannelAbilityPreset
 import ClosureEvents
+import ClosureFrames
 import ClosureTimers
 import LinkedList
 import HashMap
@@ -269,6 +270,8 @@ function onOrder(unit target, int orderID)
         // Switch the abilities, as requested.
         // switchAbilities(target)
 
+// let BUTTON = getOriginFrame(ORIGIN_FRAME_COMMAND_BUTTON, 8)
+
 init
     // Pad the lists to ease lookup.
     GRAB_IDS.push(0)
@@ -282,3 +285,45 @@ init
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_ORDER) ->
         onOrder(EventData.getOrderedUnit(), EventData.getIssuedOrderId())
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SELECTED) ->
+        for i = 0 to 11
+            print(i.toString() + ": " + getOriginFrame(ORIGIN_FRAME_COMMAND_BUTTON, i).getName())
+            getOriginFrame(ORIGIN_FRAME_COMMAND_BUTTON, i)
+                ..onClick(() -> print("The button was clicked: " + i.toString()))
+                ..onMouseEnter(() -> print("The mouse is on the button: " + i.toString()))
+                ..onMouseLeave(() -> print("The mouse left the button: " + i.toString()))
+/*
+
+    registerPlayerEvent(EVENT_PLAYER_MOUSE_DOWN) ->
+        print("mouse down " + GetTriggerPlayer().getName(), 5)
+        print(R2S(BlzGetTriggerPlayerMouseX()), 5)
+        print(R2S(BlzGetTriggerPlayerMouseY()), 5)
+        if BlzGetTriggerPlayerMouseButton() == MOUSE_BUTTON_TYPE_LEFT
+            print("LEFT", 5)
+        if BlzGetTriggerPlayerMouseButton() == MOUSE_BUTTON_TYPE_RIGHT
+            print("RIGHT", 5)
+        if BlzGetTriggerPlayerMouseButton() == MOUSE_BUTTON_TYPE_MIDDLE
+            print("MIDDLE", 5)
+
+    registerPlayerEvent(EVENT_PLAYER_MOUSE_UP) ->
+        print("mouse up " + GetTriggerPlayer().getName(), 5)
+        print(R2S(BlzGetTriggerPlayerMouseX()), 5)
+        print(R2S(BlzGetTriggerPlayerMouseY()), 5)
+        if BlzGetTriggerPlayerMouseButton() == MOUSE_BUTTON_TYPE_LEFT
+            print("LEFT", 5)
+        if BlzGetTriggerPlayerMouseButton() == MOUSE_BUTTON_TYPE_RIGHT
+            print("RIGHT", 5)
+        if BlzGetTriggerPlayerMouseButton() == MOUSE_BUTTON_TYPE_MIDDLE
+            print("MIDDLE", 5)
+
+    registerPlayerEvent(EVENT_PLAYER_MOUSE_UP) ->
+        print("mouse move " + GetTriggerPlayer().getName(), 5)
+        print(R2S(BlzGetTriggerPlayerMouseX()), 5)
+        print(R2S(BlzGetTriggerPlayerMouseY()), 5)
+        if BlzGetTriggerPlayerMouseButton() == MOUSE_BUTTON_TYPE_LEFT
+            print("LEFT", 5)
+        if BlzGetTriggerPlayerMouseButton() == MOUSE_BUTTON_TYPE_RIGHT
+            print("RIGHT", 5)
+        if BlzGetTriggerPlayerMouseButton() == MOUSE_BUTTON_TYPE_MIDDLE
+            print("MIDDLE", 5) */

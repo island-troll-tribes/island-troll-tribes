@@ -1,20 +1,29 @@
 package HydraSpawn
-import AncientHydra
-import ClosuresForItems
-import ID
-import ClosureEvents
-import LinkedList
-import GameConfig
-import ClosureForGroups
+
+// Standard library imports:
 import Assets
+import ClosureEvents
+import ClosureForGroups
+import LinkedList
+
+// Local imports:
+import ClosuresForItems
+import GameConfig
+import ID
+import UnitExtensions
 
 constant HYDRA_ALTAR_SFX = Units.wispExplode
 
 function maybeSummonHydra()
     let altar = GetSellingUnit()
+    let target = GetSoldItem()
 
-    if altar.getTypeId() != UNIT_OMINOUS_ALTAR
+    if target.getTypeId() != ITEM_HYDRA_HINT
         return
+
+    // Undo the transaction, which is only used to fire this event.
+    target.remove()
+    altar.addItemToStock(ITEM_HYDRA_HINT, 1, 1)
 
     let mushroom = altar.itemInSlot(1)
     if mushroom.getTypeId() != ITEM_MUSHROOM
@@ -80,7 +89,20 @@ function maybeSummonHydra()
     herb.remove()
 
     flashEffect(HYDRA_ALTAR_SFX, altar, "overhead")
-    new AncientHydra(spawn.getCenter())
+
+    // Look up the spawn position.
+    let pos = spawn.getCenter()
+
+    // Compute the angle between the spawn and the altar.
+    let facing = pos.angleTo(altar.getPos())
+
+    // Spawn the hydra.
+    createUnit(
+        players[PLAYER_NEUTRAL_AGGRESSIVE],
+        UNIT_ANCIENT_HYDRA,
+        spawn.getCenter(),
+        facing
+    )
 
 
 init

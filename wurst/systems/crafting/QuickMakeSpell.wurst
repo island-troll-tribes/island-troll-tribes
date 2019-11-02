@@ -6,11 +6,10 @@ import LinkedList
 
 // Local imports:
 import AbilityObjectCreationUtils
-import ColorUtils
 import ID
 import QuickMakeToolTips
-import StringExtensions
 import ToolTipsUtils
+import Transformation
 
 constant COOLDOWN = 1.
 
@@ -298,6 +297,11 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
         new QuickMakeSpell("Jungle Bear Skin Gloves" , TRANSMUTE_TOOLTIP+JUNGLE_BEAR_SKIN_GLOVES_RECIPE , "BearHideGloves" , SPELL_QM_JUNGLE_BEAR_SKIN_GLOVES , 1, 2, "X", QM_TOOLIP, "defend"),
         new QuickMakeSpell("Jungle Bear Skin Coat"   , TRANSMUTE_TOOLTIP+JUNGLE_BEAR_SKIN_COAT_RECIPE   , "BearHideCoat"   , SPELL_QM_JUNGLE_BEAR_SKIN_COAT   , 2, 2, "C", QM_TOOLIP, "divineshield"),
 
+        // Hydra
+        new QuickMakeSpell("Hydra Scale Boots"          , TRANSMUTE_TOOLTIP+HYDRA_SCALE_BOOTS_RECIPE          , "HydraWarStomp"   , SPELL_QM_HYDRA_SCALE_BOOTS          , 0, 0, "Q", QM_TOOLIP, "berserk"),
+        new QuickMakeSpell("Hydra Scale Gloves"         , TRANSMUTE_TOOLTIP+HYDRA_SCALE_GLOVES_RECIPE         , "ImprovedStrengthOfTheWild"  , SPELL_QM_HYDRA_SCALE_GLOVES         , 1, 0, "W", QM_TOOLIP, "burrow"),
+        new QuickMakeSpell("Hydra Scale Coat"           , TRANSMUTE_TOOLTIP+HYDRA_SCALE_COAT_RECIPE           , "NagaArmorUp3"    , SPELL_QM_HYDRA_SCALE_COAT           , 2, 0, "E", QM_TOOLIP, "cannibalize"),
+
         //Forge
 
 
@@ -372,3 +376,11 @@ function getQuickMakeSpellBookSpells() returns LinkedList<QuickMakeSpellBook>
 function buildSpells()
     getQuickMakeSpells().forEach(spell -> spell.buildSpell())
     getQuickMakeSpellBookSpells().forEach(spell -> spell.buildSpellBook())
+
+init
+    registerAfterEffect() (unit target, int unitID) ->
+        // Refresh the spellbook to fix access issues.
+        // TODO: Figure out why only this spellbook breaks.
+        if target.hasAbility(SPELL_BUILDING_CRAFT_SPELLBOOK_ID)
+            target.removeAbility(SPELL_BUILDING_CRAFT_SPELLBOOK_ID)
+            target.addAbility(SPELL_BUILDING_CRAFT_SPELLBOOK_ID)

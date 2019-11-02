@@ -1,0 +1,66 @@
+package DiscoDuck
+
+// Standard library imports:
+import Assets
+import LinkedList
+
+// Local imports:
+import Hostile
+import ID
+import ItemPoolExtensions
+import SoundUtils
+import StringExtensions
+
+public class DiscoDuck extends Hostile
+    private static let unitTypeId = UNIT_DISCO_DUCK
+    private static let pinions = CreateItemPool()
+    private static thistype instance = null
+
+    static function initialize()
+        register(unitTypeId, duck -> new DiscoDuck(duck))
+
+        pinions
+            ..addItemType(ITEM_DD_PINION_FIRE, 100)
+            ..addItemType(ITEM_DD_PINION_SHADOW, 100)
+            ..addItemType(ITEM_DD_PINION_PAIN, 100)
+
+    static function getInstance() returns thistype
+        return instance
+
+    construct(unit whichUnit)
+        super(whichUnit)
+
+        playMammothHorn()
+        printTimed("The disco duck has been summoned!".color("red".toColor()), 5)
+        flashEffect(Abilities.massTeleportCaster, getUnit(), "overhead")
+
+        if instance == null
+            instance = this
+
+    override function postCreate()
+        super.postCreate()
+
+    override function getDrops() returns LinkedList<int>
+        let drops = super.getDrops()
+                ..add(ITEM_BONE)
+                ..add(ITEM_BONE)
+                ..add(ITEM_STEEL_INGOT)
+                ..add(ITEM_STEEL_INGOT)
+                ..add(ITEM_MEDALLION_COURAGE)
+        return drops
+
+    override function getNumCorpses() returns int
+        return 13
+
+    override function onDeath()
+        let pos = getPos()
+        let pinion = pinions.placeRandomItem(pos)
+        pinions.removeItemType(pinion.getTypeId())
+        super.onDeath()
+
+    override function postDeath()
+        getUnit().remove()
+
+
+init
+    DiscoDuck.initialize()

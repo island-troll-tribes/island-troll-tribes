@@ -1,0 +1,124 @@
+package TrollBuildings
+
+// Standard library imports:
+import Assets
+import HashMap
+import LinkedList
+import UnitObjEditing
+
+// Local imports:
+import ID
+import Indicators
+import LocalAssets
+import ObjEditingUtils
+
+// The list of abilities that all buildings have.
+let abilities = asList(
+    ABILITY_SHOP_SHARING,
+    LocalAbilityIds.inventoryBuilding,
+    SPELL_DROP_ITEMS
+)
+
+// The indicators used for the publicly visible recipes.
+let indicators = new IterableMap<int, int>()
+    ..put('d117', UNIT_FORGE)
+    ..put('d118', UNIT_ARMORY)
+    ..put('d119', UNIT_WORKSHOP)
+    ..put('d120', UNIT_TANNERY)
+    ..put('d121', UNIT_POT)
+    ..put('d122', UNIT_WITCH_DOCTORS_HUT)
+
+// Add the given abilities to the standard list, rather than overwriting.
+function BuildingDefinition.addAbilities(LinkedList<int> additional)
+    this.setNormalAbilities(commaList(abilities, additional))
+
+// Default to the base ID most commonly used.
+function createBuilding(int newId) returns BuildingDefinition
+    return createBuilding(newId, UnitIds.farm)
+
+// Create a definition with common defaults.
+function createBuilding(int newId, int oldId) returns BuildingDefinition
+    return new BuildingDefinition(newId, oldId)
+        ..setNormalAbilities(commaList(abilities))
+        ..setBuildTime(15)
+        ..setAttacksEnabled(0)
+        ..setHitPointsMaximumBase(250)
+        ..setSightRadiusDay(1600)
+        ..setSightRadiusNight(1000)
+        ..setFoodProduced(0)
+        ..setManaMaximum(0)
+        ..setHideMinimapDisplay(true)
+        ..setPathingMap(PathingTextures.simpleSolid4x4)
+        ..setGroundTexture("")
+        ..setDefenseBase(5)
+        ..setSelectionScale(2.5)
+        ..setCollisionSize(144)
+
+@compiletime function createMixingPot() returns BuildingDefinition
+    return createBuilding(UNIT_POT)
+        ..setIconGameInterface(Icons.bTNSacrificialPit)
+        ..setModelFile(LocalBuildings.mixingPot)
+        ..setScalingValue(2)
+        ..setUnitSoundSet(Soundsets.templeofTides)
+        ..setTooltipBasic("You can mix herbs inside this pot.")
+        ..setTooltipExtended("This pot is so big it is able to hold large amounts of boiling water. Inside, herbs can be mixed into potions.")
+        ..setName("Mixing Pot")
+
+@compiletime function createTannery() returns BuildingDefinition
+    return createBuilding(UNIT_TANNERY)
+        ..setIconGameInterface(Icons.bTNPigFarm)
+        ..setModelFile(Buildings.pigFarm)
+        ..setScalingValue(.9)
+        ..setUnitSoundSet(Soundsets.pigFarm)
+        ..setTooltipBasic("You can turn hides into armor here.")
+        ..setTooltipExtended("This pot is so big it is able to hold large amounts of boiling water. Inside, herbs can be mixed into potions.")
+        ..setName("Tannery")
+
+@compiletime function createArmory() returns BuildingDefinition
+    return createBuilding(UNIT_ARMORY)
+        ..setIconGameInterface(LocalIcons.bTNArmory)
+        ..setModelFile(LocalBuildings.armory)
+        ..setScalingValue(.75)
+        ..setUnitSoundSet(Soundsets.warMill)
+        ..setTooltipBasic("You can enchant advanced armor.")
+        ..setTooltipExtended("You can enchant advanced armor here.")
+        ..setName("Armory")
+
+@compiletime function createForge() returns BuildingDefinition
+    return createBuilding(UNIT_FORGE)
+        ..setIconGameInterface(LocalIcons.bTNForge)
+        ..setModelFile(LocalBuildings.forge)
+        ..setScalingValue(.75)
+        ..setUnitSoundSet(Soundsets.warMill)
+        ..setTooltipBasic("You can refine metal and forge weapons here.")
+        ..setTooltipExtended("You can refine metal and forge weapons here.")
+        ..setName("Armory")
+
+@compiletime function createWitchDoctorsHut() returns BuildingDefinition
+    return createBuilding(UNIT_WITCH_DOCTORS_HUT)
+        ..setIconGameInterface(Icons.bTNVoodooLounge)
+        ..setModelFile(Buildings.voodooLounge1)
+        ..setScalingValue(.8)
+        ..setUnitSoundSet(Soundsets.voodooLounge)
+        ..setTooltipBasic("You can create a variety of magical items here.")
+        ..setTooltipExtended("You can create a variety of magical items here.")
+        ..setName("Witch Doctor's Hut")
+
+@compiletime function createWorkshop() returns BuildingDefinition
+    return createBuilding(UNIT_WORKSHOP)
+        ..setIconGameInterface(Icons.bTNTrollBurrow)
+        ..setModelFile(Buildings.trollBurrow)
+        ..setScalingValue(1)
+        ..setUnitSoundSet(Soundsets.voodooLounge)
+        ..setTooltipBasic("You can create a variety of magical items here.")
+        ..setTooltipExtended("You can create a variety of magical items here.")
+        ..setName("Witch Doctor's Hut")
+
+init
+    // Register the indicators to create neutral units on the island.
+    indicators.forEach() (integer originID, integer targetID) ->
+        registerIndicator(originID, targetID)
+
+        // Allow the players to use the spellbooks despite not being allied.
+        registerCallback(targetID) (unit target) ->
+            target.addAbility(AbilityIds.neutralBuildinganyunit)

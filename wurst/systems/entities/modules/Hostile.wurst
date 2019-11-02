@@ -1,0 +1,65 @@
+package Hostile
+
+// Standard library imports:
+import ClosureTimers
+import EventHelper
+import LinkedList
+
+// Local imports:
+import DummyCorpse
+import Sniff
+import UnitEntity
+
+import initlater GreenFish
+import initlater Fish
+import initlater Hawk
+
+public abstract class Hostile extends UnitEntity
+    construct(unit whichUnit)
+        super(whichUnit)
+
+    function getDrops() returns LinkedList<int>
+        return new LinkedList<int>()
+
+    function getNumCorpses() returns int
+        return 1
+
+    override function postCreate()
+        super.postCreate()
+
+    override function onDeath()
+        let pos = getPos()
+        let numCorpses = (getNumCorpses() * udg_FOOD_FOR_KILL_PROPORTION).round()
+        let drops = getDrops()
+        let numDrops = drops.size()
+        let killer = EventData.getKillingUnit()
+
+        if numDrops != 0
+            let dropsIter = drops.iterator()
+            doPeriodicallyCounted(ANIMATION_PERIOD, numDrops) cb ->
+                // Create the drop.
+                let drop = createItem(dropsIter.next(), pos)
+
+                // Register the drop for sniffing.
+                if killer != null
+                    onMove(killer, drop)
+
+                // Deallocate resources when finished
+                if cb.isLast()
+                    dropsIter.close()
+                    destroy drops
+        else
+            destroy drops
+
+        // Stagger spawns to avoid computational lag.
+        doPeriodicallyCounted(ANIMATION_PERIOD, numCorpses) cb ->
+            createCorpse(pos)
+
+        if this instanceof Hawk
+            or this instanceof Fish
+            or this instanceof GreenFish
+            udg_FISH_CURRENT -= 1
+        else
+            udg_ANIMAL_CURRENT -= 1
+
+        super.onDeath()

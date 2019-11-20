@@ -9,46 +9,46 @@ import HealingSystem
 import GroupUtils
 import UnitEntity
 
-public function checkInvulnerability(region miniBossRegion, unit miniBoss) returns bool
+public function checkInvulnerability(region bossRegion, unit boss) returns bool
     // The Boss is always invulnerable when outside its arena.
-    if not miniBoss.isInRegion(miniBossRegion)
+    if not boss.isInRegion(bossRegion)
         return true
 
     // The Boss is invulnerable unless there is a troll present in its arena.
     for troll in getTrolls()
         // Disable invulnerability if both conditions are met.
-        if troll.isAlive() and troll.isInRegion(miniBossRegion)
+        if troll.isAlive() and troll.isInRegion(bossRegion)
             return false
 
     // Enable invulnerability if no matches were found.
     return true
 
-public function toggleInvulnerability(region miniBossRegion, unit miniBoss)
+public function toggleInvulnerability(region bossRegion, unit boss)
     // Exit if The Boss is not currently alive.
-    if not miniBoss.isAlive()
+    if not boss.isAlive()
         return
 
     // Toggle the invulnerability.
-    if checkInvulnerability(miniBossRegion, miniBoss)
-        miniBoss.addAbility(AbilityIds.invulnerable)
-        toggleHealing(miniBoss)
+    if checkInvulnerability(bossRegion, boss)
+        boss.addAbility(AbilityIds.invulnerable)
+        toggleHealing(boss)
     else
-        miniBoss.removeAbility(AbilityIds.invulnerable)
+        boss.removeAbility(AbilityIds.invulnerable)
 
 // TODO: rework this into an ability
-function toggleHealing(unit miniBoss)
+function toggleHealing(unit boss)
     let hpRegen = 4.
     let regenPeriod = 1.
     
     // Heal the boss 4 hp every 1 second
     doPeriodically(regenPeriod) (CallbackPeriodic cb) ->
         // Use healing system
-        new HealingInstance(miniBoss, hpRegen, HealingType.OTHER)
+        new HealingInstance(boss, hpRegen, HealingType.OTHER)
         // If boss is not invulnerable or is max health
-        if not miniBoss.isInvulnerable() or miniBoss.getMissingHP() == 0
+        if not boss.isInvulnerable() or boss.getMissingHP() == 0
             // Stop healing
             destroy cb
 
-public function checkEntity(UnitEntity entity, region miniBossRegion, unit miniBoss)
-    if entity != null
-        toggleInvulnerability(miniBossRegion, miniBoss)
+public function checkEntity(UnitEntity bossEntity, region bossRegion, unit boss)
+    if bossEntity != null
+        toggleInvulnerability(bossRegion, boss)

@@ -1,0 +1,46 @@
+package BossUtilities
+
+import Assets
+import GroupUtils
+import ClosureTimers
+import HealingSystem
+
+public function checkInvulnerability(unit mini_Boss, region mini_Boss_Region) returns bool
+    // The Boss is always invulnerable when outside its arena.
+    if not mini_Boss.isInRegion(mini_Boss_Region)
+        return true
+
+    // The Boss is invulnerable unless there is a troll present in its arena.
+    for troll in getTrolls()
+        // Disable invulnerability if both conditions are met.
+        if troll.isAlive() and troll.isInRegion(mini_Boss_Region)
+            return false
+
+    // Enable invulnerability if no matches were found.
+    return true
+
+public function toggleInvulnerability(region mini_Boss_Region, unit mini_Boss)
+            // Exit if The Boss is not currently alive.
+    if not mini_Boss.isAlive()
+        return
+
+    // Toggle the invulnerability.
+    if checkInvulnerability(mini_Boss, mini_Boss_Region)
+        mini_Boss.addAbility(AbilityIds.invulnerable)
+        toggleHealing(mini_Boss)
+    else
+        mini_Boss.removeAbility(AbilityIds.invulnerable)
+
+//TODO: rework this into an ability
+function toggleHealing(unit mini_Boss)
+    let hp_Regen = 4.
+    let regen_Period = 1.
+    
+    //Heal the boss 4 hp every 1 second
+    doPeriodically(regen_Period) (CallbackPeriodic cb) ->
+        //Use healing system
+        new HealingInstance(mini_Boss, hp_Regen, HealingType.OTHER)
+        //If boss is not invulnerable or is max health
+        if not mini_Boss.isInvulnerable() or mini_Boss.getMissingHP() == 0
+            //stop healing
+            destroy cb

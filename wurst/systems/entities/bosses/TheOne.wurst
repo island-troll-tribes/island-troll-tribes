@@ -1,7 +1,6 @@
 package TheOne
 
 // Standard library imports:
-import Assets
 import ClosureTimers
 import RegisterEvents
 import LinkedList
@@ -10,8 +9,8 @@ import LinkedList
 import ID
 import JumpSystem
 import BonyAnimal
-import GroupUtils
 import UnitEntity
+import BossUtilities
 
 public let THE_ONE_REGION = CreateRegion()
     ..addRect(gg_rct_TheOne)
@@ -82,40 +81,19 @@ public function spawnTheOne()
 public function canSpawnTheOne() returns boolean
     return theOne == null or not theOne.getUnit().isAlive()
 
-function checkInvulnerability() returns bool
-    // The One is always invulnerable when outside its arena.
-    if not theOne.getUnit().isInRegion(THE_ONE_REGION)
-        return true
-
-    // The One is invulnerable unless there is a troll present in its arena.
-    for troll in getTrolls()
-        // Disable invulnerability if both conditions are met.
-        if troll.isAlive() and troll.isInRegion(THE_ONE_REGION)
-            return false
-
-    // Enable invulnerability if no matches were found.
-    return true
-
-function toggleInvulnerability()
-    // Exit if The One is not currently alive.
-    if theOne == null or not theOne.getUnit().isAlive()
-        return
-
-    // Toggle the invulnerability.
-    if checkInvulnerability()
-        theOne.getUnit().addAbility(AbilityIds.invulnerable)
-    else
-        theOne.getUnit().removeAbility(AbilityIds.invulnerable)
-
 init
     TheOne.initialize()
     CreateTrigger()
         ..registerEnterRegion(THE_ONE_REGION, null)
-        ..addAction(function toggleInvulnerability)
+        ..addAction()->
+        if theOne != null
+            toggleInvulnerability(THE_ONE_REGION, theOne.getUnit())
     CreateTrigger()
         ..registerLeaveRegion(THE_ONE_REGION, null)
-        ..addAction(function toggleInvulnerability)
+        ..addAction()->
+        if theOne != null
+            toggleInvulnerability(THE_ONE_REGION, theOne.getUnit())
     registerPlayerUnitEvent(
-        EVENT_PLAYER_UNIT_DEATH,
-        function toggleInvulnerability
-    )
+        EVENT_PLAYER_UNIT_DEATH)->
+        if theOne != null
+            toggleInvulnerability(THE_ONE_REGION, theOne.getUnit())

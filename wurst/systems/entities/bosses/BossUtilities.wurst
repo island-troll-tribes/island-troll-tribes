@@ -10,11 +10,11 @@ import GroupUtils
 import UnitEntity
 
 public function checkInvulnerability(region bossRegion, unit boss) returns bool
-    // The Boss is always invulnerable when outside its arena.
+    // the boss is always invulnerable when outside its arena.
     if not boss.isInRegion(bossRegion)
         return true
 
-    // The Boss is invulnerable unless there is a troll present in its arena.
+    // the boss is invulnerable unless there is a troll present in its arena.
     for troll in getTrolls()
         // Disable invulnerability if both conditions are met.
         if troll.isAlive() and troll.isInRegion(bossRegion)
@@ -24,8 +24,8 @@ public function checkInvulnerability(region bossRegion, unit boss) returns bool
     return true
 
 public function toggleInvulnerability(region bossRegion, unit boss)
-    // Exit if The Boss is not currently alive.
-    if not boss.isAlive()
+    // Exit if the boss is not currently alive.
+    if not boss.isAlive() or boss == null
         return
 
     // Toggle the invulnerability.
@@ -49,6 +49,6 @@ function toggleHealing(unit boss)
             // Stop healing
             destroy cb
 
-public function checkEntity(UnitEntity bossEntity, region bossRegion, unit boss)
-    if bossEntity != null
-        toggleInvulnerability(bossRegion, boss)
+public function toggleInvulnerability(UnitEntity boss, region bossRegion)
+    if boss != null
+        toggleInvulnerability(bossRegion, boss.getUnit())

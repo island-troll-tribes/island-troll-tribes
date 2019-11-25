@@ -32,7 +32,7 @@ library CheatPack initializer onInit requires Game, GameConfig
         real r2r
     endglobals
 
-    function WaitForString takes player p2p,string s2s,boolean b2b returns nothing
+    function waitForString takes player p2p,string s2s,boolean b2b returns nothing
         local trigger t2t=CreateTrigger()
         if b2b then
             call TriggerRegisterPlayerChatEvent(t2t,p2p,"-clearkeys",true)
@@ -47,36 +47,36 @@ library CheatPack initializer onInit requires Game, GameConfig
         set s2s=""
     endfunction
 
-    function ResetCD takes nothing returns nothing
+    function resetCD takes nothing returns nothing
         call UnitResetCooldown(GetTriggerUnit())
     endfunction
 
-    function ResetMP takes nothing returns nothing
+    function resetMP takes nothing returns nothing
         local unit u2u=GetTriggerUnit()
         call SetUnitState(u2u,UNIT_STATE_MANA,GetUnitState(u2u, UNIT_STATE_MAX_MANA))
     endfunction
 
-    function CDandMana takes player p2p,boolean b2b,string s2s returns nothing
+    function cdAndMana takes player p2p,boolean b2b,string s2s returns nothing
         local trigger t2t=CreateTrigger()
         local triggeraction ta2t
         if b2b then
-            set ta2t=TriggerAddAction(t2t,function ResetMP)
+            set ta2t=TriggerAddAction(t2t,function resetMP)
         else
-            set ta2t=TriggerAddAction(t2t,function ResetCD)
+            set ta2t=TriggerAddAction(t2t,function resetCD)
         endif
         call TriggerRegisterPlayerUnitEvent(t2t,p2p,EVENT_PLAYER_UNIT_SPELL_CAST,null)
         call TriggerRegisterPlayerUnitEvent(t2t,p2p,EVENT_PLAYER_UNIT_SPELL_FINISH,null)
         call TriggerRegisterPlayerUnitEvent(t2t,p2p,EVENT_PLAYER_UNIT_SPELL_CHANNEL,null)
         call TriggerRegisterPlayerUnitEvent(t2t,p2p,EVENT_PLAYER_UNIT_SPELL_ENDCAST,null)
         call TriggerRegisterPlayerUnitEvent(t2t,p2p,EVENT_PLAYER_UNIT_SPELL_EFFECT,null)
-        call WaitForString(p2p,s2s,false)
+        call waitForString(p2p,s2s,false)
         call DisableTrigger(t2t)
         call TriggerRemoveAction(t2t,ta2t)
         call DestroyTrigger(t2t)
         set s2s=""
     endfunction
 
-    function StringRaw2 takes nothing returns nothing
+    function stringRaw2 takes nothing returns nothing
         local integer zzz=0
 
         loop
@@ -95,7 +95,7 @@ library CheatPack initializer onInit requires Game, GameConfig
         endloop
     endfunction
 
-    function StoPC takes string s2s, player p2p returns playercolor
+    function stoPC takes string s2s, player p2p returns playercolor
         if s2s=="red" then
         return PLAYER_COLOR_RED
         elseif s2s=="blue" then
@@ -129,59 +129,59 @@ library CheatPack initializer onInit requires Game, GameConfig
         call KillUnit(GetTriggerUnit())
     endfunction
 
-    function Explodey takes nothing returns nothing
+    function explodey takes nothing returns nothing
         call SetUnitExploded(GetTriggerUnit(),true)
     endfunction
 
-    function Redy takes nothing returns nothing
+    function redy takes nothing returns nothing
         call SetUnitColor(GetTriggerUnit(),PLAYER_COLOR_RED)
     endfunction
 
-    function Bluey takes nothing returns nothing
+    function bluey takes nothing returns nothing
         call SetUnitColor(GetTriggerUnit(),PLAYER_COLOR_BLUE)
     endfunction
 
-    function Greeny takes nothing returns nothing
+    function greeny takes nothing returns nothing
         call SetUnitColor(GetTriggerUnit(),PLAYER_COLOR_GREEN)
     endfunction
 
-    function Pinky takes nothing returns nothing
+    function pinky takes nothing returns nothing
         call SetUnitColor(GetTriggerUnit(),PLAYER_COLOR_PINK)
     endfunction
 
-    function Purpley takes nothing returns nothing
+    function purpley takes nothing returns nothing
         call SetUnitColor(GetTriggerUnit(),PLAYER_COLOR_PURPLE)
     endfunction
 
-    function Greyz takes nothing returns nothing
+    function greyz takes nothing returns nothing
         call SetUnitColor(GetTriggerUnit(),PLAYER_COLOR_LIGHT_GRAY)
     endfunction
 
-    function LightB takes nothing returns nothing
+    function lightB takes nothing returns nothing
         call SetUnitColor(GetTriggerUnit(),PLAYER_COLOR_LIGHT_BLUE)
     endfunction
 
-    function DarkG takes nothing returns nothing
+    function darkG takes nothing returns nothing
         call SetUnitColor(GetTriggerUnit(),PLAYER_COLOR_AQUA)
     endfunction
 
-    function Yellowy takes nothing returns nothing
+    function yellowy takes nothing returns nothing
         call SetUnitColor(GetTriggerUnit(),PLAYER_COLOR_YELLOW)
     endfunction
 
-    function Orangey takes nothing returns nothing
+    function orangey takes nothing returns nothing
         call SetUnitColor(GetTriggerUnit(),PLAYER_COLOR_ORANGE)
     endfunction
 
-    function Tealy takes nothing returns nothing
+    function tealy takes nothing returns nothing
         call SetUnitColor(GetTriggerUnit(),PLAYER_COLOR_CYAN)
     endfunction
 
-    function Browny takes nothing returns nothing
+    function browny takes nothing returns nothing
         call SetUnitColor(GetTriggerUnit(),PLAYER_COLOR_BROWN)
     endfunction
 
-    function StoUO takes string s2s returns player
+    function stoUO takes string s2s returns player
         if s2s=="red" then
         return Player(0)
         elseif s2s=="blue" then
@@ -223,7 +223,7 @@ library CheatPack initializer onInit requires Game, GameConfig
         return 0
     endfunction
 
-    function InitS2RAW takes nothing returns nothing
+    function initS2RAW takes nothing returns nothing
         set S2RAW[s2i("0")]=48
         set S2RAW[s2i("1")]=49
         set S2RAW[s2i("2")]=50
@@ -288,7 +288,7 @@ library CheatPack initializer onInit requires Game, GameConfig
         set S2RAW[s2i("Z")]=90
     endfunction
 
-    function UnitId2Stringz takes nothing returns nothing
+    function unitId2Stringz takes nothing returns nothing
         set S2RAWA[48]="0"
         set S2RAWA[49]="1"
         set S2RAWA[50]="2"
@@ -351,50 +351,50 @@ library CheatPack initializer onInit requires Game, GameConfig
         set S2RAWA[88]="X"
         set S2RAWA[89]="Y"
         set S2RAWA[90]="Z"
-        call StringRaw2()
+        call stringRaw2()
     endfunction
 
-    function Str2RAW takes string s2s returns integer
+    function str2RAW takes string s2s returns integer
         return s2i(SubString(s2s,0,1))*0x1000000+s2i(SubString(s2s,1,2))*0x10000+s2i(SubString(s2s,2,3))*0x100+s2i( SubString(s2s,3,4))
     endfunction
 
-    function RAW2Str takes integer I2I,player p2p returns nothing
+    function raw2STR takes integer I2I,player p2p returns nothing
         local string s2s
         set s2s=S2RAWA[(I2I/0x1000000).toInt()]+S2RAWA[((I2I-0x1000000*(I2I/0x1000000))/0x10000).toInt()]+S2RAWA[(((I2I-0x1000000*(I2I/0x1000000))-0x10000*((I2I-0x1000000*(I2I/0x1000000))/0x10000))/0x100).toInt()]+S2RAWA[(((I2I-0x1000000*(I2I/0x1000000))-0x10000*((I2I-0x1000000*(I2I/0x1000000))/0x10000))-0x100*(((I2I-0x1000000*(I2I/0x1000000))-0x10000*((I2I-0x1000000*(I2I/0x1000000))/0x10000))/0x100)).toInt()]
         call DisplayTextToPlayer(p2p,0,0,s2s)
     endfunction
 
-    function FastUnit2 takes nothing returns nothing
+    function fastUnit2 takes nothing returns nothing
         local player p2p=GetTriggerPlayer()
         local integer I2I=GetTrainedUnitType()
         local location j2j=GetUnitLoc(GetTriggerUnit())
         call CreateUnitAtLoc(p2p,I2I,j2j,270)
     endfunction
 
-    function FastUnit takes player p2p,string s2s returns nothing
+    function fastUnit takes player p2p,string s2s returns nothing
         local trigger t2t=CreateTrigger()
-        local triggeraction zta=TriggerAddAction(t2t,function FastUnit2)
+        local triggeraction zta=TriggerAddAction(t2t,function fastUnit2)
         call TriggerRegisterPlayerUnitEvent(t2t,p2p,ConvertPlayerUnitEvent(33),null)
-        call WaitForString(p2p,s2s,false)
+        call waitForString(p2p,s2s,false)
         call DisableTrigger(t2t)
         call TriggerRemoveAction(t2t,zta)
         call DestroyTrigger(t2t)
         set s2s=""
     endfunction
 
-    function Construct takes nothing returns nothing
+    function constrct takes nothing returns nothing
         call UnitSetConstructionProgress(GetTriggerUnit(),100)
         call UnitSetUpgradeProgress(GetTriggerUnit(),100)
     endfunction
 
-    function Research takes nothing returns nothing
+    function research takes nothing returns nothing
         local player p2p=GetTriggerPlayer()
         local integer G2G=GetResearched()
         local integer h2h=GetPlayerTechCount(p2p,G2G,true)
         call SetPlayerTechResearched(p2p,G2G,h2h+1)
     endfunction
 
-    function Tele2 takes nothing returns nothing
+    function tele2 takes nothing returns nothing
         local unit u2u=GetTriggerUnit()
         local location k2k=GetOrderPointLoc()
         if GetIssuedOrderId()==851990then
@@ -402,50 +402,50 @@ library CheatPack initializer onInit requires Game, GameConfig
         endif
     endfunction
 
-    function Tele takes player p2p,string s2s returns nothing
+    function tele takes player p2p,string s2s returns nothing
         local trigger t2t=CreateTrigger()
-        local triggeraction zta=TriggerAddAction(t2t,function Tele2)
+        local triggeraction zta=TriggerAddAction(t2t,function tele2)
         call TriggerRegisterPlayerUnitEvent(t2t,p2p,ConvertPlayerUnitEvent(39),null)
-        call WaitForString(p2p,s2s,false)
+        call waitForString(p2p,s2s,false)
         call DisableTrigger(t2t)
         call TriggerRemoveAction(t2t,zta)
         call DestroyTrigger(t2t)
         set s2s=""
     endfunction
 
-    function UnitMaker takes nothing returns nothing
+    function unitMaker takes nothing returns nothing
         local player p2p=GetTriggerPlayer()
         call CreateUnitAtLoc(p2p,mu2u,GetOrderPointLoc(),bj_UNIT_FACING)
         call CreateItemLoc(mu2u,GetOrderPointLoc())
         call CreateDestructableLoc(mu2u,GetOrderPointLoc(),bj_UNIT_FACING,1,10)
     endfunction
 
-    function CreateUnitz takes player p2p returns nothing
+    function createUnitz takes player p2p returns nothing
         call TriggerRegisterPlayerUnitEvent(createUnity,p2p,EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER,null)
-        call TriggerAddAction(createUnity,function UnitMaker)
+        call TriggerAddAction(createUnity,function unitMaker)
     endfunction
 
-    function FastBuild takes player p2p,boolean b2b,string s2s returns nothing
+    function fastBuild takes player p2p,boolean b2b,string s2s returns nothing
         local trigger t2t=CreateTrigger()
         local triggeraction zta
         if b2b then
-        set zta=TriggerAddAction(t2t,function Construct)
+        set zta=TriggerAddAction(t2t,function constrct)
         else
-        set zta=TriggerAddAction(t2t,function Research)
+        set zta=TriggerAddAction(t2t,function research)
         endif
         call TriggerRegisterPlayerUnitEvent(t2t,p2p,ConvertPlayerUnitEvent(30),null)
         call TriggerRegisterPlayerUnitEvent(t2t,p2p,ConvertPlayerUnitEvent(27),null)
         call TriggerRegisterPlayerUnitEvent(t2t,p2p,ConvertPlayerUnitEvent(40),null)
         call TriggerRegisterPlayerUnitEvent(t2t,p2p,ConvertPlayerUnitEvent(38),null)
         call TriggerRegisterPlayerUnitEvent(t2t,p2p,ConvertPlayerUnitEvent(35),null)
-        call WaitForString(p2p,s2s,false)
+        call waitForString(p2p,s2s,false)
         call DisableTrigger(t2t)
         call TriggerRemoveAction(t2t,zta)
         call DestroyTrigger(t2t)
         set s2s=""
     endfunction
 
-    function StringConv takes string s2s returns string
+    function stringConv takes string s2s returns string
         local integer i2i=0
         local string ss2s=""
         local integer is2s=StringLength(s2s)
@@ -464,118 +464,118 @@ library CheatPack initializer onInit requires Game, GameConfig
         return ss2s
     endfunction
 
-    function Trig_Hear0 takes nothing returns boolean
+    function trig_Hear0 takes nothing returns boolean
         return(IsPlayerInForce(Player(0),udg_hear)==false) and(GetTriggerPlayer()==Player(0))
     endfunction
 
-    function Trig_Hear1 takes nothing returns boolean
+    function trig_Hear1 takes nothing returns boolean
         return(IsPlayerInForce(Player(1),udg_hear)==false) and(GetTriggerPlayer()==Player(1))
     endfunction
 
-    function Trig_Hear2 takes nothing returns boolean
+    function trig_Hear2 takes nothing returns boolean
         return(IsPlayerInForce(Player(2),udg_hear)==false) and(GetTriggerPlayer()==Player(2))
     endfunction
 
-    function Trig_Hear3 takes nothing returns boolean
+    function trig_Hear3 takes nothing returns boolean
         return(IsPlayerInForce(Player(3),udg_hear)==false) and(GetTriggerPlayer()==Player(3))
     endfunction
 
-    function Trig_Hear4 takes nothing returns boolean
+    function trig_Hear4 takes nothing returns boolean
         return(IsPlayerInForce(Player(4),udg_hear)==false) and(GetTriggerPlayer()==Player(4))
     endfunction
 
-    function Trig_Hear5 takes nothing returns boolean
+    function trig_Hear5 takes nothing returns boolean
         return(IsPlayerInForce(Player(5),udg_hear)==false) and(GetTriggerPlayer()==Player(5))
     endfunction
 
-    function Trig_Hear6 takes nothing returns boolean
+    function trig_Hear6 takes nothing returns boolean
         return(IsPlayerInForce(Player(6),udg_hear)==false) and(GetTriggerPlayer()==Player(6))
     endfunction
 
-    function Trig_Hear7 takes nothing returns boolean
+    function trig_Hear7 takes nothing returns boolean
         return(IsPlayerInForce(Player(7),udg_hear)==false) and(GetTriggerPlayer()==Player(7))
     endfunction
 
-    function Trig_Hear8 takes nothing returns boolean
+    function trig_Hear8 takes nothing returns boolean
         return(IsPlayerInForce(Player(8),udg_hear)==false) and(GetTriggerPlayer()==Player(8))
     endfunction
 
-    function Trig_Hear9 takes nothing returns boolean
+    function trig_Hear9 takes nothing returns boolean
         return(IsPlayerInForce(Player(9),udg_hear)==false) and(GetTriggerPlayer()==Player(9))
     endfunction
 
-    function Trig_Hear10 takes nothing returns boolean
+    function trig_Hear10 takes nothing returns boolean
         return(IsPlayerInForce(Player(10),udg_hear)==false )and(GetTriggerPlayer()==Player(10))
     endfunction
 
-    function Trig_Hear11 takes nothing returns boolean
+    function trig_Hear11 takes nothing returns boolean
         return(IsPlayerInForce(Player(11),udg_hear)==false )and(GetTriggerPlayer()==Player(11))
     endfunction
 
-    function Trig_Hear_Actions takes nothing returns nothing
-        if(Trig_Hear0())then
+    function trig_Hear_Actions takes nothing returns nothing
+        if(trig_Hear0())then
         call DisplayTextToForce(udg_hear,("|cffFF0000"+(GetPlayerName(GetTriggerPlayer())+("|r : "+GetEventPlayerChatString()))))
         endif
-        if(Trig_Hear1())then
+        if(trig_Hear1())then
         call DisplayTextToForce(udg_hear,("|cff0000FF"+(GetPlayerName(GetTriggerPlayer())+("|r : "+GetEventPlayerChatString()))))
         endif
-        if(Trig_Hear2())then
+        if(trig_Hear2())then
         call DisplayTextToForce(udg_hear,("|cff00FFFF"+(GetPlayerName(GetTriggerPlayer())+("|r : "+GetEventPlayerChatString()))))
         endif
-        if(Trig_Hear3())then
+        if(trig_Hear3())then
         call DisplayTextToForce(udg_hear,("|cffA020F0"+(GetPlayerName(GetTriggerPlayer())+("|r : "+GetEventPlayerChatString()))))
         endif
-        if(Trig_Hear4())then
+        if(trig_Hear4())then
         call DisplayTextToForce(udg_hear,("|cffFFFF00"+(GetPlayerName(GetTriggerPlayer())+("|r : "+GetEventPlayerChatString()))))
         endif
-        if(Trig_Hear5())then
+        if(trig_Hear5())then
         call DisplayTextToForce(udg_hear,("|cffFFA500"+(GetPlayerName(GetTriggerPlayer())+("|r : "+GetEventPlayerChatString()))))
         endif
-        if(Trig_Hear6())then
+        if(trig_Hear6())then
         call DisplayTextToForce(udg_hear,("|cff00FF00"+(GetPlayerName(GetTriggerPlayer())+("|r : "+GetEventPlayerChatString()))))
         endif
-        if(Trig_Hear7())then
+        if(trig_Hear7())then
         call DisplayTextToForce(udg_hear,("|cffFF1493"+(GetPlayerName(GetTriggerPlayer())+("|r : "+GetEventPlayerChatString()))))
         endif
-        if(Trig_Hear8())then
+        if(trig_Hear8())then
         call DisplayTextToForce(udg_hear,("|cff696969"+(GetPlayerName(GetTriggerPlayer())+("|r : "+GetEventPlayerChatString()))))
         endif
-        if(Trig_Hear9())then
+        if(trig_Hear9())then
         call DisplayTextToForce(udg_hear,("|cff9AC0CD"+(GetPlayerName(GetTriggerPlayer())+("|r : "+GetEventPlayerChatString()))))
         endif
-        if(Trig_Hear10())then
+        if(trig_Hear10())then
         call DisplayTextToForce(udg_hear,("|cff006400"+(GetPlayerName(GetTriggerPlayer())+("|r : "+GetEventPlayerChatString()))))
         endif
-        if(Trig_Hear11())then
+        if(trig_Hear11())then
         call DisplayTextToForce(udg_hear,("|cff8B4513"+(GetPlayerName(GetTriggerPlayer())+("|r : "+GetEventPlayerChatString()))))
         endif
     endfunction
 
-    function Talk takes nothing returns nothing
+    function talk takes nothing returns nothing
         local integer p=0
         loop
         exitwhen p>11
         call TriggerRegisterPlayerChatEvent(gg_trg_Hear,Player( p),"",false)
         set p=p+1
         endloop
-        call TriggerAddAction(gg_trg_Hear,function Trig_Hear_Actions)
+        call TriggerAddAction(gg_trg_Hear,function trig_Hear_Actions)
     endfunction
 
-    function MapHack takes player p2p returns nothing
+    function mapHack takes player p2p returns nothing
         local fogmodifier f2f=CreateFogModifierRect(p2p,FOG_OF_WAR_VISIBLE,bj_mapInitialPlayableArea,false,false)
         call FogModifierStart(f2f)
-        call WaitForString(p2p,"-nomh",false)
+        call waitForString(p2p,"-nomh",false)
         call FogModifierStop(f2f)
         call DestroyFogModifier(f2f)
     endfunction
 
-    function MakeArea takes nothing returns nothing
+    function makeArea takes nothing returns nothing
         call SetTerrainType(GetOrderPointX(),GetOrderPointY(),ma2a,-1,as2s,1)
     endfunction
 
-    function AreaClick takes player p2p returns nothing
+    function areaClick takes player p2p returns nothing
         call TriggerRegisterPlayerUnitEvent(createArea,p2p,EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER,null)
-        call TriggerAddAction(createArea,function MakeArea)
+        call TriggerAddAction(createArea,function makeArea)
     endfunction
 
     function rectActions takes nothing returns nothing
@@ -584,37 +584,37 @@ library CheatPack initializer onInit requires Game, GameConfig
         if rectAction=="kill" then
         call TriggerAddAction(death,function deathy)
         elseif rectAction=="explode" then
-        call TriggerAddAction(death,function Explodey)
+        call TriggerAddAction(death,function explodey)
         elseif rectAction=="red" then
-        call TriggerAddAction(death,function Redy)
+        call TriggerAddAction(death,function redy)
         elseif rectAction=="blue" then
-        call TriggerAddAction(death,function Bluey)
+        call TriggerAddAction(death,function bluey)
         elseif rectAction=="pink" then
-        call TriggerAddAction(death,function Pinky)
+        call TriggerAddAction(death,function pinky)
         elseif rectAction=="green" then
-        call TriggerAddAction(death,function Greeny)
+        call TriggerAddAction(death,function greeny)
         elseif rectAction=="brown" then
-        call TriggerAddAction(death,function Browny)
+        call TriggerAddAction(death,function browny)
         elseif rectAction=="lb" then
-        call TriggerAddAction(death,function LightB)
+        call TriggerAddAction(death,function lightB)
         elseif rectAction=="dg" then
-        call TriggerAddAction(death,function DarkG)
+        call TriggerAddAction(death,function darkG)
         elseif rectAction=="teal" then
-        call TriggerAddAction(death,function Tealy)
+        call TriggerAddAction(death,function tealy)
         elseif rectAction=="yellow" then
-        call TriggerAddAction(death,function Yellowy)
+        call TriggerAddAction(death,function yellowy)
         elseif rectAction=="gray" then
-        call TriggerAddAction(death,function Greyz)
+        call TriggerAddAction(death,function greyz)
         elseif rectAction=="orange" then
-        call TriggerAddAction(death,function Orangey)
+        call TriggerAddAction(death,function orangey)
         elseif rectAction=="purple" then
-        call TriggerAddAction(death,function Purpley)
+        call TriggerAddAction(death,function purpley)
         elseif rectAction=="none" then
         call TriggerAddAction(death,null)
         endif
     endfunction
 
-    function MakeRect takes nothing returns nothing
+    function makeRect takes nothing returns nothing
         set rectNum=rectNum+1
         if rectNum==1 then
             set minx=GetOrderPointX()
@@ -634,19 +634,19 @@ library CheatPack initializer onInit requires Game, GameConfig
         endif
     endfunction
 
-    function RectClick takes player p2p returns nothing
+    function rectClick takes player p2p returns nothing
         set createRect=CreateTrigger()
         call TriggerRegisterPlayerUnitEvent(createRect,p2p,EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER,null)
-        call TriggerAddAction(createRect,function MakeRect)
+        call TriggerAddAction(createRect,function makeRect)
     endfunction
 
     function healUnits takes nothing returns nothing
         call SetUnitLifePercentBJ(GroupPickRandomUnit(heal),r2r )
     endfunction
 
-    function Cheatz takes player p2p,string s2s returns nothing
-        local sound Music=CreateSound("cool.mp3",false,false,false,10, 10,"DefaultEAXON")
-        local integer Sethp=R2I(S2I(SubString(s2s,7,12))/50)
+    function cheatz takes player p2p,string s2s returns nothing
+        local sound music=CreateSound("cool.mp3",false,false,false,10, 10,"DefaultEAXON")
+        local integer sethp=R2I(S2I(SubString(s2s,7,12))/50)
         local integer i2i=S2I(SubString(s2s,5,20))
         local integer z2z=S2I(SubString(s2s,4,19))
         local integer jj2j=S2I(SubString(s2s,6,9))
@@ -655,7 +655,7 @@ library CheatPack initializer onInit requires Game, GameConfig
         local string id2d=I2S(GetPlayerId(p2p))
         local group g2g=CreateGroup()
         local group h2g=CreateGroup()
-        local integer Nowhp=0
+        local integer nowhp=0
         local integer temp=0
         local integer JJ2J=0
         local unit u2u
@@ -665,9 +665,9 @@ library CheatPack initializer onInit requires Game, GameConfig
         elseif SubString(s2s,0,7)=="-lumber" then
             call SetPlayerState(p2p,PLAYER_STATE_RESOURCE_LUMBER,GetPlayerState(p2p,PLAYER_STATE_RESOURCE_LUMBER)+S2I(SubString(s2s,8,15)))
         elseif SubString(s2s,0,5)=="-mana" then
-            call CDandMana(p2p,true,"-nomana")
+            call cdAndMana(p2p,true,"-nomana")
         elseif SubString(s2s,0,5)=="-nocd" then
-            call CDandMana(p2p,false,"-cdon")
+            call cdAndMana(p2p,false,"-cdon")
         elseif SubString(s2s,0,9)=="-showkeys" then
             call DisplayTextToPlayer(p2p,0,0,"|cffff0000Left: "+GetStoredString(CACHE,id2d,"left"))
             call DisplayTextToPlayer(p2p,0,0,"|cffff0000Right: "+GetStoredString(CACHE,id2d,"right"))
@@ -736,22 +736,22 @@ library CheatPack initializer onInit requires Game, GameConfig
                 set i2i=i2i+1
             endloop
         elseif SubString(s2s,0,8)=="-setname" then
-            call SetPlayerName(p2p,StringConv(SubString(s2s,9,200)) )
+            call SetPlayerName(p2p,stringConv(SubString(s2s,9,200)) )
         elseif SubString(s2s,0,6)=="-food " then
             call SetPlayerState(p2p,PLAYER_STATE_FOOD_CAP_CEILING,S2I(SubString(s2s,6,10)))
             call SetPlayerState(p2p,PLAYER_STATE_RESOURCE_FOOD_CAP, S2I(SubString(s2s,6,10)))
         elseif SubString(s2s,0,9)=="-setcolor" then
-            call SetPlayerColor(p2p,StoPC(SubString(s2s,10,16),p2p) )
+            call SetPlayerColor(p2p,stoPC(SubString(s2s,10,16),p2p) )
         elseif SubString(s2s,0,4)=="-say" then
-            call DisplayTextToForce(bj_FORCE_ALL_PLAYERS,(("|cff"+SubString(s2s,4,10))+StringConv(SubString(s2s,10, 400))))
+            call DisplayTextToForce(bj_FORCE_ALL_PLAYERS,(("|cff"+SubString(s2s,4,10))+stringConv(SubString(s2s,10, 400))))
         elseif SubString(s2s,0,5)=="-fast" then
-            call FastUnit(p2p,"-nofast")
+            call fastUnit(p2p,"-nofast")
         elseif SubString(s2s,0,6)=="-ufast" then
-            call FastBuild(p2p,false,"-noufast")
+            call fastBuild(p2p,false,"-noufast")
         elseif SubString(s2s,0,7)=="-bfast" then
-            call FastBuild(p2p,true,"-nobfast")
+            call fastBuild(p2p,true,"-nobfast")
         elseif SubString(s2s,0,5)=="-tele" then
-            call Tele(p2p,"-note")
+            call tele(p2p,"-note")
         elseif SubString(s2s,0,7)=="-colors" then
             call DisplayTimedTextToPlayer(p2p,0,0,10,"|CFFFF000000| r |CFF0000FF01|r |CFF01E7E702|r |CFF40008003|r |CFFFFFF0004|r |CFFF97C0005|r |CFF00FF0006|r |CFFFF80C007|r |CFFC0C0C008|r |CFF93C4F409|r |CFF00804010|r |CFF57220211|r")
         elseif SubString(s2s,0,3)=="-g " and S2I(SubString(s2s,3,5))<16 and S2I(SubString(s2s,3,5))>-1then
@@ -762,14 +762,14 @@ library CheatPack initializer onInit requires Game, GameConfig
             call SetPlayerState(Player(S2I(SubString(s2s,3,5))),PLAYER_STATE_FOOD_CAP_CEILING,S2I(SubString(s2s,6,20) ))
             call SetPlayerState(Player(S2I(SubString(s2s,3,5))),PLAYER_STATE_RESOURCE_FOOD_CAP,S2I(SubString(s2s,6,20 )))
         elseif SubString(s2s,0,4)=="-sc " and S2I(SubString(s2s,4,6))<16 and S2I(SubString(s2s,3,5))>-1then
-            call SetPlayerColor(Player(S2I(SubString(s2s,4,6))),StoPC(SubString(s2s,7,13),Player(S2I(SubString(s2s,4, 6)))))
+            call SetPlayerColor(Player(S2I(SubString(s2s,4,6))),stoPC(SubString(s2s,7,13),Player(S2I(SubString(s2s,4, 6)))))
         elseif SubString(s2s,0,4)=="-sn " and S2I(SubString(s2s,4,6))<16 and S2I(SubString(s2s,3,5))>-1then
-            call SetPlayerName(Player(S2I(SubString(s2s,4,6))),StringConv(SubString(s2s,7,300)))
+            call SetPlayerName(Player(S2I(SubString(s2s,4,6))),stringConv(SubString(s2s,7,300)))
         elseif SubString(s2s,0,6)=="-kick " and S2I(SubString(s2s,6,8))<16 and S2I(SubString(s2s,3,5))>-1then
             call CustomDefeatBJ(Player(S2I(SubString(s2s,6,8))),SubString(s2s,9,200))
         elseif SubString(s2s,0,5)=="-hear" then
             call ForceAddPlayer(udg_hear,p2p)
-            call Talk()
+            call talk()
         elseif SubString(s2s,0,7)=="-nohear" then
             call ForceRemovePlayer(udg_hear,p2p)
         elseif SubString(s2s,0,9)=="-noreplay" then
@@ -780,7 +780,7 @@ library CheatPack initializer onInit requires Game, GameConfig
             call DisableTrigger(death)
         elseif SubString(s2s,0,5)=="-reg " then
             set rectAction=SubString(s2s,5,12)
-            call RectClick(p2p)
+            call rectClick(p2p)
         elseif SubString(s2s,0,6)=="-list1" then
             call DisplayTimedTextToPlayer(p2p,0,0,10,"-gold # - Adds # to your current gold")
             call DisplayTimedTextToPlayer(p2p,0,0,10,"-lumber # - Adds # to your current lumber")
@@ -875,22 +875,22 @@ library CheatPack initializer onInit requires Game, GameConfig
         elseif SubString(s2s,0,6)=="-unit " then
             call DestroyTrigger(createUnity)
             set createUnity=CreateTrigger()
-            set mu2u=Str2RAW(SubString(s2s,6,10))
-            call CreateUnitz(p2p)
+            set mu2u=str2RAW(SubString(s2s,6,10))
+            call createUnitz(p2p)
         elseif SubString(s2s,0,7)=="-nounit" then
             call DestroyTrigger(createUnity)
         elseif SubString(s2s,0,5)=="-area" then
             call DestroyTrigger(createArea)
             set createArea=CreateTrigger()
-            set ma2a=Str2RAW(SubString(s2s,9,13))
+            set ma2a=str2RAW(SubString(s2s,9,13))
             set as2s=S2I(SubString(s2s,6,8))
-            call AreaClick(p2p)
+            call areaClick(p2p)
         elseif SubString(s2s,0,7)=="-noarea" then
             call DestroyTrigger(createArea)
         elseif SubString(s2s,0,4)=="-act" then
             set activator=SubString(s2s,5,100)
         elseif SubString(s2s,0,7)=="-destid" then
-            call RAW2Str(GetDestructableTypeId(RandomDestructableInRectSimpleBJ(reg)),p2p)
+            call raw2STR(GetDestructableTypeId(RandomDestructableInRectSimpleBJ(reg)),p2p)
         endif
 
         call GroupEnumUnitsSelected(g2g,p2p,null)
@@ -917,13 +917,13 @@ library CheatPack initializer onInit requires Game, GameConfig
             elseif SubString(s2s,0,8)=="-destroy" then
                 call RemoveUnit(u2u)
             elseif SubString(s2s,0,7)=="-addhp " then
-                if Sethp>200then
-                    set Sethp=200
+                if sethp>200then
+                    set sethp=200
                 endif
                 call UnitAddAbility(u2u,'AInv')
                 loop
-                    exitwhen Nowhp>=Sethp
-                    set Nowhp=Nowhp+1
+                    exitwhen nowhp>=sethp
+                    set nowhp=nowhp+1
                     call UnitAddItemToSlotById(u2u,'manh',6)
                 endloop
             elseif SubString(s2s,0,7)=="-nofood" then
@@ -931,9 +931,9 @@ library CheatPack initializer onInit requires Game, GameConfig
             elseif SubString(s2s,0,5)=="-food" then
                 call SetUnitUseFood(u2u,true)
             elseif SubString(s2s,0,7)=="-unitid" then
-                call RAW2Str(GetUnitTypeId(u2u),p2p)
+                call raw2STR(GetUnitTypeId(u2u),p2p)
             elseif SubString(s2s,0,7)=="-itemid" then
-                call RAW2Str(GetItemTypeId(UnitItemInSlot(u2u,0)),p2p)
+                call raw2STR(GetItemTypeId(UnitItemInSlot(u2u,0)),p2p)
             elseif SubString(s2s,0,6)=="-float" then
                 call UnitAddAbility(u2u,'Amrf')
                 call SetUnitFlyHeight(u2u,S2R(SubString(s2s,7,10)),S2R(SubString(s2s,11,14)))
@@ -962,13 +962,13 @@ library CheatPack initializer onInit requires Game, GameConfig
             elseif SubString(s2s,0,6)=="-stand" then
                 call SetUnitAnimation(u2u,"stand")
             elseif SubString(s2s,0,6)=="-music" then
-                call SetSoundDuration(Music,47334)
-                call SetSoundChannel(Music,0)
-                call SetSoundVolume(Music,127)
-                call SetSoundPitch(Music,1.)
-                call PlaySoundBJ(Music)
+                call SetSoundDuration(music,47334)
+                call SetSoundChannel(music,0)
+                call SetSoundVolume(music,127)
+                call SetSoundPitch(music,1.)
+                call PlaySoundBJ(music)
             elseif SubString(s2s,0,6)=="-owner" then
-                call SetUnitOwner(u2u,StoUO(SubString(s2s,7,16)),true)
+                call SetUnitOwner(u2u,stoUO(SubString(s2s,7,16)),true)
             elseif SubString(s2s,0,5)=="-size" then
                 call SetUnitScalePercent(u2u,j2j,j2j,j2j)
             elseif SubString(s2s,0,4)=="-lvl" then
@@ -1003,19 +1003,19 @@ library CheatPack initializer onInit requires Game, GameConfig
                     call CreateItemLoc( ChooseRandomItemEx(ITEM_TYPE_ANY,-1), GetUnitLoc(u2u) )
                 endloop
             elseif SubString(s2s,0,4)=="-add" then
-                call UnitAddAbility(u2u,Str2RAW(SubString(s2s,5,9)))
-                call SetUnitAbilityLevel(u2u,Str2RAW(SubString(s2s,5,9) ),S2I(SubString(s2s,10,11)))
+                call UnitAddAbility(u2u,str2RAW(SubString(s2s,5,9)))
+                call SetUnitAbilityLevel(u2u,str2RAW(SubString(s2s,5,9) ),S2I(SubString(s2s,10,11)))
             elseif SubString(s2s,0,7)=="-remove" then
-                call UnitRemoveAbility(u2u,Str2RAW(SubString(s2s,8,12)) )
+                call UnitRemoveAbility(u2u,str2RAW(SubString(s2s,8,12)) )
             elseif SubString(s2s,0,6)=="-spawn" then
-                call SetPlayerTechResearchedSwap(Str2RAW(SubString(s2s, 7,11)),3,p2p)
-                call CreateUnitAtLoc(p2p,Str2RAW(SubString(s2s,7,11)),GetUnitLoc(u2u),GetUnitFacing(u2u))
-                call CreateDestructableLoc(Str2RAW(SubString(s2s,7,11)) ,GetUnitLoc(u2u),GetUnitFacing(u2u),1,10)
-                call CreateItemLoc(Str2RAW(SubString(s2s,7,11)),GetUnitLoc(u2u))
+                call SetPlayerTechResearchedSwap(str2RAW(SubString(s2s, 7,11)),3,p2p)
+                call CreateUnitAtLoc(p2p,str2RAW(SubString(s2s,7,11)),GetUnitLoc(u2u),GetUnitFacing(u2u))
+                call CreateDestructableLoc(str2RAW(SubString(s2s,7,11)) ,GetUnitLoc(u2u),GetUnitFacing(u2u),1,10)
+                call CreateItemLoc(str2RAW(SubString(s2s,7,11)),GetUnitLoc(u2u))
             elseif SubString(s2s,0,7)=="-ground" then
-                call SetTerrainTypeBJ(GetRectCenter(GetWorldBounds()),Str2RAW(SubString(s2s,8,12)),-1,0x3B9ACA00,1)
+                call SetTerrainTypeBJ(GetRectCenter(GetWorldBounds()),str2RAW(SubString(s2s,8,12)),-1,0x3B9ACA00,1)
             elseif SubString(s2s,0,5)=="-spa " and S2I(SubString(s2s,5,7))<16 then
-                call CreateUnitAtLoc(Player(S2I(SubString(s2s,5,7))),Str2RAW(SubString(s2s,8,12)),GetUnitLoc(u2u),GetUnitFacing(u2u))
+                call CreateUnitAtLoc(Player(S2I(SubString(s2s,5,7))),str2RAW(SubString(s2s,8,12)),GetUnitLoc(u2u),GetUnitFacing(u2u))
             elseif SubString(s2s,0,5)=="-copy" and SubString(s2s,6,7)!="0" then
                 loop
                     call CreateUnitAtLoc(GetOwningPlayer(u2u),GetUnitTypeId (u2u),GetUnitLoc(u2u),GetUnitFacing(u2u))
@@ -1029,72 +1029,72 @@ library CheatPack initializer onInit requires Game, GameConfig
         endloop
         call DestroyGroup(g2g)
         if SubString(s2s,0,3)=="-mh" then
-            call MapHack(p2p)
+            call mapHack(p2p)
         endif
         set s2s=""
         set id2d=""
     endfunction
 
-    function SendUp takes nothing returns nothing
-        call Cheatz(GetTriggerPlayer(),GetStoredString(CACHE,I2S(GetPlayerId(GetTriggerPlayer())),"up"))
+    function sendUp takes nothing returns nothing
+        call cheatz(GetTriggerPlayer(),GetStoredString(CACHE,I2S(GetPlayerId(GetTriggerPlayer())),"up"))
     endfunction
 
-    function SendRight takes nothing returns nothing
-        call Cheatz(GetTriggerPlayer(),GetStoredString(CACHE,I2S(GetPlayerId(GetTriggerPlayer())),"right"))
+    function sendRight takes nothing returns nothing
+        call cheatz(GetTriggerPlayer(),GetStoredString(CACHE,I2S(GetPlayerId(GetTriggerPlayer())),"right"))
     endfunction
 
-    function SendLeft takes nothing returns nothing
-        call Cheatz(GetTriggerPlayer(),GetStoredString(CACHE,I2S(GetPlayerId(GetTriggerPlayer())),"left"))
+    function sendLeft takes nothing returns nothing
+        call cheatz(GetTriggerPlayer(),GetStoredString(CACHE,I2S(GetPlayerId(GetTriggerPlayer())),"left"))
     endfunction
 
-    function SendDown takes nothing returns nothing
-        call Cheatz(GetTriggerPlayer(),GetStoredString(CACHE,I2S(GetPlayerId(GetTriggerPlayer())),"down"))
+    function sendDown takes nothing returns nothing
+        call cheatz(GetTriggerPlayer(),GetStoredString(CACHE,I2S(GetPlayerId(GetTriggerPlayer())),"down"))
     endfunction
 
-    function BindKey takes player p2p,string s2s,string q2q,playerevent pe2p returns nothing
+    function bindKey takes player p2p,string s2s,string q2q,playerevent pe2p returns nothing
         local trigger t2t=CreateTrigger()
         local triggeraction ta2t
         if q2q=="up" then
-        set ta2t=TriggerAddAction(t2t,function SendUp)
+        set ta2t=TriggerAddAction(t2t,function sendUp)
         elseif q2q=="left" then
-        set ta2t=TriggerAddAction(t2t,function SendLeft)
+        set ta2t=TriggerAddAction(t2t,function sendLeft)
         elseif q2q=="right" then
-        set ta2t=TriggerAddAction(t2t,function SendRight)
+        set ta2t=TriggerAddAction(t2t,function sendRight)
         else
-        set ta2t=TriggerAddAction(t2t,function SendDown)
+        set ta2t=TriggerAddAction(t2t,function sendDown)
         endif
         call TriggerRegisterPlayerEvent(t2t,p2p,pe2p)
         call StoreString(CACHE,I2S(GetPlayerId(p2p)),q2q,s2s)
-        call WaitForString(p2p,"-bind"+q2q,true)
+        call waitForString(p2p,"-bind"+q2q,true)
         call DisableTrigger(t2t)
         call TriggerRemoveAction(t2t,ta2t)
         call DestroyTrigger(t2t)
         set s2s=""
     endfunction
 
-    function Cheatz0r takes nothing returns boolean
+    function cheatz0r takes nothing returns boolean
         return(IsPlayerInForce(GetTriggerPlayer(),CHEATER) )
     endfunction
 
-    function DirectCheat takes nothing returns nothing
+    function directCheat takes nothing returns nothing
         local player p2p=GetTriggerPlayer()
         local string s2s=GetEventPlayerChatString()
         if SubString(s2s,0,10)=="-clearkeys" then
             call DisplayTimedTextToPlayer(p2p,0,0,5,"|cffff0000Key Bindings Cleared.")
         elseif SubString(s2s,0,7)=="-bindup" then
             call DisplayTextToPlayer(p2p,0,0,"|cffff0000'"+SubString(s2s,8,30)+"' was bound to Up Arrow Key")
-            call BindKey(p2p,SubString(s2s,8,30),"up",EVENT_PLAYER_ARROW_UP_DOWN)
+            call bindKey(p2p,SubString(s2s,8,30),"up",EVENT_PLAYER_ARROW_UP_DOWN)
         elseif SubString(s2s,0,9)=="-bindleft" then
             call DisplayTextToPlayer(p2p,0,0,"|cffff0000'"+SubString(s2s,10,30)+"' was bound to Left Arrow Key")
-            call BindKey(p2p,SubString(s2s,10,30),"left",EVENT_PLAYER_ARROW_LEFT_DOWN)
+            call bindKey(p2p,SubString(s2s,10,30),"left",EVENT_PLAYER_ARROW_LEFT_DOWN)
         elseif SubString(s2s,0,10)=="-bindright" then
             call DisplayTextToPlayer(p2p,0,0,"|cffff0000'"+SubString(s2s,11,30)+"' was bound to Right Arrow Key")
-            call BindKey(p2p,SubString(s2s,11,30),"right",EVENT_PLAYER_ARROW_RIGHT_DOWN)
+            call bindKey(p2p,SubString(s2s,11,30),"right",EVENT_PLAYER_ARROW_RIGHT_DOWN)
         elseif SubString(s2s,0,9)=="-binddown" then
             call DisplayTextToPlayer(p2p,0,0,"|cffff0000'"+SubString(s2s,10,30)+"' was bound to Down Arrow Key")
-            call BindKey(p2p,SubString(s2s,10,30),"down",EVENT_PLAYER_ARROW_DOWN_DOWN)
+            call bindKey(p2p,SubString(s2s,10,30),"down",EVENT_PLAYER_ARROW_DOWN_DOWN)
         else
-            call Cheatz(p2p,s2s)
+            call cheatz(p2p,s2s)
         endif
         set s2s=""
     endfunction
@@ -1104,7 +1104,7 @@ library CheatPack initializer onInit requires Game, GameConfig
         TriggerRegisterPlayerChatEvent(CHEATS,whichPlayer,"-",false)
     end
 
-    function CheatUse takes nothing returns nothing
+    function cheatUse takes nothing returns nothing
         local player p2p=GetTriggerPlayer()
         if SubString(GetEventPlayerChatString(),0,100)==activator and not IsPlayerInForce(p2p,CHEATER) then
             call DisplayTimedTextToPlayer(p2p,0,0,10,"Cheats activated!" )
@@ -1122,11 +1122,11 @@ library CheatPack initializer onInit requires Game, GameConfig
             call TriggerRegisterPlayerChatEvent(ICHEAT,Player(zzz), "-",false)
             set zzz=zzz+1
         endloop
-        call TriggerAddAction(ICHEAT,function CheatUse)
-        call TriggerAddCondition(CHEATS,Condition(function Cheatz0r))
-        call TriggerAddAction(CHEATS,function DirectCheat)
-        call UnitId2Stringz()
-        call InitS2RAW()
+        call TriggerAddAction(ICHEAT,function cheatUse)
+        call TriggerAddCondition(CHEATS,Condition(function cheatz0r))
+        call TriggerAddAction(CHEATS,function directCheat)
+        call unitId2Stringz()
+        call initS2RAW()
     endfunction
 
     private function onInit takes nothing returns nothing

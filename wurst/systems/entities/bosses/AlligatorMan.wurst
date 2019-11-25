@@ -19,7 +19,7 @@ let regions = asList(
     CreateRegion()..addRect(gg_rct_SE_Alligator)
 )
 
-// Mapping of alligator regions to it's corresponding alligator
+// Mapping of alligator regions to it's corresponding alligator.
 let regionsToAlligators = new IterableMap<region, unit>()
 
 public class AlligatorMan extends Hostile
@@ -47,37 +47,37 @@ public class AlligatorMan extends Hostile
 init
     AlligatorMan.initialize()
 
-    // Cycle through alligator regions
+    // Cycle through alligator regions.
     for currentRegion in regions
-        // Create trigger for detecting alligator
+        // Create trigger for detecting alligator.
         CreateTrigger()
             ..registerEnterRegion(currentRegion, null)
             ..addAction() ->
                 let triggerRegion = GetTriggeringRegion()
                 let enteringUnit = GetEnteringUnit()
-                // Verify entering unit is alligator
+                // Verify entering unit is alligator.
                 if enteringUnit.getTypeId() == UNIT_ALIGATOR_MAN
-                    // Map region to alligator
+                    // Map region to alligator.
                     regionsToAlligators.put(triggerRegion, enteringUnit)
-                    // Destroy trigger since it is no longer needed
+                    // Destroy trigger since it is no longer needed.
                     GetTriggeringTrigger().destr()
 
 
-    // Create triggers for Alligator Islands
+    // Create triggers for Alligator Islands.
     for currentRegion in regions
-        // Trigger detecting unit entering island
+        // Trigger detecting unit entering island.
         CreateTrigger()
             ..registerEnterRegion(currentRegion, null)
             ..addAction() ->
                 let gatorRegion = GetTriggeringRegion()
                 toggleInvulnerability(gatorRegion, regionsToAlligators.get(gatorRegion))
-        // Trigger detecting unit leaving island
+        // Trigger detecting unit leaving island.
         CreateTrigger()
             ..registerLeaveRegion(currentRegion, null)
             ..addAction() ->
                 let gatorRegion = GetTriggeringRegion()
                 toggleInvulnerability(gatorRegion, regionsToAlligators.get(gatorRegion))
-        // Trigger dectecting unit death on island (needed since dying does not trigger leaving)
+        // Trigger dectecting unit death on island (needed since dying does not trigger leaving).
         registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH)->
             let gatorRegion = GetTriggeringRegion()
             toggleInvulnerability(gatorRegion, regionsToAlligators.get(gatorRegion))

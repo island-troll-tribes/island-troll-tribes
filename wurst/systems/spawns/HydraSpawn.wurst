@@ -51,37 +51,20 @@ function maybeSummonHydra()
         default
             return
 
-
-    if gameConfig.isOldMeatSystemEnabled()
-        let meats = new LinkedList<unit>()
-        forUnitsInRange(altar.getPos(), 400) (unit u) ->
-            if u.getTypeId() == UNIT_MEAT
-                meats.push(u)
-        if meats.size() < 4
-            destroy meats
-            return
-
-        for meat in meats
-            createItem(ITEM_COOKED_MEAT, meat.getPos())
-            meat.remove()
-
+    // Check for nearby corpses.
+    let meats = new LinkedList<unit>()
+    forUnitsInRange(altar.getPos(), 400) (unit u) ->
+        if u.getTypeId() == UNIT_MEAT
+            meats.push(u)
+    if meats.size() < 4
         destroy meats
+        return
 
-    else
-        let meats = new LinkedList<item>()
-        forItemsInMap() itm ->
-            if itm.getTypeId() == ITEM_RAW_MEAT and itm.getPos().distanceTo(altar.getPos()) <= 400
-                meats.push(itm)
+    for meat in meats
+        createItem(ITEM_COOKED_MEAT, meat.getPos())
+        meat.remove()
 
-        if meats.size() < 4
-            destroy meats
-            return
-
-        for meat in meats
-            createItem(ITEM_COOKED_MEAT, meat.getPos())
-            meat.remove()
-
-        destroy meats
+    destroy meats
 
     mushroom.remove()
     riverRoot.remove()

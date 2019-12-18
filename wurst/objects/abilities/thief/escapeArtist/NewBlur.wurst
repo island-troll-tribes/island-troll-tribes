@@ -12,6 +12,7 @@ import LinkedList
 import ClosureTimers
 import ClosureForGroups
 import RegisterEvents
+import UnitExtensions
 
 let DAZZLE_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
 let DAZZLE_BUFF_ID    = compiletime(BUFF_ID_GEN.next())
@@ -110,7 +111,7 @@ class Blur extends AbilityDefinitionItemSpeed
 function dazzled(LinkedList<unit> afterImages)
     afterImages.forEach() afterImage ->
         forUnitsInRange(afterImage.getPos(), 200) u ->
-            if u.getOwner().isEnemyOf(afterImage.getOwner()) and not u.hasAbility(DAZZLE_BUFF_ID)
+            if u.getOwner().isEnemyOf(afterImage.getOwner()) and not u.hasAbility(DAZZLE_BUFF_ID) and not u.isStructure()
                 new DummyCaster()
                     ..owner(afterImage.getOwner())
                     ..origin(afterImage.getPos() + vec2(100,0))

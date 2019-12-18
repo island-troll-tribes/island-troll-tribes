@@ -111,12 +111,11 @@ class Blur extends AbilityDefinitionItemSpeed
 function dazzled(LinkedList<unit> afterImages)
     afterImages.forEach() afterImage ->
         forUnitsInRange(afterImage.getPos(), 200) u ->
-            if not u.isStructure()
-                if u.getOwner().isEnemyOf(afterImage.getOwner()) and not u.hasAbility(DAZZLE_BUFF_ID)
-                    new DummyCaster()
-                        ..owner(afterImage.getOwner())
-                        ..origin(afterImage.getPos() + vec2(100,0))
-                        ..castTarget(DAZZLE_ABILITY_ID,1, Orders.curse, u)
+            if u.getOwner().isEnemyOf(afterImage.getOwner()) and not u.hasAbility(DAZZLE_BUFF_ID) and not u.isStructure()
+                new DummyCaster()
+                    ..owner(afterImage.getOwner())
+                    ..origin(afterImage.getPos() + vec2(100,0))
+                    ..castTarget(DAZZLE_ABILITY_ID,1, Orders.curse, u)
 
 // Change afterImage Transparency following it's position in the list
 function updateTransparency(LinkedList<unit> afterImages)

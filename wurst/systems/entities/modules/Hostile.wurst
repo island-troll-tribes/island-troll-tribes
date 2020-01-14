@@ -4,28 +4,15 @@ package Hostile
 import ClosureTimers
 import EventHelper
 import LinkedList
-import TerrainUtils
 
 // Local imports:
-import ExpiringRawMeat
-import GameConfig
-import GeometryUtils
-import ID
+import DummyCorpse
 import Sniff
 import UnitEntity
 
 import initlater GreenFish
 import initlater Fish
 import initlater Hawk
-
-public let MEAT_DROP_OFFSET_DISTANCE = 85.
-
-public function createCorpse(player p, int unitId, vec2 pos, angle facing) returns unit
-    return CreateCorpse(p, unitId, pos.x, pos.y, facing.degrees())
-
-public function spawnRawMeat(vec2 pos, int count)
-    for i = 1 to count
-        new ExpiringRawMeat(pos, MEAT_EXPIRATION_DEFAULT_DURATION)
 
 public abstract class Hostile extends UnitEntity
     construct(unit whichUnit)
@@ -64,21 +51,9 @@ public abstract class Hostile extends UnitEntity
         else
             destroy drops
 
-        //Smooth spawn loot to avoid lag/desyncs
-        if gameConfig.isOldMeatSystemEnabled()
-            doPeriodicallyCounted(ANIMATION_PERIOD, numCorpses) cb ->
-                createCorpse(players[PLAYER_NEUTRAL_AGGRESSIVE], UNIT_MEAT, pos, randomAngle())
-        else
-        //Find an offset position for the meat so items are separated on drop
-            doAfter(ANIMATION_PERIOD * numDrops) ->
-                for angleIndex = 0 to 3
-                    let meatPos = pos.polarOffset((angleIndex * 90.).fromDeg(), MEAT_DROP_OFFSET_DISTANCE)
-                    if meatPos.isTerrainWalkable()
-                        spawnRawMeat(meatPos, numCorpses)
-                        break
-                    else if angleIndex == 3
-                        spawnRawMeat(pos, numCorpses)
-                        break
+        // Stagger spawns to avoid computational lag.
+        doPeriodicallyCounted(ANIMATION_PERIOD, numCorpses) cb ->
+            createCorpse(pos)
 
         if this instanceof Hawk
             or this instanceof Fish

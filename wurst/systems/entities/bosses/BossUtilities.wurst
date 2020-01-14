@@ -1,0 +1,54 @@
+package BossUtilities
+
+// Standard-library imports:
+import Assets
+import ClosureTimers
+
+// Local imports:
+import HealingSystem
+import GroupUtils
+import UnitEntity
+
+public function checkInvulnerability(region bossRegion, unit boss) returns bool
+    // The boss is always invulnerable when outside its arena.
+    if not boss.isInRegion(bossRegion)
+        return true
+
+    // The boss is invulnerable unless there is a troll present in its arena.
+    for troll in getTrolls()
+        // Disable invulnerability if both conditions are met.
+        if troll.isAlive() and troll.isInRegion(bossRegion)
+            return false
+
+    // Enable invulnerability if no matches were found.
+    return true
+
+public function toggleInvulnerability(region bossRegion, unit boss)
+    // Exit if the boss is not currently alive.
+    if boss == null or not boss.isAlive()
+        return
+
+    // Toggle the invulnerability.
+    if checkInvulnerability(bossRegion, boss)
+        boss.addAbility(AbilityIds.invulnerable)
+        toggleHealing(boss)
+    else
+        boss.removeAbility(AbilityIds.invulnerable)
+
+// TODO: rework this into an ability.
+function toggleHealing(unit boss)
+    let hpRegen = 4.
+    let regenPeriod = 1.
+    
+    // Heal the boss 4 hp every 1 second.
+    doPeriodically(regenPeriod) (CallbackPeriodic cb) ->
+        // Use healing system.
+        new HealingInstance(boss, hpRegen, HealingType.OTHER)
+        // If boss is not invulnerable or is max health.
+        if not boss.isInvulnerable() or boss.getMissingHP() == 0
+            // Stop the healing.
+            destroy cb
+
+public function toggleInvulnerability(UnitEntity boss, region bossRegion)
+    if boss != null
+        toggleInvulnerability(bossRegion, boss.getUnit())

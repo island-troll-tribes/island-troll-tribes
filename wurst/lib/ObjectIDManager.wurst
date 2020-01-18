@@ -14,6 +14,15 @@ public enum IDType
     ITEM
     UPGD
 
+// Stores the type per shortcut.
+let shortcuts = new HashMap<string, IDType>()
+    ..put("UNIT_", IDType.UNIT)
+    ..put("HERO_", IDType.HERO)
+    ..put("ABIL_", IDType.ABIL)
+    ..put("BUFF_", IDType.BUFF)
+    ..put("ITEM_", IDType.ITEM)
+    ..put("UPGD_", IDType.UPGD)
+
 // Stores the generator per type.
 let generators = new HashMap<IDType, IdGenerator>()
     ..put(IDType.UNIT, UNIT_ID_GEN)
@@ -32,19 +41,36 @@ let types = new HashMap<string, IDType>()
 // Stores the name per ID, the reverse mapping.
 let names = new HashMap<int, string>
 
+function inferType(string name) returns IDType
+    // Compute the shortcut used within the name.
+    let key = name.substring(0, 5)
+
+    // Verify that the name contains a valid shortcut.
+    if not shortcuts.has(key)
+        error("Invalid shortcut used: {}".format(name))
+
+    // Generate the object with the appropriate type.
+    return shortcuts.get(key)
+
+public function generateObjectID(string name) returns int
+    // Forward the call after inferring the type
+    return generateObjectID(name, inferType(name))
+
 public function generateObjectID(string name, IDType type_) returns int
+    // Generate, register, and output the new ID.
+    return generators.get(type_).next()..registerObjectID(name, type_)
+
+public function int.registerObjectID(string name)
+    this.registerObjectID(name, inferType(name))
+
+public function int.registerObjectID(string name, IDType type_)
     // Disallow overwrites.
     if values.has(name)
-        error("{} is already registered.".format(name))
-    // Generate the appropriate ID.
-    let value = generators.get(type_).next()
+        error("Duplicate name detected: {}".format(name))
 
     // Update the dictionary.
-    values.put(name, value)
+    values.put(name, this)
     types.put(name, type_)
-
-    // Output the new ID.
-    return value
 
 public function string.asObjectID() returns int
     // Look up the ID for the name.

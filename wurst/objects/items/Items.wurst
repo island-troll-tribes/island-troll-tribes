@@ -7,7 +7,7 @@ import LinkedList
 public constant ICON_PATH = "ReplaceableTextures\\CommandButtons\\BTN{0}.blp"
 
 public class IttItem extends ItemDefinition
-    construct(int itemId, string icon, string model, string name, string toolTipExt, int cost, real scale, string abilities)
+    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, string abilities)
         super(itemId, 'bspd')
         this.setName(name)
         this.setModelUsed(model)
@@ -16,10 +16,11 @@ public class IttItem extends ItemDefinition
         this.setDescription(toolTipExt)
         this.setAbilities(abilities)
         this.setScalingValue(scale)
+        this.setHotkey(hotkey)
         this.setTooltipExtended(toolTipExt)
         setCommonPart()
 
-    construct(int itemId, string icon, string model, string name, string toolTipExt, int cost, real scale, LinkedList<int> tinting, string abilities)
+    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, LinkedList<int> tinting, string abilities)
         super(itemId, 'bspd')
         this.setName(name)
         this.setModelUsed(model)
@@ -27,6 +28,7 @@ public class IttItem extends ItemDefinition
         this.setInterfaceIcon(icon)
         this.setDescription(toolTipExt)
         this.setAbilities(abilities)
+        this.setHotkey(hotkey)
         this.setTintingColor1Red(tinting.dequeue())
         this.setTintingColor2Green(tinting.dequeue())
         this.setTintingColor3Blue(tinting.dequeue())
@@ -35,6 +37,9 @@ public class IttItem extends ItemDefinition
         this.setScalingValue(scale)
         setCommonPart()
 
+    /**
+    Basic field settings for island troll tribes items
+    **/
     function setCommonPart()
         this.setGoldCost(0)
         this.setDroppedWhenCarrierDies(true)
@@ -43,25 +48,32 @@ public class IttItem extends ItemDefinition
         this.setHitPoints(75)
         this.setClassification("Permanent")
 
+    /**
+    Only used to place item button in the shop panel, might not be very useful to be honest
+    **/
+    function setBtnPos(int x, int y)
+        this.setButtonPositionX(x)
+        this.setButtonPositionY(y)
+
 public class UsableItem extends IttItem
-    construct(int itemId, string icon, string model, string name, string toolTipExt, int cost, real scale, LinkedList<int> tinting, string abilities, string cooldownGrp)
-        super(itemId, icon, model, name, toolTipExt, cost, scale, tinting, abilities)
+    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, LinkedList<int> tinting, string abilities, string cooldownGrp)
+        super(itemId, icon, model, name, hotkey, toolTipExt, cost, scale, tinting, abilities)
         this.setActivelyUsed(true)
         this.setCooldownGroup(cooldownGrp)
 
-    construct(int itemId, string icon, string model, string name, string toolTipExt, int cost, real scale, string abilities, string cooldownGrp)
-        super(itemId, icon, model, name, toolTipExt, cost, scale, abilities)
+    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, string abilities, string cooldownGrp)
+        super(itemId, icon, model, name, hotkey, toolTipExt, cost, scale, abilities)
         this.setActivelyUsed(true)
         this.setCooldownGroup(cooldownGrp)
 
 public class PerishableItem extends UsableItem
-    construct(int itemId, string icon, string model, string name, string toolTipExt, int cost, real scale, LinkedList<int> tinting, string abilities, string cooldownGrp, int charge)
-        super(itemId, icon, model, name, toolTipExt, cost, scale, tinting, abilities, cooldownGrp)
+    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, LinkedList<int> tinting, string abilities, string cooldownGrp, int charge)
+        super(itemId, icon, model, name, hotkey, toolTipExt, cost, scale, tinting, abilities, cooldownGrp)
         this.setPerishable(true)
         this.setNumberofCharges(charge)
 
-    construct(int itemId, string icon, string model, string name, string toolTipExt, int cost, real scale, string abilities, string cooldownGrp, int charge)
-        super(itemId, icon, model, name, toolTipExt, cost, scale, abilities, cooldownGrp)
+    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, string abilities, string cooldownGrp, int charge)
+        super(itemId, icon, model, name, hotkey, toolTipExt, cost, scale, abilities, cooldownGrp)
         this.setPerishable(true)
         this.setNumberofCharges(charge)
 

@@ -1,0 +1,38 @@
+package Cure
+
+import PotionsDefinition
+import ID
+import ChannelAbilityPreset
+import ClosureEvents
+import InstantDummyCaster
+import Orders
+import ObjEditingUtils
+
+constant ABIL  = compiletime(ABIL_ID_GEN.next())
+
+//constant ABIL  = "A05K"
+constant ICON  = ICON_PATH.format("LesserClarityPotion")
+constant MODEL = "Models\\PotionGreenSmall.mdl"
+
+constant CAST_RANGE = 500.
+constant TARGET_ALLOWED = "friend,organic,self"
+constant TT = "This potion is said to be able to cure anything. Made from Athelas Seed."
+
+@compiletime function createAbil()
+    new ChannelAbilityPreset(ABIL, 1, true)
+    ..setName("Cure Potion")
+    ..setCheckDependencies(false)
+    ..setHeroAbility(false)
+    ..setItemAbility(true)
+    ..presetTargetTypes(Targettype.UNIT)
+    ..setManaCost(1, 0)
+    ..setCooldown(1, 0)
+    ..setCastRange(1, CAST_RANGE)
+    ..setEditorSuffix("(Wurst)")
+
+@compiletime function createCure()
+    new PotionDefinition(ITEM_CURE_ALL, ICON, MODEL, "Cure Potion", "S", TT, 12, commaList(ABIL), 0.50, commaList(ABIL), 120, 2)..setBtnPos(1, 1)
+
+init
+    EventListener.onTargetCast(ABIL) (unit caster, unit target) ->
+        InstantDummyCaster.castTarget(caster.getOwner(), SPELL_CURE_ALL, 1, Orders.autodispel, target)

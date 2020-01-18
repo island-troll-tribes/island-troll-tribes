@@ -1,0 +1,70 @@
+package ObjectIDManager
+
+// Standard library imports:
+import ErrorHandling
+import HashMap
+import ObjectIdGenerator
+import ObjectIds
+
+public enum IDType
+    UNIT
+    HERO
+    ABIL
+    BUFF
+    ITEM
+    UPGD
+
+// Stores the generator per type.
+let generators = new HashMap<IDType, IdGenerator>()
+    ..put(IDType.UNIT, UNIT_ID_GEN)
+    ..put(IDType.HERO, HERO_ID_GEN)
+    ..put(IDType.ABIL, ABIL_ID_GEN)
+    ..put(IDType.BUFF, BUFF_ID_GEN)
+    ..put(IDType.ITEM, ITEM_ID_GEN)
+    ..put(IDType.UPGD, UPGD_ID_GEN)
+
+// Stores the ID per name.
+let values = new HashMap<string, int>()
+
+// Stores the type per name.
+let types = new HashMap<string, IDType>()
+
+// Stores the name per ID, the reverse mapping.
+let names = new HashMap<int, string>
+
+public function generateObjectID(string name, IDType type_) returns int
+    // Disallow overwrites.
+    if values.has(name)
+        error("{} is already registered.".format(name))
+    // Generate the appropriate ID.
+    let value = generators.get(type_).next()
+
+    // Update the dictionary.
+    values.put(name, value)
+    types.put(name, type_)
+
+    // Output the new ID.
+    return value
+
+public function string.asObjectID() returns int
+    // Look up the ID for the name.
+    let value = values.get(this)
+
+    // Output the stored ID, defaulting to treating the name as a raw code.
+    if value == 0
+        return this.fromRawCode()
+    else
+        return value
+
+public function int.asObjectName() returns string
+    // Look up the name for the ID.
+    let name = names.get(this)
+
+    // Output the stored ID, defaulting to treating the name as a raw code.
+    if name == null
+        return this.toRawCode()
+    else
+        return name
+
+public function string.getObjectType() returns IDType
+    return types.get(this)

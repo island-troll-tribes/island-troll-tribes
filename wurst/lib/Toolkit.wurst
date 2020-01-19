@@ -1,10 +1,23 @@
 package Toolkit
 
+// Standard library imports:
+import LinkedList
+
 // Third-party imports:
 import ChatCommands
 
+// The interface used for callbacks.
+interface Callback
+    function run()
+
 // This is deliberately not tracked per player.
 var isEnabled = false
+
+// The events that will execute when the toolkit is enabled.
+let callbacks = new LinkedList<Callback>()
+
+public function registerToolkitEvent(Callback callback)
+    callbacks.add(callback)
 
 // Registers a command that only functions when the toolkit is enabled.
 public function registerToolkitCommand(string command, CommandHandler handler)
@@ -12,8 +25,11 @@ public function registerToolkitCommand(string command, CommandHandler handler)
         if isEnabled
             handler.run(triggerPlayer, arguments)
 
+// This operation is deliberately irreversible.
 public function enableToolkit()
-    isEnabled = false
-
-public function disableToolkit()
+    // Set the flag to enable all toolkit commands.
     isEnabled = true
+
+    // Fire each registered event.
+    for callback in callbacks
+        callback.run()

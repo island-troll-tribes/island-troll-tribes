@@ -19,8 +19,8 @@ import ToolTipsUtils
 public let BUFF_ENTANGLE_BRAMBLES_ID = compiletime(BUFF_ID_GEN.next())
 let SLOW_BUFF = 'Bfro'
 let ABILITY_ID = 'ESBR'
-let DUMMY_SLOW_SPELL_ID     = compiletime(ABIL_ID_GEN.next())
-let DUMMY_ENTANGLE_SPELL_ID = compiletime(ABIL_ID_GEN.next())
+let DUMMY_SLOW_ABILITY_ID     = compiletime(ABIL_ID_GEN.next())
+let DUMMY_ENTANGLE_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
 let DUMMY_VISION_BONUS_ID   = compiletime(ABIL_ID_GEN.next())
 let DUMMY_SLOW_BUFF         = compiletime(BUFF_ID_GEN.next())
 let COOLDOWN = 40.
@@ -34,8 +34,8 @@ let SLOW_DURATION = 1.2
 let OVERCHARGE_ENTANGLE_DURATION = 3.
 let DAMAGE_PER_SECOND = 8.
 let ROOT_CREATION_PERIOD = 0.25
-let UPDATE_LOOP_INTERVAL = 1.0 
-let SPELL_ICON = Icons.bTNEntanglingRoots
+let UPDATE_LOOP_INTERVAL = 1.0
+let ABILITY_ICON = Icons.bTNEntanglingRoots
 let ROOTS_EFFECT_PATH = Abilities.entanglingRootsTarget
 let TOOLTIP_NORM = "Brambles"
 let TOOLTIP_EXTENDED = ("Causes brambles to surface from underground in a straight line, and units who stand in the brambles receive "+
@@ -54,8 +54,8 @@ function createBuff()
     new BuffDefinition(DUMMY_SLOW_BUFF, SLOW_BUFF)
     ..setTooltipNormal(1, TOOLTIP_NORM)
     ..setTooltipNormalExtended(1, "Slowed and damaged by brambles.")
-    ..setIcon(SPELL_ICON)
-    ..setIconNormal(1, SPELL_ICON)
+    ..setIcon(ABILITY_ICON)
+    ..setIconNormal(1, ABILITY_ICON)
     ..setArtTarget(1, "")
     ..setArtSpecial(1, "")
 
@@ -63,15 +63,15 @@ function createEntangleBuff()
     new BuffDefinition(BUFF_ENTANGLE_BRAMBLES_ID, SLOW_BUFF)
     ..setTooltipNormal(1, TOOLTIP_NORM)
     ..setTooltipNormalExtended(1, "Rooted by brambles.")
-    ..setIcon(SPELL_ICON)
-    ..setIconNormal(1, SPELL_ICON)
+    ..setIcon(ABILITY_ICON)
+    ..setIconNormal(1, ABILITY_ICON)
     ..setArtTarget(1, ROOTS_EFFECT_PATH)
     ..setTargetAttachmentPoint0(1, "origin")
     ..setTargetAttachments(1, 1)
     ..setArtSpecial(1, "")
 
 function createDummySlow()
-    new AbilityDefinitionSlowCreep(DUMMY_SLOW_SPELL_ID)
+    new AbilityDefinitionSlowCreep(DUMMY_SLOW_ABILITY_ID)
     ..setLevels(1)
     ..setArtCaster("")
     ..setArtEffect("")
@@ -92,7 +92,7 @@ function createDummySlow()
     ..setItemAbility(false)
 
 function createDummyEntangle()
-    new AbilityDefinitionEntanglingRootscreep(DUMMY_ENTANGLE_SPELL_ID)
+    new AbilityDefinitionEntanglingRootscreep(DUMMY_ENTANGLE_ABILITY_ID)
     ..setMissileArt("")
     ..setMissileHomingEnabled(true)
     ..setMissileSpeed(99999)
@@ -122,9 +122,9 @@ class Brambles extends ChannelAbilityPreset
         this.setTargetType(1, 0)
         this.setButtonPositionNormalX(buttonPos.a)
         this.setButtonPositionNormalY(buttonPos.b)
-        this.setIconNormal(SPELL_ICON)
-        this.setIconResearch(SPELL_ICON)
-        this.setIconTurnOff(SPELL_ICON)
+        this.setIconNormal(ABILITY_ICON)
+        this.setIconResearch(ABILITY_ICON)
+        this.setIconTurnOff(ABILITY_ICON)
         this.setHeroAbility(false)
         this.setHotkeyNormal(hotkey)
         this.setName(TOOLTIP_NORM)
@@ -190,12 +190,12 @@ class BramblesInstance
                 forUnitsInRange(rootPos, EFFECT_AOE) u ->
                     if isValidTarget(u)
                         if not u.hasAbility(DUMMY_SLOW_BUFF)
-                            InstantDummyCaster.castTarget(owner, DUMMY_SLOW_SPELL_ID, 1, Orders.slow, u)
+                            InstantDummyCaster.castTarget(owner, DUMMY_SLOW_ABILITY_ID, 1, Orders.slow, u)
                         if not snaredTargets.has(u) and isOvercharged
                             let dummy = new DummyCaster()
                                 ..owner(owner)
                                 ..origin(ownerUnit.getPos())
-                            if dummy.castTarget(DUMMY_ENTANGLE_SPELL_ID, 1, Orders.entanglingroots, u) != null
+                            if dummy.castTarget(DUMMY_ENTANGLE_ABILITY_ID, 1, Orders.entanglingroots, u) != null
                                 snaredTargets.push(u)
                         if not loopDamagedTargets.has(u)
                             UnitDamageTarget(ownerUnit, u, DAMAGE_PER_SECOND*UPDATE_LOOP_INTERVAL, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)

@@ -12,25 +12,25 @@ import LocalObjectIDs
 import StringExtensions
 import UnitExtensions
 
-public constant SPELL_SLEEP_INSIDE = 'A004'
-public constant SPELL_SLEEP_OUTSIDE = 'A007'
+public constant ABILITY_SLEEP_INSIDE = 'A004'
+public constant ABILITY_SLEEP_OUTSIDE = 'A007'
 
 let protectionEnabled = new HashMap<player, boolean>()
 
 init
-    registerSpellEffectEvent(SPELL_SLEEP_INSIDE) ->
+    registerSpellEffectEvent(ABILITY_SLEEP_INSIDE) ->
         let building = GetSpellAbilityUnit()
         let hero = GetSpellTargetUnit()
         let energy = building.getTypeId() == UNIT_TENT ? 80.0 : 200.0
         hero.addMana(energy)
 
-    registerSpellEffectEvent(SPELL_SLEEP_OUTSIDE) ->
+    registerSpellEffectEvent(ABILITY_SLEEP_OUTSIDE) ->
         GetSpellTargetUnit()
             ..addMana(80)
             ..subHP(20)
             ..subHeat(20)
 
-    registerSpellEffectEvent(SPELL_SLEEP_OUTSIDE) ->
+    registerSpellEffectEvent(ABILITY_SLEEP_OUTSIDE) ->
         let caster = GetSpellAbilityUnit()
         let target = GetSpellTargetUnit()
         if caster != target and protectionEnabled.get(target.getOwner())

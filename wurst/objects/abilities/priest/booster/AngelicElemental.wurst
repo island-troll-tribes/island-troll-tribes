@@ -14,7 +14,7 @@ import LocalObjectIDs
 
 let EFFECT_PATH = Abilities.resurrectcaster
 let BUFF_EFFECT_PATH = Abilities.staff_Sanctuary_Target
-let BUFF_SPELL_ID = compiletime(ABIL_ID_GEN.next())
+let BUFF_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
 let BUFF_ID = compiletime(BUFF_ID_GEN.next())
 let ABILITY_ICON = Icons.bTNDivineIntervention
 let PROJECTILE_HEIGHT_OFFSET = -420.
@@ -40,7 +40,7 @@ function createBuff()
         ..setArtTarget(1, BUFF_EFFECT_PATH)
 
 function createBuffSpell()
-    new AbilityDefinitionInnerFireCreep(BUFF_SPELL_ID)
+    new AbilityDefinitionInnerFireCreep(BUFF_ABILITY_ID)
         ..setLevels(1)
         ..presetAutocastRange(lvl -> 0)
         ..presetDamageIncrease(lvl -> BUFF_DAMAGE_INCREASE)
@@ -73,8 +73,8 @@ class AngelicElemental extends ChannelAbilityPreset
         this.setButtonPositionNormalY(buttonPos.b)
 
 @compiletime function createAngelicElemental()
-    new AngelicElemental(SPELL_ANGELIC_ELEMENTAL, "S", new Pair(2, 1))
-    new AngelicElemental(SPELL_SAGE_ANGELIC_ELEMENTAL, "C", new Pair(2, 2))
+    new AngelicElemental(ABILITY_ANGELIC_ELEMENTAL, "S", new Pair(2, 1))
+    new AngelicElemental(ABILITY_SAGE_ANGELIC_ELEMENTAL, "C", new Pair(2, 2))
     createBuff()
     createBuffSpell()
 
@@ -113,7 +113,7 @@ class AngelicElementalInstance
                 new DummyCaster()
                     ..owner(ownerPlayer)
                     ..origin(projectilePos)
-                    ..castTarget(BUFF_SPELL_ID, 1, Orders.innerfire, u)
+                    ..castTarget(BUFF_ABILITY_ID, 1, Orders.innerfire, u)
 
     function isUnitValidBuffTarget(unit u) returns bool
         return u.getOwner().isAllyOf(ownerPlayer)
@@ -132,5 +132,5 @@ function onCast()
     new AngelicElementalInstance(caster, targetPos)
 
 init
-    registerSpellEffectEvent(SPELL_ANGELIC_ELEMENTAL, () -> onCast())
-    registerSpellEffectEvent(SPELL_SAGE_ANGELIC_ELEMENTAL, () -> onCast())
+    registerSpellEffectEvent(ABILITY_ANGELIC_ELEMENTAL, () -> onCast())
+    registerSpellEffectEvent(ABILITY_SAGE_ANGELIC_ELEMENTAL, () -> onCast())

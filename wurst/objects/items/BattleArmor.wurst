@@ -17,9 +17,9 @@ import ToolTipsUtils
 import UnitExtensions
 
 constant COOLDOWN = 75.
-constant SPELL_RADIUS = 800.
-constant SPELL_ANTIMAGIC = 'A0F8'
-constant SPELL_DAMAGE_REDUCTION = 'Alsr'
+constant ABILITY_RADIUS = 800.
+constant ABILITY_ANTIMAGIC = 'A0F8'
+constant ABILITY_DAMAGE_REDUCTION = 'Alsr'
 constant ABILITY_BATTLE_GEAR_STAT_BONUS = 'A0E7'
 constant ABILITY_DUMMY_ID = compiletime(ABIL_ID_GEN.next())
 constant ITEM_ABILITIES = commaList(ABILITY_DUMMY_ID, ABILITY_BATTLE_GEAR_STAT_BONUS, ABILITY_ARMOR_BONUS7)
@@ -75,11 +75,11 @@ public constant BATTLE_ARMOR_TOOLTIP_EXTENDED = "Increase all stats by 4 and arm
 function onCast()
     var caster = GetSpellAbilityUnit()
 
-    forUnitsInRange(caster.getPos(), SPELL_RADIUS) u ->
+    forUnitsInRange(caster.getPos(), ABILITY_RADIUS) u ->
         if u.isTroll() and u.getOwner().isAllyOf(caster.getOwner())
             new DummyCaster()
             ..owner(caster.getOwner())
             ..origin(u.getPos() + vec2(100, 0))
-            ..castTarget(SPELL_ANTIMAGIC, 1, Orders.antimagicshell, u)
+            ..castTarget(ABILITY_ANTIMAGIC, 1, Orders.antimagicshell, u)
 init
     registerSpellEffectEvent(ABILITY_DUMMY_ID, () -> onCast())

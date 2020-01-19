@@ -19,16 +19,16 @@ constant MANACOST = 15
 constant MAX_RANGE = 5000.
 constant REVEAL_DURATION = 10.
 constant RADAR_RANGE_BASE = 3300.
-constant SPELL_ICON = Icons.bTNSpy
+constant ABILITY_ICON = Icons.bTNSpy
 constant MAP_MAGIC_BUFF_ID = 'BHbd'
 constant RADAR_RANGE_PER_LEVEL = 200.
 constant MAP_MAGIC_RANGE_BONUS = 1500.
 
-constant string array SPELLBOOKSPELLS = [commaList(SPELL_ID_FIND_TINDER, SPELL_ID_FIND_STICK, SPELL_ID_FIND_MUSHROOM, SPELL_ID_FIND_CLAYBALL),
-                                         commaList(SPELL_ID_FIND_TINDER, SPELL_ID_FIND_STICK, SPELL_ID_FIND_MUSHROOM, SPELL_ID_FIND_CLAYBALL,
-                                          SPELL_ID_FIND_FLINT, SPELL_ID_FIND_STONE),
-                                         commaList(SPELL_ID_FIND_TINDER, SPELL_ID_FIND_STICK, SPELL_ID_FIND_MUSHROOM, SPELL_ID_FIND_CLAYBALL,
-                                          SPELL_ID_FIND_FLINT, SPELL_ID_FIND_STONE, SPELL_ID_FIND_MANA)]
+constant string array SPELLBOOKSPELLS = [commaList(ABILITY_ID_FIND_TINDER, ABILITY_ID_FIND_STICK, ABILITY_ID_FIND_MUSHROOM, ABILITY_ID_FIND_CLAYBALL),
+                                         commaList(ABILITY_ID_FIND_TINDER, ABILITY_ID_FIND_STICK, ABILITY_ID_FIND_MUSHROOM, ABILITY_ID_FIND_CLAYBALL,
+                                          ABILITY_ID_FIND_FLINT, ABILITY_ID_FIND_STONE),
+                                         commaList(ABILITY_ID_FIND_TINDER, ABILITY_ID_FIND_STICK, ABILITY_ID_FIND_MUSHROOM, ABILITY_ID_FIND_CLAYBALL,
+                                          ABILITY_ID_FIND_FLINT, ABILITY_ID_FIND_STONE, ABILITY_ID_FIND_MANA)]
 
 constant TOOLTIP_EXT_FIND_STICK    = "Pings all nearby sticks in the minimap and reveals them for a short duration. Ignores items near enemies."
 constant TOOLTIP_EXT_FIND_TINDER   = "Pings all nearby tinder in the minimap and reveals them for a short duration. Ignores items near enemies."
@@ -105,14 +105,14 @@ class Radar
         ..presetBaseOrderID(lvl -> orderId)
 
 @compiletime function createSpellbook()
-    new AbilityDefinitionSpellBook(SPELL_ITEM_RADAR)
+    new AbilityDefinitionSpellBook(ABILITY_ITEM_RADAR)
     ..setButtonPositionNormalX(1)
     ..setButtonPositionNormalY(1)
     ..setButtonPositionResearchX(0)
     ..setButtonPositionResearchY(0)
-    ..setIconNormal(SPELL_ICON)
-    ..setIconResearch(SPELL_ICON)
-    ..setIconTurnOff(SPELL_ICON)
+    ..setIconNormal(ABILITY_ICON)
+    ..setIconResearch(ABILITY_ICON)
+    ..setIconTurnOff(ABILITY_ICON)
     ..setHeroAbility(true)
     ..setItemAbility(false)
     ..setLevels(3)
@@ -217,26 +217,26 @@ function areHostilesNearItem(player p, item itm) returns bool
 
 function getRadarSpells() returns LinkedList<Radar>
     return asList(
-        new Radar(SPELL_ID_FIND_TINDER   , "Tinders"       , TOOLTIP_EXT_FIND_TINDER   , "ShimmerWeed"     , "Q", 2, 0, "taunt"),
-        new Radar(SPELL_ID_FIND_STICK    , "Sticks"        , TOOLTIP_EXT_FIND_STICK    , "NatureTouchGrow" , "W", 2, 0, "tranquility"),
-        new Radar(SPELL_ID_FIND_MUSHROOM , "Mushrooms"     , TOOLTIP_EXT_FIND_MANA     , "Mushroom"        , "E", 2, 0, "waterelemental"),
-        new Radar(SPELL_ID_FIND_CLAYBALL , "Clay Balls"    , TOOLTIP_EXT_FIND_CLAYBALL , "ThunderLizardEgg", "R", 2, 0, "unbearform"),
-        new Radar(SPELL_ID_FIND_FLINT    , "Flints"        , TOOLTIP_EXT_FIND_FLINT    , "StaffOfSanctuary", "A", 2, 0, "bearform"),
-        new Radar(SPELL_ID_FIND_STONE    , "Stones"        , TOOLTIP_EXT_FIND_STONE    , "GolemStormBolt"  , "S", 3, 0, "unflamingarrows"),
-        new Radar(SPELL_ID_FIND_MANA     , "Mana Crystals" , TOOLTIP_EXT_FIND_MANA     , "ManaStone"       , "D", 2, 0, "unrobogoblin")
+        new Radar(ABILITY_ID_FIND_TINDER   , "Tinders"       , TOOLTIP_EXT_FIND_TINDER   , "ShimmerWeed"     , "Q", 2, 0, "taunt"),
+        new Radar(ABILITY_ID_FIND_STICK    , "Sticks"        , TOOLTIP_EXT_FIND_STICK    , "NatureTouchGrow" , "W", 2, 0, "tranquility"),
+        new Radar(ABILITY_ID_FIND_MUSHROOM , "Mushrooms"     , TOOLTIP_EXT_FIND_MANA     , "Mushroom"        , "E", 2, 0, "waterelemental"),
+        new Radar(ABILITY_ID_FIND_CLAYBALL , "Clay Balls"    , TOOLTIP_EXT_FIND_CLAYBALL , "ThunderLizardEgg", "R", 2, 0, "unbearform"),
+        new Radar(ABILITY_ID_FIND_FLINT    , "Flints"        , TOOLTIP_EXT_FIND_FLINT    , "StaffOfSanctuary", "A", 2, 0, "bearform"),
+        new Radar(ABILITY_ID_FIND_STONE    , "Stones"        , TOOLTIP_EXT_FIND_STONE    , "GolemStormBolt"  , "S", 3, 0, "unflamingarrows"),
+        new Radar(ABILITY_ID_FIND_MANA     , "Mana Crystals" , TOOLTIP_EXT_FIND_MANA     , "ManaStone"       , "D", 2, 0, "unrobogoblin")
     )
 
 @compiletime function buildRadarSpells()
     getRadarSpells().forEach(spell -> spell.buildRadarSpell())
 
 init
-    registerSpellEffectEvent(SPELL_ID_FIND_STONE, () -> onCast(ITEM_STONE))
-    registerSpellEffectEvent(SPELL_ID_FIND_FLINT, () -> onCast(ITEM_FLINT))
-    registerSpellEffectEvent(SPELL_ID_FIND_TINDER, () -> onCast(ITEM_TINDER))
-    registerSpellEffectEvent(SPELL_ID_FIND_STICK, () -> onCast(ITEM_STICK))
-    registerSpellEffectEvent(SPELL_ID_FIND_CLAYBALL, () -> onCast(ITEM_CLAY_BALL))
-    registerSpellEffectEvent(SPELL_ID_FIND_MUSHROOM, () -> onCast(ITEM_MUSHROOM))
-    registerSpellEffectEvent(SPELL_ID_FIND_MANA, () -> onCast(ITEM_MANA_CRYSTAL))
+    registerSpellEffectEvent(ABILITY_ID_FIND_STONE, () -> onCast(ITEM_STONE))
+    registerSpellEffectEvent(ABILITY_ID_FIND_FLINT, () -> onCast(ITEM_FLINT))
+    registerSpellEffectEvent(ABILITY_ID_FIND_TINDER, () -> onCast(ITEM_TINDER))
+    registerSpellEffectEvent(ABILITY_ID_FIND_STICK, () -> onCast(ITEM_STICK))
+    registerSpellEffectEvent(ABILITY_ID_FIND_CLAYBALL, () -> onCast(ITEM_CLAY_BALL))
+    registerSpellEffectEvent(ABILITY_ID_FIND_MUSHROOM, () -> onCast(ITEM_MUSHROOM))
+    registerSpellEffectEvent(ABILITY_ID_FIND_MANA, () -> onCast(ITEM_MANA_CRYSTAL))
     dummyDictionary.put(ITEM_TINDER, DUMMY_IDS[0])
     dummyDictionary.put(ITEM_STICK, DUMMY_IDS[1])
     dummyDictionary.put(ITEM_MUSHROOM, DUMMY_IDS[2])

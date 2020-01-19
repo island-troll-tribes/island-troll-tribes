@@ -12,7 +12,7 @@ import ColorUtils
 import IsTypeThing
 import ToolTipsUtils
 
-let SPELL_ICON = "ReplaceableTextures\\CommandButtons\\BTNGreenSentryWard.blp"
+let ABILITY_ICON = "ReplaceableTextures\\CommandButtons\\BTNGreenSentryWard.blp"
 
 let COOLDOWN = 80.
 let SPY_COOLDOWN = COOLDOWN - 30
@@ -44,9 +44,9 @@ class WardAreaSpell extends ChannelAbilityPreset
 
         this.setTooltipLearn(makeToolTipLearn(TOOLTIP_NORM))
         this.setTooltipLearnExtended(TOOLTIP_EXTENDED.format(COLOR_ORANGE.toColorString()+"2/3/4|r", COLOR_LIGHT_BLUE.toColorString()+"360/480/600|r", COLOR_LIGHT_BLUE.toColorString()+"70/60/50|r"))
-        this.setIconNormal(SPELL_ICON)
-        this.setIconResearch(SPELL_ICON)
-        this.setIconTurnOff(SPELL_ICON)
+        this.setIconNormal(ABILITY_ICON)
+        this.setIconResearch(ABILITY_ICON)
+        this.setIconTurnOff(ABILITY_ICON)
         this.setButtonPositionNormalX(buttonPos.a)
         this.setButtonPositionNormalY(buttonPos.b)
         this.presetFollowThroughTime(lvl -> CASTTIME)
@@ -62,13 +62,13 @@ class SpyWardAreaSpell extends WardAreaSpell
         this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED.format(COLOR_ORANGE.toColorString()+"4", COLOR_LIGHT_BLUE.toColorString()+"600", SPY_COOLDOWN.toToolTipLightBlue()))
 
 @compiletime function createWardAreaSpells()
-    new WardAreaSpell(SPELL_WARD_AREA, "R", new Pair(2, 1))
-    new SpyWardAreaSpell(SPELL_SPY_WARD_AREA, "R", new Pair(3, 1))
+    new WardAreaSpell(ABILITY_WARD_AREA, "R", new Pair(2, 1))
+    new SpyWardAreaSpell(ABILITY_SPY_WARD_AREA, "R", new Pair(3, 1))
 
 function onCast()
     let caster = GetSpellAbilityUnit()
-    var wardNbr = GetSpellAbilityId() == SPELL_WARD_AREA
-        ? caster.getAbilityLevel(SPELL_WARD_AREA)
+    var wardNbr = GetSpellAbilityId() == ABILITY_WARD_AREA
+        ? caster.getAbilityLevel(ABILITY_WARD_AREA)
         : 3
 
     for i = wardNbr downto 0
@@ -80,5 +80,5 @@ function onCast()
             ..setAnimation("birth")
 
 init
-    registerSpellEffectEvent(SPELL_WARD_AREA, () -> onCast())
-    registerSpellEffectEvent(SPELL_SPY_WARD_AREA, () -> onCast())
+    registerSpellEffectEvent(ABILITY_WARD_AREA, () -> onCast())
+    registerSpellEffectEvent(ABILITY_SPY_WARD_AREA, () -> onCast())

@@ -8,7 +8,7 @@ import ChannelAbilityPreset
 import Abilities
 import BuffObjEditing
 
-//@configurable constant int SPELL_STUPEFY = 'A05W' // Dummy Channel ability, Old GUI
+//@configurable constant int ABILITY_STUPEFY = 'A05W' // Dummy Channel ability, Old GUI
 //@configurable constant int REAL_AURA_STUPEFY = 'A05V' // Real Aura, Old GUI
 
 // So hum technically it reduces by 300%, I guess it's okay since there is a threshold on minimal as & ms
@@ -71,8 +71,8 @@ class StupefyField extends ChannelAbilityPreset
         this.setArtCaster(commaList(Abilities.voodooAuraTarget, Abilities.flameStrikeTarget))
 
 @compiletime function createStupefyField()
-    new StupefyField(SPELL_STUPEFY, "F", new Pair(3, 1))
-    new StupefyField(SPELL_DEMENTIA_MASTER_STUPEFY, "X", new Pair(3, 1))
+    new StupefyField(ABILITY_STUPEFY, "F", new Pair(3, 1))
+    new StupefyField(ABILITY_DEMENTIA_MASTER_STUPEFY, "X", new Pair(3, 1))
     createStupefyAura()
     createBuff()
 
@@ -84,12 +84,12 @@ function onCast()
 function onEndcast()
     var caster = GetSpellAbilityUnit()
     var spell = GetSpellAbilityId()
-    if spell == SPELL_STUPEFY or spell == SPELL_DEMENTIA_MASTER_STUPEFY and caster.hasAbility(REAL_AURA_STUPEFY)
+    if spell == ABILITY_STUPEFY or spell == ABILITY_DEMENTIA_MASTER_STUPEFY and caster.hasAbility(REAL_AURA_STUPEFY)
         caster.removeAbility(REAL_AURA_STUPEFY)
         caster.removeAbility('B00L') // Bams
         caster.removeAbility('B00M') // Bam2
 
 init
-    registerSpellEffectEvent(SPELL_STUPEFY, () -> onCast())
-    registerSpellEffectEvent(SPELL_DEMENTIA_MASTER_STUPEFY, () -> onCast())
+    registerSpellEffectEvent(ABILITY_STUPEFY, () -> onCast())
+    registerSpellEffectEvent(ABILITY_DEMENTIA_MASTER_STUPEFY, () -> onCast())
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST, () -> onEndcast())

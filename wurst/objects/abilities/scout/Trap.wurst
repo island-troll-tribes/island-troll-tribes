@@ -273,20 +273,20 @@ class PlaceBearTrapSpell extends PlaceTrapSpell
     new SpikedTrapSlowDummy(ABILITY_SPIKED_TRAP_SLOW)
     new BearTrapLockDummy(ABILITY_BEAR_TRAP_LOCK)
 
-    new PlaceTrackTrapSpell(SPELL_TRACK_TRAP, "Q", new Pair(0, 0))
-    new PlaceSpikedTrapSpell(SPELL_SPIKED_TRAP, "W", new Pair(1, 0))
-    new PlaceBearTrapSpell(SPELL_BEAR_TRAP, "E", new Pair(2, 0))
-    new PlaceBearTrapSpell(SPELL_SPY_BEAR_TRAP, "S", new Pair(1, 1))
-    // new TrackTrapSpell    (SPELL_TRACK_TRAP     , "W", new Pair(0, 0))
-    // new SpyTrackTrapSpell (SPELL_SPY_TRACK_TRAP , "W", new Pair(0, 0))
-    // new SpikedTrapSpell   (SPELL_SPIKED_TRAP    , "Q", new Pair(1, 0))
-    // new BearTrapSpell     (SPELL_BEAR_TRAP      , "E", new Pair(2, 0))
+    new PlaceTrackTrapSpell(ABILITY_TRACK_TRAP, "Q", new Pair(0, 0))
+    new PlaceSpikedTrapSpell(ABILITY_SPIKED_TRAP, "W", new Pair(1, 0))
+    new PlaceBearTrapSpell(ABILITY_BEAR_TRAP, "E", new Pair(2, 0))
+    new PlaceBearTrapSpell(ABILITY_SPY_BEAR_TRAP, "S", new Pair(1, 1))
+    // new TrackTrapSpell    (ABILITY_TRACK_TRAP     , "W", new Pair(0, 0))
+    // new SpyTrackTrapSpell (ABILITY_SPY_TRACK_TRAP , "W", new Pair(0, 0))
+    // new SpikedTrapSpell   (ABILITY_SPIKED_TRAP    , "Q", new Pair(1, 0))
+    // new BearTrapSpell     (ABILITY_BEAR_TRAP      , "E", new Pair(2, 0))
 
     createTrapExplosionSpell()
 
 
 let trapList = new HashMap<int, Pair<int, int>>()
-    ..put(UNIT_TRAP       , new Pair(SPELL_TRACKER_TRACK     , Orders.faeriefire))
+    ..put(UNIT_TRAP       , new Pair(ABILITY_TRACKER_TRACK     , Orders.faeriefire))
     ..put(UNIT_SPIKED_TRAP, new Pair(ABILITY_SPIKED_TRAP_SLOW, Orders.cripple   ))
     ..put(UNIT_BEAR_TRAP  , new Pair(ABILITY_BEAR_TRAP_LOCK  , Orders.ensnare   ))
 
@@ -298,13 +298,13 @@ function onTrapDeath(unit trap)
                 error("Trap failed, this isn't supposed to happen, report this please.")
 
 init
-    EventListener.onPointCast(SPELL_TRACK_TRAP) (unit caster, vec2 target) ->
+    EventListener.onPointCast(ABILITY_TRACK_TRAP) (unit caster, vec2 target) ->
         createUnit(caster.getOwner(), UNIT_TRAP, target, (270.0).asAngleDegrees())..setAnimation("birth")..setTimedLife(TRACK_TRAP_DURATION)
-    EventListener.onPointCast(SPELL_SPIKED_TRAP) (unit caster, vec2 target) ->
+    EventListener.onPointCast(ABILITY_SPIKED_TRAP) (unit caster, vec2 target) ->
         createUnit(caster.getOwner(), UNIT_SPIKED_TRAP, target, (270.0).asAngleDegrees())..setAnimation("birth")..setTimedLife(SPIKED_TRAP_DURATION)
-    EventListener.onPointCast(SPELL_BEAR_TRAP) (unit caster, vec2 target) ->
+    EventListener.onPointCast(ABILITY_BEAR_TRAP) (unit caster, vec2 target) ->
         createUnit(caster.getOwner(), UNIT_BEAR_TRAP, target, (270.0).asAngleDegrees())..setAnimation("birth")..setTimedLife(BEAR_TRAP_DURATION)
-    EventListener.onPointCast(SPELL_SPY_BEAR_TRAP) (unit caster, vec2 target) ->
+    EventListener.onPointCast(ABILITY_SPY_BEAR_TRAP) (unit caster, vec2 target) ->
         createUnit(caster.getOwner(), UNIT_BEAR_TRAP, target, (270.0).asAngleDegrees())..setAnimation("birth")..setTimedLife(BEAR_TRAP_DURATION)
 
     EventListener.add(EVENT_PLAYER_UNIT_DEATH) () ->

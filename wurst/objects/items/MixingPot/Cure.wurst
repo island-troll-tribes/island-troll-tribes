@@ -8,9 +8,6 @@ import InstantDummyCaster
 import Orders
 import ObjEditingUtils
 
-constant ABIL  = compiletime(ABIL_ID_GEN.next())
-
-//constant ABIL  = "A05K"
 constant ICON  = ICON_PATH.format("LesserClarityPotion")
 constant MODEL = "Models\\PotionGreenSmall.mdl"
 
@@ -19,7 +16,7 @@ constant TARGET_ALLOWED = "friend,organic,self"
 constant TT = "This potion is said to be able to cure anything."
 
 @compiletime function createAbil()
-    new ChannelAbilityPreset(ABIL, 1, true)
+    new ChannelAbilityPreset(SPELL_CURE_ALL_ITEM, 1, true)
     ..setName("Cure Potion")
     ..setCheckDependencies(false)
     ..setHeroAbility(false)
@@ -31,8 +28,8 @@ constant TT = "This potion is said to be able to cure anything."
     ..setEditorSuffix("(Wurst)")
 
 @compiletime function createCure()
-    new PotionDefinition(ITEM_CURE_ALL, ICON, MODEL, "Cure Potion", "S", TT, 12, commaList(ABIL), 0.50, commaList(ABIL), 120, 2)..setBtnPos(1, 1)
+    new PotionDefinition(ITEM_CURE_ALL, ICON, MODEL, "Cure Potion", "S", TT, 12, commaList(SPELL_CURE_ALL_ITEM), 0.50, commaList(SPELL_CURE_ALL_ITEM), 120, 2)..setBtnPos(1, 1)
 
 init
-    EventListener.onTargetCast(ABIL) (unit caster, unit target) ->
+    EventListener.onTargetCast(SPELL_CURE_ALL_ITEM) (unit caster, unit target) ->
         InstantDummyCaster.castTarget(caster.getOwner(), SPELL_CURE_ALL, 1, Orders.autodispel, target)

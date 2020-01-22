@@ -3,8 +3,12 @@ package ObjectIDManager
 // Standard library imports:
 import ErrorHandling
 import HashMap
-import ObjectIdGenerator
+import public ObjectIdGenerator
 import ObjectIds
+
+// The standard library does not support generating IDs for destructibles.
+// TODO: Move this to ObjectIdGenerator
+public constant DEST_ID_GEN = new IdGenerator('DM00')
 
 public enum IDType
     UNIT
@@ -13,6 +17,7 @@ public enum IDType
     BUFF
     ITEM
     UPGD
+    DEST
 
 // Stores the type per shortcut.
 let shortcuts = new HashMap<string, IDType>()
@@ -22,6 +27,7 @@ let shortcuts = new HashMap<string, IDType>()
     ..put("BUFF_", IDType.BUFF)
     ..put("ITEM_", IDType.ITEM)
     ..put("UPGD_", IDType.UPGD)
+    ..put("DEST_", IDType.DEST)
 
 // Stores the generator per type.
 let generators = new HashMap<IDType, IdGenerator>()
@@ -31,6 +37,7 @@ let generators = new HashMap<IDType, IdGenerator>()
     ..put(IDType.BUFF, BUFF_ID_GEN)
     ..put(IDType.ITEM, ITEM_ID_GEN)
     ..put(IDType.UPGD, UPGD_ID_GEN)
+    ..put(IDType.DEST, DEST_ID_GEN)
 
 // Stores the ID per name.
 let values = new HashMap<string, int>()
@@ -43,7 +50,7 @@ let names = new HashMap<int, string>
 
 function inferType(string name) returns IDType
     // Compute the shortcut used within the name.
-    let key = name.substring(0, 5)
+    let key = name.substring(0, 5).toUpperCase()
 
     // Verify that the name contains a valid shortcut.
     if not shortcuts.has(key)
@@ -64,17 +71,21 @@ public function int.registerObjectID(string name)
     this.registerObjectID(name, inferType(name))
 
 public function int.registerObjectID(string name, IDType type_)
+    // Use uppercase for object names.
+    let key = name.toUpperCase()
+
     // Disallow overwrites.
-    if values.has(name)
+    if values.has(key)
         error("Duplicate name detected: {}".format(name))
 
-    // Update the dictionary.
-    values.put(name, this)
-    types.put(name, type_)
+    // Update the dictionaries.
+    values.put(key, this)
+    types.put(key, type_)
+    names.put(this, key)
 
 public function string.asObjectID() returns int
     // Look up the ID for the name.
-    let value = values.get(this)
+    let value = values.get(this.toUpperCase())
 
     // Output the stored ID, defaulting to treating the name as a raw code.
     if value == 0
@@ -93,4 +104,10 @@ public function int.asObjectName() returns string
         return name
 
 public function string.getObjectType() returns IDType
-    return types.get(this)
+    return types.get(this.toUpperCase())
+
+public function string.isRegisteredObjectName() returns bool
+    return values.has(this)
+
+public function int.isRegisteredObjectID() returns bool
+    return names.has(this)

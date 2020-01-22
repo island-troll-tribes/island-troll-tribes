@@ -5,6 +5,7 @@ import LinkedList
 
 // Third-party imports:
 import Lodash
+import ObjectIDManager
 
 // Local imports:
 import initlater CheatPack
@@ -12,7 +13,6 @@ import Classes
 import ColorUtils
 import GameMode
 import ChatUtils
-import IDUtils
 import StringExtensions
 
 init
@@ -67,10 +67,10 @@ init
 
     new GameMode("all", "ar", "General", "Each player is given the same or a random troll, eg: \"-all random\" or \"-all mage\"") (mode, args) ->
         let classArgs = drop(1, args)
-        if classArgs.size() > 0 and args.get(0) != "random"
+        if classArgs.size() > 0 and classArgs.get(0) != "random"
             let trollClass = "UNIT_" + classArgs.joinBy("_").toUpperCase()
-            let uid = s2ID(trollClass)
-            if uid == 0 or getTrollClassType(uid) != ClassType.BASE_CLASS
+            let uid = trollClass.asObjectID()
+            if not trollClass.isRegisteredObjectName() or getTrollClassType(uid) != ClassType.BASE_CLASS
                 mode.error("Invalid class selection")
             else
                 gameConfig.setAllTrollEnabled(uid)

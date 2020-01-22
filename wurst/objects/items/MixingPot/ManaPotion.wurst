@@ -7,13 +7,14 @@ import ToolTipsUtils
 import ChannelAbilityPreset
 import ClosureEvents
 import Assets
+import ObjEditingUtils
 
 constant ABIL  = compiletime(ABIL_ID_GEN.next())
 
 constant CAST_RANGE = 500.
 constant MANA_RESTORED = 60.
 
-constant ICON  = "ReplaceableTextures\\CommandButtons\\BTNPotionBlueSmall.blp"
+constant ICON  = ICON_PATH.format("PotionBlueSmall")
 constant MODEL = "Models\\PotionBlueLesser.mdl"
 constant TT    = "A dilute potion made from Athelas Seed. Instantly restores {0} Mana point to a target ally.".format(MANA_RESTORED.toToolTipLightBlue())
 
@@ -33,7 +34,7 @@ constant TARGET_ALLOWED = "friend,ground,hero,invulnerable,organic,self,vulnerab
     ..setEditorSuffix("(Wurst)")
 
 @compiletime function createManaPotion()
-    new PotionDefinition(ITEM_MANA_POTION, ICON, MODEL, "Mana Potion", TT, 5, asList(255, 255, 255), commaList(ABIL), 0.7, "A002", 120)
+    new PotionDefinition(ITEM_MANA_POTION, ICON, MODEL, "Mana Potion", "W", TT, 5, commaList(ABIL), 0.7, "A002", 120)
 
 init
     EventListener.onTargetCast(ABIL) (unit caster, unit target) ->

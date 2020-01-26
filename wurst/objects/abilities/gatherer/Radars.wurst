@@ -9,9 +9,11 @@ import LinkedList
 
 // Local imports:
 import ClosuresForItems
-import IsTypeThing
+import HashMap
+import LocalObjectIDs
 import ToolTipsUtils
 import Tribe
+import UnitExtensions
 
 constant COOLDOWN = 50.
 constant CASTTIME = 1.
@@ -209,7 +211,7 @@ function onCast(int itemId)
 function areHostilesNearItem(player p, item itm) returns bool
     let g = CreateGroup()..enumUnitsInRange(itm.getPos(), 350)
     for u in g
-        if (u.getOwner().isEnemyOf(p) and (u.isType(UNIT_TYPE_HERO) or u.isType(UNIT_TYPE_STRUCTURE))) or isUnitBoss(u)
+        if (u.getOwner().isEnemyOf(p) and (u.isType(UNIT_TYPE_HERO) or u.isType(UNIT_TYPE_STRUCTURE))) or u.isBoss()
             g.destr()
             return true
     g.destr()

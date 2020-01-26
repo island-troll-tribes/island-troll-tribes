@@ -3,7 +3,7 @@ package ObjectIDManager
 // Standard library imports:
 import ErrorHandling
 import HashMap
-import public ObjectIdGenerator
+import ObjectIdGenerator
 import ObjectIds
 
 // The standard library does not support generating IDs for destructibles.
@@ -88,10 +88,12 @@ public function string.asObjectID() returns int
     let value = values.get(this.toUpperCase())
 
     // Output the stored ID, defaulting to treating the name as a raw code.
-    if value == 0
+    if value != 0
+        return value
+    else if this.length() == 4
         return this.fromRawCode()
     else
-        return value
+        return 0
 
 public function int.asObjectName() returns string
     // Look up the name for the ID.

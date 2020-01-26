@@ -14,7 +14,9 @@ import Brambles
 import Construction
 import GameConfig
 import GroupUtils
-import IsTypeThing
+import HashMap
+import IdListConstant
+import LocalObjectIDs
 import ManaBurn
 
 public let BUFF_ENSNARE_GROUND = 'Beng'
@@ -107,7 +109,7 @@ public function unit.isStructure() returns boolean
     return IsUnitType(this, UNIT_TYPE_STRUCTURE)
 
 public function unit.isTroll() returns boolean
-    return isUnitTroll(this)
+    return TROLL_UNIT_LIST.has(this.getTypeId())
 
 public function unit.getHeat() returns real
     return this.getOwner().getGold().toReal()
@@ -237,3 +239,6 @@ public function unit.isItemInSlot(int slot) returns bool
 public function unit.isItemInSlot(int slot, int id) returns bool
     let target = this.itemInSlot(slot)
     return target != null and target.getTypeId() == id
+
+public function unit.isBoss() returns bool
+    return BOSS_LIST.has(this.getTypeId())

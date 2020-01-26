@@ -6,11 +6,13 @@ import LinkedList
 // Third-party imports:
 import Lodash
 import ObjectIDManager
+import Toolkit
 
 // Local imports:
-import initlater CheatPack
 import Classes
 import ColorUtils
+import Game
+import GameConfig
 import GameMode
 import ChatUtils
 import StringExtensions
@@ -193,6 +195,8 @@ init
     new GameMode("test-mode", "tm", "Testing", "No one can lose, enables test commands") (mode, args) ->
         mode.message("Test mode enabled".color(SPECIAL_COLOR))
         gameConfig.setTestMode(true)
+        registerGameStartEvent() ->
+            enableToolkit()
 
     new GameMode("start", "st", "General", "Start the game by entering class selection") (mode, args) ->
         GameMode.endModeSelection(true)
@@ -277,7 +281,6 @@ init
         mode.message("New elementalist subclass replaced with old elementalist.".color(ENERGY_COLOR))
 
     new GameMode("dev", "d", "Testing", "Development mode (-qp, -tm, -st)", false) (mode, args) ->
-        addCheatPlayer(players[0])
         GameMode.find("qp").enable()
         GameMode.find("tm").enable()
         GameMode.find("st").enable()

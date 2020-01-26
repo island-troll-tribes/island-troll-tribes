@@ -2,7 +2,7 @@ package MixSpells
 
 import ClosureEvents
 import ChannelAbilityPreset
-import ID
+import LocalObjectIDs
 import Lodash
 import ToolTipsUtils
 import EffectUtils
@@ -68,14 +68,14 @@ class MixEnergy extends ChannelAbilityPreset
 
 @compiletime function createMixSpells()
     // Master Healer
-    new MixEnergy(SPELL_MH_MIX_ENERGY , "Q", new Pair(0, 0))
-    new MixHeat  (SPELL_MH_MIX_HEAT   , "W", new Pair(1, 0))
+    new MixEnergy(ABILITY_MH_MIX_ENERGY , "Q", new Pair(0, 0))
+    new MixHeat  (ABILITY_MH_MIX_HEAT   , "W", new Pair(1, 0))
     // Priest
-    new MixEnergy(SPELL_MIX_ENERGY , "D", new Pair(2, 1))
-    new MixHeat  (SPELL_MIX_HEAT   , "F", new Pair(3, 1))
+    new MixEnergy(ABILITY_MIX_ENERGY , "D", new Pair(2, 1))
+    new MixHeat  (ABILITY_MIX_HEAT   , "F", new Pair(3, 1))
     // Sage
-    new MixEnergy(SPELL_SAGE_MIX_ENERGY , "Z", new Pair(0, 2))
-    new MixHeat  (SPELL_SAGE_MIX_HEAT   , "X", new Pair(1, 2))
+    new MixEnergy(ABILITY_SAGE_MIX_ENERGY , "Z", new Pair(0, 2))
+    new MixHeat  (ABILITY_SAGE_MIX_HEAT   , "X", new Pair(1, 2))
 
 
 function mixHeat(unit caster, unit target)
@@ -100,7 +100,7 @@ function onCast()
     let spell = GetSpellAbilityId()
 
     // Could be prettier, but I am lazy
-    if spell == SPELL_MIX_ENERGY or spell == SPELL_MH_MIX_ENERGY or spell == SPELL_SAGE_MIX_ENERGY
+    if spell == ABILITY_MIX_ENERGY or spell == ABILITY_MH_MIX_ENERGY or spell == ABILITY_SAGE_MIX_ENERGY
         mixMana(caster, target)
         attachLightningFX(caster, target, LIGHTNING_DRAIN_MANA, 1.0)
     else
@@ -108,9 +108,9 @@ function onCast()
         attachLightningFX(caster, target, LIGHTNING_MAGIC_LEASH, 1.0)
 
 init
-    registerSpellEffectEvent(SPELL_MIX_ENERGY      , ()-> onCast())
-    registerSpellEffectEvent(SPELL_MH_MIX_ENERGY   , ()-> onCast())
-    registerSpellEffectEvent(SPELL_SAGE_MIX_ENERGY , ()-> onCast())
-    registerSpellEffectEvent(SPELL_MIX_HEAT        , ()-> onCast())
-    registerSpellEffectEvent(SPELL_MH_MIX_HEAT     , ()-> onCast())
-    registerSpellEffectEvent(SPELL_SAGE_MIX_HEAT   , ()-> onCast())
+    registerSpellEffectEvent(ABILITY_MIX_ENERGY      , ()-> onCast())
+    registerSpellEffectEvent(ABILITY_MH_MIX_ENERGY   , ()-> onCast())
+    registerSpellEffectEvent(ABILITY_SAGE_MIX_ENERGY , ()-> onCast())
+    registerSpellEffectEvent(ABILITY_MIX_HEAT        , ()-> onCast())
+    registerSpellEffectEvent(ABILITY_MH_MIX_HEAT     , ()-> onCast())
+    registerSpellEffectEvent(ABILITY_SAGE_MIX_HEAT   , ()-> onCast())

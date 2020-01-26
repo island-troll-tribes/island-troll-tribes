@@ -14,7 +14,7 @@ import Lodash
 
 // Local imports:
 import ColorUtils
-import ID
+import LocalObjectIDs
 import ToolTipsUtils
 
 let MANACOST = 15
@@ -41,11 +41,11 @@ let ORBIT_DISTANCE     = 170.
 let MAX_RUNE_COUNT     = 5
 
 // Spells Casted by Runes
-let RUNE_SPELL_FIRE_BOLT    = 'A07C'
-let RUNE_SPELL_BURN         = 'A064'
-let RUNE_SPELL_NULL_DAMAGE  = 'A01Y'
-let RUNE_SPELL_DRUNKEN_HAZE = 'A03E'
-let RUNE_SPELL_FROST_NOVA   = 'A02A'
+let RUNE_ABILITY_FIRE_BOLT    = 'A07C'
+let RUNE_ABILITY_BURN         = 'A064'
+let RUNE_ABILITY_NULL_DAMAGE  = 'A01Y'
+let RUNE_ABILITY_DRUNKEN_HAZE = 'A03E'
+let RUNE_ABILITY_FROST_NOVA   = 'A02A'
 
 let RUNE_LEZ_EFFECT_PATH = Doodads.glowingRunes4
 let RUNE_NEL_EFFECT_PATH = Doodads.glowingRunes6
@@ -88,9 +88,9 @@ class InvokeRune extends ChannelAbilityPreset
         this.setName(toolTipNorm)
 
 @compiletime function createRuneSpells()
-    new InvokeRune(SPELL_INVOKE_RUNE_1, "W", new Pair(1, 0), TOOLTIP_NORM_NEL, TOOLTIP_EXT_NEL, ICON_NEL)
-    new InvokeRune(SPELL_INVOKE_RUNE_2, "E", new Pair(2, 0), TOOLTIP_NORM_KA , TOOLTIP_EXT_KA , ICON_KA)
-    new InvokeRune(SPELL_INVOKE_RUNE_3, "R", new Pair(3, 0), TOOLTIP_NORM_LEZ, TOOLTIP_EXT_LEZ, ICON_LEZ)
+    new InvokeRune(ABILITY_INVOKE_RUNE_1, "W", new Pair(1, 0), TOOLTIP_NORM_NEL, TOOLTIP_EXT_NEL, ICON_NEL)
+    new InvokeRune(ABILITY_INVOKE_RUNE_2, "E", new Pair(2, 0), TOOLTIP_NORM_KA , TOOLTIP_EXT_KA , ICON_KA)
+    new InvokeRune(ABILITY_INVOKE_RUNE_3, "R", new Pair(3, 0), TOOLTIP_NORM_LEZ, TOOLTIP_EXT_LEZ, ICON_LEZ)
 
 class DementiaRune
     DementiaRunesInstance instance
@@ -196,11 +196,11 @@ function onCast()
     var ID = GetSpellAbilityId()
     Runes runeType = Runes.None
 
-    if ID == SPELL_INVOKE_RUNE_1
+    if ID == ABILITY_INVOKE_RUNE_1
         runeType = Runes.Nel
-    else if ID == SPELL_INVOKE_RUNE_3
+    else if ID == ABILITY_INVOKE_RUNE_3
         runeType = Runes.Lez
-    else if ID == SPELL_INVOKE_RUNE_2
+    else if ID == ABILITY_INVOKE_RUNE_2
         runeType = Runes.Ka
 
 
@@ -222,14 +222,14 @@ public function getRunesInstance(unit owner) returns DementiaRunesInstance
 
 function setupRuneSpellsList()
     // Spells Casted by runes
-    runeSpellsList.add(new DementiaRuneSpell("Firebolt"     , RUNE_SPELL_FIRE_BOLT   , Orders.creepthunderbolt))
-    runeSpellsList.add(new DementiaRuneSpell("Soul burn"    , RUNE_SPELL_BURN        , Orders.soulburn))
-    runeSpellsList.add(new DementiaRuneSpell("Null damage"  , RUNE_SPELL_NULL_DAMAGE , Orders.cripple))
-    runeSpellsList.add(new DementiaRuneSpell("Drunken haze" , RUNE_SPELL_DRUNKEN_HAZE, Orders.drunkenhaze))
-    runeSpellsList.add(new DementiaRuneSpell("Frost nova"   , RUNE_SPELL_FROST_NOVA  , Orders.frostnova))
+    runeSpellsList.add(new DementiaRuneSpell("Firebolt"     , RUNE_ABILITY_FIRE_BOLT   , Orders.creepthunderbolt))
+    runeSpellsList.add(new DementiaRuneSpell("Soul burn"    , RUNE_ABILITY_BURN        , Orders.soulburn))
+    runeSpellsList.add(new DementiaRuneSpell("Null damage"  , RUNE_ABILITY_NULL_DAMAGE , Orders.cripple))
+    runeSpellsList.add(new DementiaRuneSpell("Drunken haze" , RUNE_ABILITY_DRUNKEN_HAZE, Orders.drunkenhaze))
+    runeSpellsList.add(new DementiaRuneSpell("Frost nova"   , RUNE_ABILITY_FROST_NOVA  , Orders.frostnova))
 
 init
     setupRuneSpellsList()
-    registerSpellEffectEvent(SPELL_INVOKE_RUNE_1, () -> onCast())
-    registerSpellEffectEvent(SPELL_INVOKE_RUNE_2,  () -> onCast())
-    registerSpellEffectEvent(SPELL_INVOKE_RUNE_3, () -> onCast())
+    registerSpellEffectEvent(ABILITY_INVOKE_RUNE_1, () -> onCast())
+    registerSpellEffectEvent(ABILITY_INVOKE_RUNE_2,  () -> onCast())
+    registerSpellEffectEvent(ABILITY_INVOKE_RUNE_3, () -> onCast())

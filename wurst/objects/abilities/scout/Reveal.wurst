@@ -3,7 +3,7 @@ import Icons
 import ClosureEvents
 import Orders
 import ToolTipsUtils
-import ID
+import LocalObjectIDs
 import ChannelAbilityPreset
 import Lodash
 import InstantDummyCaster
@@ -125,9 +125,9 @@ class ChainReveal extends Reveal
         this.setTooltipLearnExtended(CHAIN_REVEAL_TOOLTIP_EXTENDED)
 
 @compiletime function createReveal()
-    new Reveal(SPELL_REVEAL_ID, "E", new Pair(1, 1))
-    new GreaterReveal(SPELL_GREATER_REVEAL_ID, "E", new Pair(1, 1))
-    new ChainReveal(SPELL_CHAIN_REVEAL, "E", new Pair(1, 1))
+    new Reveal(ABILITY_REVEAL_ID, "E", new Pair(1, 1))
+    new GreaterReveal(ABILITY_GREATER_REVEAL_ID, "E", new Pair(1, 1))
+    new ChainReveal(ABILITY_CHAIN_REVEAL, "E", new Pair(1, 1))
     //new DummyReveal(ABILITY_ID_REVEAL_DUMMY)
     //new DummyGreaterReveal(ABILITY_ID_GREATER_REVEAL_DUMMY)
     //new DummyReconReveal(ABILITY_ID_RECON_REVEAL_DUMMY)
@@ -139,7 +139,7 @@ function onCastReveal()
     let lvl = caster.getAbilityLevel(spellId)
     var dummyToCast = ABILITY_ID_REVEAL_DUMMY
 
-    if spellId == SPELL_GREATER_REVEAL_ID
+    if spellId == ABILITY_GREATER_REVEAL_ID
         dummyToCast = ABILITY_ID_GREATER_REVEAL_DUMMY
 
     if InstantDummyCaster.castPoint(owner, dummyToCast, lvl, Orders.farsight, caster.getPos()) == false
@@ -151,11 +151,11 @@ function onCastReveal()
 
 
 init
-    registerSpellEffectEvent(SPELL_REVEAL_ID, () -> onCastReveal())
-    registerSpellEffectEvent(SPELL_GREATER_REVEAL_ID, () -> onCastReveal())
-    EventListener.onCast(SPELL_CHAIN_REVEAL) (unit caster) ->
+    registerSpellEffectEvent(ABILITY_REVEAL_ID, () -> onCastReveal())
+    registerSpellEffectEvent(ABILITY_GREATER_REVEAL_ID, () -> onCastReveal())
+    EventListener.onCast(ABILITY_CHAIN_REVEAL) (unit caster) ->
         let owner = caster.getOwner()
-        let lvl = caster.getAbilityLevel(SPELL_CHAIN_REVEAL)
+        let lvl = caster.getAbilityLevel(ABILITY_CHAIN_REVEAL)
         // Reveal on living clay
         forUnitsOfPlayer(owner) u ->
             if u.getTypeId() == UNIT_LIVING_CLAY

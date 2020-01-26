@@ -14,8 +14,8 @@ import ToolTipsUtils
 import Lodash
 
 let ABILITY_ID = 'ESEF'
-let DUMMY_STUN_SPELL_ID = 'ESES'
-let DUMMY_BUFF_SPELL_ID = 'XSSB'
+let DUMMY_STUN_ABILITY_ID = 'ESES'
+let DUMMY_BUFF_ABILITY_ID = 'XSSB'
 let IMPACT_STUN_DURATION_HERO = 0.10
 let IMPACT_STUN_DURATION_NORMAL = 0.10
 let COOLDOWN = 35.
@@ -34,7 +34,7 @@ let ORB_PERIODICINTERVAL_LOOP = 0.03125
 let ORB_ANGULARORBITSPEED = 100.
 let ORB_ORBIT_RADIUS = 150.
 let ORB_ORBIT_HEIGHT = 140.
-let SPELL_ICON = Icons.bTNGolemStormBolt
+let ABILITY_ICON = Icons.bTNGolemStormBolt
 let TOOLTIP_NORM = "Earth Guardians"
 let TOOLTIP_EXT = ("Channels to conjure 7 orbs that circle around you, striking enemies that come close for {0} damage and stunning them very "+
                   "briefly. Subsequent impacts on the same target do {1} damage. Has {2} seconds cooldown.").format(ORB_IMPACT_DAMAGE.toToolTipRed(),
@@ -45,7 +45,7 @@ let ORB_IMPACT_EFFECT = Objects.impaleTargetDust
 
 
 function createDummySpell()
-    new AbilityDefinitionFireBolt(DUMMY_STUN_SPELL_ID)
+    new AbilityDefinitionFireBolt(DUMMY_STUN_ABILITY_ID)
     ..setAnimationNames("")
     ..setMissileSpeed(20000)
     ..setBuffs(1, "BSTN")
@@ -100,9 +100,9 @@ class EarthGuardian extends ChannelAbilityPreset
         super(newAbilityId, 1, true)
         this.setTargetType(1, 0)
         this.setAnimationNames("spell,channel")
-        this.setIconNormal(SPELL_ICON)
-        this.setIconResearch(SPELL_ICON)
-        this.setIconTurnOff(SPELL_ICON)
+        this.setIconNormal(ABILITY_ICON)
+        this.setIconResearch(ABILITY_ICON)
+        this.setIconTurnOff(ABILITY_ICON)
         this.setHeroAbility(false)
         this.setHotkeyNormal(hotkey)
         this.setButtonPositionNormalX(buttonPos.a)
@@ -208,10 +208,10 @@ class EarthGuardianOrb
             new DummyCaster()
                 ..owner(ownerUnit.getOwner())
                 ..origin(ownerUnit.getPos())
-                ..castTarget(DUMMY_STUN_SPELL_ID, 1, Orders.firebolt, targetUnit)
+                ..castTarget(DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, targetUnit)
             new DummyCaster()                 ..owner(ownerUnit.getOwner())
                 ..origin(ownerUnit.getPos())
-                ..castTarget(DUMMY_BUFF_SPELL_ID, 1, Orders.acidbomb, targetUnit)
+                ..castTarget(DUMMY_BUFF_ABILITY_ID, 1, Orders.acidbomb, targetUnit)
 
         var efx = addEffect(ORB_IMPACT_EFFECT, projectile.getPos3())
         efx.setScale(1)

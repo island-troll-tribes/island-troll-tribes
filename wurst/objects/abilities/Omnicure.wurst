@@ -4,7 +4,7 @@ import RegisterEvents
 import DummyCaster
 import Orders
 import ChannelAbilityPreset
-import ID
+import LocalObjectIDs
 import Lodash
 import Assets
 import ToolTipsUtils
@@ -41,10 +41,10 @@ class Omnicure extends ChannelAbilityPreset
 
 
 @compiletime function createOmnicure()
-    new Omnicure(SPELL_OMNICURE, "E", new Pair(1, 0))
+    new Omnicure(ABILITY_OMNICURE, "E", new Pair(1, 0))
 
 init
-    registerSpellEffectEvent(SPELL_OMNICURE) ->
+    registerSpellEffectEvent(ABILITY_OMNICURE) ->
         let heroes = GetUnitsInRectMatching(bj_mapInitialPlayableArea, Condition(() -> begin
             let filterUnit = GetFilterUnit()
             return filterUnit.isType(UNIT_TYPE_HERO) and filterUnit.getOwner().isAllyOf(GetSpellAbilityUnit().getOwner())
@@ -55,4 +55,4 @@ init
             new DummyCaster()
                 ..owner(owner)
                 ..origin(hero.getPos() + vec2(100, 0))
-                ..castTarget(SPELL_CURE_ALL, 1, Orders.autodispel, hero)
+                ..castTarget(ABILITY_CURE_ALL, 1, Orders.autodispel, hero)

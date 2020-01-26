@@ -3,8 +3,8 @@ package CureAll
 // Standard library imports:
 import Assets
 import ChannelAbilityPreset
-import ClosureTimers
 import ClosureEvents
+import ClosureTimers
 import InstantDummyCaster
 import OrderIds
 
@@ -12,7 +12,7 @@ import OrderIds
 import Lodash
 
 // Local imports:
-import ID
+import LocalObjectIDs
 import ToolTipsUtils
 
 let COOLDOWN = 15.
@@ -46,10 +46,11 @@ class Cureall extends AbilityDefinitionAbolishMagic
 
 
 @compiletime function createCureAll()
-    new Cureall(SPELL_CURE_ALL, "W", new Pair(1, 0))
+    new Cureall(ABILITY_CURE_ALL, "W", new Pair(1, 0))
 
 init
-    EventListener.onTargetCast(SPELL_CURE_ALL) (unit caster, unit target) ->
+    EventListener.onTargetCast(ABILITY_CURE_ALL) (unit caster, unit target) ->
+        print("casted the real cure all")
         UnitRemoveBuffsExBJ( bj_BUFF_POLARITY_NEGATIVE, bj_BUFF_RESIST_BOTH, GetSpellTargetUnit(), false, false )
         UnitRemoveBuffBJ( 'Bspo', GetSpellTargetUnit() ) // slow poison
         UnitRemoveBuffBJ( 'Bssd', GetSpellTargetUnit() ) // slow poison, stacking
@@ -57,5 +58,7 @@ init
         UnitRemoveBuffBJ( 'Bplg', GetSpellTargetUnit() ) // disease cloud
         UnitRemoveBuffBJ( 'BNab', GetSpellTargetUnit() ) // acidbomb
         UnitRemoveBuffBJ( BUFF_DYSENTERY, GetSpellTargetUnit() )
+
+        // Delay the dummy unit is guaranteed to be available.
         nullTimer() ->
             InstantDummyCaster.castTarget(caster.getOwner(), 'A07M', 1, OrderIds.banish, target, target.getPos())

@@ -5,7 +5,7 @@ import DummyCaster
 import Orders
 import ChannelAbilityPreset
 import Assets
-import ID
+import LocalObjectIDs
 import Lodash
 import ToolTipsUtils
 
@@ -74,14 +74,14 @@ class AntiMagicAoEDummy extends ChannelAbilityPreset
         this.setButtonPositionNormalY(buttonPos.b)
 
 @compiletime function createAntiMagic()
-    new AntiMagic(SPELL_ANTI_MAGIC, "Q", new Pair(0, 0))
-    new AntiMagicAoEDummy(SPELL_ANTI_MAGIC_AOE, "Q", new Pair(0, 0))
+    new AntiMagic(ABILITY_ANTI_MAGIC, "Q", new Pair(0, 0))
+    new AntiMagicAoEDummy(ABILITY_ANTI_MAGIC_AOE, "Q", new Pair(0, 0))
 
 init
-    EventListener.onPointCast(SPELL_ANTI_MAGIC_AOE) (unit caster, vec2 target) ->
+    EventListener.onPointCast(ABILITY_ANTI_MAGIC_AOE) (unit caster, vec2 target) ->
         forUnitsInRange(target, AOE) u ->
             if u.isAlive() and u.getOwner().isAllyOf(caster.getOwner())
                 new DummyCaster()
                     ..owner(caster.getOwner())
                     ..origin(target)
-                    ..castTarget(SPELL_ANTI_MAGIC, 1, Orders.antimagicshell, u)
+                    ..castTarget(ABILITY_ANTI_MAGIC, 1, Orders.antimagicshell, u)

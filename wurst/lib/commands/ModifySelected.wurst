@@ -1,0 +1,35 @@
+package ModifySelected
+
+// Standard library imports:
+import ClosureForGroups
+
+// Third-party imports:
+import Toolkit
+
+
+init
+    // Heals each unit fully.
+    registerToolkitCommand("heal") (triggerPlayer, arguments) ->
+        forUnitsSelected(triggerPlayer) (unit target) ->
+            target.setHP(target.getMaxHP())
+
+    // Recharges each unit fully.
+    registerToolkitCommand("recharge") (triggerPlayer, arguments) ->
+        forUnitsSelected(triggerPlayer) (unit target) ->
+            target.setMana(target.getMaxMana())
+
+    // Kills each unit.
+    registerToolkitCommand("kill") (triggerPlayer, arguments) ->
+        forUnitsSelected(triggerPlayer) (unit target) ->
+            target.kill()
+
+    // Changes the owner for each unit, defaulting to the triggerer.
+    registerToolkitCommand("owner") (triggerPlayer, arguments) ->
+        // Precompute the new owner based on the command.
+        let owner = arguments.size() > 0
+            ? players[arguments.get(0).toInt()]
+            : triggerPlayer
+
+        // Modify ownership.
+        forUnitsSelected(triggerPlayer) (unit target) ->
+            target.setOwner(owner, true)

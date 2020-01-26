@@ -6,10 +6,10 @@ import ClosureEvents
 import UnitExtensions
 import TerrainUtils
 import SimError
-import ID
+import LocalObjectIDs
 
 
-constant let SPELL_TELEPORT_BEACON = 'A042'
+constant let ABILITY_TELEPORT_BEACON = 'A042'
 constant let RANGE = [0.0, 700, 1100]
 constant let rangeCheckModFirst = "Doodads\\Cinematic\\GlowingRunes\\GlowingRunes2.mdl"
 constant let mirrorEfx = "Abilities\\Spells\\NightElf\\Blink\\BlinkTarget.mdl"
@@ -36,11 +36,11 @@ public class TeleportBeacon extends Building
             return
 
         let beacon = getUnit()
-        if beacon.getAbilityLevel(SPELL_TELEPORT_BEACON) > 1
+        if beacon.getAbilityLevel(ABILITY_TELEPORT_BEACON) > 1
             return
 
         pickedUp.remove()
-        beacon.incAbilityLevel(SPELL_TELEPORT_BEACON)
+        beacon.incAbilityLevel(ABILITY_TELEPORT_BEACON)
 
     private function onSelected()
         let whichPlayer = GetTriggerPlayer()
@@ -49,7 +49,7 @@ public class TeleportBeacon extends Building
             return
 
         let beacon = getUnit()
-        let level = beacon.getAbilityLevel(SPELL_TELEPORT_BEACON)
+        let level = beacon.getAbilityLevel(ABILITY_TELEPORT_BEACON)
         let range = RANGE[level]
         let beaconPos = beacon.getPos()
         let list = new LinkedList<effect>()
@@ -75,7 +75,7 @@ public class TeleportBeacon extends Building
         effects.remove(whichPlayer)
 
     private function onCast()
-        if GetSpellAbilityId() != SPELL_TELEPORT_BEACON
+        if GetSpellAbilityId() != ABILITY_TELEPORT_BEACON
             return
 
         let target = GetSpellTargetUnit()

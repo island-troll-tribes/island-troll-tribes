@@ -1,13 +1,17 @@
-library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, Construction, ResourceSpawns
+library Transmute initializer onInit requires LocalObjectIDs, UnitExtensions, ItemExtensions, Construction, ResourceSpawns
+    globals
+        public trigger gg_trg_transmute = null
+    endglobals
+
     function trig_transmute_Actions takes nothing returns nothing
-    local boolean bol1 = isUnitTroll(GetTriggerUnit())
-    local boolean bol2 = false
-    local item array t
-    local integer array i
-    local integer e = 0
-    local integer uid = GetUnitTypeId(GetTriggerUnit())
-    local item added
-    //Begining of Troll Invetory Item Creation
+        local boolean bol1 = GetTriggerUnit().isTroll()
+        local boolean bol2 = false
+        local item array t
+        local integer array i
+        local integer e = 0
+        local integer uid = GetUnitTypeId(GetTriggerUnit())
+        local item added
+        //Begining of Troll Invetory Item Creation
         if bol1 then
             loop
                 exitwhen e > 5
@@ -22,7 +26,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 call UnitAddItem(GetTriggerUnit(), added)
                 call lowerItem(2)
             endif
-            set bol1=isItemHide(t[1])
+            set bol1=t[1].isHide()
             if i[0] == ITEM_STICK and bol1 and i[2] == ITEM_STICK then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -31,7 +35,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 call UnitAddItem(GetTriggerUnit(), added)
                 call lowerItem(3)
             endif
-            set bol1 = isItemHide(t[1])
+            set bol1 = t[1].isHide()
             if i[0] == ITEM_TENT_KIT and i[2] == ITEM_CLAY_BALL and bol1 then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -78,7 +82,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 call UnitAddItem(GetTriggerUnit(), added)
                 call lowerItem(5)
             endif
-            set bol1 = isItemHide(t[0])
+            set bol1 = t[0].isHide()
             if i[0] == ITEM_STICK and i[1] == ITEM_TINDER and i[2] == ITEM_CLAY_BALL and i[3] == ITEM_STICK then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -205,7 +209,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 call UnitAddItem(GetTriggerUnit(), added)
                 call lowerItem(2)
             endif
-            set bol1 = isItemPole(t[1])
+            set bol1 = t[1].isPole()
             if i[0] == ITEM_STONE and bol1 then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -214,7 +218,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 call lowerItem(2)
             endif
             //Forge Armor
-            set bol1 = isItemBasicBoots(t[0])
+            set bol1 = t[0].isBasicBoots()
             if bol1 and i[1] == ITEM_BONE and i[2] == ITEM_BONE and i[3] == ITEM_BONE and i[4] == ITEM_BONE and i[5] == ITEM_BONE then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -225,7 +229,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 set added = CreateItem(ITEM_BONE_BOOTS, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
                 call UnitAddItem(GetTriggerUnit(), added)
             endif
-            set bol1 = isItemBasicGloves(t[0])
+            set bol1 = t[0].isBasicGloves()
             if bol1 and i[1] == ITEM_BONE and i[2] == ITEM_BONE and i[3] == ITEM_BONE and i[4] == ITEM_BONE and i[5] == ITEM_BONE then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -236,7 +240,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 set added = CreateItem(ITEM_BONE_GLOVES, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
                 call UnitAddItem(GetTriggerUnit(), added)
             endif
-            set bol1 = isItemBasicCoat(t[0])
+            set bol1 = t[0].isBasicCoat()
             if bol1 and i[1] == ITEM_BONE and i[2] == ITEM_BONE and i[3] == ITEM_BONE and i[4] == ITEM_BONE and i[5] == ITEM_BONE then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -247,7 +251,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 set added = CreateItem(ITEM_BONE_COAT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
                 call UnitAddItem(GetTriggerUnit(), added)
             endif
-            set bol1 = isItemBasicBoots(t[0])
+            set bol1 = t[0].isBasicBoots()
             if bol1 and i[1] == ITEM_IRON_INGOT and i[2] == ITEM_IRON_INGOT then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -255,7 +259,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 set added = CreateItem(ITEM_IRON_BOOTS, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
                 call UnitAddItem(GetTriggerUnit(), added)
             endif
-            set bol1 = isItemBasicGloves(t[0])
+            set bol1 = t[0].isBasicGloves()
             if bol1 and i[1] == ITEM_IRON_INGOT and i[2] == ITEM_IRON_INGOT then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -263,7 +267,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 set added = CreateItem(ITEM_IRON_GLOVES, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
                 call UnitAddItem(GetTriggerUnit(), added)
             endif
-            set bol1 = isItemBasicCoat(t[0])
+            set bol1 = t[0].isBasicCoat()
             if bol1 and i[1] == ITEM_IRON_INGOT and i[2] == ITEM_IRON_INGOT then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -271,7 +275,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 set added = CreateItem(ITEM_IRON_COAT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
                 call UnitAddItem(GetTriggerUnit(), added)
             endif
-            set bol1 = isItemBasicBoots(t[0])
+            set bol1 = t[0].isBasicBoots()
             if bol1 and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_STEEL_INGOT then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -279,7 +283,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 set added = CreateItem(ITEM_STEEL_BOOTS, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
                 call UnitAddItem(GetTriggerUnit(), added)
             endif
-            set bol1 = isItemBasicGloves(t[0])
+            set bol1 = t[0].isBasicGloves()
             if bol1 and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_STEEL_INGOT then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -287,7 +291,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 set added = CreateItem(ITEM_STEEL_GLOVES, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
                 call UnitAddItem(GetTriggerUnit(), added)
             endif
-            set bol1 = isItemBasicCoat(t[0])
+            set bol1 = t[0].isBasicCoat()
             if bol1 and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_STEEL_INGOT then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -295,7 +299,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 set added = CreateItem(ITEM_STEEL_COAT, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()))
                 call UnitAddItem(GetTriggerUnit(), added)
             endif
-            set bol1 = isItemPole(t[0])
+            set bol1 = t[0].isPole()
             if bol1 and i[1] == ITEM_IRON_INGOT and i[2] == ITEM_IRON_INGOT then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -304,7 +308,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 call UnitAddItem(GetTriggerUnit(), added)
                 call lowerItem(1)
             endif
-            set bol1 = isItemPole(t[0])
+            set bol1 = t[0].isPole()
             if bol1 and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_STEEL_INGOT then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -313,28 +317,28 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 call UnitAddItem(GetTriggerUnit(), added)
                 call lowerItem(1)
             endif
-            set bol1 = isItemPole(t[1])
+            set bol1 = t[1].isPole()
             if i[0] == ITEM_IRON_INGOT and bol1 then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
                 call UnitAddItemByIdSwapped( ITEM_IRON_SPEAR, GetTriggerUnit() )
                 call lowerItem(1)
             endif
-            set bol1 = isItemPole(t[1])
+            set bol1 = t[1].isPole()
             if i[0] == ITEM_STEEL_INGOT and bol1 then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
                 call UnitAddItemByIdSwapped( ITEM_STEEL_SPEAR, GetTriggerUnit() )
                 call lowerItem(1)
             endif
-            set bol1 = isItemPole(t[1])
+            set bol1 = t[1].isPole()
             if i[0] == ITEM_SPIRIT_DARKNESS and bol1 then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
                 call UnitAddItemByIdSwapped( ITEM_DARK_SPEAR, GetTriggerUnit() )
                 call lowerItem(1)
             endif
-            set bol1 = isItemPole(t[0])
+            set bol1 = t[0].isPole()
             if bol1 and i[1] == ITEM_SPIRIT_WIND and i[2] == ITEM_SPIRIT_WATER and i[3] == ITEM_MANA_CRYSTAL then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -344,7 +348,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 call lowerItem(2)
             endif
             //Shields
-            set bol1 = isItemHide(t[0])
+            set bol1 = t[0].isHide()
             if bol1 and i[1] == ITEM_STICK and i[2] == ITEM_STICK then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -354,7 +358,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 call lowerItem(3)
             endif
 
-            set bol1 = isItemBasicShield(t[0])
+            set bol1 = t[1].isHide()
             if bol1 and i[1] == ITEM_IRON_INGOT and i[2] == ITEM_IRON_INGOT then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -363,7 +367,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 call UnitAddItem(GetTriggerUnit(), added)
             endif
 
-            set bol1 = isItemBasicShield(t[0])
+            set bol1 = t[0].isBasicShield()
             if bol1 and i[1] == ITEM_BONE and i[2] == ITEM_BONE and i[3] == ITEM_BONE and i[4] == ITEM_BONE and i[5] == ITEM_BONE then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -376,7 +380,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 call lowerItem(5)
             endif
 
-            set bol1 = isItemBasicShield(t[0])
+            set bol1 = t[0].isBasicShield()
             if bol1 and i[1] == ITEM_STEEL_INGOT and i[2] == ITEM_STEEL_INGOT then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -688,8 +692,8 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 call SetItemCharges(added, e)
                 call UnitAddItem(GetTriggerUnit(), added)
             endif
-            set bol1 = isItemHide(t[4])
-            set bol2 = isItemHide(t[5])
+            set bol1 = t[4].isHide()
+            set bol2 = t[5].isHide()
             if not udg_DisabledBoats and i[0] == ITEM_STICK and i[1] == ITEM_STICK and i[2] == ITEM_CLAY_BALL and i[3] == ITEM_CLAY_BALL and bol1 and bol2 then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])
@@ -774,7 +778,7 @@ library Transmute initializer onInit requires ID, IsTypeThing, LegacyTriggers, C
                 call UnitAddItemByIdSwapped( ITEM_FIRE_BOMB, GetTriggerUnit() )
                 call lowerItem(2)
             endif
-            set bol1 = isItemPole(t[1])
+            set bol1 = t[1].isPole()
             if i[0] == ITEM_TINDER and bol1 and i[2] == ITEM_STICK then
                 call RemoveItem(t[0])
                 call RemoveItem(t[1])

@@ -276,11 +276,9 @@ function updateCount(unit target, int differential)
 
     // Disable the new ability temporarily to prevent accidental rollback.
     target.disableAbility(newID, true, false)
-    // target.getOwner().setAbilityAvailable(newID, false)
 
     // Enable the new ability after a suitable interval.
     doAfter(LOCKOUT) ->
-        // target.getOwner().setAbilityAvailable(newID, true)
         target.disableAbility(newID, false, false)
 
 // TODO: Don't cancel orders for abilities that can actually have autocast.
@@ -346,6 +344,7 @@ function onKey(player triggerer)
     // Attempt to switch the ability for each unit selected.
     forUnitsSelected(triggerer) (unit target) ->
         print("Considering " + target.getName())
+        // Check that the action is both legal and valid.
         if triggerer.canControl(target) and target.canMoveCorpses()
             print("switch abilities.")
             switchAbilities(target)

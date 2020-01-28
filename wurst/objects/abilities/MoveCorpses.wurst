@@ -181,6 +181,7 @@ function unit.canMoveCorpses() returns bool
     // Output the failure case.
     return false
 
+// Switches between ability tracks, outputting the new ability ID.
 function switchAbilities(unit target) returns int
     // Look up the state for the unit.
     let count = counts.get(target)
@@ -343,12 +344,9 @@ function onDeath(unit target)
 function onKey(player triggerer)
     // Attempt to switch the ability for each unit selected.
     forUnitsSelected(triggerer) (unit target) ->
-        print("Considering " + target.getName())
         // Check that the action is both legal and valid.
         if triggerer.canControl(target) and target.canMoveCorpses()
-            print("switch abilities.")
             switchAbilities(target)
-
 
 init
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SUMMON) ->

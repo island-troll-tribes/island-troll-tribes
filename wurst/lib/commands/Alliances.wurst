@@ -1,0 +1,66 @@
+package Alliances
+
+// Standard library imports:
+import HashMap
+import LinkedList
+
+// Third-party imports:
+import LodashExtensions
+import SimError
+import Toolkit
+
+// TODO: Map strings directly to alliancetype once templating supports that.
+let settings = new IterableMap<string, int>()
+    ..put("ally",     0)
+    ..put("vision",   1)
+    ..put("share",    2)
+    ..put("advanced", 3)
+
+alliancetype array flags
+
+function handleAlliance(player triggerer, LinkedList<string> arguments)
+    // Get the operation requested.
+    let op = arguments.get(0)
+
+    // Compute the target player for the alliance.
+    let input = arguments.size() > 1
+        ? players[arguments.get(1).toInt()]
+        : triggerer
+
+    // Compute whether the source and target should be swapped.
+    // TODO: Actually parse a boolean with typed arguments.
+    let invert = arguments.size() > 2
+
+    // Look up the corresponding flag for the given setting.
+    let setting = flags[settings.get(arguments.get(0))]
+
+    // Compute the source and target.
+    let source = invert ? input : triggerer
+    let target = invert ? triggerer : input
+
+    // Look up the current state of requested alliance.
+    let state = GetPlayerAlliance(source, target, setting)
+
+    // Print a debugging message.
+    // TODO: Use logging.
+    print("Previous value of '{0}' for {1} with {2}: {3}".format(
+        op,
+        source.getName(),
+        target.getName(),
+        state.toString()
+    ))
+
+    // Invert the state.
+    SetPlayerAlliance(source, target, setting, not state)
+
+init
+    // Initialize the array.
+    flags[0] = ALLIANCE_PASSIVE
+    flags[1] = ALLIANCE_SHARED_VISION
+    flags[2] = ALLIANCE_SHARED_CONTROL
+    flags[3] = ALLIANCE_SHARED_ADVANCED_CONTROL
+
+    // Register each command with a shared callback that branches.
+    settings.forEach() (string setting, int index) ->
+        registerToolkitCommand(setting) (triggerer, arguments) ->
+            handleAlliance(triggerer, arguments)

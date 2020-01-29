@@ -11,7 +11,7 @@ import TerrainUtils
 
 // Local imports:
 import ClosuresForItems
-import ID
+import LocalObjectIDs
 import NewTeleThief
 import TeleGatherAbilityDefinition
 import Thief
@@ -93,7 +93,7 @@ class TeleGatherInstance
         // if this.casterEntity instanceof Omnigatherer
         //     teleAbilityCastLevel = 4
         // else if this.casterEntity instanceof Gatherer
-        //     teleAbilityCastLevel = caster.getAbilityLevel(SPELL_TELE_GATHER)
+        //     teleAbilityCastLevel = caster.getAbilityLevel(ABILITY_TELE_GATHER)
         if this.casterEntity instanceof Thief
             teleAbilityToCast = DUMMY_TELE_THIEF_ID
         InstantDummyCaster.castTarget(caster.getOwner(), teleAbilityToCast, teleAbilityCastLevel, "curse", caster, caster.getPos() + vec2(100,0))
@@ -207,15 +207,15 @@ function onTeleGatherCast(bool allowHerbs)
     let target = GetSpellTargetUnit()
     var duration = 0.
     switch GetSpellAbilityId()
-        case SPELL_TELE_GATHER_OMNI
+        case ABILITY_TELE_GATHER_OMNI
             duration = 30. + 20 * 4
-        case SPELL_TELE_RADAR_GATHER
-            duration = 30. + 20. * caster.getAbilityLevel(SPELL_TELE_RADAR_GATHER)
-        case SPELL_TELE_HERB_GATHER
-            duration = 30. + 20. * caster.getAbilityLevel(SPELL_TELE_HERB_GATHER)
-        case SPELL_TELE_THIEF
+        case ABILITY_TELE_RADAR_GATHER
+            duration = 30. + 20. * caster.getAbilityLevel(ABILITY_TELE_RADAR_GATHER)
+        case ABILITY_TELE_HERB_GATHER
+            duration = 30. + 20. * caster.getAbilityLevel(ABILITY_TELE_HERB_GATHER)
+        case ABILITY_TELE_THIEF
             duration = TELE_THIEF_DURATION
-        case SPELL_AS_TELE_THIEF
+        case ABILITY_AS_TELE_THIEF
             duration = TELE_THIEF_DURATION
 
     if instances.has(caster)
@@ -224,19 +224,19 @@ function onTeleGatherCast(bool allowHerbs)
     instances.put(caster, new TeleGatherInstance(caster, target, duration, allowHerbs))
 
 init
-    registerSpellEffectEvent(SPELL_TELE_RADAR_GATHER) ->
+    registerSpellEffectEvent(ABILITY_TELE_RADAR_GATHER) ->
         onTeleGatherCast(false)
 
-    registerSpellEffectEvent(SPELL_TELE_HERB_GATHER) ->
+    registerSpellEffectEvent(ABILITY_TELE_HERB_GATHER) ->
         onTeleGatherCast(true)
 
-    registerSpellEffectEvent(SPELL_TELE_GATHER_OMNI) ->
+    registerSpellEffectEvent(ABILITY_TELE_GATHER_OMNI) ->
         onTeleGatherCast(true)
 
-    registerSpellEffectEvent(SPELL_TELE_THIEF) ->
+    registerSpellEffectEvent(ABILITY_TELE_THIEF) ->
         onTeleGatherCast(true)
 
-    registerSpellEffectEvent(SPELL_AS_TELE_THIEF) ->
+    registerSpellEffectEvent(ABILITY_AS_TELE_THIEF) ->
         onTeleGatherCast(true)
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->

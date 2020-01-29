@@ -4,6 +4,7 @@ package MoveCorpses
 import AbilityObjEditing
 import Assets
 import ClosureEvents
+import ClosureForGroups
 import ClosureTimers
 import LastOrder
 import LinkedList
@@ -17,9 +18,15 @@ import Orders
 import ColorUtils
 import DummyCorpse
 import LocalAssets
+import PlayerExtensions
 import SimError
 import StringExtensions
 import Transformation
+
+// The time for which new abilities are disabled to prevent accidental rollback.
+// TODO: Use a per-player setting for this.
+// TODO: Allow lockout to be manually overridden.
+let LOCKOUT = 1.
 
 // The maximum number of corpses allowed to be carried per unit.
 @configurable let MAX_COUNT = 8
@@ -132,7 +139,7 @@ let switches = new HashMap<int, int>()
             ..presetCastRange(lvl -> 128)
             ..presetTooltipNormal(lvl -> "|c00ffcc00C|r - Grab Corpse")
             ..presetTooltipNormalExtended(lvl -> "Grabs a nearby corpse and stores it for later use. Unattended corpses will rot after two minutes.|n" + "Current Capacity: {0} / {1}".color(GOLD_COLOR).format(index.toString(), MAX_COUNT.toString()))
-            ..presetTooltipTurnOff(lvl -> "Right-click to begin dropping corpses.".color(ENERGY_COLOR))
+            ..presetTooltipTurnOff(lvl -> "Right-click or hotkey V to begin dropping corpses.".color(ENERGY_COLOR))
 
 // Used to drop meat via a Replenish effect, configured to not affect any units.
 // This ability is used because it has autocast and does not require a target.
@@ -157,9 +164,25 @@ let switches = new HashMap<int, int>()
             ..setName("Drop Corpse")
             ..presetTooltipNormal(lvl -> "|c00ffcc00C|r - Drop Corpse")
             ..presetTooltipNormalExtended(lvl -> "Drops a carried corpse onto the ground.|n" + "Current Capacity: {0} / {1}".color(GOLD_COLOR).format(index.toString(), MAX_COUNT.toString()))
-            ..presetTooltipTurnOff(lvl -> "Right-click to begin grabbing corpses.".color(ENERGY_COLOR))
+            ..presetTooltipTurnOff(lvl -> "Right-click or hotkey V to begin grabbing corpses.".color(ENERGY_COLOR))
 
-function switchAbilities(unit target) returns bool
+
+// Checks whether the unit is able to move corpses.
+// TODO: Support the case where a unit loses the ability to move corpses.
+function unit.canMoveCorpses() returns bool
+    // Check if the unit is currently tracked.
+    if counts.has(this)
+        return true
+
+    // Check if the unit has the original, unused ability.
+    if this.hasAbility(getGrabID.run(0))
+        return true
+
+    // Output the failure case.
+    return false
+
+// Switches between ability tracks, outputting the new ability ID.
+function switchAbilities(unit target) returns int
     // Look up the state for the unit.
     let count = counts.get(target)
 
@@ -187,7 +210,7 @@ function switchAbilities(unit target) returns bool
         simError(target.getOwner(), message)
 
         // Exit without swapping abilities.
-        return false
+        return 0
 
     // Remove the current ability.
     target.removeAbility(oldID)
@@ -199,7 +222,7 @@ function switchAbilities(unit target) returns bool
     target.makeAbilityPermanent(newID, true)
 
     // Indicate success.
-    return true
+    return newID
 
 function onDrop(unit caster)
     // Create the corpse that is dropped.
@@ -245,9 +268,19 @@ function updateCount(unit target, int differential)
     // Ensure that the ability is maintained during transformation.
     target.makeAbilityPermanent(track.run(after), true)
 
+    // Exit if no further operations are needed.
+    if after != 0 and after != MAX_COUNT
+        return
+
     // Switch abilities if the unit has reached the end of a track.
-    if after == 0 or after == MAX_COUNT
-        switchAbilities(target)
+    let newID = switchAbilities(target)
+
+    // Disable the new ability temporarily to prevent accidental rollback.
+    target.disableAbility(newID, true, false)
+
+    // Enable the new ability after a suitable interval.
+    doAfter(LOCKOUT) ->
+        target.disableAbility(newID, false, false)
 
 // TODO: Don't cancel orders for abilities that can actually have autocast.
 function onOrder(unit target, int orderID)
@@ -263,7 +296,7 @@ function onOrder(unit target, int orderID)
         return
 
     // Switch the abilities, as requested.
-    if switchAbilities(target)
+    if switchAbilities(target) != 0
         // Exit upon success, as disabling abilities includes undoing the order.
         return
 
@@ -308,6 +341,13 @@ function onDeath(unit target)
     for _ = 1 to count
         createCorpse(target.getPos())
 
+function onKey(player triggerer)
+    // Attempt to switch the ability for each unit selected.
+    forUnitsSelected(triggerer) (unit target) ->
+        // Check that the action is both legal and valid.
+        if triggerer.canControl(target) and target.canMoveCorpses()
+            switchAbilities(target)
+
 init
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SUMMON) ->
         onGrab(EventData.getSummoningUnit(), EventData.getSummonedUnit())
@@ -325,3 +365,10 @@ init
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
         onDeath(EventData.getDyingUnit())
+
+    // Create the trigger to allow for psuedo-hotkey functionality.
+    let t = CreateTrigger()..addAction(-> onKey(GetTriggerPlayer()))
+
+    // Listen to the activity of every player.
+    for index = 0 to bj_MAX_PLAYER_SLOTS - 1
+        t.registerPlayerKeyPress(players[index], OSKEY_V, OSKEY_META.NONE, true)

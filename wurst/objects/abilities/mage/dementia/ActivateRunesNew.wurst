@@ -18,7 +18,7 @@ import LodashExtensions
 import ColorUtils
 import DarkGateNew
 import DementiaRunesNew
-import ID
+import LocalObjectIDs
 import StringExtensions
 import ToolTipsUtils
 
@@ -78,8 +78,8 @@ class ActivateRunes extends ChannelAbilityPreset
         this.setHotkeyNormal(hotkey)
 
 @compiletime function createSpells()
-    new ActivateRunes(SPELL_ACTIVATE_RUNE, "A", new Pair(0, 0))
-    new DementiaSummoning(SPELL_DEMENTIA_SUMMONING, new Pair(1, 0))
+    new ActivateRunes(ABILITY_ACTIVATE_RUNE, "A", new Pair(0, 0))
+    new DementiaSummoning(ABILITY_DEMENTIA_SUMMONING, new Pair(1, 0))
 
 LinkedList<SummonData> summonsList = new LinkedList<SummonData>()
 
@@ -155,7 +155,7 @@ function findMatchingSummonData(OwnedLinkedList<Runes> runes) returns SummonData
     return null
 
 function trySummonDemon(unit caster, DementiaRunesInstance runesInstance, DarkPortalInstance portalInstance) returns bool
-    if runesInstance != null and portalInstance != null and runesInstance.runes.size() > 0 and caster.hasAbility(SPELL_DEMENTIA_SUMMONING)
+    if runesInstance != null and portalInstance != null and runesInstance.runes.size() > 0 and caster.hasAbility(ABILITY_DEMENTIA_SUMMONING)
         if portalInstance.isUnitInsidePortal(caster)
             //Have portal, and standing inside portal
             var runeSequence = new OwnedLinkedList<Runes>()
@@ -192,4 +192,4 @@ function initSummonsData()
 
 init
     initSummonsData()
-    registerSpellEffectEvent(SPELL_ACTIVATE_RUNE, () -> onCast())
+    registerSpellEffectEvent(ABILITY_ACTIVATE_RUNE, () -> onCast())

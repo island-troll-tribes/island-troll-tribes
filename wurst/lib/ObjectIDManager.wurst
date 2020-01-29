@@ -1,0 +1,115 @@
+package ObjectIDManager
+
+// Standard library imports:
+import ErrorHandling
+import HashMap
+import ObjectIdGenerator
+import ObjectIds
+
+// The standard library does not support generating IDs for destructibles.
+// TODO: Move this to ObjectIdGenerator
+public constant DEST_ID_GEN = new IdGenerator('DM00')
+
+public enum IDType
+    UNIT
+    HERO
+    ABIL
+    BUFF
+    ITEM
+    UPGD
+    DEST
+
+// Stores the type per shortcut.
+let shortcuts = new HashMap<string, IDType>()
+    ..put("UNIT_", IDType.UNIT)
+    ..put("HERO_", IDType.HERO)
+    ..put("ABIL_", IDType.ABIL)
+    ..put("BUFF_", IDType.BUFF)
+    ..put("ITEM_", IDType.ITEM)
+    ..put("UPGD_", IDType.UPGD)
+    ..put("DEST_", IDType.DEST)
+
+// Stores the generator per type.
+let generators = new HashMap<IDType, IdGenerator>()
+    ..put(IDType.UNIT, UNIT_ID_GEN)
+    ..put(IDType.HERO, HERO_ID_GEN)
+    ..put(IDType.ABIL, ABIL_ID_GEN)
+    ..put(IDType.BUFF, BUFF_ID_GEN)
+    ..put(IDType.ITEM, ITEM_ID_GEN)
+    ..put(IDType.UPGD, UPGD_ID_GEN)
+    ..put(IDType.DEST, DEST_ID_GEN)
+
+// Stores the ID per name.
+let values = new HashMap<string, int>()
+
+// Stores the type per name.
+let types = new HashMap<string, IDType>()
+
+// Stores the name per ID, the reverse mapping.
+let names = new HashMap<int, string>
+
+function inferType(string name) returns IDType
+    // Compute the shortcut used within the name.
+    let key = name.substring(0, 5).toUpperCase()
+
+    // Verify that the name contains a valid shortcut.
+    if not shortcuts.has(key)
+        error("Invalid shortcut used: {}".format(name))
+
+    // Generate the object with the appropriate type.
+    return shortcuts.get(key)
+
+public function generateObjectID(string name) returns int
+    // Forward the call after inferring the type
+    return generateObjectID(name, inferType(name))
+
+public function generateObjectID(string name, IDType type_) returns int
+    // Generate, register, and output the new ID.
+    return generators.get(type_).next()..registerObjectID(name, type_)
+
+public function int.registerObjectID(string name)
+    this.registerObjectID(name, inferType(name))
+
+public function int.registerObjectID(string name, IDType type_)
+    // Use uppercase for object names.
+    let key = name.toUpperCase()
+
+    // Disallow overwrites.
+    if values.has(key)
+        error("Duplicate name detected: {}".format(name))
+
+    // Update the dictionaries.
+    values.put(key, this)
+    types.put(key, type_)
+    names.put(this, key)
+
+public function string.asObjectID() returns int
+    // Look up the ID for the name.
+    let value = values.get(this.toUpperCase())
+
+    // Output the stored ID, defaulting to treating the name as a raw code.
+    if value != 0
+        return value
+    else if this.length() == 4
+        return this.fromRawCode()
+    else
+        return 0
+
+public function int.asObjectName() returns string
+    // Look up the name for the ID.
+    let name = names.get(this)
+
+    // Output the stored ID, defaulting to treating the name as a raw code.
+    if name == null
+        return this.toRawCode()
+    else
+        return name
+
+public function string.getObjectType() returns IDType
+    return types.get(this.toUpperCase())
+
+public function string.isRegisteredObjectName() returns bool
+    return values.has(this)
+
+public function int.isRegisteredObjectID() returns bool
+    return names.has(this)

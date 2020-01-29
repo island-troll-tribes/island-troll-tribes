@@ -4,7 +4,7 @@ import HashMap
 import LinkedList
 import ClosureTimers
 import Orders
-import ID
+import LocalObjectIDs
 import ClosureForGroups
 import DummyCaster
 import Assets
@@ -67,7 +67,7 @@ class OpenLightGate extends ChannelAbilityPreset
         this.setCasterAttachmentPoint("")
 
 @compiletime function createOpenLightGate()
-    new OpenLightGate(SPELL_LIGHT_GATE, "E", new Pair(0, 0))
+    new OpenLightGate(ABILITY_LIGHT_GATE, "E", new Pair(0, 0))
 
 class OrbSpell
     int spellId
@@ -248,19 +248,19 @@ function onCast()
     lightGateInstances.put(caster, new LightGateInstance(caster, caster.getPos3Real() + vec3(0, 0, 50)))
 
 function onEndCast()
-    if GetSpellAbilityId() == SPELL_LIGHT_GATE
+    if GetSpellAbilityId() == ABILITY_LIGHT_GATE
         var caster = GetSpellAbilityUnit()
         var instance = lightGateInstances.get(caster)
         instance.isChanneling = false
 
 function initSpellPool()
-    spellPool.add(1, new OrbSpell("Healing wave", SPELL_HEALING_WAVE, Orders.healingwave, 0     ))
-    spellPool.add(1, new OrbSpell("Spirit link" , SPELL_SPIRIT_LINK , Orders.spiritlink , 'Bspl'))
-    spellPool.add(2, new OrbSpell("Ranged heal" , SPELL_RANGED_HEAL , Orders.heal       , 0     ))
-    spellPool.add(2, new OrbSpell("Pump up"     , SPELL_PUMP_UP     , Orders.bloodlust  , 'B00O'))
+    spellPool.add(1, new OrbSpell("Healing wave", ABILITY_HEALING_WAVE, Orders.healingwave, 0     ))
+    spellPool.add(1, new OrbSpell("Spirit link" , ABILITY_SPIRIT_LINK , Orders.spiritlink , 'Bspl'))
+    spellPool.add(2, new OrbSpell("Ranged heal" , ABILITY_RANGED_HEAL , Orders.heal       , 0     ))
+    spellPool.add(2, new OrbSpell("Pump up"     , ABILITY_PUMP_UP     , Orders.bloodlust  , 'B00O'))
     spellPool.add(2, new OrbSpell("Inner fire"  , ABILITY_INNER_FIRE, Orders.innerfire  , 'BHds'))
 
 init
     initSpellPool()
-    registerSpellEffectEvent(SPELL_LIGHT_GATE, () -> onCast())
+    registerSpellEffectEvent(ABILITY_LIGHT_GATE, () -> onCast())
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST, () -> onEndCast())

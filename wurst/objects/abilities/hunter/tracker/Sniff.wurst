@@ -14,7 +14,7 @@ import Lodash
 
 // Local imports:
 import ForceExtensions
-import ID
+import LocalObjectIDs
 import ToolTipsUtils
 import PlayerExtensions
 import Track
@@ -69,7 +69,7 @@ class Sniff extends ChannelAbilityPreset
         this.setCasterAttachments(0)
 
 @compiletime function createSniff()
-    new Sniff(SPELL_SNIFF, "W", new Pair(1, 0))
+    new Sniff(ABILITY_SNIFF, "W", new Pair(1, 0))
 
 // The ability used to track the quarry.
 class SniffTrack extends GreaterTrack
@@ -81,7 +81,7 @@ class SniffTrack extends GreaterTrack
 
 
 @compiletime function createTrack()
-    new SniffTrack(SPELL_SNIFF_TRACK)
+    new SniffTrack(ABILITY_SNIFF_TRACK)
 
 
 // A mapping from item to the most recent manipulating unit and the current count.
@@ -123,7 +123,7 @@ function onCast(unit caster, item target)
         // Track the quarry.
         InstantDummyCaster.castTarget(
             caster.getOwner(),
-            SPELL_SNIFF_TRACK,
+            ABILITY_SNIFF_TRACK,
             1,
             OrderIds.faeriefire,
             state.a
@@ -163,7 +163,7 @@ public function onMove(unit caster, item target)
 
 
 init
-    EventListener.onCast(SPELL_SNIFF) (unit caster) ->
+    EventListener.onCast(ABILITY_SNIFF) (unit caster) ->
         onCast(caster, EventData.getSpellTargetItem())
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->

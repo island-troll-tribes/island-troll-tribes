@@ -16,7 +16,7 @@ All contributions must be made via pull requests.
 
 When creating a PR, please include a description of how your changes will affect gameplay and preface these comments with `[$changelog: ]`, as demonstrated in [#406](https://github.com/island-troll-tribes/island-troll-tribes/pull/406).
 
-When merging a PR, please ensure that these comments on kept in the squashed commit, as demonstrated in [9fcc944](https://github.com/island-troll-tribes/island-troll-tribes/commit/9fcc944d078db1a87ca1b68a34ebfb5d77f24ba0).
+When merging a PR, please ensure that these comments are kept in the squashed commit, as demonstrated in [9fcc944](https://github.com/island-troll-tribes/island-troll-tribes/commit/9fcc944d078db1a87ca1b68a34ebfb5d77f24ba0).
 
 ## Releasing 
 

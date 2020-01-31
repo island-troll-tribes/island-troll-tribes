@@ -2,7 +2,6 @@ package TrollBuildings
 
 // Standard library imports:
 import Assets
-import BitSet
 import HashMap
 import LinkedList
 import UnitObjEditing
@@ -37,29 +36,6 @@ function BuildingDefinition.addAbilities(LinkedList<int> additional)
 function createBuilding(int newId) returns BuildingDefinition
     return createBuilding(newId, UnitIds.farm)
 
-// Two dummy attacks are enabled to prevent the bug where the ally
-// resources display will block the UI with the upkeep tooltip.
-// TODO: Remove this once Blizzard fixes the bug.
-function BuildingDefinition.disableResourceDisplay()
-    this
-        ..setAttacksEnabled(emptyBitset().set(0).set(1).toInt())
-        // Make it clear to the player that the attack is useless.
-        ..setAttack1DamageNumberofDice(1)
-        ..setAttack2DamageNumberofDice(1)
-        ..setAttack1DamageSidesperDie(1)
-        ..setAttack2DamageSidesperDie(1)
-        // Disable the UI so that that the stop and attack buttons are hidden.
-        ..setAttack1ShowUI(false)
-        ..setAttack2ShowUI(false)
-        // This target type is likely not implemented by the engine.
-        ..setAttack1TargetsAllowed(TargetsAllowed.decoration)
-        ..setAttack2TargetsAllowed(TargetsAllowed.decoration)
-        // Differentiate the two attacks so that both appear on the UI.
-        ..setAttack2AttackType(AttackType.Spells)
-        // Use the tooltip for food to describe the attacks' purpose.
-        ..setFoodProduced(1)
-
-
 // Create a definition with common defaults.
 function createBuilding(int newId, int oldId) returns BuildingDefinition
     return new BuildingDefinition(newId, oldId)
@@ -77,8 +53,6 @@ function createBuilding(int newId, int oldId) returns BuildingDefinition
         ..setDefenseBase(5)
         ..setSelectionScale(2.5)
         ..setCollisionSize(144)
-        // TODO: Remove this once Blizzard fixes the bug.
-        ..disableResourceDisplay()
 
 @compiletime function createMixingPot() returns BuildingDefinition
     return createBuilding(UNIT_POT)

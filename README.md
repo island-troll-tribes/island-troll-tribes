@@ -4,7 +4,7 @@
 
 This is the source for the [Warcraft III](http://us.blizzard.com/en-us/games/war3/) custom map [Island Troll Tribes](https://www.hiveworkshop.com/threads/island-troll-tribes-v2-99f.297609/).
 
-Visit our [Discord server](https://discord.gg/vmK3P2) for more information on the game.
+Visit our [Discord server](https://discord.gg/hYzTRYf) for more information on the game.
 
 ## Developing
 

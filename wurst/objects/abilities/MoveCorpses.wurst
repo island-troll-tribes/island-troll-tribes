@@ -13,6 +13,7 @@ import HashList
 import ObjectIds
 import ObjectIdGenerator
 import Orders
+import SoundUtils
 
 // Local imports:
 import ColorUtils
@@ -22,6 +23,9 @@ import PlayerExtensions
 import SimError
 import StringExtensions
 import Transformation
+
+// Cargo Load sound effect used for corpse grab/drop
+let CORPSE_LOAD_SOUND = new SoundDefinition(Sounds.loading, false)
 
 // The time for which new abilities are disabled to prevent accidental rollback.
 // TODO: Use a per-player setting for this.
@@ -227,6 +231,7 @@ function switchAbilities(unit target) returns int
 function onDrop(unit caster)
     // Create the corpse that is dropped.
     createCorpse(caster.getPos())
+    CORPSE_LOAD_SOUND.playOnPoint(caster.getPos3Real())
 
     // Decrement the count.
     updateCount(caster, -1)
@@ -238,6 +243,7 @@ function onGrab(unit caster, unit target)
 
     // Remove the target, as its purpose is only to trigger this event.
     target.remove()
+    CORPSE_LOAD_SOUND.playOnPoint(caster.getPos3Real())
 
     // Increment the count.
     updateCount(caster, 1)

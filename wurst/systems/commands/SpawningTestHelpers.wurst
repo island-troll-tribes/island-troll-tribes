@@ -75,6 +75,18 @@ let SPAWN_HELP_MESSAGE = compiletime(
     ).joinBy("\n")
 )
 
+let RESEARCH_HELP_MESSAGE = compiletime(
+    asList(
+        "Research upgrade using:".color(GOLD_COLOR),
+        "-research [pid]".color(ENERGY_COLOR),
+        "[pid] is the ID of the research, e.g. UPGD_MEDALLION_COURAGE,",
+        "For example, to research the medallion of courage upgrade, use:",
+        "-research UPGD_MEDALLION_COURAGE".color(ENERGY_COLOR),
+        "If the upgrade has been research already, this command will undo the research".color(GOLD_COLOR)
+    ).joinBy("\n")
+)
+
+
 init
     registerToolkitCommand("create") (triggerPlayer, args) ->
         let idStr = args.get(1).toUpperCase()
@@ -128,3 +140,18 @@ init
                         createUnit(triggerPlayer, elem, pos, (270.0).asAngleDegrees())
                     else
                         createItem(elem, pos)
+
+    registerToolkitCommand("research") (triggerPlayer, args) ->
+        let idStr = args.get(1).toUpperCase()
+        let id = idStr.asObjectID()
+
+        if id <= 0
+            print(RESEARCH_HELP_MESSAGE)
+        else
+            if idStr.startsWith("UPGD_")
+                if GetPlayerTechResearched(triggerPlayer, id, true) == false
+                    SetPlayerTechResearched(triggerPlayer, id, 1)
+                else
+                    SetPlayerTechResearched(triggerPlayer, id, 0)
+            else
+                simError(triggerPlayer, "Cannot research {0}".format(idStr))

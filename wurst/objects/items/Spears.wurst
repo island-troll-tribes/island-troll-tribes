@@ -14,14 +14,26 @@ import UnitExtensions
 let ABILITY_SPEAR_HIT_DETECTION = 'A0EH'
 let DARK_SPEAR_CONSECUTIVE_REDUCTION_FACTOR = 0.6666
 
+public let DARK_SPEAR_MIN = 45.
+public let DARK_SPEAR_MAX = 55.
+
+// If you change the following, update tooltip manually in SpearsDefinition
+public let SPEAR_RESPAWN_CHANCE   = 0.666
+public let IRON_RESPAWN_CHANCE    = 0.666
+public let STEEL_RESPAWN_CHANCE   = 0.666
+public let DARK_RESPAWN_CHANCE    = 0.4
+public let POISON_RESPAWN_CHANCE  = 0.5
+public let RPOISON_RESPAWN_CHANCE = 0.5
+public let UPOISON_RESPAWN_CHANCE = 0.5
+
 enum SpearType
+    Spear
     DarkSpear
+    IronSpear
+    SteelSpear
+    PoisonSpear
     UltraPoisonSpear
     RefinedPoisonSpear
-    PoisonSpear
-    SteelSpear
-    IronSpear
-    Spear
 
 let spellToSpearType = new HashMap<int, SpearType>
 let spearListeners = new HashMap<unit, EventListener>()
@@ -49,14 +61,14 @@ function bindSpearDamageListener(unit dummy, unit target, SpearType spearType)
 function onSpearImpact(unit target, SpearType spearType)
     switch spearType
         case UltraPoisonSpear
-            spawnItemChance(0.5, ITEM_ULTRA_POISON_SPEAR, target.getPos())
+            spawnItemChance(UPOISON_RESPAWN_CHANCE, ITEM_ULTRA_POISON_SPEAR, target.getPos())
         case RefinedPoisonSpear
-            spawnItemChance(0.5, ITEM_REFINED_POISON_SPEAR, target.getPos())
+            spawnItemChance(RPOISON_RESPAWN_CHANCE, ITEM_REFINED_POISON_SPEAR, target.getPos())
         case PoisonSpear
-            spawnItemChance(0.5, ITEM_POISON_SPEAR, target.getPos())
+            spawnItemChance(POISON_RESPAWN_CHANCE, ITEM_POISON_SPEAR, target.getPos())
         case DarkSpear
-            spawnItemChance(0.4, ITEM_DARK_SPEAR, target.getPos())
-            real burnAmount = GetRandomReal(45, 55)
+            spawnItemChance(DARK_RESPAWN_CHANCE, ITEM_DARK_SPEAR, target.getPos())
+            real burnAmount = GetRandomReal(DARK_SPEAR_MIN, DARK_SPEAR_MAX)
 
             // Reduce mana damage for consecutive spears.
             let currentCounters = getAndIncreaseDarkSpearCounter(target)
@@ -67,11 +79,11 @@ function onSpearImpact(unit target, SpearType spearType)
             // Perform the mana reduction.
             target.burnMana(burnAmount)
         case SteelSpear
-            spawnItemChance(0.666, ITEM_STEEL_SPEAR, target.getPos())
+            spawnItemChance(STEEL_RESPAWN_CHANCE, ITEM_STEEL_SPEAR, target.getPos())
         case IronSpear
-            spawnItemChance(0.666, ITEM_IRON_SPEAR, target.getPos())
+            spawnItemChance(IRON_RESPAWN_CHANCE, ITEM_IRON_SPEAR, target.getPos())
         case Spear
-            spawnItemChance(0.666, ITEM_SPEAR, target.getPos())
+            spawnItemChance(SPEAR_RESPAWN_CHANCE, ITEM_SPEAR, target.getPos())
 
     if target.isType(UNIT_TYPE_HERO) and not spearType == SpearType.DarkSpear
         addSpearResistance(target)
@@ -120,13 +132,13 @@ function onSpell()
         onSpear(caster, target, spellToSpearType.get(spell))
 
 init
-    spellToSpearType.put(ABILITY_DARK_SPEAR, SpearType.DarkSpear)
-    spellToSpearType.put(ABILITY_UPOISON_SPEAR, SpearType.UltraPoisonSpear)
-    spellToSpearType.put(ABILITY_RPOISON_SPEAR, SpearType.RefinedPoisonSpear)
-    spellToSpearType.put(ABILITY_POISON_SPEAR, SpearType.PoisonSpear)
-    spellToSpearType.put(ABILITY_STEEL_SPEAR, SpearType.SteelSpear)
-    spellToSpearType.put(ABILITY_IRON_SPEAR, SpearType.IronSpear)
-    spellToSpearType.put(ABILITY_SPEAR, SpearType.Spear)
+    spellToSpearType.put(ABILITY_SPEAR        , SpearType.Spear)
+    spellToSpearType.put(ABILITY_SPEAR_DARK   , SpearType.DarkSpear)
+    spellToSpearType.put(ABILITY_SPEAR_IRON   , SpearType.IronSpear)
+    spellToSpearType.put(ABILITY_SPEAR_STEEL  , SpearType.SteelSpear)
+    spellToSpearType.put(ABILITY_SPEAR_POISON , SpearType.PoisonSpear)
+    spellToSpearType.put(ABILITY_SPEAR_RPOISON, SpearType.RefinedPoisonSpear)
+    spellToSpearType.put(ABILITY_SPEAR_UPOISON, SpearType.UltraPoisonSpear)
 
     EventListener.add(EVENT_PLAYER_UNIT_SPELL_EFFECT) ->
         onSpell()

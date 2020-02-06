@@ -1,70 +1,149 @@
 package SpearsDefinition
 
-import ItemObjEditing
+// Standard library imports:
 import Assets
-import LocalObjectIDs
+import ObjectIds
 import LinkedList
+import BuffObjEditing
+import AbilityObjEditing
+
+// Local imports:
+import Items
+import Spears
+import LocalAssets
 import ToolTipsUtils
+import LocalObjectIDs
 
-constant ABIL_SP = "A00V" // Spear Spell BasedOff Hurl Boulder spell, 40 DMG
-constant ABIL_IS = "A01P" // Iron Spear Spell BasedOff Hurl Boulder spell, 70 DMG
-constant ABIL_SS = "A01Q" // Steel Spear Spell BasedOff Hurl Boulder spell, 100 DMG
-constant ABIL_DS = "A05S" // Dark Spear Spell BasedOff Hurl Boulder spell, 40 DMG
+let SPEAR_DMG = 40.
+let IRON_DMG  = 70.
+let STEEL_DMG = 100.
+let DARK_DMG  = 40.
 
-constant ABIL_PS  = "A00Y" // Poison Spear 1
-constant ABIL_RPS = "A00Z" // Poison Spear 2
-constant ABIL_UPS = "A00X" // Poison Spear 3
+//[Initial, Decaying]
+let POISON_DMG  = [10., 6. ]
+let RPOISON_DMG = [20., 10.]
+let UPOISON_DMG = [40., 16.]
 
-constant ICON_PS  = "ReplaceableTextures\\CommandButtons\\BTNPoisonSpear.blp"
-constant ICON_UPS = "ReplaceableTextures\\CommandButtons\\BTNUltraPoisonSpear.blp"
+let SPEAR_COOLDOWN   = 2.
+let IRON_COOLDOWN    = 5.
+let STEEL_COOLDOWN   = 8.
+let DARK_COOLDOWN    = 5.
+let POISON_COOLDOWN  = 2.
+let RPOISON_COOLDOWN = 5.
+let UPOISON_COOLDOWN = 8.
 
-constant DESC_COMMON = "A spear you throw at enemy. Dealing {0} damage on striking"
-constant TT_COMMON   = "A spear with one use. Deals {0} damage on striking a target. " + "Has {0} chance of being recoverable.".format(0.60.toToolTipLightBlue())
+let SPEAR_STUN_DURATION = 0.10
+let IRON_STUN_DURATION  = 0.20
+let STEEL_STUN_DURATION = 0.30
+let DARK_STUN_DURATION  = 0.50
 
-constant DESC_DS = "A spear you throw at enemy, deals {0} damage and zap " + "{0} to {1} energy on hit.".format(40..toToolTipPurple(), 60..toToolTipPurple())
-constant TT_DS   = "A spear with one use. Deals {0} damage and can zap anywhere from " + "{0} to {1} energy on target hit. Has {2} chance of being recoverable."
-                    .format(40..toToolTipPurple(), 60..toToolTipPurple(), 0.60.toToolTipLightBlue())
+//[Attack Speed, Movement Speed]
+let POISON_DEBUFF  = [0.30, 0.20]
+let RPOISON_DEBUFF = [0.40, 0.30]
+let UPOISON_DEBUFF = [0.50, 0.40]
 
-constant DESC_PS = DESC_COMMON + " Also poison the target."
-constant TT_PS   = "Hurls a poisoned spear at a target enemy unit, dealing {0} initial damage and {1} damage every " + "{0} seconds. ".format(3..toToolTipLightBlue())+
-                   "{2} attack speed and {3} movement decrease. " + "Has {0} chance of being recoverable. ".format(0.50.toToolTipLightBlue()) + "Last {4} seconds."
+let POISON_DURATION = 40.
+let CAST_RANGE = 1000.
 
-constant MODEL = "Models\\Spears.mdx"
+let SPEAR_ICON   = ICON_PATH.format("SteelRanged")
+let IRON_ICON    = ICON_PATH.format("StrengthOfTheMoon")
+let STEEL_ICON   = ICON_PATH.format("ThoriumRanged")
+let DARK_ICON    = ICON_PATH.format("ArcaniteRanged")
+let POISON_ICON  = ICON_PATH.format("PoisonSpear")
+let RPOISON_ICON = ICON_PATH.format("EnvenomedSpear")
+let UPOISON_ICON = ICON_PATH.format("UltraPoisonSpear")
 
-class Spear extends ItemDefinition
-    construct(int id, string icon, string name, string desc, string toolTipExt, real damage, int cost, LinkedList<int> tinting, string abilities)
-        super(id, 'hlst') //Heatlh Stone
-        this.setAbilities(abilities)
-        this.setInterfaceIcon(icon)
-        this.setCooldownGroup("A00V")
-        this.setDescription(desc.format(damage.toToolTipRed()))
-        this.setDroppedWhenCarrierDies(true)
-        this.setTintingColor1Red(tinting.dequeue())
-        this.setTintingColor2Green(tinting.dequeue())
-        this.setTintingColor3Blue(tinting.dequeue())
-        this.setModelUsed(MODEL)
-        this.setGoldCost(0)
-        this.setLevel(1)
-        this.setLumberCost(cost)
-        this.setName(name)
-        this.setScalingValue(0.75)
-        this.setTooltipBasic("Trade for " + name)
-        this.setTooltipExtended(toolTipExt.format(damage.toToolTipRed()))
+let TT_COMMON   = "A spear with one use. Deals {0} damage on striking a target. Has {1} chance of being recoverable."
 
+let TT_DARK_PRE_FORMAT   = "A spear with one use. Deals {0} damage and can zap anywhere from {1} to {2} energy on target hit. Has {3} chance of being recoverable."
 
+let TT_PS   = "Hurls a poisoned spear at a target enemy unit, dealing {0} initial damage and {1} damage every " + "{0} seconds. ".format(3..toToolTipLightBlue())+
+                   "{2} attack speed and {3} movement decrease. " + "Has {0} chance of being recoverable. ".format(0.50.toToolTipLightBlue())
 
-class PoisonSpear extends Spear
-    construct(int id, string icon, string name, real iniDmg, real poisonDmg, real asFactor, real msFactor, int cost, LinkedList<int> tinting, string abilities)
-        super(id, icon, name, DESC_PS, TT_PS.format(iniDmg.toToolTipRed(), poisonDmg.toToolTipGreen(), asFactor.toToolTipOrange(),
-              msFactor.toToolTipOrange(), 40..toToolTipLightBlue()), iniDmg, cost, tinting, abilities)
+let TT_SPEAR = TT_COMMON.format(SPEAR_DMG.toToolTipRed(), 0.60.toToolTipLightBlue()) + makeToolTipCooldown(SPEAR_COOLDOWN)
+let TT_IRON  = TT_COMMON.format(IRON_DMG .toToolTipRed(), 0.60.toToolTipLightBlue()) + makeToolTipCooldown(IRON_COOLDOWN)
+let TT_STEEL = TT_COMMON.format(STEEL_DMG.toToolTipRed(), 0.60.toToolTipLightBlue()) + makeToolTipCooldown(STEEL_COOLDOWN)
+let TT_DARK  = TT_DARK_PRE_FORMAT.format(DARK_DMG .toToolTipRed(), DARK_SPEAR_MIN.toToolTipLightBlue(), DARK_SPEAR_MAX.toToolTipLightBlue(),
+                    DARK_RESPAWN_CHANCE.toToolTipLightBlue()) + makeToolTipCooldown(DARK_COOLDOWN)
+
+let TT_POISON  = TT_PS.format(POISON_DMG[0].toToolTipRed(), POISON_DMG[1].toToolTipRed(), POISON_DEBUFF[0].toToolTipOrange(),
+                      POISON_DEBUFF[1].toToolTipOrange()) + makeToolTipDuration(POISON_DURATION, POISON_COOLDOWN)
+let TT_RPOISON = TT_PS.format(RPOISON_DMG[0].toToolTipRed(), RPOISON_DMG[1].toToolTipRed(), RPOISON_DEBUFF[0].toToolTipOrange(),
+                      RPOISON_DEBUFF[1].toToolTipOrange()) + makeToolTipDuration(POISON_DURATION, RPOISON_COOLDOWN)
+let TT_UPOISON = TT_PS.format(UPOISON_DMG[0].toToolTipRed(), UPOISON_DMG[1].toToolTipRed(), UPOISON_DEBUFF[0].toToolTipOrange(),
+                      UPOISON_DEBUFF[1].toToolTipOrange()) + makeToolTipDuration(POISON_DURATION, UPOISON_COOLDOWN)
+
+class Spear extends PerishableItem
+    construct(int id, string icon, string name, string hotkey, string toolTipExt, int cost, LinkedList<int> tinting, string abilities)
+        super(id, icon, LocalModels.spears, name, hotkey, toolTipExt, cost, 0.75, tinting, abilities, toRawCode(ABILITY_SPEAR), 1)
+
+public class SpearAbility extends AbilityDefinitionThunderBoltCreep
+    construct(int abilId, string name, real damage, real duration, real cooldown)
+        super(abilId)
+        this.setName("Spear Cast ({0})".format(name))
+        this.setDamage(1, damage)
+        this.setDurationHero(1, duration)
+        this.setCooldown(1, cooldown)
+        this.setManaCost(1, 0)
+        this.setItemAbility(true)
+        this.setIconNormal(Icons.bTNThoriumRanged)
+        this.setMissileHomingEnabled(true)
+        this.setMissileSpeed(700)
+        this.setMissileArt(Abilities.banditmissile)
+        this.setTargetsAllowed(1, "air,enemies,ground,neutral,organic,terrain")
+        this.setCastRange(1, CAST_RANGE)
+        this.setEditorSuffix("(Wurst)")
+
+class DarkSpearAbility extends SpearAbility
+    construct(int abildId, string name, real damage, real duration, real cooldown)
+        super(abildId, name, damage, duration, cooldown)
+        this.setMissileArt(Abilities.blackArrowMissile)
+        this.setBuffs(1, toRawCode(BUFF_DARK))
+
+class PoisonSpearAbility extends AbilityDefinitionShadowStrikeCreep
+    construct(int abilId, string name, real initialDamage, real decayDamage, real msMalus, real asMalus, real cooldown)
+        super(abilId)
+        this.setCheckDependencies(false)
+        this.setName("Poison Spear Cast ({0})".format(name))
+        this.setCooldown(1, cooldown)
+        this.setMissileArc(0.30)
+        this.setMissileArt(Abilities.dryadmissile)
+        this.setIconNormal(Icons.bTNPoisonArrow)
+        this.setMissileSpeed(700)
+        this.setItemAbility(true)
+        this.setManaCost(1, 0)
+        this.setInitialDamage(1, initialDamage)
+        this.setDecayingDamage(1, decayDamage)
+        this.setMovementSpeedFactor(1, msMalus)
+        this.setAttackSpeedFactor(1, asMalus)
+        this.setDurationHero(1, POISON_DURATION)
+        this.setDurationNormal(1, POISON_DURATION)
+        this.setCastRange(1, CAST_RANGE)
+        this.setEditorSuffix("(Wurst)")
 
 
 @compiletime function createSpears()
-    new Spear(ITEM_SPEAR       , Icons.bTNSteelRanged       , "Spear"       , DESC_COMMON, TT_COMMON, 40  , 4  , asList(255 , 255 , 255 ), ABIL_SP)
-    new Spear(ITEM_IRON_SPEAR  , Icons.bTNStrengthOfTheMoon , "Iron Spear"  , DESC_COMMON, TT_COMMON, 70  , 11 , asList(200 , 200 , 200 ), ABIL_IS)
-    new Spear(ITEM_STEEL_SPEAR , Icons.bTNThoriumRanged     , "Steel Spear" , DESC_COMMON, TT_COMMON, 100 , 23 , asList(150 , 150 , 150 ), ABIL_SS)
-    new Spear(ITEM_DARK_SPEAR  , Icons.bTNArcaniteRanged    , "Dark Spear"  , DESC_DS    , TT_DS    , 40  , 20 , asList(0   , 0   , 0   ), ABIL_DS)
+    // I believe this buff was made just so we can see the effect when dark spear hit?
+    new BuffDefinition(BUFF_DARK, 'BPSE')
+    ..setArtTarget(1, Abilities.deathandDecayTarget)
+    ..setName(1, "Dark Spear Buff")
+    ..setTargetAttachmentPoint0(1, "origin")
+    ..setEditorSuffix(1, "(Wurst)")
 
-    new PoisonSpear(ITEM_POISON_SPEAR        , ICON_PS                   , "Poison Spear", 20, 6,  0.30, 0.20, 10, asList(100, 255, 100), ABIL_PS)
-    new PoisonSpear(ITEM_REFINED_POISON_SPEAR, Icons.bTNEnvenomedSpear   , "Refined Poison Spear", 30, 10, 0.40, 0.30, 14, asList(100, 255, 100), ABIL_RPS)
-    new PoisonSpear(ITEM_ULTRA_POISON_SPEAR  , ICON_UPS                  , "Ultra Poison Spear", 40, 16, 0.50, 0.40, 19, asList(100, 255, 100), ABIL_UPS)
+    new SpearAbility    (ABILITY_SPEAR , "Spear" , SPEAR_DMG , SPEAR_STUN_DURATION , SPEAR_COOLDOWN)
+    new SpearAbility    (ABILITY_SPEAR_IRON  , "Iron"  , IRON_DMG  , IRON_STUN_DURATION  , IRON_COOLDOWN )
+    new SpearAbility    (ABILITY_SPEAR_STEEL , "Steel" , STEEL_DMG , STEEL_STUN_DURATION , STEEL_COOLDOWN)
+    new DarkSpearAbility(ABILITY_SPEAR_DARK  , "Dark"  , DARK_DMG  , DARK_STUN_DURATION  , DARK_COOLDOWN )
+
+    new PoisonSpearAbility(ABILITY_SPEAR_POISON , "Basic"  , POISON_DMG [0], POISON_DMG [1], POISON_DEBUFF [0], POISON_DEBUFF [1], POISON_COOLDOWN)
+    new PoisonSpearAbility(ABILITY_SPEAR_RPOISON, "Refined", RPOISON_DMG[0], RPOISON_DMG[1], RPOISON_DEBUFF[0], RPOISON_DEBUFF[1], RPOISON_COOLDOWN)
+    new PoisonSpearAbility(ABILITY_SPEAR_UPOISON, "Ultra"  , UPOISON_DMG[0], UPOISON_DMG[1], UPOISON_DEBUFF[0], UPOISON_DEBUFF[1], UPOISON_COOLDOWN)
+
+    new Spear(ITEM_SPEAR       , SPEAR_ICON , "Spear"       , "Q", TT_SPEAR , 4,  asList(255 , 255 , 255 ), toRawCode(ABILITY_SPEAR))
+    new Spear(ITEM_IRON_SPEAR  , IRON_ICON  , "Iron Spear"  , "Q", TT_IRON  , 11, asList(200 , 200 , 200 ), toRawCode(ABILITY_SPEAR_IRON))
+    new Spear(ITEM_STEEL_SPEAR , STEEL_ICON , "Steel Spear" , "Q", TT_STEEL , 23, asList(150 , 150 , 150 ), toRawCode(ABILITY_SPEAR_STEEL))
+    new Spear(ITEM_DARK_SPEAR  , DARK_ICON  , "Dark Spear"  , "Q", TT_DARK  , 20, asList(0   , 0   , 0   ), toRawCode(ABILITY_SPEAR_DARK))
+
+    new Spear(ITEM_POISON_SPEAR         , POISON_ICON  , "Poison Spear"         , "Q", TT_POISON , 10, asList(100, 255, 100), toRawCode(ABILITY_SPEAR_POISON))
+    new Spear(ITEM_REFINED_POISON_SPEAR , RPOISON_ICON , "Refined Poison Spear" , "Q", TT_RPOISON, 14, asList(100, 255, 100), toRawCode(ABILITY_SPEAR_RPOISON))
+    new Spear(ITEM_ULTRA_POISON_SPEAR   , UPOISON_ICON , "Ultra Poison Spear"   , "Q", TT_UPOISON, 19, asList(100, 255, 100), toRawCode(ABILITY_SPEAR_UPOISON))

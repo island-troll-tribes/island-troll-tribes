@@ -48,12 +48,16 @@ public class Omnicure extends ChannelAbilityPreset
 
 @compiletime function createOmnicure()
     new Omnicure(ABILITY_OMNICURE, "E", new Pair(1, 0), MANACOST)
+    new Omnicure(ABILITY_OMNICURE_ITEM, "E", new Pair(1, 0), 0)
 
-public function castOmnicure(player owner)
+public function castOmnicure(unit caster)
+    let owner = caster.getOwner()
     forUnitsInRect(bj_mapInitialPlayableArea) (unit u) ->
         if u.isType(UNIT_TYPE_HERO) and u.getOwner().isAllyOf(owner)
             InstantDummyCaster.castTarget(owner, ABILITY_CURE_ALL, 1, Orders.autodispel, u)
+
 init
     EventListener.onCast(ABILITY_OMNICURE) (unit caster) ->
-        let owner = caster.getOwner()
-        castOmnicure(owner)
+        castOmnicure(caster)
+    EventListener.onCast(ABILITY_OMNICURE_ITEM) (unit caster) ->
+        castOmnicure(caster)

@@ -3,114 +3,114 @@ from collections import defaultdict
 import re
 
 # Parse the ObjEditing wurst file to get the attribute Id and function prototype
-def parseObjEditingReferenceFile(fileToOpen):
+def parse_obj_editing_reference_file(file_to_open):
 
-    with open(fileToOpen, 'r') as f:
+    with open(file_to_open, 'r') as f:
         lines = f.readlines()
 
-    dictAttribute = defaultdict(str)
+    dict_attribute = defaultdict(str)
 
     # match function name like the following : from "..setName()", we get setName
-    patternObjFuncName = r'(?<=\tfunction )(set|hide).+(?=\()'
+    pattern_obj_func_name = r'(?<=\tfunction )(set|hide).+(?=\()'
 
     # match the fieldAttributeId, like the following : from "def.setString("utub", data)", we get "utub"
-    patternObjAttrId = r'(?<=\(\").+(?=\",)'
+    pattern_obj_attr_id = r'(?<=\(\").+(?=\",)'
 
-    newFuncName = None
+    new_func_name = None
 
     for line in lines:
-        matchFuncName = re.search(patternObjFuncName, line)
-        if matchFuncName:
-            newFuncName = matchFuncName.group()
+        match_func_name = re.search(pattern_obj_func_name, line)
+        if match_func_name:
+            new_func_name = match_func_name.group()
             continue
 
-        matchAttributeId = re.search(patternObjAttrId, line)
-        if matchAttributeId and newFuncName:
-            attributeId = matchAttributeId.group()
-            if attributeId not in dictAttribute:
-                dictAttribute[attributeId] += newFuncName
-            newFuncName = None
-    return dictAttribute
+        match_attribute_id = re.search(pattern_obj_attr_id, line)
+        if match_attribute_id and new_func_name:
+            attribute_id = match_attribute_id.group()
+            if attribute_id not in dict_attribute:
+                dict_attribute[attribute_id] += new_func_name
+            new_func_name = None
+    return dict_attribute
 
 
 # Param contains the object type ID (unit, item, ability, buff), the newID and the originID
 # Return the new ObjDefinition line, e.g "new UnitDefinition("TROL","Obla") or "new ItemDefinition("I000","mnst")
-def getObjDefinitionStart(matchObjDef):
+def get_obj_definition_start(match_obj_def):
     # TODO: Handle case where the definition isn't unit/ability/buff/item
-    ObjType = ""
-    if matchObjDef[0] == "\"w3u\"":
-        ObjType = "Unit"
-    elif matchObjDef[0] == "\"w3t\"":
-        ObjType = "Item"
-    elif matchObjDef[0] == "\"w3a\"":
-        ObjType = "Ability"
-    elif matchObjDef[0] == "\"w3h\"":
-        ObjType = "Buff"
+    obj_type = ""
+    if match_obj_def[0] == "\"w3u\"":
+        obj_type = "Unit"
+    elif match_obj_def[0] == "\"w3t\"":
+        obj_type = "Item"
+    elif match_obj_def[0] == "\"w3a\"":
+        obj_type = "Ability"
+    elif match_obj_def[0] == "\"w3h\"":
+        obj_type = "Buff"
     strDef = "\n\tnew {}Definition({}, {})\n".format(
-        ObjType, matchObjDef[1], matchObjDef[2])
+        obj_type, match_obj_def[1], match_obj_def[2])
     return strDef
 
 # Return an attribute setter line, e.g "..setName("Bilbo")
-def getAttributeSetterLine(objDefinitionDict, data, dictAttribute):
+def get_attribute_setter_line(obj_definition_dict, data, dict_attribute):
     data[0] = data[0].replace("\"", "")
-    objDefinitionDict[data[0]].append(data[1])
+    obj_definition_dict[data[0]].append(data[1])
 
-    if dictAttribute.get(data[0]) != None:
-        return "\t\t..{}({})\n".format(dictAttribute.get(data[0]), data[1])
+    if dict_attribute.get(data[0]) != None:
+        return "\t\t..{}({})\n".format(dict_attribute.get(data[0]), data[1])
     return ""
 
-# This function generate an output from the fileToOpen
-def getWurstOutPut(dictAttribute, fileToFormat):
-    objDefinitionDict = defaultdict(list)
+# This function generate an output from the file_to_open
+def get_wurst_out_put(dict_attribute, file_to_format):
+    obj_definition_dict = defaultdict(list)
     output = ""
 
-    patternObjDef = r'(?<=createObjectDefinition\().+(?=\))'
-    patternAttrLine = r'(?<=\w\().+(?=\)\n)'
+    pattern_obj_def = r'(?<=createObjectDefinition\().+(?=\))'
+    pattern_attr_line = r'(?<=\w\().+(?=\)\n)'
 
-    with open(fileToFormat, 'r') as f:
+    with open(file_to_format, 'r') as f:
         lines = f.readlines()
 
-    ObjDefCounter = 0
+    obj_def_counter = 0
     for line in lines:
-        matchObjDef = re.search(patternObjDef, line)
-        if matchObjDef:
-            output += getObjDefinitionStart(matchObjDef.group().split(", ", 2))
-            ObjDefCounter += 1
+        match_obj_def = re.search(pattern_obj_def, line)
+        if match_obj_def:
+            output += get_obj_definition_start(match_obj_def.group().split(", ", 2))
+            obj_def_counter += 1
 
-        matchAttrLine = re.search(patternAttrLine, line)
-        if matchAttrLine:
-            ret = getAttributeSetterLine(objDefinitionDict, matchAttrLine.group().split(", ", 1), dictAttribute)
+        match_attr_line = re.search(pattern_attr_line, line)
+        if match_attr_line:
+            ret = get_attribute_setter_line(obj_definition_dict, match_attr_line.group().split(", ", 1), dict_attribute)
             output += ret
-    print("Formatted %s Object Definition from %s" % (ObjDefCounter, fileToFormat))
+    print("Formatted %s Object Definition from %s" % (obj_def_counter, file_to_format))
     return output
 
 def main():
-    wurstDefinitionItemPath    = "_build\\dependencies\\wurstStdlib2\\wurst\\objediting\\ItemObjEditing.wurst"
-    wurstDefinitionUnitPath    = "_build\\dependencies\\wurstStdlib2\\wurst\\objediting\\UnitObjEditing.wurst"
-    wurstDefinitionAbilityPath = "_build\\dependencies\\wurstStdlib2\\wurst\\objediting\\AbilityObjEditing.wurst"
-    wurstDefinitionBuffPath    = "_build\\dependencies\\wurstStdlib2\\wurst\\objediting\\BuffObjEditing.wurst"
+    wurst_definition_item_path    = "_build\\dependencies\\wurstStdlib2\\wurst\\objediting\\ItemObjEditing.wurst"
+    wurst_definition_unit_path    = "_build\\dependencies\\wurstStdlib2\\wurst\\objediting\\UnitObjEditing.wurst"
+    wurst_definition_ability_path = "_build\\dependencies\\wurstStdlib2\\wurst\\objediting\\AbilityObjEditing.wurst"
+    wurst_definition_buff_path    = "_build\\dependencies\\wurstStdlib2\\wurst\\objediting\\BuffObjEditing.wurst"
 
     # Store the attribute Id and function prototype in a dictionary, e.g ["unam","setName"]
-    itemDict    = parseObjEditingReferenceFile(wurstDefinitionItemPath)
-    unitDict    = parseObjEditingReferenceFile(wurstDefinitionUnitPath)
-    abilityDict = parseObjEditingReferenceFile(wurstDefinitionAbilityPath)
-    buffDict    = parseObjEditingReferenceFile(wurstDefinitionBuffPath)
+    itemDict    = parse_obj_editing_reference_file(wurst_definition_item_path)
+    unitDict    = parse_obj_editing_reference_file(wurst_definition_unit_path)
+    abilityDict = parse_obj_editing_reference_file(wurst_definition_ability_path)
+    buffDict    = parse_obj_editing_reference_file(wurst_definition_buff_path)
 
-    fileToOpen = "wurst\\objects\\items\\raw.wurst"
-    with open("scripts\\DefinitionOutput\\items.wurst", "w+") as newFile:
-        newFile.write(getWurstOutPut(itemDict, fileToOpen))
+    file_to_open = "wurst\\objects\\items\\raw.wurst"
+    with open("scripts\\DefinitionOutput\\items.wurst", "w+") as new_file:
+        new_file.write(get_wurst_out_put(itemDict, file_to_open))
 
-    fileToOpen = "wurst\\objects\\units\\units.wurst"
-    with open("scripts\\DefinitionOutput\\units.wurst", "w+") as newFile:
-        newFile.write(getWurstOutPut(unitDict, fileToOpen))
+    file_to_open = "wurst\\objects\\units\\units.wurst"
+    with open("scripts\\DefinitionOutput\\units.wurst", "w+") as new_file:
+        new_file.write(get_wurst_out_put(unitDict, file_to_open))
 
-    fileToOpen = "wurst\\objects\\abilities\\abilities.wurst"
-    with open("scripts\\DefinitionOutput\\abilities.wurst", "w+") as newFile:
-        newFile.write(getWurstOutPut(abilityDict, fileToOpen))
+    file_to_open = "wurst\\objects\\abilities\\abilities.wurst"
+    with open("scripts\\DefinitionOutput\\abilities.wurst", "w+") as new_file:
+        new_file.write(get_wurst_out_put(abilityDict, file_to_open))
 
-    fileToOpen = "wurst\\objects\\buffs.wurst"
-    with open("scripts\\DefinitionOutput\\buffs.wurst", "w+") as newFile:
-        newFile.write(getWurstOutPut(buffDict, fileToOpen))
+    file_to_open = "wurst\\objects\\buffs.wurst"
+    with open("scripts\\DefinitionOutput\\buffs.wurst", "w+") as new_file:
+        new_file.write(get_wurst_out_put(buffDict, file_to_open))
     print("END")
 
 if __name__ == "__main__":

@@ -3,6 +3,8 @@ package Hints
 // Standard library imports:
 import ClosureTimers
 import LinkedList
+import ClosureEvents
+import SoundUtils
 
 // Local imports:
 import ChatCommands
@@ -13,8 +15,9 @@ import PingMinimap
 import PlayerExtensions
 import StringExtensions
 import UnitExtensions
+import IdListConstant
 
-let TIME_BETWEEN_HINTS = 50.0
+let TIME_BETWEEN_HINTS = 5.0
 let HINTS_MESSAGE = compiletime(
     asList(
         "Your hints are now ".color(GENERAL_COLOR),
@@ -22,6 +25,8 @@ let HINTS_MESSAGE = compiletime(
         ".".color(GENERAL_COLOR)
     ).join()
 )
+let HINT_SOUND = compiletime(new SoundDefinition(Sounds.hint, false))
+
 
 class Hint
 
@@ -42,11 +47,11 @@ class Hint
 
     static function addPlayer(player p)
         ForceAddPlayer(playersF, p)
-        printTimedToPlayer(compiletime(HINTS_MESSAGE.format("off")), 5, p)
+        printTimedToPlayer(compiletime(HINTS_MESSAGE.format("on")), 5, p)
 
     static function removePlayer(player p)
         ForceRemovePlayer(playersF, p)
-        printTimedToPlayer(compiletime(HINTS_MESSAGE.format("on")), 5, p)
+        printTimedToPlayer(compiletime(HINTS_MESSAGE.format("off")), 5, p)
 
     static function togglePlayer(player p)
         if (IsPlayerInForce(p, playersF))
@@ -59,6 +64,7 @@ class Hint
             printTimed(this.toString(), 10)
             if ping != vec2(0, 0)
                 pingMinimap(ping)
+            HINT_SOUND.playForPlayer(localPlayer)
 
     static function initialize()
         for i = 0 to bj_MAX_PLAYERS - 1
@@ -98,11 +104,11 @@ init
             new Hint("If you are new to this game, reading the quest log Surviving & Crafting, you should."),
             new Hint("For help on building, refer to these shops or for some basics, the quest log.", gg_rct_vision.getCenter()),
             new Hint("If you have no hunter, fires can be used to trap elk. They also make cheap lookouts."),
-            new Hint("If any of your stats - health, mana, heat (beside gold) - reach zero, " + "you die".color(RED_COLOR) + " instantly so keep them up at all times."),
-            new Hint("If you can't manage to craft what you want, type " + "-crafting".color(ENERGY_COLOR) + " to get some explanation."),
+            new Hint("If any of your stats - health, mana, heat (beside gold) - reach zero, " + "you die".color(RED_COLOR) + " instantly so keep them up at all times.".color(GENERAL_COLOR)),
+            new Hint("If you can't manage to craft what you want, type " + "-crafting".color(ENERGY_COLOR) + " to get some explanation.".color(GENERAL_COLOR)),
             new Hint("To toggle hints, type " + "-h".color(HIGHLIGHT_COLOR)),
             new Hint("The Master Crafter in the center of the map can help your team build if you do not have enough inventory slots.", craftMaster.getUnit().getPos()),
-            new Hint("Boats frequently travel up and down the streams. The fur trade is especially lucrative." ),
+            new Hint("Boats frequently travel up and down the streams. The fur trade is especially lucrative."),
             new Hint("Remember to keep a watch on you and your team's stats. Remind someone if they are running low on anything."),
             new Hint("Beware the mammoth. He is a strong foe and defeating him is a team effort, but you will be rewarded...", gg_rct_discoduck.getCenter()),
             new Hint("Try not to sit around in your base the whole game. You can almost always be doing something useful."),
@@ -111,11 +117,11 @@ init
             new Hint("Fighting the bosses around the edges of the map is a good way to level up and gain valuable items."),
             new Hint("Each island got bushes of special herb used for powerful potion, you can see their location by using a command, answer is in the quest log."),
             new Hint("Speed, strategy, and meat are crucial to winning wars."),
-            new Hint("As a scout, you can reveal scout bush to pick up vision ward. Type " + "-ping scout".color(ENERGY_COLOR) + " to locate those bushes."),
-            new Hint("As a thief, you can blink on cliff to pick up item from thief bush, use cloak near the cliff to reveal it. Type " + "-ping thief".color(ENERGY_COLOR) + " to locate the bushes."),
+            new Hint("As a scout, you can reveal scout bush to pick up vision ward. Type " + "-ping scout".color(ENERGY_COLOR) + " to locate those bushes.".color(GENERAL_COLOR)),
+            new Hint("As a thief, you can blink on cliff to pick up item from thief bush, use cloak near the cliff to reveal it. Type " + "-ping thief".color(ENERGY_COLOR) + " to locate the bushes.".color(GENERAL_COLOR)),
             new Hint("An old altar seems to require a certain magical artifact to be activated, who knows what might happen.", gg_rct_TheOne.getCenter()),
             new Hint("Use quickmake skills and unload items to quickly manage the inventories of buildings."),
-            new Hint("Use " + "-changelog".color(ENERGY_COLOR) + " to view changelog for this version"),
+            new Hint("Use " + "-changelog".color(ENERGY_COLOR) + " to view changelog for this version".color(GENERAL_COLOR)),
             new Hint("Feel free to share feedback & idea on the Island Troll Tribes discord," + " https://discord.gg/Rh9JdKs".color(ENERGY_COLOR))
         )
 
@@ -124,3 +130,10 @@ init
         doPeriodically(3) cb ->
             Hint.playersF.forEach() ->
                 checkStat(GetEnumPlayer().getTroll())
+
+    // Clunky try at displaying hint on an event, should rework hint system later on
+    EventListener.add(EVENT_PLAYER_HERO_LEVEL) ->
+        let hero = GetTriggerUnit()
+        if hero.getLevel() >= 6 and UNSUB_TROLL_UNIT_LIST.has(hero.getTypeId())
+            new Hint("You have reached level " + hero.getLevel().toString().color(GOLD_COLOR) +
+            ", you can now choose a subclass in the SubClass menu [".color(GENERAL_COLOR) + "T".color(GOLD_COLOR) + "]".color(GENERAL_COLOR))..display()

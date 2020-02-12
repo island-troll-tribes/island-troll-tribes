@@ -7,11 +7,24 @@ import ObjectIds
 import Items
 import LocalAssets
 import LocalObjectIDs
-import PotionsDefinition
+import ObjEditingUtils
+import ItemObjEditing
 
-constant ICON = ICON_PATH.format("MinorRejuvPotion")
-constant MODEL = LocalItems.potionPurpleSmall
-constant TT = "This potion is said to be able to cure all allies."
+let ICON  = ICON_PATH.format("MinorRejuvPotion")
+let MODEL = LocalItems.potionPurpleSmall
+let TT    = "This potion is said to be able to cure all allies."
 
-@compiletime function createOmnicurePotion()
-    new PotionDefinition(ITEM_OMNICURE, ICON, MODEL, "Omnicure Potion", "S", TT, 22, commaList(ABILITY_OMNICURE_ITEM), 0.70, commaList(ABILITY_OMNICURE_ITEM), 120)
+@compiletime function createCure() returns ItemDefinition
+    return createPerishableItem(ITEM_OMNICURE)
+        ..setName("Omnicure Potion")
+        ..setInterfaceIcon(ICON)
+        ..setModelUsed(MODEL)
+        ..setHotkey("S")
+        ..setTooltipBasic("Omnicure Potion")
+        ..setTooltipExtended(TT)
+        ..setLumberCost(22)
+        ..setAbilities(commaList(ABILITY_OMNICURE_ITEM))
+        ..setScalingValue(0.7)
+        ..setCooldownGroup(commaList(ABILITY_OMNICURE_ITEM))
+        ..setStockReplenishInterval(120)
+        ..setNumberofCharges(1)

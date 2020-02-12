@@ -4,7 +4,35 @@ import ItemObjEditing
 import ChannelAbilityPreset
 import LinkedList
 
-public constant ICON_PATH = "ReplaceableTextures\\CommandButtons\\BTN{0}.blp"
+
+// Default to the base ID most commonly used.
+// bspd is the id of boot of speed
+public function createBasicItem(int newId) returns ItemDefinition
+    return createBasicItem(newId, 'bspd')
+
+public function createUsableItem(int newId) returns ItemDefinition
+    return createUsableItem(newId, 'bspd')
+
+public function createPerishableItem(int newId) returns ItemDefinition
+    return createPerishableItem(newId, 'bspd')
+
+function createBasicItem(int newId, int oldId) returns ItemDefinition
+    return new ItemDefinition(newId, oldId)
+        ..setGoldCost(0)
+        ..setDroppedWhenCarrierDies(true)
+        ..setHotkey("")
+        ..setLevel(0)
+        ..setHitPoints(75)
+        ..setClassification("Permanent")
+        ..setMaxStack(0)
+
+function createUsableItem(int newId, int oldId) returns ItemDefinition
+    return createBasicItem(newId, oldId)
+        ..setActivelyUsed(true)
+
+function createPerishableItem(int newId, int oldId) returns ItemDefinition
+    return createUsableItem(newId, oldId)
+        ..setPerishable(true)
 
 public class IttItem extends ItemDefinition
     construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, string abilities)
@@ -56,28 +84,6 @@ public class IttItem extends ItemDefinition
         this.setButtonPositionX(x)
         this.setButtonPositionY(y)
 
-public class UsableItem extends IttItem
-    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, LinkedList<int> tinting, string abilities, string cooldownGrp)
-        super(itemId, icon, model, name, hotkey, toolTipExt, cost, scale, tinting, abilities)
-        this.setActivelyUsed(true)
-        this.setCooldownGroup(cooldownGrp)
-
-    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, string abilities, string cooldownGrp)
-        super(itemId, icon, model, name, hotkey, toolTipExt, cost, scale, abilities)
-        this.setActivelyUsed(true)
-        this.setCooldownGroup(cooldownGrp)
-
-public class PerishableItem extends UsableItem
-    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, LinkedList<int> tinting, string abilities, string cooldownGrp, int charge)
-        super(itemId, icon, model, name, hotkey, toolTipExt, cost, scale, tinting, abilities, cooldownGrp)
-        this.setPerishable(true)
-        this.setNumberofCharges(charge)
-
-    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, string abilities, string cooldownGrp, int charge)
-        super(itemId, icon, model, name, hotkey, toolTipExt, cost, scale, abilities, cooldownGrp)
-        this.setPerishable(true)
-        this.setNumberofCharges(charge)
-
 //Item Abilities
 //Attack Bonus ability (Axes)
 public class AttackBonusAbility extends AbilityDefinitionAttackBonusPlus1
@@ -112,7 +118,7 @@ public class AttackSpeedBonusAbility extends AbilityDefinitionAttackSpeedIncreas
         this.setEditorSuffix("(Wurst)")
 
 public class ItemChannelCast extends ChannelAbilityPreset
-    construct(int abilId, string name, Targettype targetType, real castRange, real cooldown)
+    construct(int abilId, string name, Targettype targetType, string targetsAllowed, real castRange, real cooldown)
         super(abilId, 1, true)
         this.setName(name + " Cast")
         this.setCheckDependencies(false)
@@ -122,4 +128,26 @@ public class ItemChannelCast extends ChannelAbilityPreset
         this.setManaCost(1, 0)
         this.setCooldown(1, cooldown)
         this.setCastRange(1, castRange)
+        this.setTargetsAllowed(1, targetsAllowed)
         this.setEditorSuffix("(Wurst)")
+
+public class ItemWindWalkCast extends AbilityDefinitionWindWalk
+    construct(int abilId, string name, real cooldown)
+        super(abilId)
+        this.setArtCaster("")
+        this.setArtEffect("")
+        this.setArtTarget("")
+        this.setArtSpecial("")
+        this.setHeroAbility(false)
+        this.setItemAbility(true)
+        this.setLevels(1)
+        this.setName(name + " Cast")
+        this.setTooltipNormal(1, "dummy spell")
+        this.setTooltipNormalExtended(1, "dummy spell")
+        this.setCooldown(1, cooldown)
+        this.setManaCost(1, 0)
+        this.setAnimationNames("")
+        this.setDurationHero(1, 0.01)
+        this.setCastingTime(1, 0)
+        this.setDurationNormal(1, 0.01)
+        this.setEffectSound("")

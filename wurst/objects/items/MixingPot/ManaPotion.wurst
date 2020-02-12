@@ -1,13 +1,13 @@
 package ManaPotion
 
-import PotionsDefinition
 import LocalObjectIDs
-import LinkedList
 import ToolTipsUtils
 import ChannelAbilityPreset
 import ClosureEvents
 import Assets
 import ObjEditingUtils
+import ItemObjEditing
+import Items
 
 constant ABIL  = compiletime(ABIL_ID_GEN.next())
 
@@ -21,20 +21,22 @@ constant TT    = "A dilute potion made from Athelas Seed. Instantly restores {0}
 constant TARGET_ALLOWED = "friend,ground,hero,invulnerable,organic,self,vulnerable"
 
 @compiletime function createAbil()
-    new ChannelAbilityPreset(ABIL, 1, true)
-    ..setName("Mana Potion")
-    ..setCheckDependencies(false)
-    ..setHeroAbility(false)
-    ..setItemAbility(true)
-    ..presetTargetTypes(Targettype.UNIT)
-    ..setManaCost(1, 0)
-    ..setCooldown(1, 0)
-    ..setCastRange(1, CAST_RANGE)
-    ..setRace(Race.Demon)
-    ..setEditorSuffix("(Wurst)")
+    new ItemChannelCast(ABIL, "Mana Potion", Targettype.UNIT, TARGET_ALLOWED, CAST_RANGE, 0)
 
-@compiletime function createManaPotion()
-    new PotionDefinition(ITEM_MANA_POTION, ICON, MODEL, "Mana Potion", "W", TT, 5, commaList(ABIL), 0.7, "A002", 120)
+@compiletime function createManaPotion() returns ItemDefinition
+    return createPerishableItem(ITEM_MANA_POTION)
+        ..setName("Mana Potion")
+        ..setInterfaceIcon(ICON)
+        ..setModelUsed(MODEL)
+        ..setHotkey("W")
+        ..setTooltipBasic("Mana Potion")
+        ..setTooltipExtended(TT)
+        ..setLumberCost(5)
+        ..setAbilities(commaList(ABIL))
+        ..setScalingValue(0.7)
+        ..setCooldownGroup("A002")
+        ..setStockReplenishInterval(120)
+        ..setNumberofCharges(1)
 
 init
     EventListener.onTargetCast(ABIL) (unit caster, unit target) ->

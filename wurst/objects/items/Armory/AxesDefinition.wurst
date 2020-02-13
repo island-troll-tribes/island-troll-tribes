@@ -21,11 +21,11 @@ let ABIL_DMG_BATTLE = compiletime(ABIL_ID_GEN.next())
 let ABIL_SILENCE = compiletime(ABIL_ID_GEN.next())
 let ABIL_PURGE   = compiletime(ABIL_ID_GEN.next())
 
-let ABIL_STONE  = commaList(ABIL_DMG_STONE)
-let ABIL_IRON   = commaList(ABIL_DMG_IRON)
-let ABIL_STEEL  = commaList(ABIL_DMG_STEEL)
-let ABIL_MASHER = commaList(ABIL_SILENCE, ABIL_DMG_MASHER)
-let ABIL_BATTLE = commaList(ABIL_PURGE, ABIL_DMG_BATTLE)
+let ABIL_STONE  = commaList(ABIL_DMG_STONE, ABILITY_ATTACK_TREE)
+let ABIL_IRON   = commaList(ABIL_DMG_IRON, ABILITY_ATTACK_TREE)
+let ABIL_STEEL  = commaList(ABIL_DMG_STEEL, ABILITY_ATTACK_TREE)
+let ABIL_MASHER = commaList(ABIL_SILENCE, ABIL_DMG_MASHER, ABILITY_ATTACK_TREE)
+let ABIL_BATTLE = commaList(ABIL_PURGE, ABIL_DMG_BATTLE, ABILITY_ATTACK_TREE)
 
 let DMG_STONE  = 6
 let DMG_IRON   = 8
@@ -54,6 +54,22 @@ let TT_MM = TT_COMMON + " Can cast silence which has a {0} area of effect, lasti
 
 let TT_BA = "A two handed axe. " + TT_COMMON + " Can cast purge, removes all buffs from a target unit, and slows its movement speed." + formatCooldown(ABIL_PURGE) + formatDuration(ABIL_PURGE)
 
+
+@compiletime function createCutTreeAbility() returns AbilityDefinitionFireDamageBonus
+    return new AbilityDefinitionFireDamageBonus(ABILITY_ATTACK_TREE)
+        ..setHeroAbility(true)
+        ..setTargetsAllowed(1, "debris,ground,item,structure,tree,ward")
+        ..setName("Attack Trees")
+        ..setEditorSuffix("(Wurst)")
+        ..setSpecialAttachmentPoint("")
+        ..setArtSpecial("")
+        ..setArtTarget("")
+        ..setTargetAttachmentPoint1("")
+        ..setMissileArt("")
+        ..setDamageBonus(1, 0)
+        ..setSpecialAttachmentPoint("")
+        ..setAreaofEffect(1, 0)
+
  // Only purpose of this function is distinction, not sure about cooldown group, should battle axe and masher share cooldown?
 function createAxe(int axeId) returns ItemDefinition
     return createBasicItem(axeId)
@@ -69,7 +85,7 @@ function createAxe(int axeId) returns ItemDefinition
         ..setTooltipExtended(TT_COMMON.format(DMG_STONE.toString()))
         ..setScalingValue(0.7)
         ..setLumberCost(12)
-        ..setAbilities(commaList(ABIL_STONE, "A00W"))
+        ..setAbilities(ABIL_STONE)
 
 @compiletime function createIronAxe() returns ItemDefinition
     return createAxe(ITEM_IRON_AXE)
@@ -81,7 +97,7 @@ function createAxe(int axeId) returns ItemDefinition
         ..setTooltipExtended(TT_COMMON.format(DMG_IRON.toString()))
         ..setScalingValue(0.7)
         ..setLumberCost(25)
-        ..setAbilities(commaList(ABIL_IRON, "A00W"))
+        ..setAbilities(ABIL_IRON)
 
 @compiletime function createSteelAxe() returns ItemDefinition
     return createAxe(ITEM_STEEL_AXE)
@@ -93,7 +109,7 @@ function createAxe(int axeId) returns ItemDefinition
         ..setTooltipExtended(TT_COMMON.format(DMG_STEEL.toString()))
         ..setScalingValue(0.7)
         ..setLumberCost(48)
-        ..setAbilities(commaList(ABIL_STEEL, "A00W"))
+        ..setAbilities(ABIL_STEEL)
         ..setTintingColor1Red(120)
         ..setTintingColor2Green(140)
         ..setTintingColor3Blue(255)
@@ -108,7 +124,7 @@ function createAxe(int axeId) returns ItemDefinition
         ..setTooltipExtended(TT_BA.format(DMG_BATTLE.toString()))
         ..setScalingValue(0.7)
         ..setLumberCost(60)
-        ..setAbilities(commaList(ABIL_BATTLE, "A00W"))
+        ..setAbilities(ABIL_BATTLE)
         ..setActivelyUsed(true)
 
 @compiletime function createMageMasher() returns ItemDefinition
@@ -121,7 +137,7 @@ function createAxe(int axeId) returns ItemDefinition
         ..setTooltipExtended(TT_MM.format(DMG_MASHER.toString()))
         ..setScalingValue(0.7)
         ..setLumberCost(40)
-        ..setAbilities(commaList(ABIL_MASHER, "A00W"))
+        ..setAbilities(ABIL_MASHER)
         ..setTintingColor2Green(65)
         ..setTintingColor3Blue(65)
         ..setActivelyUsed(true)

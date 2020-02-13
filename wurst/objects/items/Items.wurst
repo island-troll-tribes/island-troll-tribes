@@ -2,7 +2,6 @@ package Items
 
 import ItemObjEditing
 import ChannelAbilityPreset
-import LinkedList
 
 
 // Default to the base ID most commonly used.
@@ -33,56 +32,6 @@ function createUsableItem(int newId, int oldId) returns ItemDefinition
 function createPerishableItem(int newId, int oldId) returns ItemDefinition
     return createUsableItem(newId, oldId)
         ..setPerishable(true)
-
-public class IttItem extends ItemDefinition
-    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, string abilities)
-        super(itemId, 'bspd')
-        this.setName(name)
-        this.setModelUsed(model)
-        this.setLumberCost(cost)
-        this.setInterfaceIcon(icon)
-        this.setDescription(toolTipExt)
-        this.setAbilities(abilities)
-        this.setScalingValue(scale)
-        this.setHotkey(hotkey)
-        this.setTooltipExtended(toolTipExt)
-        setCommonPart()
-
-    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, LinkedList<int> tinting, string abilities)
-        super(itemId, 'bspd')
-        this.setName(name)
-        this.setModelUsed(model)
-        this.setLumberCost(cost)
-        this.setInterfaceIcon(icon)
-        this.setDescription(toolTipExt)
-        this.setAbilities(abilities)
-        this.setHotkey(hotkey)
-        this.setTintingColor1Red(tinting.dequeue())
-        this.setTintingColor2Green(tinting.dequeue())
-        this.setTintingColor3Blue(tinting.dequeue())
-        this.setTooltipBasic("Trade for " + name)
-        this.setTooltipExtended(toolTipExt)
-        this.setScalingValue(scale)
-        setCommonPart()
-
-    /**
-    Basic field settings for island troll tribes items
-    **/
-    function setCommonPart()
-        this.setGoldCost(0)
-        this.setDroppedWhenCarrierDies(true)
-        this.setHotkey("")
-        this.setLevel(0)
-        this.setHitPoints(75)
-        this.setClassification("Permanent")
-        this.setMaxStack(0)
-
-    /**
-    Only used to place item button in the shop panel, might not be very useful to be honest
-    **/
-    function setBtnPos(int x, int y)
-        this.setButtonPositionX(x)
-        this.setButtonPositionY(y)
 
 //Item Abilities
 //Attack Bonus ability (Axes)
@@ -131,6 +80,10 @@ public class ItemChannelCast extends ChannelAbilityPreset
         this.setTargetsAllowed(1, targetsAllowed)
         this.setEditorSuffix("(Wurst)")
 
+/**
+    Use this to create an item spell who doesn't play an animation
+    Contrary to the Channel ability, WindWalk do not stop the unit current order when casted.
+**/
 public class ItemWindWalkCast extends AbilityDefinitionWindWalk
     construct(int abilId, string name, real cooldown)
         super(abilId)

@@ -20,8 +20,14 @@ let CAST_RANGE = 500.
 let TARGET_ALLOWED = "friend,organic,self"
 let TT = "This potion is said to be able to cure anything."
 
-@compiletime function createAbil()
-    new ItemChannelCast(ABILITY_CURE_ALL_ITEM, "Cure Potion", Targettype.UNIT, TARGET_ALLOWED, CAST_RANGE, 0)
+@compiletime function createAbil() returns ChannelAbilityPreset
+    return createItemChannelCast(ABILITY_CURE_ALL_ITEM)
+        ..setName("Cure Potion")
+        ..presetTargetTypes(Targettype.UNIT)
+        ..setTargetsAllowed(1, TARGET_ALLOWED)
+        ..setCastRange(1, CAST_RANGE)
+        ..setManaCost(1, 0)
+        ..setCooldown(1, 0)
 
 @compiletime function createCure() returns ItemDefinition
     return createPerishableItem(ITEM_CURE_ALL)

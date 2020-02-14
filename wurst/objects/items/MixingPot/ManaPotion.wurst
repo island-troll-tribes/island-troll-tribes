@@ -23,8 +23,14 @@ let TT    = "A dilute potion made from Athelas Seed. Instantly restores {0} Mana
 
 let TARGET_ALLOWED = "friend,ground,hero,invulnerable,organic,self,vulnerable"
 
-@compiletime function createAbil()
-    new ItemChannelCast(ABIL, "Mana Potion", Targettype.UNIT, TARGET_ALLOWED, CAST_RANGE, 0)
+@compiletime function createAbil() returns ChannelAbilityPreset
+    return createItemChannelCast(ABIL)
+        ..setName("Mana Potion")
+        ..presetTargetTypes(Targettype.UNIT)
+        ..setTargetsAllowed(1, TARGET_ALLOWED)
+        ..setCastRange(1, CAST_RANGE)
+        ..setManaCost(1, 0)
+        ..setCooldown(1, 0)
 
 @compiletime function createManaPotion() returns ItemDefinition
     return createPerishableItem(ITEM_MANA_POTION)

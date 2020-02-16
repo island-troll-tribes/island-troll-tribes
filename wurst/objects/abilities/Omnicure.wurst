@@ -1,12 +1,18 @@
 package Omnicure
 
-import RegisterEvents
-import DummyCaster
+// Standard library imports:
 import Orders
-import ChannelAbilityPreset
-import LocalObjectIDs
-import Lodash
 import Assets
+import LocalObjectIDs
+import InstantDummyCaster
+import ChannelAbilityPreset
+import ClosureEvents
+import ClosureForGroups
+
+// Third-party imports:
+import Lodash
+
+// Local imports:
 import ToolTipsUtils
 
 let BUFF_ID = compiletime(BUFF_ID_GEN.next())
@@ -20,10 +26,10 @@ let TOOLTIP_EXTENDED = "An upgrade of Cure All that affects all allies as well a
 let TARGET_ALLOWED = "targetAllowed"
 
 
-class Omnicure extends ChannelAbilityPreset
-    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+public class Omnicure extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos, int manaCost)
         super(newAbilityId, 1, true)
-        this.presetManaCost(lvl -> MANACOST)
+        this.presetManaCost(lvl -> manaCost)
         this.presetCooldown(lvl -> COOLDOWN)
         this.setHeroAbility(false)
         this.setItemAbility(false)
@@ -41,18 +47,17 @@ class Omnicure extends ChannelAbilityPreset
 
 
 @compiletime function createOmnicure()
-    new Omnicure(ABILITY_OMNICURE, "E", new Pair(1, 0))
+    new Omnicure(ABILITY_OMNICURE, "E", new Pair(1, 0), MANACOST)
+    new Omnicure(ABILITY_OMNICURE_ITEM, "E", new Pair(1, 0), 0)
+
+public function castOmnicure(unit caster)
+    let owner = caster.getOwner()
+    forUnitsInRect(bj_mapInitialPlayableArea) (unit u) ->
+        if u.isType(UNIT_TYPE_HERO) and u.getOwner().isAllyOf(owner)
+            InstantDummyCaster.castTarget(owner, ABILITY_CURE_ALL, 1, Orders.autodispel, u)
 
 init
-    registerSpellEffectEvent(ABILITY_OMNICURE) ->
-        let heroes = GetUnitsInRectMatching(bj_mapInitialPlayableArea, Condition(() -> begin
-            let filterUnit = GetFilterUnit()
-            return filterUnit.isType(UNIT_TYPE_HERO) and filterUnit.getOwner().isAllyOf(GetSpellAbilityUnit().getOwner())
-        end))
-
-        let owner = GetSpellAbilityUnit().getOwner()
-        for hero in heroes
-            new DummyCaster()
-                ..owner(owner)
-                ..origin(hero.getPos() + vec2(100, 0))
-                ..castTarget(ABILITY_CURE_ALL, 1, Orders.autodispel, hero)
+    EventListener.onCast(ABILITY_OMNICURE) (unit caster) ->
+        castOmnicure(caster)
+    EventListener.onCast(ABILITY_OMNICURE_ITEM) (unit caster) ->
+        castOmnicure(caster)

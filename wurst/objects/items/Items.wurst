@@ -2,81 +2,36 @@ package Items
 
 import ItemObjEditing
 import ChannelAbilityPreset
-import LinkedList
 
-public constant ICON_PATH = "ReplaceableTextures\\CommandButtons\\BTN{0}.blp"
 
-public class IttItem extends ItemDefinition
-    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, string abilities)
-        super(itemId, 'bspd')
-        this.setName(name)
-        this.setModelUsed(model)
-        this.setLumberCost(cost)
-        this.setInterfaceIcon(icon)
-        this.setDescription(toolTipExt)
-        this.setAbilities(abilities)
-        this.setScalingValue(scale)
-        this.setHotkey(hotkey)
-        this.setTooltipExtended(toolTipExt)
-        setCommonPart()
+// Default to the base ID most commonly used.
+// bspd is the id of boot of speed
+public function createBasicItem(int newId) returns ItemDefinition
+    return createBasicItem(newId, 'bspd')
 
-    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, LinkedList<int> tinting, string abilities)
-        super(itemId, 'bspd')
-        this.setName(name)
-        this.setModelUsed(model)
-        this.setLumberCost(cost)
-        this.setInterfaceIcon(icon)
-        this.setDescription(toolTipExt)
-        this.setAbilities(abilities)
-        this.setHotkey(hotkey)
-        this.setTintingColor1Red(tinting.dequeue())
-        this.setTintingColor2Green(tinting.dequeue())
-        this.setTintingColor3Blue(tinting.dequeue())
-        this.setTooltipBasic("Trade for " + name)
-        this.setTooltipExtended(toolTipExt)
-        this.setScalingValue(scale)
-        setCommonPart()
+public function createUsableItem(int newId) returns ItemDefinition
+    return createUsableItem(newId, 'bspd')
 
-    /**
-    Basic field settings for island troll tribes items
-    **/
-    function setCommonPart()
-        this.setGoldCost(0)
-        this.setDroppedWhenCarrierDies(true)
-        this.setHotkey("")
-        this.setLevel(0)
-        this.setHitPoints(75)
-        this.setClassification("Permanent")
-        this.setMaxStack(0)
+public function createPerishableItem(int newId) returns ItemDefinition
+    return createPerishableItem(newId, 'bspd')
 
-    /**
-    Only used to place item button in the shop panel, might not be very useful to be honest
-    **/
-    function setBtnPos(int x, int y)
-        this.setButtonPositionX(x)
-        this.setButtonPositionY(y)
+function createBasicItem(int newId, int oldId) returns ItemDefinition
+    return new ItemDefinition(newId, oldId)
+        ..setGoldCost(0)
+        ..setDroppedWhenCarrierDies(true)
+        ..setHotkey("")
+        ..setLevel(0)
+        ..setHitPoints(75)
+        ..setClassification("Permanent")
+        ..setMaxStack(0)
 
-public class UsableItem extends IttItem
-    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, LinkedList<int> tinting, string abilities, string cooldownGrp)
-        super(itemId, icon, model, name, hotkey, toolTipExt, cost, scale, tinting, abilities)
-        this.setActivelyUsed(true)
-        this.setCooldownGroup(cooldownGrp)
+function createUsableItem(int newId, int oldId) returns ItemDefinition
+    return createBasicItem(newId, oldId)
+        ..setActivelyUsed(true)
 
-    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, string abilities, string cooldownGrp)
-        super(itemId, icon, model, name, hotkey, toolTipExt, cost, scale, abilities)
-        this.setActivelyUsed(true)
-        this.setCooldownGroup(cooldownGrp)
-
-public class PerishableItem extends UsableItem
-    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, LinkedList<int> tinting, string abilities, string cooldownGrp, int charge)
-        super(itemId, icon, model, name, hotkey, toolTipExt, cost, scale, tinting, abilities, cooldownGrp)
-        this.setPerishable(true)
-        this.setNumberofCharges(charge)
-
-    construct(int itemId, string icon, string model, string name, string hotkey, string toolTipExt, int cost, real scale, string abilities, string cooldownGrp, int charge)
-        super(itemId, icon, model, name, hotkey, toolTipExt, cost, scale, abilities, cooldownGrp)
-        this.setPerishable(true)
-        this.setNumberofCharges(charge)
+function createPerishableItem(int newId, int oldId) returns ItemDefinition
+    return createUsableItem(newId, oldId)
+        ..setPerishable(true)
 
 //Item Abilities
 //Attack Bonus ability (Axes)
@@ -111,15 +66,36 @@ public class AttackSpeedBonusAbility extends AbilityDefinitionAttackSpeedIncreas
         this.setAttackSpeedIncrease(1, attackSpeedBonus)
         this.setEditorSuffix("(Wurst)")
 
-public class ItemChannelCast extends ChannelAbilityPreset
-    construct(int abilId, string name, Targettype targetType, real castRange, real cooldown)
-        super(abilId, 1, true)
-        this.setName(name + " Cast")
-        this.setCheckDependencies(false)
-        this.setHeroAbility(false)
-        this.setItemAbility(true)
-        this.presetTargetTypes(targetType)
-        this.setManaCost(1, 0)
-        this.setCooldown(1, cooldown)
-        this.setCastRange(1, castRange)
-        this.setEditorSuffix("(Wurst)")
+public function createItemChannelCast(int abilId) returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(abilId, 1, true)
+        ..setCheckDependencies(false)
+        ..setHeroAbility(false)
+        ..setItemAbility(true)
+        ..setEditorSuffix("(Wurst)")
+
+/**
+    Use this to create an item spell who doesn't play an animation
+    Contrary to the Channel ability, Berserk do not stop the unit current order when casted.
+**/
+public function createItemBerserkCast(int newId) returns AbilityDefinitionBeserk
+    return new AbilityDefinitionBeserk(newId)
+        ..setArtCaster("")
+        ..setArtEffect("")
+        ..setArtTarget("")
+        ..setArtSpecial("")
+        ..setHeroAbility(false)
+        ..setItemAbility(true)
+        ..setLevels(1)
+        ..setTooltipNormal(1, "dummy spell")
+        ..setTooltipNormalExtended(1, "dummy spell")
+        ..setManaCost(1, 0)
+        ..setAnimationNames("")
+        ..setDurationHero(1, 0.01)
+        ..setDurationNormal(1, 0.01)
+        ..setCastingTime(1, 0)
+        ..setDamageTakenIncrease(1, 0)
+        ..setAttackSpeedIncrease(1, 0)
+        ..setMovementSpeedIncrease(1, 0)
+        ..setBuffs(1, "")
+        ..setEffectSound("")
+        ..setEditorSuffix("(Wurst)")

@@ -111,14 +111,14 @@ public class ClassSelector
         let pos = spawn.getCenter()
         let owner = tribe.getMembers().getFirst()
         totem = createUnit(owner, UNIT_TROLL_TOTEM, pos, angle(0))
-        ..addUnitToStock(UNIT_HUNTER, 0, 1)
-        ..addUnitToStock(UNIT_BEAST_MASTER, 0, 1)
-        ..addUnitToStock(UNIT_MAGE, 0, 1)
-        ..addUnitToStock(UNIT_PRIEST, 0, 1)
-        ..addUnitToStock(UNIT_THIEF, 0, 1)
-        ..addUnitToStock(UNIT_SCOUT, 0, 1)
-        ..addUnitToStock(UNIT_GATHERER, 0, 1)
-        ..addUnitToStock(UNIT_REPICK_TROLL, 4, 4)
+        ..addUnitToStock(UNIT_HUNTER, 1, 1)
+        ..addUnitToStock(UNIT_BEAST_MASTER, 1, 1)
+        ..addUnitToStock(UNIT_MAGE, 1, 1)
+        ..addUnitToStock(UNIT_PRIEST, 1, 1)
+        ..addUnitToStock(UNIT_THIEF, 1, 1)
+        ..addUnitToStock(UNIT_SCOUT, 1, 1)
+        ..addUnitToStock(UNIT_GATHERER, 1, 1)
+        ..addUnitToStock(UNIT_REPICK_TROLL, 1, 1)
 
     private function initializePool()
         pool = CreateUnitPool()
@@ -139,7 +139,6 @@ public class ClassSelector
         let pos = spawn.getCenter()
         for member in tribe.getMembers()
             pickers.push(createUnit(member, UNIT_HERO_PICKER, pos.polarOffset(angle(PI), 1200), angle(0)))
-            member.setLumber(3)
             member.panCamToTimed(totem, 0)
             doAfter(0.3) ->
                 member.selectSingle(totem)
@@ -153,7 +152,6 @@ public class ClassSelector
             var troll = member.getTroll()
             if troll == null
                 troll = getRandomTroll(member)
-                member.setLumber(0)
                 handleSelection(troll)
 
             troll
@@ -177,7 +175,7 @@ public class ClassSelector
         if GetSellingUnit().getTypeId() == UNIT_TROLL_TOTEM
             let sold = GetSoldUnit()
             if sold.getTypeId() == UNIT_REPICK_TROLL
-                handleRepick()
+                handleRepick(sold)
             else
                 handleSelection(sold)
 
@@ -185,8 +183,10 @@ public class ClassSelector
         let owner = troll.getOwner()
         let trollId = troll.getTypeId()
 
+        // Prevent having 2 trolls at the same time
+        handleTrollRemoval(owner)
+
         setClassUnavailable(trollId)
-        totem.removeUnitFromStock(trollId)
         owner.setTroll(troll)
 
         troll
@@ -199,22 +199,23 @@ public class ClassSelector
         if gameConfig.isStartWithSpiritWard()
             troll.addItemById(ITEM_SPIRIT_WARD_KIT)
 
-    function handleRepick()
-        let sold = GetSoldUnit()
-        let owner = sold.getOwner()
-        let troll = owner.getTroll()
-        let trollId = troll.getTypeId()
+    function handleTrollRemoval(player p)
+        let troll = p.getTroll()
+        if troll != null
+            let trollId = troll.getTypeId()
 
-        setClassAvailable(trollId)
-        totem.addUnitToStock(trollId, 0, 1)
-        owner.removeTroll()
+            setClassAvailable(trollId)
+            totem.addUnitToStock(trollId, 1, 1)
+            p.removeTroll()
+            troll.remove()
 
-        troll.remove()
-        sold.remove()
+    function handleRepick(unit dummy)
+        let owner = dummy.getOwner()
 
-        owner
-        ..setGold(0)
-        ..setLumber(3)
+        handleTrollRemoval(owner)
+        
+        totem.addUnitToStock(UNIT_REPICK_TROLL, 1, 1)
+        dummy.remove()
 
 init
     ClassSelector.initialize()

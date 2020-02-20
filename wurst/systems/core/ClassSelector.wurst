@@ -16,7 +16,6 @@ import LocalObjectIDs
 import PlayerExtensions
 import StringExtensions
 import UnitExtensions
-import UnitPoolExtensions
 import TimerUtils
 import Tribe
 
@@ -91,8 +90,8 @@ public class ClassSelector
 
     Tribe tribe
     let pickers = new LinkedList<unit>()
+    let pool = new LinkedList<int>()
     rect spawn
-    unitpool pool
     unit totem
 
     construct(Tribe _tribe)
@@ -119,21 +118,21 @@ public class ClassSelector
         ..addUnitToStock(UNIT_SCOUT, 1, 1)
         ..addUnitToStock(UNIT_GATHERER, 1, 1)
         ..addUnitToStock(UNIT_REPICK_TROLL, 1, 1)
+        ..addUnitToStock(UNIT_RANDOM_TROLL, 1, 1)
 
     private function initializePool()
-        pool = CreateUnitPool()
         let allTrollUnitId = gameConfig.getAllTrollUnitId()
         if gameConfig.isAllTrollEnabled() and allTrollUnitId != 0
-            pool.addUnitType(allTrollUnitId, 1)
+            pool.add(allTrollUnitId)
         else
             pool
-            ..addUnitType(UNIT_HUNTER, 1)
-            ..addUnitType(UNIT_MAGE, 1)
-            ..addUnitType(UNIT_BEAST_MASTER, 1)
-            ..addUnitType(UNIT_PRIEST, 1)
-            ..addUnitType(UNIT_THIEF, 1)
-            ..addUnitType(UNIT_SCOUT, 1)
-            ..addUnitType(UNIT_GATHERER, 1)
+            ..add(UNIT_HUNTER)
+            ..add(UNIT_MAGE)
+            ..add(UNIT_BEAST_MASTER)
+            ..add(UNIT_PRIEST)
+            ..add(UNIT_THIEF)
+            ..add(UNIT_SCOUT)
+            ..add(UNIT_GATHERER)
 
     private function initializePickers()
         let pos = spawn.getCenter()
@@ -148,39 +147,52 @@ public class ClassSelector
             let owner = tribe.getMembers().getFirst()
             createUnit(owner, UNIT_FIRE, spawn.getCenter(), angle(0))
 
+        pickers.each(picker -> picker.remove())
+
         for member in tribe.getMembers()
             var troll = member.getTroll()
             if troll == null
-                troll = getRandomTroll(member)
-                handleSelection(troll)
+                // Here we are not using handleRandom, because we remove the totem
+                // later and the code relies on the totem existing on sell events
+                // and the sell event is fired after the removal of the totem
+                // This means the stocking/restocking will not work, but this doesn't
+                // matter as players will have already picked by this point
+                troll = placeRandomTroll(member)
+                handleSelection(member, troll)
 
             troll
             ..suspendXp(false)
             ..unpause()
 
         totem.remove()
-        pickers.each(picker -> picker.remove())
 
-    function getRandomTroll(player p) returns unit
-        return pool.placeRandomUnit(p, spawn.randomPoint(), angle(0))
+    function getRandomTrollId() returns int
+        return pool.get(GetRandomInt(0, pool.size()-1))
+
+    function placeRandomTroll(player p) returns unit
+        return createUnit(p, getRandomTrollId(), spawn.randomPoint(), angle(0))
 
     function setClassUnavailable(int which)
         if not gameConfig.isOldRandomEnabled() and gameConfig.getAllTrollUnitId() == 0
-            pool.removeUnitType(which)
+            pool.remove(which)
 
     function setClassAvailable(int which)
-        pool.addUnitType(which, 1)
+        pool.add(which)
 
     function handleUnitSold()
         if GetSellingUnit().getTypeId() == UNIT_TROLL_TOTEM
             let sold = GetSoldUnit()
+            let owner = sold.getOwner()
             if sold.getTypeId() == UNIT_REPICK_TROLL
-                handleRepick(sold)
+                sold.remove()
+                handleTrollRemoval(owner)
+            else if sold.getTypeId() == UNIT_RANDOM_TROLL
+                sold.remove()
+                handleRandom(owner)
             else
-                handleSelection(sold)
+                handleSelection(owner, sold)
 
-    function handleSelection(unit troll)
-        let owner = troll.getOwner()
+    function handleSelection(player owner, unit troll)
         let trollId = troll.getTypeId()
 
         // Prevent having 2 trolls at the same time
@@ -209,13 +221,9 @@ public class ClassSelector
             p.removeTroll()
             troll.remove()
 
-    function handleRepick(unit dummy)
-        let owner = dummy.getOwner()
-
-        handleTrollRemoval(owner)
-        
-        totem.addUnitToStock(UNIT_REPICK_TROLL, 1, 1)
-        dummy.remove()
+    function handleRandom(player p)
+        let trollId = getRandomTrollId()
+        IssueNeutralImmediateOrderById(p, totem, trollId)
 
 init
     ClassSelector.initialize()

@@ -1,0 +1,79 @@
+package MonitorOrders
+
+// Standard library imports:
+import ClosureForGroups
+import EventHelper
+import HashMap
+import HashSet
+import RegisterEvents
+
+// Third-party imports:
+import Toolkit
+
+// The set of units monitored per player.
+let monitored = new HashMap<player, HashSet<unit>>()
+
+// Centralizes the logic for displaying different outputs to the player.
+function onOrder()
+    // Look up the state.
+    let target = EventData.getOrderedUnit()
+    let orderID = EventData.getIssuedOrderId()
+
+    // Exit if this player is not monitoring orders for this unit.
+    if not monitored.get(localPlayer).has(target)
+        return
+
+    // Print the basic information for this order.
+    print("{0} was issued order {1}.".format(
+        target.getName(), 
+        OrderId2StringBJ(orderID))
+    )
+
+    // Print additional information depending on the context.
+    switch EventData.getEventId().getHandleId()
+        case EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER.getHandleId()
+            // Print the name of the appropriate widget.
+            if GetOrderTargetDestructable() != null
+                print("Target was {0} destructable.".format(
+                    EventData.getOrderTargetDestructable().getName()
+                ))
+            if GetOrderTargetItem() != null
+                print("Target was {0} item.".format(
+                    EventData.getOrderTargetItem().getName()
+                ))
+            if GetOrderTargetUnit() != null
+                print("Target was {0} unit.".format(
+                    EventData.getOrderTargetUnit().getName()
+                ))
+
+            // Print the position of the widget.
+            print("Target widget was at: {0}".format(
+                EventData.getOrderTargetWidget().getPos().toString()
+            ))
+        case EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER.getHandleId()
+            print("Target point was at: {0}".format(
+                EventData.getOrderPos().toString()
+            ))
+                
+
+init
+    // Create an empty set of monitored units per player.
+    for index = 0 to bj_MAX_PLAYER_SLOTS - 1
+        monitored.put(players[index], new HashSet<unit>())
+
+    // Toggles an order monitor for the selected units.
+    registerToolkitCommand("monitor") (triggerPlayer, arguments) ->
+        forUnitsSelected(triggerPlayer) (unit target) ->
+            // Look up the set for the triggering player.
+            let units = monitored.get(triggerPlayer)
+
+            // Take the necessary action to toggle membership.
+            if units.has(target)
+                units.remove(target)
+            else
+                units.add(target)
+        
+    // Register the events needed to monitor orders.
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_ORDER, function onOrder)
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, function onOrder)
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER, function onOrder)

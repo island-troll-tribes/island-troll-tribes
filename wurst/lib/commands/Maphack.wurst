@@ -10,23 +10,21 @@ fogmodifier array fog
 bool array status
 
 init
-    for index = 0 to bj_MAX_PLAYERS - 1
-        // Create a fogmodifier per player.
-        fog[index] = CreateFogModifierRect(
-            players[index],
-            FOG_OF_WAR_VISIBLE,
-            bj_mapInitialPlayableArea,
-            false,
-            false
-        )
-
-        // Mark that each fogmodifier starts is not yet enabled.
-        status[index] = false
-
-
     registerToolkitCommand("mh") (triggerPlayer, arguments) ->
         // Look up the index for the triggering player.
         let index = triggerPlayer.getId()
+
+        if fog[index] == null
+            fog[index] = CreateFogModifierRect(
+                players[index],
+                FOG_OF_WAR_VISIBLE,
+                bj_mapInitialPlayableArea,
+                false,
+                false
+            )
+
+            // Mark that each fogmodifier starts is not yet enabled.
+            status[index] = false
 
         // Inverse the current state for the player.
         status[index] = not status[index]

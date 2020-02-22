@@ -12,7 +12,6 @@ import LocalObjectIDs
 import UnitExtensions
 
 let ABILITY_SPEAR_HIT_DETECTION = 'A0EH'
-let DARK_SPEAR_CONSECUTIVE_REDUCTION_FACTOR = 0.6666
 
 // If you change the following, update tooltip manually in SpearsDefinition
 public let SPEAR_RESPAWN_CHANCE   = 0.666
@@ -22,6 +21,8 @@ public let DARK_RESPAWN_CHANCE    = 0.
 public let POISON_RESPAWN_CHANCE  = 0.5
 public let RPOISON_RESPAWN_CHANCE = 0.5
 public let UPOISON_RESPAWN_CHANCE = 0.5
+
+let DARK_SPEAR_MANA_BURN_PERCENTAGE = .30
 
 enum SpearType
     Spear
@@ -65,13 +66,7 @@ function onSpearImpact(unit target, SpearType spearType)
             spawnItemChance(POISON_RESPAWN_CHANCE, ITEM_POISON_SPEAR, target.getPos())
         case DarkSpear
             spawnItemChance(DARK_RESPAWN_CHANCE, ITEM_DARK_SPEAR, target.getPos())
-            real burnAmount = target.getMana() * (.30)
-
-            // Reduce mana damage for consecutive spears.
-            let currentCounters = getAndIncreaseDarkSpearCounter(target)
-            burnAmount *= DARK_SPEAR_CONSECUTIVE_REDUCTION_FACTOR.pow(currentCounters.toReal())
-            doAfter(1.00) ->
-                removeDarkSpearCounter(target)
+            real burnAmount = target.getMana() * DARK_SPEAR_MANA_BURN_PERCENTAGE
 
             // Perform the mana reduction.
             target.burnMana(burnAmount)
@@ -85,15 +80,6 @@ function onSpearImpact(unit target, SpearType spearType)
     if target.isType(UNIT_TYPE_HERO) and not spearType == SpearType.DarkSpear
         addSpearResistance(target)
 
-function getAndIncreaseDarkSpearCounter(unit target) returns int
-    //We return the old counter and increase by 1 here
-    if darkSpearCounters.has(target)
-        let currentCounters = darkSpearCounters.get(target)
-        darkSpearCounters.put(target, currentCounters + 1)
-        return currentCounters
-    else
-        darkSpearCounters.put(target, 1)
-        return 0
 
 function removeDarkSpearCounter(unit target)
     // Deduct counters by 1 or remove from map if they go to 0

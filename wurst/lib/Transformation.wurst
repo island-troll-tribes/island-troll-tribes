@@ -115,3 +115,12 @@ public function transformUnit(unit origin, int targetID)
 
     // Destroy local resources.
     destroy key
+
+init
+    // Registering a callback to update the unit proper name after transformation
+    registerAfterEffect() (unit target, int unitID) ->
+        // Only hero have proper name
+        if IsHeroUnitId(target.getTypeId())
+            let tmpUnit = createUnit(target.getOwner(), target.getTypeId(), target.getPos(), target.getFacingAngle())
+            target.setProperName(tmpUnit.getProperName())
+            tmpUnit.remove()

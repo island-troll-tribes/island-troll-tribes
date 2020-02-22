@@ -22,24 +22,25 @@ public let ABILITY_ID = compiletime(ABIL_ID_GEN.next())
 public let THISTLE_HERO_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
 
 let BONE_THISTLE_DMG = 30.0
-let BONE_THISTLE_STUN = 0.75
+let BONE_THISTLE_STUN_HERO = 0.75
+let BONE_THISTLE_STUN_NORMAL = 2.0
 
-let THISTLE_DMG                = 10.
+let THISTLE_DMG                = 15.
 let THISTLE_AS_FACTOR          = 0.3
 let THISTLE_MS_FACTOR          = 0.4
-let THISTLE_DECAYING_DMG       = 1.
+let THISTLE_DECAYING_DMG       = 5.
 let THISTLE_DECAY_POWER        = 0.5
 
 let THISTLE_HERO_DMG           = 10.
 let THISTLE_HERO_AS_FACTOR     = 0.15
 let THISTLE_HERO_MS_FACTOR     = 0.3
-let THISTLE_HERO_DECAYING_DMG  = 1.
+let THISTLE_HERO_DECAYING_DMG  = 5.
 let THISTLE_HERO_DECAY_POWER   = 0.5
 
 let DARK_THISTLE_DMG           = 20.
 let DARK_THISTLE_AS_FACTOR     = 0.2
 let DARK_THISTLE_MS_FACTOR     = 0.2
-let DARK_THISTLE_DECAYING_DMG  = 1.
+let DARK_THISTLE_DECAYING_DMG  = 5.
 let DARK_THISTLE_DECAY_POWER   = 0.5
 
 let THISTLE_DURATION_NORMAL = 16.
@@ -58,10 +59,10 @@ let COOLDOWN = 6.
 
 let ITEM_TOOLTIP = "Purchase |cffffcc00B|rlow Gun"
 
-
+// I used substring to get rid of the decimal since those value are of type real, didn't know how to do otherwise
 let BONE_TOOLTIP    = "Bone :".color(SPECIAL_COLOR) + " Deals {0} damage and stun for {1} seconds."
                       .format(BONE_THISTLE_DMG.toToolTipRed(),
-                              BONE_THISTLE_STUN.toString().substring(0, 4).color(COLOR_TURQUOISE)
+                              BONE_THISTLE_STUN_HERO.toString().substring(0, 4).color(COLOR_TURQUOISE) + "/" + BONE_THISTLE_STUN_NORMAL.toString().substring(0, 1).color(COLOR_TURQUOISE)
                               ) + makeToolTipCooldown(COOLDOWN)
 
 let THISTLE_TOOLTIP = "Thistle :".color(GREEN_COLOR) + " Deals {0} initial damage and {1} damage every {2} seconds."
@@ -101,7 +102,8 @@ let ITEM_DESCRIPTION = "A hollowed out piece of wood. If blown through, could be
         ..setDummyAbility()
         ..setIconNormal(Icons.bTNThoriumRanged)
         ..setDamage(1, BONE_THISTLE_DMG)
-        ..setDurationHero(1, BONE_THISTLE_STUN)
+        ..setDurationHero(1, BONE_THISTLE_STUN_HERO)
+        ..setDurationNormal(1, BONE_THISTLE_STUN_NORMAL)
         ..setHotkeyNormal("")
         ..setMissileArc(0.0)
         ..setMissileArt(Abilities.bristleBackMissile)

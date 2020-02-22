@@ -8,14 +8,15 @@ import ObjectIds
 import ObjectIdGenerator
 
 // Local imports:
-import LocalObjectIDs
 import Items
 import ColorUtils
-import StringExtensions
+import LocalAssets
 import ToolTipsUtils
+import LocalObjectIDs
+import StringExtensions
 
 let ICON = Icons.bTNAlleriaFlute
-let GROUND_MODEL_PATH = "Models\\BlowGun.mdx"
+let GROUND_MODEL_PATH = LocalItems.blowgun
 
 public let ABILITY_ID = compiletime(ABIL_ID_GEN.next())
 public let THISTLE_HERO_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
@@ -44,6 +45,8 @@ let DARK_THISTLE_DECAY_POWER   = 0.5
 let THISTLE_DURATION_NORMAL = 16.
 let THISTLE_DURATION_HERO   = 5.
 let DARK_THISTLE_DURATION_HERO = 12.
+
+let CAST_RANGE = 450.
 
 // The number of ticks for which mana is burned.
 public let NUM_TICK = 6
@@ -85,7 +88,7 @@ let DARK_THISTLE_TOOLTIP = "Dark Thistle :".color(COLOR_VIOLET) + " Deals {0} in
 
 public let ITEM_TOOLTIP_EXT = "Used for shooting small things. Can be loaded with thistles or bones. Drag and drop items on the blowgun to load, click and use on your own troll to unload."+
                              " If your inventory is full, clicking on ammo type item close to your troll will load them into the blowgun."+
-                             "\nAmmo Effect :".color(GOLD_COLOR) +
+                             "\n\nAmmo Effect :".color(GOLD_COLOR) +
                              "\n" + BONE_TOOLTIP +
                              "\n" + THISTLE_TOOLTIP +
                              "\n" + DARK_THISTLE_TOOLTIP
@@ -172,7 +175,7 @@ function createThistleAbility(int newId) returns AbilityDefinitionWardenShadowSt
 
 @compiletime function createBlowpipeAbility()
     createItemChannelCast(ABILITY_ID)
-        ..setCastRange(1, 450)
+        ..setCastRange(1, CAST_RANGE)
         ..setName("Blow Gun Ability")
         ..setOptions(1, 1)
         ..setTargetsAllowed(1, "air,ground,enemy,neutral,organic,self")

@@ -45,18 +45,16 @@ constant let MAX_MEAT_CARRIED = 20
 function checkMeat(unit troll, item meat)
     let numMeat = sum(map((meat, _) -> meat.getCharges(), troll.getInventory()))
     if numMeat > MAX_MEAT_CARRIED
-        dropMeat(troll, meat, numMeat)
+        dropMeat(troll, meat, numMeat - MAX_MEAT_CARRIED)
         
-function dropMeat(unit troll, item meat, int numMeat)
-    var droppedMeat = 0
-    for int i = 1 to numMeat - MAX_MEAT_CARRIED
+function dropMeat(unit troll, item meat, int meatToDrop)
+    for int i = 1 to meatToDrop
         meat.setCharges(meat.getCharges() - 1)
-        droppedMeat ++
         if meat.getCharges() == 0
             meat.remove()
     item newMeat = createItem(ITEM_COOKED_MEAT, troll.getPos())
-    if droppedMeat > 1
-        newMeat.setCharges(droppedMeat)
+    if meatToDrop > 1
+        newMeat.setCharges(meatToDrop)
 
 
 init

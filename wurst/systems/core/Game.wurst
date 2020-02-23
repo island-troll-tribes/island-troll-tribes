@@ -8,32 +8,47 @@ import ClassSelector
 import ColorUtils
 import StringExtensions
 
+// A timer for the core gameplay.
 public constant GAME_TIMER = CreateTimer()
 
+// The trigger fired at the beginning of the core gameplay.
 let listeners = CreateTrigger()
 
+// Registers a callback to be executed when the core gameplay begins.
 public function registerGameStartEvent(code handler)
     listeners.addAction(handler)
 
-public function generateMap()
-    listeners.execute()
-    SetTimeOfDay(6)
-    print("Game has begun!".color(GENERAL_COLOR))
-    GAME_TIMER.start(99999999, null)
-
 init
-    SetTimeOfDayScale(1.3)
-    SetTimeOfDay(3)
+    // Set additional gameplay constants.
     SetMapFlag(MAP_USE_HANDICAPS, false)
     EnableMinimapFilterButtons(true, false)
     SetCreepCampFilterState(false)
 
-    // TODO remove legacy initialization or move elsewhere
+    // Pin time of day to dawn until the game starts.
+    SetTimeOfDayScale(0)
+    SetTimeOfDay(6)
+    registerGameStartEvent() ->
+        SetTimeOfDayScale(1.3)
+
+    // TODO: Remove legacy initialization or move elsewhere
     InitGameCache("ITT.w3v")
 
-    registerClassSelectionEndEvent(function generateMap)
+    // Notify the players when the game officially begins.
+    registerGameStartEvent() ->
+        print("Game has begun!".color(GENERAL_COLOR))
 
+    // Begin the timing of the core gamplay.
+    // TODO: Use GameTimer once it supports additional timers.
+    registerGameStartEvent() ->
+        GAME_TIMER.start(99999999, null)
+
+    // Begin the core gameplay after class selection.
+    registerClassSelectionEndEvent() ->
+        listeners.execute()
+
+    // Delay until after the gg_rct_vision is initialized.
     nullTimer() ->
+        // Reveal the tutorial island to all players.
         ForForce(bj_FORCE_ALL_PLAYERS) ->
             CreateFogModifierRect(
                 GetEnumPlayer(),

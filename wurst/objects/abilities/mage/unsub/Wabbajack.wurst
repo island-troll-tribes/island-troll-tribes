@@ -1,0 +1,165 @@
+package Wabbajack
+
+import ClosureEvents
+import ClosureTimers
+import OverCharge
+import InstantDummyCaster
+import Assets
+import ClosureForGroups
+import Orders
+import BuffObjEditing
+import DummyCaster
+import Lodash
+import ChannelAbilityPreset
+import ToolTipsUtils
+import TimerUtils
+import LocalObjectIDs
+import AbilityObjEditing
+
+let COOLDOWN = 2.
+let MISSILE_SPEED = 700.
+let MISSILE_LIFETIME = 1.5
+let MANACOST = 12
+let IMPACT_TRIGGER_AOE = 100.
+let MISSILE_FLY_HEIGHT = 120.
+let SPAWN_OFFSET_DISTANCE = 50.
+let LOOP_INTERVAL = ANIMATION_PERIOD
+let DUMMY_CAGE_ID = compiletime(ABIL_ID_GEN.next())
+let BUFF_ID = compiletime(BUFF_ID_GEN.next())
+let BUFF_ID_AIR = compiletime(BUFF_ID_GEN.next())
+
+function createCageBuffGround(int newId) returns BuffDefinition
+    return new BuffDefinition(newId, 'Beng')
+        ..setIcon(Icons.bTNLament)
+        ..setTargetAttachments(1, 1)
+        ..setArtTarget(1, Abilities.zigguratMissile)
+        ..setTargetAttachmentPoint0(1, "chest")
+        ..setTooltipNormal(1, "Wabbajack's prison")
+        ..setTooltipNormalExtended(1, "This unit has been tormented by a restless soul and cannot move.")
+
+function createCageBuffAir(int newId) returns BuffDefinition
+    return new BuffDefinition(newId, 'Bena')
+        ..setIcon(Icons.bTNLament)
+        ..setTargetAttachments(1, 1)
+        ..setArtTarget(1, Abilities.zigguratMissile)
+        ..setTargetAttachmentPoint0(1, "chest")
+        ..setTooltipNormal(1, "Wabbajack's prison")
+        ..setTooltipNormalExtended(1, "This unit has been tormented by a restless soul and cannot move.")
+
+@compiletime function createCageBuffs()
+    createCageBuffGround(BUFF_ID)
+    createCageBuffAir(BUFF_ID_AIR)
+
+@compiletime function createCagingAbility() returns AbilityDefinitionEnsnareCreep
+    return new AbilityDefinitionEnsnareCreep(DUMMY_CAGE_ID)
+        ..setMissileArt("")
+        ..setName("Wabbajack Cage Dummy")
+        ..setDummyAbility()
+        ..setDurationHero(1, 3)
+        ..setDurationNormal(1, 1.5)
+        ..setTargetsAllowed(1, "friend,enemies,ground,hero")
+        ..setEditorSuffix("(Wurst)")
+        ..setBuffs(1, commaList(BUFF_ID, BUFF_ID_AIR))
+
+class Wabbajack extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey)
+        super(newAbilityId, 1, true)
+        this.setTargetType(1, 0)
+        this.setIconNormal(Icons.bTNWitchDoctorMaster)
+        this.setIconResearch(Icons.bTNWitchDoctorMaster)
+        this.setIconTurnOff(Icons.bTNWitchDoctorMaster)
+        this.setHeroAbility(false)
+        this.setHotkeyNormal(hotkey)
+        this.setName("Wabbajack")
+        this.setDisableOtherAbilities(1, false)
+        this.setCastingTime(1, 0)
+        this.setTooltipNormal(1,"Nice tooltip")
+        this.setTooltipNormalExtended(1, "Even better tooltip")
+        this.setCooldown(1, COOLDOWN)
+        this.setManaCost(1, MANACOST)
+        this.setTargetType(1, 3)
+        this.setButtonPositionNormalX(1)
+        this.setButtonPositionNormalY(1)
+        this.setCastRange(1, MISSILE_SPEED * MISSILE_LIFETIME)
+        this.setFollowThroughTime(1, 0.5)
+
+@compiletime function createWabbajack()
+    new Wabbajack(ABILITY_WABBAJACK, "E")
+
+class WabbajackProjectile
+    use TimedLoop
+    real lifeTime
+    unit ownerUnit
+    angle ang
+    vec3 pos
+    effect efx
+    bool foundTarget
+    bool exploded
+    bool isOvercharged
+    unit target
+
+    construct(unit caster, vec2 casterPos, angle ang)
+        this.ownerUnit = caster
+        this.lifeTime = 0
+        this.ang = ang
+        this.pos = casterPos.polarOffset(ang, SPAWN_OFFSET_DISTANCE).withTerrainZ(MISSILE_FLY_HEIGHT)
+        this.efx = addEffect(Abilities.zigguratMissile, pos)
+        this.foundTarget = false
+        this.exploded = false
+        this.efx.setRoll(ang)
+        this.target = null
+        this.startTimedLoop()
+
+    override function onTimedLoop()
+        if this.exploded or this.lifeTime >= MISSILE_LIFETIME
+            stopTimedLoopAndDestroy()
+        this.lifeTime += LOOP_INTERVAL
+        vec3 newPos = this.pos.offset2d(this.ang, MISSILE_SPEED * LOOP_INTERVAL)
+        let terrainZ = newPos.getTerrainZ()
+        newPos.z = terrainZ + MISSILE_FLY_HEIGHT
+        //print(newPos.toString())
+        this.efx.setPos(newPos)
+        this.pos = newPos
+        checkForImpacts()
+
+    function checkForImpacts()
+        this.foundTarget = false
+        forUnitsInRange(this.pos.toVec2(), IMPACT_TRIGGER_AOE) u ->
+            print(u.getName())
+            if isValidTarget(ownerUnit, u)
+                print("target Found")
+                this.target = u
+                spawnTemporaryVision(450, 2)
+                onImpact()
+                stopTimedLoopAndDestroy()
+
+    function onImpact()
+        print(this.target.getName())
+        this.exploded = true
+        UnitDamageTarget(ownerUnit, target, 10, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
+        print(this.target.getName())
+        InstantDummyCaster.castTarget(this.ownerUnit.getOwner(), DUMMY_CAGE_ID, 1, Orders.ensnare, this.target)
+
+    function spawnTemporaryVision(real radius, real duration)
+        let vis = createVision(ownerUnit.getOwner(), this.pos.toVec2(), radius, true)
+        vis.start()
+        doAfter(duration) ->
+            vis.destr()
+
+    ondestroy
+        print("ded")
+        this.efx.destr()
+
+function isValidTarget(unit caster, unit target) returns bool
+    return target.getOwner().isAllyOf(caster.getOwner())
+        and not target.isInvulnerable()
+        and not target.isType(UNIT_TYPE_FLYING)
+        and target.isAlive()
+        and not target.isHidden()
+        and not target.isType(UNIT_TYPE_STRUCTURE)
+        and target != caster
+
+
+init
+    EventListener.onPointCast(ABILITY_WABBAJACK) (unit caster, vec2 target) ->
+        new WabbajackProjectile(caster, caster.getPos(), caster.getPos().angleTo(target))

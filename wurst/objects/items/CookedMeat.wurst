@@ -1,0 +1,72 @@
+package CookedMeat
+
+// Standard library imports:
+import ItemObjEditing
+import RegisterEvents
+import Lodash
+import LinkedList
+import StackNSplit
+
+// Local imports:
+import LocalAssets
+import Game
+import LocalObjectIDs
+import UnitExtensions
+import GameConfig
+
+
+constant let NAME = "Cooked Meat"
+constant let DESCRIPTION = "A tasty meat. Instantly heals 50 hp on use."
+
+constant let TT_BASIC = "Trade for food."
+constant let TT_EXTENDED = "A tasty meat. Instantly heals 50 hp on use."
+
+constant let MAX_MEAT_CARRIED = 20
+
+@compiletime function createCookedMeat() returns ItemDefinition
+    return new ItemDefinition(ITEM_COOKED_MEAT, 'shrs')
+    ..setTintingColor3Blue(125)
+    ..setTintingColor2Green(160)
+    ..setCooldownGroup("A002")
+    ..setDescription(DESCRIPTION)
+    ..setDroppedWhenCarrierDies(true)
+    ..setModelUsed(LocalItems.cookedMeat)
+    ..setGoldCost(0)
+    ..setLumberCost(2)
+    ..setLevel(1)
+    ..setName(NAME)
+    ..setScalingValue(.85)
+    ..setStockMaximum(20)
+    ..setTooltipBasic(TT_BASIC)
+    ..setTooltipExtended(TT_EXTENDED)
+    ..setNumberofCharges(1)
+    ..setMaxStack(0)
+
+function checkMeat(unit troll, item meat)
+    let numMeat = sum(map((meat, _) -> meat.getCharges(), troll.getInventory()))
+    if numMeat > MAX_MEAT_CARRIED
+        dropMeat(troll, meat, numMeat)
+        
+function dropMeat(unit troll, item meat, int numMeat)
+    var droppedMeat = 0
+    for int i = 1 to numMeat - MAX_MEAT_CARRIED
+        meat.setCharges(meat.getCharges() - 1)
+        droppedMeat ++
+        if meat.getCharges() == 0
+            meat.remove()
+    item newMeat = createItem(ITEM_COOKED_MEAT, troll.getPos())
+    if droppedMeat > 1
+        newMeat.setCharges(droppedMeat)
+
+
+init
+    registerGameStartEvent() ->
+        if gameConfig.getInventoryLimits()
+            registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
+                let manipulatedItem = GetManipulatedItem()
+                if manipulatedItem.getTypeId() == ITEM_COOKED_MEAT
+                    checkMeat(GetManipulatingUnit(), manipulatedItem)
+            registerItemStackingEvent(EVENT_ITEM_CHARGES.ADDED) ->
+                let manipulatedItem = getItemStackingItem()
+                if manipulatedItem.getTypeId() == ITEM_COOKED_MEAT
+                    checkMeat(getItemStackingUnit(), manipulatedItem)

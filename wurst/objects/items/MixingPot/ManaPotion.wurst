@@ -1,40 +1,50 @@
 package ManaPotion
 
-import PotionsDefinition
-import LocalObjectIDs
-import LinkedList
-import ToolTipsUtils
-import ChannelAbilityPreset
-import ClosureEvents
+// Standard library imports:
 import Assets
-import ObjEditingUtils
+import ClosureEvents
+import ChannelAbilityPreset
 
-constant ABIL  = compiletime(ABIL_ID_GEN.next())
+// Local imports:
+import Items
+import LocalAssets
+import ToolTipsUtils
+import LocalObjectIDs
+import LocalItemObjEditing
 
-constant CAST_RANGE = 500.
-constant MANA_RESTORED = 60.
+let ABIL  = compiletime(ABIL_ID_GEN.next())
 
-constant ICON  = ICON_PATH.format("PotionBlueSmall")
-constant MODEL = "Models\\PotionBlueLesser.mdl"
-constant TT    = "A dilute potion made from Athelas Seed. Instantly restores {0} Mana point to a target ally.".format(MANA_RESTORED.toToolTipLightBlue())
+let CAST_RANGE = 500.
+let MANA_RESTORED = 60.
 
-constant TARGET_ALLOWED = "friend,ground,hero,invulnerable,organic,self,vulnerable"
+let ICON  = Icons.bTNPotionBlueSmall
+let MODEL = LocalItems.potionBlueLesser
+let TT    = "A dilute potion made from Athelas Seed. Instantly restores {0} Mana point to a target ally.".format(MANA_RESTORED.toToolTipLightBlue())
 
-@compiletime function createAbil()
-    new ChannelAbilityPreset(ABIL, 1, true)
-    ..setName("Mana Potion")
-    ..setCheckDependencies(false)
-    ..setHeroAbility(false)
-    ..setItemAbility(true)
-    ..presetTargetTypes(Targettype.UNIT)
-    ..setManaCost(1, 0)
-    ..setCooldown(1, 0)
-    ..setCastRange(1, CAST_RANGE)
-    ..setRace(Race.Demon)
-    ..setEditorSuffix("(Wurst)")
+let TARGET_ALLOWED = "friend,ground,hero,invulnerable,organic,self,vulnerable"
 
-@compiletime function createManaPotion()
-    new PotionDefinition(ITEM_MANA_POTION, ICON, MODEL, "Mana Potion", "W", TT, 5, commaList(ABIL), 0.7, "A002", 120)
+@compiletime function createAbil() returns ChannelAbilityPreset
+    return createItemChannelCast(ABIL)
+        ..setName("Mana Potion")
+        ..presetTargetTypes(Targettype.UNIT)
+        ..setTargetsAllowed(1, TARGET_ALLOWED)
+        ..setCastRange(1, CAST_RANGE)
+        ..setManaCost(1, 0)
+        ..setCooldown(1, 0)
+
+@compiletime function createManaPotion() returns ItemDefinition
+    return createPerishableItem(ITEM_MANA_POTION)
+        ..setNameEnhance("Mana Potion")
+        ..setInterfaceIcon(ICON)
+        ..setModelUsed(MODEL)
+        ..setHotkey("W")
+        ..setTooltipExtended(TT)
+        ..setLumberCost(5)
+        ..setAbilities(commaList(ABIL))
+        ..setScalingValue(0.7)
+        ..setCooldownGroup("A002")
+        ..setStockReplenishInterval(120)
+        ..setNumberofCharges(1)
 
 init
     EventListener.onTargetCast(ABIL) (unit caster, unit target) ->

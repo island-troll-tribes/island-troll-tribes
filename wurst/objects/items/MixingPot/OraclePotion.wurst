@@ -1,0 +1,99 @@
+package OraclePotion
+
+// Standard library imports:
+import Assets
+import HashMap
+import ObjectIds
+import TimerUtils
+import ClosureTimers
+import ClosureEvents
+import BuffObjEditing
+import AbilityObjEditing
+import ObjectIdGenerator
+import ToolTipsUtils
+
+// Local import
+import Items
+import LocalAssets
+import LocalObjectIDs
+import LocalItemObjEditing
+import AbilityObjectCreationUtils
+
+let ABILITY_ID = compiletime(ABIL_ID_GEN.next())
+let ABILITY_DUMMY_ID = compiletime(ABIL_ID_GEN.next())
+
+let BUFF_ID = compiletime(BUFF_ID_GEN.next())
+let BUFF_AURA_ID = compiletime(ABIL_ID_GEN.next())
+let SPELLBOOK_ABILITY_ID = compiletime(createHiddenSpellbookWithAbilities("{0},{1}".format(toRawCode(ABILITY_ID), toRawCode(BUFF_AURA_ID))))
+
+let DURATION = 20.
+let COOLDOWN = 20.
+
+@compiletime function createTrueSightBuff()
+    new BuffDefinition(BUFF_ID, 'Bstt')
+    ..setArtTarget(1, "")
+    ..setTooltipNormal(1, "True Sight")
+    ..setTooltipNormalExtended(1, "This unit can see invisible unit.")
+    ..setIcon(Icons.pASBTNMagicalSentry)
+
+@compiletime function createDummyAura()
+    new AbilityDefinitionAuraSlow(BUFF_AURA_ID)
+    ..setArtTarget(Abilities.magicSentryCaster)
+    ..setTargetAttachmentPoint("overhead")
+    ..setMovementSpeedFactor(1, 0)
+    ..setAreaofEffect(1, 0)
+    ..setBuffs(1, toRawCode(BUFF_ID))
+    ..setDurationHero(1, DURATION)
+    ..setDurationNormal(1, DURATION)
+    ..setTargetsAllowed(1, "self")
+    ..setName("True Sight")
+
+@compiletime function createTrueSightSpell()
+    new AbilityDefinitionDetectShade(ABILITY_ID)
+    ..setCastRange(1, 900)
+    ..setName("Oracle clarity")
+    ..setTooltipNormal(1, "True Sight")
+    ..setTooltipNormalExtended(1, "Reveal invisible unit")
+    ..setBuffs(1, "Binf")
+    ..setItemAbility(false)
+    ..setDurationHero(1, DURATION)
+    ..setDurationNormal(1, DURATION)
+    ..setButtonPositionNormalY(0)
+    ..setArtCaster(Abilities.magicSentryCaster)
+    ..setCasterAttachmentPoint("overhead")
+    ..setCasterAttachments(0)
+
+@compiletime function createOraclePotion() returns ItemDefinition
+
+    createItemBerserkCast(ABILITY_DUMMY_ID)
+    ..setName("Oracle Potion Cast")
+    ..setCooldown(1, COOLDOWN)
+
+    return createPerishableItem(ITEM_ORACLE_POTION)
+    ..setNameEnhance("Oracle Potion")
+    ..setAbilities(toRawCode(ABILITY_DUMMY_ID))
+    ..setTooltipExtended("The consumer of this potion gain true sight, allowing him to see stealthed unit. Good versus thief & vision ward." + makeToolTipDuration(DURATION, COOLDOWN))
+    ..setModelUsed(LocalItems.oraclePotion)
+    ..setLumberCost(11)
+    ..setScalingValue(1)
+    ..setInterfaceIcon(Icons.bTNGreaterInvisibility)
+    ..setDescription("Give true sight")
+    ..setCooldownGroup(toRawCode('pinv'))
+    ..setNumberofCharges(1)
+    ..setTooltipBasic("Trade for Oracle Potion")
+
+HashMap<unit, timer> removalTimers = new HashMap<unit,timer>()
+
+init
+    EventListener.onCast(ABILITY_DUMMY_ID) (unit caster) ->
+        if removalTimers.has(caster)
+            removalTimers.getAndRemove(caster).release()
+        caster.addAbility(SPELLBOOK_ABILITY_ID)
+        caster.getOwner().setAbilityAvailable(SPELLBOOK_ABILITY_ID, false)
+
+        let t = getTimer()
+        t.doAfter(DURATION) ->
+            caster.removeAbility(SPELLBOOK_ABILITY_ID)
+            caster.removeAbility(BUFF_AURA_ID)
+            removalTimers.remove(caster)
+        removalTimers.put(caster, t)

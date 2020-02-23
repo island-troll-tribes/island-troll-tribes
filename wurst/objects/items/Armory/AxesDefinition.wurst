@@ -2,119 +2,194 @@ package AxesDefinition
 
 import Items
 import AbilityObjEditing
-import ItemObjEditing
+import LocalItemObjEditing
 import Assets
 import LocalObjectIDs
-import LinkedList
 import ObjectIdGenerator
 import ObjectIds
 import ToolTipsUtils
+import LocalAssets
+import ColorUtils
+import StringExtensions
 
-constant ABIL_DMG_STONE  = compiletime(ABIL_ID_GEN.next())
-constant ABIL_DMG_IRON   = compiletime(ABIL_ID_GEN.next())
-constant ABIL_DMG_STEEL  = compiletime(ABIL_ID_GEN.next())
-constant ABIL_DMG_MASHER = compiletime(ABIL_ID_GEN.next())
-constant ABIL_DMG_BATTLE = compiletime(ABIL_ID_GEN.next())
+let ABIL_DMG_STONE  = compiletime(ABIL_ID_GEN.next())
+let ABIL_DMG_IRON   = compiletime(ABIL_ID_GEN.next())
+let ABIL_DMG_STEEL  = compiletime(ABIL_ID_GEN.next())
+let ABIL_DMG_MASHER = compiletime(ABIL_ID_GEN.next())
+let ABIL_DMG_BATTLE = compiletime(ABIL_ID_GEN.next())
 
-constant ABIL_SILENCE = compiletime(ABIL_ID_GEN.next())
-constant ABIL_PURGE = compiletime(ABIL_ID_GEN.next())
+let ABIL_SILENCE = compiletime(ABIL_ID_GEN.next())
+let ABIL_PURGE   = compiletime(ABIL_ID_GEN.next())
 
-constant ABIL_STONE  = commaList(ABIL_DMG_STONE)
-constant ABIL_IRON   = commaList(ABIL_DMG_IRON)
-constant ABIL_STEEL  = commaList(ABIL_DMG_STEEL)
-constant ABIL_MASHER = commaList(ABIL_SILENCE, ABIL_DMG_MASHER)
-constant ABIL_BATTLE = commaList(ABIL_PURGE, ABIL_DMG_BATTLE)
+let ABIL_STONE  = commaList(ABIL_DMG_STONE, ABILITY_ATTACK_TREE)
+let ABIL_IRON   = commaList(ABIL_DMG_IRON, ABILITY_ATTACK_TREE)
+let ABIL_STEEL  = commaList(ABIL_DMG_STEEL, ABILITY_ATTACK_TREE)
+let ABIL_MASHER = commaList(ABIL_SILENCE, ABIL_DMG_MASHER, ABILITY_ATTACK_TREE)
+let ABIL_BATTLE = commaList(ABIL_PURGE, ABIL_DMG_BATTLE, ABILITY_ATTACK_TREE)
 
-constant DMG_STONE  = 6
-constant DMG_IRON   = 8
-constant DMG_STEEL  = 12
-constant DMG_MASHER = 7
-constant DMG_BATTLE = 14
+let DMG_STONE  = 6
+let DMG_IRON   = 8
+let DMG_STEEL  = 12
+let DMG_MASHER = 7
+let DMG_BATTLE = 14
 
-constant SILENCE_DURATION_HERO = 4.
-constant SILENCE_DURATION_NORMAL = 12.
-constant PURGE_DURATION_HERO = 5.
-constant PURGE_DURATION_NORMAL = 15.
+let SILENCE_DURATION_HERO   = 4.
+let SILENCE_DURATION_NORMAL = 12.
+let PURGE_DURATION_HERO     = 5.
+let PURGE_DURATION_NORMAL   = 15.
 
-constant SILENCE_CAST_RANGE = 350.
-constant PURGE_CAST_RANGE = 400.
+let SILENCE_CAST_RANGE = 350.
+let PURGE_CAST_RANGE   = 400.
 
-constant SILENCE_COOLDOWN = 45.
-constant PURGE_COOLDOWN = 60.
+let SILENCE_COOLDOWN = 45.
+let PURGE_COOLDOWN   = 60.
 
-constant SILENCE_AOE = 225.
+let SILENCE_AOE = 225.
 
-constant ST_MODEL = "Models\\StoneAxe.mdl"
-constant IA_MODEL = "Models\\IronAxe.mdl"
-constant SA_MODEL = "Models\\SteelAxe.mdl"
-constant BA_MODEL = "Models\\BattleAxe.mdl"
-constant MM_MODEL = "Models\\MageMasher.mdl"
+let TT_COMMON = "Increases the attack damage of the unit by " + "{0}".color(RED_COLOR) + " when worn. Wielder can cut trees."
 
-constant TT_COMMON = "Increases the attack damage of the unit by {0} when worn. Wielder can cut trees."
-
-constant TT_MM = TT_COMMON + " Can cast silence which has a {0} area of effect, lasting {1} seconds with a {2} second cooldown. "
+let TT_MM = TT_COMMON + " Can cast silence which has a {0} area of effect, lasting {1} seconds with a {2} second cooldown. "
                             .format(SILENCE_AOE.toToolTipLightBlue(), SILENCE_DURATION_HERO.toToolTipLightBlue(), SILENCE_COOLDOWN.toToolTipLightBlue())+
                              "Every hit burns {0} mana against mages, priests, and their subclasses.".format(6..toToolTipBlue())
 
-constant TT_BA = "A two handed axe. " + TT_COMMON + " Can cast purge, removes all buffs from a target unit, and slows its movement speed by a factor of <A0FA,DataA1>."+
-                             " Purged units will slowly regain their movement speed over <A0FA,Dur1> seconds." + makeToolTipCooldown(PURGE_COOLDOWN)
+let TT_BA = "A two handed axe. " + TT_COMMON + " Can cast purge, removes all buffs from a target unit, and slows its movement speed." + formatCooldown(ABIL_PURGE) + formatDuration(ABIL_PURGE)
 
-class Axe extends IttItem
-    construct(int id, string icon, string model, string name, string hotkey, string toolTipExt, int damage, int cost, LinkedList<int> tinting, string abilities)
-        super(id, icon, model, name, hotkey, toolTipExt, cost, 0.70, tinting, abilities)
-        this.setAbilities(commaList(abilities, "A00W")) //A00W is the attack tree ability
-        this.setStockReplenishInterval(damage * 15)
-        this.setTooltipExtended(toolTipExt.format(damage.toReal().toToolTipRed()))
-        this.setCooldownGroup("AIas")
 
-class UsableAxe extends Axe
-    construct(int id, string icon, string model, string name, string hotkey, string toolTipExt, int damage, int cost, LinkedList<int> tinting, string abilities)
-        super(id, icon, model, name, hotkey, toolTipExt, damage, cost, tinting, abilities)
-        this.setActivelyUsed(true)
+@compiletime function createCutTreeAbility() returns AbilityDefinitionFireDamageBonus
+    return new AbilityDefinitionFireDamageBonus(ABILITY_ATTACK_TREE)
+        ..setHeroAbility(true)
+        ..setTargetsAllowed(1, "debris,ground,item,structure,tree,ward")
+        ..setName("Attack Trees")
+        ..setEditorSuffix("(Wurst)")
+        ..setSpecialAttachmentPoint("")
+        ..setArtSpecial("")
+        ..setArtTarget("")
+        ..setTargetAttachmentPoint1("")
+        ..setMissileArt("")
+        ..setDamageBonus(1, 0)
+        ..setSpecialAttachmentPoint("")
+        ..setAreaofEffect(1, 0)
 
-class AxeDamageBonusAbility extends AbilityDefinitionAttackBonusPlus1
-    construct(int abilId, string name, int damage)
-        super(abilId)
-        this.setName(name + " Axe Damage Bonus")
-        this.setAttackBonus(1, damage)
-        this.setEditorSuffix("(Wurst)")
+ // Only purpose of this function is distinction, not sure about cooldown group, should battle axe and masher share cooldown?
+function createAxe(int axeId) returns ItemDefinition
+    return createBasicItem(axeId)
+        ..setCooldownGroup("AIas")
+        ..setStockReplenishInterval(120)
 
-class Silence extends AbilityDefinitionSilenceItem
-    construct(int abilId, string name, real durationHero, real durationNormal, real cooldown, real castRange, real aoe)
-        super(abilId)
-        this.setName(name)
-        this.setAreaofEffect(1, aoe)
-        this.setManaCost(1, 10)
-        this.setDurationHero(1, durationHero)
-        this.setDurationNormal(1, durationNormal)
-        this.setCastRange(1, castRange)
-        this.setCooldown(1, cooldown)
-        this.setEditorSuffix("(Wurst)")
+@compiletime function createStoneAxe() returns ItemDefinition
+    return createAxe(ITEM_STONE_AXE)
+        ..setInterfaceIcon(Icons.bTNOrcMeleeUpOne)
+        ..setModelUsed(LocalItems.stoneAxe)
+        ..setTooltipBasic("Trade for Stone Axe")
+        ..setHotkey("A")
+        ..setTooltipExtended(TT_COMMON.format(DMG_STONE.toString()))
+        ..setScalingValue(0.7)
+        ..setLumberCost(12)
+        ..setAbilities(ABIL_STONE)
+        ..setNameEnhance("Stone Axe")
 
-class Purge extends AbilityDefinitionPurgeCreep
-    construct(int abilId, string name, real durationHero, real durationNormal, real cooldown, real castRange)
-        super(abilId)
-        this.setName(name)
-        this.setManaCost(1, 0)
-        this.setDurationHero(1, durationHero)
-        this.setDurationNormal(1, durationNormal)
-        this.setCastRange(1, castRange)
-        this.setCooldown(1, cooldown)
-        this.setEditorSuffix("(Wurst)")
+@compiletime function createIronAxe() returns ItemDefinition
+    return createAxe(ITEM_IRON_AXE)
+        ..setInterfaceIcon(Icons.bTNOrcMeleeUpTwo)
+        ..setModelUsed(LocalItems.ironAxe)
+        ..setNameEnhance("Iron Axe")
+        ..setTooltipBasic("Trade for Iron Axe")
+        ..setHotkey("S")
+        ..setTooltipExtended(TT_COMMON.format(DMG_IRON.toString()))
+        ..setScalingValue(0.7)
+        ..setLumberCost(25)
+        ..setAbilities(ABIL_IRON)
 
-@compiletime function createAxes()
-    new AxeDamageBonusAbility(ABIL_DMG_STONE , "Stone" , DMG_STONE)
-    new AxeDamageBonusAbility(ABIL_DMG_IRON  , "Iron"  , DMG_IRON)
-    new AxeDamageBonusAbility(ABIL_DMG_STEEL , "Steel" , DMG_STEEL)
-    new AxeDamageBonusAbility(ABIL_DMG_MASHER, "Masher", DMG_MASHER)
-    new AxeDamageBonusAbility(ABIL_DMG_BATTLE, "Battle", DMG_BATTLE)
+@compiletime function createSteelAxe() returns ItemDefinition
+    return createAxe(ITEM_STEEL_AXE)
+        ..setInterfaceIcon(Icons.bTNSpiritWalkerAdeptTraining)
+        ..setModelUsed(LocalItems.steelAxe)
+        ..setNameEnhance("Steel Axe")
+        ..setTooltipBasic("Trade for Steel Axe")
+        ..setHotkey("W")
+        ..setTooltipExtended(TT_COMMON.format(DMG_STEEL.toString()))
+        ..setScalingValue(0.7)
+        ..setLumberCost(48)
+        ..setAbilities(ABIL_STEEL)
+        ..setTintingColor1Red(120)
+        ..setTintingColor2Green(140)
+        ..setTintingColor3Blue(255)
 
-    new Silence(ABIL_SILENCE, "Mage Masher Silence", SILENCE_DURATION_HERO, SILENCE_DURATION_NORMAL, SILENCE_COOLDOWN, SILENCE_CAST_RANGE, SILENCE_AOE)
-    new Purge(ABIL_PURGE, "Battle Axe Purge", PURGE_DURATION_HERO, PURGE_DURATION_NORMAL, PURGE_COOLDOWN, PURGE_CAST_RANGE)
+@compiletime function createBattleAxe() returns ItemDefinition
+    return createAxe(ITEM_BATTLE_AXE)
+        ..setInterfaceIcon(Icons.bTNOrcMeleeUpThree)
+        ..setModelUsed(LocalItems.battleAxe)
+        ..setNameEnhance("Battle Axe")
+        ..setTooltipBasic("Trade for Battle Axe")
+        ..setHotkey("A")
+        ..setTooltipExtended(TT_BA.format(DMG_BATTLE.toString()))
+        ..setScalingValue(0.7)
+        ..setLumberCost(60)
+        ..setAbilities(ABIL_BATTLE)
+        ..setActivelyUsed(true)
 
-    new Axe(ITEM_STONE_AXE   , Icons.bTNOrcMeleeUpOne              , ST_MODEL , "Stone Axe"   , "A", TT_COMMON , DMG_STONE , 12, asList(255, 255 , 255 ), ABIL_STONE)
-    new Axe(ITEM_IRON_AXE    , Icons.bTNOrcMeleeUpTwo              , IA_MODEL , "Iron Axe"    , "S", TT_COMMON , DMG_IRON  , 25, asList(255, 255 , 255 ), ABIL_IRON)
-    new Axe(ITEM_STEEL_AXE   , Icons.bTNSpiritWalkerAdeptTraining  , SA_MODEL , "Steel Axe"   , "Q", TT_COMMON , DMG_STEEL , 48, asList(120, 140 , 255 ), ABIL_STEEL)
+@compiletime function createMageMasher() returns ItemDefinition
+    return createAxe(ITEM_MAGE_MASHER)
+        ..setInterfaceIcon(Icons.bTNSpiritWalkerMasterTraining)
+        ..setModelUsed(LocalItems.mageMasher)
+        ..setNameEnhance("Mage Masher ")
+        ..setTooltipBasic("Trade for MageMasher")
+        ..setHotkey("A")
+        ..setTooltipExtended(TT_MM.format(DMG_MASHER.toString()))
+        ..setScalingValue(0.7)
+        ..setLumberCost(40)
+        ..setAbilities(ABIL_MASHER)
+        ..setTintingColor2Green(65)
+        ..setTintingColor3Blue(65)
+        ..setActivelyUsed(true)
 
-    new UsableAxe(ITEM_BATTLE_AXE  , Icons.bTNOrcMeleeUpThree            , BA_MODEL , "Battle Axe"  , "A", TT_BA     , DMG_BATTLE, 60, asList(255, 255 , 255 ), ABIL_BATTLE)
-    new UsableAxe(ITEM_MAGE_MASHER , Icons.bTNSpiritWalkerMasterTraining , MM_MODEL , "Mage Masher" , "A", TT_MM     , DMG_MASHER, 40, asList(255, 65  , 65  ), ABIL_MASHER)
+@compiletime function createStoneAxeAttackBonusAbility() returns AbilityDefinitionAttackBonusPlus1
+    return new AbilityDefinitionAttackBonusPlus1(ABIL_DMG_STONE)
+        ..setName("Stone Axe Damage Bonus")
+        ..setAttackBonus(1, DMG_STONE)
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createIronAxeAttackBonusAbility() returns AbilityDefinitionAttackBonusPlus1
+    return new AbilityDefinitionAttackBonusPlus1(ABIL_DMG_IRON)
+        ..setName("Iron Axe Damage Bonus")
+        ..setAttackBonus(1, DMG_IRON)
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createSteelAxeAttackBonusAbility() returns AbilityDefinitionAttackBonusPlus1
+    return new AbilityDefinitionAttackBonusPlus1(ABIL_DMG_STEEL)
+        ..setName("Steel Axe Damage Bonus")
+        ..setAttackBonus(1, DMG_STEEL)
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createBattleAxeAttackBonusAbility() returns AbilityDefinitionAttackBonusPlus1
+    return new AbilityDefinitionAttackBonusPlus1(ABIL_DMG_BATTLE)
+        ..setName("Battle Axe Damage Bonus")
+        ..setAttackBonus(1, DMG_BATTLE)
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createMageMasherAxeAttackBonusAbility() returns AbilityDefinitionAttackBonusPlus1
+    return new AbilityDefinitionAttackBonusPlus1(ABIL_DMG_MASHER)
+        ..setName("Mage Masher Axe Damage Bonus")
+        ..setAttackBonus(1, DMG_MASHER)
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createSilenceAbility() returns AbilityDefinitionSilenceItem
+    return new AbilityDefinitionSilenceItem(ABIL_SILENCE)
+        ..setName("Mage Masher Silence")
+        ..setAreaofEffect(1, SILENCE_AOE)
+        ..setManaCost(1, 10)
+        ..setDurationHero(1, SILENCE_DURATION_HERO)
+        ..setDurationNormal(1, SILENCE_DURATION_NORMAL)
+        ..setCastRange(1, SILENCE_CAST_RANGE)
+        ..setCooldown(1, SILENCE_COOLDOWN)
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createPurgeAbility() returns AbilityDefinitionPurgeCreep
+    return new AbilityDefinitionPurgeCreep(ABIL_PURGE)
+        ..setName("Battle Axe Purge")
+        ..setManaCost(1, 0)
+        ..setDurationHero(1, PURGE_DURATION_HERO)
+        ..setDurationNormal(1, PURGE_DURATION_NORMAL)
+        ..setCastRange(1, PURGE_CAST_RANGE)
+        ..setCooldown(1, PURGE_COOLDOWN)
+        ..setEditorSuffix("(Wurst)")

@@ -9,6 +9,7 @@ import Lodash
 import InstantDummyCaster
 import ClosureForGroups
 import ErrorHandling
+import ObjectIDManager
 
 let ABILITY_ID_REVEAL_DUMMY = compiletime(ABIL_ID_GEN.next())
 let ABILITY_ID_RECON_REVEAL_DUMMY = compiletime(ABIL_ID_GEN.next())
@@ -111,8 +112,6 @@ function onCastReveal()
         ? ABILITY_ID_GREATER_REVEAL_DUMMY
         : ABILITY_ID_REVEAL_DUMMY
 
-    print("casting  {0} at level {1}.".format(dummyToCast.toRawCode(), lvl.toString()))
-
     // Cast the Far Sight ability centered on the original caster.
     if not InstantDummyCaster.castPoint(owner, dummyToCast, lvl, Orders.farsight, caster.getPos())
         error("Reveal cast failed, this isn't supposed to happen, report this please.")
@@ -131,13 +130,13 @@ init
                 if InstantDummyCaster.castPoint(owner, ABILITY_ID_RECON_REVEAL_DUMMY, lvl, Orders.farsight, u.getPos()) == false
                     error("Reveal cast failed, this isn't supposed to happen, report this please.")
 
-        // Get nearby enemy units
+        // Get nearby enemies.
         let unitsAround = CreateGroup()..enumUnitsInRange(caster.getPos(), 2700)
         unitsAround.forEachIn() elem ->
             if elem.getOwner().isAllyOf(owner)
                 unitsAround.removeUnit(elem)
 
-        // cast greater reveal on a random nearby unit
+        // Cast greater reveal on a random nearby unit.
         for i = 0 to lvl
             let randomUnit = unitsAround.getRandomUnit()
             if randomUnit != null

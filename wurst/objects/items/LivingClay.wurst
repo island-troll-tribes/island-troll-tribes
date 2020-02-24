@@ -3,24 +3,66 @@ package LivingClay
 // Standard library imports:
 import AbilityObjEditing
 import Assets
+import BuffObjEditing
 import EventHelper
+import HashMap
 import ItemObjEditing
 import ObjectIdGenerator
 import ObjectIds
+import OnUnitEnterLeave
 import RegisterEvents
+import SimError
+
+// Third-party imports:
+import StackNSplit
 
 // Local imports:
+import DummyUnits
 import LocalObjectIDs
 import LocalAssets
 
+// The configuration for the mechanism preventing clustering wards.
 @configurable let CLAY_WARD_LIMIT_RANGE = 500.0
 @configurable let CLAY_WARD_LIMIT_MAX_WARDS = 10
 
+// The sight radius of the ward, required to be the same throughout the day.
+@configurable let SIGHT_RADIUS = 700
+
+// The ID for the dummy unit that has the aura.
+let DUMMY_UNIT_ID = compiletime(UNIT_ID_GEN.next())
+
+// The ID for the ability for placing a ward.
 let PLACE_ABIL_ID = compiletime(ABIL_ID_GEN.next())
 
-let TOOLTIP = "" +
+// The ID for the ability for the aura around a ward.
+let AURA_ABIL_ID = compiletime(ABIL_ID_GEN.next())
+
+// The ID for the ability for the bestowed by the aura.
+let AURA_BUFF_ID = compiletime(ABIL_ID_GEN.next())
+
+let ITEM_TOOLTIP = "" +
     "Places a sentry ward to watch the nearby area. Lasts indefinitely until " +
     "approached, at which point it explodes and damages nearby enemies."
+
+let BUFF_TOOLTIP = "" +
+    "This unit senses that it is being watched by a nearby ward."
+
+// The mapping from ward to corresponding dummy units.
+let dummies = new HashMap<unit, unit>()
+
+// Creates a dummy unit that is used to impart the aura for a ward, which the
+// ward cannot do itself because invisible units cannot bestow auras on enemies.
+@compiletime function createDummyAuraUnit()
+    new UnitDefinition(DUMMY_UNIT_ID, UnitIds.locust)
+        ..addDummyProperties()
+        ..setNormalAbilities(
+            commaList(
+                // Keep the existing locust ability.
+                AbilityIds.locust,
+                // Make the unit notify enemies of its presence.
+                AURA_ABIL_ID
+            )
+        )
 
 @compiletime function createLivingClayDamageAbility()
     new AbilityDefinitionDeathDamageAOEmine(ABILITY_WARD_DESTROY)
@@ -29,27 +71,56 @@ let TOOLTIP = "" +
         ..presetPartialDamageRadius(lvl -> 400)
         ..presetPartialDamageAmount(lvl -> 5.)
 
+@compiletime function createLivingClayAuraBuff()
+    new BuffDefinition(AURA_BUFF_ID, BuffIds.thornsAura)
+        ..setIcon(LocalIcons.bTNGreenSentryWard)
+        ..setTooltipNormal(1, "Paranoia")
+        ..setTooltipNormalExtended(1, BUFF_TOOLTIP)
+
+@compiletime function createLivingClayAuraAbility()
+    new AbilityDefinitionKeeperoftheGroveThornsAura(AURA_ABIL_ID)
+        // Use the dummy buff.
+        ..presetBuffs(lvl -> commaList(
+            AURA_BUFF_ID
+        ))
+        // Prevent the level of the ability showing in the buff tooltip.
+        ..setHeroAbility(false)
+        ..setLevels(1)
+        // Prevent the aura from having a mechanical effect.
+        ..presetDamageDealttoAttackers(lvl -> 0)
+        ..presetDamageisPercentReceived(lvl -> false)
+        // Match the sight radius for the ward.
+        ..presetAreaofEffect(lvl -> SIGHT_RADIUS.toReal())
+        // Target enemies and exclude structures.
+        ..presetTargetsAllowed(lvl -> commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.ground,
+            TargetsAllowed.enemies,
+            TargetsAllowed.vulnerable,
+            TargetsAllowed.invulnerable,
+            TargetsAllowed.hero
+        ))
+
 @compiletime function createLivingClayUnit()
     new UnitDefinition(UNIT_LIVING_CLAY, UnitIds.goblinlandmine)
         ..setNormalAbilities(commaList(
-            // Makes the unit invisible and ignored for pathing.
+            // Make the unit ignored for pathing.
             AbilityIds.ghostVisible,
-            // Makes the unit deal damage on death.
+            // Make the unit deal damage on death.
             ABILITY_WARD_DESTROY,
-            // Makes the unit die when approached.
+            // Make the unit die when approached.
             AbilityIds.mineexploding
         ))
         ..setIconGameInterface(LocalIcons.bTNGreenSentryWard)
         ..setArmorType(ArmorType.Small)
         ..setModelFile(Units.sentryWard)
         ..setName("Living Clay")
-        ..setSightRadiusNight(700)
-        ..setSightRadiusDay(1400)
+        ..setSightRadiusNight(SIGHT_RADIUS)
+        ..setSightRadiusDay(SIGHT_RADIUS)
 
 @compiletime function createLivingClaySummonAbility()
     new AbilityDefinitionItemPlaceMine(PLACE_ABIL_ID)
         ..presetUnitType(lvl -> UNIT_LIVING_CLAY.toRawCode())
-
 
 @compiletime function createLivingClayItem()
     new ItemDefinition(ITEM_LIVING_CLAY, ItemIds.sentryWards)
@@ -63,10 +134,40 @@ let TOOLTIP = "" +
         ..setLumberCost(8)
         ..setName("Living Clay")
         ..setTooltipBasic("Purchase Living Clay")
-        ..setTooltipExtended(TOOLTIP)
+        ..setTooltipExtended(ITEM_TOOLTIP)
         ..setScalingValue(0.5)
 
-function onCreate(unit target)
+// Pairs each ward with a dummy to impart the aura.
+function onWardEnter(unit target)
+    // Ignore units other than wards.
+    if target.getTypeId() != UNIT_LIVING_CLAY
+        return
+
+    // Create the dummy for the aura effect.
+    let dummy = createUnit(
+        target.getOwner(),
+        DUMMY_UNIT_ID,
+        target.getPos(),
+        target.getFacingAngle()
+    )
+
+    // Store the relation so that the dummy may be removed later.
+    dummies.put(target, dummy)
+
+// Removes the paired dummy with a ward exits the map.
+function onWardLeave(unit target)
+    // Ignore units other than wards.
+    if target.getTypeId() != UNIT_LIVING_CLAY
+        return
+
+    // Look up the dummy for the ward.
+    let dummy = dummies.getAndRemove(target)
+
+    // Remove the dummy upon the ward exiting.
+    dummy.remove()
+
+// Enforces a limit on the maximum amount of wards in a cluster.
+function onWardPlace(unit caster, unit target)
     // Exit the unit created is not a ward.
     if target.getTypeId() != UNIT_LIVING_CLAY
         return
@@ -78,15 +179,29 @@ function onCreate(unit target)
         Filter(-> GetFilterUnit().getTypeId() == UNIT_LIVING_CLAY)
     )
 
-    // Undo the placement.
-    if ENUM_GROUP.size() > CLAY_WARD_LIMIT_MAX_WARDS
-        // Create a replacement ward.
-        createItem(ITEM_LIVING_CLAY, target.getPos())
-            ..setCharges(1)
+    // Exit if the unit is allowed to be summoned at its current location.
+    if ENUM_GROUP.size() <= CLAY_WARD_LIMIT_MAX_WARDS
+        return
 
-        // Removed the placed ward without exploding it.
-        target.remove()
+    // Undo the placement by removing the new ward without exploding it.
+    target.remove()
+
+    // Create a replacement ward.
+    let replacement = createItem(ITEM_LIVING_CLAY, target.getPos())
+        ..setCharges(1)
+
+    // Return the replacement to the unit responsible for the placement.
+    caster.stackItem(replacement)
+
+    // Notify the user of this operation.
+    simError(target.getOwner(), "Cannot place more wards here.")
 
 init
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SUMMON) ->
-        onCreate(EventData.getSummonedUnit())
+        onWardPlace(EventData.getSummoningUnit(), EventData.getSummonedUnit())
+
+    onEnter() ->
+        onWardEnter(getEnterLeaveUnit())
+
+    onLeave() ->
+        onWardLeave(getEnterLeaveUnit())

@@ -6,6 +6,7 @@ import ObjectIds
 import UnitObjEditing
 
 // Local imports:
+import DummyUnits
 import LocalObjectIDs
 import LocalAssets
 
@@ -41,6 +42,9 @@ function createMerchantShip(int newId) returns UnitDefinition
 
 @compiletime function createDummyGoldMineShip()
     createMerchantShip(LocalUnitIds.dummyGoldMine)
+        // Negate mechanical effects for the unit.
+        ..addDummyProperties()
+        // Override the locust ability and show the minimap gold mine indicator.
         ..setNormalAbilities(
             commaList(
                 AbilityIds.goldMineability,
@@ -49,13 +53,6 @@ function createMerchantShip(int newId) returns UnitDefinition
         )
         // Allow the gold mine icon to appear.
         ..setHideMinimapDisplay(false)
-        // Disable the model, which blocks selecting and targeting.
-        ..setModelFile(LocalUnits.dummy)
-        // Remove the shadow so the unit has no visual impact.
-        ..setShadowImageUnit(UnitShadow.none)
-        // Prevent collision with placed directly on another unit.
-        ..setMovementType(MovementType.Fly)
-        ..setSpeedBase(0)
 
 @compiletime function createMerchantShip1()
     createMerchantShip(UNIT_TRADE_SHIP_1)

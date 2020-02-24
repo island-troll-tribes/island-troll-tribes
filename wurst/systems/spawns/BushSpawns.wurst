@@ -47,12 +47,16 @@ class BushPool
         return pool.placeRandomItem(pos)
 
 function addItemToBush(unit target)
+    // Ignore units that have been modified and are no longer viable.
+    if target == null or not target.isAlive()
+        return
+
     // Randomly choose the item being created.
     let choice = BushPool
         .findForUnitId(target.getTypeId())
         .getItem(target.getPos())
 
-    // Allow for the itempool to miss.
+    // Allow the itempool to miss.
     if target != null
         // Check that the target has room for the item.
         if not target.addOrStackItem(choice)
@@ -118,3 +122,8 @@ init
     new BushPool(UNIT_WATER_HERB_BUSH, 'd108')
         ..addItem(ITEM_RIVER_ROOT, 1)
         ..addItem(ITEM_RIVER_STEM, 1)
+
+    // Remove all Scout Bushes, as per #502, pending playtesting.
+    // TODO: Properly remove the indicator units once playtesting is complete.
+    registerCallback(UNIT_SCOUTS_BUSH) (unit target) ->
+        target.remove()

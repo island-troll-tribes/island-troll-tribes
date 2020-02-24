@@ -1,0 +1,185 @@
+package BlowgunDefinition
+
+// Standard library imports:
+import AbilityObjEditing
+import Assets
+import ItemObjEditing
+import ObjectIds
+import ObjectIdGenerator
+
+// Local imports:
+import Items
+import ColorUtils
+import LocalAssets
+import ToolTipsUtils
+import LocalObjectIDs
+import StringExtensions
+
+let ICON = Icons.bTNAlleriaFlute
+let GROUND_MODEL_PATH = LocalItems.blowgun
+
+public let ABILITY_ID = compiletime(ABIL_ID_GEN.next())
+public let THISTLE_HERO_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
+
+let BONE_THISTLE_DMG = 30.0
+let BONE_THISTLE_STUN_HERO = 0.75
+let BONE_THISTLE_STUN_NORMAL = 2.0
+
+let THISTLE_DMG                = 15.
+let THISTLE_AS_FACTOR          = 0.3
+let THISTLE_MS_FACTOR          = 0.4
+let THISTLE_DECAYING_DMG       = 5.
+let THISTLE_DECAY_POWER        = 0.5
+
+let THISTLE_HERO_DMG           = 10.
+let THISTLE_HERO_AS_FACTOR     = 0.15
+let THISTLE_HERO_MS_FACTOR     = 0.3
+let THISTLE_HERO_DECAYING_DMG  = 5.
+let THISTLE_HERO_DECAY_POWER   = 0.5
+
+let DARK_THISTLE_DMG           = 20.
+let DARK_THISTLE_AS_FACTOR     = 0.2
+let DARK_THISTLE_MS_FACTOR     = 0.2
+let DARK_THISTLE_DECAYING_DMG  = 5.
+let DARK_THISTLE_DECAY_POWER   = 0.5
+
+let THISTLE_DURATION_NORMAL = 16.
+let THISTLE_DURATION_HERO   = 5.
+let DARK_THISTLE_DURATION_HERO = 12.
+
+let CAST_RANGE = 450.
+
+// The number of ticks for which mana is burned.
+public let NUM_TICK = 6
+// The interval in seconds between ticks.
+public let LEN_TICK = 1.
+public let DARK_THISTLE_MANA_BURN = 2.
+
+let COOLDOWN = 6.
+
+let ITEM_TOOLTIP = "Purchase |cffffcc00B|rlow Gun"
+
+// I used substring to get rid of the decimal since those value are of type real, didn't know how to do otherwise
+let BONE_TOOLTIP    = "Bone :".color(SPECIAL_COLOR) + " Deals {0} damage and stun for {1} seconds."
+                      .format(BONE_THISTLE_DMG.toToolTipRed(),
+                              BONE_THISTLE_STUN_HERO.toString().substring(0, 4).color(COLOR_TURQUOISE) + "/" + BONE_THISTLE_STUN_NORMAL.toString().substring(0, 1).color(COLOR_TURQUOISE)
+                              ) + makeToolTipCooldown(COOLDOWN)
+
+let THISTLE_TOOLTIP = "Thistle :".color(GREEN_COLOR) + " Deals {0} initial damage and {1} damage every {2} seconds."
+                      .format(THISTLE_DMG.toToolTipRed(),
+                              THISTLE_DECAYING_DMG.toToolTipRed(),
+                              3..toToolTipLightBlue()) +
+                      " Also decrease attack speed by {0} and movement speed by {1}.".format(
+                          THISTLE_HERO_AS_FACTOR.toToolTipOrange() + "/" + THISTLE_AS_FACTOR.toToolTipOrange(),
+                          THISTLE_HERO_MS_FACTOR.toToolTipOrange() + "/" + THISTLE_MS_FACTOR.toToolTipOrange()
+                          ) + makeToolTipDuration(THISTLE_DURATION_HERO, COOLDOWN)
+
+
+let DARK_THISTLE_TOOLTIP = "Dark Thistle :".color(COLOR_VIOLET) + " Deals {0} initial damage and {1} damage every {2} seconds, burn {3} mana over {4} seconds."
+                           .format(DARK_THISTLE_DMG.toToolTipRed(),
+                                   DARK_THISTLE_DECAYING_DMG.toToolTipRed(),
+                                   3..toToolTipLightBlue(),
+                                   (DARK_THISTLE_MANA_BURN * NUM_TICK).toToolTipPurple(),
+                                   (NUM_TICK * LEN_TICK).toToolTipLightBlue()
+                                   )+
+                           " Also decrease attack speed by {0} and movement speed by {1}.".format(
+                               DARK_THISTLE_AS_FACTOR.toToolTipOrange(),
+                               DARK_THISTLE_MS_FACTOR.toToolTipOrange()
+                               ) + makeToolTipDuration(DARK_THISTLE_DURATION_HERO, COOLDOWN)
+
+public let ITEM_TOOLTIP_EXT = "Used for shooting small things. Can be loaded with thistles or bones. Drag and drop items on the blowgun to load, click and use on your own troll to unload."+
+                             " If your inventory is full, clicking on ammo type item close to your troll will load them into the blowgun."+
+                             "\n\nAmmo Effect :".color(GOLD_COLOR) +
+                             "\n" + BONE_TOOLTIP +
+                             "\n" + THISTLE_TOOLTIP +
+                             "\n" + DARK_THISTLE_TOOLTIP
+
+
+let ITEM_DESCRIPTION = "A hollowed out piece of wood. If blown through, could be used to fire small projectiles such as thistles."
+
+@compiletime function createBoneAmmoAbility()
+    new AbilityDefinitionThunderBoltCreep(ABILITY_BONE_THISTLE)
+        ..setDummyAbility()
+        ..setIconNormal(Icons.bTNThoriumRanged)
+        ..setDamage(1, BONE_THISTLE_DMG)
+        ..setDurationHero(1, BONE_THISTLE_STUN_HERO)
+        ..setDurationNormal(1, BONE_THISTLE_STUN_NORMAL)
+        ..setHotkeyNormal("")
+        ..setMissileArc(0.0)
+        ..setMissileArt(Abilities.bristleBackMissile)
+        ..setMissileSpeed(1700)
+        ..setName("Bone Tistle")
+        ..setTargetsAllowed(1, "air,enemies,ground,neutral,organic,terrain")
+        ..setTooltipNormal(1, "Bone Tistle")
+        ..setTooltipNormalExtended(1, "Bone Tistle")
+        ..setEditorSuffix("(Wurst)")
+
+function createThistleAbility(int newId) returns AbilityDefinitionWardenShadowStrike
+    return new AbilityDefinitionWardenShadowStrike(newId)
+        ..setDummyAbility()
+        ..presetBuffs(lvl -> "B099")
+        ..presetTargetsAllowed(lvl -> "air,enemies,ground,neutral,organic,terrain")
+        ..setMissileArt(Abilities.bristleBackMissile)
+        ..setMissileSpeed(2100)
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createThistleHeroAbility()
+    createThistleAbility(THISTLE_HERO_ABILITY_ID)
+        ..presetInitialDamage(lvl -> THISTLE_HERO_DMG)
+        ..presetDecayingDamage(lvl -> THISTLE_HERO_DECAYING_DMG)
+        ..presetAttackSpeedFactor(lvl -> THISTLE_HERO_AS_FACTOR)
+        ..presetMovementSpeedFactor(lvl -> THISTLE_HERO_MS_FACTOR)
+        ..presetDurationNormal(lvl -> THISTLE_DURATION_NORMAL)
+        ..presetDurationHero(lvl -> THISTLE_DURATION_HERO)
+        ..presetDecayPower(lvl -> THISTLE_HERO_DECAY_POWER)
+        ..setName("Loaded Hero Thistles")
+
+@compiletime function createThistleNormalAbility()
+    createThistleAbility(ABILITY_THISTLE)
+        ..presetInitialDamage(lvl -> THISTLE_DMG)
+        ..presetDecayingDamage(lvl -> THISTLE_DECAYING_DMG)
+        ..presetAttackSpeedFactor(lvl -> THISTLE_AS_FACTOR)
+        ..presetMovementSpeedFactor(lvl -> THISTLE_MS_FACTOR)
+        ..presetDurationNormal(lvl -> THISTLE_DURATION_NORMAL)
+        ..presetDurationHero(lvl -> THISTLE_DURATION_HERO)
+        ..presetDecayPower(lvl -> THISTLE_DECAY_POWER)
+        ..setName("Loaded Normal Thistles")
+
+@compiletime function createDarkThistleAbility()
+    createThistleAbility(ABILITY_DARK_THISTLE)
+        ..setBuffs(1, "B00E")
+        ..presetInitialDamage(lvl -> DARK_THISTLE_DMG)
+        ..presetDecayingDamage(lvl -> DARK_THISTLE_DECAYING_DMG)
+        ..presetAttackSpeedFactor(lvl -> DARK_THISTLE_AS_FACTOR)
+        ..presetMovementSpeedFactor(lvl -> DARK_THISTLE_MS_FACTOR)
+        ..presetDurationNormal(lvl -> THISTLE_DURATION_NORMAL)
+        ..presetDurationHero(lvl -> DARK_THISTLE_DURATION_HERO)
+        ..presetDecayPower(lvl -> DARK_THISTLE_DECAY_POWER)
+        ..setName("Loaded Dark Thistles")
+
+@compiletime function createBlowpipeItem()
+    createUsableItem(ITEM_BLOW_GUN)
+        ..setAbilities(toRawCode(ABILITY_ID))
+        ..setModelUsed(GROUND_MODEL_PATH)
+        ..setScalingValue(0.6)
+        ..setButtonPositionX(3)
+        ..setButtonPositionY(1)
+        ..setClassification("Charged")
+        ..setInterfaceIcon(ICON)
+        ..setCooldownGroup("A01K")
+        ..setLumberCost(5)
+        ..setStockReplenishInterval(30)
+        ..setDescription(ITEM_DESCRIPTION)
+        ..setHotkey("F")
+        ..setName("Blow Gun")
+        ..setTooltipBasic(ITEM_TOOLTIP)
+        ..setTooltipExtended(ITEM_TOOLTIP_EXT)
+
+@compiletime function createBlowpipeAbility()
+    createItemChannelCast(ABILITY_ID)
+        ..setCastRange(1, CAST_RANGE)
+        ..setName("Blow Gun Ability")
+        ..setOptions(1, 1)
+        ..setTargetsAllowed(1, "air,ground,enemy,neutral,organic,self")
+        ..setTargetType(1, 1)
+        ..setCooldown(1, COOLDOWN)

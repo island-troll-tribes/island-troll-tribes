@@ -1,0 +1,24 @@
+package DummyUnits
+
+// Standard library imports:
+import Assets
+import ObjectIds
+import UnitObjEditing
+
+// Local imports:
+import LocalAssets
+
+// Causes a unit definition to not appear or have any visible side-effects.
+public function UnitDefinition.addDummyProperties()
+    this
+        // Block effects from selecting, targeting, and enumerating the unit.
+        // Disable the minimap indicator for the unit.
+        ..setNormalAbilities(commaList(AbilityIds.locust))
+        // Disable the model, which also blocks selecting and targeting.
+        ..setModelFile(LocalUnits.dummy)
+        // Remove the shadow so the unit has no visual impact.
+        ..setShadowImageUnit(UnitShadow.none)
+        // Prevent collision, including when placed directly on another unit.
+        ..setMovementType(MovementType.Fly)
+        // Prevents behavior where stacked flying units will later disperse.
+        ..setSpeedBase(0)

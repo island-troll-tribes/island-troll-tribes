@@ -43,28 +43,23 @@ constant let MAX_MEAT_CARRIED = 20
     ..setMaxStack(0)
 
 function checkMeat(unit troll, item meat)
-    let numMeat = sum(map((meat, _) -> meat.getCharges(), troll.getInventory()))
-    if numMeat > MAX_MEAT_CARRIED
-        dropMeat(troll, meat, numMeat - MAX_MEAT_CARRIED)
+    if meat.getTypeId() == ITEM_COOKED_MEAT and troll.isTroll()
+        let numMeat = sum(map((meat, _) -> meat.getCharges(), troll.getInventory()))
+        if numMeat > MAX_MEAT_CARRIED
+            dropMeat(troll, meat, numMeat - MAX_MEAT_CARRIED)
         
 function dropMeat(unit troll, item meat, int meatToDrop)
     for int i = 1 to meatToDrop
         meat.setCharges(meat.getCharges() - 1)
         if meat.getCharges() == 0
             meat.remove()
-    item newMeat = createItem(ITEM_COOKED_MEAT, troll.getPos())
-    if meatToDrop > 1
-        newMeat.setCharges(meatToDrop)
+    createItem(ITEM_COOKED_MEAT, troll.getPos())..setCharges(meatToDrop)
 
 
 init
     registerGameStartEvent() ->
         if gameConfig.getInventoryLimits()
             registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
-                let manipulatedItem = GetManipulatedItem()
-                if manipulatedItem.getTypeId() == ITEM_COOKED_MEAT
-                    checkMeat(GetManipulatingUnit(), manipulatedItem)
+                checkMeat(GetManipulatingUnit(), GetManipulatedItem())
             registerItemStackingEvent(EVENT_ITEM_CHARGES.ADDED) ->
-                let manipulatedItem = getItemStackingItem()
-                if manipulatedItem.getTypeId() == ITEM_COOKED_MEAT
-                    checkMeat(getItemStackingUnit(), manipulatedItem)
+                checkMeat(getItemStackingUnit(), getItemStackingItem())

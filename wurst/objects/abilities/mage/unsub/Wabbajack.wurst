@@ -2,24 +2,21 @@ package Wabbajack
 
 import ClosureEvents
 import ClosureTimers
-import OverCharge
 import InstantDummyCaster
 import Assets
 import ClosureForGroups
 import Orders
 import BuffObjEditing
-import DummyCaster
-import Lodash
 import ChannelAbilityPreset
 import ToolTipsUtils
 import TimerUtils
 import LocalObjectIDs
-import AbilityObjEditing
+import ColorUtils
+import StringExtensions
 
-let COOLDOWN = 2.
 let MISSILE_SPEED = 700.
-let MISSILE_LIFETIME = 1.5
-let MANACOST = 12
+let MISSILE_LIFETIME = 2
+let MANACOST = 0
 let IMPACT_TRIGGER_AOE = 100.
 let MISSILE_FLY_HEIGHT = 120.
 let SPAWN_OFFSET_DISTANCE = 50.
@@ -27,6 +24,10 @@ let LOOP_INTERVAL = ANIMATION_PERIOD
 let DUMMY_CAGE_ID = compiletime(ABIL_ID_GEN.next())
 let BUFF_ID = compiletime(BUFF_ID_GEN.next())
 let BUFF_ID_AIR = compiletime(BUFF_ID_GEN.next())
+
+let DURATION_HERO = 1.75
+let DURATION_NORMAL = 5.0
+let COOLDOWN = 1.
 
 function createCageBuffGround(int newId) returns BuffDefinition
     return new BuffDefinition(newId, 'Beng')
@@ -55,9 +56,9 @@ function createCageBuffAir(int newId) returns BuffDefinition
         ..setMissileArt("")
         ..setName("Wabbajack Cage Dummy")
         ..setDummyAbility()
-        ..setDurationHero(1, 3)
-        ..setDurationNormal(1, 1.5)
-        ..setTargetsAllowed(1, "friend,enemies,ground,hero")
+        ..setDurationHero(1, DURATION_HERO)
+        ..setDurationNormal(1, DURATION_NORMAL)
+        ..setTargetsAllowed(1, "friend,enemies,ground,neutral,nonancient,organic")
         ..setEditorSuffix("(Wurst)")
         ..setBuffs(1, commaList(BUFF_ID, BUFF_ID_AIR))
 
@@ -70,11 +71,11 @@ class Wabbajack extends ChannelAbilityPreset
         this.setIconTurnOff(Icons.bTNWitchDoctorMaster)
         this.setHeroAbility(false)
         this.setHotkeyNormal(hotkey)
-        this.setName("Wabbajack")
+        this.setName("Wabbajack's Tormenter")
         this.setDisableOtherAbilities(1, false)
         this.setCastingTime(1, 0)
-        this.setTooltipNormal(1,"Nice tooltip")
-        this.setTooltipNormalExtended(1, "Even better tooltip")
+        this.setTooltipNormal(1,"Wabbajack's Tormenter".color(GENERAL_COLOR))
+        this.setTooltipNormalExtended(1, "Unleash a tormented soul in a straight line, caging the first enemy hit." + makeToolTipDuration(DURATION_HERO, DURATION_NORMAL, COOLDOWN))
         this.setCooldown(1, COOLDOWN)
         this.setManaCost(1, MANACOST)
         this.setTargetType(1, 3)
@@ -117,7 +118,6 @@ class WabbajackProjectile
         vec3 newPos = this.pos.offset2d(this.ang, MISSILE_SPEED * LOOP_INTERVAL)
         let terrainZ = newPos.getTerrainZ()
         newPos.z = terrainZ + MISSILE_FLY_HEIGHT
-        //print(newPos.toString())
         this.efx.setPos(newPos)
         this.pos = newPos
         checkForImpacts()
@@ -125,19 +125,15 @@ class WabbajackProjectile
     function checkForImpacts()
         this.foundTarget = false
         forUnitsInRange(this.pos.toVec2(), IMPACT_TRIGGER_AOE) u ->
-            print(u.getName())
             if isValidTarget(ownerUnit, u)
-                print("target Found")
                 this.target = u
                 spawnTemporaryVision(450, 2)
                 onImpact()
                 stopTimedLoopAndDestroy()
 
     function onImpact()
-        print(this.target.getName())
         this.exploded = true
         UnitDamageTarget(ownerUnit, target, 10, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
-        print(this.target.getName())
         InstantDummyCaster.castTarget(this.ownerUnit.getOwner(), DUMMY_CAGE_ID, 1, Orders.ensnare, this.target)
 
     function spawnTemporaryVision(real radius, real duration)
@@ -147,11 +143,11 @@ class WabbajackProjectile
             vis.destr()
 
     ondestroy
-        print("ded")
         this.efx.destr()
 
 function isValidTarget(unit caster, unit target) returns bool
-    return target.getOwner().isAllyOf(caster.getOwner())
+    return (target.getOwner().isAllyOf(caster.getOwner())
+        or target.getOwner().isEnemyOf(caster.getOwner()))
         and not target.isInvulnerable()
         and not target.isType(UNIT_TYPE_FLYING)
         and target.isAlive()

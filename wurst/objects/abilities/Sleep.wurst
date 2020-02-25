@@ -1,8 +1,9 @@
 package Sleep
 
 // Standard library imports:
-import RegisterEvents
 import HashMap
+import AbilityObjEditing
+import ClosureEvents
 
 // Local imports:
 import ColorUtils
@@ -11,30 +12,85 @@ import ChatUtils
 import LocalObjectIDs
 import StringExtensions
 import UnitExtensions
-
-public constant ABILITY_SLEEP_INSIDE = 'A004'
-public constant ABILITY_SLEEP_OUTSIDE = 'A007'
+import ToolTipsUtils
 
 let protectionEnabled = new HashMap<player, boolean>()
 
+let MANA_RESTORED_BY_TROLL = 80.
+let MANA_RESTORED_BY_TENT = 80.
+let MANA_RESTORED_BY_HUTS = 200.
+
+let SLEEP_OUTSIDE_HP_PENALTY = 20.
+let SLEEP_OUTSIDE_HEAT_PENALTY = 15
+
+let INVUL_DURATION = 1.0
+let COOLDOWN = 10.
+let DURATION_HERO = 6.0
+let CAST_RANGE = 300.
+let TARGET_ALLOWED = "friend,ground,hero,self"
+
+function AbilityDefinitionSleepcreep.setNameEnhance(string name)
+    this.setTooltipNormal(1, name)
+    this.setTooltipNormal(1, name.color(GENERAL_COLOR))
+
+function createSleepAbility(int newId) returns AbilityDefinitionSleepcreep
+    return new AbilityDefinitionSleepcreep(newId)
+        ..setButtonPositionNormalX(3)
+        ..setCooldown(1, COOLDOWN)
+        ..setManaCost(1, 0)
+        ..setStunDuration(1, INVUL_DURATION)
+        ..setHeroAbility(false)
+        ..setDurationHero(1, DURATION_HERO)
+        ..setHotkeyNormal("F")
+        ..setName("Sleep")
+        ..setCastRange(1, CAST_RANGE)
+        ..setTargetsAllowed(1, TARGET_ALLOWED)
+
+@compiletime function createSleepOutside() returns AbilityDefinitionSleepcreep
+    return createSleepAbility(ABILITY_SLEEP_OUTSIDE)
+        ..setNameEnhance("Sleep Outside")
+        ..setTooltipNormalExtended(1, "The Troll can sleep outside to restore {0} mana but lose {1} health point and {2} heat. This can kill you if any of your stats reach 0."
+        .format(MANA_RESTORED_BY_TROLL.toToolTipBlue(), SLEEP_OUTSIDE_HP_PENALTY.toToolTipRed(), SLEEP_OUTSIDE_HEAT_PENALTY.toString().color(COLOR_ORANGE))
+        + formatCooldown(ABILITY_SLEEP_OUTSIDE))
+
+@compiletime function createSleepInsideTent() returns AbilityDefinitionSleepcreep
+    return createSleepAbility(ABILITY_SLEEP_INSIDE_TENT)
+        ..setNameEnhance("Sleep Inside Tent")
+        ..setTooltipNormalExtended(1, "The Troll can sleep inside the tent to restore {0} mana."
+        .format(MANA_RESTORED_BY_TENT.toToolTipBlue())
+        + formatCooldown(ABILITY_SLEEP_INSIDE_TENT))
+
+@compiletime function createSleepInsideHut() returns AbilityDefinitionSleepcreep
+    return createSleepAbility(ABILITY_SLEEP_INSIDE_HUT)
+        ..setNameEnhance("Sleep Inside Hut")
+        ..setTooltipNormalExtended(1, "The Troll can sleep inside the hut to restore {0} mana."
+        .format(MANA_RESTORED_BY_HUTS.toToolTipBlue())
+        + formatCooldown(ABILITY_SLEEP_INSIDE_HUT))
+
+
+function onCast(unit caster, unit target, int abilId)
+    switch abilId
+        case ABILITY_SLEEP_OUTSIDE
+            // Sleep protection working only with troll sleep spell because I can't figure out how to make it work
+            // with building when tribe own building is enabled, can't get the player that issued an order through allied unit
+            if caster != target and protectionEnabled.get(target.getOwner())
+                caster.issueImmediateOrder("stop")
+            else
+                target
+                    ..addMana(MANA_RESTORED_BY_TROLL)
+                    ..subHP(SLEEP_OUTSIDE_HP_PENALTY)
+                    ..subHeat(SLEEP_OUTSIDE_HEAT_PENALTY)
+        case ABILITY_SLEEP_INSIDE_TENT
+            target
+                ..addMana(MANA_RESTORED_BY_TENT)
+        case ABILITY_SLEEP_INSIDE_HUT
+            target
+                ..addMana(MANA_RESTORED_BY_HUTS)
+
 init
-    registerSpellEffectEvent(ABILITY_SLEEP_INSIDE) ->
-        let building = GetSpellAbilityUnit()
-        let hero = GetSpellTargetUnit()
-        let energy = building.getTypeId() == UNIT_TENT ? 80.0 : 200.0
-        hero.addMana(energy)
-
-    registerSpellEffectEvent(ABILITY_SLEEP_OUTSIDE) ->
-        GetSpellTargetUnit()
-            ..addMana(80)
-            ..subHP(20)
-            ..subHeat(15)
-
-    registerSpellEffectEvent(ABILITY_SLEEP_OUTSIDE) ->
-        let caster = GetSpellAbilityUnit()
-        let target = GetSpellTargetUnit()
-        if caster != target and protectionEnabled.get(target.getOwner())
-            caster.issueImmediateOrder("stop")
+    EventListener.onTargetCast(ABILITY_SLEEP_OUTSIDE    , (unit caster, unit target) -> onCast(caster, target, ABILITY_SLEEP_OUTSIDE))
+    EventListener.onTargetCast(ABILITY_SLEEP_INSIDE_TENT, (unit caster, unit target) -> onCast(caster, target, ABILITY_SLEEP_INSIDE_TENT))
+    EventListener.onTargetCast(ABILITY_SLEEP_INSIDE_HUT , (unit caster, unit target) -> onCast(caster, target, ABILITY_SLEEP_INSIDE_HUT))
 
     registerCommandAll("sleep") (triggerPlayer, args) ->
         let currentValue = protectionEnabled.get(triggerPlayer)

@@ -2,16 +2,15 @@ package TrollUpgradeSpell
 
 // Standard library imports:
 import ChannelAbilityPreset
-import LinkedList
 import UpgradeObjEditing
-
-// Third-party imports:
-import Lodash
+import Assets
 
 // Local imports:
+import LocalAssets
 import ColorUtils
 import LocalObjectIDs
 import TrollUnitTextConstant
+import StringExtensions
 
 // This upgrade spell is used to lock the Super Sub ability for unsub troll
 // The upgrade is researched when the player use the item medallion of courage
@@ -20,86 +19,217 @@ import TrollUnitTextConstant
     new UpgradeDefinition(UPGD_MEDALLION_COURAGE)
     ..setName(1, "Medallion Of Courage")
 
-public class TrollUpgradeSuperSubSpell extends TrollUpgradeSubSpell
+function ChannelAbilityPreset.getLevelReq() returns string
+    return "<{0},reqLevel>".format(this.getNewId().toRawCode())
 
-    construct(int id, string name, string toolTipExt, Pair<int, int> btnPos, string icon, string hotkey)
-        super(id, name, toolTipExt, btnPos, icon, hotkey)
-        this.levelReq = 9
-        this.upgradeReq = toRawCode(UPGD_MEDALLION_COURAGE)
 
-public class TrollUpgradeSubSpell
-    let id = 0
-    let name = ""
-    let toolTip = ""
-    let toolTipExt = ""
-    let hotkey = "E"
-    let icon = "ReplaceableTextures\\CommandButtons\\BTN"
-    let btnPos = new Pair(0, 0)
-    let levelReq = 6
-    let upgradeReq = ""
+function ChannelAbilityPreset.setUpgradeSubSpell(string name, string toolTipExt)
+    this.setName(name)
+    this.setTooltipNormal(1,  "Transform into ".color(GENERAL_COLOR) + name.color(GOLD_COLOR))
+    let toolTipSubExt = "Raise your class status to {0}. ".format(name.color(GOLD_COLOR)) + toolTipExt + ("|nRequires level {0}".format(this.getLevelReq())).color(GOLD_COLOR)
+    this.setTooltipNormalExtended(1, toolTipSubExt)
 
-    construct(int id, string name, string toolTipExt, Pair<int, int> btnPos, string icon, string hotkey)
-        this.id = id
-        this.name = name
-        this.btnPos = btnPos
-        this.hotkey = hotkey
-        this.icon += icon + ".blp"
-        this.toolTipExt = "Raise your class status to " + COLOR_LIGHT_BLUE.toColorString() + name + "|r. " + toolTipExt
-        this.toolTip =  GENERAL_COLOR.toColorString()+"[" + SPECIAL_COLOR.toColorString() + hotkey + GENERAL_COLOR.toColorString() + "] - " + "Transform into " + name
-
-    function buildSpell()
-        new ChannelAbilityPreset(id, 1, true)
-        ..setName(name)
-        ..setIconNormal(icon)
-        ..setIconResearch(icon)
-        ..presetTooltipNormal(lvl -> toolTip)
-        ..presetTooltipNormalExtended(lvl -> toolTipExt + "|nRequires level {0}.".format(this.levelReq.toString()))
+function createUpgradeSpell(int newId) returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(newId, 1, true)
         ..presetFollowThroughTime(lvl -> 0)
-        ..setCooldown(1, 0)
+        ..setAnimationNames("")
+        // I don't want people to spawn the spell when they don't have the level required and have their screen flooded by error message
+        ..setCooldown(1, 5)
         ..setLevels(1)
-        ..setRequiredLevel(levelReq)
         ..setHeroAbility(true)
-        ..presetHotkey(hotkey)
-        ..presetButtonPosResearch(btnPos.a, btnPos.b)
-        ..setRequirements(upgradeReq)
 
-function getTrollUpgrade() returns LinkedList<TrollUpgradeSubSpell>
-    return asList<TrollUpgradeSubSpell>(
-        // Hunter
-        new TrollUpgradeSubSpell(ABILITY_WARRIOR              , "Warrior"              , TOOLTIP_WARRIOR         , new Pair(1, 0), "TrollPredator"           , "Q"),
-        new TrollUpgradeSubSpell(ABILITY_TRACKER              , "Tracker"              , TOOLTIP_TRACKER         , new Pair(2, 0), "IceTroll"                , "W"),
-        new TrollUpgradeSuperSubSpell(ABILITY_JUGGERNAUT      , "Juggernaut"           , TOOLTIP_JUGGERNAUT      , new Pair(3, 0), "TrollPredator"           , "E"),
+@compiletime function createUpgradeSpellWarrior() returns ChannelAbilityPreset
+    return createUpgradeSpell(ABILITY_WARRIOR)
+        ..setUpgradeSubSpell("Warrior", TOOLTIP_WARRIOR)
+        ..setIconNormal(LocalIcons.bTNTrollPredator)
+        ..setIconResearch(LocalIcons.bTNTrollPredator)
+        ..setRequiredLevel(6)
+        ..presetHotkey("Q")
+        ..presetButtonPosResearch(1, 0)
 
-        // Mage
-        new TrollUpgradeSubSpell(ABILITY_ELEMENTALIST         , "Elementalist"         , TOOLTIP_ELEMENTALIST    , new Pair(1, 0), "IceTrollShaman"          , "Q"),
-        new TrollUpgradeSubSpell(ABILITY_HYPNOTIST            , "Hypnotist"            , TOOLTIP_HYPNOTIST       , new Pair(2, 0), "Hypnotist"               , "W"),
-        new TrollUpgradeSuperSubSpell(ABILITY_DEMENTIA_MASTER , "Dementia Master"      , TOOLTIP_DEMENTIA_MASTER , new Pair(3, 0), "DarkTrollShadowPriest"   , "E"),
+@compiletime function createUpgradeSpellTracker() returns ChannelAbilityPreset
+    return createUpgradeSpell(ABILITY_TRACKER)
+        ..setUpgradeSubSpell("Tracker", TOOLTIP_TRACKER)
+        ..setIconNormal(Icons.bTNIceTroll)
+        ..setIconResearch(Icons.bTNIceTroll)
+        ..setRequiredLevel(6)
+        ..presetHotkey("W")
+        ..presetButtonPosResearch(2, 0)
 
-        // Priest
-        new TrollUpgradeSubSpell(ABILITY_BOOSTER              , "Booster"              , TOOLTIP_BOOSTER         , new Pair(1, 0), "ForestTrollShadowPriest" , "Q"),
-        new TrollUpgradeSubSpell(ABILITY_MASTER_HEALER        , "Master Healer"        , TOOLTIP_MASTER_HEALER   , new Pair(2, 0), "MasterHealer"            , "W"),
-        new TrollUpgradeSuperSubSpell(ABILITY_SAGE            , "Sage"                 , TOOLTIP_SAGE            , new Pair(3, 0), "ForestTrollShadowPriest" , "E"),
+@compiletime function createUpgradeSpellJuggernaut() returns ChannelAbilityPreset
+    return createUpgradeSpell(ABILITY_JUGGERNAUT)
+        ..setUpgradeSubSpell("Juggernaut", TOOLTIP_JUGGERNAUT)
+        ..setIconNormal(LocalIcons.bTNTrollPredator)
+        ..setIconResearch(LocalIcons.bTNTrollPredator)
+        ..setRequiredLevel(9)
+        ..presetHotkey("E")
+        ..presetButtonPosResearch(3, 0)
+        ..setRequirements(UPGD_MEDALLION_COURAGE.toRawCode())
 
-        // Beast Master
-        new TrollUpgradeSubSpell(ABILITY_SHAPESHIFTER         , "Shapeshifter"         , TOOLTIP_SHAPESHIFTER    , new Pair(1, 0), "BearForm"                , "Q"),
-        new TrollUpgradeSubSpell(ABILITY_CHICKEN              , "Chicken"              , TOOLTIP_CHICKEN         , new Pair(2, 0), "CritterChicken"          , "W"),
-        new TrollUpgradeSuperSubSpell(ABILITY_ULTIMATE_FORM   , "Ultimate Form"        , TOOLTIP_ULTIMATE_FORM   , new Pair(3, 0), "JungleBeast"             , "E"),
+@compiletime function createUpgradeSpellElementalist() returns ChannelAbilityPreset
+    return createUpgradeSpell(ABILITY_ELEMENTALIST)
+        ..setUpgradeSubSpell("Elementalist", TOOLTIP_ELEMENTALIST)
+        ..setIconNormal(Icons.bTNIceTrollShaman)
+        ..setIconResearch(Icons.bTNIceTrollShaman)
+        ..setRequiredLevel(6)
+        ..presetHotkey("Q")
+        ..presetButtonPosResearch(1, 0)
 
-        // Thief
-        new TrollUpgradeSubSpell(ABILITY_ESCAPE_ARTIST        , "Escape Artist"        , TOOLTIP_ESCAPE_ARTIST   , new Pair(1, 0), "DarkTroll"               , "Q"),
-        new TrollUpgradeSubSpell(ABILITY_CONTORTIONIST        , "Contortionist"        , TOOLTIP_CONTORTIONIST   , new Pair(2, 0), "Contortionist"           , "W"),
-        new TrollUpgradeSuperSubSpell(ABILITY_ASSASSIN        , "Assassin"             , TOOLTIP_ASSASSIN        , new Pair(3, 0), "DarkTrollTrapper"        , "E"),
+@compiletime function createUpgradeSpellHypnotist() returns ChannelAbilityPreset
+    return createUpgradeSpell(ABILITY_HYPNOTIST)
+        ..setUpgradeSubSpell("Hypnotist", TOOLTIP_HYPNOTIST)
+        ..setIconNormal(LocalIcons.bTNHypnotist)
+        ..setIconResearch(LocalIcons.bTNHypnotist)
+        ..setRequiredLevel(6)
+        ..presetHotkey("W")
+        ..presetButtonPosResearch(2, 0)
 
-        // Scout
-        new TrollUpgradeSubSpell(ABILITY_OBSERVER             , "Observer"             , TOOLTIP_OBSERVER        , new Pair(1, 0), "ObserverSentry"          , "Q"),
-        new TrollUpgradeSubSpell(ABILITY_TRAPPER              , "Trapper"              , TOOLTIP_TRAPPER         , new Pair(2, 0), "Trapper"                 , "W"),
-        new TrollUpgradeSuperSubSpell(ABILITY_SPY             , "Spy"                  , TOOLTIP_SPY             , new Pair(3, 0), "ForestTrollTrapper"      , "E"),
+@compiletime function createUpgradeSpellDementiaMaster() returns ChannelAbilityPreset
+    return createUpgradeSpell(ABILITY_DEMENTIA_MASTER)
+        ..setUpgradeSubSpell("Dementia Master", TOOLTIP_DEMENTIA_MASTER)
+        ..setIconNormal(Icons.bTNDarkTrollShadowPriest)
+        ..setIconResearch(Icons.bTNDarkTrollShadowPriest)
+        ..setRequiredLevel(9)
+        ..presetHotkey("E")
+        ..presetButtonPosResearch(3, 0)
+        ..setRequirements(UPGD_MEDALLION_COURAGE.toRawCode())
 
-        // Gatherer
-        new TrollUpgradeSubSpell(ABILITY_HERB_MASTER          , "Herb Master Gatherer" , TOOLTIP_HERB_MASTER     , new Pair(1, 0), "IceTrollShadowPriest"    , "Q"),
-        new TrollUpgradeSubSpell(ABILITY_RADAR_GATHERER       , "Radar Gatherer"       , TOOLTIP_RADAR_GATHERER  , new Pair(2, 0), "TerrorTroll"             , "W"),
-        new TrollUpgradeSuperSubSpell(ABILITY_OMNIGATHERER    , "Omnigatherer"         , TOOLTIP_OMNIGATHERER    , new Pair(3, 0), "TerrorTroll"             , "E")
-    )
+@compiletime function createUpgradeSpellBooster() returns ChannelAbilityPreset
+    return createUpgradeSpell(ABILITY_BOOSTER)
+        ..setUpgradeSubSpell("Booster", TOOLTIP_BOOSTER)
+        ..setIconNormal(Icons.bTNForestTrollShadowPriest)
+        ..setIconResearch(Icons.bTNForestTrollShadowPriest)
+        ..setRequiredLevel(6)
+        ..presetHotkey("Q")
+        ..presetButtonPosResearch(1, 0)
 
-@compiletime function buildSpell()
-    getTrollUpgrade().forEach(elem -> elem.buildSpell())
+@compiletime function createUpgradeSpellMasterHealer() returns ChannelAbilityPreset
+    return createUpgradeSpell(ABILITY_MASTER_HEALER)
+        ..setUpgradeSubSpell("Master Healer", TOOLTIP_MASTER_HEALER)
+        ..setIconNormal(LocalIcons.bTNMasterHealer)
+        ..setIconResearch(LocalIcons.bTNMasterHealer)
+        ..setRequiredLevel(6)
+        ..presetHotkey("W")
+        ..presetButtonPosResearch(2, 0)
+
+@compiletime function createUpgradeSpellSage() returns ChannelAbilityPreset
+    return createUpgradeSpell(ABILITY_SAGE)
+        ..setUpgradeSubSpell("Sage", TOOLTIP_SAGE)
+        ..setIconNormal(Icons.bTNForestTrollShadowPriest)
+        ..setIconResearch(Icons.bTNForestTrollShadowPriest)
+        ..setRequiredLevel(9)
+        ..presetHotkey("E")
+        ..presetButtonPosResearch(3, 0)
+        ..setRequirements(UPGD_MEDALLION_COURAGE.toRawCode())
+
+@compiletime function createUpgradeSpellShapeshifter() returns ChannelAbilityPreset
+    return createUpgradeSpell(ABILITY_SHAPESHIFTER)
+        ..setUpgradeSubSpell("Shapeshifter", TOOLTIP_SHAPESHIFTER)
+        ..setIconNormal(Icons.bTNBearForm)
+        ..setIconResearch(Icons.bTNBearForm)
+        ..setRequiredLevel(6)
+        ..presetHotkey("Q")
+        ..presetButtonPosResearch(1, 0)
+
+@compiletime function createUpgradeSpellChicken() returns ChannelAbilityPreset
+    return createUpgradeSpell(ABILITY_CHICKEN)
+        ..setUpgradeSubSpell("Chicken", TOOLTIP_CHICKEN)
+        ..setIconNormal(Icons.bTNCritterChicken)
+        ..setIconResearch(Icons.bTNCritterChicken)
+        ..setRequiredLevel(6)
+        ..presetHotkey("W")
+        ..presetButtonPosResearch(2, 0)
+
+@compiletime function createUpgradeSpellUltimateForm() returns ChannelAbilityPreset
+    return createUpgradeSpell(ABILITY_ULTIMATE_FORM)
+        ..setUpgradeSubSpell("Ultimate Form", TOOLTIP_ULTIMATE_FORM)
+        ..setIconNormal(Icons.bTNJungleBeast)
+        ..setIconResearch(Icons.bTNJungleBeast)
+        ..setRequiredLevel(9)
+        ..presetHotkey("E")
+        ..presetButtonPosResearch(3, 0)
+        ..setRequirements(UPGD_MEDALLION_COURAGE.toRawCode())
+
+@compiletime function createUpgradeSpellEscapeArtist() returns ChannelAbilityPreset
+    return createUpgradeSpell(ABILITY_ESCAPE_ARTIST)
+        ..setUpgradeSubSpell("Escape Artist", TOOLTIP_ESCAPE_ARTIST)
+        ..setIconNormal(Icons.bTNDarkTroll)
+        ..setIconResearch(Icons.bTNDarkTroll)
+        ..setRequiredLevel(6)
+        ..presetHotkey("Q")
+        ..presetButtonPosResearch(1, 0)
+
+@compiletime function createUpgradeSpellContortionist() returns ChannelAbilityPreset
+    return createUpgradeSpell(ABILITY_CONTORTIONIST)
+        ..setUpgradeSubSpell("Contortionist", TOOLTIP_CONTORTIONIST)
+        ..setIconNormal(LocalIcons.bTNContortionist)
+        ..setIconResearch(LocalIcons.bTNContortionist)
+        ..setRequiredLevel(6)
+        ..presetHotkey("W")
+        ..presetButtonPosResearch(2, 0)
+
+@compiletime function createUpgradeSpellAssassin() returns ChannelAbilityPreset
+    return createUpgradeSpell(ABILITY_ASSASSIN)
+        ..setUpgradeSubSpell("Assassin", TOOLTIP_ASSASSIN)
+        ..setIconNormal(Icons.bTNDarkTrollTrapper)
+        ..setIconResearch(Icons.bTNDarkTrollTrapper)
+        ..setRequiredLevel(9)
+        ..presetHotkey("E")
+        ..presetButtonPosResearch(3, 0)
+        ..setRequirements(UPGD_MEDALLION_COURAGE.toRawCode())
+
+@compiletime function createUpgradeSpellObserver() returns ChannelAbilityPreset
+    return createUpgradeSpell(ABILITY_OBSERVER)
+        ..setUpgradeSubSpell("Observer", TOOLTIP_OBSERVER)
+        ..setIconNormal(LocalIcons.bTNObserverSentry)
+        ..setIconResearch(LocalIcons.bTNObserverSentry)
+        ..setRequiredLevel(6)
+        ..presetHotkey("Q")
+        ..presetButtonPosResearch(1, 0)
+
+@compiletime function createUpgradeSpellTrapper() returns ChannelAbilityPreset
+    return createUpgradeSpell(ABILITY_TRAPPER)
+        ..setUpgradeSubSpell("Trapper", TOOLTIP_TRAPPER)
+        ..setIconNormal(LocalIcons.bTNTrapper)
+        ..setIconResearch(LocalIcons.bTNTrapper)
+        ..setRequiredLevel(6)
+        ..presetHotkey("W")
+        ..presetButtonPosResearch(2, 0)
+
+@compiletime function createUpgradeSpellSpy() returns ChannelAbilityPreset
+    return createUpgradeSpell(ABILITY_SPY)
+        ..setUpgradeSubSpell("Spy", TOOLTIP_SPY)
+        ..setIconNormal(Icons.bTNForestTrollTrapper)
+        ..setIconResearch(Icons.bTNForestTrollTrapper)
+        ..setRequiredLevel(9)
+        ..presetHotkey("E")
+        ..presetButtonPosResearch(3, 0)
+        ..setRequirements(UPGD_MEDALLION_COURAGE.toRawCode())
+
+@compiletime function createUpgradeSpellHerbMasterGatherer() returns ChannelAbilityPreset
+    return createUpgradeSpell(ABILITY_HERB_MASTER)
+        ..setUpgradeSubSpell("Herb Master Gatherer", TOOLTIP_HERB_MASTER)
+        ..setIconNormal(Icons.bTNIceTrollShadowPriest)
+        ..setIconResearch(Icons.bTNIceTrollShadowPriest)
+        ..setRequiredLevel(6)
+        ..presetHotkey("Q")
+        ..presetButtonPosResearch(1, 0)
+
+@compiletime function createUpgradeSpellRadarGatherer() returns ChannelAbilityPreset
+    return createUpgradeSpell(ABILITY_RADAR_GATHERER)
+        ..setUpgradeSubSpell("Radar Gatherer", TOOLTIP_RADAR_GATHERER)
+        ..setIconNormal(LocalIcons.bTNTerrorTroll)
+        ..setIconResearch(LocalIcons.bTNTerrorTroll)
+        ..setRequiredLevel(6)
+        ..presetHotkey("W")
+        ..presetButtonPosResearch(2, 0)
+
+@compiletime function createUpgradeSpellOmnigatherer() returns ChannelAbilityPreset
+    return createUpgradeSpell(ABILITY_OMNIGATHERER)
+        ..setUpgradeSubSpell("Omnigatherer", TOOLTIP_OMNIGATHERER)
+        ..setIconNormal(LocalIcons.bTNTerrorTroll)
+        ..setIconResearch(LocalIcons.bTNTerrorTroll)
+        ..setRequiredLevel(9)
+        ..presetHotkey("E")
+        ..presetButtonPosResearch(3, 0)
+        ..setRequirements(UPGD_MEDALLION_COURAGE.toRawCode())

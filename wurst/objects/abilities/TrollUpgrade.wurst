@@ -8,10 +8,10 @@ import RegisterEvents
 
 // Local imports:
 import AutoSkill
-import Classes
 import LocalObjectIDs
 import Transformation
-import IdListConstant
+import StringExtensions
+import ColorUtils
 
 // TODO: Build this out automatically.
 public constant trollUpgradeMap = new HashMap<int, int>()
@@ -130,13 +130,12 @@ function onLearn(unit origin, int abilityID)
     if targetID == 0
         return
 
+    let levelReq = BlzGetAbilityIntegerField(BlzGetUnitAbility(origin, abilityID), ABILITY_IF_REQUIRED_LEVEL)
+
     // Verify that the level requirements are meant.
     // TODO: Enforce this using an automatic upgrade / research system.
-    if getTrollClassType(targetID) == ClassType.SUPER_CLASS and origin.getLevel() < 9
-        origin.getOwner().print("You must be at least level 9 to choose that class.")
-        return
-    if getTrollClassType(targetID) == ClassType.SUB_CLASS and origin.getLevel() < 6
-        origin.getOwner().print("You must be at least level 6 to choose that class.")
+    if origin.getLevel() < levelReq
+        origin.getOwner().print("You must be at least level {0} to choose that class.".format(levelReq.toString()).color(SPECIAL_COLOR))
         return
 
     // Perform the upgrade after allowing casting to finish.

@@ -208,10 +208,20 @@ public function unit.makeAbilitiesPermanent(LinkedList<int> abilList, boolean fl
     abilList.forEach(elem -> this.makeAbilityPermanent(elem, flag))
 
 public function unit.isEnemyBuildingAround(real radius) returns bool
-    var nearbyUnits = CreateGroup()..enumUnitsInRange(this.getPos(), radius)
+    let nearbyUnits = CreateGroup()..enumUnitsInRange(this.getPos(), radius)
     while nearbyUnits.hasNext()
         let u = nearbyUnits.next()
         if u.isEnemyOf(this.getOwner()) and u.isStructure()
+            nearbyUnits.destr()
+            return true
+    nearbyUnits.destr()
+    return false
+
+public function unit.isEnemyTrollAround(real radius) returns bool
+    let nearbyUnits = CreateGroup()..enumUnitsInRange(this.getPos(), radius)
+    while nearbyUnits.hasNext()
+        let u = nearbyUnits.next()
+        if u.isEnemyOf(this.getOwner()) and u.isTroll()
             nearbyUnits.destr()
             return true
     nearbyUnits.destr()

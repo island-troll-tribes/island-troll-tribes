@@ -5,6 +5,7 @@ import AbilityObjEditing
 import LinkedList
 import ObjectIdGenerator
 import ObjectIds
+import MapBounds
 
 // Third-party imports:
 import Lodash
@@ -14,6 +15,9 @@ import ObjectIDManager
 import HashingMap
 
 @configurable let BASE_ID = 'AZ00'
+
+// The option indicating whether proper names should be updated.
+@configurable let UPDATE_PROPER_NAME = true
 
 public interface Callback
     function run(unit target, int unitID)
@@ -115,3 +119,24 @@ public function transformUnit(unit origin, int targetID)
 
     // Destroy local resources.
     destroy key
+
+init
+    // Allow for this feature to be disabled.
+    if UPDATE_PROPER_NAME
+        // Register a callback to update the proper name for heroes.
+        registerAfterEffect() (unit target, int unitID) ->
+            // Only heroes have proper name.
+            if IsHeroUnitId(target.getTypeId())
+                // Create a temporary unit to generate the new peroper name.
+                let temp = createUnit(
+                    target.getOwner(),
+                    target.getTypeId(),
+                    boundMax,
+                    target.getFacingAngle()
+                )
+
+                // Copy the newly randomized proper name.
+                target.setProperName(temp.getProperName())
+
+                // Remove the temporary unit once it is no longer needed.
+                temp.remove()

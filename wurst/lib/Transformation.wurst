@@ -16,6 +16,9 @@ import HashingMap
 
 @configurable let BASE_ID = 'AZ00'
 
+// The option indicating whether proper names should be updated.
+@configurable let UPDATE_PROPER_NAME = true
+
 public interface Callback
     function run(unit target, int unitID)
 
@@ -118,10 +121,22 @@ public function transformUnit(unit origin, int targetID)
     destroy key
 
 init
-    // Registering a callback to update the unit proper name after transformation
-    registerAfterEffect() (unit target, int unitID) ->
-        // Only hero have proper name
-        if IsHeroUnitId(target.getTypeId())
-            let tmpUnit = createUnit(target.getOwner(), target.getTypeId(), boundMax, target.getFacingAngle())
-            target.setProperName(tmpUnit.getProperName())
-            tmpUnit.remove()
+    // Allow for this feature to be disabled.
+    if UPDATE_PROPER_NAME
+        // Register a callback to update the proper name for heroes.
+        registerAfterEffect() (unit target, int unitID) ->
+            // Only heroes have proper name.
+            if IsHeroUnitId(target.getTypeId())
+                // Create a temporary unit to generate the new peroper name.
+                let temp = createUnit(
+                    target.getOwner(),
+                    target.getTypeId(),
+                    boundMax,
+                    target.getFacingAngle()
+                )
+
+                // Copy the newly randomized proper name.
+                target.setProperName(temp.getProperName())
+
+                // Remove the temporary unit once it is no longer needed.
+                temp.remove()

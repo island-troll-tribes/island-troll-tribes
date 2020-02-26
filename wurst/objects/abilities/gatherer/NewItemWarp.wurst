@@ -26,6 +26,7 @@ let TOOLTIP_EXTENDED = ("Teleports items in the area around the gatherer right t
                        "an ally campfire won't be warped, you don't want to mess up your base, do you?|r")
 
 let AOE = 900.
+let MISSILE_FLY_HEIGHT = 150.
 
 class ItemWarpSpell extends ChannelAbilityPreset
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
@@ -60,19 +61,25 @@ class ItemPulled
     effect missile
     unit target
     vec2 vel
+    vec3 pos
 
     construct(unit target, item i)
         this.i = i
         this.i.setVisible(false)
         this.target = target
-        this.missile = addEffect(Abilities.devourMagicBirthMissile, i.getPos())
-        this.missile.setHeight(100)
+        let itemPos = i.getPos()
+        this.pos = vec3(itemPos.x, itemPos.y, itemPos.getTerrainZ() + MISSILE_FLY_HEIGHT)
+        this.missile = addEffect(Abilities.devourMagicBirthMissile, this.pos)
         this.startTimedLoop()
 
     // TimedLoop module handles all periodic update
     override function onTimedLoop()
         vel = (target.getPos() - missile.getPos()).setLength(15)
-        missile.setPos(missile.getPos() + vel)
+        vec3 newPos = this.pos + vel
+        let terrainZ = newPos.getTerrainZ()
+        newPos.z = terrainZ + MISSILE_FLY_HEIGHT
+        missile.setPos(newPos)
+        pos = newPos
         // Destroy the instance once item reaches the target
         if missile.getPos().inRange(target.getPos(), 100)
             stopTimedLoopAndDestroy()

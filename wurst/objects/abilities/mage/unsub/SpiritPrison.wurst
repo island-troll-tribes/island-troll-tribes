@@ -1,0 +1,171 @@
+package SpiritPrison
+
+// Standard library imports:
+import Assets
+import Orders
+import ClosureForGroups
+import ClosureEvents
+import ClosureTimers
+import InstantDummyCaster
+import BuffObjEditing
+import ChannelAbilityPreset
+import TimerUtils
+
+// Local imports:
+import ToolTipsUtils
+import LocalObjectIDs
+import ColorUtils
+import StringExtensions
+import UnitExtensions
+
+let MISSILE_SPEED = 700.
+let MISSILE_LIFETIME = 2
+let MANACOST = 10
+let IMPACT_TRIGGER_AOE = 100.
+let MISSILE_FLY_HEIGHT = 120.
+let SPAWN_OFFSET_DISTANCE = 50.
+let LOOP_INTERVAL = ANIMATION_PERIOD
+
+let BUFF_ID = compiletime(BUFF_ID_GEN.next())
+let BUFF_ID_AIR = compiletime(BUFF_ID_GEN.next())
+
+let DURATION_HERO = 1.75
+let DURATION_NORMAL = 5.0
+let COOLDOWN = 20.
+let VISION_RANGE = 350.
+
+let BUFF_TOOLTIP = "This unit has been tormented by a restless spirit and cannot move."
+let TOOLTIP_EXT = "Unleash a tormented spirit in a straight line, caging and revealing the first enemy hit." + makeToolTipDuration(DURATION_HERO, DURATION_NORMAL, COOLDOWN)
+
+
+function createCageBuffGround(int newId) returns BuffDefinition
+    return new BuffDefinition(newId, 'Beng')
+        ..setIcon(Icons.bTNLament)
+        ..setTargetAttachments(1, 1)
+        ..setArtTarget(1, Abilities.zigguratMissile)
+        ..setTargetAttachmentPoint0(1, "chest")
+        ..setTooltipNormal(1, "Spirit Prison")
+        ..setTooltipNormalExtended(1, BUFF_TOOLTIP)
+        ..setEditorSuffix(1, "(Wurst)")
+
+function createCageBuffAir(int newId) returns BuffDefinition
+    return new BuffDefinition(newId, 'Bena')
+        ..setIcon(Icons.bTNLament)
+        ..setTargetAttachments(1, 1)
+        ..setArtTarget(1, Abilities.zigguratMissile)
+        ..setTargetAttachmentPoint0(1, "chest")
+        ..setTooltipNormal(1, "Spirit Prison")
+        ..setTooltipNormalExtended(1, BUFF_TOOLTIP)
+        ..setEditorSuffix(1, "(Wurst)")
+
+@compiletime function createCageBuffs()
+    createCageBuffGround(BUFF_ID)
+    createCageBuffAir(BUFF_ID_AIR)
+
+@compiletime function createCagingAbility() returns AbilityDefinitionEnsnareCreep
+    return new AbilityDefinitionEnsnareCreep(ABILITY_SPIRIT_PRISON_CAGE)
+        ..setMissileArt("")
+        ..setName("Spirit Prison Cage Dummy")
+        ..setDummyAbility()
+        ..setDurationHero(1, DURATION_HERO)
+        ..setDurationNormal(1, DURATION_NORMAL)
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.friend,
+            TargetsAllowed.enemies,
+            TargetsAllowed.ground,
+            TargetsAllowed.neutral,
+            TargetsAllowed.nonancient,
+            TargetsAllowed.organic
+        ))
+        ..setEditorSuffix("(Wurst)")
+        ..setBuffs(1, commaList(BUFF_ID, BUFF_ID_AIR))
+
+@compiletime function createSpiritPrison() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_SPIRIT_PRISON, 1, true)
+        ..setIconNormal(Icons.bTNWitchDoctorMaster)
+        ..setIconResearch(Icons.bTNWitchDoctorMaster)
+        ..setIconTurnOff(Icons.bTNWitchDoctorMaster)
+        ..setHeroAbility(false)
+        ..setHotkeyNormal("Q")
+        ..setName("Spirit Prison")
+        ..setDisableOtherAbilities(1, false)
+        ..setCastingTime(1, 0)
+        ..setTooltipNormal(1,"Spirit Prison".color(GENERAL_COLOR))
+        ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+        ..setCooldown(1, COOLDOWN)
+        ..setManaCost(1, MANACOST)
+        ..presetTargetTypes(Targettype.POINT)
+        ..setButtonPositionNormalX(1)
+        ..setButtonPositionNormalY(1)
+        ..setCastRange(1, MISSILE_SPEED * MISSILE_LIFETIME)
+        ..setFollowThroughTime(1, 0.5)
+
+class SpiritPrisonProjectile
+    use TimedLoop
+    real lifeTime
+    unit ownerUnit
+    angle ang
+    vec3 pos
+    effect efx
+    bool exploded
+    bool isOvercharged
+    unit target
+
+    construct(unit caster, vec2 casterPos, angle ang)
+        this.ownerUnit = caster
+        this.lifeTime = 0
+        this.ang = ang
+        this.pos = casterPos.polarOffset(ang, SPAWN_OFFSET_DISTANCE).withTerrainZ(MISSILE_FLY_HEIGHT)
+        this.efx = addEffect(Abilities.zigguratMissile, pos)
+        this.exploded = false
+        this.efx.setRoll(ang)
+        this.target = null
+        this.startTimedLoop()
+
+    override function onTimedLoop()
+        if this.exploded or this.lifeTime >= MISSILE_LIFETIME
+            stopTimedLoopAndDestroy()
+        this.lifeTime += LOOP_INTERVAL
+        vec3 newPos = this.pos.offset2d(this.ang, MISSILE_SPEED * LOOP_INTERVAL)
+        let terrainZ = newPos.getTerrainZ()
+        newPos.z = terrainZ + MISSILE_FLY_HEIGHT
+        this.efx.setPos(newPos)
+        this.pos = newPos
+        checkForImpacts()
+
+    function checkForImpacts()
+        forUnitsInRange(this.pos.toVec2(), IMPACT_TRIGGER_AOE) u ->
+            if isValidTarget(ownerUnit, u)
+                this.target = u
+                if u.isTroll()
+                    spawnTemporaryVision(VISION_RANGE, DURATION_HERO)
+                else
+                    spawnTemporaryVision(VISION_RANGE, DURATION_NORMAL)
+                onImpact()
+
+    function onImpact()
+        this.exploded = true
+        InstantDummyCaster.castTarget(this.ownerUnit.getOwner(), ABILITY_SPIRIT_PRISON_CAGE, 1, Orders.ensnare, this.target)
+
+    function spawnTemporaryVision(real radius, real duration)
+        let vis = createVision(ownerUnit.getOwner(), this.pos.toVec2(), radius, true)
+        vis.start()
+        doAfter(duration) ->
+            vis.destr()
+
+    ondestroy
+        this.efx.destr()
+
+function isValidTarget(unit caster, unit target) returns bool
+    return target.getOwner().isEnemyOf(caster.getOwner())
+        and not target.isInvulnerable()
+        and not target.isType(UNIT_TYPE_FLYING)
+        and target.isAlive()
+        and not target.isHidden()
+        and not target.isType(UNIT_TYPE_STRUCTURE)
+        and target != caster
+
+
+init
+    EventListener.onPointCast(ABILITY_SPIRIT_PRISON) (unit caster, vec2 target) ->
+        new SpiritPrisonProjectile(caster, caster.getPos(), caster.getPos().angleTo(target))

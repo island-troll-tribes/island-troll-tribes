@@ -1,4 +1,4 @@
-package Wabbajack
+package SpiritPrison
 
 // Standard library imports:
 import Assets
@@ -34,8 +34,8 @@ let DURATION_NORMAL = 5.0
 let COOLDOWN = 20.
 let VISION_RANGE = 350.
 
-let BUFF_TOOLTIP = "This unit has been tormented by a restless soul and cannot move."
-let TOOLTIP_EXT = "Unleash a tormented soul in a straight line, caging and revealing the first enemy hit." + makeToolTipDuration(DURATION_HERO, DURATION_NORMAL, COOLDOWN)
+let BUFF_TOOLTIP = "This unit has been tormented by a restless spirit and cannot move."
+let TOOLTIP_EXT = "Unleash a tormented spirit in a straight line, caging and revealing the first enemy hit." + makeToolTipDuration(DURATION_HERO, DURATION_NORMAL, COOLDOWN)
 
 
 function createCageBuffGround(int newId) returns BuffDefinition
@@ -44,7 +44,7 @@ function createCageBuffGround(int newId) returns BuffDefinition
         ..setTargetAttachments(1, 1)
         ..setArtTarget(1, Abilities.zigguratMissile)
         ..setTargetAttachmentPoint0(1, "chest")
-        ..setTooltipNormal(1, "Wabbajack's Torment")
+        ..setTooltipNormal(1, "Spirit Prison")
         ..setTooltipNormalExtended(1, BUFF_TOOLTIP)
         ..setEditorSuffix(1, "(Wurst)")
 
@@ -54,7 +54,7 @@ function createCageBuffAir(int newId) returns BuffDefinition
         ..setTargetAttachments(1, 1)
         ..setArtTarget(1, Abilities.zigguratMissile)
         ..setTargetAttachmentPoint0(1, "chest")
-        ..setTooltipNormal(1, "Wabbajack's Torment")
+        ..setTooltipNormal(1, "Spirit Prison")
         ..setTooltipNormalExtended(1, BUFF_TOOLTIP)
         ..setEditorSuffix(1, "(Wurst)")
 
@@ -63,41 +63,44 @@ function createCageBuffAir(int newId) returns BuffDefinition
     createCageBuffAir(BUFF_ID_AIR)
 
 @compiletime function createCagingAbility() returns AbilityDefinitionEnsnareCreep
-    return new AbilityDefinitionEnsnareCreep(ABILITY_WABBAJACK_CAGE)
+    return new AbilityDefinitionEnsnareCreep(ABILITY_SPIRIT_PRISON_CAGE)
         ..setMissileArt("")
-        ..setName("Wabbajack Cage Dummy")
+        ..setName("Spirit Prison Cage Dummy")
         ..setDummyAbility()
         ..setDurationHero(1, DURATION_HERO)
         ..setDurationNormal(1, DURATION_NORMAL)
-        ..setTargetsAllowed(1, "friend,enemies,ground,neutral,nonancient,organic")
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.friend,
+            TargetsAllowed.enemies,
+            TargetsAllowed.ground,
+            TargetsAllowed.neutral,
+            TargetsAllowed.nonancient,
+            TargetsAllowed.organic
+        ))
         ..setEditorSuffix("(Wurst)")
         ..setBuffs(1, commaList(BUFF_ID, BUFF_ID_AIR))
 
-class Wabbajack extends ChannelAbilityPreset
-    construct(int newAbilityId, string hotkey)
-        super(newAbilityId, 1, true)
-        this.setIconNormal(Icons.bTNWitchDoctorMaster)
-        this.setIconResearch(Icons.bTNWitchDoctorMaster)
-        this.setIconTurnOff(Icons.bTNWitchDoctorMaster)
-        this.setHeroAbility(false)
-        this.setHotkeyNormal(hotkey)
-        this.setName("Wabbajack's Tormenter")
-        this.setDisableOtherAbilities(1, false)
-        this.setCastingTime(1, 0)
-        this.setTooltipNormal(1,"Wabbajack's Tormenter".color(GENERAL_COLOR))
-        this.setTooltipNormalExtended(1, TOOLTIP_EXT)
-        this.setCooldown(1, COOLDOWN)
-        this.setManaCost(1, MANACOST)
-        this.presetTargetTypes(Targettype.POINT)
-        this.setButtonPositionNormalX(1)
-        this.setButtonPositionNormalY(1)
-        this.setCastRange(1, MISSILE_SPEED * MISSILE_LIFETIME)
-        this.setFollowThroughTime(1, 0.5)
+@compiletime function createSpiritPrison() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_SPIRIT_PRISON, 1, true)
+        ..setIconNormal(Icons.bTNWitchDoctorMaster)
+        ..setIconResearch(Icons.bTNWitchDoctorMaster)
+        ..setIconTurnOff(Icons.bTNWitchDoctorMaster)
+        ..setHeroAbility(false)
+        ..setHotkeyNormal("Q")
+        ..setName("Spirit Prison")
+        ..setDisableOtherAbilities(1, false)
+        ..setCastingTime(1, 0)
+        ..setTooltipNormal(1,"Spirit Prison".color(GENERAL_COLOR))
+        ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+        ..setCooldown(1, COOLDOWN)
+        ..setManaCost(1, MANACOST)
+        ..presetTargetTypes(Targettype.POINT)
+        ..setButtonPositionNormalX(1)
+        ..setButtonPositionNormalY(1)
+        ..setCastRange(1, MISSILE_SPEED * MISSILE_LIFETIME)
+        ..setFollowThroughTime(1, 0.5)
 
-@compiletime function createWabbajack()
-    new Wabbajack(ABILITY_WABBAJACK, "Q")
-
-class WabbajackProjectile
+class SpiritPrisonProjectile
     use TimedLoop
     real lifeTime
     unit ownerUnit
@@ -142,7 +145,7 @@ class WabbajackProjectile
 
     function onImpact()
         this.exploded = true
-        InstantDummyCaster.castTarget(this.ownerUnit.getOwner(), ABILITY_WABBAJACK_CAGE, 1, Orders.ensnare, this.target)
+        InstantDummyCaster.castTarget(this.ownerUnit.getOwner(), ABILITY_SPIRIT_PRISON_CAGE, 1, Orders.ensnare, this.target)
 
     function spawnTemporaryVision(real radius, real duration)
         let vis = createVision(ownerUnit.getOwner(), this.pos.toVec2(), radius, true)
@@ -164,5 +167,5 @@ function isValidTarget(unit caster, unit target) returns bool
 
 
 init
-    EventListener.onPointCast(ABILITY_WABBAJACK) (unit caster, vec2 target) ->
-        new WabbajackProjectile(caster, caster.getPos(), caster.getPos().angleTo(target))
+    EventListener.onPointCast(ABILITY_SPIRIT_PRISON) (unit caster, vec2 target) ->
+        new SpiritPrisonProjectile(caster, caster.getPos(), caster.getPos().angleTo(target))

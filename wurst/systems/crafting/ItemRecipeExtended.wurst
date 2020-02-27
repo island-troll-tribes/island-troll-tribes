@@ -1,0 +1,36 @@
+package ItemRecipeExtended
+
+// Standard library imports:
+import LinkedList
+
+// Extension library imports:
+import ItemRecipe
+import IdListConstant
+import ResourceSpawns
+
+
+public class ItemRecipeExt extends ItemRecipe
+    
+    construct(int reward, int charges, boolean ordered, boolean permanent, boolean pickupable)
+        super(reward, charges, ordered, permanent, pickupable)
+
+    override function assemble(unit whichUnit, LinkedList<item> fromItems) returns boolean
+        let max = fromItems.size()
+        for i = 0 to max
+            if(MATERIAL_COUNTER_LIST.has(fromItems.get(i).getTypeId()))
+                lowerItem(1)
+        return super.assemble(whichUnit, fromItems)
+
+
+public class IngredientCharge extends ItemRecipeExt
+
+    construct(int reward, boolean ordered, boolean permanent, boolean pickupable)
+        super(reward, charges, ordered, permanent, pickupable)
+
+    override function assemble(unit whichUnit, LinkedList<item> fromItems) returns boolean
+        let max = fromItems.size()
+        for i = 0 to max
+            if(fromItems.get(i).getCharges() > this.charges)
+                this.charges = fromItems.get(i).getCharges()
+        return super.assemble(whichUnit, fromItems)
+            

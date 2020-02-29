@@ -8,10 +8,9 @@ import RegisterEvents
 
 // Local imports:
 import AutoSkill
+import Experience
 import LocalObjectIDs
 import Transformation
-import StringExtensions
-import ColorUtils
 
 // TODO: Build this out automatically.
 public constant trollUpgradeMap = new HashMap<int, int>()
@@ -106,6 +105,8 @@ function upgradeUnit(unit origin, int targetID)
     // Reset the experience for the unit.
     // TODO: Avoid level resetting.
     origin.removeLevels(30)
+    // TODO: Remove this once compound requirements for abilities are fixed.
+    unlockResearch(origin)
 
     // Restore the statistics.
     // TODO: Avoid level resetting.
@@ -128,14 +129,6 @@ function onLearn(unit origin, int abilityID)
 
     // Exit if the skill does not mark an upgrade.
     if targetID == 0
-        return
-
-    let levelReq = BlzGetAbilityIntegerField(BlzGetUnitAbility(origin, abilityID), ABILITY_IF_REQUIRED_LEVEL)
-
-    // Verify that the level requirements are meant.
-    // TODO: Enforce this using an automatic upgrade / research system.
-    if origin.getLevel() < levelReq
-        origin.getOwner().print("You must be at least level {0} to choose that class.".format(levelReq.toString()).color(SPECIAL_COLOR))
         return
 
     // Perform the upgrade after allowing casting to finish.

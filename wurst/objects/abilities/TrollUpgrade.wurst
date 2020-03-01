@@ -8,10 +8,9 @@ import RegisterEvents
 
 // Local imports:
 import AutoSkill
-import Classes
+import Experience
 import LocalObjectIDs
 import Transformation
-import IdListConstant
 
 // TODO: Build this out automatically.
 public constant trollUpgradeMap = new HashMap<int, int>()
@@ -106,6 +105,8 @@ function upgradeUnit(unit origin, int targetID)
     // Reset the experience for the unit.
     // TODO: Avoid level resetting.
     origin.removeLevels(30)
+    // TODO: Remove this once compound requirements for abilities are fixed.
+    unlockResearch(origin)
 
     // Restore the statistics.
     // TODO: Avoid level resetting.
@@ -128,15 +129,6 @@ function onLearn(unit origin, int abilityID)
 
     // Exit if the skill does not mark an upgrade.
     if targetID == 0
-        return
-
-    // Verify that the level requirements are meant.
-    // TODO: Enforce this using an automatic upgrade / research system.
-    if getTrollClassType(targetID) == ClassType.SUPER_CLASS and origin.getLevel() < 9
-        origin.getOwner().print("You must be at least level 9 to choose that class.")
-        return
-    if getTrollClassType(targetID) == ClassType.SUB_CLASS and origin.getLevel() < 6
-        origin.getOwner().print("You must be at least level 6 to choose that class.")
         return
 
     // Perform the upgrade after allowing casting to finish.

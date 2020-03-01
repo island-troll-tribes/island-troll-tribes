@@ -1,0 +1,353 @@
+package ScrollsDefinition
+
+
+import Assets
+import BuffObjEditing
+import ToolTipsUtils
+import ObjectIds
+import Items
+import LocalAssets
+import LocalItemObjEditing
+import AbilityObjEditing
+import LocalObjectIDs
+import StringExtensions
+import ColorUtils
+import ClosureEvents
+import ClosureTimers
+
+
+constant ROOT_DMG            = 5.
+constant FIRE_DMG            = 40.
+constant STONE_ARMOR         = 9.
+constant TSUNAMI_DMG         = 25.
+constant TSUNAMI_MAX_DMG     = 200.
+constant TSUNAMI_STRUCT_DMG  = 30.
+constant SKELETAL_MINION_DMG = 7
+constant HASTE_SPEED_BONUS   = 5.
+
+constant ROOT_DURATION_HERO        = 3.
+constant ROOT_DURATION_NORMAL      = 8.
+constant FIRE_DURATION_HERO        = 0.5
+constant FIRE_DURATION_NORMAL      = 2.5
+constant SKELETAL_DURATION         = 30.
+constant STONE_ARMOR_DURATION      = 20.
+constant HASTE_DURATION            = 7.
+constant CYCLONE_DURATION_HERO     = 5.
+constant CYCLONE_DURATION_NORMAL   = 10.
+constant STONE_ARMOR_SLOW_DURATION = 2.
+
+constant ROOT_COOLDOWN        = 45.
+constant FIRE_COOLDOWN        = 32.
+constant SKELETAL_COOLDOWN    = 60.
+constant STONE_ARMOR_COOLDOWN = 80.
+constant TSUNAMI_COOLDOWN     = 15.
+constant HASTE_COOLDOWN       = 35.
+constant CYCLONE_COOLDOWN     = 35.
+
+constant ROOT_CAST_RANGE    = 450.
+constant FIRE_CAST_RANGE    = 800.
+constant STONE_CAST_RANGE   = 400.
+constant TSUNAMI_CAST_RANGE = 500.
+constant CYCLONE_CAST_RANGE = 500.
+
+constant TSUNAMI_DISTANCE = 600.
+constant SKELETAL_AOE = 200.
+constant HASTE_AOE = 600.
+
+constant FB_TT = "Grants the unit the ability to cast fireball dealing {0} damage and stunning the target for {1}/{2} seconds."
+                 .format(FIRE_DMG.toToolTipRed(), FIRE_DURATION_HERO.toString().color(COLOR_ORANGE), FIRE_DURATION_NORMAL.toToolTipOrange()) + makeToolTipCooldown(FIRE_COOLDOWN)
+constant ER_TT = "Grants the unit the ability to cast entangling roots, locking the enemy in place for {0}({1}) seconds and dealing {2} damage per second."
+                 .format(ROOT_DURATION_HERO.toToolTipOrange(), ROOT_DURATION_NORMAL.toToolTipOrange(), ROOT_DMG.toToolTipRed()) + makeToolTipCooldown(ROOT_COOLDOWN)
+constant LD_TT = "Grants the unit the ability to cast living dead which summons two skeletal bodyguard, each sketelon deal {0} magic damage per hit.".format(
+                 SKELETAL_MINION_DMG.toString().color(COLOR_RED))
+                 + makeToolTipDuration(SKELETAL_DURATION, SKELETAL_COOLDOWN)
+constant SS_TT = "Grants the unit the ability to cast stone armor which increases the target ally armor by {0} and slows the attack speed of melee attackers by {1} for {2} seconds."
+                 .format(STONE_ARMOR.toToolTipGreen(), 0.15.toToolTipOrange(), STONE_ARMOR_SLOW_DURATION.toToolTipOrange())
+                 + makeToolTipDuration(STONE_ARMOR_DURATION, STONE_ARMOR_COOLDOWN)
+constant SH_TT = "Grant the unit the ability to boost its allies movement speed."
+                 +makeToolTipDuration(HASTE_DURATION, HASTE_COOLDOWN)
+
+constant ST_TT = "Grants the unit the ability to cast Tsunami dealing {0} to units in a line. It deals {1} extra to buildings and can instantly put out fires when casted at close range."
+                 .format(TSUNAMI_DMG.toToolTipRed(), TSUNAMI_STRUCT_DMG.toToolTipRed()) + makeToolTipCooldown(TSUNAMI_COOLDOWN)
+constant SC_TT = "Grants the unit the ability to cast Cyclone which tosses an enemy unit in the air for {0}({1}) seconds."
+                 .format(CYCLONE_DURATION_HERO.toToolTipOrange(), CYCLONE_DURATION_NORMAL.toToolTipOrange()) + makeToolTipCooldown(CYCLONE_COOLDOWN)
+
+
+@compiletime function createRootinatedAbility() returns AbilityDefinitionEntanglingRootscreep
+    return new AbilityDefinitionEntanglingRootscreep(ABILITY_ROOT)
+        ..setCheckDependencies(false)
+        ..setDamageperSecond(1, ROOT_DMG)
+        ..setHeroAbility(false)
+        ..setItemAbility(true)
+        ..setManaCost(1, 0)
+        ..setDurationHero(1, ROOT_DURATION_HERO)
+        ..setDurationNormal(1, ROOT_DURATION_NORMAL)
+        ..presetTargetsAllowed(lvl -> commaList(
+            TargetsAllowed.ground,
+            TargetsAllowed.enemies,
+            TargetsAllowed.neutral,
+            TargetsAllowed.organic
+            ))
+        ..setLevels(1)
+        ..setCastRange(1, ROOT_CAST_RANGE)
+        ..setCooldown(1, ROOT_COOLDOWN)
+        ..setName("Scroll of Entangling Root")
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createFireBallAbility() returns AbilityDefinitionFireBoltwarlock
+    return new AbilityDefinitionFireBoltwarlock(ABILITY_FIREBOLT)
+        ..setName("Scroll of FireBall")
+        ..setDamage(1, FIRE_DMG)
+        ..setMissileArt(Abilities.phoenix_Missile)
+        ..setCastRange(1, FIRE_CAST_RANGE)
+        ..setManaCost(1, 0)
+        ..setDurationHero(1, FIRE_DURATION_HERO)
+        ..setDurationNormal(1, FIRE_DURATION_NORMAL)
+        ..setCooldown(1, FIRE_COOLDOWN)
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createSkeletalMinionAbility() returns AbilityDefinitionCryptLordLocustSwarm
+    return new AbilityDefinitionCryptLordLocustSwarm(ABILITY_SKELETAL_MINION)
+        ..setName("Scroll of Living Dead")
+        ..setCheckDependencies(false)
+        ..setDamageReturnFactor(1, 0)
+        ..setNumberofSwarmUnits(1, 2)
+        ..setDamageReturnThreshold(1, 600)
+        ..setMaxSwarmUnitsPerTarget(1, 5)
+        ..setSwarmUnitType(1, UNIT_LOCUST_SKELETON.toRawCode())
+        ..setIconNormal(Icons.bTNSkeletonWarrior)
+        ..setEffectSoundLooping("")
+        ..presetTargetsAllowed(lvl -> commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.enemies,
+            TargetsAllowed.ground
+        ))
+        ..setHeroAbility(false)
+        ..setItemAbility(true)
+        ..setManaCost(1, 0)
+        ..setDurationHero(1, SKELETAL_DURATION)
+        ..setDurationNormal(1, SKELETAL_DURATION)
+        ..setCooldown(1, SKELETAL_COOLDOWN)
+        ..setAreaofEffect(1, SKELETAL_AOE)
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createStoneArmorAbility() returns AbilityDefinitionFrostArmorcreep
+    return new AbilityDefinitionFrostArmorcreep(ABILITY_FROST_ARMOR)
+        ..setName("Scroll of Stone Armor")
+        ..setBuffs(1, BUFF_STONE_ARMOR.toRawCode())
+        ..setArmorBonus(1, STONE_ARMOR)
+        ..setArmorDuration(1, STONE_ARMOR_DURATION)
+        ..presetTargetsAllowed(lvl -> commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.friend,
+            TargetsAllowed.ground,
+            TargetsAllowed.neutral,
+            TargetsAllowed.self
+        ))
+        ..setItemAbility(true)
+        ..setManaCost(1, 0)
+        ..setDurationHero(1, STONE_ARMOR_SLOW_DURATION)
+        ..setDurationNormal(1, STONE_ARMOR_SLOW_DURATION)
+        ..setCastRange(1, STONE_CAST_RANGE)
+        ..setCooldown(1, STONE_ARMOR_COOLDOWN)
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createTsunamiAbility() returns AbilityDefinitionCrushingWave
+    return new AbilityDefinitionCrushingWave(ABILITY_TSUNAMI)
+        ..setName("Scroll of Tsunami")
+        ..setDamage(1, TSUNAMI_DMG)
+        ..setMaxDamage(1, TSUNAMI_DMG)
+        ..setCastRange(1, TSUNAMI_CAST_RANGE)
+        ..setDistance(1, TSUNAMI_DISTANCE)
+        ..setCooldown(1, TSUNAMI_COOLDOWN)
+        ..setItemAbility(true)
+        ..setManaCost(1, 0)
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createHasteAbility() returns AbilityDefinitionItemSpeedAoe
+    return new AbilityDefinitionItemSpeedAoe(ABILITY_HASTE_AOE)
+        ..setName("Scroll of Haste")
+        ..setBuffs(1, BUFF_HASTE.toRawCode())
+        ..setMovementSpeedIncrease(1, HASTE_SPEED_BONUS)
+        ..setAreaofEffect(1, HASTE_AOE)
+        ..setDurationHero(1, HASTE_DURATION)
+        ..setDurationNormal(1, HASTE_DURATION)
+        ..presetTargetsAllowed(lvl -> commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.ground,
+            TargetsAllowed.friend,
+            TargetsAllowed.self,
+            TargetsAllowed.vulnerable,
+            TargetsAllowed.invulnerable,
+            TargetsAllowed.nonsapper
+        ))
+        ..setCooldown(1, HASTE_COOLDOWN)
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createCycloneAbility() returns AbilityDefinitionCycloneAIcy
+    return new AbilityDefinitionCycloneAIcy(ABILITY_CYCLONE)
+        ..setName("Scroll of Cyclone")
+        ..setDurationHero(1, CYCLONE_DURATION_HERO)
+        ..setDurationNormal(1, CYCLONE_DURATION_NORMAL)
+        ..setCooldown(1, CYCLONE_COOLDOWN)
+        ..setCastRange(1, CYCLONE_CAST_RANGE)
+
+
+@compiletime function createBuffStoneArmor() returns BuffDefinition
+    return new BuffDefinition(BUFF_STONE_ARMOR, 'BUfa') // Frost armor buff
+    ..setIcon(Icons.bTNResistantSkin)
+    ..setArtTarget(1, Abilities.aIdaTarget)
+    ..setTargetAttachmentPoint0(1, "overhead")
+    ..setTooltipNormal(1, "Stone Armor")
+    ..setTooltipNormalExtended(1, "This unit is protected by a stone armor. Its armor is increased.")
+
+@compiletime function createBuffHaste() returns BuffDefinition
+    return new BuffDefinition(BUFF_HASTE, 'Bspe') // Speed Bonus
+    ..setName(1, "Speed Boost")
+    ..setArtTarget(1, Abilities.speedTarget)
+    ..setTooltipNormal(1, "Speed Boost")
+    ..setTooltipNormalExtended(1, "This unit got a speed boost, moving faster.")
+    ..setTargetAttachments(1, 0)
+    ..setTargetAttachmentPoint0(1, "")
+    ..setTargetAttachmentPoint1(1, "")
+
+
+@compiletime function createUnitSkeletalMinion() returns UnitDefinition
+    return new UnitDefinition(UNIT_LOCUST_SKELETON, UnitIds.skeletonwarrior)
+        ..setNormalAbilities("Aloc")
+        ..setAttack1AttackType(AttackType.Magic)
+        ..setAttack1DamageBase(SKELETAL_MINION_DMG)
+        ..setAttack1CooldownTime(0.75)
+        ..setName("Skeleton Minion")
+        ..setAttack1DamageNumberofDice(1)
+        ..setAttack1DamageSidesperDie(1)
+        ..setSpeedBase(360)
+        ..setAttack1TargetsAllowed(commaList(
+            TargetsAllowed.debris,
+            TargetsAllowed.ground,
+            TargetsAllowed.item_t,
+            TargetsAllowed.structure,
+            TargetsAllowed.ward
+            ))
+
+@compiletime function createEntanglingRootsScroll() returns ItemDefinition
+    return createUsableItem(ITEM_SCROLL_ENTANGLING_ROOTS)
+            ..setCooldownGroup(ABILITY_ROOT.toRawCode())
+            ..setLumberCost(7)
+            ..setAbilities(ABILITY_ROOT.toRawCode())
+            ..setStockReplenishInterval(120)
+            ..setModelUsed(LocalItems.scrollRegen)
+            ..setInterfaceIcon(Icons.bTNScrollOfRegenerationGreen)
+            ..setNameEnhance("Scroll of Entangling Roots")
+            ..setTooltipExtended(ER_TT)
+
+@compiletime function createFireBallScroll() returns ItemDefinition
+    return createUsableItem(ITEM_SCROLL_FIREBALL)
+            ..setCooldownGroup(ABILITY_SPEAR.toRawCode())
+            ..setLumberCost(7)
+            ..setAbilities(ABILITY_FIREBOLT.toRawCode())
+            ..setStockReplenishInterval(120)
+            ..setModelUsed(LocalItems.scrollRed)
+            ..setInterfaceIcon(Icons.bTNScrollOfHealing)
+            ..setNameEnhance("Scroll of Fire Ball")
+            ..setTooltipExtended(FB_TT)
+
+@compiletime function createLivingDeadScroll() returns ItemDefinition
+    return createUsableItem(ITEM_SCROLL_LIVING_DEAD)
+            ..setCooldownGroup(ABILITY_SKELETAL_MINION.toRawCode())
+            ..setLumberCost(7)
+            ..setAbilities(ABILITY_SKELETAL_MINION.toRawCode())
+            ..setStockReplenishInterval(120)
+            ..setModelUsed(LocalItems.scrollYellow)
+            ..setInterfaceIcon(Icons.bTNSnazzyScroll)
+            ..setNameEnhance("Scroll of Living Dead")
+            ..setTooltipExtended(LD_TT)
+
+@compiletime function createStoneShieldScroll() returns ItemDefinition
+    return createUsableItem(ITEM_SCROLL_STONE_ARMOR)
+            ..setCooldownGroup(ABILITY_FROST_ARMOR.toRawCode())
+            ..setLumberCost(9)
+            ..setAbilities(ABILITY_FROST_ARMOR.toRawCode())
+            ..setStockReplenishInterval(120)
+            ..setModelUsed(LocalItems.scrollOrange)
+            ..setInterfaceIcon(Icons.bTNScrollUber)
+            ..setNameEnhance("Scroll of Stone Shield")
+            ..setTooltipExtended(SS_TT)
+
+@compiletime function createSwiftnessScroll() returns ItemDefinition
+    return createUsableItem(ITEM_SCROLL_SWIFTNESS)
+            ..setCooldownGroup(ABILITY_HASTE_AOE.toRawCode())
+            ..setLumberCost(10)
+            ..setAbilities(ABILITY_HASTE_AOE.toRawCode())
+            ..setStockReplenishInterval(120)
+            ..setModelUsed(LocalItems.scrollHaste)
+            ..setInterfaceIcon(Icons.bTNScrollOfHaste)
+            ..setNameEnhance("Scroll of Swiftness")
+            ..setTooltipExtended(SH_TT)
+
+@compiletime function createTsunamiScroll() returns ItemDefinition
+    return createUsableItem(ITEM_SCROLL_TSUNAMI)
+            ..setCooldownGroup(ABILITY_TSUNAMI.toRawCode())
+            ..setLumberCost(9)
+            ..setAbilities(ABILITY_TSUNAMI.toRawCode())
+            ..setStockReplenishInterval(120)
+            ..setModelUsed(LocalItems.scrollPurple)
+            ..setInterfaceIcon(Icons.bTNSnazzyScrollPurple)
+            ..setNameEnhance("Scroll of Tsunami")
+            ..setTooltipExtended(ST_TT)
+
+@compiletime function createCycloneScroll() returns ItemDefinition
+    return createUsableItem(ITEM_SCROLL_CYCLONE)
+            ..setCooldownGroup(ABILITY_CYCLONE.toRawCode())
+            ..setLumberCost(9)
+            ..setAbilities(ABILITY_CYCLONE.toRawCode())
+            ..setStockReplenishInterval(120)
+            ..setModelUsed(LocalItems.scrollCyan)
+            ..setInterfaceIcon(Icons.bTNBansheeMaster)
+            ..setNameEnhance("Scroll of Cyclone")
+            ..setTooltipExtended(SC_TT)
+
+
+let BUFF_CYCLONE = 'Bcyc'
+let BUFF_CYCLONE_EXTRA = 'Bcy2'
+
+function onCyclone(unit target)
+    target.addAbility(GHOST_VIS_ID)
+    doPeriodicallyTimed(0.1, 15) buffPoller ->
+        if not target.hasAbility(BUFF_CYCLONE) and not target.hasAbility(BUFF_CYCLONE_EXTRA)
+            target.removeAbility(GHOST_VIS_ID)
+            buffPoller.stop()
+
+function unit.isFire() returns bool
+    return this.getTypeId() == UNIT_FIRE
+        or this.getTypeId() == UNIT_MAGE_FIRE_SUMMONED
+        or this.getTypeId() == UNIT_MAGE_FIRE
+
+function onTsunami(unit caster, vec2 target)
+    // The range from the caster that the effect is centered.
+    let OFFSET_DISTANCE = 300.
+
+    // The range from the center for which units are affected.
+    let EFFECT_DISTANCE = 150.
+
+    // Compute the center of the extra damage.
+    let center = caster.getPos().polarOffset(caster.getPos().angleTo(target), OFFSET_DISTANCE)
+
+    // Enumerate all units that are in region for extra damage.
+    ENUM_GROUP.enumUnitsInRange(center, EFFECT_DISTANCE)
+
+    // Perform the extra damage for the matching units.
+    for u in ENUM_GROUP
+        // Only enemy structures are affected.
+        if u.isEnemyOf(caster) and IsUnitType(u, UNIT_TYPE_STRUCTURE)
+            // Destroy fires outright.
+            if u.isFire()
+                flashEffect(Objects.nagaDeath, u.getPos())
+                u.kill()
+            // Otherwise deal additional damage.
+            else
+                caster.damageTarget(u, TSUNAMI_STRUCT_DMG)
+
+init
+    EventListener.onTargetCast(ABILITY_CYCLONE, (unit caster, unit target) -> onCyclone(target))
+    EventListener.onPointCast(ABILITY_TSUNAMI, (unit caster, vec2 target) -> onTsunami(caster, target))

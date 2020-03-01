@@ -1,0 +1,119 @@
+package ReduceHealing
+
+// Standard library imports:
+import ClosureTimers
+import ErrorHandling
+import LinkedList
+import OnUnitEnterLeave
+import HashMap
+
+// Third-party imports:
+import Lodash
+
+// Local imports:
+import HealingSystem
+
+// The duration in seconds for which the moving sum is tracked.
+let DURATION = 300.
+
+// The proportion per bracket.
+let BRACKETS = asOwnedList(
+    new Pair(REAL_MIN, 1.00),
+    new Pair(500.,     0.75),
+    new Pair(1000.,    0.50),
+    new Pair(1500.,    0.25),
+    new Pair(REAL_MAX, 0.00)
+)
+
+// Arrays corresponding to brackets used to optimize some operations.
+let NUM_BRACKETS = BRACKETS.size() - 1
+real array BOUNDS
+real array FACTORS
+
+// The moving sum of the total amount healed by items per unit.
+let sums = new HashMap<unit, real>()
+
+public function adjustAmountHealed(unit target, real amount)
+    if sums.has(target)
+        sums.put(target, sums.get(target) + amount)
+
+function onUnitHealed(HealingInstance instance)
+    // Only items are considered for healing reduction.
+    if instance.healingType != ITEM
+        return
+
+    // Validate the state for the unit.
+    if not sums.has(instance.target)
+        error("No healing tracked for {0}.".format(instance.target.getName()))
+
+    // Retrieve the current value for the target.
+    var sum = sums.get(instance.target)
+
+    // The actual value to be healed.
+    var output = 0.
+
+    // Copy the the initial amount before adjusting it.
+    var amount = instance.amount
+
+    // The index of the current bracket being considered.
+    var index = 0
+
+    // Skip brackets below the starting sum.
+    while BOUNDS[index + 1] <= sum
+        index++
+
+    // Iterate until the initial amount has been split among brackets.
+    while amount > 0
+        // Compute the portion that falls within the current bracket.
+        let current = min(amount, BOUNDS[index + 1] - sum)
+
+        // Increment the state.
+        amount -= current
+        output += current * FACTORS[index]
+        sum    += current
+        index  += 1
+
+    // Adjust the healing factor accordingly.
+    instance.scaleMultiplier(output / instance.amount)
+
+    // Adjust the moving sum.
+    sums.put(instance.target, sum)
+
+    // Schedule the operation to reduce the sum.
+    doAfter(DURATION) ->
+        adjustAmountHealed(instance.target, -instance.amount)
+
+function onUnitEnter(unit target)
+    sums.put(target, 0)
+
+function onUnitLeave(unit target)
+    sums.remove(target)
+
+function LinkedList<T>.asArray<T>() returns T array
+    // The array to be filled.
+    T array output
+
+    // Iterate over the elements.
+    for index = 0 to this.size() - 1
+        output[index] = this.get(index)
+
+    // Output the filled array.
+    return output
+
+// Copies list data into the arrays used to optimize lookup.
+function initializeArrays()
+    for index = 0 to NUM_BRACKETS
+        BOUNDS[index] = BRACKETS.get(index).a
+        FACTORS[index] = BRACKETS.get(index).b
+
+init
+    onUnitHealed() ->
+        onUnitHealed(getHealingInstance())
+
+    onEnter() ->
+        onUnitEnter(getEnterLeaveUnit())
+
+    onLeave() ->
+        onUnitLeave(getEnterLeaveUnit())
+
+    initializeArrays()

@@ -134,6 +134,7 @@ init
     // Clunky try at displaying hint on an event, should rework hint system later on
     EventListener.add(EVENT_PLAYER_HERO_LEVEL) ->
         let hero = GetTriggerUnit()
-        if hero.getLevel() >= 6 and UNSUB_TROLL_UNIT_LIST.has(hero.getTypeId())
-            new Hint("You have reached level " + hero.getLevel().toString().color(GOLD_COLOR) +
-            ", you can now choose a subclass in the SubClass menu [".color(GENERAL_COLOR) + "T".color(GOLD_COLOR) + "]".color(GENERAL_COLOR))..display()
+        let lvl = hero.getLevel()
+        if lvl >= 6 and UNSUB_TROLL_UNIT_LIST.has(hero.getTypeId()) and Hint.playersF.containsPlayer(hero.getOwner())
+            printTimedToPlayer("You have reached level ".color(GENERAL_COLOR) + lvl.toString().color(GOLD_COLOR) +
+            ", you can now choose a subclass in the SubClass menu [".color(GENERAL_COLOR) + "T".color(GOLD_COLOR) + "]".color(GENERAL_COLOR), 10, hero.getOwner())

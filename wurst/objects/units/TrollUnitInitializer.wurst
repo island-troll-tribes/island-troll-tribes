@@ -1,216 +1,691 @@
 package TrollUnitInitializer
 
 import TrollUnitFactory
-import Lodash
 import LocalObjectIDs
-import LinkedList
-import Units
 import TrollUnitTextConstant
-import Soundsets
+import UnitObjEditing
+import Assets
+import LocalAssets
 
-//  Parameter are the following :
-//  ID, BaseDamage, ProperNameUsed, SpeedBase, CooldownTime or AttackSpeed, Scaling Value,
-//  Name, Tooltip extended, Model Used, Icon, Hotkey
-//  Proper Name, Hero Spell, Normal Spell,
-//  Soundset, Button Position, day & night Sight radius
 
-function getTrollUnits() returns LinkedList<TrollUnit>
-    return asList<TrollUnit>(
+@compiletime function createHunter() returns HeroDefinition
+    return createBasicTroll(UNIT_HUNTER)
+        ..setNameEnhance("Hunter")
+        ..setAttack1DamageBase(13)
+        ..setAttack1CooldownTime(1.75)
+        ..setAttack2DamageBase(13)
+        ..setAttack2CooldownTime(1.75)
+        ..setModelFile(Units.forestTrollTrapper1)
+        ..setIcons(Icons.bTNForestTroll)
+        ..setUnitSoundSet(Soundsets.forestTrollShadowPriest)
+        ..setSpeedBase(300)
+        ..setButtonPositionX(1)
+        ..setButtonPositionY(1)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(1000)
+        ..setSightRadiusNight(500)
+        ..setTooltipExtended(TOOLTIP_HUNTER)
+        ..setProperNames(NAME_HUNTER)
+        ..setProperNamesUsed(4)
+        ..setHotkey("W")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_HUNTER, HERO_SPELLS_HUNTER)
 
-            // Hunter
-        new UnSubTrollUnit(
-            UNIT_HUNTER, 13, 4, 300, 1.77, 1,
-            "Hunter", TOOLTIP_HUNTER, Units.forestTrollTrapper1, "ForestTroll", "W",
-            NAME_HUNTER, HERO_SPELLS_HUNTER, NORMAL_SPELLS_HUNTER,
-            Soundsets.forestTrollShadowPriest, pair(1,1), pair(1000, 500)),
+@compiletime function createWarrior() returns HeroDefinition
+    return createSubTroll(UNIT_WARRIOR)
+        ..setNameEnhance("Warrior")
+        ..setAttack1DamageBase(16)
+        ..setAttack1CooldownTime(1.65)
+        ..setAttack2DamageBase(16)
+        ..setAttack2CooldownTime(1.65)
+        ..setModelFile(LocalUnits.trollOverlord)
+        ..setIcons(LocalIcons.bTNTrollPredator)
+        ..setUnitSoundSet(Soundsets.headHunter)
+        ..setSpeedBase(300)
+        ..setButtonPositionX(1)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(1300)
+        ..setSightRadiusNight(800)
+        ..setTooltipExtended(TOOLTIP_WARRIOR)
+        ..setProperNames(NAME_WARRIOR)
+        ..setProperNamesUsed(4)
+        ..setHotkey("Q")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_WARRIOR, HERO_SPELLS_WARRIOR)
 
-        new SubTrollUnit(
-            UNIT_WARRIOR, 16, 4, 300, 1.66, 1,
-            "Warrior", TOOLTIP_WARRIOR, M_TROLL_OVERLORD, "TrollPredator", "W",
-            NAME_WARRIOR, HERO_SPELLS_WARRIOR, NORMAL_SPELLS_WARRIOR,
-            Soundsets.headHunter, pair(1,0), pair(1300, 800)),
+@compiletime function createTracker() returns HeroDefinition
+    return createSubTroll(UNIT_TRACKER)
+        ..setNameEnhance("Tracker")
+        ..setAttack1DamageBase(14)
+        ..setAttack1CooldownTime(1.75)
+        ..setAttack2DamageBase(14)
+        ..setAttack2CooldownTime(1.75)
+        ..setModelFile(Units.iceTroll1)
+        ..setIcons(Icons.bTNIceTrollBeserker)
+        ..setUnitSoundSet(Soundsets.forestTrollShadowPriest)
+        ..setSpeedBase(310)
+        ..setButtonPositionX(2)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(1300)
+        ..setSightRadiusNight(800)
+        ..setTooltipExtended(TOOLTIP_TRACKER)
+        ..setProperNames(NAME_TRACKER)
+        ..setProperNamesUsed(4)
+        ..setHotkey("W")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_TRACKER, HERO_SPELLS_TRACKER)
 
-        new SubTrollUnit(
-            UNIT_TRACKER, 14, 4, 310, 1.75, 1,
-            "Tracker", TOOLTIP_TRACKER, Units.iceTroll1, "IceTroll", "E",
-            NAME_TRACKER, HERO_SPELLS_TRACKER, NORMAL_SPELLS_TRACKER,
-            Soundsets.forestTrollShadowPriest, pair(2,0), pair(1300, 800)),
+@compiletime function createJuggernaut() returns HeroDefinition
+    return createSuperSubTroll(UNIT_JUGGERNAUT)
+        ..setNameEnhance("Juggernaut")
+        ..setAttack1DamageBase(18)
+        ..setAttack1CooldownTime(1.60)
+        ..setAttack2DamageBase(18)
+        ..setAttack2CooldownTime(1.60)
+        ..setModelFile(LocalUnits.trollOverlord)
+        ..setIcons(LocalIcons.bTNTrollPredator)
+        ..setUnitSoundSet(Soundsets.headHunter)
+        ..setSpeedBase(330)
+        ..setButtonPositionX(3)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1.35)
+        ..setSightRadiusDay(1700)
+        ..setSightRadiusNight(1400)
+        ..setTooltipExtended(TOOLTIP_JUGGERNAUT)
+        ..setProperNames(NAME_JUGGERNAUT)
+        ..setProperNamesUsed(1)
+        ..setHotkey("R")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_JUGGERNAUT, HERO_SPELLS_JUGGERNAUT)
 
-        new SuperSubTrollUnit(
-            UNIT_JUGGERNAUT, 18, 1, 330, 1.60, 1.35,
-            "Juggernaut", TOOLTIP_JUGGERNAUT, M_TROLL_OVERLORD, "TrollPredator", "R",
-            NAME_JUGGERNAUT, HERO_SPELLS_JUGGERNAUT, NORMAL_SPELLS_JUGGERNAUT,
-            Soundsets.headHunter, pair(3,0), pair(1700, 1400)),
+@compiletime function createMage() returns HeroDefinition
+    return createBasicTroll(UNIT_MAGE)
+        ..setNameEnhance("Mage")
+        ..setAttack1DamageBase(11)
+        ..setAttack1CooldownTime(1.77)
+        ..setAttack2DamageBase(11)
+        ..setAttack2CooldownTime(1.77)
+        ..setModelFile(Units.witchDoctor1)
+        ..setIcons(Icons.bTNWitchDoctor)
+        ..setUnitSoundSet(Soundsets.witchDoctor)
+        ..setSpeedBase(270)
+        ..setButtonPositionX(2)
+        ..setButtonPositionY(1)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(950)
+        ..setSightRadiusNight(500)
+        ..setTooltipExtended(TOOLTIP_MAGE)
+        ..setProperNames(NAME_MAGE)
+        ..setProperNamesUsed(4)
+        ..setHotkey("E")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_MAGE, HERO_SPELLS_MAGE)
 
-            // Mage
-        new UnSubTrollUnit(
-            UNIT_MAGE, 11, 4, 270, 1.77, 1,
-            "Mage", TOOLTIP_MAGE, Units.witchDoctor1, "WitchDoctor", "E",
-            NAME_MAGE, HERO_SPELLS_MAGE, NORMAL_SPELLS_MAGE,
-            Soundsets.witchDoctor, pair(2,1), pair(950, 500)),
+@compiletime function createElementalist() returns HeroDefinition
+    return createSubTroll(UNIT_ELEMENTALIST_NEW)
+        ..setNameEnhance("Elementalist")
+        ..setAttack1DamageBase(11)
+        ..setAttack1CooldownTime(1.75)
+        ..setAttack2DamageBase(11)
+        ..setAttack2CooldownTime(1.75)
+        ..setModelFile(LocalUnits.elementalist)
+        ..setIcons(Icons.bTNIceTrollShaman)
+        ..setUnitSoundSet(Soundsets.iceTroll)
+        ..setSpeedBase(280)
+        ..setButtonPositionX(1)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(1250)
+        ..setSightRadiusNight(800)
+        ..setTooltipExtended(TOOLTIP_ELEMENTALIST)
+        ..setProperNames(NAME_ELEMENTALIST)
+        ..setProperNamesUsed(4)
+        ..setHotkey("Q")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_ELEMENTALIST, HERO_SPELLS_ELEMENTALIST)
 
-        new SubTrollUnit(
-            UNIT_ELEMENTALIST_NEW, 11, 4, 280, 1.75, 1,
-            "Elementalist", TOOLTIP_ELEMENTALIST, M_ELEMENTALIST, "IceTrollShaman", "W",
-            NAME_ELEMENTALIST, HERO_SPELLS_ELEMENTALIST, NORMAL_SPELLS_ELEMENTALIST,
-            Soundsets.iceTroll, pair(1,0), pair(1250, 800)),
+@compiletime function createHypnotist() returns HeroDefinition
+    return createSubTroll(UNIT_HYPNOTIST)
+        ..setNameEnhance("Hypnotist")
+        ..setAttack1DamageBase(11)
+        ..setAttack1CooldownTime(1.75)
+        ..setAttack2DamageBase(11)
+        ..setAttack2CooldownTime(1.75)
+        ..setModelFile(LocalUnits.trollSlasher)
+        ..setIcons(LocalIcons.bTNHypnotist)
+        ..setUnitSoundSet(Soundsets.heroLich)
+        ..setSpeedBase(280)
+        ..setButtonPositionX(2)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(1250)
+        ..setSightRadiusNight(800)
+        ..setTooltipExtended(TOOLTIP_HYPNOTIST)
+        ..setProperNames(NAME_HYPNOTIST)
+        ..setProperNamesUsed(4)
+        ..setHotkey("W")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_HYPNOTIST, HERO_SPELLS_HYPNOTIST)
 
-        new SubTrollUnit(
-            UNIT_HYPNOTIST, 11, 4, 280, 1.75, 1,
-            "Hypnotist", TOOLTIP_HYPNOTIST, M_TROLL_SLASHER, "Hypnotist", "E",
-            NAME_HYPNOTIST, HERO_SPELLS_HYPNOTIST, NORMAL_SPELLS_HYPNOTIST,
-            Soundsets.heroLich, pair(2,0), pair(1250, 800)),
+@compiletime function createDementiaMaster() returns HeroDefinition
+    return createSuperSubTroll(UNIT_DEMENTIA_MASTER)
+        ..setNameEnhance("Dementia Master")
+        ..setAttack1DamageBase(14)
+        ..setAttack1CooldownTime(1.50)
+        ..setAttack2DamageBase(14)
+        ..setAttack2CooldownTime(1.50)
+        ..setModelFile(Units.darkTrollShadowPriest1)
+        ..setIcons(Icons.bTNDarkTrollShadowPriest)
+        ..setUnitSoundSet(Soundsets.heroLich)
+        ..setSpeedBase(300)
+        ..setButtonPositionX(3)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(1600)
+        ..setSightRadiusNight(1200)
+        ..setTooltipExtended(TOOLTIP_DEMENTIA_MASTER)
+        ..setProperNames(NAME_DEMENTIA_MASTER)
+        ..setProperNamesUsed(1)
+        ..setHotkey("E")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_DEMENTIA_MASTER, HERO_SPELLS_DEMENTIA_MASTER)
 
-        new SuperSubTrollUnit(
-            UNIT_DEMENTIA_MASTER, 14, 1, 300, 1.50, 1,
-            "Dementia Master", TOOLTIP_DEMENTIA_MASTER, Units.darkTrollShadowPriest1, "DarkTrollShadowPriest", "R",
-            NAME_DEMENTIA_MASTER, HERO_SPELLS_DEMENTIA_MASTER, NORMAL_SPELLS_DEMENTIA_MASTER,
-            Soundsets.heroLich, pair(3,0), pair(1600, 1200)),
+@compiletime function createPriest() returns HeroDefinition
+    return createBasicTroll(UNIT_PRIEST)
+        ..setNameEnhance("Priest")
+        ..setAttack1DamageBase(10)
+        ..setAttack1CooldownTime(1.77)
+        ..setAttack2DamageBase(10)
+        ..setAttack2CooldownTime(1.77)
+        ..setModelFile(Units.heroShadowHunter1)
+        ..setIcons(Icons.bTNShadowHunter)
+        ..setUnitSoundSet(Soundsets.witchDoctor)
+        ..setSpeedBase(270)
+        ..setButtonPositionX(3)
+        ..setButtonPositionY(1)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(1100)
+        ..setSightRadiusNight(650)
+        ..setTooltipExtended(TOOLTIP_PRIEST)
+        ..setProperNames(NAME_PRIEST)
+        ..setProperNamesUsed(4)
+        ..setHotkey("R")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_PRIEST, HERO_SPELLS_PRIEST)
 
-            // Priest
-        new UnSubTrollUnit(
-            UNIT_PRIEST, 10, 4, 270, 1.77, 1,
-            "Priest", TOOLTIP_PRIEST, Units.heroShadowHunter1, "ShadowHunter", "R",
-            NAME_PRIEST, HERO_SPELLS_PRIEST, NORMAL_SPELLS_PRIEST,
-            Soundsets.witchDoctor, pair(3,1), pair(1100, 650)),
+@compiletime function createBooster() returns HeroDefinition
+    return createSubTroll(UNIT_BOOSTER)
+        ..setNameEnhance("Booster")
+        ..setAttack1DamageBase(10)
+        ..setAttack1CooldownTime(1.75)
+        ..setAttack2DamageBase(10)
+        ..setAttack2CooldownTime(1.75)
+        ..setModelFile(Units.forestTrollShadowPriest1)
+        ..setIcons(Icons.bTNForestTrollShadowPriest)
+        ..setUnitSoundSet(Soundsets.witchDoctor)
+        ..setSpeedBase(280)
+        ..setButtonPositionX(1)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(1250)
+        ..setSightRadiusNight(800)
+        ..setTooltipExtended(TOOLTIP_BOOSTER)
+        ..setProperNames(NAME_BOOSTER)
+        ..setProperNamesUsed(4)
+        ..setHotkey("Q")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_BOOSTER, HERO_SPELLS_BOOSTER)
 
-        new SubTrollUnit(
-            UNIT_BOOSTER, 10, 4, 280, 1.75, 1,
-            "Booster", TOOLTIP_BOOSTER, Units.forestTrollShadowPriest1, "ForestTrollShadowPriest", "W",
-            NAME_BOOSTER, HERO_SPELLS_BOOSTER, NORMAL_SPELLS_BOOSTER,
-            Soundsets.witchDoctor, pair(1,0), pair(1250, 800)),
+@compiletime function createMasterHealer() returns HeroDefinition
+    return createSubTroll(UNIT_MASTER_HEALER)
+        ..setNameEnhance("Master Healer")
+        ..setAttack1DamageBase(10)
+        ..setAttack1CooldownTime(1.75)
+        ..setAttack2DamageBase(10)
+        ..setAttack2CooldownTime(1.75)
+        ..setModelFile(LocalUnits.heroShadowHunter)
+        ..setIcons(LocalIcons.bTNMasterHealer)
+        ..setUnitSoundSet(Soundsets.witchDoctor)
+        ..setSpeedBase(280)
+        ..setButtonPositionX(2)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(1250)
+        ..setSightRadiusNight(800)
+        ..setTooltipExtended(TOOLTIP_MASTER_HEALER)
+        ..setProperNames(NAME_MASTER_HEALER)
+        ..setProperNamesUsed(4)
+        ..setHotkey("W")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_MASTER_HEALER, HERO_SPELLS_MASTER_HEALER)
 
-        new SubTrollUnit(
-            UNIT_MASTER_HEALER, 10, 4, 280, 1.75, 1,
-            "Master Healer", TOOLTIP_MASTER_HEALER, M_HERO_SHADOW_HUNTER, "MasterHealer", "E",
-            NAME_MASTER_HEALER, HERO_SPELLS_MASTER_HEALER, NORMAL_SPELLS_MASTER_HEALER,
-            Soundsets.witchDoctor, pair(2,0), pair(1250, 800)),
+@compiletime function createSage() returns HeroDefinition
+    return createSuperSubTroll(UNIT_SAGE)
+        ..setNameEnhance("Sage")
+        ..setAttack1DamageBase(13)
+        ..setAttack1CooldownTime(1.50)
+        ..setAttack2DamageBase(13)
+        ..setAttack2CooldownTime(1.50)
+        ..setModelFile(LocalUnits.sage)
+        ..setIcons(Icons.bTNForestTrollShadowPriest)
+        ..setUnitSoundSet(Soundsets.witchDoctor)
+        ..setSpeedBase(300)
+        ..setButtonPositionX(3)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(1800)
+        ..setSightRadiusNight(800)
+        ..setTooltipExtended(TOOLTIP_SAGE)
+        ..setProperNames(NAME_SAGE)
+        ..setProperNamesUsed(1)
+        ..setHotkey("R")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_SAGE, HERO_SPELLS_SAGE)
 
-        new SuperSubTrollUnit(
-            UNIT_SAGE, 13, 1, 300, 1.50, 1,
-            "Sage", TOOLTIP_SAGE, M_SAGE, "ForestTrollShadowPriest", "R",
-            NAME_SAGE, HERO_SPELLS_SAGE, NORMAL_SPELLS_SAGE,
-            Soundsets.witchDoctor, pair(3,0), pair(1800, 800)),
+@compiletime function createBeastMaster() returns HeroDefinition
+    return createBasicTroll(UNIT_BEAST_MASTER)
+        ..setNameEnhance("Beast Master")
+        ..setAttack1DamageBase(13)
+        ..setAttack1CooldownTime(1.77)
+        ..setAttack2DamageBase(13)
+        ..setAttack2CooldownTime(1.77)
+        ..setModelFile(Units.shaman1)
+        ..setIcons(Icons.bTNShaman)
+        ..setUnitSoundSet(Soundsets.shaman)
+        ..setSpeedBase(300)
+        ..setButtonPositionX(0)
+        ..setButtonPositionY(2)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(1400)
+        ..setSightRadiusNight(675)
+        ..setTooltipExtended(TOOLTIP_BEAST_MASTER)
+        ..setProperNames(NAME_BEAST_MASTER)
+        ..setProperNamesUsed(5)
+        ..setHotkey("Z")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_BEAST_MASTER, HERO_SPELLS_BEAST_MASTER)
 
-            // Beast Master
-        new UnSubTrollUnit(
-            UNIT_BEAST_MASTER, 13, 5, 300, 1.77, 1,
-            "Beast Master", TOOLTIP_BEAST_MASTER, Units.shaman1, "Shaman", "Z",
-            NAME_BEAST_MASTER, HERO_SPELLS_BEAST_MASTER, NORMAL_SPELLS_BEAST_MASTER,
-            Soundsets.shaman, pair(0,2), pair(1400, 675)),
+@compiletime function createWolfForm() returns HeroDefinition
+    return createSubTroll(UNIT_SHAPESHIFTER_WOLF)
+        ..setNameEnhance("Wolf Form")
+        ..setAttack1DamageBase(10)
+        ..setAttack1CooldownTime(1.40)
+        ..setAttack2DamageBase(10)
+        ..setAttack2CooldownTime(1.40)
+        ..setModelFile(Units.direWolf1)
+        ..setIcons(Icons.bTNDireWolf)
+        ..setUnitSoundSet(Soundsets.shaman)
+        ..setSpeedBase(310)
+        ..setButtonPositionX(0)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(1500)
+        ..setSightRadiusNight(1000)
+        ..setTooltipExtended(TOOLTIP_SHAPESHIFTER)
+        ..setProperNames(NAME_SHAPESHIFTER[0])
+        ..setProperNamesUsed(1)
+        ..setHotkey("Q")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_SHAPESHIFTER_WOLF, HERO_SPELLS_SHAPESHIFTER_WOLF)
 
-        new SubTrollUnit(
-            UNIT_SHAPESHIFTER_WOLF, 10, 3, 310, 1.40, 1,
-            "Wolf Form", TOOLTIP_SHAPESHIFTER, Units.direWolf1, "DireWolf", "Q",
-            NAME_SHAPESHIFTER[0], HERO_SPELLS_SHAPESHIFTER_WOLF,NORMAL_SPELLS_SHAPESHIFTER_WOLF,
-            Soundsets.shaman, pair(0,0), pair(1500, 1000)),
+@compiletime function createBearForm() returns HeroDefinition
+    return createSubTroll(UNIT_SHAPESHIFTER_BEAR)
+        ..setNameEnhance("Bear Form")
+        ..setAttack1DamageBase(25)
+        ..setAttack1CooldownTime(2.50)
+        ..setAttack2DamageBase(25)
+        ..setAttack2CooldownTime(2.50)
+        ..setModelFile(Units.grizzlyBear)
+        ..setIcons(Icons.bTNGrizzlyBear)
+        ..setUnitSoundSet(Soundsets.shaman)
+        ..setSpeedBase(290)
+        ..setButtonPositionX(1)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1.15)
+        ..setSightRadiusDay(1500)
+        ..setSightRadiusNight(1000)
+        ..setTooltipExtended(TOOLTIP_SHAPESHIFTER)
+        ..setProperNames(NAME_SHAPESHIFTER[1])
+        ..setProperNamesUsed(1)
+        ..setHotkey("W")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_SHAPESHIFTER_BEAR, HERO_SPELLS_SHAPESHIFTER_BEAR)
 
-        new SubTrollUnit(
-            UNIT_SHAPESHIFTER_BEAR, 25, 3, 290, 2.50, 1.15,
-            "Bear Form", TOOLTIP_SHAPESHIFTER, Units.grizzlyBear, "GrizzlyBear", "W",
-            NAME_SHAPESHIFTER[1], HERO_SPELLS_SHAPESHIFTER_BEAR,NORMAL_SPELLS_SHAPESHIFTER_BEAR,
-            Soundsets.shaman, pair(1,0), pair(1500, 1000)),
+@compiletime function createPantherForm() returns HeroDefinition
+    return createSubTroll(UNIT_SHAPESHIFTER_PANTHER)
+        ..setNameEnhance("Panther Form")
+        ..setAttack1DamageBase(12)
+        ..setAttack1CooldownTime(1.75)
+        ..setAttack2DamageBase(12)
+        ..setAttack2CooldownTime(1.75)
+        ..setModelFile(LocalUnits.panther)
+        ..setIcons(LocalIcons.bTNPanther)
+        ..setUnitSoundSet(Soundsets.shaman)
+        ..setSpeedBase(320)
+        ..setButtonPositionX(2)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(1500)
+        ..setSightRadiusNight(1000)
+        ..setTooltipExtended(TOOLTIP_SHAPESHIFTER)
+        ..setProperNames(NAME_SHAPESHIFTER[2])
+        ..setProperNamesUsed(1)
+        ..setHotkey("E")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_SHAPESHIFTER_PANTHER, HERO_SPELLS_SHAPESHIFTER_PANTHER)
 
-        new SubTrollUnit(
-            UNIT_SHAPESHIFTER_PANTHER, 12, 3, 320, 1.75, 1,
-            "Panther Form", TOOLTIP_SHAPESHIFTER, M_PANTHER, "Panther", "E",
-            NAME_SHAPESHIFTER[2], HERO_SPELLS_SHAPESHIFTER_PANTHER, NORMAL_SPELLS_SHAPESHIFTER_PANTHER,
-            Soundsets.shaman, pair(2,0), pair(1500, 1000)),
+@compiletime function createTigerForm() returns HeroDefinition
+    return createSubTroll(UNIT_SHAPESHIFTER_TIGER)
+        ..setNameEnhance("Tiger Form")
+        ..setAttack1DamageBase(13)
+        ..setAttack1CooldownTime(1.75)
+        ..setAttack2DamageBase(13)
+        ..setAttack2CooldownTime(1.75)
+        ..setModelFile(LocalUnits.tiger)
+        ..setIcons(LocalIcons.bTNTiger)
+        ..setUnitSoundSet(Soundsets.shaman)
+        ..setSpeedBase(320)
+        ..setButtonPositionX(3)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1.10)
+        ..setSightRadiusDay(1500)
+        ..setSightRadiusNight(1000)
+        ..setTooltipExtended(TOOLTIP_SHAPESHIFTER)
+        ..setProperNames(NAME_SHAPESHIFTER[3])
+        ..setProperNamesUsed(1)
+        ..setHotkey("R")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_SHAPESHIFTER_TIGER, HERO_SPELLS_SHAPESHIFTER_TIGER)
 
-        new SubTrollUnit(
-            UNIT_SHAPESHIFTER_TIGER, 13, 3, 320, 1.75, 1.10,
-            "Tiger Form", TOOLTIP_SHAPESHIFTER, M_TIGER, "Tiger", "R",
-            NAME_SHAPESHIFTER[3], HERO_SPELLS_SHAPESHIFTER_TIGER,NORMAL_SPELLS_SHAPESHIFTER_TIGER,
-            Soundsets.shaman, pair(3,0), pair(1500, 1000)),
+@compiletime function createChickenForm() returns HeroDefinition
+    return createSubTroll(UNIT_CHICKEN_FORM)
+        ..setNameEnhance("Chicken Form")
+        ..setAttack1DamageBase(1)
+        ..setAttack1CooldownTime(30.0)
+        ..setAttack2DamageBase(1)
+        ..setAttack2CooldownTime(30.0)
+        ..setModelFile(Units.easterChicken1)
+        ..setIcons(Icons.bTNCritterChicken)
+        ..setUnitSoundSet(Soundsets.chimaeraRoost)
+        ..setSpeedBase(330)
+        ..setButtonPositionX(2)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1.5)
+        ..setSightRadiusDay(1500)
+        ..setSightRadiusNight(1000)
+        ..setTooltipExtended(TOOLTIP_CHICKEN)
+        ..setProperNames(NAME_CHICKEN_FORM)
+        ..setProperNamesUsed(4)
+        ..setHotkey("E")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_CHICKEN_FORM, HERO_SPELLS_CHICKEN_FORM)
 
-        new SubTrollUnit(
-            UNIT_CHICKEN_FORM, 1, 4, 330, 30.0, 1.5,
-            "Chicken Form", TOOLTIP_CHICKEN, Units.easterChicken1, "CritterChicken", "E",
-            NAME_CHICKEN_FORM, HERO_SPELLS_CHICKEN_FORM,NORMAL_SPELLS_CHICKEN_FORM,
-            "Chicken", pair(2,0), pair(1500, 1000)),
+@compiletime function createUltimateForm() returns HeroDefinition
+    return createSuperSubTroll(UNIT_ULTIMATE_FORM)
+        ..setNameEnhance("Ultimate Form")
+        ..setAttack1DamageBase(17)
+        ..setAttack1CooldownTime(1.40)
+        ..setAttack2DamageBase(17)
+        ..setAttack2CooldownTime(1.40)
+        ..setModelFile(Units.jungleBeast1)
+        ..setIcons(Icons.bTNJungleBeast)
+        ..setUnitSoundSet(Soundsets.shaman)
+        ..setSpeedBase(390)
+        ..setButtonPositionX(3)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(1700)
+        ..setSightRadiusNight(1000)
+        ..setTooltipExtended(TOOLTIP_ULTIMATE_FORM)
+        ..setProperNames(NAME_ULTIMATE_FORM)
+        ..setProperNamesUsed(1)
+        ..setHotkey("E")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_ULTIMATE_FORM, HERO_SPELLS_ULTIMATE_FORM)
 
-        new SuperSubTrollUnit(
-            UNIT_ULTIMATE_FORM, 17, 1, 390, 1.40, 1,
-            "Ultimate Form", TOOLTIP_ULTIMATE_FORM, Units.jungleBeast1, "JungleBeast", "R",
-            NAME_ULTIMATE_FORM, HERO_SPELLS_ULTIMATE_FORM,NORMAL_SPELLS_ULTIMATE_FORM,
-            Soundsets.shaman, pair(3,0), pair(1700, 1000)),
+@compiletime function createThief() returns HeroDefinition
+    return createBasicTroll(UNIT_THIEF)
+        ..setNameEnhance("Thief")
+        ..setAttack1DamageBase(10)
+        ..setAttack1CooldownTime(2.00)
+        ..setAttack2DamageBase(10)
+        ..setAttack2CooldownTime(2.00)
+        ..setModelFile(Units.darkTrollTrapper1)
+        ..setIcons(Icons.bTNDarkTrollTrapper)
+        ..setUnitSoundSet(Soundsets.iceTroll)
+        ..setSpeedBase(300)
+        ..setButtonPositionX(1)
+        ..setButtonPositionY(2)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(800)
+        ..setSightRadiusNight(1800)
+        ..setTooltipExtended(TOOLTIP_THIEF)
+        ..setProperNames(NAME_THIEF)
+        ..setProperNamesUsed(3)
+        ..setHotkey("X")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_THIEF, HERO_SPELLS_THIEF)
 
-            // Thief
-        new UnSubTrollUnit(
-            UNIT_THIEF, 10, 3, 300, 2.00, 1,
-            "Thief", TOOLTIP_THIEF, Units.darkTrollTrapper1, "DarkTrollTrapper", "X",
-            NAME_THIEF, HERO_SPELLS_THIEF, NORMAL_SPELLS_THIEF,
-            Soundsets.iceTroll, pair(1,2), pair(800, 1800)),
+@compiletime function createEscapeArtist() returns HeroDefinition
+    return createSubTroll(UNIT_ESCAPE_ARTIST)
+        ..setNameEnhance("Escape Artist")
+        ..setAttack1DamageBase(12)
+        ..setAttack1CooldownTime(1.85)
+        ..setAttack2DamageBase(12)
+        ..setAttack2CooldownTime(1.85)
+        ..setModelFile(Units.darkTroll1)
+        ..setIcons(Icons.bTNDarkTroll)
+        ..setUnitSoundSet(Soundsets.iceTroll)
+        ..setSpeedBase(300)
+        ..setButtonPositionX(1)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(1400)
+        ..setSightRadiusNight(1800)
+        ..setTooltipExtended(TOOLTIP_ESCAPE_ARTIST)
+        ..setProperNames(NAME_ESCAPE_ARTIST)
+        ..setProperNamesUsed(3)
+        ..setHotkey("W")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_ESCAPE_ARTIST, HERO_SPELLS_ESCAPE_ARTIST)
 
-        new SubTrollUnit(
-            UNIT_ESCAPE_ARTIST, 12, 3, 300, 1.85, 1,
-            "Escape Artist", TOOLTIP_ESCAPE_ARTIST, Units.darkTroll1, "DarkTroll", "W",
-            NAME_ESCAPE_ARTIST, HERO_SPELLS_ESCAPE_ARTIST,NORMAL_SPELLS_ESCAPE_ARTIST,
-            Soundsets.iceTroll, pair(1,0), pair(1400, 1800)),
+@compiletime function createContortionist() returns HeroDefinition
+    return createSubTroll(UNIT_CONTORTIONIST)
+        ..setNameEnhance("Contortionist")
+        ..setAttack1DamageBase(11)
+        ..setAttack1CooldownTime(1.75)
+        ..setAttack2DamageBase(11)
+        ..setAttack2CooldownTime(1.75)
+        ..setModelFile(LocalUnits.troll_for_Super_Panda)
+        ..setIcons(LocalIcons.bTNContortionist)
+        ..setUnitSoundSet(Soundsets.iceTroll)
+        ..setSpeedBase(300)
+        ..setButtonPositionX(2)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(1400)
+        ..setSightRadiusNight(1800)
+        ..setTooltipExtended(TOOLTIP_CONTORTIONIST)
+        ..setProperNames(NAME_CONTORTIONIST)
+        ..setProperNamesUsed(3)
+        ..setHotkey("W")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_CONTORTIONIST, HERO_SPELLS_CONTORTIONIST)
 
-        new SubTrollUnit(
-            UNIT_CONTORTIONIST, 11, 3, 300, 1.75, 1,
-            "Contortionist", TOOLTIP_CONTORTIONIST, M_TROLL_FOR_SUPER_PANDA, "Contortionist", "E",
-            NAME_CONTORTIONIST, HERO_SPELLS_CONTORTIONIST, NORMAL_SPELLS_CONTORTIONIST,
-            Soundsets.iceTroll, pair(2,0), pair(1400, 1800)),
+@compiletime function createAssassin() returns HeroDefinition
+    return createSuperSubTroll(UNIT_ASSASSIN)
+        ..setNameEnhance("Assassin")
+        ..setAttack1DamageBase(14)
+        ..setAttack1CooldownTime(1.85)
+        ..setAttack2DamageBase(14)
+        ..setAttack2CooldownTime(1.85)
+        ..setModelFile(Units.darkTrollTrapper1)
+        ..setIcons(Icons.bTNDarkTrollTrapper)
+        ..setUnitSoundSet(Soundsets.heroShadowHunter)
+        ..setSpeedBase(300)
+        ..setButtonPositionX(3)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(1600)
+        ..setSightRadiusNight(1800)
+        ..setTooltipExtended(TOOLTIP_ASSASSIN)
+        ..setProperNames(NAME_ASSASSIN)
+        ..setProperNamesUsed(1)
+        ..setHotkey("E")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_ASSASSIN, HERO_SPELLS_ASSASSIN)
 
-        new SuperSubTrollUnit(
-            UNIT_ASSASSIN, 14, 1, 300, 1.85, 1,
-            "Assassin", TOOLTIP_ASSASSIN, Units.darkTrollTrapper1, "DarkTrollTrapper", "R",
-            NAME_ASSASSIN, HERO_SPELLS_ASSASSIN, NORMAL_SPELLS_ASSASSIN,
-            Soundsets.heroShadowHunter, pair(3,0), pair(1300, 1300)),
+@compiletime function createScout() returns HeroDefinition
+    return createBasicTroll(UNIT_SCOUT)
+        ..setNameEnhance("Scout")
+        ..setAttack1DamageBase(10)
+        ..setAttack1CooldownTime(2.00)
+        ..setAttack2DamageBase(10)
+        ..setAttack2CooldownTime(2.00)
+        ..setModelFile(LocalUnits.scoutUnsub)
+        ..setIcons(LocalIcons.bTNScout)
+        ..setUnitSoundSet(Soundsets.shade)
+        ..setSpeedBase(300)
+        ..setButtonPositionX(2)
+        ..setButtonPositionY(2)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(1300)
+        ..setSightRadiusNight(1300)
+        ..setTooltipExtended(TOOLTIP_SCOUT)
+        ..setProperNames(NAME_SCOUT)
+        ..setProperNamesUsed(3)
+        ..setHotkey("C")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_SCOUT, HERO_SPELLS_SCOUT)
 
-            // Scout
-        new UnSubTrollUnit(
-            UNIT_SCOUT, 10, 3, 300, 2.00, 1,
-            "Scout", TOOLTIP_SCOUT, M_SCOUT_UNSUB, "Scout", "C",
-            NAME_SCOUT, HERO_SPELLS_SCOUT, NORMAL_SPELLS_SCOUT,
-            Soundsets.shade, pair(2,2), pair(1300, 1300)),
+@compiletime function createObserver() returns HeroDefinition
+    return createSubTroll(UNIT_OBSERVER)
+        ..setNameEnhance("Observer")
+        ..setAttack1DamageBase(12)
+        ..setAttack1CooldownTime(1.70)
+        ..setAttack2DamageBase(12)
+        ..setAttack2CooldownTime(1.70)
+        ..setModelFile(LocalUnits.observer)
+        ..setIcons(LocalIcons.bTNObserverSentry)
+        ..setUnitSoundSet(Soundsets.shade)
+        ..setSpeedBase(300)
+        ..setButtonPositionX(1)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1.10)
+        ..setSightRadiusDay(1500)
+        ..setSightRadiusNight(1600)
+        ..setTooltipExtended(TOOLTIP_OBSERVER)
+        ..setProperNames(NAME_OBSERVER)
+        ..setProperNamesUsed(3)
+        ..setHotkey("Q")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_OBSERVER, HERO_SPELLS_OBSERVER)
 
-        new SubTrollUnit(
-            UNIT_OBSERVER, 12, 3, 300, 1.70, 1.10,
-            "Observer", TOOLTIP_OBSERVER, M_OBSERVER, "ObserverSentry", "W",
-            NAME_OBSERVER, HERO_SPELLS_OBSERVER, NORMAL_SPELLS_OBSERVER,
-            Soundsets.shade, pair(1,0), pair(1500, 1600)),
+@compiletime function createTrapper() returns HeroDefinition
+    return createSubTroll(UNIT_TRAPPER)
+        ..setNameEnhance("Trapper")
+        ..setAttack1DamageBase(12)
+        ..setAttack1CooldownTime(1.70)
+        ..setAttack2DamageBase(12)
+        ..setAttack2CooldownTime(1.70)
+        ..setModelFile(LocalUnits.trapper)
+        ..setIcons(LocalIcons.bTNTrapper)
+        ..setUnitSoundSet(Soundsets.shade)
+        ..setSpeedBase(300)
+        ..setButtonPositionX(3)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1.10)
+        ..setSightRadiusDay(1300)
+        ..setSightRadiusNight(1500)
+        ..setTooltipExtended(TOOLTIP_TRAPPER)
+        ..setProperNames(NAME_TRAPPER)
+        ..setProperNamesUsed(3)
+        ..setHotkey("W")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_TRAPPER, HERO_SPELLS_TRAPPER)
 
-        new SubTrollUnit(
-            UNIT_TRAPPER, 12, 3, 300, 1.70, 1,
-            "Trapper", TOOLTIP_TRAPPER, M_TRAPPER, "Trapper", "T",
-            NAME_TRAPPER, HERO_SPELLS_TRAPPER, NORMAL_SPELLS_TRAPPER,
-            Soundsets.shade, pair(3,0), pair(1300, 1500)),
+@compiletime function createSpy() returns HeroDefinition
+    return createSuperSubTroll(UNIT_SPY)
+        ..setNameEnhance("Spy")
+        ..setAttack1DamageBase(15)
+        ..setAttack1CooldownTime(1.60)
+        ..setAttack2DamageBase(15)
+        ..setAttack2CooldownTime(1.60)
+        ..setModelFile(LocalUnits.spy)
+        ..setIcons(Icons.bTNForestTrollTrapper)
+        ..setUnitSoundSet(Soundsets.shade)
+        ..setSpeedBase(330)
+        ..setButtonPositionX(0)
+        ..setButtonPositionY(1)
+        ..setScalingValue(1.10)
+        ..setSightRadiusDay(1600)
+        ..setSightRadiusNight(1800)
+        ..setTooltipExtended(TOOLTIP_SPY)
+        ..setProperNames(NAME_SPY)
+        ..setProperNamesUsed(3)
+        ..setHotkey("R")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_SPY, HERO_SPELLS_SPY)
 
-        new SuperSubTrollUnit(
-            UNIT_SPY, 15, 3, 330, 1.56, 1.10,
-            "Spy", TOOLTIP_SPY, M_SPY, "ForestTrollTrapper", "R",
-            NAME_SPY, HERO_SPELLS_SPY, NORMAL_SPELLS_SPY,
-            Soundsets.shade, pair(0,1), pair(1600, 1800)),
+@compiletime function createGatherer() returns HeroDefinition
+    return createBasicTroll(UNIT_GATHERER)
+        ..setNameEnhance("Gatherer")
+        ..setAttack1DamageBase(10)
+        ..setAttack1CooldownTime(2.00)
+        ..setAttack2DamageBase(10)
+        ..setAttack2CooldownTime(2.00)
+        ..setModelFile(LocalUnits.gatherer)
+        ..setIcons(LocalIcons.bTNGatherer)
+        ..setUnitSoundSet(Soundsets.batTroll)
+        ..setSpeedBase(300)
+        ..setButtonPositionX(3)
+        ..setButtonPositionY(2)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(1800)
+        ..setSightRadiusNight(900)
+        ..setTooltipExtended(TOOLTIP_GATHERER)
+        ..setProperNames(NAME_GATHERER)
+        ..setProperNamesUsed(4)
+        ..setHotkey("F")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_GATHERER, HERO_SPELLS_GATHERER)
 
-            // Gatherer
-        new UnSubTrollUnit(
-            UNIT_GATHERER, 10, 4, 300, 2.00, 1,
-            "Gatherer", TOOLTIP_GATHERER, M_GATHERER, "Gatherer", "F",
-            NAME_GATHERER, HERO_SPELLS_GATHERER, NORMAL_SPELLS_GATHERER,
-            "TrollBatrider", pair(3,2), pair(1800, 900)),
+@compiletime function createHerbMaster() returns HeroDefinition
+    return createSubTroll(UNIT_HERB_MASTER)
+        ..setNameEnhance("Herb Master")
+        ..setAttack1DamageBase(10)
+        ..setAttack1CooldownTime(1.70)
+        ..setAttack2DamageBase(10)
+        ..setAttack2CooldownTime(1.70)
+        ..setModelFile(Units.iceTrollShadowPriest1)
+        ..setIcons(Icons.bTNIceTrollShadowPriest)
+        ..setUnitSoundSet(Soundsets.batTroll)
+        ..setSpeedBase(300)
+        ..setButtonPositionX(1)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(1800)
+        ..setSightRadiusNight(1800)
+        ..setTooltipExtended(TOOLTIP_HERB_MASTER)
+        ..setProperNames(NAME_HERB_MASTER)
+        ..setProperNamesUsed(3)
+        ..setHotkey("W")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_HERB_MASTER, HERO_SPELLS_HERB_MASTER)
 
-        new SubTrollUnit(
-            UNIT_HERB_MASTER, 10, 3, 300, 1.67, 1,
-            "Herb Master", TOOLTIP_HERB_MASTER, Units.iceTrollShadowPriest1, "IceTrollShadowPriest", "W",
-            NAME_HERB_MASTER, HERO_SPELLS_HERB_MASTER,NORMAL_SPELLS_HERB_MASTER,
-            "TrollBatrider", pair(1,0), pair(1800, 1800)),
+@compiletime function createRadarGatherer() returns HeroDefinition
+    return createSubTroll(UNIT_RADAR_GATHERER)
+        ..setNameEnhance("Radar Gatherer")
+        ..setAttack1DamageBase(10)
+        ..setAttack1CooldownTime(1.70)
+        ..setAttack2DamageBase(10)
+        ..setAttack2CooldownTime(1.70)
+        ..setModelFile(LocalUnits.terrorTroll)
+        ..setIcons(LocalIcons.bTNTerrorTroll)
+        ..setUnitSoundSet(Soundsets.batTroll)
+        ..setSpeedBase(310)
+        ..setButtonPositionX(2)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(1800)
+        ..setSightRadiusNight(1800)
+        ..setTooltipExtended(TOOLTIP_RADAR_GATHERER)
+        ..setProperNames(NAME_RADAR_GATHERER)
+        ..setProperNamesUsed(3)
+        ..setHotkey("Q")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_RADAR_GATHERER, HERO_SPELLS_RADAR_GATHERER)
 
-        new SubTrollUnit(
-            UNIT_RADAR_GATHERER, 10, 3, 310, 1.67, 1,
-            "Radar Gatherer", TOOLTIP_RADAR_GATHERER, M_TERROR_TROLL, "TerrorTroll", "E",
-            NAME_RADAR_GATHERER, HERO_SPELLS_RADAR_GATHERER, NORMAL_SPELLS_RADAR_GATHERER,
-            "TrollBatrider", pair(2,0), pair(1800, 1800)),
-
-        new SuperSubTrollUnit(
-            UNIT_OMNIGATHERER, 15, 3, 300, 1.45, 1,
-            "Omni Gatherer", TOOLTIP_OMNIGATHERER, M_TERROR_TROLL, "TerrorTroll", "R",
-            NAME_OMNIGATHERER, HERO_SPELLS_OMNIGATHERER, NORMAL_SPELLS_OMNIGATHERER,
-            "TrollBatrider", pair(3,0), pair(1800, 1800))
-
-)
-
-@compiletime function buildTrollUnits()
-    getTrollUnits().forEach(troll -> troll.buildUnit())
+@compiletime function createOmniGatherer() returns HeroDefinition
+    return createSuperSubTroll(UNIT_OMNIGATHERER)
+        ..setNameEnhance("Omni Gatherer")
+        ..setAttack1DamageBase(15)
+        ..setAttack1CooldownTime(1.45)
+        ..setAttack2DamageBase(15)
+        ..setAttack2CooldownTime(1.45)
+        ..setModelFile(LocalUnits.terrorTroll)
+        ..setIcons(LocalIcons.bTNTerrorTroll)
+        ..setUnitSoundSet(Soundsets.batTroll)
+        ..setSpeedBase(300)
+        ..setButtonPositionX(3)
+        ..setButtonPositionY(0)
+        ..setScalingValue(1)
+        ..setSightRadiusDay(1800)
+        ..setSightRadiusNight(1800)
+        ..setTooltipExtended(TOOLTIP_OMNIGATHERER)
+        ..setProperNames(NAME_OMNIGATHERER)
+        ..setProperNamesUsed(3)
+        ..setHotkey("E")
+        ..setAbilitiesEnhance(NORMAL_SPELLS_OMNIGATHERER, HERO_SPELLS_OMNIGATHERER)

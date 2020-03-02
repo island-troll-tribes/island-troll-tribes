@@ -17,165 +17,85 @@ import Lodash
 import AbilityObjectCreationUtils
 import TrollUnitTextConstant
 
-public abstract class TrollUnit
-    int id = 0
-    int baseDamage = 10
-    int properNameUsed = 3
-    int speedBase = 300
-    int baseHpMana = 192
-    int startingStats = 1
-    real cooldownTime = 2
-    real scalingValue = 1.0
-    string name = "Troll"
-    string properName = "The PlaceHolder Troll"
-    string model = ""
-    string soundSet = Soundsets.forestTrollShadowPriest
-    string iconInterface = "ReplaceableTextures\\CommandButtons\\BTN"
-    string iconScoreScreen = "ReplaceableTextures\\CommandButtons\\BTN"
-    string hotkey = "Q"
-    LinkedList<string> heroAbilities
-    string normalAbilities = ""
-    string toolTipBasic = "Pick "
-    string toolTipAwaken = "Revive "
-    string toolTipRevive = "Revive"
-    string toolTipExtented = "Troll PlaceHolder is an awesome Troll, always faithful to his job of placeholder"
-    Pair<int, int> buttonPos = new Pair(0, 0)
-    Pair<int, int> sightRadius = new Pair(900, 900)
+public function HeroDefinition.setNameEnhance(string name)
+    this.setName(name)
+    this.setTooltipBasic("Pick " + name)
+    this.setTooltipAwaken("Revive " + name)
+    this.setTooltipRevive("Revive " + name)
 
-    construct(int id, int baseDamage, int properNameUsed, int speedBase, real cooldownTime, real scalingValue,
-     string name, string toolTipExtended, string model, string icon, string hotkey, string properName,
-     string heroAbilities, string normalAbilities, string soundSet, Pair<int, int> buttonPos, Pair<int, int> sightRadius)
+public function HeroDefinition.setIcons(string iconPath)
+    this.setIconGameInterface(iconPath)
+    this.setIconScoreScreen(iconPath)
 
-        this.id = id
-        this.name = name
-        this.baseDamage = baseDamage
-        this.properNameUsed = properNameUsed
-        this.speedBase = speedBase
-        this.cooldownTime = cooldownTime
-        this.scalingValue = scalingValue
-        this.name = name
-        this.properName = properName
-        this.toolTipExtented = toolTipExtended
-        this.toolTipBasic += name
-        this.toolTipAwaken += name
-        this.toolTipRevive += name
-        this.model = model
-        this.iconInterface += icon+".blp"
-        this.iconScoreScreen += icon+".blp"
-        this.hotkey = hotkey
-        this.soundSet = soundSet
-        this.buttonPos = buttonPos
-        this.sightRadius = sightRadius
-        for key in trollInventoryAbilityMap
-            if trollInventoryAbilityMap.get(key).has(id)
-                this.normalAbilities += commaList(key)
-        this.normalAbilities += ","+BASIC_TROLL_SPELLS+","+normalAbilities
+public function HeroDefinition.setAbilitiesEnhance(string normalAbilities, string heroAbilities)
+    var normalAbil = normalAbilities
+    let heroAbilitiesList = heroAbilities.split(",")..dequeue()
+    if heroAbilitiesList.size() > 0
+        let subclassMenuID = ABIL_ID_GEN.next()
 
-        // TODO: Do this directly.
-        // Remove the first listed ability, leaving only transformation markers.
-        this.heroAbilities = heroAbilities.split(",")..dequeue()
-        if this.heroAbilities.size() > 0
-            let subclassMenuID = ABIL_ID_GEN.next()
+        // Create the spellbook
+        let spellbook = new SpellBookObject(
+            subclassMenuID,
+            "Subclass Menu",
+            "T",
+            "Choose a subclass.",
+            heroAbilitiesList.joinBy(","),
+            new Pair(3, 1),
+            "StatUp"
+        ).buildSpellBook()
 
-            // Create the spellbook
-            let spellbook = new SpellBookObject(
-                subclassMenuID,
-                "Subclass Menu",
-                "T",
-                "Choose a subclass.",
-                this.heroAbilities.joinBy(","),
-                new Pair(3, 1),
-                "StatUp"
-            ).buildSpellBook()
+        // Update the order ID of the spellbook to avoid conflicts.
+        spellbook.presetBaseOrderID(lvl -> "absorb")
+        normalAbil += ","+subclassMenuID.toRawCode()
 
-            // Update the order ID of the spellbook to avoid conflicts.
-            spellbook.presetBaseOrderID(lvl -> "absorb")
+    var inventoryAbil = ""
+    for key in trollInventoryAbilityMap
+        if trollInventoryAbilityMap.get(key).has(this.getNewId())
+            inventoryAbil += commaList(key)
+    this.setNormalAbilities(normalAbil+","+inventoryAbil + ","+BASIC_TROLL_SPELLS)
 
-
-            this.normalAbilities += ","+subclassMenuID.toRawCode()
-
-    function buildUnit()
-        new HeroDefinition(id, UnitIds.blademaster)
+public function createBasicTroll(int newId) returns HeroDefinition
+    return new HeroDefinition(newId, UnitIds.blademaster)
         ..setTotemShopInterface()
         ..setUpgradesUsed("")
         ..setRequierementsForTier(2, "")
         ..setRequierementsForTier(3, "")
         ..setHeroAbilities("")
-        ..setNormalAbilities(normalAbilities)
         ..setAttack1Range(128)
         ..setAttack1DamageNumberofDice(1)
-        ..setAttack1DamageBase(baseDamage)
         ..setAttack1DamageSidesperDie(1)
-        ..setAttack1CooldownTime(cooldownTime)
         ..setAttack2DamageNumberofDice(1)
-        ..setAttack2DamageBase(baseDamage)
         ..setAttack2DamageSidesperDie(1)
-        ..setAttack2CooldownTime(cooldownTime)
         ..setAttack2TargetsAllowed("debris,ground,item,structure,tree,ward")
         ..setAttack2WeaponSound(WeaponSound.MetalHeavySlice)
         ..setAttack2Range(128)
         ..setAttack2WeaponType(WeaponType.Normal)
         ..setAnimationRunSpeed(290)
         ..setAnimationWalkSpeed(290)
-        ..setModelFile(model)
-        ..setIconScoreScreen(iconScoreScreen)
-        ..setIconGameInterface(iconInterface)
-        ..setUnitSoundSet(soundSet)
-        ..setSpeedBase(speedBase)
         ..setTurnRate(1.80)
-        ..setButtonPositionX(buttonPos.a)
-        ..setButtonPositionY(buttonPos.b)
-        ..setScalingValue(scalingValue)
         ..setAllowCustomTeamColor(true)
-        ..setStartingStrength(startingStats)
         ..setStrengthPerLevel(1.00)
-        ..setStartingAgility(startingStats)
         ..setAgilityPerLevel(1.0)
-        ..setStartingIntelligence(startingStats)
         ..setIntelligencePerLevel(1.00)
-        ..setManaMaximum(baseHpMana)
         ..setManaRegeneration(0)
         ..setManaInitialAmount(200)
-        ..setHitPointsMaximumBase(baseHpMana)
         ..setHitPointsRegenerationRate(0)
-        ..setSightRadiusDay(sightRadius.a)
-        ..setSightRadiusNight(sightRadius.b)
-        ..setTooltipBasic(toolTipBasic)
-        ..setTooltipExtended(toolTipExtented)
-        ..setTooltipAwaken(toolTipAwaken)
-        ..setTooltipRevive(toolTipRevive)
-        ..setName(name)
-        ..setProperNames(properName)
-        ..setProperNamesUsed(properNameUsed)
-        ..setHotkey(hotkey)
+        ..setManaMaximum(192)
+        ..setHitPointsMaximumBase(192)
+        ..setStartingStrength(1)
+        ..setStartingAgility(1)
+        ..setStartingIntelligence(1)
 
-// This isn't pretty to look at, might need to give it more thought
-public class SuperSubTrollUnit extends TrollUnit
-    construct(int id, int baseDamage, int properNameUsed, int speedBase, real cooldownTime, real scalingValue,
-            string name, string toolTipExtended, string model, string icon, string hotkey, string properName,
-            string heroAbilities, string normalAbilities, string soundSet, Pair<int, int> buttonPos, Pair<int, int> sightRadius)
+public function createSubTroll(int newId) returns HeroDefinition
+    return createBasicTroll(newId)
+        ..setStartingStrength(6)
+        ..setStartingAgility(6)
+        ..setStartingIntelligence(6)
 
-        super(id, baseDamage, properNameUsed, speedBase, cooldownTime, scalingValue, name, toolTipExtended, model, icon,
-            hotkey, properName, heroAbilities, normalAbilities, soundSet, buttonPos, sightRadius)
-        this.baseHpMana = 210
-        this.startingStats = 9
-
-public class SubTrollUnit extends TrollUnit
-    construct(int id, int baseDamage, int properNameUsed, int speedBase, real cooldownTime, real scalingValue,
-            string name, string toolTipExtended, string model, string icon, string hotkey, string properName,
-            string heroAbilities, string normalAbilities, string soundSet, Pair<int, int> buttonPos, Pair<int, int> sightRadius)
-
-        super(id, baseDamage, properNameUsed, speedBase, cooldownTime, scalingValue, name, toolTipExtended, model, icon,
-            hotkey, properName, heroAbilities, normalAbilities, soundSet, buttonPos, sightRadius)
-        this.baseHpMana = 192
-        this.startingStats = 6
-
-public class UnSubTrollUnit extends TrollUnit
-    construct(int id, int baseDamage, int properNameUsed, int speedBase, real cooldownTime, real scalingValue,
-            string name, string toolTipExtended, string model, string icon, string hotkey, string properName,
-            string heroAbilities, string normalAbilities, string soundSet, Pair<int, int> buttonPos, Pair<int, int> sightRadius)
-
-        super(id, baseDamage, properNameUsed, speedBase, cooldownTime, scalingValue, name, toolTipExtended, model, icon,
-            hotkey, properName, heroAbilities, normalAbilities, soundSet, buttonPos, sightRadius)
-        this.baseHpMana = 192
-        this.startingStats = 1
+public function createSuperSubTroll(int newId) returns HeroDefinition
+    return createBasicTroll(newId)
+        ..setManaMaximum(210)
+        ..setHitPointsMaximumBase(210)
+        ..setStartingStrength(9)
+        ..setStartingAgility(9)
+        ..setStartingIntelligence(9)

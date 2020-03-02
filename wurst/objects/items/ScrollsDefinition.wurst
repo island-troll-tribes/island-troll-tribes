@@ -7,6 +7,7 @@ import ClosureEvents
 import ClosureTimers
 import ChannelAbilityPreset
 import InstantDummyCaster
+import DummyCaster
 import OrderIds
 
 // Local Import :
@@ -152,7 +153,7 @@ let SC_TT = "Grants the unit the ability to cast Cyclone which tosses an enemy u
         ..setDamageReturnFactor(1, 0)
         ..setNumberofSwarmUnits(1, 2)
         ..setDamageReturnThreshold(1, 600)
-        ..setMaxSwarmUnitsPerTarget(1, 5)
+        ..setMaxSwarmUnitsPerTarget(1, 1)
         ..setSwarmUnitType(1, UNIT_LOCUST_SKELETON.toRawCode())
         ..setIconNormal(Icons.bTNSkeletonWarrior)
         ..setEffectSoundLooping("")
@@ -368,11 +369,17 @@ let SC_TT = "Grants the unit the ability to cast Cyclone which tosses an enemy u
         ..setTooltipExtended(SC_TT)
 
 
+// Cyclone Buff Ids, I believe Cyclone Extra is the buff applied to air unit, didn't confirm
+// Those buff are set in all cyclone-based abilities
 let BUFF_CYCLONE = 'Bcyc'
 let BUFF_CYCLONE_EXTRA = 'Bcy2'
 
 function onCyclone(unit target)
+    // Following code give the ability Ghost (visible) to the unit targeted by cyclone
+    // It allows other unit to walk through the target while it's tossed in the air
     target.addAbility(GHOST_VIS_ID)
+
+    // periodically checking if the unit is still tossed in the air
     doPeriodicallyTimed(0.1, 15) buffPoller ->
         if not target.hasAbility(BUFF_CYCLONE) and not target.hasAbility(BUFF_CYCLONE_EXTRA)
             target.removeAbility(GHOST_VIS_ID)
@@ -412,7 +419,10 @@ function onRoot(unit caster, unit target)
     if target.isTroll()
         InstantDummyCaster.castTarget(caster.getOwner(), ABILITY_ROOT_TROLL, 1, Orders.ensnare, target)
     else
-        InstantDummyCaster.castTarget(caster.getOwner(), ABILITY_ROOT_HOSTILE, 1, Orders.entanglingroots, target)
+        new DummyCaster()
+            ..owner(caster.getOwner())
+            ..origin(caster.getPos())
+            ..castTarget(ABILITY_ROOT_HOSTILE, 1, Orders.entanglingroots, target)
 
 
 init

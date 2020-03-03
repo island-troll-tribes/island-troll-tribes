@@ -72,7 +72,7 @@ class Radar
     string orderId = "channel"
     string icon = "ReplaceableTextures\\CommandButtons\\BTN{0}.blp"
 
-    construct(int id, string itemName, string toolTipExt, string icon, string hotkey, int buttonPosX, int buttonPosY)
+    construct(int id, string itemName, string toolTipExt, string icon, string hotkey, int buttonPosX, int buttonPosY, string orderId)
         this.id = id
         this.hotkey   = hotkey
         this.name     += itemName
@@ -80,6 +80,7 @@ class Radar
         this.buttonPosX  = buttonPosX
         this.buttonPosY  = buttonPosY
         this.toolTip  = makeToolTipNorm(hotkey, this.name)
+        this.orderId = orderId
         this.icon = this.icon.format(icon)
 
     function buildRadarSpell()
@@ -104,6 +105,7 @@ class Radar
         ..presetCooldown(lvl -> COOLDOWN)
         ..presetManaCost(lvl -> MANACOST)
         ..presetFollowThroughTime(lvl -> CASTTIME)
+        ..presetBaseOrderID(lvl -> orderId)
 
 @compiletime function createSpellbook()
     new AbilityDefinitionSpellBook(ABILITY_ITEM_RADAR)
@@ -218,13 +220,13 @@ function areHostilesNearItem(player p, item itm) returns bool
 
 function getRadarSpells() returns LinkedList<Radar>
     return asList(
-        new Radar(ABILITY_ID_FIND_TINDER   , "Tinders"       , TOOLTIP_EXT_FIND_TINDER   , "ShimmerWeed"     , "Q", 2, 0),
-        new Radar(ABILITY_ID_FIND_STICK    , "Sticks"        , TOOLTIP_EXT_FIND_STICK    , "NatureTouchGrow" , "W", 2, 0),
-        new Radar(ABILITY_ID_FIND_MUSHROOM , "Mushrooms"     , TOOLTIP_EXT_FIND_MANA     , "Mushroom"        , "E", 2, 0),
-        new Radar(ABILITY_ID_FIND_CLAYBALL , "Clay Balls"    , TOOLTIP_EXT_FIND_CLAYBALL , "ThunderLizardEgg", "R", 2, 0),
-        new Radar(ABILITY_ID_FIND_FLINT    , "Flints"        , TOOLTIP_EXT_FIND_FLINT    , "StaffOfSanctuary", "A", 2, 0),
-        new Radar(ABILITY_ID_FIND_STONE    , "Stones"        , TOOLTIP_EXT_FIND_STONE    , "GolemStormBolt"  , "S", 3, 0),
-        new Radar(ABILITY_ID_FIND_MANA     , "Mana Crystals" , TOOLTIP_EXT_FIND_MANA     , "ManaStone"       , "D", 2, 0)
+        new Radar(ABILITY_ID_FIND_TINDER   , "Tinders"       , TOOLTIP_EXT_FIND_TINDER   , "ShimmerWeed"     , "Q", 2, 0, "taunt"),
+        new Radar(ABILITY_ID_FIND_STICK    , "Sticks"        , TOOLTIP_EXT_FIND_STICK    , "NatureTouchGrow" , "W", 2, 0, "tranquility"),
+        new Radar(ABILITY_ID_FIND_MUSHROOM , "Mushrooms"     , TOOLTIP_EXT_FIND_MANA     , "Mushroom"        , "E", 2, 0, "waterelemental"),
+        new Radar(ABILITY_ID_FIND_CLAYBALL , "Clay Balls"    , TOOLTIP_EXT_FIND_CLAYBALL , "ThunderLizardEgg", "R", 2, 0, "unbearform"),
+        new Radar(ABILITY_ID_FIND_FLINT    , "Flints"        , TOOLTIP_EXT_FIND_FLINT    , "StaffOfSanctuary", "A", 2, 0, "bearform"),
+        new Radar(ABILITY_ID_FIND_STONE    , "Stones"        , TOOLTIP_EXT_FIND_STONE    , "GolemStormBolt"  , "S", 3, 0, "unflamingarrows"),
+        new Radar(ABILITY_ID_FIND_MANA     , "Mana Crystals" , TOOLTIP_EXT_FIND_MANA     , "ManaStone"       , "D", 2, 0, "unrobogoblin")
     )
 
 @compiletime function buildRadarSpells()

@@ -11,6 +11,8 @@ import HashMap
 import Lodash
 
 // Local imports:
+import Game
+import GameConfig
 import HealingSystem
 
 // The duration in seconds for which the moving sum is tracked.
@@ -33,7 +35,7 @@ real array FACTORS
 // The moving sum of the total amount healed by items per unit.
 let sums = new HashMap<unit, real>()
 
-public function adjustAmountHealed(unit target, real amount)
+function adjustAmountHealed(unit target, real amount)
     if sums.has(target)
         sums.put(target, sums.get(target) + amount)
 
@@ -77,7 +79,7 @@ function onUnitHealed(HealingInstance instance)
     instance.scaleMultiplier(output / instance.amount)
 
     // Adjust the moving sum.
-    sums.put(instance.target, sum)
+    adjustAmountHealed(instance.target, instance.amount)
 
     // Schedule the operation to reduce the sum.
     doAfter(DURATION) ->
@@ -100,10 +102,17 @@ function LinkedList<T>.asArray<T>() returns T array
     // Output the filled array.
     return output
 
-// Copies list data into the arrays used to optimize lookup.
+// Initializes the arrays used to optimize lookup.
 function initializeArrays()
+    // Compute the natural health loss per second.
+    let decay = gameConfig.getStatLossAmount() / gameConfig.getStatLossInterval()
+
+    // Compute the buffer needed to counteract the loss.
+    let buffer = DURATION * decay
+
+    // Copies and adjust the initial data.
     for index = 0 to NUM_BRACKETS
-        BOUNDS[index] = BRACKETS.get(index).a
+        BOUNDS[index]  = BRACKETS.get(index).a + buffer
         FACTORS[index] = BRACKETS.get(index).b
 
 init
@@ -116,4 +125,5 @@ init
     onLeave() ->
         onUnitLeave(getEnterLeaveUnit())
 
-    initializeArrays()
+    registerGameStartEvent() ->
+        initializeArrays()

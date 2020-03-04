@@ -60,28 +60,33 @@ let TSUNAMI_DISTANCE = 600.
 let SKELETAL_AOE = 200.
 let HASTE_AOE = 600.
 
-let FB_TT = "Grants the unit the ability to cast fireball dealing {0} damage and stunning the target for {1}/{2} seconds."
-            .format(FIRE_DMG.toToolTipRed(), FIRE_DURATION_HERO.toString().color(COLOR_ORANGE), FIRE_DURATION_NORMAL.toToolTipOrange())
-            + makeToolTipCooldown(FIRE_COOLDOWN)
-let ER_TT = "Grants the unit the ability to cast entangling roots, locking the enemy in place for {0}/{1} seconds and dealing {2} damage per second."
-            .format(ROOT_DURATION_HERO.toToolTipOrange(), ROOT_DURATION_NORMAL.toToolTipOrange(), ROOT_DMG.toToolTipRed())
-            + makeToolTipCooldown(ROOT_COOLDOWN)
-            + "|nNote: Troll do not take damage and can still attack when affected by this spell.".color(GOLD_COLOR)
-let LD_TT = "Grants the unit the ability to cast living dead which summons two skeletal bodyguard, each sketelon deal {0} magic damage per hit."
-            .format(SKELETAL_MINION_DMG.toString().color(COLOR_RED))
-            + makeToolTipDuration(SKELETAL_DURATION, SKELETAL_COOLDOWN)
-let SS_TT = "Grants the unit the ability to cast stone armor which increases the target ally armor by {0} and slows the attack speed of melee attackers by {1} for {2} seconds."
-            .format(STONE_ARMOR.toToolTipGreen(), 0.15.toToolTipOrange(), STONE_ARMOR_SLOW_DURATION.toToolTipOrange())
-            + makeToolTipDuration(STONE_ARMOR_DURATION, STONE_ARMOR_COOLDOWN)
-let SH_TT = "Grant the unit the ability to boost its allies movement speed to the maximum."
-            + makeToolTipDuration(HASTE_DURATION, HASTE_COOLDOWN)
+public let FIREBALL_TT = "Grants the unit the ability to cast Fire Ball dealing {0} damage and stunning the target for {1}/{2} seconds."
+                          .format(FIRE_DMG.toToolTipRed(), FIRE_DURATION_HERO.toString().color(COLOR_ORANGE), FIRE_DURATION_NORMAL.toToolTipOrange())
+                          + makeToolTipCooldown(FIRE_COOLDOWN)
 
-let ST_TT = "Grants the unit the ability to cast Tsunami dealing {0} damage to units in a line. When casted at close range, it deals {1} extra damage to buildings and can instantly put out fires."
-            .format(TSUNAMI_DMG.toToolTipRed(), TSUNAMI_STRUCT_DMG.toToolTipRed())
-            + makeToolTipCooldown(TSUNAMI_COOLDOWN)
-let SC_TT = "Grants the unit the ability to cast Cyclone which tosses an enemy unit in the air for {0}/{1} seconds."
-            .format(CYCLONE_DURATION_HERO.toToolTipOrange(), CYCLONE_DURATION_NORMAL.toToolTipOrange())
-            + makeToolTipCooldown(CYCLONE_COOLDOWN)
+public let ENTANGLING_ROOT_TT = "Grants the unit the ability to cast Entangling Roots, locking the enemy in place for {0}/{1} seconds and dealing {2} damage per second."
+                                 .format(ROOT_DURATION_HERO.toToolTipOrange(), ROOT_DURATION_NORMAL.toToolTipOrange(), ROOT_DMG.toToolTipRed())
+                                 + makeToolTipCooldown(ROOT_COOLDOWN)
+                                 + "|nNote: Troll do not take damage and can still attack when affected by this spell.".color(GOLD_COLOR)
+
+public let LIVING_DEAD_TT = "Grants the unit the ability to cast Living Dead which summons two skeletal bodyguard, each sketelon deal {0} magic damage per hit."
+                             .format(SKELETAL_MINION_DMG.toString().color(COLOR_RED))
+                             + makeToolTipDuration(SKELETAL_DURATION, SKELETAL_COOLDOWN)
+
+public let STONE_ARMOR_TT = "Grants the unit the ability to Cast Stone armor which increases the target ally armor by {0} and slows the attack speed of melee attackers by {1} for {2} seconds."
+                             .format(STONE_ARMOR.toToolTipGreen(), 0.15.toToolTipOrange(), STONE_ARMOR_SLOW_DURATION.toToolTipOrange())
+                             + makeToolTipDuration(STONE_ARMOR_DURATION, STONE_ARMOR_COOLDOWN)
+
+public let HASTE_TT = "Grant the unit the ability to boost its allies movement speed to the maximum."
+                       + makeToolTipDuration(HASTE_DURATION, HASTE_COOLDOWN)
+
+public let TSUNAMI_TT = "Grants the unit the ability to cast Tsunami dealing {0} damage to units in a line. When casted at close range, it deals {1} extra damage to buildings and can instantly put out fires."
+                         .format(TSUNAMI_DMG.toToolTipRed(), TSUNAMI_STRUCT_DMG.toToolTipRed())
+                         + makeToolTipCooldown(TSUNAMI_COOLDOWN)
+
+public let CYCLONE_TT = "Grants the unit the ability to cast Cyclone which tosses an enemy unit in the air for {0}/{1} seconds."
+                         .format(CYCLONE_DURATION_HERO.toToolTipOrange(), CYCLONE_DURATION_NORMAL.toToolTipOrange())
+                         + makeToolTipCooldown(CYCLONE_COOLDOWN)
 
 
 // Entangling Root effect differs from being casted to trolls or animals
@@ -281,7 +286,7 @@ let SC_TT = "Grants the unit the ability to cast Cyclone which tosses an enemy u
         ..setModelUsed(LocalItems.scrollRegen)
         ..setInterfaceIcon(Icons.bTNScrollOfRegenerationGreen)
         ..setNameEnhance("Scroll of Entangling Roots")
-        ..setTooltipExtended(ER_TT)
+        ..setTooltipExtended(ENTANGLING_ROOT_TT)
 
 @compiletime function createFireBallScroll() returns ItemDefinition
     return createUsableItem(ITEM_SCROLL_FIREBALL)
@@ -292,7 +297,7 @@ let SC_TT = "Grants the unit the ability to cast Cyclone which tosses an enemy u
         ..setModelUsed(LocalItems.scrollRed)
         ..setInterfaceIcon(Icons.bTNScrollOfHealing)
         ..setNameEnhance("Scroll of Fire Ball")
-        ..setTooltipExtended(FB_TT)
+        ..setTooltipExtended(FIREBALL_TT)
 
 @compiletime function createLivingDeadScroll() returns ItemDefinition
     return createUsableItem(ITEM_SCROLL_LIVING_DEAD)
@@ -303,7 +308,7 @@ let SC_TT = "Grants the unit the ability to cast Cyclone which tosses an enemy u
         ..setModelUsed(LocalItems.scrollYellow)
         ..setInterfaceIcon(Icons.bTNSnazzyScroll)
         ..setNameEnhance("Scroll of Living Dead")
-        ..setTooltipExtended(LD_TT)
+        ..setTooltipExtended(LIVING_DEAD_TT)
 
 @compiletime function createStoneShieldScroll() returns ItemDefinition
     return createUsableItem(ITEM_SCROLL_STONE_ARMOR)
@@ -314,7 +319,7 @@ let SC_TT = "Grants the unit the ability to cast Cyclone which tosses an enemy u
         ..setModelUsed(LocalItems.scrollOrange)
         ..setInterfaceIcon(Icons.bTNScrollUber)
         ..setNameEnhance("Scroll of Stone Shield")
-        ..setTooltipExtended(SS_TT)
+        ..setTooltipExtended(STONE_ARMOR_TT)
 
 @compiletime function createHasteScroll() returns ItemDefinition
     return createUsableItem(ITEM_SCROLL_HASTE)
@@ -325,7 +330,7 @@ let SC_TT = "Grants the unit the ability to cast Cyclone which tosses an enemy u
         ..setModelUsed(LocalItems.scrollHaste)
         ..setInterfaceIcon(Icons.bTNScrollOfHaste)
         ..setNameEnhance("Scroll of Haste")
-        ..setTooltipExtended(SH_TT)
+        ..setTooltipExtended(HASTE_TT)
 
 @compiletime function createTsunamiScroll() returns ItemDefinition
     return createUsableItem(ITEM_SCROLL_TSUNAMI)
@@ -336,7 +341,7 @@ let SC_TT = "Grants the unit the ability to cast Cyclone which tosses an enemy u
         ..setModelUsed(LocalItems.scrollPurple)
         ..setInterfaceIcon(Icons.bTNSnazzyScrollPurple)
         ..setNameEnhance("Scroll of Tsunami")
-        ..setTooltipExtended(ST_TT)
+        ..setTooltipExtended(TSUNAMI_TT)
 
 @compiletime function createCycloneScroll() returns ItemDefinition
     return createUsableItem(ITEM_SCROLL_CYCLONE)
@@ -347,7 +352,7 @@ let SC_TT = "Grants the unit the ability to cast Cyclone which tosses an enemy u
         ..setModelUsed(LocalItems.scrollCyan)
         ..setInterfaceIcon(Icons.bTNBansheeMaster)
         ..setNameEnhance("Scroll of Cyclone")
-        ..setTooltipExtended(SC_TT)
+        ..setTooltipExtended(CYCLONE_TT)
 
 
 // Cyclone Buff Ids, I believe Cyclone Extra is the buff applied to air unit, didn't confirm

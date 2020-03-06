@@ -19,6 +19,9 @@ import HashingMap
 // The option indicating whether proper names should be updated.
 @configurable let UPDATE_PROPER_NAME = true
 
+// The option indicating whether hero glow color should be updated.
+@configurable let UPDATE_HERO_GLOW = true
+
 public interface Callback
     function run(unit target, int unitID)
 
@@ -140,3 +143,10 @@ init
 
                 // Remove the temporary unit once it is no longer needed.
                 temp.remove()
+
+    // Setting unit color manually after transformation
+    if UPDATE_HERO_GLOW
+        registerAfterEffect() (unit target, int unitID) ->
+            // Only heroes have hero glow.
+            if IsHeroUnitId(target.getTypeId())
+                target.setColor(target.getOwner().getColor())

@@ -1,6 +1,5 @@
 package Troll
 import BonyAnimal
-import LocalObjectIDs
 
 
 public abstract class Troll extends BonyAnimal
@@ -19,15 +18,10 @@ public abstract class Troll extends BonyAnimal
     override function postRevive()
         setColor()
 
-    // Setting color manually
-    // If we add the ability directly in the unit definition, it will use the player slot to get color
+    // Getting & setting color manually, otherwise it will use the player slot to get color
     // e.g, if player 1 (red by default) select pink color in lobby or in game, the glow will use red color
     // We reset the color to player color each time the unit is created/revive
     // The method getColor seems to retrieve the correct color for now
     function setColor()
         // Resetting the glow ability
-        getUnit().removeAbility(ABILITY_HERO_GLOW)
-        getUnit().addAbility(ABILITY_HERO_GLOW)
-        // Neccessary to keep the ability when unit morph
-        getUnit().makeAbilityPermanent(ABILITY_HERO_GLOW, true)
         getUnit().setColor(getUnit().getOwner().getColor())

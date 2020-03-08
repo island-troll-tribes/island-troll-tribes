@@ -8,12 +8,9 @@ import RegisterEvents
 import Lodash
 
 // Local imports:
-import ChatUtils
 import Game
 import GameConfig
-import GameMode
 import LocalObjectIDs
-import StringExtensions
 import Tribe
 
 function syncTribeGold(unit whichUnit, boolean useMin)
@@ -39,11 +36,6 @@ function initializeTeamGold()
             syncTribeGold(GetTriggerUnit(), false)
 
 init
-    new GameMode("team-gold", "tg", "Pro", "Players on a team share gold in the same pool") (mode, args) ->
-        let enabled = args.size() > 1 ? args.get(0).isConfirmation() : true
-        gameConfig.setTeamGoldEnabled(enabled)
-        mode.message("Team gold ".color(COLOR_GOLD) + enabled.toOnOff() + "!")
-
     registerGameStartEvent() ->
         if gameConfig.isTeamGoldEnabled()
             initializeTeamGold()

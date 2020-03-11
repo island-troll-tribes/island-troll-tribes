@@ -5,7 +5,7 @@ import Assets
 import ClosureTimers
 import HashMap
 import LinkedList
-import RegisterEvents
+import ClosureEvents
 
 // Third-party imports:
 import LodashExtensions
@@ -17,14 +17,16 @@ import Game
 import PlayerExtensions
 import StringExtensions
 import Tribe
-import EventHelper
+import UnitExtensions
+import Transformation
 
 let PERIOD = 1.0
+let ENERGY_ICON = "ui\\widgets\\tooltips\\human\\tooltipmanaicon.blp"
 
-let ICON_COOKED_MEAT = Icons.bTNMonsterLure
-let ICON_SLEEP = Icons.pASBTNElunesBlessing
-let ICON_HEAT = Icons.pASBTNIncinerate
-
+/**
+    This class create & update a board for a tribe, displaying the tribe member following stats :
+    Name -  Unit Icon -  Level -  Health -  Mana -  Heat
+**/
 class TribeBoard
     static let boards = new HashMap<player, thistype>()
 
@@ -34,49 +36,63 @@ class TribeBoard
     Tribe tribe
     multiboard board
     CallbackPeriodic cb
+    boolean isInit
 
     construct(Tribe tribe)
         this.tribe = tribe
-        this.cb = doPeriodically(PERIOD, cb -> updateBoard())
+        this.cb = doPeriodically(PERIOD, cb -> updateBoardStat())
         createBoard()
+        isInit = true
 
     function createBoard()
         let members = tribe.getMembers()
 
         board = CreateMultiboard()
-            ..setColumnCount(4)
+            ..setColumnCount(5)
             ..setRowCount(members.size())
             ..setTitle("Team Stats")
 
         var row = 0
         for member in members
             boards.put(member, this)
+            var column = 0
 
             board
-                .getItem(row, 0)
+                .getItem(row, column)
                 ..setStyle(true, false)
                 ..setValue(member.getName().color(HIGHLIGHT_COLOR))
                 ..setWidth(0.1)
                 ..release()
+            column++
 
             board
-                .getItem(row, 1)
+                .getItem(row, column)
                 ..setStyle(true, true)
-                ..setIcon(ICON_COOKED_MEAT)
+                ..setValue("Level".color(HIGHLIGHT_COLOR))
                 ..setWidth(0.04)
                 ..release()
+            column++
 
             board
-                .getItem(row, 2)
+                .getItem(row, column)
                 ..setStyle(true, true)
-                ..setIcon(ICON_SLEEP)
+                ..setIcon(Icons.bTNSkillz)
                 ..setWidth(0.04)
                 ..release()
+            column++
 
             board
-                .getItem(row, 3)
+                .getItem(row, column)
                 ..setStyle(true, true)
-                ..setIcon(ICON_HEAT)
+                ..setIcon(ENERGY_ICON)
+                ..setWidth(0.04)
+                ..release()
+            column++
+
+            board
+                .getItem(row, column)
+                ..setStyle(true, true)
+                ..setIcon(Icons.pASBTNIncinerate)
                 ..setWidth(0.04)
                 ..release()
 
@@ -84,45 +100,87 @@ class TribeBoard
 
             row += 1
 
-    function updateBoard()
+    /**
+        Get the player rown number on the tribe board
+    **/
+    function getPlayerRow(player p) returns int
+        return tribe.getMembers().indexOf(p)
+
+    /**
+        Grays out the player name
+    **/
+    function updateLeaverName(player p)
+        let row = getPlayerRow(p)
+
+        board
+            .getItem(row, 0)
+            ..setValue(p.getName().color(GRAY_COLOR))
+            ..release()
+
+    function setTrollLevel(player p)
+        let row = getPlayerRow(p)
+
+        board
+            .getItem(row, 1)
+            ..setValue(p.getTroll().getLevel().toString())
+            ..setIcon(p.getTrollIcon())
+            ..release()
+
+    function setTrollIcon(player p)
+        let row = getPlayerRow(p)
+
+        board
+            .getItem(row, 1)
+            ..setIcon(p.getTrollIcon())
+            ..release()
+
+    function updateBoardStat()
         let members = tribe.getMembers()
         let title = getGameTimersBoardTitle()
 
+        // Setting the game timers on top of the tribe board
         board.setTitle(title)
 
         var row = 0
         for member in members
             let troll = member.getTroll()
+            var column = 2
+
+            // Set icon & level at init
+            // Updating level & icon every 1 seconds seems uneccessary
+            // Instead, we update it on level up & transformation
+            if isInit
+                setTrollLevel(member)
+                setTrollIcon(member)
 
             board
-                .getItem(row, 1)
+                .getItem(row, column)
                 ..setValue(troll.getHP().toInt().toString().color(HEALTH_COLOR))
                 ..release()
+            column++
+
 
             board
-                .getItem(row, 2)
+                .getItem(row, column)
                 ..setValue(troll.getMana().toInt().toString().color(ENERGY_COLOR))
                 ..release()
+            column++
+
 
             board
-                .getItem(row, 3)
+                .getItem(row, column)
                 ..setValue(member.getGold().toString().color(COLOR_GOLD))
                 ..release()
 
-            if not member.isIngame()
-                board
-                    .getItem(row, 0)
-                    ..setValue(member.getName().color(GRAY_COLOR))
-                    ..release()
-
             row += 1
+        isInit = false
 
     function fixDisplay()
         doAfter(0.5) ->
             for member in tribe.getMembers()
                 board
                     ..display(member, false)
-                    ..display(member, true)
+                    ..display(member, tribe.isDefeated() ? false : true)
 
 
 init
@@ -131,8 +189,25 @@ init
             Tribe.getTribes().each(tribe -> new TribeBoard(tribe))
 
         registerPlayerEvent(EVENT_PLAYER_LEAVE) ->
-            let leaver = EventData.getTriggerPlayer()
-            if Tribe.ofPlayer(leaver) != null
+            if not GetTriggerPlayer().isObserver() and not GetTriggerPlayer().isObserverNew()
                 TribeBoard
-                    .findForPlayer(leaver)
-                    .fixDisplay()
+                    .findForPlayer(GetTriggerPlayer())
+                    ..fixDisplay()
+                    ..updateLeaverName(GetTriggerPlayer())
+
+    EventListener.add(EVENT_PLAYER_HERO_LEVEL) ->
+        if GetTriggerUnit().isTroll()
+            let owner = GetTriggerUnit().getOwner()
+            TribeBoard
+                .findForPlayer(owner)
+                .setTrollLevel(owner)
+
+    registerAfterEffect() (unit target, int unitID) ->
+        if target.isTroll()
+            let owner = target.getOwner()
+            // For some reason, the troll level isn't updated in time with this event, but the name is
+            // waiting a bit to get the correct level
+            nullTimer() ->
+                TribeBoard.findForPlayer(owner)
+                    ..setTrollIcon(owner)
+                    ..setTrollLevel(owner)

@@ -18,13 +18,17 @@ let COOLDOWN = 120.
 let MANACOST = 15
 let DURATION = 30.
 
-let OMNI_DURATION = DURATION + 4 * 20
+public let OMNI_DURATION = DURATION + 4 * 20
+public let GATHERER_DURATION = DURATION + 20
 let OMNI_MANACOST = 30
+
+public let GATHERER_ITEM_MAX = 5
 
 let TOOLTIP_NORM = "Tele-Gathering"
 let TOOLTIP_EXTENDED = "The Tele-Gatherer psychically links up with the targeted campfire as its "+
                        "outlet and starts Tele-gathering. While Tele-Gathering, items"+
-                       " picked up are warped directly to the outlet."
+                       " picked up are warped directly to the outlet. "
+let TOOLTIP_EXTENDED_UNSUB = "Can warp a maximum of {0} items, and does not work when enemy trolls or buildings are nearby.".format(GATHERER_ITEM_MAX.toReal().toToolTipLightBlue())
 
 let TARGET_ALLOWED = "friend,ground,mechanical,neutral,structure,worker"
 let DUMMY_TARGET_ALLOWED = "air,friend,ground,neutral,organic"
@@ -105,6 +109,14 @@ class TeleGathering extends TeleGatheringDefinition
         this.setTooltipLearn(makeToolTipLearn(TOOLTIP_NORM))
         this.setTooltipLearnExtended(TOOLTIP_EXTENDED)
 
+class GathererTeleGathering extends TeleGatheringDefinition
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, hotkey, buttonPos)
+        this.presetCooldown(lvl -> COOLDOWN)
+        this.presetManaCost(lvl -> MANACOST)
+        this.presetDurationHero(lvl -> GATHERER_DURATION)
+        this.presetDurationNormal(lvl -> GATHERER_DURATION)
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED+TOOLTIP_EXTENDED_UNSUB+makeToolTipDuration(GATHERER_DURATION, COOLDOWN))
 
 
 class OmnigathererTeleGathering extends TeleGatheringDefinition
@@ -123,4 +135,5 @@ class OmnigathererTeleGathering extends TeleGatheringDefinition
     new TeleGatherDummyCasting(DUMMY_TELE_GATHER_ID)
     new TeleGathering(ABILITY_TELE_RADAR_GATHER, "E", new Pair(1, 1))
     new TeleGathering(ABILITY_TELE_HERB_GATHER, "E", new Pair(1, 1))
+    new GathererTeleGathering(ABILITY_TELE_GATHERER, "Q", new Pair(1, 1))
     new OmnigathererTeleGathering(ABILITY_TELE_GATHER_OMNI, "F", new Pair(1, 1))

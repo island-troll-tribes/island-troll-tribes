@@ -7,6 +7,7 @@ import HashMap
 import Interpolation
 import LinkedList
 import TerrainUtils
+import ClosureEvents
 
 // Third-party imports:
 import Lodash
@@ -19,6 +20,10 @@ import GameTimer
 import GameConfig
 import GeometryUtils
 import Pool
+import LocalAssets
+import StringExtensions
+import ColorUtils
+import Toolkit
 
 let itemSpawnInfoMap = new IterableMap<int, SpawnInfo>()
 let animalSpawnInfoMap = new IterableMap<int, SpawnInfo>()
@@ -27,6 +32,31 @@ let islandSpawnList = new LinkedList<IslandSpawner>()
 let FISH_PER_AREA = 1
 var gameStartTime = 0.
 
+let spawnRect = asList(gg_rct_spawn_area_1_1,
+                        gg_rct_spawn_area_1_2,
+                        gg_rct_spawn_area_1_3,
+                        gg_rct_spawn_area_2_1,
+                        gg_rct_spawn_area_2_2,
+                        gg_rct_spawn_area_2_3,
+                        gg_rct_spawn_area_3_1,
+                        gg_rct_spawn_area_3_2,
+                        gg_rct_spawn_area_3_3,
+                        gg_rct_spawn_area_4_1,
+                        gg_rct_spawn_area_4_2,
+                        gg_rct_spawn_area_4_3
+                        )
+
+ let restrainedSpawnRect = asList(
+                                  gg_rct_Thief_Bush_Cliff_SE,
+                                  gg_rct_Thief_Bush_Cliff_NE,
+                                  gg_rct_Thief_Bush_Cliff_SW_1,
+                                  gg_rct_Thief_Bush_Cliff_SW_2,
+                                  gg_rct_Thief_Bush_Cliff_NW
+)
+
+// From Marsunpaisti :
+// this class handles the spawning system trying to emulate the old code
+// so for example mana crystals at start of game can have like a 5% chance to spawn and it increases to 25% slowly
 class SpawnInfo
     int id
     real initialSpawnWeight
@@ -73,10 +103,10 @@ class IslandSpawner
         islandSpawnList.push(this)
 
     function randomSpawnPoint() returns vec2
-        rect spawnRect = this.spawnRegionsPool.random()
+        let spawnRect = this.spawnRegionsPool.random()
         while true
-            vec2 spawnPoint = spawnRect.randomPoint()
-            if spawnPoint.isTerrainLand() and spawnPoint.isTerrainWalkable()
+            let spawnPoint = spawnRect.randomPoint()
+            if spawnPoint.isTerrainLand() and spawnPoint.isTerrainWalkable() and not restrainedSpawnRect.map(elem -> elem.contains(spawnPoint)).has(true)
                 return spawnPoint
 
         error("ERROR: randomSpawnPoint() returned null!")
@@ -132,7 +162,24 @@ class IslandSpawner
             totalWeight += itemSpawnInfoMap.get(i).getTimeAdjustedSpawnWeight()
 
         for itm in itemSpawnInfoMap
-            //Get adjusted spawn weights based on desired item counts from previous spawning round
+            // From Marsunpaisti :
+            // this part is where I calculate how many items have actually spawned and how many "should" have spawned
+            // basically it means if difference from desired amount is 50% too much -> it will multiply spawn rate by 0.8 to reduce chance
+            // so if rocks have 20% rate to spawn, and you have 150 rocks when you should have 100, it adjusts it to 20% * 0.8 = 16% chance to spawn rocks
+            // to debug you can print for each islandSpawner the contents of
+            // private let spawnsPerType = new HashMap<int, int>()
+            // private let referenceItemCount = new HashMap<int,real>()
+            // spawnPerType contains how many items with ID have been spawned to the island
+            // referenceitemcount contains how many the system thinks "should" have been spawned
+            // and to see the current spawn rates you need to look at pool class
+            // in wurst/lib/Pool.wurst
+            // You gotta print the itemPool item weight / itemPool totalweight
+            // The pool is basically a weighted random selection pool class
+            // so if I put in A with weight 1 and B with weight 1 and C with weight 2
+            // I would have 25% chance to get A, 25% chance to get B and 50% chance to get C
+            // maybe you could add a function to Pool that returns the % chance of getting something
+
+            // Get adjusted spawn weights based on desired item counts from previous spawning round
             let spawnInfo = itemSpawnInfoMap.get(itm)
             let itemWeight = spawnInfo.getTimeAdjustedSpawnWeight()
             var adjustmentRatio = 1.
@@ -255,6 +302,12 @@ function initAnimalSpawnInfo()
     animalSpawnFunctions.put(UNIT_PANTHER) (x, y) ->
         createUnit(players[PLAYER_NEUTRAL_AGGRESSIVE], UNIT_PANTHER, vec2(x, y), randomAngle())
 
+// From Marsunpaisti :
+// this is the part that handles the island balance
+// when I add those rects, the first number is the relative size of the region to all the other rects
+// so all areas get picked evenly
+// new IslandSpawner(23, 6, swSpawns) here the variables mean this island will get 23 items and 6 animals
+// because SW is bigger than the others
 function initIslandSpawners()
     let nwSpawns = new Pool<rect>()
     nwSpawns.add(65, gg_rct_spawn_area_1_1)
@@ -346,6 +399,8 @@ function spawnFishAndHawks()
         spawnFishOrHawk(gg_rct_fish_new_7)
         spawnFishOrHawk(gg_rct_fish_new_8)
 
+bool array debug_status
+
 init
     initItemSpawnInfo()
     initAnimalSpawnInfo()
@@ -363,3 +418,33 @@ init
         doAfter(25, -> spawnFishAndHawks())
         doAfter(30, -> addItemsToBushes())
         startSpawnCycle()
+
+    // SP for spawning point, Debugging which spot can spawn items
+    registerToolkitCommand("sp") (triggerPlayer, arguments) ->
+        // Look up the index for the triggering player.
+        let index = triggerPlayer.getId()
+        if debug_status[index] == true
+            printTimedToPlayer("Spawning point debug mode disabled".color(GENERAL_COLOR), 10, triggerPlayer)
+            debug_status[index] = false
+        else
+            printTimedToPlayer("Spawning point debug mode enabled, click on a point to check if it's a valid spawning point for items/animals".color(GENERAL_COLOR), 10, triggerPlayer)
+            debug_status[index] = true
+
+        EventListener.add(EVENT_PLAYER_MOUSE_DOWN) ->
+            let x = EventData.getPlayerMouseX()
+            let y = EventData.getPlayerMouseY()
+            let p = EventData.getTriggerPlayer()
+            let point = vec2(x, y)
+
+            if debug_status[p.getId()]
+                let efx = addEffect(LocalAbilities.generalHeroGlow, point)..setScale(0.5)
+                doAfter(4.5) ->
+                    efx.destr()
+                let msg = "The point located at " + point.toString().color(SPECIAL_COLOR) + " is a {0} spawning point."
+                if point.isTerrainLand()
+                    and point.isTerrainWalkable()
+                    and spawnRect.map(elem -> elem.contains(point)).has(true)
+                    and not restrainedSpawnRect.map(elem -> elem.contains(point)).has(true)
+                    printTimedToPlayer(msg.format("valid".color(COLOR_GREEN)), 15, p)
+                else
+                    printTimedToPlayer(msg.format("invalid".color(COLOR_RED)), 15, p)

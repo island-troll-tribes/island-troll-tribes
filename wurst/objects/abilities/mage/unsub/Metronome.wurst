@@ -1,13 +1,19 @@
 package Metronome
-import RegisterEvents
+
+// Standard Library Import :
 import Table
 import Orders
-import ClosureTimers
-import EventHelper
-import DummyCaster
-import AbilityObjEditing
 import Assets
+import ClosureTimers
+import AbilityObjEditing
+import DummyCaster
+import ObjectIds
+import ClosureEvents
+
+// Third party Dependencies :
 import Lodash
+
+// Local Import :
 import LocalObjectIDs
 import ToolTipsUtils
 
@@ -15,7 +21,6 @@ let MANACOST = 20
 let COOLDOWN = 45.
 let TOOLTIP = "Metronome"
 let TOOLTIP_EXTENDED = "Barrages enemies with random, chaining effects. Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
-let TARGET_ALLOWED = "air,enemies,ground,neutral,organic"
 
 class Metronome extends AbilityDefinitionFirelordSoulBurn
     construct(int newAbility, string hotkey, Pair<int, int> buttonPos)
@@ -24,7 +29,13 @@ class Metronome extends AbilityDefinitionFirelordSoulBurn
         this.setDamagePenalty(1, 0)
         this.setDamagePeriod(1, 0)
         this.setIconNormal(Icons.bTNWandOfManaSteal)
-        this.setTargetsAllowed(1, TARGET_ALLOWED)
+        this.setTargetsAllowed(1, commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.enemies,
+            TargetsAllowed.ground,
+            TargetsAllowed.neutral,
+            TargetsAllowed.organic
+        ))
         this.setHeroAbility(false)
         this.setManaCost(1, MANACOST)
         this.setDurationHero(1, 0.01)
@@ -38,15 +49,52 @@ class Metronome extends AbilityDefinitionFirelordSoulBurn
         this.setButtonPositionNormalY(buttonPos.b)
         this.setHotkeyNormal(hotkey)
 
+@compiletime function createMetroImpale() returns AbilityDefinitionImpaleCreep
+    return new AbilityDefinitionImpaleCreep(ABILITY_METRONOME_IMPALE)
+            ..setDummyAbility()
+            ..setDamageDealt(1, 10.0)
+            ..setEditorSuffix("(Wurst)")
+            ..setDurationHero(0, 0.5)
+            ..setName("Metronome Impale")
+
+@compiletime function createMetroNova() returns AbilityDefinitionFrostNovacreep
+    return new AbilityDefinitionFrostNovacreep(ABILITY_METRONOME_FROSTNOVA)
+            ..setDummyAbility()
+            ..setAreaofEffectDamage(1, 10)
+            ..setSpecificTargetDamage(1, 15)
+            ..setEditorSuffix("(Wurst)")
+            ..setName("Metronome Nova")
+
+@compiletime function createMetroManaBurn() returns AbilityDefinitionManaBurndemon
+    return new AbilityDefinitionManaBurndemon(ABILITY_METRONOME_MANABURN)
+            ..setDummyAbility()
+            ..setEditorSuffix("(Wurst)")
+            ..setMaxManaDrained(1, 6.0)
+            ..setBoltLifetime(1, 0.5)
+            ..setName("Metronome Mana Burn")
+
+@compiletime function createMetroNovaUlt() returns AbilityDefinitionFrostNovacreep
+    return new AbilityDefinitionFrostNovacreep(ABILITY_METRONOME_FROSTNOVAULT)
+            ..setDummyAbility()
+            ..setAreaofEffect(1, 600)
+            ..setAreaofEffectDamage(1, 15)
+            ..setSpecificTargetDamage(1, 45)
+            ..setArtEffect(Abilities.blizzardTarget)
+            ..setDurationHero(1, 5)
+            ..setEditorSuffix("(Wurst)")
+            ..setName("Metronome Nova Ultimate")
+
 @compiletime function createMetronome()
     new Metronome(ABILITY_METRONOME, "D", new Pair(2, 1))
+
+
 class MasterCaster
-    static constant impale        = 'A028'
-    static constant tsunami       = 'A038'
-    static constant frostNova     = 'A02A'
-    static constant poisonThistle = 'A01K'
-    static constant manaBurn      = 'A065'
-    static constant frostNovaUlt  = 'A02B' // 2 Different frostnova spells? This one does more damage, should be the one with blizzard effect
+    static constant impale        = ABILITY_METRONOME_IMPALE
+    static constant tsunami       = ABILITY_TSUNAMI
+    static constant frostNova     = ABILITY_METRONOME_FROSTNOVA
+    static constant poisonThistle = ABILITY_THISTLE
+    static constant manaBurn      = ABILITY_METRONOME_MANABURN
+    static constant frostNovaUlt  = ABILITY_METRONOME_FROSTNOVAULT
 
 constant table = new Table()
 
@@ -70,53 +118,59 @@ function initSpellTable()
     table.saveInt(MasterCaster.manaBurn     , Orders.manaburn)
     table.saveInt(MasterCaster.frostNovaUlt , Orders.frostnova)
 
-function onCast()
-    var target = GetSpellTargetUnit()
-    var targetPos = EventData.getAbilityTargetPos()
-    var pos = targetPos.polarOffset(GetRandomReal(0, 360).fromDeg(), GetRandomReal(0, 100))
-    var owner = GetSpellAbilityUnit().getOwner()
+function onCast(unit caster, unit target)
+    let targetPos = target.getPos()
+    var dummyPos = targetPos.polarOffset(GetRandomReal(0, 360).fromDeg(), GetRandomReal(0, 100))
+    let owner = caster.getOwner()
     var abilityId = table.loadInt(9)
 
+    // Trying to cast frost nova ultimate, 1 chance out of 3?
     if GetRandomInt(0, 2) == 0
-        //Temporary vision required by dummy
-        var vis = createVision(owner, target.getPos(), 300, true)
+        // Temporary vision required by dummy
+        let vis = createVision(owner, target.getPos(), 300, true)
         vis.start()
         doAfter(0.2) ->
             vis.destr()
         new DummyCaster()
             ..owner(owner)
             ..delay(1)
-            ..origin(pos)
+            ..origin(dummyPos)
             ..castTarget(abilityId, 1, table.loadInt(abilityId), target)
 
+        // Do cast additional spells, frost nova ult by itself does 60 instant damage
         return
 
+    // Load up first ability
     abilityId = table.loadInt(GetRandomInt(0, 8))
-    //Temporary vision required by dummy
-    var vis2 = createVision(owner, target.getPos(), 300, true)
+    // Temporary vision required by dummy
+    let vis2 = createVision(owner, target.getPos(), 300, true)
     vis2.start()
     doAfter(0.2) ->
         vis2.destr()
     new DummyCaster()
         ..owner(owner)
         ..delay(1)
-        ..origin(pos)
+        ..origin(dummyPos)
         ..castTarget(abilityId, 1, table.loadInt(abilityId), target)
 
+    // Cast between 3 - 5 spells with 1 second interval
+    // Note: manaburn casting fails on units without mana
     doPeriodicallyCounted(1.00, GetRandomInt(3, 5)) cb ->
         //Temporary vision required by dummy
-        var vis3 = createVision(owner, target.getPos(), 300, true)
+        let vis3 = createVision(owner, target.getPos(), 300, true)
         vis3.start()
         doAfter(0.2) ->
             vis3.destr()
         abilityId = table.loadInt(GetRandomInt(0, 8))
-        pos = targetPos.polarOffset(GetRandomReal(0, 360).fromDeg(), GetRandomReal(0, 200))
+        // Moving dummy around target so spell casting looks cool
+        dummyPos = targetPos.polarOffset(GetRandomReal(0, 360).fromDeg(), GetRandomReal(0, 200))
         new DummyCaster()
             ..owner(owner)
             ..delay(1)
-            ..origin(pos)
-            ..castTarget(abilityId, 1, table.loadInt(abilityId), target)
+            ..origin(dummyPos)
+        ..castTarget(abilityId, 1, table.loadInt(abilityId), target)
+
 
 init
     initSpellTable()
-    registerSpellEffectEvent(ABILITY_METRONOME, () -> onCast())
+    EventListener.onTargetCast(ABILITY_METRONOME, (unit caster, unit target) -> onCast(caster, target))

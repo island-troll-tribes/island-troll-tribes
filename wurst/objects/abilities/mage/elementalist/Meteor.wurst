@@ -34,7 +34,7 @@ let LOOP_INTERVAL = 0.03125
 let PROJECTILE_EFFECT_PATH = Abilities.catapultMissile
 let PROJECTILE_TRAIL_EFFECT_PATH = Abilities.redDragonMissile
 let EXPLOSION_EFFECT_PATH = Objects.neutralBuildingExplosion
-let BURN_EFFECT_PATH = Abilities.breathOfFireDamage
+let BURN_EFFECT_PATH = Abilities.flameStrikeEmbers
 let GROUND_BURN_EFFECT_PATH = Abilities.breathOfFireDamage
 let ICON_PATH = Icons.bTNFireRocks
 let TOOLTIP_NORMAL = "Meteor"
@@ -92,17 +92,17 @@ class Meteor extends AbilityDefinitionRainofFire
     createDummySpell()
 
 function onCast()
-    var caster = GetSpellAbilityUnit()
-    vec2 targetPos = vec2(GetSpellTargetX(), GetSpellTargetY())
+    let caster = GetSpellAbilityUnit()
+    let targetPos = vec2(GetSpellTargetX(), GetSpellTargetY())
     callMeteor(caster, targetPos, consumeOvercharge(caster))
 
 function handleGroundBurning(unit caster, vec2 pos)
-    var owner = caster.getOwner()
+    let owner = caster.getOwner()
     //Spawn fire FX on ground
     for i = 0 to 40
-        angle randAngle = angle(GetRandomReal(0, 2*bj_PI))
-        real randomDist = GetRandomReal(15, IMPACT_RADIUS_MAX)
-        var fireFX = addEffect(GROUND_BURN_EFFECT_PATH, pos.polarOffset(randAngle, randomDist).withTerrainZ(0))
+        let randAngle = angle(GetRandomReal(0, 2*bj_PI))
+        let randomDist = GetRandomReal(15, IMPACT_RADIUS_MAX)
+        let fireFX = addEffect(GROUND_BURN_EFFECT_PATH, pos.polarOffset(randAngle, randomDist).withTerrainZ(0))
         fireFX.setScale(0.7)
         doAfter(OVERCHARGE_GROUND_BURN_DURATION - 0.5) ->
             fireFX.destr()
@@ -116,21 +116,21 @@ function handleGroundBurning(unit caster, vec2 pos)
 
 
 function callMeteor(unit caster, vec2 targetpos, bool isOvercharged)
-    var owner = caster.getOwner()
-    var casterPos = caster.getPos()
-    vec3 target3D = targetpos.withTerrainZ(0)
-    vec3 startPos = targetpos.withTerrainZ(PROJECTILE_INITIAL_HEIGHT).offset2d(targetpos.angleTo(casterPos), PROJECTILE_INITIAL_DISTANCE)
-    vec3 projectilePath = target3D - startPos
+    let owner = caster.getOwner()
+    let casterPos = caster.getPos()
+    let target3D = targetpos.withTerrainZ(0)
+    let startPos = targetpos.withTerrainZ(PROJECTILE_INITIAL_HEIGHT).offset2d(targetpos.angleTo(casterPos), PROJECTILE_INITIAL_DISTANCE)
+    let projectilePath = target3D - startPos
 
-    effect projectile = addEffect(PROJECTILE_EFFECT_PATH, startPos)
-    effect trail = addEffect(PROJECTILE_TRAIL_EFFECT_PATH, startPos)
+    let projectile = addEffect(PROJECTILE_EFFECT_PATH, startPos)
+    let trail = addEffect(PROJECTILE_TRAIL_EFFECT_PATH, startPos)
     projectile.setScale(1.3)
     trail.setScale(0.45)
     trail.setColor(255, 200, 200)
 
     //Grant vision
     doAfter(0.3) ->
-        var vision = createVision(owner, targetpos, 400, true)
+        let vision = createVision(owner, targetpos, 400, true)
         vision.start()
         doAfter(IMPACT_DELAY + 0.7) ->
             vision.destr()
@@ -140,8 +140,8 @@ function callMeteor(unit caster, vec2 targetpos, bool isOvercharged)
     doPeriodicallyTimed(LOOP_INTERVAL, IMPACT_DELAY) cb ->
         //Use elapsed time relative to impact delay to calculate position
         elapsedTime = elapsedTime + LOOP_INTERVAL
-        real ratio = elapsedTime / IMPACT_DELAY
-        vec3 currentPos = startPos + ratio * projectilePath
+        let ratio = elapsedTime / IMPACT_DELAY
+        let currentPos = startPos + ratio * projectilePath
         projectile.setPos(currentPos)
         trail.setPos(currentPos)
 
@@ -154,7 +154,7 @@ function callMeteor(unit caster, vec2 targetpos, bool isOvercharged)
             handleImpactEffects(target3D, caster, isOvercharged)
 
 function isValidTarget(unit caster, unit target) returns boolean
-    var owner = caster.getOwner()
+    let owner = caster.getOwner()
     return target.isAlive()
         and target.getOwner().isEnemyOf(owner)
         and not target.isType(UNIT_TYPE_STRUCTURE)
@@ -162,10 +162,10 @@ function isValidTarget(unit caster, unit target) returns boolean
         and not target.isInvulnerable()
 
 function handleImpactEffects(vec3 target3D, unit caster, boolean isOvercharged)
-    var targetpos = target3D.toVec2()
+    let targetpos = target3D.toVec2()
 
     //Impact SFX
-    var explosion = addEffect(EXPLOSION_EFFECT_PATH, target3D)
+    let explosion = addEffect(EXPLOSION_EFFECT_PATH, target3D)
     explosion.setScale(0.5)
     doAfter(3) ->
         explosion.destr()
@@ -180,14 +180,14 @@ function handleImpactEffects(vec3 target3D, unit caster, boolean isOvercharged)
             handleImpactUnitEffect(targetpos, u, caster)
 
 function handleImpactUnitEffect(vec2 hitPosition, unit target, unit caster)
-    var owner = caster.getOwner()
+    let owner = caster.getOwner()
 
     //Calculate reduced damage for units away from center
-    var distance = hitPosition.distanceTo(target.getPos())
+    let distance = hitPosition.distanceTo(target.getPos())
     if (distance <= IMPACT_RADIUS_DAMAGEFALLOFF)
         UnitDamageTarget(caster, target, IMPACT_DAMAGE, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
     else
-        var reducedDamage = IMPACT_DAMAGE * (1 - ((distance - IMPACT_RADIUS_DAMAGEFALLOFF) / (IMPACT_RADIUS_MAX - IMPACT_RADIUS_DAMAGEFALLOFF)))
+        let reducedDamage = IMPACT_DAMAGE * (1 - ((distance - IMPACT_RADIUS_DAMAGEFALLOFF) / (IMPACT_RADIUS_MAX - IMPACT_RADIUS_DAMAGEFALLOFF)))
         UnitDamageTarget(caster, target, reducedDamage, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
 
     //Apply stun
@@ -197,8 +197,8 @@ function handleImpactUnitEffect(vec2 hitPosition, unit target, unit caster)
         ..castTarget(DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, target)
 
     //Apply burn on units
-    var burnfx = AddSpecialEffectTargetUnitBJ("chest", target, BURN_EFFECT_PATH)
-    burnfx.setScale(5)
+    let burnfx = addEffect(BURN_EFFECT_PATH, target, "chest")
+    burnfx.setScale(1)
 
     //Burn damage loop
     doPeriodicallyTimed(IMPACT_BURN_INTERVAL, IMPACT_BURN_DURATION) burn ->

@@ -32,27 +32,27 @@ let islandSpawnList = new LinkedList<IslandSpawner>()
 let FISH_PER_AREA = 1
 var gameStartTime = 0.
 
-let spawnRect = asList(gg_rct_spawn_area_1_1,
-                        gg_rct_spawn_area_1_2,
-                        gg_rct_spawn_area_1_3,
-                        gg_rct_spawn_area_2_1,
-                        gg_rct_spawn_area_2_2,
-                        gg_rct_spawn_area_2_3,
-                        gg_rct_spawn_area_3_1,
-                        gg_rct_spawn_area_3_2,
-                        gg_rct_spawn_area_3_3,
-                        gg_rct_spawn_area_4_1,
-                        gg_rct_spawn_area_4_2,
-                        gg_rct_spawn_area_4_3
-                        )
 
- let restrainedSpawnRect = asList(
-                                  gg_rct_Thief_Bush_Cliff_SE,
-                                  gg_rct_Thief_Bush_Cliff_NE,
-                                  gg_rct_Thief_Bush_Cliff_SW_1,
-                                  gg_rct_Thief_Bush_Cliff_SW_2,
-                                  gg_rct_Thief_Bush_Cliff_NW
-)
+let spawnRegion = CreateRegion()
+                ..addRect(gg_rct_spawn_area_1_1)
+                ..addRect(gg_rct_spawn_area_1_2)
+                ..addRect(gg_rct_spawn_area_1_3)
+                ..addRect(gg_rct_spawn_area_2_1)
+                ..addRect(gg_rct_spawn_area_2_2)
+                ..addRect(gg_rct_spawn_area_2_3)
+                ..addRect(gg_rct_spawn_area_3_1)
+                ..addRect(gg_rct_spawn_area_3_2)
+                ..addRect(gg_rct_spawn_area_3_3)
+                ..addRect(gg_rct_spawn_area_4_1)
+                ..addRect(gg_rct_spawn_area_4_2)
+                ..addRect(gg_rct_spawn_area_4_3)
+
+let restrainedSpawnRegion = CreateRegion()
+                            ..addRect(gg_rct_Thief_Bush_Cliff_SE)
+                            ..addRect(gg_rct_Thief_Bush_Cliff_NE)
+                            ..addRect(gg_rct_Thief_Bush_Cliff_SW_1)
+                            ..addRect(gg_rct_Thief_Bush_Cliff_SW_2)
+                            ..addRect(gg_rct_Thief_Bush_Cliff_NW)
 
 // From Marsunpaisti :
 // this class handles the spawning system trying to emulate the old code
@@ -106,7 +106,7 @@ class IslandSpawner
         let spawnRect = this.spawnRegionsPool.random()
         while true
             let spawnPoint = spawnRect.randomPoint()
-            if spawnPoint.isTerrainLand() and spawnPoint.isTerrainWalkable() and not restrainedSpawnRect.map(elem -> elem.contains(spawnPoint)).has(true)
+            if spawnPoint.isTerrainLand() and spawnPoint.isTerrainWalkable() and not spawnPoint.isInRegion(restrainedSpawnRegion)
                 return spawnPoint
 
         error("ERROR: randomSpawnPoint() returned null!")
@@ -443,8 +443,8 @@ init
                 let msg = "The point located at " + point.toString().color(SPECIAL_COLOR) + " is a {0} spawning point."
                 if point.isTerrainLand()
                     and point.isTerrainWalkable()
-                    and spawnRect.map(elem -> elem.contains(point)).has(true)
-                    and not restrainedSpawnRect.map(elem -> elem.contains(point)).has(true)
+                    and point.isInRegion(spawnRegion)
+                    and not point.isInRegion(restrainedSpawnRegion)
                     printTimedToPlayer(msg.format("valid".color(COLOR_GREEN)), 15, p)
                 else
                     printTimedToPlayer(msg.format("invalid".color(COLOR_RED)), 15, p)

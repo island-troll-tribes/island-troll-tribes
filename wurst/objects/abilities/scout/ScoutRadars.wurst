@@ -14,16 +14,15 @@ import IdListConstant
 import LocalAssets
 import ToolTipsUtils
 
-constant let ABILITY_PING_ELK            = compiletime(ABIL_ID_GEN.next())
-constant let ABILITY_PING_HAWK           = compiletime(ABIL_ID_GEN.next())
-constant let ABILITY_PING_LIVING_CLAY    = compiletime(ABIL_ID_GEN.next())
-constant let ABILITY_PING_TROLL          = compiletime(ABIL_ID_GEN.next())
-constant let ABILITY_PING_BUILDING       = compiletime(ABIL_ID_GEN.next())
-constant let ABILITY_PING_TRADESHIP      = compiletime(ABIL_ID_GEN.next())
-constant let ABILITY_PING_HOSTILE_ANIMALS= compiletime(ABIL_ID_GEN.next())
-constant let UNSUB_RADAR_PING          = compiletime(UNIT_ID_GEN.next())
+let ABILITY_PING_ELK             = compiletime(ABIL_ID_GEN.next())
+let ABILITY_PING_HAWK            = compiletime(ABIL_ID_GEN.next())
+let ABILITY_PING_LIVING_CLAY     = compiletime(ABIL_ID_GEN.next())
+let ABILITY_PING_TROLL           = compiletime(ABIL_ID_GEN.next())
+let ABILITY_PING_BUILDING        = compiletime(ABIL_ID_GEN.next())
+let ABILITY_PING_HOSTILE_ANIMALS = compiletime(ABIL_ID_GEN.next())
+let UNSUB_RADAR_PING             = compiletime(UNIT_ID_GEN.next())
 
-public constant let ADVANCED_RADAR_SPELLBOOK = commaList(
+public let ADVANCED_RADAR_SPELLBOOK = commaList(
     ABILITY_PING_ELK,
     ABILITY_PING_HAWK,
     ABILITY_PING_HOSTILE_ANIMALS,
@@ -34,7 +33,7 @@ public constant let ADVANCED_RADAR_SPELLBOOK = commaList(
     ABILITY_SHADOW_SIGHT
 )
 
-constant let HOSTILE_ANIMALS_LIST = asList(UNIT_SNAKE, UNIT_JUNGLE_WOLF, UNIT_JUNGLE_BEAR, UNIT_PANTHER,
+let HOSTILE_ANIMALS_LIST = asList(UNIT_SNAKE, UNIT_JUNGLE_WOLF, UNIT_JUNGLE_BEAR, UNIT_PANTHER,
                                     UNIT_ALIGATOR_MAN           , UNIT_ONE                    , UNIT_MAMMOTH             , UNIT_DISCO_DUCK, UNIT_ANCIENT_HYDRA,
                                     UNIT_ADULT_ELK              , UNIT_ADULT_JUNGLE_BEAR      , UNIT_ADULT_JUNGLE_WOLF   , UNIT_ELK_ADOLESCENT,
                                     UNIT_HAWK_ADOLESCENT        , UNIT_FOREST_DRAGON_HATCHLING, UNIT_RED_DRAGON_HATCHLING,
@@ -42,19 +41,19 @@ constant let HOSTILE_ANIMALS_LIST = asList(UNIT_SNAKE, UNIT_JUNGLE_WOLF, UNIT_JU
                                     UNIT_FOREST_DRAGON          , UNIT_GREATER_FOREST_DRAGON  , UNIT_BRONZE_DRAGON       , UNIT_GREATER_BRONZE_DRAGON,
                                     UNIT_RED_DRAGON             , UNIT_GREATER_RED_DRAGON     , UNIT_NETHER_DRAGON       , UNIT_GREATER_NETHER_DRAGON)
 
-constant let BUILDING_LIST        = asList(UNIT_FIRE,      UNIT_SMOKE_HOUSE,       UNIT_STORAGE_HUT, UNIT_MUD_HUT,     UNIT_ARMORY, UNIT_TELEPORTATION_BEACON,
+let BUILDING_LIST        = asList(UNIT_FIRE,      UNIT_SMOKE_HOUSE,       UNIT_STORAGE_HUT, UNIT_MUD_HUT,     UNIT_ARMORY, UNIT_TELEPORTATION_BEACON,
                                            UNIT_WORKSHOP , UNIT_WITCH_DOCTORS_HUT, UNIT_POT     ,    UNIT_TANNERY    , UNIT_ENSNARE_TRAP, UNIT_OMNITOWER,
                                            UNIT_MAGE_FIRE, UNIT_TROLL_HUT        , UNIT_HATCHERY,    UNIT_SPIRIT_WARD, UNIT_FORGE)
 
-constant let TRADESHIP_LIST       = asList(UNIT_TRADE_SHIP_1, UNIT_TRADE_SHIP_2, UNIT_TRADE_SHIP_3, UNIT_TRADE_SHIP_4, UNIT_TRADE_SHIP_5, UNIT_TRADE_SHIP_6)
+let TRADESHIP_LIST       = asList(UNIT_TRADE_SHIP_1, UNIT_TRADE_SHIP_2, UNIT_TRADE_SHIP_3, UNIT_TRADE_SHIP_4, UNIT_TRADE_SHIP_5, UNIT_TRADE_SHIP_6)
 
-constant let DONT_PING_THOSE_LIST = asList(UNIT_HAWK, UNIT_FISH, UNIT_GREEN_FISH, UNIT_MEAT, LocalUnitIds.dummyGoldMine)
+let DONT_PING_THOSE_LIST = asList(UNIT_HAWK, UNIT_FISH, UNIT_GREEN_FISH, UNIT_MEAT, LocalUnitIds.dummyGoldMine)
 
-constant let COOLDOWN = 30.
-constant let TOOL_TIP_COOLDOWN = " Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
-constant let MANACOST = 0
-constant let RADAR_RANGE = 3000.
-constant let IMPROVED_RADAR_RANGE = 4500.
+let COOLDOWN = 30.
+let TOOL_TIP_COOLDOWN = " Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
+let MANACOST = 0
+let RADAR_RANGE = 3000.
+let IMPROVED_RADAR_RANGE = 4500.
 
 public class RadarSpell
     let hotkey = ""
@@ -105,13 +104,12 @@ function getRadarSpells() returns LinkedList<RadarSpell>
         new RadarSpell("Elk|r"+GENERAL_COLOR.toColorString()+" and "+COLOR_RED.toColorString()+"Hostile Units" , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , ABILITY_SPY_PING_ENEMY, 2, 1, "A", "stormbolt" , 0, COLOR_GREEN.toColorString()  ),
 
         //Advanced Radar Spells
-        new RadarSpell("Elk"              , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , ABILITY_PING_ELK             , 0, 0, "Q", "locustswarm" , MANACOST, COLOR_GREEN.toColorString()      ),
-        new RadarSpell("Hawk"             , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , ABILITY_PING_HAWK            , 0, 0, "W", "manashieldon"   , MANACOST, COLOR_TEAL.toColorString()       ),
-        new RadarSpell("Hostile Animals"  , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , ABILITY_PING_HOSTILE_ANIMALS , 0, 0, "E", "manaflareoff"  , MANACOST, COLOR_RED.toColorString()        ),
-        new RadarSpell("Hostile Building" , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , ABILITY_PING_BUILDING        , 0, 0, "R", "manaflareon"  , MANACOST, COLOR_ORANGE.toColorString()     ),
-        new RadarSpell("Trolls"           , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , ABILITY_PING_TROLL           , 0, 0, "A", "manashieldoff"    , MANACOST, COLOR_RED.toColorString()        ),
-        new RadarSpell("Living Clay"      , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , ABILITY_PING_LIVING_CLAY     , 0, 0, "S", "howlofterror"     , MANACOST, COLOR_PINK.toColorString()       ),
-        new RadarSpell("Trade Ship"       , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , ABILITY_PING_TRADESHIP       , 0, 0, "D", "thunderclap"   , MANACOST, GOLD_COLOR.toColorString()       )
+        new RadarSpell("Elk"              , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , ABILITY_PING_ELK             , 0, 0, "Q", "locustswarm"   , MANACOST, COLOR_GREEN .toColorString() ),
+        new RadarSpell("Hawk"             , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , ABILITY_PING_HAWK            , 0, 0, "W", "manashieldon"  , MANACOST, COLOR_TEAL  .toColorString() ),
+        new RadarSpell("Hostile Animals"  , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , ABILITY_PING_HOSTILE_ANIMALS , 0, 0, "E", "manaflareoff"  , MANACOST, COLOR_RED   .toColorString() ),
+        new RadarSpell("Hostile Building" , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , ABILITY_PING_BUILDING        , 0, 0, "R", "manaflareon"   , MANACOST, COLOR_ORANGE.toColorString() ),
+        new RadarSpell("Trolls"           , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , ABILITY_PING_TROLL           , 0, 0, "A", "manashieldoff" , MANACOST, COLOR_RED   .toColorString() ),
+        new RadarSpell("Living Clay"      , TOOL_TIP_COOLDOWN, "BTNSpy.blp" , ABILITY_PING_LIVING_CLAY     , 0, 0, "S", "howlofterror"  , MANACOST, COLOR_PINK  .toColorString() )
     )
 
 function onCast(LinkedList<int> unitId, real red, real green, real blue)
@@ -158,4 +156,3 @@ init
 
     registerSpellEffectEvent(ABILITY_PING_HOSTILE_ANIMALS , () -> onCast(HOSTILE_ANIMALS_LIST                   , 255 , 128 , 0   ))
     registerSpellEffectEvent(ABILITY_PING_BUILDING        , () -> onCast(BUILDING_LIST                          , 255 , 102 , 102 ))
-    registerSpellEffectEvent(ABILITY_PING_TRADESHIP       , () -> onCast(TRADESHIP_LIST                         , 255 , 255 , 0   ))

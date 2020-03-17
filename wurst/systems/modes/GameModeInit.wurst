@@ -31,7 +31,7 @@ init
                 gameConfig.setNumPlayersPerTribe(ppt)
                 mode.message("Players per tribe".color(ENERGY_COLOR)+ " set to " + ppt.toString())
 
-    new GameMode("6v6", "6s", "General", "Set the number of players in each tribe to 6") (mode, args) ->
+    new GameMode("6v6", "6s", "General", "Set the number of players in each tribe to 6", false) (mode, args) ->
         gameConfig.setNumPlayersPerTribe(6)
         mode.message("6v6".color(ENERGY_COLOR) + " enabled")
 
@@ -67,6 +67,16 @@ init
         GameMode.find("tb").enable()
         GameMode.find("rs").enable()
 
+    new GameMode("team-gold", "tg", "Pro", "Players on a team share gold in the same pool") (mode, args) ->
+        let enabled = args.size() > 1 ? args.get(0).isConfirmation() : true
+        gameConfig.setTeamGoldEnabled(enabled)
+        mode.message("Team gold ".color(COLOR_GOLD) + enabled.toOnOff() + "!")
+
+    new GameMode("tribe-owns-buildings", "tb", "Building ownership is transferred to the tribe") (mode, args) ->
+        let value = args.size() > 1 ? args.get(0).isConfirmation() : true
+        gameConfig.setTribeOwnsBuildingsEnabled(value)
+        mode.message("Tribe building ownership".color(ENERGY_COLOR) + " enabled")
+
     new GameMode("all", "ar", "General", "Each player is given the same or a random troll, eg: \"-all random\" or \"-all mage\"") (mode, args) ->
         let classArgs = drop(1, args)
         if classArgs.size() > 0 and classArgs.get(0) != "random"
@@ -95,6 +105,11 @@ init
             amount = S2I(args.get(1))
         gameConfig.setHeatMaximum(amount)
         mode.message("Heat Max".color(ENERGY_COLOR) + " has been increased. Heat capacity is " + amount.toString().color(GOLD_COLOR))
+
+    new GameMode("fast", "fs", "Fun", "More items spawn at once", true) (mode, args) ->
+        udg_ITEM_BASE = 1.50
+        udg_FAST_MODE = true
+        mode.message("Fast mode".color(ENERGY_COLOR) + " has been enabled. More items spawn at once.")
 
     new GameMode("enable-boats", "eb", "General", "Enables construction of transport boats") (mode, args) ->
         udg_DisabledBoats = false
@@ -137,12 +152,12 @@ init
         mode.message("Hostile Animal Spawn Rate".color(ENERGY_COLOR) + " has been increased to " + (next * 100).toInt().toString() + "% of normal.")
 
     new GameMode("elimination", "el", "Pro", "Elimination mode (no spirit wards)") (mode, args) ->
-        mode.message("Elimination Mode".color(HIGHLIGHT_COLOR) + " has been enabled. Teams can not build spirit wards now!")
-        gameConfig.setEliminationEnabled(true)
-
-    new GameMode("noelimination", "noel", "Pro", "Removed Elimination mode (spirit wards allowed)") (mode, args) ->
-        mode.message("Elimination Mode".color(HIGHLIGHT_COLOR) + " has been disabled. Teams can build spirit wards now!")
-        gameConfig.setEliminationEnabled(false)
+        if gameConfig.getEliminationEnabled()
+            mode.message("Elimination Mode".color(HIGHLIGHT_COLOR) + " has been disabled. Teams can build spirit wards now!")
+            gameConfig.setEliminationEnabled(false)
+        else
+            mode.message("Elimination Mode".color(HIGHLIGHT_COLOR) + " has been enabled. Teams can not build spirit wards now!")
+            gameConfig.setEliminationEnabled(true)
 
     new GameMode("old-random", "or", "Fun", "You can random any class, not just those which haven't been picked") (mode, args) ->
         mode.deregister()
@@ -157,6 +172,16 @@ init
             mode.error("Grace period must end before forced duel")
         else
             mode.message("Grace period duration ".color(ENERGY_COLOR) + amount.toInt().toString() + " min")
+
+    new GameMode("quick-pick", "qp", "General", "Reduce class selection time, defaults to 5, eg: \"-qp 15\"") (mode, args) ->
+        var timeAllowed = 5
+        if (args.size() > 1)
+            timeAllowed = S2I(args.get(1))
+        mode.message("Selection time".color(ENERGY_COLOR) + " set to " + timeAllowed.toString() + "s")
+        gameConfig.setSelectionTimeAllowed(timeAllowed)
+
+    new GameMode("start", "st", "General", "Start the game by entering class selection") (mode, args) ->
+        GameMode.endModeSelection(true)
 
     new GameMode("respawn-system", "re", "General", "Use the new respawn system instead of grace period") (mode, args) ->
         gameConfig.setRespawnSystemEnabled(true)
@@ -185,21 +210,11 @@ init
             gameConfig.setForestFire(amount, distance)
             mode.message("Forest fire".color(RED_COLOR) + " after " + amount.toInt().toString() + " min")
 
-    new GameMode("quick-pick", "qp", "General", "Reduce class selection time, defaults to 5, eg: \"-qp 15\"") (mode, args) ->
-        var timeAllowed = 5
-        if (args.size() > 1)
-            timeAllowed = S2I(args.get(1))
-        mode.message("Selection time".color(ENERGY_COLOR) + " set to " + timeAllowed.toString() + "s")
-        gameConfig.setSelectionTimeAllowed(timeAllowed)
-
     new GameMode("test-mode", "tm", "Testing", "No one can lose, enables test commands") (mode, args) ->
         mode.message("Test mode enabled".color(SPECIAL_COLOR))
         gameConfig.setTestMode(true)
         registerGameStartEvent() ->
             enableToolkit()
-
-    new GameMode("start", "st", "General", "Start the game by entering class selection") (mode, args) ->
-        GameMode.endModeSelection(true)
 
     // legacy modes
     new GameMode("safe", "sa", "Casual", "Stats degrade slower every 4.5 s instead of 3 s", false) (mode, args) ->
@@ -220,11 +235,6 @@ init
         gameConfig.setMaxAnimals(90)
         udg_FISH_MAX = 320
         mode.message("Food limits".color(ENERGY_COLOR) + " have been increased. More animals and fish can be on the map at the same time.")
-
-    new GameMode("fast", "fs", "Fun", "More items spawn at once", false) (mode, args) ->
-        udg_ITEM_BASE = 1.50
-        udg_FAST_MODE = true
-        mode.message("Fast mode".color(ENERGY_COLOR) + " has been enabled. More items spawn at once.")
 
     new GameMode("raise-item-limit", "ril", "Fun", "Increase item spawn limits", false) (mode, args) ->
         udg_ITEM_MAX = 700
@@ -276,7 +286,7 @@ init
         udg_ITEM_MAX = 250
         mode.message("Lower Item Limit".color(COLOR_COAL) + " has been enabled.")
 
-    new GameMode("old-elementalist", "oe", "Testing", "Replaces new elementalist with the old elementalist.", true) (mode, args) ->
+    new GameMode("old-elementalist", "oe", "Testing", "Replaces new elementalist with the old elementalist.", false) (mode, args) ->
         gameConfig.setUseOldMage(true)
         mode.message("New elementalist subclass replaced with old elementalist.".color(ENERGY_COLOR))
 
@@ -284,8 +294,3 @@ init
         GameMode.find("qp").enable()
         GameMode.find("tm").enable()
         GameMode.find("st").enable()
-
-    new GameMode("tameable-fawn", "tf", "Testing", "Tame fawns with acorns") (mode, args) ->
-        let value = args.size() > 1 ? args.get(0).isConfirmation() : true
-        gameConfig.setTameableFawnEnabled(value)
-        mode.message("Taming fawns enabled by placing acorns near them.".color(ENERGY_COLOR))

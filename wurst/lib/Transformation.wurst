@@ -13,11 +13,15 @@ import ObjectIDManager
 
 // Local imports:
 import HashingMap
+import UnitExtensions
 
 @configurable let BASE_ID = 'AZ00'
 
 // The option indicating whether proper names should be updated.
 @configurable let UPDATE_PROPER_NAME = true
+
+// The option indicating whether unit color should be corrected.
+@configurable let CORRECT_COLOR = true
 
 public interface Callback
     function run(unit target, int unitID)
@@ -140,3 +144,9 @@ init
 
                 // Remove the temporary unit once it is no longer needed.
                 temp.remove()
+
+    // Set unit color manually, as it will default to the slow color otherwise.
+    if CORRECT_COLOR
+        registerAfterEffect() (unit target, int unitID) ->
+            // Filter out units that do not glow.
+            target.correctColor()

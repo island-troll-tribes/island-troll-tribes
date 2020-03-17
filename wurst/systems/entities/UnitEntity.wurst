@@ -3,8 +3,8 @@ package UnitEntity
 // Standard library imports:v
 import ClosureTimers
 import HashMap
-import RegisterEvents
 import UnitIndexer
+import ClosureEvents
 
 // Third-party imports:
 import Lodash
@@ -35,6 +35,14 @@ public abstract class UnitEntity
         // Fire the event, as necessary.
         if entity != null
             entity.onDeath()
+
+    static function onRevive(unit target)
+        // Look up the entity for the reviving unit.
+        let entity = UnitEntity.findForUnit(target)
+
+        // Fire the event, as necessary.
+        if entity != null
+            entity.onRevive()
 
     static function onIndex(unit target)
         // Exit if the unit was already assigned an entity.
@@ -97,6 +105,11 @@ public abstract class UnitEntity
             theUnit.remove()
             theUnit = null
 
+    function onRevive()
+        postRevive()
+
+    function postRevive()
+
     function onDeath()
         postDeath()
 
@@ -108,8 +121,10 @@ public abstract class UnitEntity
         removeUnit()
 
 init
-    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
+    EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
         UnitEntity.onDeath(GetDyingUnit())
+    EventListener.add(EVENT_PLAYER_HERO_REVIVE_FINISH) ->
+        UnitEntity.onRevive(GetRevivingUnit())
 
     onUnitIndex() ->
         // Cache the state for later use.

@@ -126,7 +126,7 @@ function upgradeUnit(unit origin, int targetID)
     if GetLocalPlayer() == origin.getOwner()
         ForceUICancel()
 
-function onLearn(unit origin, int abilityID)
+function onCast(unit origin, int abilityID)
     // Look up the transformation denoted by the learned ability.
     let targetID = trollUpgradeMap.get(abilityID)
 
@@ -135,13 +135,11 @@ function onLearn(unit origin, int abilityID)
         return
 
     // Perform the upgrade after allowing casting to finish.
-    // TODO: Remove this once a helper unit performs the casting.
-    nullTimer() ->
-        upgradeUnit(origin, targetID)
+    upgradeUnit(origin, targetID)
 
 init
-    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_CAST) ->
-        onLearn(
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_FINISH) ->
+        onCast(
             EventData.getSpellAbilityUnit(),
             EventData.getSpellAbilityId()
         )

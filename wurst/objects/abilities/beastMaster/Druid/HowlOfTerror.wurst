@@ -1,0 +1,39 @@
+package HowlOfTerror
+
+
+// Standard Library Imports:
+import ClosureEvents
+import OrderIds
+import ChannelAbilityPreset
+
+// Local Imports:
+import LocalObjectIDs
+import LocalAssets
+import Pets
+
+
+let ORDER_ID = "blackarrowoff"
+let MANA_COST = 20
+let COOL_DOWN = 15.
+let ICON = LocalIcons.bTnHowlOfTerror
+
+@compiletime function createHowlOfTerrorDummy() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_HOWL_OF_TERROR_DUMMY, 1, true)
+    ..setDummyAbility()
+    ..presetBaseOrderID(lvl -> ORDER_ID)
+    ..setManaCost(1, MANA_COST)
+    ..setCooldown(1, COOL_DOWN)
+    ..setIconNormal(ICON)
+
+@compiletime function createHowlOfTerror() returns AbilityDefinitionPitLordHowlofTerror
+    return new AbilityDefinitionPitLordHowlofTerror(ABILITY_HOWL_OF_TERROR)
+    ..setDamageIncrease(1, .3)
+    ..setManaCost(1, 0)
+    ..setCooldown(1, 0)
+
+init 
+    EventListener.onCast(ABILITY_HOWL_OF_TERROR_DUMMY) (unit caster) ->
+        let pet = caster.getOwner().getPet()
+        pet.addAbility(ABILITY_HOWL_OF_TERROR)
+        pet.issueImmediateOrderById(OrderIds.howlofterror)
+        pet.removeAbility(ABILITY_HOWL_OF_TERROR)

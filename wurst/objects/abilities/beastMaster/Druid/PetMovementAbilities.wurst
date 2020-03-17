@@ -1,0 +1,88 @@
+package PetMovementAbilities
+
+
+// Standard Library Imports:
+import ChannelAbilityPreset
+import ClosureEvents
+import ClosureTimers
+import LodashExtensions
+
+// Local Imports:
+import LocalObjectIDs
+import PetMovement
+import Tribe
+import Game
+
+let TOOLTIP = ""
+let buttonPosX  = 0
+let buttonPosY  = 0
+let HOTKOY   = "I"
+let NAME_ENABLE     = "Enable Auto Pet Movement"
+let NAME_DISABLE    = "Disable Auto Pet Movement"
+let TOOL_TIP_ENABLE  = "Enable automatic pet control."
+let TOOL_TIP_DISABLE = "Disable automatic pet control"
+let TOOL_TIP_EXT_ENABLE  = "Enables your pet to automatically move and attack where you do."
+let TOOL_TIP_EXT_DISABLE  = "Disables automatic pet movement, instead you can order your pet with (R)."
+let ORDER_ID_ENABLE = "channel"
+let ORDER_ID_DISABLE = "barkskinoff"
+let icon = "ReplaceableTextures\\CommandButtons\\BTN{0}.blp"
+let COOLDOWN = 0.
+let MANA_COST = 0
+let CAST_TIME = 0.
+let CAST_RANGE = 99999.
+
+@compiletime function createEnableAutoControl() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_ENABLE_AUTO_CONTROL, 1, true)
+    ..setDummyAbility()
+    ..presetTargetTypes(Targettype.NONE)
+    ..setButtonPositionNormalX(buttonPosX)
+    ..setButtonPositionNormalY(buttonPosY)
+    ..setIconNormal(icon)
+    ..setHeroAbility(true)
+    ..setHotkeyNormal(HOTKOY)
+    ..setName(NAME_ENABLE)
+    ..setLevels(1)
+    ..setTooltipNormal(1, TOOL_TIP_ENABLE)
+    ..setTooltipNormalExtended(1, TOOL_TIP_EXT_ENABLE)
+    ..presetBaseOrderID(lvl -> ORDER_ID_ENABLE)
+    ..setAnimationNames("")
+
+@compiletime function createDisableAutoControl() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_DISABLE_AUTO_CONTROL, 1, true)
+    ..setDummyAbility()
+    ..presetTargetTypes(Targettype.NONE)
+    ..setButtonPositionNormalX(buttonPosX)
+    ..setButtonPositionNormalY(buttonPosY)
+    ..setIconNormal(icon)
+    ..setHeroAbility(true)
+    ..setHotkeyNormal(HOTKOY)
+    ..setName(NAME_DISABLE)
+    ..setLevels(1)
+    ..setTooltipNormal(1, TOOL_TIP_DISABLE)
+    ..setTooltipNormalExtended(1, TOOL_TIP_EXT_DISABLE)
+    ..presetBaseOrderID(lvl -> ORDER_ID_ENABLE)
+    ..setAnimationNames("")
+
+function enableAutoControl()
+    PET_AUTO_CONTROLS.remove(EventData.getTriggerPlayer())
+    PET_AUTO_CONTROLS.put(EventData.getTriggerPlayer(), true)
+    EventData.getTriggerUnit().removeAbility(ABILITY_ENABLE_AUTO_CONTROL)
+    EventData.getTriggerUnit().addAbility(ABILITY_DISABLE_AUTO_CONTROL)
+
+function disableAutoControl()
+    PET_AUTO_CONTROLS.remove(EventData.getTriggerPlayer())
+    PET_AUTO_CONTROLS.put(EventData.getTriggerPlayer(), false)
+    EventData.getTriggerUnit().removeAbility(ABILITY_DISABLE_AUTO_CONTROL)
+    EventData.getTriggerUnit().addAbility(ABILITY_ENABLE_AUTO_CONTROL)
+
+
+function initializeControls()
+    Tribe.getTribes().each(t -> t.getMembers().each(member -> PET_AUTO_CONTROLS.put(member, true)))
+
+init
+    EventListener.onCast(ABILITY_ENABLE_AUTO_CONTROL, _ -> enableAutoControl())
+    EventListener.onCast(ABILITY_DISABLE_AUTO_CONTROL, _ -> disableAutoControl())
+
+    registerGameStartEvent() ->
+        nullTimer() -> 
+            initializeControls()

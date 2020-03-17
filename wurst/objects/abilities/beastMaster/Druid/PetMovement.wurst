@@ -1,0 +1,87 @@
+package PetMovement
+
+
+// Standard Library Imports:
+import ClosureEvents
+import Orders
+import ClosureForGroups
+import HashMap
+
+// Local Imports:
+import UnitEntity
+import LocalObjectIDs
+import PlayerExtensions
+import Pets
+import BeastMaster
+
+vec2 array MOUSE_POS
+int array PLAYER_ORDER
+public let PET_AUTO_CONTROLS = new HashMap<player, bool>()
+
+let PET_ATTACK_RADIUS = 50.
+let PET_MOVE_RANGE = 200.
+
+
+
+
+function updateMousePos()
+    MOUSE_POS[EventData.getTriggerPlayer().getId()] = EventData.getMouseWorldPos()
+
+
+function onKeyDown(player triggerer)
+    if PET_AUTO_CONTROLS.get(triggerer) == true
+        return
+    forUnitsSelected(triggerer) (unit target) ->
+        // TODO: Change to check beastmaster subclasses once druid is a real subclass.
+        
+        if triggerer.canControl(target) and UnitEntity.findForUnit(target) instanceof BeastMaster
+            let pet = target.getOwner().getPet() 
+            let targetUnit = findTarget(triggerer)
+            if targetUnit != null and targetUnit.isEnemyOf(triggerer)
+                pet.issueTargetOrderById(Orders.attack, targetUnit)
+            else 
+                pet.issuePointOrderById(Orders.smart, MOUSE_POS[triggerer.getId()])
+
+
+function findTarget(player triggerer) returns unit
+    let targetPos = MOUSE_POS[triggerer.getId()]
+    let nearbyUnits = CreateGroup()..enumUnitsInRange(targetPos, PET_ATTACK_RADIUS)
+    unit closestUnit = null
+    for currUnit in nearbyUnits
+        if currUnit.getPos().distanceTo(targetPos) < closestUnit.getPos().distanceTo(targetPos) and currUnit.isEnemyOf(triggerer)
+            closestUnit = currUnit
+    return closestUnit
+
+
+function petOrder()
+    let u = EventData.getTriggerUnit()
+    if PET_AUTO_CONTROLS.get(EventData.getTriggerPlayer()) == false
+        return
+
+    if UnitEntity.findForUnit(u) instanceof BeastMaster
+    // if u.getTypeId() == UNIT_DRUID and u.getOwner().getPet() != null
+        let pet = GetTriggerUnit().getOwner().getPet()
+        if EventData.getOrderPos().toString() != null
+            var pos = EventData.getOrderPos()
+            pos.x += GetRandomReal(-PET_MOVE_RANGE, PET_MOVE_RANGE)
+            pos.y += GetRandomReal(-PET_MOVE_RANGE, PET_MOVE_RANGE)
+            pet.issuePointOrderById(Orders.smart, pos)
+        // if EventData.getOrderTargetItem() != null
+        //     pet.issueTargetOrderById(Orders.attack, EventData.getOrderTargetItem())
+        if EventData.getOrderTargetUnit() != null
+            pet.issueTargetOrderById(Orders.attack, EventData.getOrderTargetUnit())
+
+
+
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER) ->
+        petOrder()
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER) ->
+        petOrder()
+    registerPlayerEvent(EVENT_PLAYER_MOUSE_MOVE) ->
+        updateMousePos()
+
+    let t = CreateTrigger()..addAction(-> onKeyDown(GetTriggerPlayer()))
+
+    for index = 0 to bj_MAX_PLAYER_SLOTS - 1
+        t.registerPlayerKeyPress(players[index], OSKEY_R, OSKEY_META.NONE, true)

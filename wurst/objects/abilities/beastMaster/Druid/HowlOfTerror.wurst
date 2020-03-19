@@ -31,9 +31,12 @@ let ICON = LocalIcons.bTnHowlOfTerror
     ..setManaCost(1, 0)
     ..setCooldown(1, 0)
 
+function onCast(unit caster)
+    let pet = caster.getOwner().getPet()
+    pet.addAbility(ABILITY_HOWL_OF_TERROR)
+    pet.issueImmediateOrderById(OrderIds.howlofterror)
+    pet.removeAbility(ABILITY_HOWL_OF_TERROR)
+
 init 
     EventListener.onCast(ABILITY_HOWL_OF_TERROR_DUMMY) (unit caster) ->
-        let pet = caster.getOwner().getPet()
-        pet.addAbility(ABILITY_HOWL_OF_TERROR)
-        pet.issueImmediateOrderById(OrderIds.howlofterror)
-        pet.removeAbility(ABILITY_HOWL_OF_TERROR)
+        onCast(caster)

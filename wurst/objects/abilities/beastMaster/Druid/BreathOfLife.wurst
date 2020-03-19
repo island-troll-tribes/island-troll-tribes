@@ -1,31 +1,53 @@
 package BreathOfLife
 
-import AbilityObjEditing
 import LocalObjectIDs
 import ChannelAbilityPreset
 import OrderIds
 import ClosureEvents
 import ClosureTimers
+import TerrainUtils
+import LocalAssets
 
 let ORDER_ID = Orders.blizzard.toString()
 let COOL_DOWN = 30.
 let MANA_COST = 15
 let BUSH_DURATION = 30.
+let BUSH_OFFSET = 150.
+let MAX_BUSHES = 4
+let NAME = "Breath of Life"
+let TOOLTIP = "Grow bushes at will by breathing life into the ground."
+let BUSH_ID = 'B000'
 
-// let fakeBush = createDestructable('B000', pos, direction, scale, variation)
+vec2 array bushes
+
 
 @compiletime function createBreathOfLife() returns ChannelAbilityPreset
     return new ChannelAbilityPreset(ABILITY_BREATH_OF_LIFE, 1, true)
     ..setDummyAbility()
     ..presetBaseOrderID(lvl -> ORDER_ID)
-    ..setManaCost(1, MANA_COST)
-    ..setCooldown(1, COOL_DOWN)
+    ..presetManaCost(lvl -> MANA_COST)
+    ..presetCooldown(lvl -> COOL_DOWN)
     ..presetTargetTypes(Targettype.POINT)
+    ..presetIcon(LocalIcons.bTNBreathOfLife)
+    ..setName(NAME)
+    ..presetTooltipNormal(lvl -> TOOLTIP)
 
 function plantBush(vec2 target)
-    let fakeBush = createDestructable('B000', target, angle(0), 1, 0)
-    doAfter(BUSH_DURATION) -> 
-        fakeBush.kill()
+    if not target.isTerrainLand()
+        return
+    initializeBushes(target)
+    for int i = 0 to MAX_BUSHES
+        if bushes[i].isTerrainLand()
+            let bush = createDestructable(BUSH_ID, bushes[i], angle(0), 1.2, 0)
+            doAfter(BUSH_DURATION) -> 
+                bush.kill()
+
+function initializeBushes(vec2 target)
+    bushes[0] = target
+    bushes[1] = target.add(0, BUSH_OFFSET)
+    bushes[2] = target.add(0, -BUSH_OFFSET)
+    bushes[3] = target.add(-BUSH_OFFSET, 0)
+    bushes[4] = target.add(BUSH_OFFSET, 0)
 
 
 init

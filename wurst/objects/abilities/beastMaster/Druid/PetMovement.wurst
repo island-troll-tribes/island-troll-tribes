@@ -16,7 +16,7 @@ import BeastMaster
 
 vec2 array MOUSE_POS
 int array PLAYER_ORDER
-public let PET_AUTO_CONTROLS = new HashMap<player, bool>()
+public let PET_CONTROLS = new HashMap<player, bool>()
 
 let PET_ATTACK_RADIUS = 50.
 let PET_MOVE_RANGE = 200.
@@ -29,12 +29,12 @@ function updateMousePos()
 
 
 function onKeyDown(player triggerer)
-    if PET_AUTO_CONTROLS.get(triggerer) == true
+    if PET_CONTROLS.get(triggerer) == true
         return
     forUnitsSelected(triggerer) (unit target) ->
         // TODO: Change to check beastmaster subclasses once druid is a real subclass.
-        
-        if triggerer.canControl(target) and UnitEntity.findForUnit(target) instanceof BeastMaster
+        if triggerer.canControl(target) and target.getTypeId() == UNIT_BEAST_MASTER or target.getTypeId() == UNIT_DRUID
+        // if triggerer.canControl(target) and UnitEntity.findForUnit(target) instanceof BeastMaster
             let pet = target.getOwner().getPet() 
             let targetUnit = findTarget(triggerer)
             if targetUnit != null and targetUnit.isEnemyOf(triggerer)
@@ -55,11 +55,11 @@ function findTarget(player triggerer) returns unit
 
 function petOrder()
     let u = EventData.getTriggerUnit()
-    if PET_AUTO_CONTROLS.get(EventData.getTriggerPlayer()) == false
+    if PET_CONTROLS.get(EventData.getTriggerPlayer()) == false
         return
 
-    if UnitEntity.findForUnit(u) instanceof BeastMaster
-    // if u.getTypeId() == UNIT_DRUID and u.getOwner().getPet() != null
+    // if UnitEntity.findForUnit(u) instanceof BeastMaster
+    if u.getTypeId() == UNIT_DRUID or u.getTypeId() == UNIT_BEAST_MASTER and u.getOwner().getPet() != null
         let pet = GetTriggerUnit().getOwner().getPet()
         if EventData.getOrderPos().toString() != null
             var pos = EventData.getOrderPos()

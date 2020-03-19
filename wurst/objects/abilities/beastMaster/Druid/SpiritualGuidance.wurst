@@ -1,0 +1,47 @@
+package SpiritualGuidance
+
+import BuffObjEditing
+import AbilityObjEditing
+import LocalObjectIDs
+import Assets
+import ChannelAbilityPreset
+import StringExtensions
+import ColorUtils
+import ClosureEvents
+
+let BUFF_ID = compiletime(BUFF_ID_GEN.next())
+let BUFF_ORIGINAL_ID = 'Blrl'
+
+let HP_REGEN = 0.33
+let RANGE = 800.
+
+let TOOLTIP_NORM = "This unit's soul is being cared for by the druid. /n" + 
+                    "Granting it {0} health regeneration a second.".format(HP_REGEN.toString().color(HEALTH_COLOR))
+let NAME = "Spiritual Guidance"
+let ICON = Icons.bTNAncestralSpirit
+
+@compiletime function createBuff() returns BuffDefinition
+    return new BuffDefinition(BUFF_ID, BUFF_ORIGINAL_ID)
+    ..setName(1, NAME)
+    ..setTooltipNormal(1, TOOLTIP_NORM)
+
+@compiletime function createSpiritualGuidance() returns AbilityDefinitionUnholyAuracreep
+    return new AbilityDefinitionUnholyAuracreep(ABILITY_SPIRITUAL_GUIDANCE)
+    ..setLifeRegenerationIncrease(1, HP_REGEN)
+    ..setMovementSpeedIncrease(1, 0)
+    ..setPercentBonus(1, false)
+    ..setAreaofEffect(1, RANGE)
+    ..setBuffs(1, toRawCode(BUFF_ID))
+    ..setIconNormal(ICON)
+    ..setButtonPositionNormalX(3)
+    ..setButtonPositionNormalY(3)
+    ..setHeroAbility(true)
+    ..setCheckDependencies(false)
+
+function onEffect()
+    print("Hello")
+
+init
+    EventListener.add(EVENT_PLAYER_UNIT_SPELL_EFFECT) -> 
+        onEffect()
+        

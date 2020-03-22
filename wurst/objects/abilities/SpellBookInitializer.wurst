@@ -6,6 +6,7 @@ import LocalObjectIDs
 import HashMap
 import LinkedList
 import SpellBookHashMap
+import Transformation
 
 constant TOOLTIP_TRACKER_SPELLBOOK         = "The Tracker Knowledge, contains various spells to track a target."
 constant TOOLTIP_WARRIOR_SPELLBOOK         = "The Warrior Skills, contains description of the warrior abilities."
@@ -24,6 +25,7 @@ constant TOOLTIP_CONTORTIONIST_SPELLBOOK   = "The Contortionist Magical Abilitie
 constant TOOLTIP_TRAPPER_SPELLBOOK         = "The Trapper Toolkit, contains a few trap spell."
 constant TOOLTIP_ADVANCED_RADAR_SPELLBOOK  = "An improved better radar to locate unit around him with high precision."
 constant TOOLTIP_ITEM_RADAR                = "Contains spells allowing the gatherer to locate the items nearby using minimap ping."
+constant TOOLTIP_DRUID_SPELLBOOK           = "Spells that connect the Druid and his team with the ebb and flow of life."
 
 constant TOOLTIP_MAGE_INHERITED         = "Inherited Spells from the Mage."
 constant TOOLTIP_DEMENTIA_INHERITED     = "A bunch of assorted mage spells."
@@ -58,6 +60,9 @@ function getSpellBooks() returns LinkedList<SpellBookObject>
         new HeroSpellBookObject(ABILITY_ASSASSIN_SPELLBOOK         , "Assassin Spells"         , "E", TOOLTIP_ASSASSIN                  , ASSASSIN_ABILITY_HASH        , new Pair(1, 1), "Tome"              , 1, 1, 1),
         new HeroSpellBookObject(ABILITY_TRAPPER_SPELLBOOK          , "Trap Toolkit"            , "E", TOOLTIP_TRAPPER_SPELLBOOK         , TRAPPER_ABILITY_HASH         , new Pair(1, 1), "PackBeast"         , 3, 0, 0),
         new HeroSpellBookObject(ABILITY_GATHERER_SPELLBOOK         , "Item Radar"              , "R", TOOLTIP_ITEM_RADAR                , GATHERER_ABILITY_HASH        , new Pair(2, 1), "Spy"               , 3, 2, 1),
+        // Jaccouille
+        // Icon for druid spellbook.
+        new HeroSpellBookObject(ABILITY_DRUID_SPELLBOOK            , "Druidic Spells"          , "E", TOOLTIP_DRUID_SPELLBOOK           , DRUID_ABILITY_HASH           , new Pair(1, 1), "EntrapmentWard"    , 3, 0, 0),
 
         // Most of those are inherited Spellbooks
         new SpellBookObject(ABILITY_JUGGERNAUT_SPELLBOOK                , "Juggernaut Inherited Spells"   , "E", TOOLTIP_JUGGERNAUT_SPELLBOOK     , SS_HUNTER_INHERITED_SPELL    , new Pair(1, 1), "TrollPredator"   ),
@@ -75,3 +80,11 @@ function getSpellBooks() returns LinkedList<SpellBookObject>
 
 @compiletime function buildSpellBooks()
         getSpellBooks().forEach(spellbook -> spellbook.buildSpellBook())
+
+init
+        registerAfterEffect() (unit target, int unitID) ->
+                // Refresh the spellbook to fix access issues.
+                // TODO: Figure out why only this spellbook breaks.
+                if target.hasAbility(ABILITY_PET_SPELLS)
+                target.removeAbility(ABILITY_PET_SPELLS)
+                target.addAbility(ABILITY_PET_SPELLS)

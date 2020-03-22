@@ -8,6 +8,10 @@ import ChannelAbilityPreset
 import StringExtensions
 import ColorUtils
 import ClosureEvents
+import ClosureTimers
+import Pets
+import PlayerExtensions
+import ObjectIds
 
 let BUFF_ID = compiletime(BUFF_ID_GEN.next())
 let BUFF_ORIGINAL_ID = 'Blrl'
@@ -15,19 +19,26 @@ let BUFF_ORIGINAL_ID = 'Blrl'
 let HP_REGEN = 0.33
 let RANGE = 800.
 
-let TOOLTIP_NORM = "This unit's soul is being cared for by the druid. /n" + 
-                    "Granting it {0} health regeneration a second.".format(HP_REGEN.toString().color(HEALTH_COLOR))
+let PET_PROXIMITY_INTERVAL = 0.0315
+
+let TOOLTIP_NORM = "This unit's soul is being cared for by the druid." 
+let TOOLTIP_EXT = "Granting it {0} health regeneration a second.".format(HP_REGEN.toString().color(HEALTH_COLOR))
 let NAME = "Spiritual Guidance"
+
+// Jaccouille
 let ICON = Icons.bTNAncestralSpirit
+let BUFF_ICON = Icons.bTNAncestralSpirit
+// Also if you have a good idea for the aura model that would be cool, this one doesnt fit well i think.
 
 @compiletime function createBuff() returns BuffDefinition
     return new BuffDefinition(BUFF_ID, BUFF_ORIGINAL_ID)
     ..setName(1, NAME)
     ..setTooltipNormal(1, TOOLTIP_NORM)
+    ..setTooltipNormalExtended(1, TOOLTIP_EXT)
 
 @compiletime function createSpiritualGuidance() returns AbilityDefinitionUnholyAuracreep
     return new AbilityDefinitionUnholyAuracreep(ABILITY_SPIRITUAL_GUIDANCE)
-    ..setLifeRegenerationIncrease(1, HP_REGEN)
+    ..setLifeRegenerationIncrease(1, 0)
     ..setMovementSpeedIncrease(1, 0)
     ..setPercentBonus(1, false)
     ..setAreaofEffect(1, RANGE)
@@ -38,10 +49,26 @@ let ICON = Icons.bTNAncestralSpirit
     ..setHeroAbility(true)
     ..setCheckDependencies(false)
 
-function onEffect()
-    print("Hello")
+public function toggleSpiritForm(unit pet, bool inRange)
+    if inRange
+        if not pet.hasAbility(AbilityIds.invulnerable)
+            pet.addAbility(AbilityIds.invulnerable)
+            pet.setVertexColor(150, 255, 150, 180)
+    else 
+        if pet.hasAbility(AbilityIds.invulnerable)
+            pet.removeAbility(AbilityIds.invulnerable)
+            pet.setVertexColor(255, 255, 255, 255)
 
+function checkPetRadius()
+    doPeriodically(PET_PROXIMITY_INTERVAL) (CallbackPeriodic cb) ->
+        for owner in pets
+            if owner.getTroll().hasAbility(ABILITY_SPIRITUAL_GUIDANCE)
+                if IsUnitInRange(owner.getTroll(), owner.getPet(), RANGE)
+                    toggleSpiritForm(owner.getPet(), true)
+                else
+                    toggleSpiritForm(owner.getPet(), false)
+                
 init
-    EventListener.add(EVENT_PLAYER_UNIT_SPELL_EFFECT) -> 
-        onEffect()
+    // TODO: Change this to start with a callback system.
+    checkPetRadius()
         

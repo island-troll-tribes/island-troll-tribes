@@ -22,11 +22,16 @@ let NAME_ENABLE     = "Toggle Pet Control"
 let TOOL_TIP_ENABLE  = "Toggle pet control between automatic and manual."
 let ORDER_ID = "channel"
 let ORDER_ID_DISABLE = "barkskinoff"
-let ICON = LocalIcons.bTNTogglePetControls
 let COOLDOWN = 0.
 let MANA_COST = 0
 let CAST_TIME = 0.
 let CAST_RANGE = 99999.
+
+let AUTO_CONTROL_MESSAGE = "Auto pet control."
+let MANUAL_CONTROL_MESSAGE = "Manual pet control."
+
+// Jaccouille
+let ICON = LocalIcons.bTNTogglePetControls
 
 @compiletime function createTogglePetControl() returns ChannelAbilityPreset
     return new ChannelAbilityPreset(ABILITY_TOGGLE_PET_CONTROL, 1, true)
@@ -45,8 +50,10 @@ let CAST_RANGE = 99999.
 
 function togglePetControl()
     if PET_CONTROLS.getAndRemove(EventData.getTriggerPlayer())
+        print(MANUAL_CONTROL_MESSAGE)
         PET_CONTROLS.put(EventData.getTriggerPlayer(), false)
     else 
+        print(AUTO_CONTROL_MESSAGE)
         PET_CONTROLS.put(EventData.getTriggerPlayer(), true)
 
 function initializeControls()

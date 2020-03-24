@@ -3,42 +3,52 @@ package PetGrowth
 // Standard library imports:
 import ClosureTimers
 import LinkedList
+import ClosureEvents
+import HashMap
 
 // Local imports:
-import FlyingUnitDefinition
-import MathUtils
 import Pets
-import Hawk
 import Transformation
-import UnitEntity
+import LocalObjectIDs
 
-// The frequency for which pet growth is checked.
-let GROWTH_FREQUENCY = 4.
+// The time for each species to grow.
+let ELK_GROW_TIME = 90.
+let WOLF_GROW_TIME = 120.
+let BEAR_GROW_TIME = 150.
+let HAWK_GROW_TIME = 90.
 
-// The probability that a pet will advance.
-let GROWTH_RATE = 0.02
+// Map of the species to the growth time for that species.
+let SPECIES_TIME_MAP = new HashMap <int, real>()
+    ..put(UNIT_FAWN, ELK_GROW_TIME)
+    ..put(UNIT_WOLF_PUP, WOLF_GROW_TIME)
+    ..put(UNIT_BEAR_CUB, BEAR_GROW_TIME)
+    ..put(UNIT_HAWK_HATCHLING, HAWK_GROW_TIME)
+    ..put(UNIT_FOREST_DRAGON_HATCHLING, HAWK_GROW_TIME)
+    ..put(UNIT_RED_DRAGON_HATCHLING, HAWK_GROW_TIME)
+    ..put(UNIT_BRONZE_DRAGON_HATCHLING, HAWK_GROW_TIME)
+    ..put(UNIT_NETHER_DRAGON_HATCHLING, HAWK_GROW_TIME)
 
-function checkGrowth(unit pet)
+function growPet(unit pet)
     // Look up the growth chain for the pet.
     let chain = pet.getPetGrowthChain()
 
     // Look up the next unit along the chain.
     let next = chain.get(chain.indexOf(pet.getTypeId()) + 1)
 
-    // Exit if the unit is at the end of its chain or if it was not chosen.
-    if next == 0 or GetRandomReal(0., 1.) > GROWTH_RATE
+    // Gets the first unit in the growth chain to determine the species of the pet.
+    let species = pet.getPetGrowthChain().getFirst()
+
+    // Exit if the unit is at the end of its growth chain or if no growth time for that species was found.
+    if next == 0 or species == 0
         return
 
-    // Transform the pet to its next stage.
-    transformUnit(pet, next)
-
-    // Increment hawk abilities.
-    if UnitEntity.findForUnit(pet) instanceof Hawk
-        for abilityID in hawkAbilities
-            if flipCoin() and pet.getAbilityLevel(abilityID) < 6
-                pet.incAbilityLevel(abilityID)
+    // Wait until the appropriate growth time has passed.
+    doAfter(SPECIES_TIME_MAP.get(species)) ->
+        // Grow the pet.
+        transformUnit(pet, next)
+        // Start the growth cycle for the next stage.
+        growPet(pet)
 
 init
-    doPeriodically(GROWTH_FREQUENCY) (CallbackPeriodic cb) ->
-        for pet in ENUM_GROUP..enumPets()
-            checkGrowth(pet)
+    EventListener.onTargetCast(ABILITY_PET_TAME) (unit caster, unit target) ->
+        growPet(target)

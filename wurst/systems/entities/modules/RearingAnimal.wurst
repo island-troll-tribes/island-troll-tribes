@@ -13,15 +13,6 @@ import GameConfig
 import GeometryUtils
 import UnitEntity
 
-function unit.hasBaby() returns bool
-    // Randomly choose whether the unit will drop a pet.
-    return GetRandomReal(0, 1) <= udg_PET_CHANCE + 0.05 * ENUM_GROUP
-        ..enumUnitsInRange(this.getPos(), 400, null)
-        .asList()
-        .filter(target -> UnitEntity.findForUnit(target) instanceof BeastMaster)
-        .map(target -> target.getLevel())
-        ..add(0)
-        .max()
 
 public abstract class RearingAnimal extends BonyAnimal
     construct(unit whichUnit)
@@ -40,12 +31,11 @@ public abstract class RearingAnimal extends BonyAnimal
         return drops
 
     override function onDeath()
-        if getUnit().hasBaby() or gameConfig.isTameableFawnEnabled()
-            createUnit(
-                players[PLAYER_NEUTRAL_PASSIVE],
-                getChild(),
-                getPos(),
-                randomAngle()
-            )
+        createUnit(
+            players[PLAYER_NEUTRAL_PASSIVE],
+            getChild(),
+            getPos(),
+            randomAngle()
+        )
 
         super.onDeath()

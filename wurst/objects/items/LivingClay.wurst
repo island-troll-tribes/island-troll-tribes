@@ -40,6 +40,9 @@ let AURA_ABIL_ID = compiletime(ABIL_ID_GEN.next())
 // The ID for the ability for the bestowed by the aura.
 let AURA_BUFF_ID = compiletime(ABIL_ID_GEN.next())
 
+// The ID for the ability which trigger the ward destruction/explosion
+let EXPLOSION_ABIL_ID = compiletime(ABIL_ID_GEN.next())
+
 let ITEM_TOOLTIP = "" +
     "Places a sentry ward to watch the nearby area. Lasts indefinitely until " +
     "approached, at which point it explodes and damages nearby enemies."
@@ -75,6 +78,8 @@ let dummies = new HashMap<unit, unit>()
     new BuffDefinition(AURA_BUFF_ID, BuffIds.thornsAura)
         ..setIcon(LocalIcons.bTNGreenSentryWard)
         ..setTooltipNormal(1, "Paranoia")
+        ..setArtTarget(1, Abilities.magicSentryCaster)
+        ..setTargetAttachmentPoint0(1, "overhead")
         ..setTooltipNormalExtended(1, BUFF_TOOLTIP)
 
 @compiletime function createLivingClayAuraAbility()
@@ -101,6 +106,15 @@ let dummies = new HashMap<unit, unit>()
             TargetsAllowed.hero
         ))
 
+@compiletime function createExplosionAbility()
+    new AbilityDefinition(EXPLOSION_ABIL_ID, AbilityIds.mineexploding)
+        ..presetTargetsAllowed(lvl -> commaList(
+            TargetsAllowed.ground,
+            TargetsAllowed.enemies,
+            TargetsAllowed.vulnerable,
+            TargetsAllowed.hero
+        ))
+
 @compiletime function createLivingClayUnit()
     new UnitDefinition(UNIT_LIVING_CLAY, UnitIds.goblinlandmine)
         ..setNormalAbilities(commaList(
@@ -109,7 +123,7 @@ let dummies = new HashMap<unit, unit>()
             // Make the unit deal damage on death.
             ABILITY_WARD_DESTROY,
             // Make the unit die when approached.
-            AbilityIds.mineexploding
+            EXPLOSION_ABIL_ID
         ))
         ..setIconGameInterface(LocalIcons.bTNGreenSentryWard)
         ..setArmorType(ArmorType.Small)

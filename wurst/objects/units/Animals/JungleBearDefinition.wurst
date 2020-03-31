@@ -8,13 +8,22 @@ import UnitObjEditing
 // Local imports:
 import ElkDefinition
 import LocalObjectIDs
+import LocalAssets
 
-constant JUNGLE_BEAR_ABIL = commaList('AOCN', ABILITY_BASH) // Bear Block, Bash
+constant JUNGLE_BEAR_ABIL = commaList('AOCN', ABILITY_BASH, ABILITY_FEED_PET) // Bear Block, Bash
 
 class JungleBearDefinition extends UnitDefinition
     construct(int unitId)
         super(unitId, UnitIds.giantpolarbear)
-        this.setNormalAbilities(JUNGLE_BEAR_ABIL)
+        this.setNormalAbilities(commaList(
+            "AOCN",
+            ABILITY_FEED_PET.toRawCode(), 
+            ABILITY_PET_DAMAGE.toRawCode(), 
+            ABILITY_PET_ARMOR.toRawCode(),
+            ABILITY_PET_MAGIC_RESIST.toRawCode(),
+            ABILITY_GROW_PET.toRawCode()
+            )
+        )
         this.setAttack1DamageBase(15)
         this.setDefenseBase(3)
         this.setAcquisitionRange(200)
@@ -41,6 +50,13 @@ class JungleBearDefinition extends UnitDefinition
 class BearCubDefinition extends FawnDefinition
     construct(int unitId)
         super(unitId)
+        this.setNormalAbilities(commaList(
+            ABILITY_FEED_PET.toRawCode(),
+            ABILITY_PET_ARMOR.toRawCode(),
+            ABILITY_PET_MAGIC_RESIST.toRawCode(),
+            ABILITY_GROW_PET.toRawCode()
+            )
+        )
         this.setModelFile(Units.polarBear1)
         this.setTintingColorRed(150)
         this.setTintingColorBlue(150)
@@ -53,6 +69,14 @@ class BearCubDefinition extends FawnDefinition
 class AdultJungleBearDefinition extends JungleBearDefinition
     construct(int unitId)
         super(unitId)
+        this.setNormalAbilities(commaList(
+            "AOCN",
+            ABILITY_FEED_PET.toRawCode(), 
+            ABILITY_PET_DAMAGE.toRawCode(), 
+            ABILITY_PET_ARMOR.toRawCode(),
+            ABILITY_PET_MAGIC_RESIST.toRawCode()
+            )
+        )
         this.setAttack1DamageBase(33)
         this.setAttack1DamageSidesperDie(3)
         this.setScalingValue(1.35)

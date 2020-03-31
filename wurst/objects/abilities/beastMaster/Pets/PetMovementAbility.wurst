@@ -14,17 +14,13 @@ import PetMovement
 import Tribe
 import Game
 
-let TOOLTIP = ""
-let buttonPosX  = 0
+let buttonPosX  = 3
 let buttonPosY  = 0
-let HOTKOY   = "I"
-let NAME_ENABLE     = "Toggle Pet Control"
-let TOOL_TIP_ENABLE  = "Toggle pet control between automatic and manual."
+let HOTKEY   = "R"
+let NAME     = "Toggle Pet Control"
+let TOOLTIP  = "Toggle pet control."
+let TOOLTIP_EXT = "Toggle between automatic and manual pet controls."
 let ORDER_ID = "barkskinoff"
-let COOLDOWN = 0.
-let MANA_COST = 0
-let CAST_TIME = 0.
-let CAST_RANGE = 99999.
 
 let AUTO_CONTROL_MESSAGE = "Auto pet control."
 let MANUAL_CONTROL_MESSAGE = "Manual pet control."
@@ -40,21 +36,36 @@ let ICON = LocalIcons.bTNTogglePetControls
     ..setButtonPositionNormalY(buttonPosY)
     ..setIconNormal(ICON)
     ..setHeroAbility(true)
-    ..setHotkeyNormal(HOTKOY)
-    ..setName(NAME_ENABLE)
+    ..setHotkeyNormal(HOTKEY)
+    ..setName(NAME)
     ..setLevels(1)
-    ..setTooltipNormal(1, TOOL_TIP_ENABLE)
+    ..setTooltipNormal(1, TOOLTIP)
+    ..setTooltipNormalExtended(1, TOOLTIP_EXT)
     ..presetBaseOrderID(lvl -> ORDER_ID)
     ..setAnimationNames("")
 
+// Used to toggle pet controls stored in `PetMovement.wurst`.
 function togglePetControl()
+
+    // If auto controls are currently active.
     if PET_CONTROLS.getAndRemove(EventData.getTriggerPlayer())
+
+        // Print message alerting the switch to manual controls.
         print(MANUAL_CONTROL_MESSAGE)
+
+        // Reset the player's controls to manual mode.
         PET_CONTROLS.put(EventData.getTriggerPlayer(), false)
+
+    // If manual controls are currently active.
     else 
+
+        // Print message alerting the switch to auto controls.
         print(AUTO_CONTROL_MESSAGE)
+
+        // Reset the player's controls to auto mode.
         PET_CONTROLS.put(EventData.getTriggerPlayer(), true)
 
+// Initialize all player's controls to auto at the beginning of the game.
 function initializeControls()
     Tribe.getTribes().each(t -> t.getMembers().each(member -> PET_CONTROLS.put(member, true)))
 

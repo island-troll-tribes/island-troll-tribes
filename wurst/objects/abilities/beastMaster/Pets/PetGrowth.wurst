@@ -1,54 +1,209 @@
 package PetGrowth
 
 // Standard library imports:
-import ClosureTimers
 import LinkedList
 import ClosureEvents
 import HashMap
+import ChannelAbilityPreset
+import Assets
 
 // Local imports:
 import Pets
 import Transformation
 import LocalObjectIDs
+import SimError
+import LocalAssets
 
-// The time for each species to grow.
-let ELK_GROW_TIME = 90.
-let WOLF_GROW_TIME = 120.
-let BEAR_GROW_TIME = 150.
-let HAWK_GROW_TIME = 90.
+// Pet stat growth abilities
+let DAMAGE_TOOLTIP = "Condense Strength"
+let DAMAGE_TOOLTIP_EXT = "Increase your pet's damage by 1."
+let DAMAGE_ICON = LocalIcons.bTNCondenseStrength
 
-// Map of the species to the growth time for that species.
-let SPECIES_TIME_MAP = new HashMap <int, real>()
-    ..put(UNIT_FAWN, ELK_GROW_TIME)
-    ..put(UNIT_WOLF_PUP, WOLF_GROW_TIME)
-    ..put(UNIT_BEAR_CUB, BEAR_GROW_TIME)
-    ..put(UNIT_HAWK_HATCHLING, HAWK_GROW_TIME)
-    ..put(UNIT_FOREST_DRAGON_HATCHLING, HAWK_GROW_TIME)
-    ..put(UNIT_RED_DRAGON_HATCHLING, HAWK_GROW_TIME)
-    ..put(UNIT_BRONZE_DRAGON_HATCHLING, HAWK_GROW_TIME)
-    ..put(UNIT_NETHER_DRAGON_HATCHLING, HAWK_GROW_TIME)
+
+let ARMOR_TOOLTIP = "Fortify Armor"
+let ARMOR_TOOLTIP_EXT = "Increase your pet's armor by 1."
+let ARMOR_ICON = LocalIcons.bTNFortifyArmor
+
+
+let MAGIC_RESIST_TOOLTIP = "Resist Magic"
+let MAGIC_RESIST_TOOLTIP_EXT = "Increase your pet's magical resistance by 10%."
+let MAGIC_RESIST_ICON = LocalIcons.bTNResistMagic
+
+let STAT_MANA_COST = 2
+
+let GROWTH_TOOLTIP = "Advance Life"
+let GROWTH_TOOLTIP_EXT = "Your pet matures to the next stage of it's development."
+let GROWTH_MANACOST = 10
+let GROWTH_ICON = LocalIcons.bTNAdvanceLife
+
+let PET_LEVELS = new HashMap<unit, int>()
+let MAX_POINTS_PER_LEVEL = 3
+
+
+@compiletime function createPetDamageAbility() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_PET_DAMAGE, 1, true)
+    ..setDummyAbility()
+    ..setName("Increase Damage")
+    ..setIconNormal(DAMAGE_ICON)
+    ..setButtonPositionNormalX(0)
+    ..setButtonPositionNormalY(2)
+    ..setHotkeyNormal("Z")
+    ..presetCooldown(lvl -> 0)
+    ..setManaCost(1, STAT_MANA_COST)
+    ..presetTooltipNormal(lvl -> DAMAGE_TOOLTIP)
+    ..presetTooltipNormalExtended(lvl -> DAMAGE_TOOLTIP_EXT)
+
+@compiletime function createPetArmorAbility() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_PET_ARMOR, 1, true)
+    ..setDummyAbility()
+    ..setName("Increase Armor")
+    ..setIconNormal(ARMOR_ICON)
+    ..setButtonPositionNormalX(1)
+    ..setButtonPositionNormalY(2)
+    ..setHotkeyNormal("X")
+    ..presetCooldown(lvl -> 0)
+    ..setManaCost(1, STAT_MANA_COST)
+    ..presetTooltipNormal(lvl -> ARMOR_TOOLTIP)
+    ..presetTooltipNormalExtended(lvl -> ARMOR_TOOLTIP_EXT)
+
+@compiletime function createPetMagicResistAbility() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_PET_MAGIC_RESIST, 1, true)
+    ..setDummyAbility()
+    ..setIconNormal(MAGIC_RESIST_ICON)
+    ..setButtonPositionNormalX(2)
+    ..setButtonPositionNormalY(2)
+    ..setHotkeyNormal("C")
+    ..presetCooldown(lvl -> 0)
+    ..presetManaCost(lvl -> STAT_MANA_COST)
+    ..presetTooltipNormal(lvl -> MAGIC_RESIST_TOOLTIP)
+    ..presetTooltipNormalExtended(lvl -> MAGIC_RESIST_TOOLTIP_EXT)
+
+@compiletime function createMagicResistAbility() returns AbilityDefinitionRunedBracers
+    return new AbilityDefinitionRunedBracers(ABILITY_MAGIC_RESIST)
+    ..setLevels(10)
+    ..presetDamageReduction(lvl -> .1 * lvl)
+
+@compiletime function createPetGrowthAbility() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_GROW_PET, 1, true)
+    ..setDummyAbility()
+    ..setName("Grow Pet")
+    ..setIconNormal(GROWTH_ICON)
+    ..setButtonPositionNormalX(3)
+    ..setButtonPositionNormalY(2)
+    ..setHotkeyNormal("V")
+    ..setCooldown(1, 0)
+    ..setManaCost(1, GROWTH_MANACOST)
+    ..setTooltipNormal(1, GROWTH_TOOLTIP)
+    ..setTooltipNormalExtended(1, GROWTH_TOOLTIP_EXT)
+
+// Increases damage of the pet by 1.
+function increaseDamage(unit caster)
+
+    // If the caster is not a pet or the pet has used too many points this level exit.
+    if not caster.isPet() or not checkPetLevelCounter(caster)
+
+        return
+    
+    // Increase the damage of the pet by 1.
+    caster.setBaseDamage(caster.getBaseDamage(0) + 1, 0)
+
+    // Increment the counter of points spent by the pet.
+    incrementPetLevelCounter(caster)
+
+// Increases armor of the pet by 1.
+function increaseArmor(unit caster)
+
+    // If the caster is not a pet or the pet has used too many points this level exit.
+    if not caster.isPet() or not checkPetLevelCounter(caster)
+
+        return
+
+    // Increase the armor of the pet by 1.
+    caster.setArmor(caster.getArmor() + 1)
+
+    // Increment the counter of points spent by the pet.
+    incrementPetLevelCounter(caster)
+
+// Increases magic resistance of the pet by 10%.
+function increaseMagicResist(unit caster)
+
+    // If the caster is not a pet or the pet has used too many points this level exit.
+    if not caster.isPet() or not checkPetLevelCounter(caster)
+
+        return
+
+    // If this is the first instance of the ability being used give base magic resist ability.
+    if not caster.hasAbility(ABILITY_MAGIC_RESIST)
+
+        caster.addAbility(ABILITY_MAGIC_RESIST)
+
+    // Subsequent uses of the ability increment the level or the ability instead.
+    else 
+
+        caster.incAbilityLevel(ABILITY_MAGIC_RESIST)
+
+    // Increment the counter of points spent by the pet.
+    incrementPetLevelCounter(caster)
+
+// Used to increment the counter of stat points used by the pet.
+function incrementPetLevelCounter(unit pet)
+
+    // If the pet has already used a point.
+    if PET_LEVELS.has(pet)
+
+        // Increment the counter by 1.
+        PET_LEVELS.put(pet, PET_LEVELS.getAndRemove(pet) + 1)
+
+    // If this is the first use of a stat point this level.
+    else 
+        // Start tracking the pet.
+        PET_LEVELS.put(pet, 1)
+
+// Used to check how many points a pet has used this level.
+function checkPetLevelCounter(unit pet) returns bool
+
+    // If the pet has used more points than the allowed maximum.
+    if PET_LEVELS.get(pet) >= MAX_POINTS_PER_LEVEL
+
+        // Alert the player.
+        simError(pet.getOwner(), "Level up your troll to use more points.")
+
+        // Refund the mana spent and exit.
+        pet.setMana(pet.getMana() + STAT_MANA_COST)
+
+        return false
+
+    // If the pet still has available points to spend this level.
+    return true
+
+// Used to reset the counter of used stat points for a pet on hero level up.
+function resetPetLevelCounter(unit pet)
+
+    // Stop tracking the pet, allowing it to reset the next time a point is spent.
+    PET_LEVELS.remove(pet)
 
 function growPet(unit pet)
+
     // Look up the growth chain for the pet.
     let chain = pet.getPetGrowthChain()
 
     // Look up the next unit along the chain.
     let next = chain.get(chain.indexOf(pet.getTypeId()) + 1)
 
-    // Gets the first unit in the growth chain to determine the species of the pet.
-    let species = pet.getPetGrowthChain().getFirst()
-
-    // Exit if the unit is at the end of its growth chain or if no growth time for that species was found.
-    if next == 0 or species == 0
+    // Exit if the unit is at the end of its growth chain.
+    if next == 0
         return
 
-    // Wait until the appropriate growth time has passed.
-    doAfter(SPECIES_TIME_MAP.get(species)) ->
-        // Grow the pet.
-        transformUnit(pet, next)
-        // Start the growth cycle for the next stage.
-        growPet(pet)
-
+    // Grow the pet.
+    transformUnit(pet, next)
 init
-    EventListener.onTargetCast(ABILITY_PET_TAME) (unit caster, unit target) ->
-        growPet(target)
+    EventListener.onCast(ABILITY_PET_DAMAGE) (unit caster) ->
+        increaseDamage(caster)
+    EventListener.onCast(ABILITY_PET_ARMOR) (unit caster) ->
+        increaseArmor(caster)
+    EventListener.onCast(ABILITY_PET_MAGIC_RESIST) (unit caster) ->
+        increaseMagicResist(caster)
+    EventListener.add(EVENT_PLAYER_HERO_LEVEL) -> 
+        resetPetLevelCounter(EventData.getTriggerUnit().getOwner().getPet())
+    EventListener.onCast(ABILITY_GROW_PET) (unit caster) ->
+        growPet(caster)

@@ -13,6 +13,7 @@ import PlayerExtensions
 import StringExtensions
 import ColorUtils
 import LocalObjectIDs
+import LocalAssets
 
 let BUFF_ID = compiletime(BUFF_ID_GEN.next())
 let BUFF_ORIGINAL_ID = 'Blrl'
@@ -29,8 +30,7 @@ let TOOLTIP_EXT = "Granting it {0} health regeneration a second.".format(HP_REGE
 let NAME = "Spiritual Guidance"
 
 // Jaccouille
-let ICON = Icons.bTNAncestralSpirit
-let BUFF_ICON = Icons.bTNAncestralSpirit
+let ICON = LocalIcons.bTNSpiritualGuidance
 // Also if you have a good idea for the aura model that would be cool, this one doesnt fit well i think.
 
 @compiletime function createBuff() returns BuffDefinition
@@ -38,17 +38,21 @@ let BUFF_ICON = Icons.bTNAncestralSpirit
     ..setName(1, NAME)
     ..setTooltipNormal(1, TOOLTIP_NORM)
     ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+    ..setIcon(ICON)
 
 @compiletime function createSpiritualGuidance() returns AbilityDefinitionUnholyAuracreep
     return new AbilityDefinitionUnholyAuracreep(ABILITY_SPIRITUAL_GUIDANCE)
-    ..setLifeRegenerationIncrease(1, 0)
+    ..setLifeRegenerationIncrease(1, HP_REGEN)
+    ..setArtTarget(LocalAbilities.spiritualGuidance)
+    ..setTooltipNormal(1, TOOLTIP_NORM)
+    ..setTooltipNormalExtended(1, TOOLTIP_EXT)
     ..setMovementSpeedIncrease(1, 0)
     ..setPercentBonus(1, false)
     ..setAreaofEffect(1, RANGE)
     ..setBuffs(1, toRawCode(BUFF_ID))
     ..setIconNormal(ICON)
     ..setButtonPositionNormalX(3)
-    ..setButtonPositionNormalY(3)
+    ..setButtonPositionNormalY(0)
     ..setHeroAbility(true)
     ..setCheckDependencies(false)
 

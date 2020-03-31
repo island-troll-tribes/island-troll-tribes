@@ -6,24 +6,39 @@ import ChannelAbilityPreset
 import OrderIds
 import ClosureEvents
 import ClosureTimers
+
 // Local Imports:
 import LocalObjectIDs
 import TerrainUtils
 import LocalAssets
+import SimError
 
 let ORDER_ID = Orders.blizzard.toString()
 let COOL_DOWN = 30.
 let MANA_COST = 15
-let BUSH_DURATION = 30.
-let BUSH_OFFSET = 150.
-let MAX_BUSHES = 4
+let BUTTON_POS_X = 2
+let BUTTON_POS_Y = 0
+let HOTKEY = "E"
 let NAME = "Breath of Life"
 let TOOLTIP = "Grow bushes at will by breathing life into the ground."
+let TOOLTIP_EXT = "Attempt to grow bushes at the target location, must be used on dry ground."
+
+// Life time of the spawns bushes.
+let BUSH_DURATION = 30.
+
+// Distance between the center of the bushes.
+let BUSH_OFFSET = 150.
+
+// Number of bushes around the center.
+let MAX_BUSHES = 4
+
+// ID for the bush destructable.
 let BUSH_ID = 'B000'
 
 // Jaccouille
 let ICON = LocalIcons.bTNBreathOfLife
 
+// Array of the positions for the bushes around the center point.
 vec2 array bushes
 
 
@@ -33,21 +48,42 @@ vec2 array bushes
     ..presetBaseOrderID(lvl -> ORDER_ID)
     ..presetManaCost(lvl -> MANA_COST)
     ..presetCooldown(lvl -> COOL_DOWN)
+    ..setButtonPositionNormalX(BUTTON_POS_X)
+    ..setButtonPositionNormalY(BUTTON_POS_Y)
+    ..setHotkeyNormal(HOTKEY)
     ..presetTargetTypes(Targettype.POINT)
     ..presetIcon(ICON)
     ..setName(NAME)
-    ..presetTooltipNormal(lvl -> TOOLTIP)
+    ..setTooltipNormal(1, TOOLTIP)
+    ..setTooltipNormalExtended(1, TOOLTIP_EXT)
 
+// Plants the bushes in and around the target position.
 function plantBush(vec2 target)
-    if not target.isTerrainLand()
-        return
-    initializeBushes(target)
-    for int i = 0 to MAX_BUSHES
-        if bushes[i].isTerrainLand()
-            let bush = createDestructable(BUSH_ID, bushes[i], angle(0), 1.2, 0)
-            doAfter(BUSH_DURATION) -> 
-                bush.kill()
 
+    // Exit if the target position is not on land.
+    if not target.isTerrainLand()
+
+        // Notify the player of their mistake.
+        simError(EventData.getTriggerUnit().getOwner(), "Must be cast on land.")
+        return
+
+    // Determine the positions of the bushes around the center point.
+    initializeBushes(target)
+
+    // Iterate through all the side bushes.
+    for int i = 0 to MAX_BUSHES
+
+        // If the side bush would be created on land.
+        if bushes[i].isTerrainLand()
+
+            // Create the bush.
+            let bush = createDestructable(BUSH_ID, bushes[i], angle(0), 1.2, 0)
+
+            // Remove the bush after its lifetime.
+            doAfter(BUSH_DURATION) -> 
+                bush.remove()
+
+// Used to calculate the positions of the bushes surrounding the target position.
 function initializeBushes(vec2 target)
     bushes[0] = target
     bushes[1] = target.add(0, BUSH_OFFSET)

@@ -8,16 +8,20 @@ import ChannelAbilityPreset
 import ClosureForGroups
 import InstantDummyCaster
 import BuffObjEditing
+import Assets
 
 // Local Imports:
 import LocalObjectIDs
 import LocalAssets
 import Pets
 
-
+let BUTTON_POS_X = 1
+let BUTTON_POS_Y = 0
+let HOTKEY = "W"
 let DRUID_ROAR_DAMAGE_BOOST = .3
+let DRUID_ROAR_DURATION = 10.
 let MANA_COST = 20
-let COOL_DOWN = 15.
+let COOL_DOWN = 45.
 let DRUID_ROAR_BUFF_ID = compiletime(BUFF_ID_GEN.next())
 let DRUID_ROAR_TT = "This unit is under the affects of Nature's Roar. It has increased damage"
 
@@ -32,12 +36,13 @@ let ABILITY_WOLF_ROAR = compiletime(ABIL_ID_GEN.next())
 let WOLF_ROAR_RANGE = 600.
 let WOLF_AS_REDUCTION = .2
 let WOLF_MS_REDUCTION = .1
-let WOLF_ROAR_DURATION = 7.
+let WOLF_ROAR_DURATION = 4.
 let WOLF_ROAR_BUFF_ID = compiletime(BUFF_ID_GEN.next())
 let WOLF_ROAR_TT = "This unit begins shaking as a nearby wolf howls. It has reduced attack and movement speed."
 
 let ABILITY_BEAR_ROAR = compiletime(ABIL_ID_GEN.next())
 let ABILITY_BEAR_DAMAGE_REDUCTION = .3
+let BEAR_ROAR_DURATION = 10.
 let BEAR_ROAR_BUFF_ID = compiletime(BUFF_ID_GEN.next())
 let BEAR_ROAR_TT = "This unit witnesses the might of a bear and feels the difference in their strength. It has reduced damage."
 
@@ -56,6 +61,11 @@ let BEAR_ROAR_ICON = LocalIcons.bTnHowlOfTerror
     ..setIconNormal(DRUID_ROAR_ICON)
     ..setBuffs(1, DRUID_ROAR_BUFF_ID.toRawCode())
     ..setDamageIncrease(1, DRUID_ROAR_DAMAGE_BOOST)
+    ..setDurationHero(1, DRUID_ROAR_DURATION)
+    ..setDurationNormal(1, DRUID_ROAR_DURATION)
+    ..setButtonPositionNormalX(BUTTON_POS_X)
+    ..setButtonPositionNormalY(BUTTON_POS_Y)
+    ..setHotkeyNormal(HOTKEY)
     ..presetTargetsAllowed(lvl -> commaList(
             TargetsAllowed.air,
             TargetsAllowed.ground,
@@ -70,13 +80,11 @@ let BEAR_ROAR_ICON = LocalIcons.bTnHowlOfTerror
     return new BuffDefinition(DRUID_ROAR_BUFF_ID, BuffIds.roar)
     ..setIcon(DRUID_ROAR_ICON)
     ..setName(1, "Nature's Roar")
-    // Jaccouille
-    ..setArtTarget(1, LocalAbilities.rejuvMana)
     ..setTooltipNormal(1, "Nature's Roar")
     ..setTooltipNormalExtended(1, DRUID_ROAR_TT)
     ..setEditorSuffix(1, "(Wurst)")
 
-@compiletime function createDummySlow() returns AbilityDefinitionSlow
+@compiletime function createElkRoar() returns AbilityDefinitionSlow
     return new AbilityDefinitionSlow(ABILITY_ELK_ROAR)
     ..setLevels(1)
     ..setArtCaster("")
@@ -110,8 +118,7 @@ let BEAR_ROAR_ICON = LocalIcons.bTnHowlOfTerror
     return new BuffDefinition(ELK_ROAR_BUFF_ID, BuffIds.slow)
     ..setIcon(DRUID_ROAR_ICON)
     ..setName(1, "Elk's Composure")
-    // Jaccouille
-    ..setArtTarget(1, LocalAbilities.iceVeil)
+    ..setArtTarget(1, Abilities.speedTarget)
     ..setTooltipNormal(1, "Elk's Composure")
     ..setTooltipNormalExtended(1, ELK_ROAR_TT)
     ..setEditorSuffix(1, "(Wurst)")
@@ -142,7 +149,7 @@ let BEAR_ROAR_ICON = LocalIcons.bTnHowlOfTerror
     ..setIcon(WOLF_ROAR_ICON)
     ..setName(1, "Wolf's Intimidation")
     // Jaccouille
-    ..setArtTarget(1, LocalAbilities.rejuvMana)
+    ..setArtTarget(1, LocalAbilities.wolfsIntimidation)
     ..setTooltipNormal(1, "Wolf's Intimidation")
     ..setTooltipNormalExtended(1, WOLF_ROAR_TT)
     ..setEditorSuffix(1, "(Wurst)")
@@ -156,6 +163,8 @@ let BEAR_ROAR_ICON = LocalIcons.bTnHowlOfTerror
     ..setArtSpecial("")
     ..setDamageIncrease(1, ABILITY_BEAR_DAMAGE_REDUCTION)
     ..setBuffs(1, BEAR_ROAR_BUFF_ID.toRawCode())
+    ..setDurationHero(1, BEAR_ROAR_DURATION)
+    ..setDurationNormal(1, BEAR_ROAR_DURATION)
     ..setManaCost(1, 0)
     ..setCooldown(1, 0)
 

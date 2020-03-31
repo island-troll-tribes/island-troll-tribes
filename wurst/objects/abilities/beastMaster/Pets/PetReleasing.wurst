@@ -39,34 +39,6 @@ public function releasePet(unit caster)
         tribe.getMembers().forEach() (player member) ->
             member.print("A pet was released!".color(GENERAL_COLOR))
 
-    // If the pet was released in spirit form as a result of Druid.
-    // Disable the spirit form.
-    toggleSpiritForm(pet, false)
-
-// Releases the pet upon choosing a sub-class.
-function handleTransformation(unit origin, int targetID)
-    // Exit if the unit is not originally a base class.
-    if getTrollClassType(origin) != ClassType.BASE_CLASS
-        return
-
-    // Exit if the unit is not becoming a sub-class.
-    if getTrollClassType(targetID) != ClassType.SUB_CLASS
-        return
-
-    // Exit if the unit does not currently own a pet.
-    if origin.getOwner().getPet() == null
-        return
-
-    if targetID == UNIT_DRUID
-        return
-
-    // Release the pet if all conditions are met.
-    releasePet(origin)
-
 init
     EventListener.onCast(ABILITY_PET_RELEASE) (unit caster) ->
         releasePet(caster)
-
-    // Release pets if the new class does not have them.
-    registerPriorEffect() (unit target, int unitID) ->
-        handleTransformation(target, unitID)

@@ -1,0 +1,54 @@
+package PetFeeding
+
+// Standard library imports:
+import AbilityObjEditing
+import ClosureEvents
+import HashMap
+import Assets
+
+// Local imports:
+import LocalObjectIDs
+import Pets
+
+let ICON = Icons.bTNCannibalize
+let PET_FEEDING_RANGE = 600.
+let CORPSES_PER_LEVEL = 3
+
+let CORPSES_EATEN = new HashMap<unit, int>()
+
+
+@compiletime function createAbilityFeedPet() returns AbilityDefinitionRaiseDead
+    return new AbilityDefinitionRaiseDead(ABILITY_FEED_PET)
+    ..setIconNormal(ICON)
+    ..setButtonPositionNormalX(1)
+    ..setButtonPositionNormalY(1)
+    ..setHotkeyNormal("D")
+    // The corpse is removed without an effect.
+    ..setArtEffect("")
+    ..setLevels(1)
+    ..presetUnitTypeOne(lvl -> "")
+    ..presetUnitsSummonedTypeOne(lvl -> 0)
+    ..presetUnitsSummonedTypeTwo(lvl -> 0)
+    ..presetManaCost(lvl -> 0)
+    ..presetCooldown(lvl -> 0)
+    // The radius from which the order can be issued.
+    ..presetAreaofEffect(lvl -> 800)
+    // The ability is cast at melee range.
+    ..presetCastRange(lvl -> 128)
+    ..presetTooltipNormal(lvl -> "|c00ffcc00C|r - Eat Corpse")
+
+
+        
+function onCast(unit caster)
+    // Exit if the caster is not a pet.
+    if not caster.isPet()
+        return
+    // Grant the pet 1 mana for eating a corpse.
+    caster.setMana(caster.getMana() + 1)
+
+init 
+    // Uses this event so that it triggers once the corpse has been consumed.
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST) ->
+        if EventData.getSpellAbilityId() == ABILITY_FEED_PET
+            onCast(EventData.getTriggerUnit())
+        

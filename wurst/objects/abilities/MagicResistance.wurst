@@ -1,0 +1,100 @@
+package MagicResistance
+
+
+// Standard library imports:
+import AbilityObjEditing
+import BuffObjEditing
+import LinkedList
+import ObjectIds
+import ObjectIdGenerator
+
+// Local imports:
+import LocalObjectIDs
+import LocalAssets
+import StringExtensions
+import ColorUtils
+import SimError
+
+let BUFFS = asList(
+    BUFF_MAGIC_RESIST1,
+    BUFF_MAGIC_RESIST2,
+    BUFF_MAGIC_RESIST3,
+    BUFF_MAGIC_RESIST4,
+    BUFF_MAGIC_RESIST5,
+    BUFF_MAGIC_RESIST6,
+    BUFF_MAGIC_RESIST7,
+    BUFF_MAGIC_RESIST8,
+    BUFF_MAGIC_RESIST9,
+    BUFF_MAGIC_RESIST10
+)
+
+let MAX_LEVEL = 10
+let MIN_LEVEL = 1
+
+let DUMMY_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
+
+constant buffTuple array MAGIC_RESIST_BUFFS = [
+    compiletime (createDummyBuffObject("10% Magic Resist", "This unit is resisting 10% of magic damage.", LocalIcons.bTNResistMagic)),
+    compiletime (createDummyBuffObject("20% Magic Resist", "This unit is resisting 20% of magic damage.", LocalIcons.bTNResistMagic)),
+    compiletime (createDummyBuffObject("30% Magic Resist", "This unit is resisting 30% of magic damage.", LocalIcons.bTNResistMagic)),
+    compiletime (createDummyBuffObject("40% Magic Resist", "This unit is resisting 40% of magic damage.", LocalIcons.bTNResistMagic)),
+    compiletime (createDummyBuffObject("50% Magic Resist", "This unit is resisting 50% of magic damage.", LocalIcons.bTNResistMagic)),
+    compiletime (createDummyBuffObject("60% Magic Resist", "This unit is resisting 60% of magic damage.", LocalIcons.bTNResistMagic)),
+    compiletime (createDummyBuffObject("70% Magic Resist", "This unit is resisting 70% of magic damage.", LocalIcons.bTNResistMagic)),
+    compiletime (createDummyBuffObject("80% Magic Resist", "This unit is resisting 80% of magic damage.", LocalIcons.bTNResistMagic)),
+    compiletime (createDummyBuffObject("90% Magic Resist", "This unit is resisting 90% of magic damage.", LocalIcons.bTNResistMagic)),
+    compiletime (createDummyBuffObject("100% Magic Resist", "This unit is resisting 100% of magic damage.", LocalIcons.bTNResistMagic))
+]
+
+
+@compiletime function createMagicResistAbility() returns AbilityDefinitionRunedBracers
+    return new AbilityDefinitionRunedBracers(ABILITY_MAGIC_RESIST)
+    ..setLevels(MAX_LEVEL)
+    ..presetDamageReduction(lvl -> .1 * lvl)
+
+
+public function increaseMagicResitance(unit reciever) returns bool
+
+
+    if reciever.hasAbility(ABILITY_MAGIC_RESIST)
+
+        let abilityLevel = reciever.getAbilityLevel(ABILITY_MAGIC_RESIST)
+
+        if abilityLevel >= MAX_LEVEL
+            simError(reciever.getOwner(), "Unit already has max magic resist.")
+            return false
+
+        reciever.incAbilityLevel(ABILITY_MAGIC_RESIST)
+
+        reciever.removeAbility(MAGIC_RESIST_BUFFS[abilityLevel - 1].abilId)
+
+        reciever.addAbility(MAGIC_RESIST_BUFFS[abilityLevel].abilId)
+        
+    else
+        giveMagicResistance(reciever)
+
+    return true
+
+public function giveMagicResistance(unit u)
+
+    if u == null
+        return
+
+    u.addAbility(MAGIC_RESIST_BUFFS[0].abilId)
+
+    u.addAbility(ABILITY_MAGIC_RESIST)
+
+public function giveMagicResistanceLevel(unit u, int lvl)
+
+    if u == null or lvl < MIN_LEVEL or lvl > MAX_LEVEL
+
+        return
+
+    u.addAbility(ABILITY_MAGIC_RESIST)
+
+
+    for _ = 1 to lvl - 1
+
+        u.incAbilityLevel(ABILITY_MAGIC_RESIST)
+
+    u.addAbility(MAGIC_RESIST_BUFFS[lvl - 1].abilId)

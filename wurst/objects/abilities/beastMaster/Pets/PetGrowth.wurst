@@ -6,6 +6,7 @@ import ClosureEvents
 import HashMap
 import ChannelAbilityPreset
 import Assets
+import ClosureTimers
 
 // Local imports:
 import Pets
@@ -13,6 +14,7 @@ import Transformation
 import LocalObjectIDs
 import SimError
 import LocalAssets
+import MagicResistance
 
 // Pet stat growth abilities
 let DAMAGE_TOOLTIP = "Condense Strength"
@@ -36,8 +38,15 @@ let GROWTH_TOOLTIP_EXT = "Your pet matures to the next stage of it's development
 let GROWTH_MANACOST = 10
 let GROWTH_ICON = LocalIcons.bTNAdvanceLife
 
+// Stores the amount of times a pet has spent a stat point.
 let PET_LEVELS = new HashMap<unit, int>()
 let MAX_POINTS_PER_LEVEL = 3
+
+// Stores the amount of times pet upgraded damage.
+let PET_DAMAGE = new HashMap<unit, int>()
+
+// Stores the amount of times a per upgraded magic resist.
+let PET_MAGIC_RESIST = new HashMap<unit, int>()
 
 
 @compiletime function createPetDamageAbility() returns ChannelAbilityPreset
@@ -78,11 +87,6 @@ let MAX_POINTS_PER_LEVEL = 3
     ..presetTooltipNormal(lvl -> MAGIC_RESIST_TOOLTIP)
     ..presetTooltipNormalExtended(lvl -> MAGIC_RESIST_TOOLTIP_EXT)
 
-@compiletime function createMagicResistAbility() returns AbilityDefinitionRunedBracers
-    return new AbilityDefinitionRunedBracers(ABILITY_MAGIC_RESIST)
-    ..setLevels(10)
-    ..presetDamageReduction(lvl -> .1 * lvl)
-
 @compiletime function createPetGrowthAbility() returns ChannelAbilityPreset
     return new ChannelAbilityPreset(ABILITY_GROW_PET, 1, true)
     ..setDummyAbility()
@@ -110,6 +114,8 @@ function increaseDamage(unit caster)
     // Increment the counter of points spent by the pet.
     incrementPetLevelCounter(caster)
 
+    trackStatGrowth(PET_DAMAGE, caster)
+
 // Increases armor of the pet by 1.
 function increaseArmor(unit caster)
 
@@ -125,25 +131,19 @@ function increaseArmor(unit caster)
     incrementPetLevelCounter(caster)
 
 // Increases magic resistance of the pet by 10%.
-function increaseMagicResist(unit caster)
+function increasePetMagicResist(unit caster)
 
     // If the caster is not a pet or the pet has used too many points this level exit.
     if not caster.isPet() or not checkPetLevelCounter(caster)
 
         return
 
-    // If this is the first instance of the ability being used give base magic resist ability.
-    if not caster.hasAbility(ABILITY_MAGIC_RESIST)
-
-        caster.addAbility(ABILITY_MAGIC_RESIST)
-
-    // Subsequent uses of the ability increment the level or the ability instead.
-    else 
-
-        caster.incAbilityLevel(ABILITY_MAGIC_RESIST)
+    increaseMagicResitance(caster)
 
     // Increment the counter of points spent by the pet.
     incrementPetLevelCounter(caster)
+
+    trackStatGrowth(PET_MAGIC_RESIST, caster)
 
 // Used to increment the counter of stat points used by the pet.
 function incrementPetLevelCounter(unit pet)
@@ -196,13 +196,41 @@ function growPet(unit pet)
 
     // Grow the pet.
     transformUnit(pet, next)
+
+    // Reapply stats lost due to transformation.
+    reapplyStats(pet)
+
+// Used to reapply Damage and Magic resist which are lost due to pet transformation.
+function reapplyStats(unit pet)
+
+    // Check if the pet used a damage stat increase.
+    if PET_DAMAGE.has(pet)
+
+        // Give the pet back the stats it lost during transformation.
+        pet.setBaseDamage(pet.getBaseDamage(0) + PET_DAMAGE.getAndRemove(pet), 0)
+
+    // Check if the pet used a magic resist increase.
+    if PET_MAGIC_RESIST.has(pet)
+
+        // Give the pet back the level of magic resist it lost during transformation.
+        giveMagicResistanceLevel(pet, PET_MAGIC_RESIST.get(pet))
+
+// Used to track the stat points used by the pet to reapply later.
+function trackStatGrowth(HashMap<unit, int> stats, unit pet)
+    if stats.has(pet)
+        stats.put(pet, stats.getAndRemove(pet) + 1)
+
+    else 
+        stats.put(pet, 1)
+
+
 init
     EventListener.onCast(ABILITY_PET_DAMAGE) (unit caster) ->
         increaseDamage(caster)
     EventListener.onCast(ABILITY_PET_ARMOR) (unit caster) ->
         increaseArmor(caster)
     EventListener.onCast(ABILITY_PET_MAGIC_RESIST) (unit caster) ->
-        increaseMagicResist(caster)
+        increasePetMagicResist(caster)
     EventListener.add(EVENT_PLAYER_HERO_LEVEL) -> 
         resetPetLevelCounter(EventData.getTriggerUnit().getOwner().getPet())
     EventListener.onCast(ABILITY_GROW_PET) (unit caster) ->

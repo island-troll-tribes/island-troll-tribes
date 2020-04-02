@@ -37,115 +37,49 @@ constant buffTuple array MAGIC_RESIST_BUFFS = [
     ..setLevels(MAX_LEVEL)
     ..presetDamageReduction(lvl -> .1 * lvl)
 
+// Used to get a unit's current level of magic resistance.
+public function unit.getMagicResist() returns int
+
+    return this.getAbilityLevel(ABILITY_MAGIC_RESIST)
+
 
 // Used to give a unit the base level of magic resistance.
-public function giveMagicResistance(unit u)
+public function unit.setMagicResist()
 
     // Exit if the unit passed in is null.
-    if u == null
+    if this == null
         return
 
     // Add the base level of magic resistance.
-    u.addAbility(ABILITY_MAGIC_RESIST)
+    this.addAbility(ABILITY_MAGIC_RESIST)
 
     // Add the buff for the first level of magic resistance.
-    u.addAbility(MAGIC_RESIST_BUFFS[0].abilId)
+    this.addAbility(MAGIC_RESIST_BUFFS[0].abilId)
 
 // Used to give the unit a specific level of magic resistance.
-public function giveMagicResistanceLevel(unit u, int lvl)
+public function unit.setMagicResist(int lvl)
 
     // Exit if the unit is null or the desired level is out of the accepted range.
-    if u == null or lvl < MIN_LEVEL or lvl > MAX_LEVEL
+    if this == null or lvl < MIN_LEVEL or lvl > MAX_LEVEL
 
         return
 
-    // Add the base level of magic resistance.
-    u.addAbility(ABILITY_MAGIC_RESIST)
+    // If the unit already has magic resistance
+    if this.hasAbility(ABILITY_MAGIC_RESIST)
+
+        // Remove the buff corresponding to the original level.
+        this.removeAbility(MAGIC_RESIST_BUFFS[this.getMagicResist() - 1].abilId)
+
+        // remove the magic resistance ability.
+        this.removeAbility(ABILITY_MAGIC_RESIST)
+
+    // Add magic resistance ability
+    this.addAbility(ABILITY_MAGIC_RESIST)
 
     // Increment to level of magic resistance until at the desired level.
     for _ = 1 to lvl - 1
 
-        u.incAbilityLevel(ABILITY_MAGIC_RESIST)
+        this.incAbilityLevel(ABILITY_MAGIC_RESIST)
 
     // Add the corresponding buff to the desired level of magic resistance.
-    u.addAbility(MAGIC_RESIST_BUFFS[lvl - 1].abilId)
-
-// Used to increment a units magic resist by 1 level.
-public function increaseMagicResistance(unit u) returns bool
-
-    // Verify the unit already has magic resistance
-    if u.hasAbility(ABILITY_MAGIC_RESIST)
-
-        // Get the current level of magic resistance.
-        let abilityLevel = u.getAbilityLevel(ABILITY_MAGIC_RESIST)
-
-        // If the unit has the max level or magic resist, notify the player and return a failure to increment the level.
-        if abilityLevel >= MAX_LEVEL
-            simError(u.getOwner(), "Unit already has max magic resist.")
-            return false
-
-        // Increase the level of the magic resist ability.
-        u.incAbilityLevel(ABILITY_MAGIC_RESIST)
-
-        // Remove the buff used by the previous level.
-        u.removeAbility(MAGIC_RESIST_BUFFS[abilityLevel - 1].abilId)
-
-        // Add the buff used by the current level.
-        u.addAbility(MAGIC_RESIST_BUFFS[abilityLevel].abilId)
-        
-    // In case the unit doesn't have magic resistance.
-    else
-
-        // Give the unit the first level of magic resistance.
-        giveMagicResistance(u)
-
-    // Return a success in incrementing the level of magic resistance.
-    return true
-
-public function increaseMagicResistance(unit u, int levels) returns bool
-    for _ = 1 to levels
-        if not increaseMagicResistance(u)
-            return false
-        
-    return true
-
-// Used to decrement the amount of magic resist a unit has by 1 level.
-public function decreaseMagicResistance(unit u) returns bool
-
-    // Return a failure to decrease if the unit has no magic resistance.
-    if not u.hasAbility(ABILITY_MAGIC_RESIST)
-        return false
-
-    // Store the original level of magic resistance.
-    let abilityLevel = u.getAbilityLevel(ABILITY_MAGIC_RESIST)
-
-    // If the unit has higher than the first level or magic resistance.
-    if abilityLevel > 1
-
-        // Decrement the magic resistance ability.
-        u.decAbilityLevel(ABILITY_MAGIC_RESIST)
-
-        // Remove the magic resistance buff corresponding to the original level.
-        u.removeAbility(MAGIC_RESIST_BUFFS[abilityLevel - 1].abilId)
-
-        // Add the magic resistance buff corresponding to the new level.
-        u.addAbility(MAGIC_RESIST_BUFFS[abilityLevel - 2].abilId)
-    
-    // If the unit only has the first level of magic resistance.
-    else 
-
-        // Remove the magic resistance ability.
-        u.removeAbility(ABILITY_MAGIC_RESIST)
-
-        // Remove the magic resistance buff.
-        u.removeAbility(MAGIC_RESIST_BUFFS[abilityLevel -1].abilId)
-
-    // Return a successful decrement.
-    return true
-
-public function decreaseMagicResistance(unit u, int levels) returns bool
-    for _ = 1 to levels
-        if not decreaseMagicResistance(u)
-            return false
-        
-    return true
+    this.addAbility(MAGIC_RESIST_BUFFS[lvl - 1].abilId)

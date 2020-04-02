@@ -16,23 +16,25 @@ import SimError
 import LocalAssets
 import MagicResistance
 
-// Pet stat growth abilities
+// Mana cost for all stat growth abilities.
+let STAT_MANA_COST = 2
+
+// Damage growth variables.
 let DAMAGE_TOOLTIP = "Condense Strength"
 let DAMAGE_TOOLTIP_EXT = "Increase your pet's damage by 1."
 let DAMAGE_ICON = LocalIcons.bTNCondenseStrength
 
-
+// Armor growth variables.
 let ARMOR_TOOLTIP = "Fortify Armor"
 let ARMOR_TOOLTIP_EXT = "Increase your pet's armor by 1."
 let ARMOR_ICON = LocalIcons.bTNFortifyArmor
 
-
+// Magic resistance growth variables.
 let MAGIC_RESIST_TOOLTIP = "Resist Magic"
 let MAGIC_RESIST_TOOLTIP_EXT = "Increase your pet's magical resistance by 10%."
 let MAGIC_RESIST_ICON = LocalIcons.bTNResistMagic
 
-let STAT_MANA_COST = 2
-
+// Variables used to grow pet to next stage of life.
 let GROWTH_TOOLTIP = "Advance Life"
 let GROWTH_TOOLTIP_EXT = "Your pet matures to the next stage of it's development."
 let GROWTH_MANACOST = 10
@@ -138,7 +140,7 @@ function increasePetMagicResist(unit caster)
 
         return
 
-    increaseMagicResitance(caster)
+    increaseMagicResistance(caster)
 
     // Increment the counter of points spent by the pet.
     incrementPetLevelCounter(caster)
@@ -217,10 +219,17 @@ function reapplyStats(unit pet)
 
 // Used to track the stat points used by the pet to reapply later.
 function trackStatGrowth(HashMap<unit, int> stats, unit pet)
+
+    // Check if the pet is already being tracked.
     if stats.has(pet)
+
+        // If so increment the counter by 1.
         stats.put(pet, stats.getAndRemove(pet) + 1)
 
+    // If the pet is not being tracked already.
     else 
+
+        //Begin tracking with a value of 1.
         stats.put(pet, 1)
 
 

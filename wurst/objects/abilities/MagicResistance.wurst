@@ -4,9 +4,6 @@ package MagicResistance
 // Standard library imports:
 import AbilityObjEditing
 import BuffObjEditing
-import LinkedList
-import ObjectIds
-import ObjectIdGenerator
 
 // Local imports:
 import LocalObjectIDs
@@ -15,35 +12,23 @@ import StringExtensions
 import ColorUtils
 import SimError
 
-let BUFFS = asList(
-    BUFF_MAGIC_RESIST1,
-    BUFF_MAGIC_RESIST2,
-    BUFF_MAGIC_RESIST3,
-    BUFF_MAGIC_RESIST4,
-    BUFF_MAGIC_RESIST5,
-    BUFF_MAGIC_RESIST6,
-    BUFF_MAGIC_RESIST7,
-    BUFF_MAGIC_RESIST8,
-    BUFF_MAGIC_RESIST9,
-    BUFF_MAGIC_RESIST10
-)
-
+// Max level of magic resistance is 10 which = 100%.
 let MAX_LEVEL = 10
+// Minimum level of magic resistance is 1 which = 10%.
 let MIN_LEVEL = 1
 
-let DUMMY_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
-
+// Array of all the buffs used for different levels of magic resistance.
 constant buffTuple array MAGIC_RESIST_BUFFS = [
-    compiletime (createDummyBuffObject("10% Magic Resist", "This unit is resisting 10% of magic damage.", LocalIcons.bTNResistMagic)),
-    compiletime (createDummyBuffObject("20% Magic Resist", "This unit is resisting 20% of magic damage.", LocalIcons.bTNResistMagic)),
-    compiletime (createDummyBuffObject("30% Magic Resist", "This unit is resisting 30% of magic damage.", LocalIcons.bTNResistMagic)),
-    compiletime (createDummyBuffObject("40% Magic Resist", "This unit is resisting 40% of magic damage.", LocalIcons.bTNResistMagic)),
-    compiletime (createDummyBuffObject("50% Magic Resist", "This unit is resisting 50% of magic damage.", LocalIcons.bTNResistMagic)),
-    compiletime (createDummyBuffObject("60% Magic Resist", "This unit is resisting 60% of magic damage.", LocalIcons.bTNResistMagic)),
-    compiletime (createDummyBuffObject("70% Magic Resist", "This unit is resisting 70% of magic damage.", LocalIcons.bTNResistMagic)),
-    compiletime (createDummyBuffObject("80% Magic Resist", "This unit is resisting 80% of magic damage.", LocalIcons.bTNResistMagic)),
-    compiletime (createDummyBuffObject("90% Magic Resist", "This unit is resisting 90% of magic damage.", LocalIcons.bTNResistMagic)),
-    compiletime (createDummyBuffObject("100% Magic Resist", "This unit is resisting 100% of magic damage.", LocalIcons.bTNResistMagic))
+    compiletime (createDummyBuffObject("10% Magic Resist".color(MAGIC_RESIST_COLOR), "This unit is resisting 10% of magic damage.", LocalIcons.bTNResistMagic)),
+    compiletime (createDummyBuffObject("20% Magic Resist".color(MAGIC_RESIST_COLOR), "This unit is resisting 20% of magic damage.", LocalIcons.bTNResistMagic)),
+    compiletime (createDummyBuffObject("30% Magic Resist".color(MAGIC_RESIST_COLOR), "This unit is resisting 30% of magic damage.", LocalIcons.bTNResistMagic)),
+    compiletime (createDummyBuffObject("40% Magic Resist".color(MAGIC_RESIST_COLOR), "This unit is resisting 40% of magic damage.", LocalIcons.bTNResistMagic)),
+    compiletime (createDummyBuffObject("50% Magic Resist".color(MAGIC_RESIST_COLOR), "This unit is resisting 50% of magic damage.", LocalIcons.bTNResistMagic)),
+    compiletime (createDummyBuffObject("60% Magic Resist".color(MAGIC_RESIST_COLOR), "This unit is resisting 60% of magic damage.", LocalIcons.bTNResistMagic)),
+    compiletime (createDummyBuffObject("70% Magic Resist".color(MAGIC_RESIST_COLOR), "This unit is resisting 70% of magic damage.", LocalIcons.bTNResistMagic)),
+    compiletime (createDummyBuffObject("80% Magic Resist".color(MAGIC_RESIST_COLOR), "This unit is resisting 80% of magic damage.", LocalIcons.bTNResistMagic)),
+    compiletime (createDummyBuffObject("90% Magic Resist".color(MAGIC_RESIST_COLOR), "This unit is resisting 90% of magic damage.", LocalIcons.bTNResistMagic)),
+    compiletime (createDummyBuffObject("100% Magic Resist".color(MAGIC_RESIST_COLOR), "This unit is resisting 100% of magic damage.", LocalIcons.bTNResistMagic))
 ]
 
 
@@ -53,48 +38,114 @@ constant buffTuple array MAGIC_RESIST_BUFFS = [
     ..presetDamageReduction(lvl -> .1 * lvl)
 
 
-public function increaseMagicResitance(unit reciever) returns bool
-
-
-    if reciever.hasAbility(ABILITY_MAGIC_RESIST)
-
-        let abilityLevel = reciever.getAbilityLevel(ABILITY_MAGIC_RESIST)
-
-        if abilityLevel >= MAX_LEVEL
-            simError(reciever.getOwner(), "Unit already has max magic resist.")
-            return false
-
-        reciever.incAbilityLevel(ABILITY_MAGIC_RESIST)
-
-        reciever.removeAbility(MAGIC_RESIST_BUFFS[abilityLevel - 1].abilId)
-
-        reciever.addAbility(MAGIC_RESIST_BUFFS[abilityLevel].abilId)
-        
-    else
-        giveMagicResistance(reciever)
-
-    return true
-
+// Used to give a unit the base level of magic resistance.
 public function giveMagicResistance(unit u)
 
+    // Exit if the unit passed in is null.
     if u == null
         return
 
-    u.addAbility(MAGIC_RESIST_BUFFS[0].abilId)
-
+    // Add the base level of magic resistance.
     u.addAbility(ABILITY_MAGIC_RESIST)
 
+    // Add the buff for the first level of magic resistance.
+    u.addAbility(MAGIC_RESIST_BUFFS[0].abilId)
+
+// Used to give the unit a specific level of magic resistance.
 public function giveMagicResistanceLevel(unit u, int lvl)
 
+    // Exit if the unit is null or the desired level is out of the accepted range.
     if u == null or lvl < MIN_LEVEL or lvl > MAX_LEVEL
 
         return
 
+    // Add the base level of magic resistance.
     u.addAbility(ABILITY_MAGIC_RESIST)
 
-
+    // Increment to level of magic resistance until at the desired level.
     for _ = 1 to lvl - 1
 
         u.incAbilityLevel(ABILITY_MAGIC_RESIST)
 
+    // Add the corresponding buff to the desired level of magic resistance.
     u.addAbility(MAGIC_RESIST_BUFFS[lvl - 1].abilId)
+
+// Used to increment a units magic resist by 1 level.
+public function increaseMagicResistance(unit u) returns bool
+
+    // Verify the unit already has magic resistance
+    if u.hasAbility(ABILITY_MAGIC_RESIST)
+
+        // Get the current level of magic resistance.
+        let abilityLevel = u.getAbilityLevel(ABILITY_MAGIC_RESIST)
+
+        // If the unit has the max level or magic resist, notify the player and return a failure to increment the level.
+        if abilityLevel >= MAX_LEVEL
+            simError(u.getOwner(), "Unit already has max magic resist.")
+            return false
+
+        // Increase the level of the magic resist ability.
+        u.incAbilityLevel(ABILITY_MAGIC_RESIST)
+
+        // Remove the buff used by the previous level.
+        u.removeAbility(MAGIC_RESIST_BUFFS[abilityLevel - 1].abilId)
+
+        // Add the buff used by the current level.
+        u.addAbility(MAGIC_RESIST_BUFFS[abilityLevel].abilId)
+        
+    // In case the unit doesn't have magic resistance.
+    else
+
+        // Give the unit the first level of magic resistance.
+        giveMagicResistance(u)
+
+    // Return a success in incrementing the level of magic resistance.
+    return true
+
+public function increaseMagicResistance(unit u, int levels) returns bool
+    for _ = 1 to levels
+        if not increaseMagicResistance(u)
+            return false
+        
+    return true
+
+// Used to decrement the amount of magic resist a unit has by 1 level.
+public function decreaseMagicResistance(unit u) returns bool
+
+    // Return a failure to decrease if the unit has no magic resistance.
+    if not u.hasAbility(ABILITY_MAGIC_RESIST)
+        return false
+
+    // Store the original level of magic resistance.
+    let abilityLevel = u.getAbilityLevel(ABILITY_MAGIC_RESIST)
+
+    // If the unit has higher than the first level or magic resistance.
+    if abilityLevel > 1
+
+        // Decrement the magic resistance ability.
+        u.decAbilityLevel(ABILITY_MAGIC_RESIST)
+
+        // Remove the magic resistance buff corresponding to the original level.
+        u.removeAbility(MAGIC_RESIST_BUFFS[abilityLevel - 1].abilId)
+
+        // Add the magic resistance buff corresponding to the new level.
+        u.addAbility(MAGIC_RESIST_BUFFS[abilityLevel - 2].abilId)
+    
+    // If the unit only has the first level of magic resistance.
+    else 
+
+        // Remove the magic resistance ability.
+        u.removeAbility(ABILITY_MAGIC_RESIST)
+
+        // Remove the magic resistance buff.
+        u.removeAbility(MAGIC_RESIST_BUFFS[abilityLevel -1].abilId)
+
+    // Return a successful decrement.
+    return true
+
+public function decreaseMagicResistance(unit u, int levels) returns bool
+    for _ = 1 to levels
+        if not decreaseMagicResistance(u)
+            return false
+        
+    return true

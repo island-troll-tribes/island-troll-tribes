@@ -3,9 +3,10 @@ package SpiritualGuidance
 
 // Standard Library Imports:
 import BuffObjEditing
-import Assets
 import ChannelAbilityPreset
 import ClosureTimers
+import LinkedList
+import ClosureEvents
 
 // Local Imports:
 import Pets
@@ -14,38 +15,48 @@ import StringExtensions
 import ColorUtils
 import LocalObjectIDs
 import LocalAssets
+import MagicResistance
 
 let BUFF_ID = compiletime(BUFF_ID_GEN.next())
 let BUFF_ORIGINAL_ID = 'Blrl'
-let PET_ARMOR_ID = compiletime(ABIL_ID_GEN.next())
-let PER_ARMOR_BONUS = 10.
 
+// Aura gives 2 stat bonuses in each category to the pet while in range.
+let PET_STAT_BONUS = 2
+
+// Aura gives health regen to all allies in range.
 let HP_REGEN = 0.33
+
+// Range of the aura.
 let RANGE = 800.
 
-let PET_PROXIMITY_INTERVAL = 0.0315
+// How often the location of the pet is checked.
+let PET_PROXIMITY_INTERVAL = 0.3
 
-let TOOLTIP_NORM = "This unit's soul is being cared for by the druid." 
-let TOOLTIP_EXT = "Granting it {0} health regeneration a second.".format(HP_REGEN.toString().color(HEALTH_COLOR))
+let ABIL_TT = "Spiritual Guidance"
+let ABIL_TT_EXT = "The Druid takes great care of the spirit of those around him, granting allies {0} health regeneration.\n".format(HP_REGEN.toString().color(HEALTH_COLOR)) +
+                    "Additionally pets affected by Spiritual Guidance are able to transcend into their spirit form, gaining {0} points for every stat.".format(PET_STAT_BONUS.toString())
+let BUFF_TT = "This unit's soul is being cared for by the druid." 
+let BUFF_TT_EXT = "Granting it {0} health regeneration a second.".format(HP_REGEN.toString().color(HEALTH_COLOR))
 let NAME = "Spiritual Guidance"
+let ICON = LocalIcons.pASBTNSpiritualGuidance
 
-// Jaccouille
-let ICON = LocalIcons.bTNSpiritualGuidance
-// Also if you have a good idea for the aura model that would be cool, this one doesnt fit well i think.
+// List of the pets currently in spirit form.
+// Used to decide whether or not stats need to be changed.
+let SPIRITS = new LinkedList<unit>
 
 @compiletime function createBuff() returns BuffDefinition
     return new BuffDefinition(BUFF_ID, BUFF_ORIGINAL_ID)
     ..setName(1, NAME)
-    ..setTooltipNormal(1, TOOLTIP_NORM)
-    ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+    ..setTooltipNormal(1, BUFF_TT)
+    ..setTooltipNormalExtended(1, BUFF_TT_EXT)
     ..setIcon(ICON)
 
 @compiletime function createSpiritualGuidance() returns AbilityDefinitionUnholyAuracreep
     return new AbilityDefinitionUnholyAuracreep(ABILITY_SPIRITUAL_GUIDANCE)
     ..setLifeRegenerationIncrease(1, HP_REGEN)
     ..setArtTarget(LocalAbilities.spiritualGuidance)
-    ..setTooltipNormal(1, TOOLTIP_NORM)
-    ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+    ..setTooltipNormal(1, ABIL_TT)
+    ..setTooltipNormalExtended(1, ABIL_TT_EXT)
     ..setMovementSpeedIncrease(1, 0)
     ..setPercentBonus(1, false)
     ..setAreaofEffect(1, RANGE)
@@ -56,34 +67,82 @@ let ICON = LocalIcons.bTNSpiritualGuidance
     ..setHeroAbility(true)
     ..setCheckDependencies(false)
 
-@compiletime function createArmorBonus() returns AbilityDefinitionFrostArmorcreep
-    return new AbilityDefinitionFrostArmorcreep(PET_ARMOR_ID)
-    ..setArtCaster("")
-    ..setArtEffect("")
-    ..setArtSpecial("")
-    ..setArtTarget("")
-    ..setArmorBonus(1, PER_ARMOR_BONUS)
-
+// Used to toggle the spirit form of the pet when entering/leaving aura range.
 public function toggleSpiritForm(unit pet, bool inRange)
-    if inRange
-        if not pet.hasAbility(AbilityIds.invulnerable)
-            pet.addAbility(AbilityIds.invulnerable)
-            pet.setVertexColor(150, 255, 150, 180)
-    else 
-        if pet.hasAbility(AbilityIds.invulnerable)
-            pet.removeAbility(AbilityIds.invulnerable)
-            pet.setVertexColor(255, 255, 255, 255)
 
+    // If the pet is in range and not already a spirit.
+    if inRange and not SPIRITS.has(pet)
+
+        // Set the color and transparency to look spirity.
+        pet.setVertexColor(150, 255, 150, 180)
+        
+        // Increase the damage by 2.
+        pet.setBaseDamage(pet.getBaseDamage(0) + PET_STAT_BONUS , 0)
+
+        // Increase the armor by 2.
+        pet.setArmor(pet.getArmor() + PET_STAT_BONUS)
+
+        //Increase magic resistance by 2 levels.
+        increaseMagicResistance(pet, PET_STAT_BONUS)
+
+        // Add this unit to the list of spirits.
+        SPIRITS.add(pet)
+
+    // If the unit is out of range and is a spirit.
+    else if not inRange and SPIRITS.has(pet)
+
+        // Return the pet to it's normal color and transparency.
+        pet.setVertexColor(255, 255, 255, 255)
+
+        // Reduce the damage by 2.
+        pet.setBaseDamage(pet.getBaseDamage(0) - PET_STAT_BONUS , 0)
+
+        // Reduce the armor by 2.
+        pet.setArmor(pet.getArmor() - PET_STAT_BONUS)
+
+        // Reduce magic resistance by 2 levels.
+        decreaseMagicResistance(pet, PET_STAT_BONUS)
+
+        // Remove this unit from the list of spirits.
+        SPIRITS.remove(pet)
+
+// Used to continuously check if the pet is in range of the aura.
 function checkPetRadius()
+
     doPeriodically(PET_PROXIMITY_INTERVAL) (CallbackPeriodic cb) ->
+
+        // Cycle through all the owner/pet combos.
         for owner in pets
+
+            // Verify the pet's master has learned Spiritual Guidance.
             if owner.getTroll().hasAbility(ABILITY_SPIRITUAL_GUIDANCE)
+
+                // If the pet is in range of the aura.
                 if IsUnitInRange(owner.getTroll(), owner.getPet(), RANGE)
+
+                    // Transform the pet into it's spirit form.
                     toggleSpiritForm(owner.getPet(), true)
+
+                // If the pet is not in range of the aura.
                 else
+                
+                    // Transform the pet back into it's non-spirit form.
                     toggleSpiritForm(owner.getPet(), false)
+
+// Used to remove a pet from SPIRITS when it evolves.
+// This is done to ensure stats are properly adjusted within the aura.
+function onGrow(unit u)
+
+    // If the pet was a spirit before it evolved.
+    if SPIRITS.has(u)
+
+        // Remove the pet from list of spirits.
+        SPIRITS.remove(u)
                 
 init
     // TODO: Change this to start with a callback system.
     checkPetRadius()
-        
+
+    // Used the detect a pet evolving.
+    EventListener.onCast(ABILITY_GROW_PET) (unit caster) ->
+        onGrow(EventData.getTriggerUnit())

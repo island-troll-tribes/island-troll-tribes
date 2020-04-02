@@ -6,6 +6,7 @@ import ClosureEvents
 import Orders
 import ClosureForGroups
 import HashMap
+import LastOrder
 
 // Local Imports:
 import LocalObjectIDs
@@ -55,7 +56,7 @@ function onKeyDown(player triggerer)
             pet.issuePointOrderById(Orders.smart, MOUSE_POS[triggerer.getId()])
 
 // Auto control pet movement.
-function petOrder()
+function autoMovePet()
 
     // Exit if the player is using manual control mode.
     if PET_CONTROLS.get(EventData.getTriggerPlayer()) == false
@@ -67,36 +68,43 @@ function petOrder()
     // Verify the moving unit has a pet and is a derivitive of Beast Master.
     if u.getOwner().getPet() != null and getTrollBaseClass(u) == UNIT_BEAST_MASTER
 
-        // Store the pet.
-        let pet = GetTriggerUnit().getOwner().getPet()
+        // Store the pet of moving unit.
+        let pet = u.getOwner().getPet()
 
-        // If the issued order is a move order.
-        if EventData.getOrderPos().toString() != null
+        let prevOrder = u.getLastOrder()
 
-            // Copy the order with an offset on the x/y value to give a random pos around orderer.
-            var pos = EventData.getOrderPos()
-            pos.x += GetRandomReal(-PET_MOVE_RANGE, PET_MOVE_RANGE)
-            pos.y += GetRandomReal(-PET_MOVE_RANGE, PET_MOVE_RANGE)
+        // Compute the type of the previous order.
+        let orderType = prevOrder == null
+            ? OrderType.IMMEDIATE
+            : prevOrder.orderType
 
-            // Issue the order to the newly determined target position.
-            pet.issuePointOrderById(Orders.smart, pos)
-
-        // If the issued order is an attack order.
-        if EventData.getOrderTargetUnit() != null
-
-            // Copy the order and attack the target.
-            pet.issueTargetOrderById(Orders.attack, EventData.getOrderTargetUnit())
+        // Issue the previous order to the pet.
+        switch orderType
+            case POINT
+                // Moves the pet to a random location in a small circle around target pos.
+                vec2 targetPos = prevOrder.targetPosition
+                targetPos.x += GetRandomReal(-PET_MOVE_RANGE, PET_MOVE_RANGE)
+                targetPos.y += GetRandomReal(-PET_MOVE_RANGE, PET_MOVE_RANGE)
+                pet.issuePointOrderById(prevOrder.orderId, targetPos)
+            case TARGET
+                pet.issueTargetOrderById(prevOrder.orderId, prevOrder.target)
+            case IMMEDIATE
+                pet.issueImmediateOrderById(prevOrder.orderId)
 
 init
+    // Used for auto control of the pet.
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER) ->
-        petOrder()
+        autoMovePet()
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER) ->
-        petOrder()
+        autoMovePet()
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_ORDER) ->
+        autoMovePet()
 
     // Continually update the mouse positions of players.
     registerPlayerEvent(EVENT_PLAYER_MOUSE_MOVE) ->
         updateMousePos()
 
+    // Used for manual control of the pet.
     // Using triggers for this as it seems the events don't work.
     let t = CreateTrigger()..addAction(-> onKeyDown(GetTriggerPlayer()))
 

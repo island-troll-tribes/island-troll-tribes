@@ -1,0 +1,105 @@
+package PetRevive
+
+// Standard library imports:
+import ClosureEvents
+import AbilityObjEditing
+import ClosureTimers
+import OrderIds
+import MapBounds
+import InstantDummyCaster
+import HashMap
+
+// Local imports:
+import Pets
+import LocalObjectIDs
+import PlayerExtensions
+import ColorUtils
+import StringExtensions
+import DummyCorpse
+
+// Used to drop the corresponding amount of meat on pet death.
+let MEAT_DROPS = new HashMap<int, int>()
+    ..put(UNIT_FAWN,              1)
+    ..put(UNIT_ELK_ADOLESCENT,    6)
+    ..put(UNIT_ADULT_ELK,         7)
+    ..put(UNIT_WOLF_PUP,          1)
+    ..put(UNIT_JUNGLE_WOLF,       4)
+    ..put(UNIT_ADULT_JUNGLE_WOLF, 8)
+    ..put(UNIT_BEAR_CUB,          1)
+    ..put(UNIT_JUNGLE_BEAR,       7)
+    ..put(UNIT_ADULT_JUNGLE_BEAR, 9)
+
+// Used to drop the hide corresponding to the species of pet.
+let HIDE_DROPS = new HashMap<int, int>()
+    ..put(UNIT_ELK_ADOLESCENT   , ITEM_ELK_HIDE)
+    ..put(UNIT_ADULT_ELK        , ITEM_ELK_HIDE)
+    ..put(UNIT_JUNGLE_WOLF      , ITEM_JUNGLE_WOLF_HIDE)
+    ..put(UNIT_ADULT_JUNGLE_WOLF, ITEM_JUNGLE_WOLF_HIDE)
+    ..put(UNIT_JUNGLE_BEAR      , ITEM_JUNGLE_BEAR_HIDE)
+    ..put(UNIT_ADULT_JUNGLE_BEAR, ITEM_JUNGLE_BEAR_HIDE)
+
+// Time before pet revives.
+let PET_REVIVE_TIME = 60.
+
+// Small aoe to avoid reviving other units.
+let AOE = 1.
+
+// Used to get a random area around map bounds.
+let MAP_BOUNDS_OFFSET = 1000.
+
+// Message printed to owner on pet death.
+let DEATH_MESSAGE = "Your pet has died. It will revive in {0} seconds.".format(PET_REVIVE_TIME.toString().color(GOLD_COLOR))
+
+@compiletime function createPetRevive() returns AbilityDefinitionPaladinResurrection
+    return new AbilityDefinitionPaladinResurrection(ABILITY_PET_REVIVE)
+    ..setRaisedUnitsAreInvulnerable(1, false)
+    ..setNumberofCorpsesRaised(1, 2)
+    ..setAreaofEffect(1, AOE)
+    ..setDummyAbility()
+
+function onDeath(unit u)
+
+    // Exit if dying unit is not a pet.
+    if not u.isPet()
+        return
+
+    // Store the owner of the pet.
+    let owner = u.getOwner()
+
+    // Notify the owner that their pet died.
+    owner.print(DEATH_MESSAGE)
+
+    // Random pos around map bounds.
+    vec2 targetPos = boundMax
+    targetPos.x += GetRandomReal(-MAP_BOUNDS_OFFSET, MAP_BOUNDS_OFFSET)
+    targetPos.y += GetRandomReal(-MAP_BOUNDS_OFFSET, MAP_BOUNDS_OFFSET)
+
+    // Drop the required amount of meat.
+    for _ = 1 to MEAT_DROPS.get(u.getTypeId())
+        createCorpse(u.getPos())
+
+    // Drop a bone.
+    createItem(ITEM_BONE, u.getPos())
+    // Drop the corresponding hide.
+    createItem(HIDE_DROPS.get(u.getTypeId()), u.getPos())
+    
+
+    // Move the pet to target pos.
+    u.setPos(targetPos)
+
+    // Wait for revive timer.
+    doAfter(PET_REVIVE_TIME) -> 
+
+        // Verify that the unit is still the pet of the owner.
+        if u == owner.getPet()
+            
+            // Revive the pet.
+            InstantDummyCaster.castImmediate(u.getOwner(), ABILITY_PET_REVIVE, 1, Orders.resurrection, u.getPos())
+
+            // Move the pet back to its owner's troll.
+            u.setPos(u.getOwner().getTroll().getPos())
+
+
+init
+    EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
+        onDeath(EventData.getTriggerUnit())

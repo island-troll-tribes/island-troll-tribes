@@ -53,14 +53,14 @@ let DEATH_MESSAGE = "Your pet has died. It will revive in {0} seconds.".format(P
 @compiletime function createPetRevive() returns AbilityDefinitionPaladinResurrection
     return new AbilityDefinitionPaladinResurrection(ABILITY_PET_REVIVE)
     ..setRaisedUnitsAreInvulnerable(1, false)
-    ..setNumberofCorpsesRaised(1, 2)
+    ..setNumberofCorpsesRaised(1, 1)
     ..setAreaofEffect(1, AOE)
     ..setDummyAbility()
 
 function onDeath(unit u)
 
-    // Exit if dying unit is not a pet.
-    if not u.isPet()
+    // Exit if dying unit is not its owner's pet.
+    if u.getOwner().getPet() != u
         return
 
     // Store the owner of the pet.
@@ -69,35 +69,42 @@ function onDeath(unit u)
     // Notify the owner that their pet died.
     owner.print(DEATH_MESSAGE)
 
-    // Random pos around map bounds.
-    vec2 targetPos = boundMax
-    targetPos.x += GetRandomReal(-MAP_BOUNDS_OFFSET, MAP_BOUNDS_OFFSET)
-    targetPos.y += GetRandomReal(-MAP_BOUNDS_OFFSET, MAP_BOUNDS_OFFSET)
-
     // Drop the required amount of meat.
     for _ = 1 to MEAT_DROPS.get(u.getTypeId())
         createCorpse(u.getPos())
 
     // Drop a bone.
     createItem(ITEM_BONE, u.getPos())
+
     // Drop the corresponding hide.
     createItem(HIDE_DROPS.get(u.getTypeId()), u.getPos())
-    
 
-    // Move the pet to target pos.
-    u.setPos(targetPos)
+    // To ensure the corpse is moved after the postDeath movement of baby/child rearing animals.
+    nullTimer() -> 
 
-    // Wait for revive timer.
-    doAfter(PET_REVIVE_TIME) -> 
+        // Random pos around map bounds.
+        vec2 targetPos = boundMax
+        targetPos.x += GetRandomReal(-MAP_BOUNDS_OFFSET, MAP_BOUNDS_OFFSET)
+        targetPos.y += GetRandomReal(-MAP_BOUNDS_OFFSET, MAP_BOUNDS_OFFSET)
+        
 
-        // Verify that the unit is still the pet of the owner.
-        if u == owner.getPet()
-            
-            // Revive the pet.
-            InstantDummyCaster.castImmediate(u.getOwner(), ABILITY_PET_REVIVE, 1, Orders.resurrection, u.getPos())
+        // Move the pet to target pos.
+        u.setPos(targetPos)
 
-            // Move the pet back to its owner's troll.
-            u.setPos(u.getOwner().getTroll().getPos())
+        // Suspend decay of unit's corpse.
+        UnitSuspendDecay(u, true)
+
+        // Wait for revive timer.
+        doAfter(PET_REVIVE_TIME) -> 
+
+            // Verify that the unit is still the pet of the owner.
+            if u == owner.getPet()
+                
+                // Revive the pet.
+                InstantDummyCaster.castImmediate(u.getOwner(), ABILITY_PET_REVIVE, 1, Orders.resurrection, u.getPos())
+
+                // Move the pet back to its owner's troll.
+                u.setPos(u.getOwner().getTroll().getPos())
 
 
 init

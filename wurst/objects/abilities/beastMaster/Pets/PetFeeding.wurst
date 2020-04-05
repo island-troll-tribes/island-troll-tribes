@@ -4,6 +4,8 @@ package PetFeeding
 import AbilityObjEditing
 import ClosureEvents
 import Assets
+import SimError
+import Orders
 
 // Local imports:
 import LocalObjectIDs
@@ -38,12 +40,21 @@ function onCast(unit caster)
     // Exit if the caster is not a pet.
     if not caster.isPet()
         return
+
     // Grant the pet 1 mana for eating a corpse.
     caster.setMana(caster.getMana() + 1)
+
+function onFeed(unit caster)
+
+    if caster.getMana() == caster.getMaxMana()
+        simError(caster.getOwner(), "Your pet is already at full mana.")
+        caster.issueImmediateOrderById(Orders.stop)
 
 init 
     // Uses this event so that it triggers once the corpse has been consumed.
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST) ->
         if EventData.getSpellAbilityId() == ABILITY_FEED_PET
             onCast(EventData.getTriggerUnit())
+    EventListener.onCast(ABILITY_FEED_PET) (unit caster) ->
+        onFeed(caster)
         

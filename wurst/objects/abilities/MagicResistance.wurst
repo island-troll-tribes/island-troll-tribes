@@ -57,6 +57,7 @@ public function unit.setMagicResist()
     this.addAbility(MAGIC_RESIST_BUFFS[0].abilId)
 
 // Used to give the unit a specific level of magic resistance.
+// Each level is 10%. eg. level 1 gives 10%, lvl 6 gives 60%.
 public function unit.setMagicResist(int lvl)
 
     // Exit if the unit is null or the desired level is out of the accepted range.
@@ -83,3 +84,16 @@ public function unit.setMagicResist(int lvl)
 
     // Add the corresponding buff to the desired level of magic resistance.
     this.addAbility(MAGIC_RESIST_BUFFS[lvl - 1].abilId)
+
+// Used to remove all magic resistance from a unit.
+public function unit.removeMagicResist()
+
+    // Exit if unit is null.
+    if this == null
+        return
+    
+    // Remove the buff first as that depends on the level of the ability.
+    this.removeAbility(MAGIC_RESIST_BUFFS[this.getMagicResist() - 1].abilId)
+
+    // Remove the ability.
+    this.removeAbility(ABILITY_MAGIC_RESIST)

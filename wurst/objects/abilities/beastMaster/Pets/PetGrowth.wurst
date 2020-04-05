@@ -41,15 +41,23 @@ let GROWTH_MANACOST = 10
 let GROWTH_ICON = LocalIcons.bTNAdvanceLife
 
 // Stores the amount of times a pet has spent a stat point.
-let PET_LEVELS = new HashMap<unit, int>()
+let PET_LEVELS = new HashMap<player, int>()
 let MAX_POINTS_PER_LEVEL = 3
 
-// Stores the amount of times pet upgraded damage.
-let PET_DAMAGE = new HashMap<unit, int>()
+// Tracks the amount of armor given to a specific unit.
+// Used to calculate new armor as armor carries over between transformations.
+let PET_ARMOR = new HashMap<unit, int>()
 
-// Stores the amount of times a per upgraded magic resist.
-let PET_MAGIC_RESIST = new HashMap<unit, int>()
+// Stores the total amount of times a pet upgraded damage. Used to reapply stats for new pet.
+let TOTAL_DAMAGE = new HashMap<player, int>()
 
+
+// Stores the total amount of times a pet upgraded armor. Used to reapply stats for new pet.
+let TOTAL_ARMOR = new HashMap<player, int>()
+
+
+// Stores the total amount of times a pet upgraded magic resist. Used to reapply stats for new pet.
+let TOTAL_MAGIC_RESIST = new HashMap<player, int>()
 
 @compiletime function createPetDamageAbility() returns ChannelAbilityPreset
     return new ChannelAbilityPreset(ABILITY_PET_DAMAGE, 1, true)
@@ -116,7 +124,7 @@ function increaseDamage(unit caster)
     // Increment the counter of points spent by the pet.
     incrementPetLevelCounter(caster)
 
-    trackStatGrowth(PET_DAMAGE, caster)
+    trackStatGrowth(TOTAL_DAMAGE, caster.getOwner())
 
 // Increases armor of the pet by 1.
 function increaseArmor(unit caster)
@@ -131,6 +139,13 @@ function increaseArmor(unit caster)
 
     // Increment the counter of points spent by the pet.
     incrementPetLevelCounter(caster)
+    
+    // Track the armor gained by this unit.
+    trackStatGrowth(PET_ARMOR, caster)
+
+    // Track the total armor gained by any pet.
+    trackStatGrowth(TOTAL_ARMOR, caster.getOwner())
+
 
 // Increases magic resistance of the pet by 10%.
 function increasePetMagicResist(unit caster)
@@ -140,32 +155,36 @@ function increasePetMagicResist(unit caster)
 
         return
 
+    // Increment magic resist to the next level.
     caster.setMagicResist(caster.getMagicResist() + 1)
 
     // Increment the counter of points spent by the pet.
     incrementPetLevelCounter(caster)
 
-    trackStatGrowth(PET_MAGIC_RESIST, caster)
+    // Track the total magic resist gained by all pets.
+    trackStatGrowth(TOTAL_MAGIC_RESIST, caster.getOwner())
+
 
 // Used to increment the counter of stat points used by the pet.
 function incrementPetLevelCounter(unit pet)
+    let owner = pet.getOwner()
 
     // If the pet has already used a point.
-    if PET_LEVELS.has(pet)
+    if PET_LEVELS.has(owner)
 
         // Increment the counter by 1.
-        PET_LEVELS.put(pet, PET_LEVELS.getAndRemove(pet) + 1)
+        PET_LEVELS.put(owner, PET_LEVELS.getAndRemove(owner) + 1)
 
     // If this is the first use of a stat point this level.
     else 
         // Start tracking the pet.
-        PET_LEVELS.put(pet, 1)
+        PET_LEVELS.put(owner, 1)
 
 // Used to check how many points a pet has used this level.
 function checkPetLevelCounter(unit pet) returns bool
 
     // If the pet has used more points than the allowed maximum.
-    if PET_LEVELS.get(pet) >= MAX_POINTS_PER_LEVEL
+    if PET_LEVELS.get(pet.getOwner()) >= MAX_POINTS_PER_LEVEL
 
         // Alert the player.
         simError(pet.getOwner(), "Level up your troll to use more points.")
@@ -182,7 +201,7 @@ function checkPetLevelCounter(unit pet) returns bool
 function resetPetLevelCounter(unit pet)
 
     // Stop tracking the pet, allowing it to reset the next time a point is spent.
-    PET_LEVELS.remove(pet)
+    PET_LEVELS.remove(pet.getOwner())
 
 function growPet(unit pet)
 
@@ -192,32 +211,13 @@ function growPet(unit pet)
     // Look up the next unit along the chain.
     let next = chain.get(chain.indexOf(pet.getTypeId()) + 1)
 
-    // Exit if the unit is at the end of its growth chain.
-    if next == 0
-        return
-
     // Grow the pet.
     transformUnit(pet, next)
 
     // Reapply stats lost due to transformation.
-    reapplyStats(pet)
+    reapplyStats(pet.getOwner(), pet)
 
-// Used to reapply Damage and Magic resist which are lost due to pet transformation.
-function reapplyStats(unit pet)
-
-    // Check if the pet used a damage stat increase.
-    if PET_DAMAGE.has(pet)
-
-        // Give the pet back the stats it lost during transformation.
-        pet.setBaseDamage(pet.getBaseDamage(0) + PET_DAMAGE.getAndRemove(pet), 0)
-
-    // Check if the pet used a magic resist increase.
-    if PET_MAGIC_RESIST.has(pet)
-
-        // Give the pet back the level of magic resist it lost during transformation.
-        pet.setMagicResist(PET_MAGIC_RESIST.get(pet))
-
-// Used to track the stat points used by the pet to reapply later.
+// Used to track the stat points used by the pet to reapply after growth.
 function trackStatGrowth(HashMap<unit, int> stats, unit pet)
 
     // Check if the pet is already being tracked.
@@ -232,6 +232,65 @@ function trackStatGrowth(HashMap<unit, int> stats, unit pet)
         //Begin tracking with a value of 1.
         stats.put(pet, 1)
 
+function trackStatGrowth(HashMap<player, int> stats, player owner)
+    // Check if the pet is already being tracked.
+    if stats.has(owner)
+
+        // If so increment the counter by 1.
+        stats.put(owner, stats.getAndRemove(owner) + 1)
+
+    // If the pet is not being tracked already.
+    else 
+
+        //Begin tracking with a value of 1.
+        stats.put(owner, 1)
+
+// Used to reapply Damage and Magic resist which are lost due to pet transformation.
+function reapplyStats(player owner, unit pet)
+
+    // Check if the pet needs a damage increase.
+    if TOTAL_DAMAGE.has(owner)
+
+        // Give the pet all the required damage.
+        pet.setBaseDamage(pet.getBaseDamage(0) + TOTAL_DAMAGE.get(owner), 0)
+
+    // Check if the pet needs to increase magic resist.
+    if TOTAL_MAGIC_RESIST.has(owner)
+
+        // Give the pet all the required magic resist.
+        pet.setMagicResist(TOTAL_MAGIC_RESIST.get(owner))
+
+    // Check if the pet needs an armor incrase.
+    if TOTAL_ARMOR.has(owner)
+
+        // Give the pet all required armor.
+        pet.setArmor(pet.getArmor() + TOTAL_ARMOR.get(owner) - PET_ARMOR.get(owner.getPet()))
+
+// Used to reset the stats of an animal to their base amounts on release.
+function resetStats(player owner)
+
+    // Store the pet.
+    let pet = owner.getPet()
+
+    // If the animal needs to reset its damage.
+    if TOTAL_DAMAGE.has(owner)
+
+        // Take away all damage gained through points.
+        pet.setBaseDamage(pet.getBaseDamage(0) - TOTAL_DAMAGE.get(owner), 0)
+
+    // If the animal needs to reset its magic resist.
+    if TOTAL_MAGIC_RESIST.has(owner)
+
+        // Take away all magic resist gained through points.
+        pet.removeMagicResist()
+
+    // If the armor
+    if TOTAL_ARMOR.has(owner)
+        pet.setArmor(pet.getArmor() - TOTAL_ARMOR.get(owner))
+
+    // Stop tracking the animal.
+    if PET_ARMOR.has(pet)
+        PET_ARMOR.remove(pet)
 
 init
     EventListener.onCast(ABILITY_PET_DAMAGE) (unit caster) ->
@@ -244,3 +303,7 @@ init
         resetPetLevelCounter(EventData.getTriggerUnit().getOwner().getPet())
     EventListener.onCast(ABILITY_GROW_PET) (unit caster) ->
         growPet(caster)
+    EventListener.onCast(ABILITY_PET_TAME) (unit caster) ->
+        reapplyStats(caster.getOwner(), EventData.getSpellTargetUnit())
+    EventListener.onCast(ABILITY_PET_RELEASE) (unit caster) ->
+        resetStats(EventData.getTriggerPlayer())

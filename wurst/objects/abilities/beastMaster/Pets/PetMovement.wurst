@@ -7,6 +7,7 @@ import Orders
 import ClosureForGroups
 import HashMap
 import LastOrder
+import LinkedList
 
 // Local Imports:
 import LocalObjectIDs
@@ -25,6 +26,15 @@ let PET_ATTACK_RADIUS = 100.
 // Pet will randomly choose a position in this radius from target position in automatic mode.
 // This is done to prevent the pet and troll from stacking as well as an aesthetic choice.
 let PET_MOVE_RANGE = 200.
+
+// The orders that the pet is allowed to copy using auto movement.
+let ALLOWED_ORDERS = asList(
+    Orders.smart,
+    Orders.move,
+    Orders.attack,
+    Orders.stop,
+    Orders.holdposition
+)
 
 // Used to continuously track the mouse position of players, used to order pet in manual control mode.
 function updateMousePos()
@@ -71,13 +81,17 @@ function autoMovePet()
         // Store the pet of moving unit.
         let pet = u.getOwner().getPet()
 
-        let prevOrder = u.getLastOrder()
+        var prevOrder = u.getLastOrder()
 
         // Compute the type of the previous order.
         let orderType = prevOrder == null
             ? OrderType.IMMEDIATE
             : prevOrder.orderType
 
+        // Exit if the pet is not allowed to copy the order.
+        if not ALLOWED_ORDERS.has(prevOrder.orderId)
+            return
+        
         // Issue the previous order to the pet.
         switch orderType
             case POINT

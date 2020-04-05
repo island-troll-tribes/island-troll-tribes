@@ -2,6 +2,7 @@ package PetReleasing
 
 // Standard library imports:
 import ClosureEvents
+import ClosureTimers
 
 // Local imports:
 import ColorUtils
@@ -38,4 +39,6 @@ public function releasePet(unit caster)
 
 init
     EventListener.onCast(ABILITY_PET_RELEASE) (unit caster) ->
-        releasePet(caster)
+        // Needed to insure stats get properly reset upon release. See PetGrowth.wurst.
+        nullTimer() -> 
+            releasePet(caster)

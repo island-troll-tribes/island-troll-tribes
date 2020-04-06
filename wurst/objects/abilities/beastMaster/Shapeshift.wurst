@@ -17,10 +17,6 @@ import LodashExtensions
 import LocalObjectIDs
 import Transformation
 
-// Used only to order transformation registry.
-// TODO: Order transformations globally.
-import Skins
-
 // The list of abilities used to transform.
 let TRANSFORMATIONS = new OwnedIterableMap<int, int>()
     ..put(ABILITY_TRANSFORM_WOLF,    UNIT_SHAPESHIFTER_WOLF)
@@ -36,17 +32,16 @@ let ABILITIES = new IterableMap<int, LinkedList<int>>()
     ..put(UNIT_SHAPESHIFTER_PANTHER, asList(ABILITY_PANTHER_PROWL))
     ..put(UNIT_SHAPESHIFTER_TIGER,   asList(ABILITY_TIGER_VICIOUS_STRIKE, 'A0GH'))
 
-let FORMS = TRANSFORMATIONS.values()
+let FORMS = TRANSFORMATIONS.values().own()
+
+let transformations = product(FORMS, FORMS)
+    .filter(t -> t.a != t.b)
+
+let transformationIDs = compiletime(registerTransformations(transformations))
 
 // The unit currently being transformed.
 // TODO: Remove this if forces support closures.
 unit originGlobal
-
-@compiletime function registerTransformations()
-    for originID in FORMS
-        for targetID in FORMS
-            if originID != targetID
-                registerTransformation(originID, targetID)
 
 // TODO: Remove logic regarding orders once a non-interrupting ability is used.
 function onCast(unit origin, int targetID)
@@ -106,7 +101,7 @@ init
             onCast(EventData.getSpellAbilityUnit(), formID)
 
     // Register the transformations at runtime.
-    registerTransformations()
+    registerTransformations(transformations, transformationIDs, false)
 
     // Undo the shapeshifting prior to other transformations.
     registerPriorEffect() (unit target, int unitID) ->

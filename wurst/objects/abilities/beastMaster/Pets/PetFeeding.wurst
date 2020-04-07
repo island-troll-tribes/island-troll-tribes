@@ -6,6 +6,9 @@ import ClosureEvents
 import Assets
 import SimError
 import Orders
+import UpgradeObjEditing
+import ObjectIdGenerator
+import ObjectIds
 
 // Local imports:
 import LocalObjectIDs
@@ -13,6 +16,11 @@ import Pets
 
 let ICON = Icons.bTNCannibalize
 
+let UPGD_PET_MANA = compiletime(UPGD_ID_GEN.next())
+
+@compiletime function createManaDummyUpgrade() returns UpgradeDefinition
+    return new UpgradeDefinition(UPGD_PET_MANA)
+    ..setName(1, "Maximum unused upgrade points reached.")
 
 @compiletime function createAbilityFeedPet() returns AbilityDefinitionRaiseDead
     return new AbilityDefinitionRaiseDead(ABILITY_FEED_PET)
@@ -33,6 +41,8 @@ let ICON = Icons.bTNCannibalize
     // The ability is cast at melee range.
     ..presetCastRange(lvl -> 128)
     ..presetTooltipNormal(lvl -> "|c00ffcc00C|r - Eat Corpse")
+    ..setRequirements(UPGD_PET_MANA.toRawCode())
+    ..setRequirementsLevels("1")
 
 
         
@@ -43,18 +53,30 @@ function onCast(unit caster)
 
     // Grant the pet 1 mana for eating a corpse.
     caster.setMana(caster.getMana() + 1)
+    setResearch(caster)
 
-function onFeed(unit caster)
+function setResearch(unit caster)
+    if not caster.isPet()
+        return
+    if not caster.getMana() == caster.getMaxMana()
+        SetPlayerTechResearched(caster.getOwner(), UPGD_PET_MANA, 1)
 
-    if caster.getMana() == caster.getMaxMana()
-        simError(caster.getOwner(), "Your pet is already at full mana.")
-        caster.issueImmediateOrderById(Orders.stop)
+    else 
+        SetPlayerTechResearched(caster.getOwner(), UPGD_PET_MANA, 0)
+
+function onTame(player owner)
+    SetPlayerTechResearched(owner, UPGD_PET_MANA, 1)
 
 init 
     // Uses this event so that it triggers once the corpse has been consumed.
-    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST) ->
+    EventListener.add(EVENT_PLAYER_UNIT_SPELL_ENDCAST) -> 
         if EventData.getSpellAbilityId() == ABILITY_FEED_PET
             onCast(EventData.getTriggerUnit())
-    EventListener.onCast(ABILITY_FEED_PET) (unit caster) ->
-        onFeed(caster)
+        if EventData.getTriggerUnit().isPet()
+            setResearch(EventData.getTriggerUnit())
+    
+    EventListener.add(EVENT_PLAYER_UNIT_SPELL_CAST) -> 
+        setResearch(EventData.getTriggerUnit())
         
+    EventListener.onCast(ABILITY_PET_TAME) (unit caster) ->
+        onTame(caster.getOwner())

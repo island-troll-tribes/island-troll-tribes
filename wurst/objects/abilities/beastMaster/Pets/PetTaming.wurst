@@ -2,19 +2,58 @@ package PetTaming
 
 // Standard library imports:
 import ClosureEvents
+import AbilityObjEditing
+import Assets
+import ObjectIds
 
 // Local imports:
+import ColorUtils
+import LocalAssets
 import LocalObjectIDs
-import PetAbilities
 import Pets
+import StringExtensions
+import ToolTipsUtils
+import PlayerExtensions
+
+
+let ABIL_TT_EXT = "Tames a baby animal. The following animals dying around the {0} or {1} will leave a baby behind".format(
+                  "Beast Master".color(COLOR_ORANGE), "Druid".color(COLOR_ORANGE))
+                  + ", " + "Elk".color(COLOR_YELLOW)
+                  + ", " + "Wolf".color(COLOR_YELLOW)
+                  + ", " + "Bear".color(COLOR_YELLOW)
+                  + ". You can tame only 1 animal at once."
+
+@compiletime function createPetTaming()
+    new AbilityDefinitionCharm(ABILITY_PET_TAME)
+        ..setIconNormal(LocalIcons.bTNTamePet)
+        ..setButtonPositionNormalY(1)
+        ..setCooldown(1, 10.0)
+        ..setManaCost(1, 0)
+        ..setHeroAbility(false)
+        ..setHotkeyNormal("Q")
+        ..setName("Tame Pet")
+        ..setCastRange(1, 600.0)
+        ..setArtTarget(Abilities.controlMagicTarget)
+        ..setTargetsAllowed(1, commaList(
+                TargetsAllowed.neutral,
+                TargetsAllowed.nonhero,
+                TargetsAllowed.organic
+            ))
+        ..setTooltipNormal(1, makeToolTipNorm("Q", "Tame"))
+        ..setTooltipNormalExtended(1, ABIL_TT_EXT)
+        ..setRequirements(UPGD_PET_TAMED_FALSE.toRawCode())
+        ..setEditorSuffix("(Wurst)")
+
 
 init
     EventListener.onTargetCast(ABILITY_PET_TAME) (unit caster, unit target) ->
         // Record the owner of the new unit.
-        caster.getOwner().addPet(target)
+        let owner = caster.getOwner()
 
-        // Unlock the new abilities.
-        setPetAbilities(caster.getOwner(), true)
+        owner.addPet(target)
+
+        owner.setTechResearched(UPGD_PET_TAMED_TRUE, 1)
+        owner.setTechResearched(UPGD_PET_TAMED_FALSE, 0)
 
         // Set max mana used for growth abilities.
         target.setMaxMana(10)

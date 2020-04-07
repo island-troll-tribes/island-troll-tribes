@@ -4,18 +4,19 @@ package SpiritualGuidance
 // Standard Library Imports:
 import BuffObjEditing
 import ChannelAbilityPreset
+import ClosureEvents
 import ClosureTimers
 import LinkedList
-import ClosureEvents
 
 // Local Imports:
+import ColorUtils
+import LocalAssets
+import LocalObjectIDs
+import MagicResistance
 import Pets
 import PlayerExtensions
 import StringExtensions
-import ColorUtils
-import LocalObjectIDs
-import LocalAssets
-import MagicResistance
+import ToolTipsUtils
 
 let BUFF_ID = compiletime(BUFF_ID_GEN.next())
 let BUFF_ORIGINAL_ID = 'Blrl'
@@ -35,7 +36,7 @@ let PET_PROXIMITY_INTERVAL = 0.3
 let ABIL_TT = "Spiritual Guidance"
 let ABIL_TT_EXT = "The Druid takes great care of the spirit of those around him, granting allies {0} health regeneration.\n".format(HP_REGEN.toString().color(HEALTH_COLOR)) +
                     "Additionally pets affected by Spiritual Guidance are able to transcend into their spirit form, gaining {0} points for every stat.".format(PET_STAT_BONUS.toString())
-let BUFF_TT = "This unit's soul is being cared for by the druid." 
+let BUFF_TT = "This unit's soul is being cared for by the druid."
 let BUFF_TT_EXT = "Granting it {0} health regeneration a second.".format(HP_REGEN.toString().color(HEALTH_COLOR))
 let NAME = "Spiritual Guidance"
 let ICON = LocalIcons.pASBTNSpiritualGuidance
@@ -55,7 +56,7 @@ let SPIRITS = new LinkedList<unit>
     return new AbilityDefinitionUnholyAuracreep(ABILITY_SPIRITUAL_GUIDANCE)
     ..setLifeRegenerationIncrease(1, HP_REGEN)
     ..setArtTarget(LocalAbilities.spiritualGuidance)
-    ..setTooltipNormal(1, ABIL_TT)
+    ..setTooltipNormal(1, makeToolTipNormAura(ABIL_TT))
     ..setTooltipNormalExtended(1, ABIL_TT_EXT)
     ..setMovementSpeedIncrease(1, 0)
     ..setPercentBonus(1, false)
@@ -75,7 +76,7 @@ public function toggleSpiritForm(unit pet, bool inRange)
 
         // Set the color and transparency to look spirity.
         pet.setVertexColor(150, 255, 150, 180)
-        
+
         // Increase the damage by 2.
         pet.setBaseDamage(pet.getBaseDamage(0) + PET_STAT_BONUS , 0)
 
@@ -125,7 +126,7 @@ function checkPetRadius()
 
                 // If the pet is not in range of the aura.
                 else
-                
+
                     // Transform the pet back into it's non-spirit form.
                     toggleSpiritForm(owner.getPet(), false)
 
@@ -138,7 +139,7 @@ function onGrow(unit u)
 
         // Remove the pet from list of spirits.
         SPIRITS.remove(u)
-                
+
 init
     // TODO: Change this to start with a callback system.
     checkPetRadius()

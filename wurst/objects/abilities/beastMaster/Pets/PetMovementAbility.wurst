@@ -6,13 +6,14 @@ import ChannelAbilityPreset
 import ClosureEvents
 import ClosureTimers
 import LodashExtensions
+import Assets
 
 // Local Imports:
 import LocalObjectIDs
-import LocalAssets
 import PetMovement
 import Tribe
 import Game
+import ToolTipsUtils
 
 let buttonPosX  = 3
 let buttonPosY  = 0
@@ -25,23 +26,27 @@ let ORDER_ID = "barkskinoff"
 let AUTO_CONTROL_MESSAGE = "Auto pet control."
 let MANUAL_CONTROL_MESSAGE = "Manual pet control."
 
-let ICON = LocalIcons.bTNTogglePetControls
 
 @compiletime function createTogglePetControl() returns ChannelAbilityPreset
     return new ChannelAbilityPreset(ABILITY_TOGGLE_PET_CONTROL, 1, true)
     ..setDummyAbility()
+    ..setAnimationNames("")
     ..presetTargetTypes(Targettype.NONE)
     ..setButtonPositionNormalX(buttonPosX)
     ..setButtonPositionNormalY(buttonPosY)
-    ..setIconNormal(ICON)
+    ..setIconNormal(Icons.bTNSelectUnit)
     ..setHeroAbility(true)
     ..setHotkeyNormal(HOTKEY)
     ..setName(NAME)
     ..setLevels(1)
-    ..setTooltipNormal(1, TOOLTIP)
+    ..setTooltipNormal(1, makeToolTipNorm(HOTKEY, TOOLTIP))
     ..setTooltipNormalExtended(1, TOOLTIP_EXT)
     ..presetBaseOrderID(lvl -> ORDER_ID)
     ..setAnimationNames("")
+    ..setCheckDependencies(true)
+    ..setRequirements(UPGD_PET_TAMED_TRUE.toRawCode())
+    ..setEditorSuffix("(Wurst)")
+
 
 // Used to toggle pet controls stored in `PetMovement.wurst`.
 function togglePetControl()
@@ -56,7 +61,7 @@ function togglePetControl()
         PET_CONTROLS.put(EventData.getTriggerPlayer(), false)
 
     // If manual controls are currently active.
-    else 
+    else
 
         // Print message alerting the switch to auto controls.
         print(AUTO_CONTROL_MESSAGE)
@@ -72,5 +77,5 @@ init
     EventListener.onCast(ABILITY_TOGGLE_PET_CONTROL, _ -> togglePetControl())
 
     registerGameStartEvent() ->
-        nullTimer() -> 
+        nullTimer() ->
             initializeControls()

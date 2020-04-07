@@ -3,16 +3,13 @@ package Sentinel
 
 // Standard Library Imports:
 import AbilityObjEditing
+import Assets
 
 // Local Imports:
 import LocalObjectIDs
-import LocalAssets
+import ToolTipsUtils
 
-
-let NAME = "Sentinel"
-let TOOLTIP_BASIC = "Send out a Sentinel Owl."
-let TOOLTIP_EXT   = "Send out a Sentinel Owl to watch from a nearby tree."
-let COOL_DOWN = 60.
+let COOLDOWN = 60.
 let MANA_COST = 5
 let HOVERING_SIGHT = 700.
 let HOVERING_HEIGHT = 125.
@@ -21,13 +18,16 @@ let CAST_RANGE = 150.
 let BUTTON_POS_X = 0
 let BUTTON_POS_Y = 0
 let HOTKEY = "Q"
-let ICON = LocalIcons.bTNSentinel
+let NAME = "Sentinel"
+let TOOLTIP_BASIC = "Send out a Sentinel Owl"
+let TOOLTIP_EXT   = "Send out a Sentinel Owl to watch from a nearby tree."
+                    + makeToolTipCooldown(COOLDOWN)
 
 
 @compiletime function createSentinelAbility() returns AbilityDefinitionSentinel
     return new AbilityDefinitionSentinel(ABILITY_SENTINEL)
     ..setName(NAME)
-    ..setCooldown(1, COOL_DOWN)
+    ..setCooldown(1, COOLDOWN)
     ..setButtonPositionNormalX(BUTTON_POS_X)
     ..setButtonPositionNormalY(BUTTON_POS_Y)
     ..setHotkeyNormal(HOTKEY)
@@ -40,4 +40,6 @@ let ICON = LocalIcons.bTNSentinel
     ..setHoveringHeight(1, HOVERING_HEIGHT)
     ..setNumberofOwls(1, MAX_OWLS)
     ..setCastRange(1, CAST_RANGE)
-    ..setIconNormal(ICON)
+    ..setIconNormal(Icons.bTNSentinel)
+    ..setTooltipNormal(1, makeToolTipNorm(HOTKEY, TOOLTIP_BASIC))
+    ..setTooltipNormalExtended(1, TOOLTIP_EXT)

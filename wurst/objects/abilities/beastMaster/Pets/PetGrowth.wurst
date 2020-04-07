@@ -1,38 +1,43 @@
 package PetGrowth
 
 // Standard library imports:
-import LinkedList
+import Assets
+import ChannelAbilityPreset
 import ClosureEvents
 import HashMap
-import ChannelAbilityPreset
-import Assets
-import ClosureTimers
+import LinkedList
 
 // Local imports:
-import Pets
-import Transformation
-import LocalObjectIDs
-import SimError
 import LocalAssets
+import LocalObjectIDs
 import MagicResistance
+import Pets
+import SimError
+import ToolTipsUtils
+import Transformation
 
 // Mana cost for all stat growth abilities.
 let STAT_MANA_COST = 2
 
+let ATTACK_INCREASE = 1
+let ARMOR_INCREASE = 1
+let MAGIC_RESIST_INCREASE = 0.10
+
+
 // Damage growth variables.
 let DAMAGE_TOOLTIP = "Condense Strength"
-let DAMAGE_TOOLTIP_EXT = "Increase your pet's damage by 1."
-let DAMAGE_ICON = LocalIcons.bTNCondenseStrength
+let DAMAGE_TOOLTIP_EXT = "Increase your pet's damage by {0}.".format(ATTACK_INCREASE.toReal().toToolTipRed())
+let DAMAGE_ICON = Icons.bTNStrengthOfTheWild
 
 // Armor growth variables.
 let ARMOR_TOOLTIP = "Fortify Armor"
-let ARMOR_TOOLTIP_EXT = "Increase your pet's armor by 1."
-let ARMOR_ICON = LocalIcons.bTNFortifyArmor
+let ARMOR_TOOLTIP_EXT = "Increase your pet's armor by {0}.".format(ARMOR_INCREASE.toReal().toToolTipGreen())
+let ARMOR_ICON = Icons.bTNReinforcedHides
 
 // Magic resistance growth variables.
 let MAGIC_RESIST_TOOLTIP = "Resist Magic"
-let MAGIC_RESIST_TOOLTIP_EXT = "Increase your pet's magical resistance by 10%."
-let MAGIC_RESIST_ICON = LocalIcons.bTNResistMagic
+let MAGIC_RESIST_TOOLTIP_EXT = "Increase your pet's magical resistance by {0}.".format(MAGIC_RESIST_INCREASE.toToolTipBlue())
+let MAGIC_RESIST_ICON = Icons.bTNThickFur
 
 // Variables used to grow pet to next stage of life.
 let GROWTH_TOOLTIP = "Advance Life"
@@ -69,7 +74,7 @@ let TOTAL_MAGIC_RESIST = new HashMap<player, int>()
     ..setHotkeyNormal("Z")
     ..presetCooldown(lvl -> 0)
     ..setManaCost(1, STAT_MANA_COST)
-    ..presetTooltipNormal(lvl -> DAMAGE_TOOLTIP)
+    ..presetTooltipNormal(lvl -> makeToolTipNorm("Z", DAMAGE_TOOLTIP))
     ..presetTooltipNormalExtended(lvl -> DAMAGE_TOOLTIP_EXT)
 
 @compiletime function createPetArmorAbility() returns ChannelAbilityPreset
@@ -82,7 +87,7 @@ let TOTAL_MAGIC_RESIST = new HashMap<player, int>()
     ..setHotkeyNormal("X")
     ..presetCooldown(lvl -> 0)
     ..setManaCost(1, STAT_MANA_COST)
-    ..presetTooltipNormal(lvl -> ARMOR_TOOLTIP)
+    ..presetTooltipNormal(lvl -> makeToolTipNorm("X", ARMOR_TOOLTIP))
     ..presetTooltipNormalExtended(lvl -> ARMOR_TOOLTIP_EXT)
 
 @compiletime function createPetMagicResistAbility() returns ChannelAbilityPreset
@@ -94,7 +99,7 @@ let TOTAL_MAGIC_RESIST = new HashMap<player, int>()
     ..setHotkeyNormal("C")
     ..presetCooldown(lvl -> 0)
     ..presetManaCost(lvl -> STAT_MANA_COST)
-    ..presetTooltipNormal(lvl -> MAGIC_RESIST_TOOLTIP)
+    ..presetTooltipNormal(lvl -> makeToolTipNorm("C", MAGIC_RESIST_TOOLTIP))
     ..presetTooltipNormalExtended(lvl -> MAGIC_RESIST_TOOLTIP_EXT)
 
 @compiletime function createPetGrowthAbility() returns ChannelAbilityPreset
@@ -107,7 +112,7 @@ let TOTAL_MAGIC_RESIST = new HashMap<player, int>()
     ..setHotkeyNormal("V")
     ..setCooldown(1, 0)
     ..setManaCost(1, GROWTH_MANACOST)
-    ..setTooltipNormal(1, GROWTH_TOOLTIP)
+    ..setTooltipNormal(1, makeToolTipNorm("V", GROWTH_TOOLTIP))
     ..setTooltipNormalExtended(1, GROWTH_TOOLTIP_EXT)
 
 // Increases damage of the pet by 1.
@@ -117,9 +122,9 @@ function increaseDamage(unit caster)
     if not caster.isPet() or not checkPetLevelCounter(caster)
 
         return
-    
+
     // Increase the damage of the pet by 1.
-    caster.setBaseDamage(caster.getBaseDamage(0) + 1, 0)
+    caster.setBaseDamage(caster.getBaseDamage(0) + ATTACK_INCREASE, 0)
 
     // Increment the counter of points spent by the pet.
     incrementPetLevelCounter(caster)
@@ -135,11 +140,11 @@ function increaseArmor(unit caster)
         return
 
     // Increase the armor of the pet by 1.
-    caster.setArmor(caster.getArmor() + 1)
+    caster.setArmor(caster.getArmor() + ARMOR_INCREASE)
 
     // Increment the counter of points spent by the pet.
     incrementPetLevelCounter(caster)
-    
+
     // Track the armor gained by this unit.
     trackStatGrowth(PET_ARMOR, caster)
 
@@ -176,7 +181,7 @@ function incrementPetLevelCounter(unit pet)
         PET_LEVELS.put(owner, PET_LEVELS.getAndRemove(owner) + 1)
 
     // If this is the first use of a stat point this level.
-    else 
+    else
         // Start tracking the pet.
         PET_LEVELS.put(owner, 1)
 
@@ -227,7 +232,7 @@ function trackStatGrowth(HashMap<unit, int> stats, unit pet)
         stats.put(pet, stats.getAndRemove(pet) + 1)
 
     // If the pet is not being tracked already.
-    else 
+    else
 
         //Begin tracking with a value of 1.
         stats.put(pet, 1)
@@ -240,7 +245,7 @@ function trackStatGrowth(HashMap<player, int> stats, player owner)
         stats.put(owner, stats.getAndRemove(owner) + 1)
 
     // If the pet is not being tracked already.
-    else 
+    else
 
         //Begin tracking with a value of 1.
         stats.put(owner, 1)
@@ -285,7 +290,7 @@ function resetStats(player owner)
     if TOTAL_MAGIC_RESIST.has(owner)
 
         // Take away all magic resist gained through points.
-        pet.removeMagicResist()
+        //pet.removeMagicResist()
 
     // If the armor
     if TOTAL_ARMOR.has(owner)
@@ -302,7 +307,7 @@ init
         increaseArmor(caster)
     EventListener.onCast(ABILITY_PET_MAGIC_RESIST) (unit caster) ->
         increasePetMagicResist(caster)
-    EventListener.add(EVENT_PLAYER_HERO_LEVEL) -> 
+    EventListener.add(EVENT_PLAYER_HERO_LEVEL) ->
         resetPetLevelCounter(EventData.getTriggerUnit().getOwner().getPet())
     EventListener.onCast(ABILITY_GROW_PET) (unit caster) ->
         growPet(caster)

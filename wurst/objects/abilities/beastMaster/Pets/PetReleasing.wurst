@@ -2,15 +2,33 @@ package PetReleasing
 
 // Standard library imports:
 import ClosureEvents
-import ClosureTimers
+import ChannelAbilityPreset
 
 // Local imports:
 import ColorUtils
 import LocalObjectIDs
-import PetAbilities
+import LocalAssets
 import Pets
 import StringExtensions
 import Tribe
+import ToolTipsUtils
+import PlayerExtensions
+
+@compiletime function createReleasePetAbility()
+    new ChannelAbilityPreset(ABILITY_PET_RELEASE, 1, true)
+        ..setAnimationNames("spell,throw")
+        ..setIconNormal(LocalIcons.bTNReleasePet)
+        ..setButtonPositionNormalY(1)
+        ..setArtCaster("")
+        ..setCasterAttachmentPoint("")
+        ..setCooldown(1, 5.0)
+        ..setFollowThroughTime(1, 1.0)
+        ..setName("Release Pet")
+        ..setHotkeyNormal("W")
+        ..setTooltipNormal(1, makeToolTipNorm("W", "Release Your Pet"))
+        ..setTooltipNormalExtended(1, "Releases your pet back into the wild allowing you to tame another. The released pet will become hostile and attack you.")
+        ..setRequirements(UPGD_PET_TAMED_TRUE.toRawCode())
+        ..setEditorSuffix("(Wurst)")
 
 public function releasePet(unit caster)
     // Look up the pet.
@@ -20,8 +38,10 @@ public function releasePet(unit caster)
     // Deregister the pet.
     originalOwner.removePet()
 
+    originalOwner.setTechResearched(UPGD_PET_TAMED_TRUE, 0)
+    originalOwner.setTechResearched(UPGD_PET_TAMED_FALSE, 1)
     // Revert the available abilities.
-    setPetAbilities(originalOwner, false)
+    // setPetAbilities(originalOwner, false)
 
     // Compute the new owner.
     let newOwner = pet.getPetGrowthChain().indexOf(pet.getTypeId()) == 0
@@ -39,6 +59,4 @@ public function releasePet(unit caster)
 
 init
     EventListener.onCast(ABILITY_PET_RELEASE) (unit caster) ->
-        // Needed to insure stats get properly reset upon release. See PetGrowth.wurst.
-        nullTimer() -> 
-            releasePet(caster)
+        releasePet(caster)

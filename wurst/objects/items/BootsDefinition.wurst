@@ -1,0 +1,277 @@
+package BootsDefinition
+
+// Standard-library imports:
+import Assets
+import ObjectIds
+import AbilityObjEditing
+
+// Local imports:
+import Items
+import ColorUtils
+import LocalAssets
+import ToolTipsUtils
+import LocalObjectIDs
+import StringExtensions
+import LocalItemObjEditing
+
+let EVASION_CHANCE = 0.10
+
+let TT_COMMON = "Increases wearer's movement speed by {0}, intelligence by {1}"
+let TT_TRANSMUTE_SUFFIX = "|nAll basic boots transmute into the same bone/iron/steel boots.".color(COLOR_ORANGE)
+
+let TT_UNFORMAT_SKIN_BOOT = TT_COMMON + " and provides warmth."
+let TT_UNFORMAT_ARMOR_BOOT = TT_COMMON + ", armor by {2} and provides warmth."
+let TT_UNFORMAT_ANA_BOOT_STRING = "Increases wearer's movement speed by {0}, armor by {1} and all stats by {2}. Also gives {3} chance to dodge an attack."
+let TT_UNFORMAT_HYDRA_FINS_STRING = "Increases wearer's movement speed by {0}, armor by {1} armor and all stats by {2}. Also gives spell shield with {3} second cooldown."
+
+// We can retrieve the ability data field, returning an Int in those case
+// DataA1 being the bonus movement speed for bonus move speed ability
+// DataB1 being the intelligence bonus field for the all stat bonus ability
+public let TT_ELK_SKIN_BOOTS = TT_UNFORMAT_SKIN_BOOT.format(
+    getAbilityDataField(ABILITY_SPEED_BONUS_60,  "DataA1").color(COLOR_ORANGE),
+    getAbilityDataField(ABILITY_INT_BONUS_2,     "DataB1").color(COLOR_TURQUOISE)
+    )
+
+public let TT_WOLF_SKIN_BOOTS = TT_UNFORMAT_ARMOR_BOOT.format(
+    getAbilityDataField(ABILITY_SPEED_BONUS_60,  "DataA1").color(COLOR_ORANGE),
+    getAbilityDataField(ABILITY_INT_BONUS_4,     "DataB1").color(COLOR_TURQUOISE),
+    getAbilityDataField(ABILITY_ARMOR_BONUS_2,   "DataA1").color(COLOR_GREEN)
+)
+
+public let TT_BEAR_SKIN_BOOTS = TT_UNFORMAT_ARMOR_BOOT.format(
+    getAbilityDataField(ABILITY_SPEED_BONUS_60,  "DataA1").color(COLOR_ORANGE),
+    getAbilityDataField(ABILITY_INT_BONUS_5,     "DataB1").color(COLOR_TURQUOISE),
+    getAbilityDataField(ABILITY_ARMOR_BONUS_3,   "DataA1").color(COLOR_GREEN)
+)
+
+public let TT_BONE_BOOTS = TT_UNFORMAT_ARMOR_BOOT.format(
+    getAbilityDataField(ABILITY_SPEED_BONUS_70,  "DataA1").color(COLOR_ORANGE),
+    getAbilityDataField(ABILITY_INT_BONUS_3,     "DataB1").color(COLOR_TURQUOISE),
+    getAbilityDataField(ABILITY_ARMOR_BONUS_3,   "DataA1").color(COLOR_GREEN)
+) + TT_TRANSMUTE_SUFFIX
+
+public let TT_IRON_BOOTS = TT_UNFORMAT_ARMOR_BOOT.format(
+    getAbilityDataField(ABILITY_SPEED_BONUS_80,  "DataA1").color(COLOR_ORANGE),
+    getAbilityDataField(ABILITY_INT_BONUS_6,     "DataB1").color(COLOR_TURQUOISE),
+    getAbilityDataField(ABILITY_ARMOR_BONUS_3,   "DataA1").color(COLOR_GREEN)
+) + TT_TRANSMUTE_SUFFIX
+
+public let TT_STEEL_BOOTS = TT_UNFORMAT_ARMOR_BOOT.format(
+    getAbilityDataField(ABILITY_SPEED_BONUS_100, "DataA1").color(COLOR_ORANGE),
+    getAbilityDataField(ABILITY_INT_BONUS_10,     "DataB1").color(COLOR_TURQUOISE),
+    getAbilityDataField(ABILITY_ARMOR_BONUS_5,   "DataA1").color(COLOR_GREEN)
+) + TT_TRANSMUTE_SUFFIX
+
+public let TT_ANA_BOOTS = TT_UNFORMAT_ANA_BOOT_STRING.format(
+    getAbilityDataField(ABILITY_SPEED_BONUS_200, "DataA1").color(COLOR_ORANGE),
+    getAbilityDataField(ABILITY_ARMOR_BONUS_5,   "DataA1").color(COLOR_GREEN),
+    4..toToolTipGreen(),
+    EVASION_CHANCE.toToolTipPurple()
+)
+
+public let TT_HYDRA_FINS = TT_UNFORMAT_HYDRA_FINS_STRING.format(
+    getAbilityDataField(ABILITY_SPEED_BONUS_100, "DataA1").color(COLOR_ORANGE),
+    getAbilityDataField(ABILITY_ARMOR_BONUS_5,   "DataA1").color(COLOR_GREEN),
+    5..toToolTipGreen(),
+    getAbilityDataField(ABILITY_SPELL_SHIELD, "Cool1").color(COLOR_LIGHT_BLUE)
+)
+
+@compiletime function createSpeedBonusAbility()
+    new AbilityDefinitionMoveSpeedBonus(ABILITY_SPEED_BONUS_60)
+        ..setMovementSpeedBonus(1, 60)
+        ..setName("Movement Speed Bonus 60")
+        ..setEditorSuffix("(Wurst)")
+
+    new AbilityDefinitionMoveSpeedBonus(ABILITY_SPEED_BONUS_70)
+        ..setMovementSpeedBonus(1, 70)
+        ..setName("Movement Speed Bonus 70")
+        ..setEditorSuffix("(Wurst)")
+
+    new AbilityDefinitionMoveSpeedBonus(ABILITY_SPEED_BONUS_80)
+        ..setMovementSpeedBonus(1, 80)
+        ..setName("Movement Speed Bonus 80")
+        ..setEditorSuffix("(Wurst)")
+
+    new AbilityDefinitionMoveSpeedBonus(ABILITY_SPEED_BONUS_100)
+        ..setMovementSpeedBonus(1, 100)
+        ..setName("Movement Speed Bonus 100")
+        ..setEditorSuffix("(Wurst)")
+
+    new AbilityDefinitionMoveSpeedBonus(ABILITY_SPEED_BONUS_200)
+        ..setMovementSpeedBonus(1, 200)
+        ..setArtTarget(Abilities.faerieDragonMissile)
+        ..setTargetAttachmentPoint("foot,left")
+        ..setTargetAttachmentPoint1("foot,right")
+        ..setTargetAttachments(2)
+        ..setName("Movement Speed Bonus 200")
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createEvasionAbility()
+    new AbilityDefinitionEvasion(ABILITY_ANABOLIC_EVASION)
+        ..setChancetoEvade(1, 0.10)
+        ..setName("Anabolic Evasion")
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createSpellShieldAbility()
+    new AbilityDefinition(ABILITY_SPELL_SHIELD, 'ANss')
+        ..setCooldown(1, 75.0)
+        ..setName("Hydra Fins Spell Shield (Amulet)")
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createElkSkinBoots() returns ItemDefinition
+    return createBasicItem(ITEM_ELK_SKIN_BOOTS)
+        ..setAbilities(commaList(
+            ABILITY_SPEED_BONUS_60,
+            ABILITY_INT_BONUS_2
+            )
+        )
+        ..setInterfaceIcon(LocalIcons.bTNElkHideBoots)
+        ..setDescription("Increases wearer's movement speed and intelligence")
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(255)
+        ..setModelUsed(LocalItems.skinBoots)
+        ..setHotkey("")
+        ..setLumberCost(19)
+        ..setNameEnhance("Elk Skin Boots")
+        ..setTooltipExtended(TT_ELK_SKIN_BOOTS)
+        ..setCooldownGroup(toRawCode(ABILITY_SPEED_BONUS_60))
+
+@compiletime function createWolfSkinBoots() returns ItemDefinition
+    return createBasicItem(ITEM_WOLF_SKIN_BOOTS)
+        ..setAbilities(commaList(
+            ABILITY_SPEED_BONUS_60,
+            ABILITY_INT_BONUS_4,
+            ABILITY_ARMOR_BONUS_2
+            )
+        )
+        ..setInterfaceIcon(LocalIcons.bTNWolfHideBoots)
+        ..setDescription("Increases wearer's movement speed, armor and intelligence")
+        ..setTintingColor1Red(128)
+        ..setTintingColor2Green(128)
+        ..setTintingColor3Blue(128)
+        ..setModelUsed(LocalItems.wolfHideBoots)
+        ..setHotkey("")
+        ..setLumberCost(33)
+        ..setNameEnhance("Wolf Skin Boots")
+        ..setTooltipExtended(TT_WOLF_SKIN_BOOTS)
+        ..setCooldownGroup(toRawCode(ABILITY_SPEED_BONUS_60))
+
+@compiletime function createBearSkinBoots() returns ItemDefinition
+    return createBasicItem(ITEM_BEAR_SKIN_BOOTS)
+        ..setAbilities(commaList(
+            ABILITY_SPEED_BONUS_60,
+            ABILITY_INT_BONUS_5,
+            ABILITY_ARMOR_BONUS_3
+            )
+        )
+        ..setInterfaceIcon(LocalIcons.bTNBearHideBoots)
+        ..setDescription("Increases wearer's movement speed, armor and intelligence")
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(128)
+        ..setTintingColor3Blue(128)
+        ..setModelUsed(LocalItems.wolfHideBoots)
+        ..setHotkey("")
+        ..setLumberCost(47)
+        ..setNameEnhance("Bear Skin Boots")
+        ..setTooltipExtended(TT_BEAR_SKIN_BOOTS)
+        ..setCooldownGroup(toRawCode(ABILITY_SPEED_BONUS_60))
+
+@compiletime function createBoneBoots() returns ItemDefinition
+    return createBasicItem(ITEM_BONE_BOOTS)
+        ..setAbilities(commaList(
+            ABILITY_SPEED_BONUS_60,
+            ABILITY_INT_BONUS_3,
+            ABILITY_ARMOR_BONUS_2
+            )
+        )
+        ..setInterfaceIcon(LocalIcons.bTNBoneBoots)
+        ..setDescription("Increases wearer's movement speed, armor and intelligence")
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(255)
+        ..setModelUsed(LocalItems.boneBoots)
+        ..setHotkey("")
+        ..setLumberCost(34)
+        ..setNameEnhance("Bone Boots")
+        ..setTooltipExtended(TT_BONE_BOOTS)
+        ..setCooldownGroup(toRawCode(ABILITY_SPEED_BONUS_60))
+
+@compiletime function createIronBoots() returns ItemDefinition
+    return createBasicItem(ITEM_IRON_BOOTS)
+        ..setAbilities(commaList(
+            ABILITY_SPEED_BONUS_80,
+            ABILITY_INT_BONUS_6,
+            ABILITY_ARMOR_BONUS_3
+            )
+        )
+        ..setInterfaceIcon(Icons.bTNBoots)
+        ..setDescription("Increases wearer's movement speed, armor and intelligence")
+        ..setTintingColor1Red(100)
+        ..setTintingColor2Green(100)
+        ..setTintingColor3Blue(100)
+        ..setModelUsed(LocalItems.ironBoots)
+        ..setHotkey("")
+        ..setLumberCost(55)
+        ..setNameEnhance("Iron Boots")
+        ..setTooltipExtended(TT_IRON_BOOTS)
+        ..setCooldownGroup(toRawCode(ABILITY_SPEED_BONUS_60))
+
+@compiletime function createSteelBoots() returns ItemDefinition
+    return createBasicItem(ITEM_STEEL_BOOTS)
+        ..setAbilities(commaList(
+            ABILITY_SPEED_BONUS_100,
+            ABILITY_INT_BONUS_10,
+            ABILITY_ARMOR_BONUS_5
+            )
+        )
+        ..setInterfaceIcon(LocalIcons.bTNSteelBoots)
+        ..setDescription("Increases wearer's movement speed, armor and intelligence")
+        ..setTintingColor1Red(0)
+        ..setTintingColor2Green(119)
+        ..setTintingColor3Blue(255)
+        ..setModelUsed(LocalItems.ironBoots)
+        ..setHotkey("")
+        ..setLumberCost(70)
+        ..setNameEnhance("Steel Boots")
+        ..setTooltipExtended(TT_STEEL_BOOTS)
+        ..setCooldownGroup(toRawCode(ABILITY_SPEED_BONUS_60))
+
+@compiletime function createAnabolicBoots() returns ItemDefinition
+    return createBasicItem(ITEM_ANABOLIC_BOOTS)
+        ..setAbilities(commaList(
+            ABILITY_SPEED_BONUS_200,
+            ABILITY_STATS_BONUS_4 ,
+            ABILITY_ARMOR_BONUS_5,
+            ABILITY_ANABOLIC_EVASION
+            )
+        )
+        ..setInterfaceIcon(Icons.bTNWirtsOtherLeg)
+        ..setDescription("Increases wearer's movement speed, armor, stats and give him a chance to dodge incoming attack")
+        ..setTintingColor1Red(200)
+        ..setTintingColor2Green(80)
+        ..setTintingColor3Blue(80)
+        ..setModelUsed(LocalItems.ironBoots)
+        ..setHotkey("")
+        ..setLumberCost(85)
+        ..setNameEnhance("Anabolic Boots")
+        ..setTooltipExtended(TT_ANA_BOOTS)
+        ..setCooldownGroup(toRawCode(ABILITY_SPEED_BONUS_60))
+
+@compiletime function createHydraFins() returns ItemDefinition
+    return createBasicItem(ITEM_HYDRA_FINS)
+        ..setAbilities(commaList(
+            ABILITY_SPEED_BONUS_100,
+            ABILITY_STATS_BONUS_5,
+            ABILITY_ARMOR_BONUS_5,
+            ABILITY_SPELL_SHIELD
+            )
+        )
+        ..setInterfaceIcon(Icons.bTNSeaGiantWarStomp)
+        ..setDescription("Increases wearer's movement speed, armor, stats and give him a Spell shield")
+        ..setModelUsed(LocalItems.hydraFins)
+        ..setHotkey("")
+        ..setLumberCost(104)
+        ..setNameEnhance("Hydra Fins")
+        ..setTooltipExtended(TT_HYDRA_FINS)
+        ..setCooldownGroup(toRawCode(ABILITY_SPEED_BONUS_60))

@@ -2,18 +2,19 @@ package VerdantSong
 
 
 // Standard Library Imports:
-import ClosureEvents
-import OrderIds
+import Assets
+import BuffObjEditing
 import ChannelAbilityPreset
+import ClosureEvents
 import ClosureForGroups
 import InstantDummyCaster
-import BuffObjEditing
-import Assets
+import OrderIds
 
 // Local Imports:
 import LocalObjectIDs
 import LocalAssets
 import Pets
+import ToolTipsUtils
 
 let BUTTON_POS_X = 1
 let BUTTON_POS_Y = 0
@@ -50,15 +51,15 @@ let DRUID_ROAR_TT = "Verdant Song"
 let DRUID_ROAR_TT_EXT = "The Druid and his pet unleash a mighty roar, inspiring allies and striking fear into the hearts of enemies.\n" +
                         "Druid: Increases nearby allies' damage by {0}%.\n".format((DRUID_ROAR_DAMAGE_BOOST * 100).toString().substring(0, 2)) +
                         "Elk: Increases nearby allies movement speed by {0}%.\n".format(ELK_MS_BOOST.toString().substring(0, 2)) +
-                        "Wolf: Decreases nearby enemies' movement speed by {0}% and attack speed by {1}%.\n".format((WOLF_MS_REDUCTION * 100).toString().substring(0, 2), 
+                        "Wolf: Decreases nearby enemies' movement speed by {0}% and attack speed by {1}%.\n".format((WOLF_MS_REDUCTION * 100).toString().substring(0, 2),
                                                                                                                     (WOLF_AS_REDUCTION * 100).toString().substring(0, 2)) +
                         "Bear: Decreases nearby enemies' damage by {0}%.".format((BEAR_DAMAGE_REDUCTION * 100).toString().substring(0, 2))
 
 // Used for druid roar icon, and all buffs left by the roars.
 let DRUID_ROAR_ICON = LocalIcons.bTNVerdantSong
 let ELK_ROAR_ICON = LocalIcons.bTNElkRoar
-let WOLF_ROAR_ICON = LocalIcons.bTNWolfRoar
-let BEAR_ROAR_ICON = LocalIcons.bTNBearRoar
+let WOLF_ROAR_ICON = Icons.bTNHowlOfTerror
+let BEAR_ROAR_ICON = Icons.bTNBattleRoar
 
 
 @compiletime function createDruidRoar() returns AbilityDefinitionRoar
@@ -72,7 +73,7 @@ let BEAR_ROAR_ICON = LocalIcons.bTNBearRoar
     ..setDurationNormal(1, DRUID_ROAR_DURATION)
     ..setButtonPositionNormalX(BUTTON_POS_X)
     ..setButtonPositionNormalY(BUTTON_POS_Y)
-    ..setTooltipNormal(1, DRUID_ROAR_TT)
+    ..setTooltipNormal(1, makeToolTipNorm(HOTKEY, DRUID_ROAR_TT))
     ..setTooltipNormalExtended(1, DRUID_ROAR_TT_EXT)
     ..setHotkeyNormal(HOTKEY)
     ..presetTargetsAllowed(lvl -> commaList(
@@ -127,6 +128,7 @@ let BEAR_ROAR_ICON = LocalIcons.bTNBearRoar
     return new BuffDefinition(ELK_ROAR_BUFF_ID, BuffIds.slow)
     ..setIcon(ELK_ROAR_ICON)
     ..setName(1, "Elk's Composure")
+    ..setTargetAttachmentPoint0(1, "overhead")
     ..setArtTarget(1, Abilities.speedTarget)
     ..setTooltipNormal(1, "Elk's Composure")
     ..setTooltipNormalExtended(1, ELK_ROAR_TT)
@@ -162,7 +164,7 @@ let BEAR_ROAR_ICON = LocalIcons.bTNBearRoar
     ..setTooltipNormalExtended(1, WOLF_ROAR_TT)
     ..setEditorSuffix(1, "(Wurst)")
 
-    
+
 @compiletime function createBearRoar() returns AbilityDefinitionPitLordHowlofTerror
     return new AbilityDefinitionPitLordHowlofTerror(ABILITY_BEAR_ROAR)
     ..setArtCaster("")
@@ -202,7 +204,7 @@ function onCast(unit pet)
             pet.addEffect(LocalAbilities.wolfRoarCaster, "origin").destr()
             InstantDummyCaster.castImmediate(pet.getOwner(), ABILITY_BEAR_ROAR, 1, OrderIds.howlofterror, pet.getPos())
 
-init 
+init
 
     EventListener.onCast(ABILITY_DRUID_ROAR) (unit caster) ->
         onCast(caster.getOwner().getPet())

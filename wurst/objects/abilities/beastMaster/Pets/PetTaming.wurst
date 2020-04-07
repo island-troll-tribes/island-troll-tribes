@@ -10,10 +10,10 @@ import ObjectIds
 import ColorUtils
 import LocalAssets
 import LocalObjectIDs
-import PetAbilities
 import Pets
 import StringExtensions
 import ToolTipsUtils
+import PlayerExtensions
 
 
 let ABIL_TT_EXT = "Tames a baby animal. The following animals dying around the {0} or {1} will leave a baby behind".format(
@@ -41,15 +41,19 @@ let ABIL_TT_EXT = "Tames a baby animal. The following animals dying around the {
             ))
         ..setTooltipNormal(1, makeToolTipNorm("Q", "Tame"))
         ..setTooltipNormalExtended(1, ABIL_TT_EXT)
+        ..setRequirements(UPGD_PET_TAMED_FALSE.toRawCode())
         ..setEditorSuffix("(Wurst)")
+
 
 init
     EventListener.onTargetCast(ABILITY_PET_TAME) (unit caster, unit target) ->
         // Record the owner of the new unit.
-        caster.getOwner().addPet(target)
+        let owner = caster.getOwner()
 
-        // Unlock the new abilities.
-        setPetAbilities(caster.getOwner(), true)
+        owner.addPet(target)
+
+        owner.setTechResearched(UPGD_PET_TAMED_TRUE, 1)
+        owner.setTechResearched(UPGD_PET_TAMED_FALSE, 0)
 
         // Set max mana used for growth abilities.
         target.setMaxMana(10)

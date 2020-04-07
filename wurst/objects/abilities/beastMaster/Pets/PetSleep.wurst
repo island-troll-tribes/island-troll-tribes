@@ -19,16 +19,22 @@ public let SLEEP_ID = compiletime(ABIL_ID_GEN.next())
 // The amount the pet is healed for when sleeping.
 let HEALING_AMOUNT = 60.
 
+let COOLDOWN = 20.
+let SLEEP_DURATION = 10.
+
+let ABIL_TT = "Your pet goes to sleep, recovering {0} health point.".format(HEALING_AMOUNT.toToolTipGreen())
+              + makeToolTipDuration(SLEEP_DURATION, COOLDOWN)
+
 @compiletime function createSleepSpell()
     createObjectDefinition("w3a", SLEEP_ID, 'AUsl')
         ..setLvlDataString("aart", 0, 0, Icons.bTNElunesBlessing)
         ..setLvlDataInt("abpx", 0, 0, 3)
-        ..setLvlDataUnreal("acdn", 1, 0, 30.0)
+        ..setLvlDataUnreal("acdn", 1, 0, COOLDOWN)
         ..setLvlDataInt("amcs", 1, 0, 0)
         ..setLvlDataUnreal("Usl1", 1, 1, 1.0)
-        ..setLvlDataUnreal("adur", 1, 0, 10.0)
+        ..setLvlDataUnreal("adur", 1, 0, SLEEP_DURATION)
         ..setLvlDataString("ansf", 0, 0, "(pet, self)")
-        ..setLvlDataUnreal("ahdu", 1, 0, 10.0)
+        ..setLvlDataUnreal("ahdu", 1, 0, SLEEP_DURATION)
         ..setLvlDataString("ahky", 0, 0, "")
         ..setLvlDataInt("alev", 0, 0, 1)
         ..setLvlDataInt("arlv", 0, 0, 2)
@@ -45,7 +51,9 @@ let HEALING_AMOUNT = 60.
     ..setHotkeyNormal("E")
     ..setName("Pet Sleep")
     ..setTooltipNormal(1, makeToolTipNorm("E", "Sleep"))
-    ..setTooltipNormalExtended(1, "Your pet goes to sleep, recovering lost hp")
+    ..setTooltipNormalExtended(1, ABIL_TT)
+    ..setRequirements(UPGD_PET_TAMED_TRUE.toRawCode())
+    ..setEditorSuffix("(Wurst)")
 
 
 init
@@ -68,4 +76,6 @@ init
             )
 
             // Heal the pet.
+            // TODO : Maybe do a periodic healing instead of an instant one?
+            // It kinda makes more sense since the sleep last 10 seconds
             pet.addHP(HEALING_AMOUNT)

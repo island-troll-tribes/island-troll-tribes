@@ -1,14 +1,24 @@
 package PetAbilities
 
+// Standard Library Imports
+import UpgradeObjEditing
+
 // Local imports:
 import LocalObjectIDs
+import PlayerExtensions
 
-public function setPetAbilities(player p, bool hasPet)
-    SetPlayerAbilityAvailable(p, ABILITY_PET_TAME,    not hasPet)
-    SetPlayerAbilityAvailable(p, ABILITY_PET_RELEASE,     hasPet)
-    SetPlayerAbilityAvailable(p, ABILITY_PET_SLEEP,       hasPet)
-    SetPlayerAbilityAvailable(p, ABILITY_TOGGLE_PET_CONTROL, hasPet)
+
+@compiletime function createPetUpgrades()
+    new UpgradeDefinition(UPGD_PET_TAMED_FALSE)
+    ..setName(1, "No tamed Pet")
+    ..setTooltipExtended(1, "Used to check if BM has a pet and enable/disable icons, is researched when player release/loose a pet")
+
+    new UpgradeDefinition(UPGD_PET_TAMED_TRUE)
+    ..setName(1, "A tamed Pet")
+    ..setTooltipExtended(1, "Used to check if BM has no pet and enable/disable icons, is researched when player tame a pet")
+
 
 init
     ForForce(bj_FORCE_ALL_PLAYERS) ->
-        setPetAbilities(GetEnumPlayer(), false)
+        GetEnumPlayer().setTechResearched(UPGD_PET_TAMED_TRUE, 0)
+        GetEnumPlayer().setTechResearched(UPGD_PET_TAMED_FALSE, 1)

@@ -2,16 +2,18 @@ package BreathOfLife
 
 
 // Standard Library Imports:
-import ChannelAbilityPreset
+import Assets
 import OrderIds
 import ClosureEvents
 import ClosureTimers
+import ChannelAbilityPreset
 
 // Local Imports:
 import LocalObjectIDs
 import TerrainUtils
 import LocalAssets
 import SimError
+
 
 let ORDER_ID = Orders.blizzard.toString()
 let COOL_DOWN = 30.
@@ -55,6 +57,10 @@ vec2 array bushes
     ..setName(NAME)
     ..setTooltipNormal(1, TOOLTIP)
     ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+    ..setFollowThroughTime(1, 1.0)
+    // AoE indicator
+    ..presetOption(Option.TARGETIMAGE, true)
+    ..setAreaofEffect(1, BUSH_OFFSET * 2)
 
 // Plants the bushes in and around the target position.
 function plantBush(vec2 target)
@@ -76,11 +82,18 @@ function plantBush(vec2 target)
         if bushes[i].isTerrainLand()
 
             // Create the bush.
-            let bush = createDestructable(BUSH_ID, bushes[i], angle(0), 1.2, 0)
+            flashEffect(Objects.entBirthTarget, bushes[i])
+            let bush = createDestructable(BUSH_ID, bushes[i], angle(0), 1.2, 0)..setAnimation("birth")..setOccluderHeight(0)
 
-            // Remove the bush after its lifetime.
-            doAfter(BUSH_DURATION) -> 
-                bush.remove()
+            // Setting the occlusio height to 0 remove the vision block, this way we can see all the bush birth animation
+            // After the birth animation's finished, we reset the vision block, the value is taken from the world editor
+            // And based off tree destructible I believe
+            doAfter(1.5) ->
+                bush.setOccluderHeight(230)
+
+            // Killing the bush after its lifetime. Using kill instead of remove so we can see the death animation.
+            doAfter(BUSH_DURATION) ->
+                bush.kill()
 
 // Used to calculate the positions of the bushes surrounding the target position.
 function initializeBushes(vec2 target)
@@ -94,5 +107,3 @@ function initializeBushes(vec2 target)
 init
     EventListener.onPointCast(ABILITY_BREATH_OF_LIFE) (unit caster, vec2 target) ->
         plantBush(target)
-        
-        

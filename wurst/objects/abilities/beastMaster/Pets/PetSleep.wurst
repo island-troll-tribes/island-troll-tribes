@@ -3,14 +3,15 @@ package PetSleep
 // Standard library imports:
 import ClosureEvents
 import InstantDummyCaster
-import ObjEditingNatives
-import ObjectIdGenerator
 import OrderIds
 import SimError
+import Assets
+import ChannelAbilityPreset
 
 // Local imports:
 import LocalObjectIDs
 import Pets
+import ToolTipsUtils
 
 // The ID for the ability used to put a pet to sleep.
 public let SLEEP_ID = compiletime(ABIL_ID_GEN.next())
@@ -20,7 +21,7 @@ let HEALING_AMOUNT = 60.
 
 @compiletime function createSleepSpell()
     createObjectDefinition("w3a", SLEEP_ID, 'AUsl')
-        ..setLvlDataString("aart", 0, 0, "ReplaceableTextures\\PassiveButtons\\PASBTNElunesBlessing.blp")
+        ..setLvlDataString("aart", 0, 0, Icons.bTNElunesBlessing)
         ..setLvlDataInt("abpx", 0, 0, 3)
         ..setLvlDataUnreal("acdn", 1, 0, 30.0)
         ..setLvlDataInt("amcs", 1, 0, 0)
@@ -33,6 +34,18 @@ let HEALING_AMOUNT = 60.
         ..setLvlDataInt("arlv", 0, 0, 2)
         ..setLvlDataUnreal("aran", 1, 0, 99999.0)
         ..setLvlDataString("atar", 1, 0, "ground,nonhero")
+
+@compiletime function createDummyCastSleepSpell()
+    new ChannelAbilityPreset(ABILITY_PET_SLEEP, 1, true)
+        ..setAnimationNames("throw")
+        ..setIconNormal(Icons.bTNElunesBlessing)
+        ..setButtonPositionNormalX(2)
+        ..setCooldown(1, 20.0)
+        ..setFollowThroughTime(1, 1.0)
+        ..setHotkeyNormal("E")
+        ..setName("Pet Sleep")
+        ..setTooltipNormal(1, makeToolTipNorm("E", "Sleep"))
+        ..setTooltipNormalExtended(1, "Your pet goes to sleep, recovering lost hp")
 
 init
     EventListener.onCast(ABILITY_PET_SLEEP) (unit caster) ->

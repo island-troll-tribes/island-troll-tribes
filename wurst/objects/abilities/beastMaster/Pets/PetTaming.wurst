@@ -2,11 +2,36 @@ package PetTaming
 
 // Standard library imports:
 import ClosureEvents
+import AbilityObjEditing
+import Assets
+import ObjectIds
 
 // Local imports:
 import LocalObjectIDs
 import PetAbilities
+import LocalAssets
 import Pets
+import ToolTipsUtils
+
+@compiletime function createPetTaming()
+    new AbilityDefinitionCharm(ABILITY_PET_TAME)
+        ..setIconNormal(LocalIcons.bTNTamePet)
+        ..setButtonPositionNormalY(1)
+        ..setCooldown(1, 10.0)
+        ..setManaCost(1, 0)
+        ..setHeroAbility(false)
+        ..setHotkeyNormal("Q")
+        ..setName("Tame Pet")
+        ..setCastRange(1, 600.0)
+        ..setArtTarget(Abilities.controlMagicTarget)
+        ..setTargetsAllowed(1, commaList(
+                TargetsAllowed.neutral,
+                TargetsAllowed.nonhero,
+                TargetsAllowed.organic
+            ))
+        ..setTooltipNormal(1, makeToolTipNorm("Q", "Tame"))
+        ..setTooltipNormalExtended(1, "Tames a baby animal")
+        ..setEditorSuffix("(Wurst)")
 
 init
     EventListener.onTargetCast(ABILITY_PET_TAME) (unit caster, unit target) ->

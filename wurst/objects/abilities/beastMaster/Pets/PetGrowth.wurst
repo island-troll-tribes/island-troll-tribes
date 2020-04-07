@@ -6,7 +6,6 @@ import ClosureEvents
 import HashMap
 import ChannelAbilityPreset
 import Assets
-import ClosureTimers
 
 // Local imports:
 import Pets
@@ -22,17 +21,17 @@ let STAT_MANA_COST = 2
 // Damage growth variables.
 let DAMAGE_TOOLTIP = "Condense Strength"
 let DAMAGE_TOOLTIP_EXT = "Increase your pet's damage by 1."
-let DAMAGE_ICON = LocalIcons.bTNCondenseStrength
+let DAMAGE_ICON = Icons.bTNStrengthOfTheWild
 
 // Armor growth variables.
 let ARMOR_TOOLTIP = "Fortify Armor"
 let ARMOR_TOOLTIP_EXT = "Increase your pet's armor by 1."
-let ARMOR_ICON = LocalIcons.bTNFortifyArmor
+let ARMOR_ICON = Icons.bTNReinforcedHides
 
 // Magic resistance growth variables.
 let MAGIC_RESIST_TOOLTIP = "Resist Magic"
 let MAGIC_RESIST_TOOLTIP_EXT = "Increase your pet's magical resistance by 10%."
-let MAGIC_RESIST_ICON = LocalIcons.bTNResistMagic
+let MAGIC_RESIST_ICON = Icons.bTNThickFur
 
 // Variables used to grow pet to next stage of life.
 let GROWTH_TOOLTIP = "Advance Life"
@@ -117,7 +116,7 @@ function increaseDamage(unit caster)
     if not caster.isPet() or not checkPetLevelCounter(caster)
 
         return
-    
+
     // Increase the damage of the pet by 1.
     caster.setBaseDamage(caster.getBaseDamage(0) + 1, 0)
 
@@ -139,7 +138,7 @@ function increaseArmor(unit caster)
 
     // Increment the counter of points spent by the pet.
     incrementPetLevelCounter(caster)
-    
+
     // Track the armor gained by this unit.
     trackStatGrowth(PET_ARMOR, caster)
 
@@ -176,7 +175,7 @@ function incrementPetLevelCounter(unit pet)
         PET_LEVELS.put(owner, PET_LEVELS.getAndRemove(owner) + 1)
 
     // If this is the first use of a stat point this level.
-    else 
+    else
         // Start tracking the pet.
         PET_LEVELS.put(owner, 1)
 
@@ -227,7 +226,7 @@ function trackStatGrowth(HashMap<unit, int> stats, unit pet)
         stats.put(pet, stats.getAndRemove(pet) + 1)
 
     // If the pet is not being tracked already.
-    else 
+    else
 
         //Begin tracking with a value of 1.
         stats.put(pet, 1)
@@ -240,7 +239,7 @@ function trackStatGrowth(HashMap<player, int> stats, player owner)
         stats.put(owner, stats.getAndRemove(owner) + 1)
 
     // If the pet is not being tracked already.
-    else 
+    else
 
         //Begin tracking with a value of 1.
         stats.put(owner, 1)
@@ -282,7 +281,7 @@ function resetStats(player owner)
     if TOTAL_MAGIC_RESIST.has(owner)
 
         // Take away all magic resist gained through points.
-        pet.removeMagicResist()
+        //pet.removeMagicResist()
 
     // If the armor
     if TOTAL_ARMOR.has(owner)
@@ -299,7 +298,7 @@ init
         increaseArmor(caster)
     EventListener.onCast(ABILITY_PET_MAGIC_RESIST) (unit caster) ->
         increasePetMagicResist(caster)
-    EventListener.add(EVENT_PLAYER_HERO_LEVEL) -> 
+    EventListener.add(EVENT_PLAYER_HERO_LEVEL) ->
         resetPetLevelCounter(EventData.getTriggerUnit().getOwner().getPet())
     EventListener.onCast(ABILITY_GROW_PET) (unit caster) ->
         growPet(caster)

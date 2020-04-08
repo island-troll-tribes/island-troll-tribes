@@ -13,13 +13,12 @@ import ObjectIds
 // Local imports:
 import LocalObjectIDs
 import Pets
+import PlayerExtensions
 
 let ICON = Icons.bTNCannibalize
 
-let UPGD_PET_MANA = compiletime(UPGD_ID_GEN.next())
-
 @compiletime function createManaDummyUpgrade() returns UpgradeDefinition
-    return new UpgradeDefinition(UPGD_PET_MANA)
+    return new UpgradeDefinition(UPGD_PET_EATING_ALLOWED)
     ..setName(1, "Maximum unused upgrade points reached.")
 
 @compiletime function createAbilityFeedPet() returns AbilityDefinitionRaiseDead
@@ -41,7 +40,7 @@ let UPGD_PET_MANA = compiletime(UPGD_ID_GEN.next())
     // The ability is cast at melee range.
     ..presetCastRange(lvl -> 128)
     ..presetTooltipNormal(lvl -> "|c00ffcc00C|r - Eat Corpse")
-    ..setRequirements(UPGD_PET_MANA.toRawCode())
+    ..setRequirements(UPGD_PET_EATING_ALLOWED.toRawCode())
     ..setRequirementsLevels("1")
 
 
@@ -53,19 +52,28 @@ function onCast(unit caster)
 
     // Grant the pet 1 mana for eating a corpse.
     caster.setMana(caster.getMana() + 1)
+
+    // Check if research needs to be swapped for pet.
     setResearch(caster)
 
 function setResearch(unit caster)
-    if not caster.isPet()
-        return
+    
+    // If the pet does not have full mana.
     if not caster.getMana() == caster.getMaxMana()
-        SetPlayerTechResearched(caster.getOwner(), UPGD_PET_MANA, 1)
 
+        // Enable the research to allow eating.
+        caster.getOwner().setTechResearched(UPGD_PET_EATING_ALLOWED, 1)
+
+    // If the pet does have full mana.
     else 
-        SetPlayerTechResearched(caster.getOwner(), UPGD_PET_MANA, 0)
+
+        // Disable research so eating is not allowed.
+        caster.getOwner().setTechResearched(UPGD_PET_EATING_ALLOWED, 0)
 
 function onTame(player owner)
-    SetPlayerTechResearched(owner, UPGD_PET_MANA, 1)
+
+    // Allow the pet to eat when first tamed.
+    owner.setTechResearched(UPGD_PET_EATING_ALLOWED, 1)
 
 init 
     // Uses this event so that it triggers once the corpse has been consumed.
@@ -74,9 +82,6 @@ init
             onCast(EventData.getTriggerUnit())
         if EventData.getTriggerUnit().isPet()
             setResearch(EventData.getTriggerUnit())
-    
-    EventListener.add(EVENT_PLAYER_UNIT_SPELL_CAST) -> 
-        setResearch(EventData.getTriggerUnit())
         
     EventListener.onCast(ABILITY_PET_TAME) (unit caster) ->
         onTame(caster.getOwner())

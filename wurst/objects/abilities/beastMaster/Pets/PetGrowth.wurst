@@ -6,6 +6,7 @@ import ChannelAbilityPreset
 import ClosureEvents
 import HashMap
 import LinkedList
+import UpgradeObjEditing
 
 // Local imports:
 import LocalAssets
@@ -15,6 +16,7 @@ import Pets
 import SimError
 import ToolTipsUtils
 import Transformation
+import PlayerExtensions
 
 // Mana cost for all stat growth abilities.
 let STAT_MANA_COST = 2
@@ -22,7 +24,6 @@ let STAT_MANA_COST = 2
 let ATTACK_INCREASE = 1
 let ARMOR_INCREASE = 1
 let MAGIC_RESIST_INCREASE = 0.10
-
 
 // Damage growth variables.
 let DAMAGE_TOOLTIP = "Condense Strength"
@@ -42,7 +43,7 @@ let MAGIC_RESIST_ICON = Icons.bTNThickFur
 // Variables used to grow pet to next stage of life.
 let GROWTH_TOOLTIP = "Advance Life"
 let GROWTH_TOOLTIP_EXT = "Your pet matures to the next stage of it's development."
-let GROWTH_MANACOST = 10
+let GROWTH_MANACOST = 3
 let GROWTH_ICON = LocalIcons.bTNAdvanceLife
 
 // Stores the amount of times a pet has spent a stat point.
@@ -64,9 +65,14 @@ let TOTAL_ARMOR = new HashMap<player, int>()
 // Stores the total amount of times a pet upgraded magic resist. Used to reapply stats for new pet.
 let TOTAL_MAGIC_RESIST = new HashMap<player, int>()
 
+@compiletime function createPetLvlUpgrade() returns UpgradeDefinition
+    return new UpgradeDefinition(UPGD_PET_STATS_ALLOWED)
+    ..setName(1, "Level up your troll to spend more points.")
+
 @compiletime function createPetDamageAbility() returns ChannelAbilityPreset
     return new ChannelAbilityPreset(ABILITY_PET_DAMAGE, 1, true)
-    ..setDummyAbility()
+    ..setHeroAbility(false)
+    ..presetCastRange(lvl -> 99999)
     ..setName("Increase Damage")
     ..setIconNormal(DAMAGE_ICON)
     ..setButtonPositionNormalX(0)
@@ -76,10 +82,13 @@ let TOTAL_MAGIC_RESIST = new HashMap<player, int>()
     ..setManaCost(1, STAT_MANA_COST)
     ..presetTooltipNormal(lvl -> makeToolTipNorm("Z", DAMAGE_TOOLTIP))
     ..presetTooltipNormalExtended(lvl -> DAMAGE_TOOLTIP_EXT)
+    ..setRequirements(UPGD_PET_STATS_ALLOWED.toRawCode())
+    ..setRequirementsLevels("1")
 
 @compiletime function createPetArmorAbility() returns ChannelAbilityPreset
     return new ChannelAbilityPreset(ABILITY_PET_ARMOR, 1, true)
-    ..setDummyAbility()
+    ..setHeroAbility(false)
+    ..presetCastRange(lvl -> 99999)
     ..setName("Increase Armor")
     ..setIconNormal(ARMOR_ICON)
     ..setButtonPositionNormalX(1)
@@ -89,10 +98,13 @@ let TOTAL_MAGIC_RESIST = new HashMap<player, int>()
     ..setManaCost(1, STAT_MANA_COST)
     ..presetTooltipNormal(lvl -> makeToolTipNorm("X", ARMOR_TOOLTIP))
     ..presetTooltipNormalExtended(lvl -> ARMOR_TOOLTIP_EXT)
+    ..setRequirements(UPGD_PET_STATS_ALLOWED.toRawCode())
+    ..setRequirementsLevels("1")
 
 @compiletime function createPetMagicResistAbility() returns ChannelAbilityPreset
     return new ChannelAbilityPreset(ABILITY_PET_MAGIC_RESIST, 1, true)
-    ..setDummyAbility()
+    ..setHeroAbility(false)
+    ..presetCastRange(lvl -> 99999)
     ..setIconNormal(MAGIC_RESIST_ICON)
     ..setButtonPositionNormalX(2)
     ..setButtonPositionNormalY(2)
@@ -101,6 +113,8 @@ let TOTAL_MAGIC_RESIST = new HashMap<player, int>()
     ..presetManaCost(lvl -> STAT_MANA_COST)
     ..presetTooltipNormal(lvl -> makeToolTipNorm("C", MAGIC_RESIST_TOOLTIP))
     ..presetTooltipNormalExtended(lvl -> MAGIC_RESIST_TOOLTIP_EXT)
+    ..setRequirements(UPGD_PET_STATS_ALLOWED.toRawCode())
+    ..setRequirementsLevels("1")
 
 @compiletime function createPetGrowthAbility() returns ChannelAbilityPreset
     return new ChannelAbilityPreset(ABILITY_GROW_PET, 1, true)
@@ -118,26 +132,17 @@ let TOTAL_MAGIC_RESIST = new HashMap<player, int>()
 // Increases damage of the pet by 1.
 function increaseDamage(unit caster)
 
-    // If the caster is not a pet or the pet has used too many points this level exit.
-    if not caster.isPet() or not checkPetLevelCounter(caster)
-
-        return
-
     // Increase the damage of the pet by 1.
     caster.setBaseDamage(caster.getBaseDamage(0) + ATTACK_INCREASE, 0)
 
     // Increment the counter of points spent by the pet.
     incrementPetLevelCounter(caster)
 
+    // Track the total amount of damage gained by all pets.
     trackStatGrowth(TOTAL_DAMAGE, caster.getOwner())
 
 // Increases armor of the pet by 1.
 function increaseArmor(unit caster)
-
-    // If the caster is not a pet or the pet has used too many points this level exit.
-    if not caster.isPet() or not checkPetLevelCounter(caster)
-
-        return
 
     // Increase the armor of the pet by 1.
     caster.setArmor(caster.getArmor() + ARMOR_INCREASE)
@@ -154,11 +159,6 @@ function increaseArmor(unit caster)
 
 // Increases magic resistance of the pet by 10%.
 function increasePetMagicResist(unit caster)
-
-    // If the caster is not a pet or the pet has used too many points this level exit.
-    if not caster.isPet() or not checkPetLevelCounter(caster)
-
-        return
 
     // Increment magic resist to the next level.
     caster.setMagicResist(caster.getMagicResist() + 1)
@@ -185,28 +185,31 @@ function incrementPetLevelCounter(unit pet)
         // Start tracking the pet.
         PET_LEVELS.put(owner, 1)
 
+    checkPetLevelCounter(pet.getOwner())
+
 // Used to check how many points a pet has used this level.
-function checkPetLevelCounter(unit pet) returns bool
+function checkPetLevelCounter(player owner)
 
     // If the pet has used more points than the allowed maximum.
-    if PET_LEVELS.get(pet.getOwner()) >= MAX_POINTS_PER_LEVEL
+    if PET_LEVELS.get(owner) >= MAX_POINTS_PER_LEVEL
 
-        // Alert the player.
-        simError(pet.getOwner(), "Level up your troll to use more points.")
+        // Do not allow the pet to use more stat points.
+        owner.setTechResearched(UPGD_PET_STATS_ALLOWED, 0)
 
-        // Refund the mana spent and exit.
-        pet.setMana(pet.getMana() + STAT_MANA_COST)
+// Used to enable the pet to use stat upgrade abilities.
+function enableAbilities(unit caster)
 
-        return false
-
-    // If the pet still has available points to spend this level.
-    return true
+    // Set the research allowing stat upgrade abilities.
+    caster.getOwner().setTechResearched(UPGD_PET_STATS_ALLOWED, 1)
 
 // Used to reset the counter of used stat points for a pet on hero level up.
 function resetPetLevelCounter(unit pet)
 
     // Stop tracking the pet, allowing it to reset the next time a point is spent.
     PET_LEVELS.remove(pet.getOwner())
+
+    // Enable the pet to use more stat upgrades.
+    pet.getOwner().setTechResearched(UPGD_PET_STATS_ALLOWED, 1)
 
 function growPet(unit pet)
 
@@ -312,6 +315,7 @@ init
     EventListener.onCast(ABILITY_GROW_PET) (unit caster) ->
         growPet(caster)
     EventListener.onCast(ABILITY_PET_TAME) (unit caster) ->
+        enableAbilities(caster)
         reapplyStats(caster.getOwner(), EventData.getSpellTargetUnit())
     EventListener.onCast(ABILITY_PET_RELEASE) (unit caster) ->
         resetStats(EventData.getTriggerPlayer())

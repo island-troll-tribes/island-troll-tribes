@@ -74,6 +74,8 @@ public function registerTransformation(int originID, int targetID, int abilityID
 
 public function registerTransformations(
         LinkedList<Pair<int, int>> transformations) returns LinkedList<int>
+    for pair in transformations
+        print("Handling transformation {0} -> {1}".format(pair.a.asObjectName(), pair.b.asObjectName()))
     return transformations.map(pair -> registerTransformation(pair.a, pair.b))
 
 // Performs a bulk operations for registrations. Designed to simplify what must
@@ -84,16 +86,13 @@ function registerTransformations(
         bool requiresFixing,
         bool requiresAbility)
     // Pair each tranformation with its pregenerated ability ID.
-    zip(transformations, abilityIDs).map() (element, index) ->
+    zip(transformations, abilityIDs).forEach() element ->
         // Register the transformation.
         registerTransformation(element.a.a, element.a.b, element.b)
 
         // Register the fix, is required.
         if requiresFixing
             registerCorpseFix(element.a.a, element.a.b, requiresAbility)
-
-        // Output a dummy value, as required for mapping.
-        return 0
 
 // Simplifies the call for the above bulk operation.
 public function registerTransformations(

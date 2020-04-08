@@ -17,10 +17,6 @@ import LodashExtensions
 import LocalObjectIDs
 import Transformation
 
-// Used only to order transformation registry.
-// TODO: Order transformations globally.
-import Skins
-
 // The list of abilities used to transform.
 let TRANSFORMATIONS = new OwnedIterableMap<int, int>()
     ..put(ABILITY_TRANSFORM_WOLF,    UNIT_SHAPESHIFTER_WOLF)
@@ -29,24 +25,25 @@ let TRANSFORMATIONS = new OwnedIterableMap<int, int>()
     ..put(ABILITY_TRANSFORM_TIGER,   UNIT_SHAPESHIFTER_TIGER)
 
 // The unique abilities per form.
-// TODO: Automate permanency tracking for all tranformations.
+// TODO: Automate permanency tracking for all transformations.
 let ABILITIES = new IterableMap<int, LinkedList<int>>()
     ..put(UNIT_SHAPESHIFTER_WOLF,    asList(ABILITY_WOLF_HUNGER))
     ..put(UNIT_SHAPESHIFTER_BEAR,    asList(ABILITY_BEAR_BULWARK))
     ..put(UNIT_SHAPESHIFTER_PANTHER, asList(ABILITY_PANTHER_PROWL))
     ..put(UNIT_SHAPESHIFTER_TIGER,   asList(ABILITY_TIGER_VICIOUS_STRIKE, 'A0GH'))
 
-let FORMS = TRANSFORMATIONS.values()
+let FORMS = TRANSFORMATIONS.values().own()
+
+let transformations = product(FORMS, FORMS)
+    .filter(t -> t.a != t.b)
+    // TODO: Figure out why the map won't compile unless this listed is owned.
+    .own()
+
+let transformationIDs = compiletime(registerTransformations(transformations))
 
 // The unit currently being transformed.
 // TODO: Remove this if forces support closures.
 unit originGlobal
-
-@compiletime function registerTransformations()
-    for originID in FORMS
-        for targetID in FORMS
-            if originID != targetID
-                registerTransformation(originID, targetID)
 
 // TODO: Remove logic regarding orders once a non-interrupting ability is used.
 function onCast(unit origin, int targetID)
@@ -106,7 +103,7 @@ init
             onCast(EventData.getSpellAbilityUnit(), formID)
 
     // Register the transformations at runtime.
-    registerTransformations()
+    registerTransformations(transformations, transformationIDs, false)
 
     // Undo the shapeshifting prior to other transformations.
     registerPriorEffect() (unit target, int unitID) ->
@@ -114,7 +111,7 @@ init
             transformUnit(target, UNIT_SHAPESHIFTER_WOLF)
 
     // Make each unique ability permanent to preserve cooldown.
-    // TODO: Automate permanency tracking for all tranformations.
+    // TODO: Automate permanency tracking for all transformations.
     registerPriorEffect() (unit target, int unitID) ->
         if FORMS.has(target.getTypeId())
             ABILITIES.forEach() (integer formID, LinkedList<integer> abilIDs) ->
@@ -127,7 +124,7 @@ init
                         target.removeAbility(abilID)
 
     // Enable the correct ability for the unit.
-    // TODO: Automate permanency tracking for all tranformations.
+    // TODO: Automate permanency tracking for all transformations.
     // TODO: Use BlzUnitDisableAbility per unit.
     registerAfterEffect() (unit target, int unitID) ->
         if FORMS.has(target.getTypeId())

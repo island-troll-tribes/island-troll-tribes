@@ -1,10 +1,13 @@
 package TrollUpgrade
 
 // Standard library imports:
-import ClosureTimers
 import EventHelper
 import HashMap
+import LinkedList
 import RegisterEvents
+
+// Third-party imports
+import Lodash
 
 // Local imports:
 import AutoSkill
@@ -37,59 +40,54 @@ public constant trollUpgradeMap = new HashMap<int, int>()
     ..put(ABILITY_HERB_MASTER,      UNIT_HERB_MASTER)
     ..put(ABILITY_OMNIGATHERER,     UNIT_OMNIGATHERER)
 
-// TODO: Do this while creating the classes.
-@compiletime function registerTransformations()
+let transformations = new LinkedList<Pair<int, int>>()
     // Hunter
-    registerTransformation(UNIT_HUNTER, UNIT_WARRIOR)
-    registerTransformation(UNIT_HUNTER, UNIT_TRACKER)
-    registerTransformation(UNIT_HUNTER, UNIT_JUGGERNAUT)
-    registerTransformation(UNIT_WARRIOR, UNIT_JUGGERNAUT)
-    registerTransformation(UNIT_TRACKER, UNIT_JUGGERNAUT)
-
+    ..add(new Pair(UNIT_HUNTER, UNIT_WARRIOR))
+    ..add(new Pair(UNIT_HUNTER, UNIT_TRACKER))
+    ..add(new Pair(UNIT_HUNTER, UNIT_JUGGERNAUT))
+    ..add(new Pair(UNIT_WARRIOR, UNIT_JUGGERNAUT))
+    ..add(new Pair(UNIT_TRACKER, UNIT_JUGGERNAUT))
     // Beastmaster
-    registerTransformation(UNIT_BEAST_MASTER, UNIT_SHAPESHIFTER_WOLF)
-    registerTransformation(UNIT_BEAST_MASTER, UNIT_CHICKEN_FORM)
-    registerTransformation(UNIT_BEAST_MASTER, UNIT_DRUID)
-    registerTransformation(UNIT_BEAST_MASTER, UNIT_ULTIMATE_FORM)
-    registerTransformation(UNIT_SHAPESHIFTER_WOLF, UNIT_ULTIMATE_FORM)
-    registerTransformation(UNIT_CHICKEN_FORM, UNIT_ULTIMATE_FORM)
-    registerTransformation(UNIT_DRUID, UNIT_ULTIMATE_FORM)
-
+    ..add(new Pair(UNIT_BEAST_MASTER, UNIT_SHAPESHIFTER_WOLF))
+    ..add(new Pair(UNIT_BEAST_MASTER, UNIT_CHICKEN_FORM))
+    ..add(new Pair(UNIT_BEAST_MASTER, UNIT_DRUID))
+    ..add(new Pair(UNIT_BEAST_MASTER, UNIT_ULTIMATE_FORM))
+    ..add(new Pair(UNIT_SHAPESHIFTER_WOLF, UNIT_ULTIMATE_FORM))
+    ..add(new Pair(UNIT_CHICKEN_FORM, UNIT_ULTIMATE_FORM))
+    ..add(new Pair(UNIT_DRUID, UNIT_ULTIMATE_FORM))
     // Priest
-    registerTransformation(UNIT_PRIEST, UNIT_BOOSTER)
-    registerTransformation(UNIT_PRIEST, UNIT_MASTER_HEALER)
-    registerTransformation(UNIT_PRIEST, UNIT_SAGE)
-    registerTransformation(UNIT_BOOSTER, UNIT_SAGE)
-    registerTransformation(UNIT_MASTER_HEALER, UNIT_SAGE)
-
+    ..add(new Pair(UNIT_PRIEST, UNIT_BOOSTER))
+    ..add(new Pair(UNIT_PRIEST, UNIT_MASTER_HEALER))
+    ..add(new Pair(UNIT_PRIEST, UNIT_SAGE))
+    ..add(new Pair(UNIT_BOOSTER, UNIT_SAGE))
+    ..add(new Pair(UNIT_MASTER_HEALER, UNIT_SAGE))
     // Mage
-    registerTransformation(UNIT_MAGE, UNIT_ELEMENTALIST_NEW)
-    registerTransformation(UNIT_MAGE, UNIT_HYPNOTIST)
-    registerTransformation(UNIT_MAGE, UNIT_DEMENTIA_MASTER)
-    registerTransformation(UNIT_ELEMENTALIST_NEW, UNIT_DEMENTIA_MASTER)
-    registerTransformation(UNIT_HYPNOTIST, UNIT_DEMENTIA_MASTER)
-
+    ..add(new Pair(UNIT_MAGE, UNIT_ELEMENTALIST_NEW))
+    ..add(new Pair(UNIT_MAGE, UNIT_HYPNOTIST))
+    ..add(new Pair(UNIT_MAGE, UNIT_DEMENTIA_MASTER))
+    ..add(new Pair(UNIT_ELEMENTALIST_NEW, UNIT_DEMENTIA_MASTER))
+    ..add(new Pair(UNIT_HYPNOTIST, UNIT_DEMENTIA_MASTER))
     // Scout
-    registerTransformation(UNIT_SCOUT, UNIT_TRAPPER)
-    registerTransformation(UNIT_SCOUT, UNIT_OBSERVER)
-    registerTransformation(UNIT_SCOUT, UNIT_SPY)
-    registerTransformation(UNIT_TRAPPER, UNIT_SPY)
-    registerTransformation(UNIT_OBSERVER, UNIT_SPY)
-
+    ..add(new Pair(UNIT_SCOUT, UNIT_TRAPPER))
+    ..add(new Pair(UNIT_SCOUT, UNIT_OBSERVER))
+    ..add(new Pair(UNIT_SCOUT, UNIT_SPY))
+    ..add(new Pair(UNIT_TRAPPER, UNIT_SPY))
+    ..add(new Pair(UNIT_OBSERVER, UNIT_SPY))
     // Gatherer
-    registerTransformation(UNIT_GATHERER, UNIT_RADAR_GATHERER)
-    registerTransformation(UNIT_GATHERER, UNIT_HERB_MASTER)
-    registerTransformation(UNIT_GATHERER, UNIT_OMNIGATHERER)
-    registerTransformation(UNIT_RADAR_GATHERER, UNIT_OMNIGATHERER)
-    registerTransformation(UNIT_HERB_MASTER, UNIT_OMNIGATHERER)
-
+    ..add(new Pair(UNIT_GATHERER, UNIT_RADAR_GATHERER))
+    ..add(new Pair(UNIT_GATHERER, UNIT_HERB_MASTER))
+    ..add(new Pair(UNIT_GATHERER, UNIT_OMNIGATHERER))
+    ..add(new Pair(UNIT_RADAR_GATHERER, UNIT_OMNIGATHERER))
+    ..add(new Pair(UNIT_HERB_MASTER, UNIT_OMNIGATHERER))
     // Thief
-    registerTransformation(UNIT_THIEF, UNIT_CONTORTIONIST)
-    registerTransformation(UNIT_THIEF, UNIT_ESCAPE_ARTIST)
-    registerTransformation(UNIT_THIEF, UNIT_ASSASSIN)
-    registerTransformation(UNIT_CONTORTIONIST, UNIT_ASSASSIN)
-    registerTransformation(UNIT_ESCAPE_ARTIST, UNIT_ASSASSIN)
+    ..add(new Pair(UNIT_THIEF, UNIT_CONTORTIONIST))
+    ..add(new Pair(UNIT_THIEF, UNIT_ESCAPE_ARTIST))
+    ..add(new Pair(UNIT_THIEF, UNIT_ASSASSIN))
+    ..add(new Pair(UNIT_CONTORTIONIST, UNIT_ASSASSIN))
+    ..add(new Pair(UNIT_ESCAPE_ARTIST, UNIT_ASSASSIN))
 
+// Generate the transformations during compilation.
+let transformationIDs = compiletime(registerTransformations(transformations))
 
 function upgradeUnit(unit origin, int targetID)
     // Save the statistics for the unit for restoration after level reduction.
@@ -145,4 +143,4 @@ init
         )
 
     // Register the transformations at runtime.
-    registerTransformations()
+    registerTransformations(transformations, transformationIDs, false)

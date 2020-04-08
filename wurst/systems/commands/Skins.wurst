@@ -16,10 +16,6 @@ import PlayerFeature
 import StringExtensions
 import Transformation
 
-// Used only to order transformation registry.
-// TODO: Order transformations globally.
-import TrollUpgrade
-
 let TIMEOUT = 10.0
 
 // The base message used for notifying users of the exchange.
@@ -58,6 +54,9 @@ class CustomSkin
                 transformUnit(target, unitTypeId)
 
 // This function is called externally.
+// TODO: This won't work with the new transformation registration methodology.
+//       See the associated PR for an in-depth explanation.
+//       This is not fixed part of it because skins are currently defunct.
 @compiletime function buildSkins()
     new CustomSkin(UNIT_BEAST_MASTER,  UNIT_BEAST_MASTER_1,  "skin-bm-1"     )
     new CustomSkin(UNIT_HUNTER,        UNIT_HUNTER_1,        "skin-hunter-1" )
@@ -106,8 +105,6 @@ init
         // Verify that the unit changed classes.
         if getTrollClassType(target) != getTrollClassType(unitID)
             onEnterHandler(target)
-
-
 
     PlayerFeature
         .get("WorldEdit")

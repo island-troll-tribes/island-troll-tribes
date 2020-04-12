@@ -22,7 +22,7 @@ let HOTKEY = "W"
 let DRUID_ROAR_DAMAGE_BOOST = .3
 let DRUID_ROAR_DURATION = 10.
 let MANA_COST = 20
-let COOL_DOWN = 45.
+let COOLDOWN = 45.
 let DRUID_ROAR_BUFF_ID = compiletime(BUFF_ID_GEN.next())
 let DRUID_ROAR_BUFF_TT = "This unit is under the affects of Nature's Roar. It has increased damage"
 
@@ -53,7 +53,8 @@ let DRUID_ROAR_TT_EXT = "The Druid and his pet unleash a mighty roar, inspiring 
                         "Elk: Increases nearby allies movement speed by {0}%.\n".format(ELK_MS_BOOST.toString().substring(0, 2)) +
                         "Wolf: Decreases nearby enemies' movement speed by {0}% and attack speed by {1}%.\n".format((WOLF_MS_REDUCTION * 100).toString().substring(0, 2),
                                                                                                                     (WOLF_AS_REDUCTION * 100).toString().substring(0, 2)) +
-                        "Bear: Decreases nearby enemies' damage by {0}%.".format((BEAR_DAMAGE_REDUCTION * 100).toString().substring(0, 2))
+                        "Bear: Decreases nearby enemies' damage by {0}%.".format((BEAR_DAMAGE_REDUCTION * 100).toString().substring(0, 2)) +
+                        makeToolTipCooldown(COOLDOWN)
 
 // Used for druid roar icon, and all buffs left by the roars.
 let DRUID_ROAR_ICON = LocalIcons.bTNVerdantSong
@@ -65,7 +66,7 @@ let BEAR_ROAR_ICON = Icons.bTNBattleRoar
 @compiletime function createDruidRoar() returns AbilityDefinitionRoar
     return new AbilityDefinitionRoar(ABILITY_DRUID_ROAR)
     ..setManaCost(1, MANA_COST)
-    ..setCooldown(1, COOL_DOWN)
+    ..setCooldown(1, COOLDOWN)
     ..setIconNormal(DRUID_ROAR_ICON)
     ..setBuffs(1, DRUID_ROAR_BUFF_ID.toRawCode())
     ..setDamageIncrease(1, DRUID_ROAR_DAMAGE_BOOST)

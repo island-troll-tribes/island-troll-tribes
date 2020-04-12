@@ -4,11 +4,9 @@ package PetFeeding
 import AbilityObjEditing
 import ClosureEvents
 import Assets
-import SimError
-import Orders
 import UpgradeObjEditing
-import ObjectIdGenerator
 import ObjectIds
+import ClosureTimers
 
 // Local imports:
 import LocalObjectIDs
@@ -56,19 +54,22 @@ function onCast(unit caster)
     // Check if research needs to be swapped for pet.
     setResearch(caster)
 
-function setResearch(unit caster)
-    
-    // If the pet does not have full mana.
-    if not caster.getMana() == caster.getMaxMana()
+public function setResearch(unit caster)
 
-        // Enable the research to allow eating.
-        caster.getOwner().setTechResearched(UPGD_PET_EATING_ALLOWED, 1)
+    // Wait for mana to actually be reduced after casting.
+    nullTimer() ->
 
-    // If the pet does have full mana.
-    else 
+        // If the pet does not have full mana.
+        if not caster.getMana() == caster.getMaxMana()
 
-        // Disable research so eating is not allowed.
-        caster.getOwner().setTechResearched(UPGD_PET_EATING_ALLOWED, 0)
+            // Enable the research to allow eating.
+            caster.getOwner().setTechResearched(UPGD_PET_EATING_ALLOWED, 1)
+
+        // If the pet does have full mana.
+        else 
+
+            // Disable research so eating is not allowed.
+            caster.getOwner().setTechResearched(UPGD_PET_EATING_ALLOWED, 0)
 
 function onTame(player owner)
 
@@ -76,12 +77,12 @@ function onTame(player owner)
     owner.setTechResearched(UPGD_PET_EATING_ALLOWED, 1)
 
 init 
-    // Uses this event so that it triggers once the corpse has been consumed.
+    
     EventListener.add(EVENT_PLAYER_UNIT_SPELL_ENDCAST) -> 
         if EventData.getSpellAbilityId() == ABILITY_FEED_PET
             onCast(EventData.getTriggerUnit())
         if EventData.getTriggerUnit().isPet()
             setResearch(EventData.getTriggerUnit())
-        
+
     EventListener.onCast(ABILITY_PET_TAME) (unit caster) ->
         onTame(caster.getOwner())

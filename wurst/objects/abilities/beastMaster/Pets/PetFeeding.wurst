@@ -12,8 +12,15 @@ import ClosureTimers
 import LocalObjectIDs
 import Pets
 import PlayerExtensions
+import ColorUtils
+import StringExtensions
+import ToolTipsUtils
 
+let MANA_GAINED = 1
+let HOTKEY = "D"
 let ICON = Icons.bTNCannibalize
+let TOOLTIP = "Eat Corpse"
+let TOOLTIP_EXT = "Eat a raw corpse to gain {0} mana.".format(MANA_GAINED.toString().color(ENERGY_COLOR))
 
 @compiletime function createManaDummyUpgrade() returns UpgradeDefinition
     return new UpgradeDefinition(UPGD_PET_EATING_ALLOWED)
@@ -24,7 +31,9 @@ let ICON = Icons.bTNCannibalize
     ..setIconNormal(ICON)
     ..setButtonPositionNormalX(1)
     ..setButtonPositionNormalY(1)
-    ..setHotkeyNormal("D")
+    ..setHotkeyNormal(HOTKEY)
+    ..setTooltipNormal(1, makeToolTipNorm(HOTKEY, TOOLTIP))
+    ..setTooltipNormalExtended(1, TOOLTIP_EXT)
     // The corpse is removed without an effect.
     ..setArtEffect("")
     ..setLevels(1)
@@ -37,7 +46,6 @@ let ICON = Icons.bTNCannibalize
     ..presetAreaofEffect(lvl -> 800)
     // The ability is cast at melee range.
     ..presetCastRange(lvl -> 128)
-    ..presetTooltipNormal(lvl -> "|c00ffcc00C|r - Eat Corpse")
     ..setRequirements(UPGD_PET_EATING_ALLOWED.toRawCode())
     ..setRequirementsLevels("1")
 

@@ -11,6 +11,7 @@ import Lodash
 import ColorUtils
 import LocalObjectIDs
 import ToolTipsUtils
+import StringExtensions
 
 let ABILITY_ICON = "ReplaceableTextures\\CommandButtons\\BTNGreenSentryWard.blp"
 
@@ -23,7 +24,8 @@ let RANDOM_PLACEMENT_RANGE = 600.
 let WARD_DURATION = 480.
 
 let TOOLTIP_NORM = "Ward the Area"
-let TOOLTIP_EXTENDED = "Places a living clay at your feet and {0}|r living clay in the area around you. Living clay last {1}|r seconds, has {2} seconds cooldown."
+let TOOLTIP_BASE_EXT = "Places a living clay at the target spot. Living clay last {0} seconds, has {1} seconds cooldown."
+let TOOLTIP_SUB_EXT = "Places a living clay at the target spot and {0}|r living clay in the area around you. Living clay last {1}|r seconds, has {2} seconds cooldown."
 
 let MANACOST = 10
 let CASTTIME = 1.0
@@ -42,11 +44,10 @@ class WardAreaSpell extends ChannelAbilityPreset
         this.setHotkeyNormal(hotkey)
         this.setName(TOOLTIP_NORM)
         this.presetTooltipNormal(lvl -> makeToolTipNormHero(hotkey, TOOLTIP_NORM, lvl))
-        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED.format(COLOR_ORANGE.toColorString()+(lvl + 1).toString(),
-        (WARD_DURATION).toToolTipLightBlue(), (COOLDOWN).toToolTipLightBlue()))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_BASE_EXT.format(WARD_DURATION.toString().substring(0, 3).color(COLOR_ORANGE), COOLDOWN.toString().substring(0, 2).color(COLOR_LIGHT_BLUE)))
 
         this.setTooltipLearn(makeToolTipLearn(TOOLTIP_NORM))
-        this.setTooltipLearnExtended(TOOLTIP_EXTENDED.format(COLOR_ORANGE.toColorString()+"2/3/4|r", COLOR_LIGHT_BLUE.toColorString()+"360/480/600|r", COLOR_LIGHT_BLUE.toColorString()+"70/60/50|r"))
+        this.setTooltipLearnExtended(TOOLTIP_BASE_EXT.format(WARD_DURATION.toString().color(COLOR_ORANGE).substring(0, 3), COOLDOWN.toString().color(COLOR_LIGHT_BLUE).substring(0, 2)))
         this.setIconNormal(ABILITY_ICON)
         this.setIconResearch(ABILITY_ICON)
         this.setIconTurnOff(ABILITY_ICON)
@@ -60,7 +61,7 @@ class ObserverWardAreaSpell extends WardAreaSpell
         super(newAbilityId, hotkey, buttonPos, lvls)
         this.presetCooldown(lvl -> COOLDOWN - lvl * 10)
         this.presetTooltipNormal(lvl -> makeToolTipNormHero(hotkey, TOOLTIP_NORM, lvl))
-        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED.format(COLOR_ORANGE.toColorString()+(lvl + 1).toString(),
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_SUB_EXT.format(COLOR_ORANGE.toColorString()+(lvl + 1).toString(),
         (WARD_DURATION).toToolTipLightBlue(), (COOLDOWN - lvl * 10).toToolTipLightBlue()))
         this.setCheckDependencies(false)
 
@@ -69,7 +70,7 @@ class SpyWardAreaSpell extends WardAreaSpell
         super(newAbilityId, hotkey, buttonPos, lvls)
         this.setCooldown(1, SPY_COOLDOWN)
         this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
-        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED.format(COLOR_ORANGE.toColorString()+"4", COLOR_LIGHT_BLUE.toColorString()+WARD_DURATION.toString(), SPY_COOLDOWN.toToolTipLightBlue()))
+        this.setTooltipNormalExtended(1, TOOLTIP_SUB_EXT.format(COLOR_ORANGE.toColorString()+"4", COLOR_LIGHT_BLUE.toColorString()+WARD_DURATION.toString().substring(0, 3), SPY_COOLDOWN.toToolTipLightBlue()))
 
 @compiletime function createWardAreaSpells()
     new WardAreaSpell(ABILITY_WARD_AREA, "R", new Pair(2, 1), 1)

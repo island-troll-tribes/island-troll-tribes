@@ -7,7 +7,6 @@ import ClosureTimers
 import OrderIds
 import MapBounds
 import InstantDummyCaster
-import HashMap
 
 // Local imports:
 import Pets
@@ -15,28 +14,6 @@ import LocalObjectIDs
 import PlayerExtensions
 import ColorUtils
 import StringExtensions
-import DummyCorpse
-
-// Used to drop the corresponding amount of meat on pet death.
-let MEAT_DROPS = new HashMap<int, int>()
-    ..put(UNIT_FAWN,              1)
-    ..put(UNIT_ELK_ADOLESCENT,    6)
-    ..put(UNIT_ADULT_ELK,         7)
-    ..put(UNIT_WOLF_PUP,          1)
-    ..put(UNIT_WOLF_ADOLESCENT,   4)
-    ..put(UNIT_ADULT_JUNGLE_WOLF, 8)
-    ..put(UNIT_BEAR_CUB,          1)
-    ..put(UNIT_BEAR_ADOLESCENT,   7)
-    ..put(UNIT_ADULT_JUNGLE_BEAR, 9)
-
-// Used to drop the hide corresponding to the species of pet.
-let HIDE_DROPS = new HashMap<int, int>()
-    ..put(UNIT_ELK_ADOLESCENT   , ITEM_ELK_HIDE)
-    ..put(UNIT_ADULT_ELK        , ITEM_ELK_HIDE)
-    ..put(UNIT_JUNGLE_WOLF      , ITEM_JUNGLE_WOLF_HIDE)
-    ..put(UNIT_ADULT_JUNGLE_WOLF, ITEM_JUNGLE_WOLF_HIDE)
-    ..put(UNIT_JUNGLE_BEAR      , ITEM_JUNGLE_BEAR_HIDE)
-    ..put(UNIT_ADULT_JUNGLE_BEAR, ITEM_JUNGLE_BEAR_HIDE)
 
 // Time before pet revives.
 let PET_REVIVE_TIME = 60.
@@ -59,25 +36,15 @@ let DEATH_MESSAGE = "Your pet has died. It will revive in {0} seconds.".format(P
 
 function onDeath(unit u)
 
-    // Exit if dying unit is not its owner's pet.
-    if u.getOwner().getPet() != u
-        return
-
     // Store the owner of the pet.
     let owner = u.getOwner()
 
+    // Exit if dying unit is not its owner's pet.
+    if owner.getPet() != u
+        return
+
     // Notify the owner that their pet died.
     owner.print(DEATH_MESSAGE)
-
-    // Drop the required amount of meat.
-    // for _ = 1 to MEAT_DROPS.get(u.getTypeId())
-    //     createCorpse(u.getPos())
-
-    // // Drop a bone.
-    // createItem(ITEM_BONE, u.getPos())
-
-    // // Drop the corresponding hide.
-    // createItem(HIDE_DROPS.get(u.getTypeId()), u.getPos())
 
     // To ensure the corpse is moved after the postDeath movement of baby/child rearing animals.
     nullTimer() -> 

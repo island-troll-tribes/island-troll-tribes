@@ -20,21 +20,20 @@ let BUTTON_POS_X = 1
 let BUTTON_POS_Y = 0
 let HOTKEY = "W"
 let DRUID_ROAR_DAMAGE_BOOST = .3
-let DRUID_ROAR_DURATION = 10.
+let DRUID_ROAR_DURATION = 7.
 let MANA_COST = 20
 let COOLDOWN = 45.
+let RANGE = 600.
 let DRUID_ROAR_BUFF_ID = compiletime(BUFF_ID_GEN.next())
 let DRUID_ROAR_BUFF_TT = "This unit is under the affects of Nature's Roar. It has increased damage"
 
 let ABILITY_ELK_ROAR = compiletime(ABIL_ID_GEN.next())
-let ELK_ROAR_RANGE = 600.
 let ELK_MS_BOOST = 50.
 let ELK_ROAR_DURATION = 4.
 let ELK_ROAR_BUFF_ID = compiletime(BUFF_ID_GEN.next())
 let ELK_ROAR_TT = "This unit observes a nearby elk prepare for battle and is inspired to do the same. It has increased movement speed."
 
 let ABILITY_WOLF_ROAR = compiletime(ABIL_ID_GEN.next())
-let WOLF_ROAR_RANGE = 600.
 let WOLF_AS_REDUCTION = .2
 let WOLF_MS_REDUCTION = .1
 let WOLF_ROAR_DURATION = 7.
@@ -65,127 +64,127 @@ let BEAR_ROAR_ICON = Icons.bTNBattleRoar
 
 @compiletime function createDruidRoar() returns AbilityDefinitionRoar
     return new AbilityDefinitionRoar(ABILITY_DRUID_ROAR)
-    ..setManaCost(1, MANA_COST)
-    ..setCooldown(1, COOLDOWN)
-    ..setIconNormal(DRUID_ROAR_ICON)
-    ..setBuffs(1, DRUID_ROAR_BUFF_ID.toRawCode())
-    ..setDamageIncrease(1, DRUID_ROAR_DAMAGE_BOOST)
-    ..setDurationHero(1, DRUID_ROAR_DURATION)
-    ..setDurationNormal(1, DRUID_ROAR_DURATION)
-    ..setButtonPositionNormalX(BUTTON_POS_X)
-    ..setButtonPositionNormalY(BUTTON_POS_Y)
-    ..setTooltipNormal(1, makeToolTipNorm(HOTKEY, DRUID_ROAR_TT))
-    ..setTooltipNormalExtended(1, DRUID_ROAR_TT_EXT)
-    ..setHotkeyNormal(HOTKEY)
-    ..presetTargetsAllowed(lvl -> commaList(
-            TargetsAllowed.air,
-            TargetsAllowed.ground,
-            TargetsAllowed.friend,
-            TargetsAllowed.self,
-            TargetsAllowed.vulnerable,
-            TargetsAllowed.invulnerable,
-            TargetsAllowed.nonsapper
-        ))
+        ..setManaCost(1, MANA_COST)
+        ..setCooldown(1, COOLDOWN)
+        ..setIconNormal(DRUID_ROAR_ICON)
+        ..setBuffs(1, DRUID_ROAR_BUFF_ID.toRawCode())
+        ..setDamageIncrease(1, DRUID_ROAR_DAMAGE_BOOST)
+        ..setDurationHero(1, DRUID_ROAR_DURATION)
+        ..setDurationNormal(1, DRUID_ROAR_DURATION)
+        ..setButtonPositionNormalX(BUTTON_POS_X)
+        ..setButtonPositionNormalY(BUTTON_POS_Y)
+        ..setTooltipNormal(1, makeToolTipNorm(HOTKEY, DRUID_ROAR_TT))
+        ..setTooltipNormalExtended(1, DRUID_ROAR_TT_EXT)
+        ..setHotkeyNormal(HOTKEY)
+        ..presetTargetsAllowed(lvl -> commaList(
+                TargetsAllowed.air,
+                TargetsAllowed.ground,
+                TargetsAllowed.friend,
+                TargetsAllowed.self,
+                TargetsAllowed.vulnerable,
+                TargetsAllowed.invulnerable,
+                TargetsAllowed.nonsapper
+            ))
 
 @compiletime function createDruidBuff() returns BuffDefinition
     return new BuffDefinition(DRUID_ROAR_BUFF_ID, BuffIds.roar)
-    ..setIcon(DRUID_ROAR_ICON)
-    ..setName(1, "Nature's Roar")
-    ..setTooltipNormal(1, "Nature's Roar")
-    ..setTooltipNormalExtended(1, DRUID_ROAR_BUFF_TT)
-    ..setEditorSuffix(1, "(Wurst)")
+        ..setIcon(DRUID_ROAR_ICON)
+        ..setName(1, "Nature's Roar")
+        ..setTooltipNormal(1, "Nature's Roar")
+        ..setTooltipNormalExtended(1, DRUID_ROAR_BUFF_TT)
+        ..setEditorSuffix(1, "(Wurst)")
 
 @compiletime function createElkRoar() returns AbilityDefinitionSlow
     return new AbilityDefinitionSlow(ABILITY_ELK_ROAR)
-    ..setLevels(1)
-    ..setArtCaster("")
-    ..setArtEffect("")
-    ..setArtTarget("")
-    ..setArtSpecial("")
-    ..presetBuffs(lvl -> toRawCode(ELK_ROAR_BUFF_ID))
-    ..presetCastingTime(lvl -> 0)
-    ..presetCastRange(lvl -> 9999)
-    ..presetAreaofEffect(lvl -> 0)
-    ..presetManaCost(lvl -> 0)
-    ..presetCooldown(lvl -> 0)
-    ..presetAttackSpeedFactor(lvl -> 0)
-    ..presetMovementSpeedFactor(lvl -> -ELK_MS_BOOST)
-    ..presetDurationHero(lvl -> ELK_ROAR_DURATION)
-    ..presetDurationNormal(lvl -> ELK_ROAR_DURATION)
-    ..setLevelSkipRequirement(0)
-    ..setHeroAbility(false)
-    ..setItemAbility(false)
-    ..presetTargetsAllowed(lvl -> commaList(
-            TargetsAllowed.air,
-            TargetsAllowed.ground,
-            TargetsAllowed.friend,
-            TargetsAllowed.self,
-            TargetsAllowed.vulnerable,
-            TargetsAllowed.invulnerable,
-            TargetsAllowed.nonsapper
-        ))
+        ..setLevels(1)
+        ..setArtCaster("")
+        ..setArtEffect("")
+        ..setArtTarget("")
+        ..setArtSpecial("")
+        ..presetBuffs(lvl -> toRawCode(ELK_ROAR_BUFF_ID))
+        ..presetCastingTime(lvl -> 0)
+        ..presetCastRange(lvl -> 9999)
+        ..presetAreaofEffect(lvl -> 0)
+        ..presetManaCost(lvl -> 0)
+        ..presetCooldown(lvl -> 0)
+        ..presetAttackSpeedFactor(lvl -> 0)
+        ..presetMovementSpeedFactor(lvl -> -ELK_MS_BOOST)
+        ..presetDurationHero(lvl -> ELK_ROAR_DURATION)
+        ..presetDurationNormal(lvl -> ELK_ROAR_DURATION)
+        ..setLevelSkipRequirement(0)
+        ..setHeroAbility(false)
+        ..setItemAbility(false)
+        ..presetTargetsAllowed(lvl -> commaList(
+                TargetsAllowed.air,
+                TargetsAllowed.ground,
+                TargetsAllowed.friend,
+                TargetsAllowed.self,
+                TargetsAllowed.vulnerable,
+                TargetsAllowed.invulnerable,
+                TargetsAllowed.nonsapper
+            ))
 
 @compiletime function createElkBuff() returns BuffDefinition
     return new BuffDefinition(ELK_ROAR_BUFF_ID, BuffIds.slow)
-    ..setIcon(ELK_ROAR_ICON)
-    ..setName(1, "Elk's Composure")
-    ..setTargetAttachmentPoint0(1, "overhead")
-    ..setArtTarget(1, Abilities.speedTarget)
-    ..setTooltipNormal(1, "Elk's Composure")
-    ..setTooltipNormalExtended(1, ELK_ROAR_TT)
-    ..setEditorSuffix(1, "(Wurst)")
+        ..setIcon(ELK_ROAR_ICON)
+        ..setName(1, "Elk's Composure")
+        ..setTargetAttachmentPoint0(1, "overhead")
+        ..setArtTarget(1, Abilities.speedTarget)
+        ..setTooltipNormal(1, "Elk's Composure")
+        ..setTooltipNormalExtended(1, ELK_ROAR_TT)
+        ..setEditorSuffix(1, "(Wurst)")
 
 @compiletime function createWolfRoar() returns AbilityDefinitionSlow
     return new AbilityDefinitionSlow(ABILITY_WOLF_ROAR)
-    ..setLevels(1)
-    ..setArtCaster("")
-    ..setArtEffect("")
-    ..setArtTarget("")
-    ..setArtSpecial("")
-    ..presetBuffs(lvl -> toRawCode(WOLF_ROAR_BUFF_ID))
-    ..presetCastingTime(lvl -> 0)
-    ..presetCastRange(lvl -> 9999)
-    ..presetAreaofEffect(lvl -> 0)
-    ..presetManaCost(lvl -> 0)
-    ..presetCooldown(lvl -> 0)
-    ..presetAttackSpeedFactor(lvl -> WOLF_AS_REDUCTION)
-    ..presetMovementSpeedFactor(lvl -> WOLF_MS_REDUCTION)
-    ..presetDurationHero(lvl -> WOLF_ROAR_DURATION)
-    ..presetDurationNormal(lvl -> WOLF_ROAR_DURATION)
-    ..setLevelSkipRequirement(0)
-    ..setHeroAbility(false)
-    ..setItemAbility(false)
+        ..setLevels(1)
+        ..setArtCaster("")
+        ..setArtEffect("")
+        ..setArtTarget("")
+        ..setArtSpecial("")
+        ..presetBuffs(lvl -> toRawCode(WOLF_ROAR_BUFF_ID))
+        ..presetCastingTime(lvl -> 0)
+        ..presetCastRange(lvl -> 9999)
+        ..presetAreaofEffect(lvl -> 0)
+        ..presetManaCost(lvl -> 0)
+        ..presetCooldown(lvl -> 0)
+        ..presetAttackSpeedFactor(lvl -> WOLF_AS_REDUCTION)
+        ..presetMovementSpeedFactor(lvl -> WOLF_MS_REDUCTION)
+        ..presetDurationHero(lvl -> WOLF_ROAR_DURATION)
+        ..presetDurationNormal(lvl -> WOLF_ROAR_DURATION)
+        ..setLevelSkipRequirement(0)
+        ..setHeroAbility(false)
+        ..setItemAbility(false)
 
 @compiletime function createWolfBuff() returns BuffDefinition
     return new BuffDefinition(WOLF_ROAR_BUFF_ID, BuffIds.cripple)
-    ..setIcon(WOLF_ROAR_ICON)
-    ..setName(1, "Wolf's Intimidation")
-    ..setArtTarget(1, Abilities.howlTarget)
-    ..setTooltipNormal(1, "Wolf's Intimidation")
-    ..setTooltipNormalExtended(1, WOLF_ROAR_TT)
-    ..setEditorSuffix(1, "(Wurst)")
+        ..setIcon(WOLF_ROAR_ICON)
+        ..setName(1, "Wolf's Intimidation")
+        ..setArtTarget(1, Abilities.howlTarget)
+        ..setTooltipNormal(1, "Wolf's Intimidation")
+        ..setTooltipNormalExtended(1, WOLF_ROAR_TT)
+        ..setEditorSuffix(1, "(Wurst)")
 
 
 @compiletime function createBearRoar() returns AbilityDefinitionPitLordHowlofTerror
     return new AbilityDefinitionPitLordHowlofTerror(ABILITY_BEAR_ROAR)
-    ..setArtCaster("")
-    ..setArtEffect("")
-    ..setArtTarget("")
-    ..setArtSpecial("")
-    ..setDamageIncrease(1, BEAR_DAMAGE_REDUCTION)
-    ..setBuffs(1, BEAR_ROAR_BUFF_ID.toRawCode())
-    ..setDurationHero(1, BEAR_ROAR_DURATION)
-    ..setDurationNormal(1, BEAR_ROAR_DURATION)
-    ..setManaCost(1, 0)
-    ..setCooldown(1, 0)
+        ..setArtCaster("")
+        ..setArtEffect("")
+        ..setArtTarget("")
+        ..setArtSpecial("")
+        ..setDamageIncrease(1, BEAR_DAMAGE_REDUCTION)
+        ..setBuffs(1, BEAR_ROAR_BUFF_ID.toRawCode())
+        ..setDurationHero(1, BEAR_ROAR_DURATION)
+        ..setDurationNormal(1, BEAR_ROAR_DURATION)
+        ..setManaCost(1, 0)
+        ..setCooldown(1, 0)
 
 @compiletime function createBearBuff() returns BuffDefinition
     return new BuffDefinition(BEAR_ROAR_BUFF_ID, BuffIds.howlOfTerror)
-    ..setIcon(BEAR_ROAR_ICON)
-    ..setName(1, "Bear's Might")
-    ..setTooltipNormal(1, "Bear's Might")
-    ..setTooltipNormalExtended(1, BEAR_ROAR_TT)
-    ..setEditorSuffix(1, "(Wurst)")
+        ..setIcon(BEAR_ROAR_ICON)
+        ..setName(1, "Bear's Might")
+        ..setTooltipNormal(1, "Bear's Might")
+        ..setTooltipNormalExtended(1, BEAR_ROAR_TT)
+        ..setEditorSuffix(1, "(Wurst)")
 
 function onCast(unit pet)
     switch pet.getPetGrowthChain().getFirst()
@@ -193,12 +192,12 @@ function onCast(unit pet)
             pet.addEffect(LocalAbilities.elkRoarCaster, "origin")
                 ..setScale(.4)
                 ..destr()
-            forUnitsInRange(pet.getPos(), WOLF_ROAR_RANGE) (unit u) ->
+            forUnitsInRange(pet.getPos(), RANGE) (unit u) ->
                 if u.isAllyOf(pet.getOwner())
                     InstantDummyCaster.castTarget(pet.getOwner(), ABILITY_ELK_ROAR, 1, Orders.slow, u)
         case UNIT_WOLF_PUP
             pet.addEffect(LocalAbilities.bearRoarCaster, "origin").destr()
-            forUnitsInRange(pet.getPos(), WOLF_ROAR_RANGE) (unit u) ->
+            forUnitsInRange(pet.getPos(), RANGE) (unit u) ->
                 if u.isEnemyOf(pet.getOwner())
                     InstantDummyCaster.castTarget(pet.getOwner(), ABILITY_WOLF_ROAR, 1, Orders.slow, u)
         case UNIT_BEAR_CUB

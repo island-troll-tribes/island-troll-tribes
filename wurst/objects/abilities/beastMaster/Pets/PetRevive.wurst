@@ -35,7 +35,6 @@ let DEATH_MESSAGE = "Your pet has died. It will revive in {0} seconds.".format(P
     ..setDummyAbility()
 
 function onDeath(unit u)
-
     // Store the owner of the pet.
     let owner = u.getOwner()
 
@@ -48,13 +47,11 @@ function onDeath(unit u)
 
     // To ensure the corpse is moved after the postDeath movement of baby/child rearing animals.
     nullTimer() -> 
-
         // Random pos around map bounds.
         vec2 targetPos = boundMax
         targetPos.x += GetRandomReal(-MAP_BOUNDS_OFFSET, MAP_BOUNDS_OFFSET)
         targetPos.y += GetRandomReal(-MAP_BOUNDS_OFFSET, MAP_BOUNDS_OFFSET)
         
-
         // Move the pet to target pos.
         u.setPos(targetPos)
 
@@ -63,10 +60,8 @@ function onDeath(unit u)
 
         // Wait for revive timer.
         doAfter(PET_REVIVE_TIME) -> 
-
             // Verify that the unit is still the pet of the owner.
             if u == owner.getPet()
-                
                 // Revive the pet.
                 InstantDummyCaster.castImmediate(u.getOwner(), ABILITY_PET_REVIVE, 1, Orders.resurrection, u.getPos())
 

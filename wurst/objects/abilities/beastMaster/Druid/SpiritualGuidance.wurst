@@ -47,33 +47,31 @@ let SPIRITS = new LinkedList<unit>
 
 @compiletime function createBuff() returns BuffDefinition
     return new BuffDefinition(BUFF_ID, BUFF_ORIGINAL_ID)
-    ..setName(1, NAME)
-    ..setTooltipNormal(1, BUFF_TT)
-    ..setTooltipNormalExtended(1, BUFF_TT_EXT)
-    ..setIcon(ICON)
+        ..setName(1, NAME)
+        ..setTooltipNormal(1, BUFF_TT)
+        ..setTooltipNormalExtended(1, BUFF_TT_EXT)
+        ..setIcon(ICON)
 
 @compiletime function createSpiritualGuidance() returns AbilityDefinitionUnholyAuracreep
     return new AbilityDefinitionUnholyAuracreep(ABILITY_SPIRITUAL_GUIDANCE)
-    ..setLifeRegenerationIncrease(1, HP_REGEN)
-    ..setArtTarget(LocalAbilities.spiritualGuidance)
-    ..setTooltipNormal(1, makeToolTipNormAura(ABIL_TT))
-    ..setTooltipNormalExtended(1, ABIL_TT_EXT)
-    ..setMovementSpeedIncrease(1, 0)
-    ..setPercentBonus(1, false)
-    ..setAreaofEffect(1, RANGE)
-    ..setBuffs(1, toRawCode(BUFF_ID))
-    ..setIconNormal(ICON)
-    ..setButtonPositionNormalX(3)
-    ..setButtonPositionNormalY(0)
-    ..setHeroAbility(true)
-    ..setCheckDependencies(false)
+        ..setLifeRegenerationIncrease(1, HP_REGEN)
+        ..setArtTarget(LocalAbilities.spiritualGuidance)
+        ..setTooltipNormal(1, makeToolTipNormAura(ABIL_TT))
+        ..setTooltipNormalExtended(1, ABIL_TT_EXT)
+        ..setMovementSpeedIncrease(1, 0)
+        ..setPercentBonus(1, false)
+        ..setAreaofEffect(1, RANGE)
+        ..setBuffs(1, toRawCode(BUFF_ID))
+        ..setIconNormal(ICON)
+        ..setButtonPositionNormalX(3)
+        ..setButtonPositionNormalY(0)
+        ..setHeroAbility(true)
+        ..setCheckDependencies(false)
 
 // Used to toggle the spirit form of the pet when entering/leaving aura range.
 public function toggleSpiritForm(unit pet, bool inRange)
-
     // If the pet is in range and not already a spirit.
     if inRange and not SPIRITS.has(pet)
-
         // Set the color and transparency to look spirity.
         pet.setVertexColor(150, 255, 150, 180)
 
@@ -91,7 +89,6 @@ public function toggleSpiritForm(unit pet, bool inRange)
 
     // If the unit is out of range and is a spirit.
     else if not inRange and SPIRITS.has(pet)
-
         // Return the pet to it's normal color and transparency.
         pet.setVertexColor(255, 255, 255, 255)
 
@@ -109,34 +106,26 @@ public function toggleSpiritForm(unit pet, bool inRange)
 
 // Used to continuously check if the pet is in range of the aura.
 function checkPetRadius()
-
     doPeriodically(PET_PROXIMITY_INTERVAL) (CallbackPeriodic cb) ->
-
         // Cycle through all the owner/pet combos.
         for owner in pets
-
             // Verify the pet's master has learned Spiritual Guidance.
             if owner.getTroll().hasAbility(ABILITY_SPIRITUAL_GUIDANCE)
-
                 // If the pet is in range of the aura.
                 if IsUnitInRange(owner.getTroll(), owner.getPet(), RANGE)
-
                     // Transform the pet into it's spirit form.
                     toggleSpiritForm(owner.getPet(), true)
 
                 // If the pet is not in range of the aura.
                 else
-
                     // Transform the pet back into it's non-spirit form.
                     toggleSpiritForm(owner.getPet(), false)
 
 // Used to remove a pet from SPIRITS when it evolves.
 // This is done to ensure stats are properly adjusted within the aura.
 function onGrow(unit u)
-
     // If the pet was a spirit before it evolved.
     if SPIRITS.has(u)
-
         // Remove the pet from list of spirits.
         SPIRITS.remove(u)
 

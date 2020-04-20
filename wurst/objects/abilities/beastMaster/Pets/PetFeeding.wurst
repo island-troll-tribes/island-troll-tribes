@@ -24,33 +24,33 @@ let TOOLTIP_EXT = "Eat a raw corpse to gain {0} mana.".format(MANA_GAINED.toStri
 
 @compiletime function createManaDummyUpgrade() returns UpgradeDefinition
     return new UpgradeDefinition(UPGD_PET_EATING_ALLOWED)
-    ..setName(1, "Maximum unused upgrade points reached.")
+        ..setName(1, "Maximum unused upgrade points reached.")
 
 @compiletime function createAbilityFeedPet() returns AbilityDefinitionRaiseDead
     return new AbilityDefinitionRaiseDead(ABILITY_FEED_PET)
-    ..setIconNormal(ICON)
-    ..setButtonPositionNormalX(1)
-    ..setButtonPositionNormalY(1)
-    ..setHotkeyNormal(HOTKEY)
-    ..setButtonPositionTurnOffX(1)
-    ..setButtonPositionTurnOffY(1)
-    ..setIconTurnOff(ICON)
-    ..setTooltipNormal(1, makeToolTipNorm(HOTKEY, TOOLTIP))
-    ..setTooltipNormalExtended(1, TOOLTIP_EXT)
-    // The corpse is removed without an effect.
-    ..setArtEffect("")
-    ..setLevels(1)
-    ..presetUnitTypeOne(lvl -> "")
-    ..presetUnitsSummonedTypeOne(lvl -> 0)
-    ..presetUnitsSummonedTypeTwo(lvl -> 0)
-    ..presetManaCost(lvl -> 0)
-    ..presetCooldown(lvl -> 0)
-    // The radius from which the order can be issued.
-    ..presetAreaofEffect(lvl -> 800)
-    // The ability is cast at melee range.
-    ..presetCastRange(lvl -> 128)
-    ..setRequirements(UPGD_PET_EATING_ALLOWED.toRawCode())
-    ..setRequirementsLevels("1")
+        ..setIconNormal(ICON)
+        ..setButtonPositionNormalX(1)
+        ..setButtonPositionNormalY(1)
+        ..setHotkeyNormal(HOTKEY)
+        ..setButtonPositionTurnOffX(1)
+        ..setButtonPositionTurnOffY(1)
+        ..setIconTurnOff(ICON)
+        ..setTooltipNormal(1, makeToolTipNorm(HOTKEY, TOOLTIP))
+        ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+        // The corpse is removed without an effect.
+        ..setArtEffect("")
+        ..setLevels(1)
+        ..presetUnitTypeOne(lvl -> "")
+        ..presetUnitsSummonedTypeOne(lvl -> 0)
+        ..presetUnitsSummonedTypeTwo(lvl -> 0)
+        ..presetManaCost(lvl -> 0)
+        ..presetCooldown(lvl -> 0)
+        // The radius from which the order can be issued.
+        ..presetAreaofEffect(lvl -> 800)
+        // The ability is cast at melee range.
+        ..presetCastRange(lvl -> 128)
+        ..setRequirements(UPGD_PET_EATING_ALLOWED.toRawCode())
+        ..setRequirementsLevels("1")
 
 
         
@@ -66,29 +66,23 @@ function onCast(unit caster)
     setResearch(caster)
 
 public function setResearch(unit caster)
-
     // Wait for mana to actually be reduced after casting.
     nullTimer() ->
-
         // If the pet does not have full mana.
         if not caster.getMana() == caster.getMaxMana()
-
             // Enable the research to allow eating.
             caster.getOwner().setTechResearched(UPGD_PET_EATING_ALLOWED, 1)
 
         // If the pet does have full mana.
         else 
-
             // Disable research so eating is not allowed.
             caster.getOwner().setTechResearched(UPGD_PET_EATING_ALLOWED, 0)
 
 function onTame(player owner)
-
     // Allow the pet to eat when first tamed.
     owner.setTechResearched(UPGD_PET_EATING_ALLOWED, 1)
 
 init 
-    
     EventListener.add(EVENT_PLAYER_UNIT_SPELL_ENDCAST) -> 
         if EventData.getSpellAbilityId() == ABILITY_FEED_PET
             onCast(EventData.getTriggerUnit())

@@ -4,13 +4,14 @@ package MagicResistance
 // Standard library imports:
 import AbilityObjEditing
 import BuffObjEditing
+import Lodash
+import LinkedList
 
 // Local imports:
 import LocalObjectIDs
 import LocalAssets
 import StringExtensions
 import ColorUtils
-import SimError
 
 // Max level of magic resistance is 10 which = 100%.
 let MAX_LEVEL = 10
@@ -19,83 +20,46 @@ let MIN_LEVEL = 1
 // Magic resist per lvl.
 let RESIST_PER_LVL = .1
 
-// Array of all the buffs used for different levels of magic resistance.
-constant buffTuple array MAGIC_RESIST_BUFFS = [
-    compiletime (createDummyBuffObject("10% Magic Resist".color(MAGIC_RESIST_COLOR), "This unit is resisting 10% of magic damage.", LocalIcons.bTNResistMagic)),
-    compiletime (createDummyBuffObject("20% Magic Resist".color(MAGIC_RESIST_COLOR), "This unit is resisting 20% of magic damage.", LocalIcons.bTNResistMagic)),
-    compiletime (createDummyBuffObject("30% Magic Resist".color(MAGIC_RESIST_COLOR), "This unit is resisting 30% of magic damage.", LocalIcons.bTNResistMagic)),
-    compiletime (createDummyBuffObject("40% Magic Resist".color(MAGIC_RESIST_COLOR), "This unit is resisting 40% of magic damage.", LocalIcons.bTNResistMagic)),
-    compiletime (createDummyBuffObject("50% Magic Resist".color(MAGIC_RESIST_COLOR), "This unit is resisting 50% of magic damage.", LocalIcons.bTNResistMagic)),
-    compiletime (createDummyBuffObject("60% Magic Resist".color(MAGIC_RESIST_COLOR), "This unit is resisting 60% of magic damage.", LocalIcons.bTNResistMagic)),
-    compiletime (createDummyBuffObject("70% Magic Resist".color(MAGIC_RESIST_COLOR), "This unit is resisting 70% of magic damage.", LocalIcons.bTNResistMagic)),
-    compiletime (createDummyBuffObject("80% Magic Resist".color(MAGIC_RESIST_COLOR), "This unit is resisting 80% of magic damage.", LocalIcons.bTNResistMagic)),
-    compiletime (createDummyBuffObject("90% Magic Resist".color(MAGIC_RESIST_COLOR), "This unit is resisting 90% of magic damage.", LocalIcons.bTNResistMagic)),
-    compiletime (createDummyBuffObject("100% Magic Resist".color(MAGIC_RESIST_COLOR), "This unit is resisting 100% of magic damage.", LocalIcons.bTNResistMagic))
-]
+// List of the buffs for magic resistance ability.
+let MAGIC_RESIST_BUFFS = compiletime(map((lvl, _) -> createDummyBuff(lvl), range(MIN_LEVEL, MAX_LEVEL).toList()))
 
+// Creates the buffs.
+function createDummyBuff(int lvl) returns int
+    return createDummyBuffObject(lvl.toString().color(MAGIC_RESIST_COLOR)+"0% Magic Resist".color(MAGIC_RESIST_COLOR),
+                                 "This unit is resisting "+lvl.toString()+"0% of magic damage.", LocalIcons.bTNResistMagic).abilId
 
 @compiletime function createMagicResistAbility() returns AbilityDefinitionRunedBracers
     return new AbilityDefinitionRunedBracers(ABILITY_MAGIC_RESIST)
-    ..setLevels(MAX_LEVEL)
-    ..presetDamageReduction(lvl -> RESIST_PER_LVL * lvl)
+        ..setLevels(MAX_LEVEL)
+        ..presetDamageReduction(lvl -> RESIST_PER_LVL * lvl)
 
 // Used to get a unit's current level of magic resistance.
 public function unit.getMagicResist() returns int
-
     return this.getAbilityLevel(ABILITY_MAGIC_RESIST)
 
-
-// Used to give a unit the base level of magic resistance.
-public function unit.setMagicResist()
-
-    // Exit if the unit passed in is null.
-    if this == null
-        return
-
-    // Add the base level of magic resistance.
-    this.addAbility(ABILITY_MAGIC_RESIST)
-
-    // Add the buff for the first level of magic resistance.
-    this.addAbility(MAGIC_RESIST_BUFFS[0].abilId)
-
-// Used to give the unit a specific level of magic resistance.
-// Each level is 10%. eg. level 1 gives 10%, lvl 6 gives 60%.
+// Used to give a specified amount of magic resistance to a unit.
+// Each lvl is 10% magic resistance ie. 1 = 10%, 6 = 60%.
 public function unit.setMagicResist(int lvl)
-
-    // Exit if the unit is null or the desired level is out of the accepted range.
-    if this == null or lvl < MIN_LEVEL or lvl > MAX_LEVEL
-
+    // Exit if the level is not in the accepted range.
+    if lvl > MAX_LEVEL or lvl < MIN_LEVEL
         return
-
-    // If the unit already has magic resistance
+    // If the unit already has magic resistance, remove it.
     if this.hasAbility(ABILITY_MAGIC_RESIST)
+        this.removeMagicResist()
 
-        // Remove the buff corresponding to the original level.
-        this.removeAbility(MAGIC_RESIST_BUFFS[this.getMagicResist() - 1].abilId)
-
-        // remove the magic resistance ability.
-        this.removeAbility(ABILITY_MAGIC_RESIST)
-
-    // Add magic resistance ability
+    // Give the unit the base level of magic resistance.
     this.addAbility(ABILITY_MAGIC_RESIST)
 
-    // Increment to level of magic resistance until at the desired level.
+    // Increment the level of the ability up to the desired level.
     for _ = 1 to lvl - 1
-
         this.incAbilityLevel(ABILITY_MAGIC_RESIST)
 
-    // Add the corresponding buff to the desired level of magic resistance.
-    this.addAbility(MAGIC_RESIST_BUFFS[lvl - 1].abilId)
+    // Add the buff corresponding to the level of magic resistance.
+    this.addAbility(MAGIC_RESIST_BUFFS.get(lvl - 1))
 
 // Used to remove all magic resistance from a unit.
 public function unit.removeMagicResist()
-
-    // Exit if unit is null.
-    if this == null
-        return
-    
-    // Remove the buff first as that depends on the level of the ability.
-    this.removeAbility(MAGIC_RESIST_BUFFS[this.getMagicResist() - 1].abilId)
-
-    // Remove the ability.
+    // Remove the buff first as it depends on the actual ability.
+    this.removeAbility(MAGIC_RESIST_BUFFS.get(this.getMagicResist() - 1))
+    // Remove the magic resist ability.
     this.removeAbility(ABILITY_MAGIC_RESIST)

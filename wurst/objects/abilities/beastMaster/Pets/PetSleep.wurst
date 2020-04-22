@@ -7,6 +7,7 @@ import OrderIds
 import SimError
 import Assets
 import ChannelAbilityPreset
+import Lodash
 
 // Local imports:
 import LocalObjectIDs
@@ -41,41 +42,52 @@ let ABIL_TT = "Your pet goes to sleep, recovering {0} health point.".format(HEAL
         ..setLvlDataUnreal("aran", 1, 0, 99999.0)
         ..setLvlDataString("atar", 1, 0, "ground,nonhero")
 
-@compiletime function createDummyCastSleepSpell()
-    new ChannelAbilityPreset(ABILITY_PET_SLEEP, 1, true)
-        ..setAnimationNames("")
-        ..setIconNormal(Icons.bTNElunesBlessing)
-        ..setButtonPositionNormalX(2)
-        ..setCooldown(1, 20.0)
-        ..setFollowThroughTime(1, 1.0)
-        ..setHotkeyNormal("E")
-        ..setName("Pet Sleep")
-        ..setTooltipNormal(1, makeToolTipNorm("E", "Sleep"))
-        ..setTooltipNormalExtended(1, ABIL_TT)
-        ..setRequirements(UPGD_PET_TAMED_TRUE.toRawCode())
-        ..setEditorSuffix("(Wurst)")
+class PetSleepSpell extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 1, true)
+        this.setAnimationNames("")
+        this.setIconNormal(Icons.bTNElunesBlessing)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setCooldown(1, 20.0)
+        this.setFollowThroughTime(1, 1.0)
+        this.setHotkeyNormal(hotkey)
+        this.setName("Pet Sleep")
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, "Sleep"))
+        this.setTooltipNormalExtended(1, ABIL_TT)
+        this.setRequirements(UPGD_PET_TAMED_TRUE.toRawCode())
+        this.setEditorSuffix("(Wurst)")
 
+@compiletime function createPetSleepSpells()
+    new PetSleepSpell(ABILITY_PET_SLEEP, "E", new Pair(2, 0))
+    new PetSleepSpell(ABILITY_PET_SLEEP_SHAPESHIFTER, "D", new Pair(2, 2))
+
+
+function onCast(unit caster)
+    // Lookup the pet for the caster.
+    let pet = caster.getOwner().getPet()
+
+    // Verify that the player has a pet, which should be guaranteed.
+    if pet == null
+        simError(caster.getOwner(), "You do not have pet.")
+    // Perform the actions associated with a sleeping pet.
+    else
+        // Put the pet to sleep.
+        InstantDummyCaster.castTarget(
+            pet.getOwner(),
+            SLEEP_ID,
+            1,
+            OrderIds.sleep,
+            pet
+        )
+
+        // Heal the pet.
+        // TODO : Maybe do a periodic healing instead of an instant one?
+        // It kinda makes more sense since the sleep last 10 seconds
+        pet.addHP(HEALING_AMOUNT)
 
 init
     EventListener.onCast(ABILITY_PET_SLEEP) (unit caster) ->
-        // Lookup the pet for the caster.
-        let pet = caster.getOwner().getPet()
-
-        // Verify that the player has a pet, which should be guaranteed.
-        if pet == null
-            simError(caster.getOwner(), "You do not have pet.")
-        // Perform the actions associated with a sleeping pet.
-        else
-            // Put the pet to sleep.
-            InstantDummyCaster.castTarget(
-                pet.getOwner(),
-                SLEEP_ID,
-                1,
-                OrderIds.sleep,
-                pet
-            )
-
-            // Heal the pet.
-            // TODO : Maybe do a periodic healing instead of an instant one?
-            // It kinda makes more sense since the sleep last 10 seconds
-            pet.addHP(HEALING_AMOUNT)
+        onCast(caster)
+    EventListener.onCast(ABILITY_PET_SLEEP_SHAPESHIFTER) (unit caster) ->
+        onCast(caster)

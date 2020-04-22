@@ -4,6 +4,7 @@ package PetReleasing
 import ClosureEvents
 import ChannelAbilityPreset
 import ClosureTimers
+import Lodash
 
 // Local imports:
 import ColorUtils
@@ -15,21 +16,27 @@ import Tribe
 import ToolTipsUtils
 import PlayerExtensions
 
-@compiletime function createReleasePetAbility()
-    new ChannelAbilityPreset(ABILITY_PET_RELEASE, 1, true)
-        ..setAnimationNames("spell,throw")
-        ..setIconNormal(LocalIcons.bTNReleasePet)
-        ..setButtonPositionNormalY(1)
-        ..setArtCaster("")
-        ..setCasterAttachmentPoint("")
-        ..setCooldown(1, 5.0)
-        ..setFollowThroughTime(1, 1.0)
-        ..setName("Release Pet")
-        ..setHotkeyNormal("W")
-        ..setTooltipNormal(1, makeToolTipNorm("W", "Release Your Pet"))
-        ..setTooltipNormalExtended(1, "Releases your pet back into the wild allowing you to tame another. The released pet will become hostile and attack you.")
-        ..setRequirements(UPGD_PET_TAMED_TRUE.toRawCode())
-        ..setEditorSuffix("(Wurst)")
+class ReleasePetAbility extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 1, true)
+        this.setAnimationNames("spell,throw")
+        this.setIconNormal(LocalIcons.bTNReleasePet)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setArtCaster("")
+        this.setCasterAttachmentPoint("")
+        this.setCooldown(1, 5.0)
+        this.setFollowThroughTime(1, 1.0)
+        this.setName("Release Pet")
+        this.setHotkeyNormal(hotkey)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, "Release Your Pet"))
+        this.setTooltipNormalExtended(1, "Releases your pet back into the wild allowing you to tame another. The released pet will become hostile and attack you.")
+        this.setRequirements(UPGD_PET_TAMED_TRUE.toRawCode())
+        this.setEditorSuffix("(Wurst)")
+
+@compiletime function createReleaseSpell()
+    new ReleasePetAbility(ABILITY_PET_RELEASE, "W", new Pair(1, 0))
+    new ReleasePetAbility(ABILITY_PET_RELEASE_SHAPESHIFTER, "S", new Pair(1, 2))
 
 public function releasePet(unit caster)
     // Look up the pet.
@@ -60,6 +67,10 @@ public function releasePet(unit caster)
 
 init
     EventListener.onCast(ABILITY_PET_RELEASE) (unit caster) ->
+        // Delay relasing pet so that bonus stats can be removed. See PetGrowth.wurst.
+        nullTimer() ->
+            releasePet(caster)
+    EventListener.onCast(ABILITY_PET_RELEASE_SHAPESHIFTER) (unit caster) ->
         // Delay relasing pet so that bonus stats can be removed. See PetGrowth.wurst.
         nullTimer() ->
             releasePet(caster)

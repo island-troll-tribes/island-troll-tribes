@@ -1,0 +1,46 @@
+package SpiritOfTheBeast
+
+// Standard Library Imports:
+import AbilityObjEditing
+import ObjectIds
+import Assets
+import Lodash
+
+// Local Imports:
+import LocalObjectIDs
+
+let ICON = Icons.bTNEnchantedBears
+let TOOLTIP = "Spirit of the Beast"
+let TOOLTIP_EXT = "The Beast Master has an extra 5% chance to get a baby after killing an animal per level. Animals also have a natural attraction to the Beast Master."
+
+class SpiritOfTheBeastSpell extends AbilityDefinitionUnholyAuracreep
+    construct(int newAbilID, Pair<int, int> buttonPos)
+        super(newAbilID)
+        this.setAreaofEffect(1, 400)
+        this.setIconNormal(ICON)
+        this.setBuffs(1, BUFF_ATTRACTION.toRawCode())
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setCheckDependencies(false)
+        this.setMovementSpeedIncrease(1, -0.4)
+        this.setLifeRegenerationIncrease(1, 0)
+        this.setHeroAbility(true)
+        this.setLevels(1)
+        this.setName("Spirit of the Beast")
+        this.setRace(Race.Nightelf)
+        this.setArtTarget("")
+        this.setTargetAttachmentPoint("")
+        this.setTargetsAllowed(1, commaList(
+                TargetsAllowed.enemies,
+                TargetsAllowed.ground,
+                TargetsAllowed.nonhero,
+                TargetsAllowed.organic,
+                TargetsAllowed.vulnerable
+            )
+        )
+        this.setTooltipNormal(1, TOOLTIP)
+        this.setTooltipNormalExtended(1, TOOLTIP_EXT)
+
+@compiletime function createSpiritBeastSpells()
+    new SpiritOfTheBeastSpell(ABILITY_SPIRIT_BEAST, new Pair(1, 1))
+    new SpiritOfTheBeastSpell(ABILITY_SPIRIT_BEAST_SHAPESHIFTER, new Pair(0, 2))

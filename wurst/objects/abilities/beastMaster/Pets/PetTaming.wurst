@@ -5,6 +5,7 @@ import ClosureEvents
 import AbilityObjEditing
 import Assets
 import ObjectIds
+import Lodash
 
 // Local imports:
 import ColorUtils
@@ -23,37 +24,49 @@ let ABIL_TT_EXT = "Tames a baby animal. The following animals dying will leave a
                   + ", " + "Bear".color(COLOR_YELLOW)
                   + ". You can tame only 1 animal at once."
 
-@compiletime function createPetTaming()
-    new AbilityDefinitionCharm(ABILITY_PET_TAME)
-        ..setIconNormal(LocalIcons.bTNTamePet)
-        ..setButtonPositionNormalY(1)
-        ..setCooldown(1, 10.0)
-        ..setManaCost(1, 0)
-        ..setHeroAbility(false)
-        ..setHotkeyNormal("Q")
-        ..setName("Tame Pet")
-        ..setCastRange(1, 600.0)
-        ..setArtTarget(Abilities.controlMagicTarget)
-        ..setTargetsAllowed(1, commaList(
+class PetTameSpell extends AbilityDefinitionCharm
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setIconNormal(LocalIcons.bTNTamePet)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setCooldown(1, 10.0)
+        this.setManaCost(1, 0)
+        this.setHeroAbility(false)
+        this.setHotkeyNormal(hotkey)
+        this.setName("Tame Pet")
+        this.setCastRange(1, 600.0)
+        this.setArtTarget(Abilities.controlMagicTarget)
+        this.setTargetsAllowed(1, commaList(
                 TargetsAllowed.neutral,
                 TargetsAllowed.nonhero,
                 TargetsAllowed.organic
             ))
-        ..setTooltipNormal(1, makeToolTipNorm("Q", "Tame"))
-        ..setTooltipNormalExtended(1, ABIL_TT_EXT)
-        ..setRequirements(UPGD_PET_TAMED_FALSE.toRawCode())
-        ..setEditorSuffix("(Wurst)")
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, "Tame"))
+        this.setTooltipNormalExtended(1, ABIL_TT_EXT)
+        this.setRequirements(UPGD_PET_TAMED_FALSE.toRawCode())
+        this.setEditorSuffix("(Wurst)")
+
+@compiletime function createTameSpells()
+    new PetTameSpell(ABILITY_PET_TAME, "Q", new Pair(0, 0))
+    new PetTameSpell(ABILITY_PET_TAME_SHAPESHIFTER, "A", new Pair(0, 2))
+
+function onCast(unit caster, unit target)
+    // Record the owner of the new unit.
+    let owner = caster.getOwner()
+
+    owner.addPet(target)
+
+    owner.setTechResearched(UPGD_PET_TAMED_TRUE, 1)
+    owner.setTechResearched(UPGD_PET_TAMED_FALSE, 0)
+
+    // Set max mana used for growth abilities.
+    target.setMaxMana(PET_MAX_MANA)
 
 
 init
     EventListener.onTargetCast(ABILITY_PET_TAME) (unit caster, unit target) ->
-        // Record the owner of the new unit.
-        let owner = caster.getOwner()
-
-        owner.addPet(target)
-
-        owner.setTechResearched(UPGD_PET_TAMED_TRUE, 1)
-        owner.setTechResearched(UPGD_PET_TAMED_FALSE, 0)
-
-        // Set max mana used for growth abilities.
-        target.setMaxMana(PET_MAX_MANA)
+        onCast(caster, target)
+    EventListener.onTargetCast(ABILITY_PET_TAME_SHAPESHIFTER) (unit caster, unit target) ->
+        onCast(caster, target)
+        

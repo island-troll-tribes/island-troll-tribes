@@ -7,6 +7,7 @@ import ClosureEvents
 import ClosureTimers
 import LodashExtensions
 import Assets
+import Lodash
 
 // Local Imports:
 import LocalObjectIDs
@@ -15,9 +16,6 @@ import Tribe
 import Game
 import ToolTipsUtils
 
-let buttonPosX  = 3
-let buttonPosY  = 0
-let HOTKEY   = "R"
 let NAME     = "Toggle Pet Control"
 let TOOLTIP  = "Toggle pet control."
 let TOOLTIP_EXT = "Toggle between automatic and manual pet controls.\n" +
@@ -29,25 +27,30 @@ let AUTO_CONTROL_MESSAGE = "Auto pet control."
 let MANUAL_CONTROL_MESSAGE = "Manual pet control."
 
 
-@compiletime function createTogglePetControl() returns ChannelAbilityPreset
-    return new ChannelAbilityPreset(ABILITY_TOGGLE_PET_CONTROL, 1, true)
-        ..setDummyAbility()
-        ..setAnimationNames("")
-        ..presetTargetTypes(Targettype.NONE)
-        ..setButtonPositionNormalX(buttonPosX)
-        ..setButtonPositionNormalY(buttonPosY)
-        ..setIconNormal(Icons.bTNSelectUnit)
-        ..setHeroAbility(true)
-        ..setHotkeyNormal(HOTKEY)
-        ..setName(NAME)
-        ..setLevels(1)
-        ..setTooltipNormal(1, makeToolTipNorm(HOTKEY, TOOLTIP))
-        ..setTooltipNormalExtended(1, TOOLTIP_EXT)
-        ..presetBaseOrderID(lvl -> ORDER_ID)
-        ..setAnimationNames("")
-        ..setCheckDependencies(true)
-        ..setRequirements(UPGD_PET_TAMED_TRUE.toRawCode())
-        ..setEditorSuffix("(Wurst)")
+class TogglePetControlSpell extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 1, true)
+        this.setDummyAbility()
+        this.setAnimationNames("")
+        this.presetTargetTypes(Targettype.NONE)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setIconNormal(Icons.bTNSelectUnit)
+        this.setHeroAbility(true)
+        this.setHotkeyNormal(hotkey)
+        this.setName(NAME)
+        this.setLevels(1)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP))
+        this.setTooltipNormalExtended(1, TOOLTIP_EXT)
+        this.presetBaseOrderID(lvl -> ORDER_ID)
+        this.setAnimationNames("")
+        this.setCheckDependencies(true)
+        this.setRequirements(UPGD_PET_TAMED_TRUE.toRawCode())
+        this.setEditorSuffix("(Wurst)")
+
+@compiletime function createPetControlSpells()
+    new TogglePetControlSpell(ABILITY_TOGGLE_PET_CONTROL, "R", new Pair(3, 0))
+    new TogglePetControlSpell(ABILITY_TOGGLE_PET_CONTROL_SHAPESHIFTER, "F", new Pair(3, 2))
 
 
 // Used to toggle pet controls stored in `PetMovement.wurst`.
@@ -74,6 +77,7 @@ function initializeControls()
 
 init
     EventListener.onCast(ABILITY_TOGGLE_PET_CONTROL, _ -> togglePetControl())
+    EventListener.onCast(ABILITY_TOGGLE_PET_CONTROL_SHAPESHIFTER, _ -> togglePetControl())
 
     registerGameStartEvent() ->
         nullTimer() ->

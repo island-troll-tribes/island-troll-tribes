@@ -15,6 +15,7 @@ import ColorUtils
 import StringExtensions
 import ToolTipsUtils
 import LocalAssets
+import PetMana
 
 let MANA_GAINED = 1
 let HOTKEY = "D"
@@ -57,11 +58,14 @@ let TOOLTIP_EXT = "Eat a raw corpse to gain {0} mana. Mana can be used to grow y
         
 function onCast(unit caster)
     // Exit if the caster is not a pet.
-    if not caster.isPet()
+    if not caster.isPet() or caster.getMana() == caster.getMaxMana()
         return
 
-    // Grant the pet 1 mana for eating a corpse.
-    caster.setMana(caster.getMana() + 1)
+    // Grant the pet mana for eating a corpse.
+    caster.setMana(caster.getMana() + MANA_GAINED)
+
+    // Update true value for pet's mana.
+    updatePetMana(caster, MANA_GAINED.toReal())
 
     // Check if research needs to be swapped for pet.
     setResearch(caster)

@@ -1,0 +1,24 @@
+package PetMana
+
+// Standard Library Imports:
+import HashMap
+import ClosureTimers
+import ErrorHandling
+
+
+
+let TRUE_PET_MANA = new IterableMap<unit, real>()
+
+public function updatePetMana(unit pet, real adjustment)
+    if TRUE_PET_MANA.has(pet)
+        TRUE_PET_MANA.put(pet, TRUE_PET_MANA.getAndRemove(pet) + adjustment)
+
+    else
+        TRUE_PET_MANA.put(pet, adjustment)
+
+init
+    doPeriodicallyTimed(1, 999999) (CallbackCounted cb) ->
+        for pet in TRUE_PET_MANA
+            if not pet.getMana() == TRUE_PET_MANA.get(pet)
+                error("Pet has incorrect mana, this is a bug please report.")
+                pet.setMana(TRUE_PET_MANA.get(pet))

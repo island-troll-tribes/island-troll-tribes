@@ -4,33 +4,29 @@ package SpiritOfTheBeast
 import AbilityObjEditing
 import ObjectIds
 import Assets
-import Lodash
 
 // Local Imports:
 import LocalObjectIDs
 
 let ICON = Icons.bTNEnchantedBears
 let TOOLTIP = "Spirit of the Beast"
-let TOOLTIP_EXT = "The Beast Master has an extra 5% chance to get a baby after killing an animal per level. Animals also have a natural attraction to the Beast Master."
+let TOOLTIP_EXT = "Animals are more at ease around the Beast Master and move slowly. This makes them easier to hunt."
 
-class SpiritOfTheBeastSpell extends AbilityDefinitionUnholyAuracreep
-    construct(int newAbilID, Pair<int, int> buttonPos)
-        super(newAbilID)
-        this.setAreaofEffect(1, 400)
-        this.setIconNormal(ICON)
-        this.setBuffs(1, BUFF_ATTRACTION.toRawCode())
-        this.setButtonPositionNormalX(buttonPos.a)
-        this.setButtonPositionNormalY(buttonPos.b)
-        this.setCheckDependencies(false)
-        this.setMovementSpeedIncrease(1, -0.4)
-        this.setLifeRegenerationIncrease(1, 0)
-        this.setHeroAbility(true)
-        this.setLevels(1)
-        this.setName("Spirit of the Beast")
-        this.setRace(Race.Nightelf)
-        this.setArtTarget("")
-        this.setTargetAttachmentPoint("")
-        this.setTargetsAllowed(1, commaList(
+function createSpiritBeastSpell(int abilId) returns AbilityDefinitionUnholyAuracreep
+    return new AbilityDefinitionUnholyAuracreep(abilId)
+        ..setAreaofEffect(1, 400)
+        ..setIconNormal(ICON)
+        ..setBuffs(1, BUFF_ATTRACTION.toRawCode())
+        ..setCheckDependencies(false)
+        ..setMovementSpeedIncrease(1, -0.4)
+        ..setLifeRegenerationIncrease(1, 0)
+        ..setHeroAbility(true)
+        ..setLevels(1)
+        ..setName("Spirit of the Beast")
+        ..setRace(Race.Nightelf)
+        ..setArtTarget("")
+        ..setTargetAttachmentPoint("")
+        ..setTargetsAllowed(1, commaList(
                 TargetsAllowed.enemies,
                 TargetsAllowed.ground,
                 TargetsAllowed.nonhero,
@@ -38,9 +34,14 @@ class SpiritOfTheBeastSpell extends AbilityDefinitionUnholyAuracreep
                 TargetsAllowed.vulnerable
             )
         )
-        this.setTooltipNormal(1, TOOLTIP)
-        this.setTooltipNormalExtended(1, TOOLTIP_EXT)
+        ..setTooltipNormal(1, TOOLTIP)
+        ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+@compiletime function createSpiritBeastBase() returns AbilityDefinitionUnholyAuracreep
+    return createSpiritBeastSpell(ABILITY_SPIRIT_BEAST)
+        ..setButtonPositionNormalX(1)
+        ..setButtonPositionNormalY(1)
 
-@compiletime function createSpiritBeastSpells()
-    new SpiritOfTheBeastSpell(ABILITY_SPIRIT_BEAST, new Pair(1, 1))
-    new SpiritOfTheBeastSpell(ABILITY_SPIRIT_BEAST_SHAPESHIFTER, new Pair(0, 2))
+@compiletime function createSpiritBeastShapeShifter() returns AbilityDefinitionUnholyAuracreep
+    return createSpiritBeastSpell(ABILITY_SPIRIT_BEAST_SHAPESHIFTER)
+        ..setButtonPositionNormalX(0)
+        ..setButtonPositionNormalY(2)

@@ -2,21 +2,20 @@ package PetRevive
 
 // Standard library imports:
 import ClosureEvents
-import AbilityObjEditing
 import ClosureTimers
 import OrderIds
 import MapBounds
 import InstantDummyCaster
+import Assets
 
 // Local imports:
 import Pets
-import LocalObjectIDs
 import PlayerExtensions
 import ColorUtils
 import StringExtensions
 
 // Time before pet revives.
-let PET_REVIVE_TIME = 60.
+let PET_REVIVE_TIME = 6.
 
 // Small aoe to avoid reviving other units.
 let AOE = 1.
@@ -25,32 +24,26 @@ let AOE = 1.
 let MAP_BOUNDS_OFFSET = 1000.
 
 // Message printed to owner on pet death.
-let DEATH_MESSAGE = "Your pet has died. It will revive in {0} seconds.".format(PET_REVIVE_TIME.toString().color(GOLD_COLOR))
+let DEATH_MESSAGE = "Your pet has died. It will revive in {0} seconds.".format(PET_REVIVE_TIME.toInt().toString().color(GOLD_COLOR))
 
-@compiletime function createPetRevive() returns AbilityDefinitionPaladinResurrection
-    return new AbilityDefinitionPaladinResurrection(ABILITY_PET_REVIVE)
-    ..setRaisedUnitsAreInvulnerable(1, false)
-    ..setNumberofCorpsesRaised(1, 1)
-    ..setAreaofEffect(1, AOE)
-    ..setDummyAbility()
-
-function onDeath(unit u)
+public function onDeath(unit u)
     // Store the owner of the pet.
     let owner = u.getOwner()
 
     // Exit if dying unit is not its owner's pet.
-    if owner.getPet() != u
+    if not owner.getPet() == u
         return
 
-    // Notify the owner that their pet died.
+    // Effect played when the pet dies.
+    flashEffect(Objects.undeadDissipate, u.getPos())
+
+    // Notify the owner of the pet's death.
     owner.print(DEATH_MESSAGE)
 
-    // To ensure the corpse is moved after the postDeath movement of baby/child rearing animals.
+    // Delay to ensure corpses/bone drops before being moved.
     nullTimer() -> 
-        // Random pos around map bounds.
-        vec2 targetPos = boundMax
-        targetPos.x += GetRandomReal(-MAP_BOUNDS_OFFSET, MAP_BOUNDS_OFFSET)
-        targetPos.y += GetRandomReal(-MAP_BOUNDS_OFFSET, MAP_BOUNDS_OFFSET)
+        // Move the corpse to a position away from any other dead pets.
+        vec2 targetPos = boundMax + vec2(MAP_BOUNDS_OFFSET * owner.getId(), 0)
         
         // Move the pet to target pos.
         u.setPos(targetPos)
@@ -63,10 +56,9 @@ function onDeath(unit u)
             // Verify that the unit is still the pet of the owner.
             if u == owner.getPet()
                 // Revive the pet.
-                InstantDummyCaster.castImmediate(u.getOwner(), ABILITY_PET_REVIVE, 1, Orders.resurrection, u.getPos())
-
+                InstantDummyCaster.castImmediate(u.getOwner(), AbilityIds.resurrection, 1, Orders.resurrection, u.getPos())
                 // Move the pet back to its owner's troll.
-                u.setPos(u.getOwner().getTroll().getPos())
+                u.setPos(owner.getTroll().getPos())
 
 
 init

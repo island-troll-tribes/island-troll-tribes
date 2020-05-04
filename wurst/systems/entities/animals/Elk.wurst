@@ -10,8 +10,8 @@ import RearingAnimal
 // The number of corpses dropped per unit type.
 let typeIDs = new IterableMap<int, int>()
     ..put(UNIT_ELK,            3)
-    ..put(UNIT_ELK_ADOLESCENT, 3)
-    ..put(UNIT_ADULT_ELK,      7)
+    ..put(UNIT_ELK_ADOLESCENT, 0)
+    ..put(UNIT_ADULT_ELK,      0)
 
 
 public class Elk extends RearingAnimal
@@ -19,9 +19,13 @@ public class Elk extends RearingAnimal
         super(whichUnit)
 
     override function getHideTypeId() returns int
+        if not getUnit().getTypeId() == UNIT_JUNGLE_BEAR
+            return 0
         return ITEM_ELK_HIDE
 
     override function getChild() returns int
+        if not getUnit().getTypeId() == UNIT_ELK
+            return 0
         return UNIT_FAWN
 
     override function getNumCorpses() returns int

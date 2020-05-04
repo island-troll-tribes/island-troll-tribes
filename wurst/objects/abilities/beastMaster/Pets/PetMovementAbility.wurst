@@ -7,7 +7,6 @@ import ClosureEvents
 import ClosureTimers
 import LodashExtensions
 import Assets
-import Lodash
 
 // Local Imports:
 import LocalObjectIDs
@@ -27,41 +26,47 @@ let AUTO_CONTROL_MESSAGE = "Auto pet control."
 let MANUAL_CONTROL_MESSAGE = "Manual pet control."
 
 
-class TogglePetControlSpell extends ChannelAbilityPreset
-    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
-        super(newAbilityId, 1, true)
-        this.setDummyAbility()
-        this.setAnimationNames("")
-        this.presetTargetTypes(Targettype.NONE)
-        this.setButtonPositionNormalX(buttonPos.a)
-        this.setButtonPositionNormalY(buttonPos.b)
-        this.setIconNormal(Icons.bTNSelectUnit)
-        this.setHeroAbility(true)
-        this.setHotkeyNormal(hotkey)
-        this.setName(NAME)
-        this.setLevels(1)
-        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP))
-        this.setTooltipNormalExtended(1, TOOLTIP_EXT)
-        this.presetBaseOrderID(lvl -> ORDER_ID)
-        this.setAnimationNames("")
-        this.setCheckDependencies(true)
-        this.setRequirements(UPGD_PET_TAMED_TRUE.toRawCode())
-        this.setEditorSuffix("(Wurst)")
+function createTogglePetControlSpell(int newAbilId) returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(newAbilId, 1, true)
+        ..setDummyAbility()
+        ..setAnimationNames("")
+        ..presetTargetTypes(Targettype.NONE)
+        ..setIconNormal(Icons.bTNSelectUnit)
+        ..setHeroAbility(true)
+        ..setName(NAME)
+        ..setLevels(1)
+        ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+        ..presetBaseOrderID(lvl -> ORDER_ID)
+        ..setAnimationNames("")
+        ..setCheckDependencies(true)
+        ..setRequirements(UPGD_PET_TAMED_TRUE.toRawCode())
+        ..setEditorSuffix("(Wurst)")
 
-@compiletime function createPetControlSpells()
-    new TogglePetControlSpell(ABILITY_TOGGLE_PET_CONTROL, "R", new Pair(3, 0))
-    new TogglePetControlSpell(ABILITY_TOGGLE_PET_CONTROL_SHAPESHIFTER, "F", new Pair(3, 2))
+@compiletime function createBaseToggleSpell() returns ChannelAbilityPreset
+    return createTogglePetControlSpell(ABILITY_TOGGLE_PET_CONTROL)
+        
+    ..setButtonPositionNormalX(3)
+    ..setButtonPositionNormalY(0)
+    ..setHotkeyNormal("R")
+    ..setTooltipNormal(1, makeToolTipNorm("R", TOOLTIP))
 
+@compiletime function createShapeShifterToggleSpell() returns ChannelAbilityPreset
+    return createTogglePetControlSpell(ABILITY_TOGGLE_PET_CONTROL_SHAPESHIFTER)
+        
+    ..setButtonPositionNormalX(3)
+    ..setButtonPositionNormalY(1)
+    ..setHotkeyNormal("F")
+    ..setTooltipNormal(1, makeToolTipNorm("F", TOOLTIP))
 
 // Used to toggle pet controls stored in `PetMovement.wurst`.
 function togglePetControl()
     // If auto controls are currently active.
-    if PET_CONTROLS.getAndRemove(EventData.getTriggerPlayer())
+    if PET_CONTROLS.getAndRemove(EventData.getTriggerPlayer()) == AUTO
         // Print message alerting the switch to manual controls.
         print(MANUAL_CONTROL_MESSAGE)
 
         // Reset the player's controls to manual mode.
-        PET_CONTROLS.put(EventData.getTriggerPlayer(), false)
+        PET_CONTROLS.put(EventData.getTriggerPlayer(), CONTROL_MODE.MANUAL)
 
     // If manual controls are currently active.
     else
@@ -69,11 +74,11 @@ function togglePetControl()
         print(AUTO_CONTROL_MESSAGE)
 
         // Reset the player's controls to auto mode.
-        PET_CONTROLS.put(EventData.getTriggerPlayer(), true)
+        PET_CONTROLS.put(EventData.getTriggerPlayer(), CONTROL_MODE.AUTO)
 
 // Initialize all player's controls to auto at the beginning of the game.
 function initializeControls()
-    Tribe.getTribes().each(t -> t.getMembers().each(member -> PET_CONTROLS.put(member, true)))
+    Tribe.getTribes().each(t -> t.getMembers().each(member -> PET_CONTROLS.put(member, CONTROL_MODE.AUTO)))
 
 init
     EventListener.onCast(ABILITY_TOGGLE_PET_CONTROL, _ -> togglePetControl())

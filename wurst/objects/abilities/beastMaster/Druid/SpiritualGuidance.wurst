@@ -89,45 +89,46 @@ public function toggleSpiritForm(unit pet, bool inRange)
 
     // If the unit is out of range and is a spirit.
     else if not inRange and SPIRITS.has(pet)
-        // Return the pet to it's normal color and transparency.
-        pet.setVertexColor(255, 255, 255, 255)
+        removeSpiritForm(pet)
 
-        // Reduce the damage by 2.
-        pet.setBaseDamage(pet.getBaseDamage(0) - PET_STAT_BONUS , 0)
+function removeSpiritForm(unit pet)
+    // Return the pet to it's normal color and transparency.
+    pet.setVertexColor(255, 255, 255, 255)
 
-        // Reduce the armor by 2.
-        pet.setArmor(pet.getArmor() - PET_STAT_BONUS)
+    // Reduce the damage by 2.
+    pet.setBaseDamage(pet.getBaseDamage(0) - PET_STAT_BONUS , 0)
 
-        // Reduce magic resistance by 2 levels.
-        pet.setMagicResist(pet.getMagicResist() - PET_STAT_BONUS)
+    // Reduce the armor by 2.
+    pet.setArmor(pet.getArmor() - PET_STAT_BONUS)
 
-        // Remove this unit from the list of spirits.
-        SPIRITS.remove(pet)
+    // Reduce magic resistance by 2 levels.
+    pet.setMagicResist(pet.getMagicResist() - PET_STAT_BONUS)
+
+    // Remove this unit from the list of spirits.
+    SPIRITS.remove(pet)
 
 // Used to continuously check if the pet is in range of the aura.
 function checkPetRadius()
     doPeriodically(PET_PROXIMITY_INTERVAL) (CallbackPeriodic cb) ->
-        // Cycle through all the owner/pet combos.
-        for owner in pets
+        pets.forEach() (player key, unit value) ->
             // Verify the pet's master has learned Spiritual Guidance.
-            if owner.getTroll().hasAbility(ABILITY_SPIRITUAL_GUIDANCE)
+            if key.getTroll().hasAbility(ABILITY_SPIRITUAL_GUIDANCE)
                 // If the pet is in range of the aura.
-                if IsUnitInRange(owner.getTroll(), owner.getPet(), RANGE)
+                if IsUnitInRange(key.getTroll(), value, RANGE)
                     // Transform the pet into it's spirit form.
-                    toggleSpiritForm(owner.getPet(), true)
+                    toggleSpiritForm(value, true)
 
                 // If the pet is not in range of the aura.
                 else
                     // Transform the pet back into it's non-spirit form.
-                    toggleSpiritForm(owner.getPet(), false)
+                    toggleSpiritForm(value, false)
 
 // Used to remove a pet from SPIRITS when it evolves.
 // This is done to ensure stats are properly adjusted within the aura.
 function onGrow(unit u)
     // If the pet was a spirit before it evolved.
     if SPIRITS.has(u)
-        // Remove the pet from list of spirits.
-        SPIRITS.remove(u)
+        removeSpiritForm(u)
 
 init
     // TODO: Change this to start with a callback system.

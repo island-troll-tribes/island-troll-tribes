@@ -31,20 +31,20 @@ let ABILITY_ELK_ROAR = compiletime(ABIL_ID_GEN.next())
 let ELK_MS_BOOST = 50.
 let ELK_ROAR_DURATION = 4.
 let ELK_ROAR_BUFF_ID = compiletime(BUFF_ID_GEN.next())
-let ELK_ROAR_TT = "This unit observes a nearby elk prepare for battle and is inspired to do the same. It has increased movement speed."
+let ELK_ROAR_TT = "This unit observed a nearby elk leap into battle and is inspired. It has increased movement speed."
 
 let ABILITY_WOLF_ROAR = compiletime(ABIL_ID_GEN.next())
 let WOLF_AS_REDUCTION = .2
 let WOLF_MS_REDUCTION = .1
 let WOLF_ROAR_DURATION = 7.
 let WOLF_ROAR_BUFF_ID = compiletime(BUFF_ID_GEN.next())
-let WOLF_ROAR_TT = "This unit begins shaking in fear as a nearby wolf howls. It has reduced attack and movement speed."
+let WOLF_ROAR_TT = "This unit heard a nearby wolf howl and is shaken. It has reduced attack and movement speed."
 
 let ABILITY_BEAR_ROAR = compiletime(ABIL_ID_GEN.next())
 let BEAR_DAMAGE_REDUCTION = .3
 let BEAR_ROAR_DURATION = 7.
 let BEAR_ROAR_BUFF_ID = compiletime(BUFF_ID_GEN.next())
-let BEAR_ROAR_TT = "This unit witnesses the might of a bear and feels the difference in their strength. It has reduced damage."
+let BEAR_ROAR_TT = "This unit witnessed a nearby bear shake the earth and is awestruck. It has reduced damage."
 
 let DRUID_ROAR_TT = "Verdant Song"
 let DRUID_ROAR_TT_EXT = "The Druid and his pet unleash a mighty roar, inspiring allies and striking fear into the hearts of enemies.\n" +
@@ -189,19 +189,17 @@ let BEAR_ROAR_ICON = Icons.bTNBattleRoar
 function onCast(unit pet)
     switch pet.getPetGrowthChain().getFirst()
         case UNIT_FAWN
-            pet.addEffect(LocalAbilities.elkRoarCaster, "origin")
-                ..setScale(.4)
-                ..destr()
+            flashEffect(LocalAbilities.elkRoarCaster, pet, "origin")
             forUnitsInRange(pet.getPos(), RANGE) (unit u) ->
                 if u.isAllyOf(pet.getOwner())
                     InstantDummyCaster.castTarget(pet.getOwner(), ABILITY_ELK_ROAR, 1, Orders.slow, u)
         case UNIT_WOLF_PUP
-            pet.addEffect(LocalAbilities.bearRoarCaster, "origin").destr()
+            flashEffect(LocalAbilities.bearRoarCaster, pet, "origin")
             forUnitsInRange(pet.getPos(), RANGE) (unit u) ->
                 if u.isEnemyOf(pet.getOwner())
                     InstantDummyCaster.castTarget(pet.getOwner(), ABILITY_WOLF_ROAR, 1, Orders.slow, u)
         case UNIT_BEAR_CUB
-            pet.addEffect(LocalAbilities.wolfRoarCaster, "origin").destr()
+            flashEffect(LocalAbilities.wolfRoarCaster, pet, "origin")
             InstantDummyCaster.castImmediate(pet.getOwner(), ABILITY_BEAR_ROAR, 1, OrderIds.howlofterror, pet.getPos())
 
 init

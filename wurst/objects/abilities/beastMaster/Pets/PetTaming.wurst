@@ -15,41 +15,53 @@ import Pets
 import StringExtensions
 import ToolTipsUtils
 import PlayerExtensions
+import LinkedList
 
 let PET_MAX_MANA = 6
 
+let TAMEABLE_PETS = asList(
+    " Elk,",
+    " Wolf,",
+    " Bear"
+)
+
+let PETS_TT = map((animal, _) -> animal.color(COLOR_YELLOW), TAMEABLE_PETS).join()
+
 let ABIL_TT_EXT = "Tames a baby animal. The following animals dying will leave a baby behind"
-                  + ", " + "Elk".color(COLOR_YELLOW)
-                  + ", " + "Wolf".color(COLOR_YELLOW)
-                  + ", " + "Bear".color(COLOR_YELLOW)
+                  + PETS_TT
                   + ". You can tame only 1 animal at once."
 
-class PetTameSpell extends AbilityDefinitionCharm
-    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
-        super(newAbilityId)
-        this.setIconNormal(LocalIcons.bTNTamePet)
-        this.setButtonPositionNormalX(buttonPos.a)
-        this.setButtonPositionNormalY(buttonPos.b)
-        this.setCooldown(1, 10.0)
-        this.setManaCost(1, 0)
-        this.setHeroAbility(false)
-        this.setHotkeyNormal(hotkey)
-        this.setName("Tame Pet")
-        this.setCastRange(1, 600.0)
-        this.setArtTarget(Abilities.controlMagicTarget)
-        this.setTargetsAllowed(1, commaList(
+function createPetTameSpell(int newAbilId) returns AbilityDefinitionCharm
+    return new AbilityDefinitionCharm(newAbilId)
+        ..setIconNormal(LocalIcons.bTNTamePet)
+        ..setCooldown(1, 10.0)
+        ..setManaCost(1, 0)
+        ..setHeroAbility(false)
+        ..setName("Tame Pet")
+        ..setCastRange(1, 600.0)
+        ..setArtTarget(Abilities.controlMagicTarget)
+        ..setTargetsAllowed(1, commaList(
                 TargetsAllowed.neutral,
                 TargetsAllowed.nonhero,
                 TargetsAllowed.organic
             ))
-        this.setTooltipNormal(1, makeToolTipNorm(hotkey, "Tame"))
-        this.setTooltipNormalExtended(1, ABIL_TT_EXT)
-        this.setRequirements(UPGD_PET_TAMED_FALSE.toRawCode())
-        this.setEditorSuffix("(Wurst)")
+        ..setTooltipNormalExtended(1, ABIL_TT_EXT)
+        ..setRequirements(UPGD_PET_TAMED_FALSE.toRawCode())
+        ..setEditorSuffix("(Wurst)")
 
-@compiletime function createTameSpells()
-    new PetTameSpell(ABILITY_PET_TAME, "Q", new Pair(0, 0))
-    new PetTameSpell(ABILITY_PET_TAME_SHAPESHIFTER, "A", new Pair(0, 2))
+@compiletime function createBasePetTameSpell() returns AbilityDefinitionCharm
+    return createPetTameSpell(ABILITY_PET_TAME)
+    ..setButtonPositionNormalX(0)
+    ..setButtonPositionNormalY(0)
+    ..setHotkeyNormal("Q")
+    ..setTooltipNormal(1, makeToolTipNorm("Q", "Tame"))
+
+@compiletime function createShapeShifterPetTameSpell() returns AbilityDefinitionCharm
+    return createPetTameSpell(ABILITY_PET_TAME_SHAPESHIFTER)
+    ..setButtonPositionNormalX(0)
+    ..setButtonPositionNormalY(1)
+    ..setHotkeyNormal("A")
+    ..setTooltipNormal(1, makeToolTipNorm("A", "Tame"))
 
 function onCast(unit caster, unit target)
     // Record the owner of the new unit.
@@ -69,4 +81,3 @@ init
         onCast(caster, target)
     EventListener.onTargetCast(ABILITY_PET_TAME_SHAPESHIFTER) (unit caster, unit target) ->
         onCast(caster, target)
-        

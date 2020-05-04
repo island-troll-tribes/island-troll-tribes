@@ -7,7 +7,6 @@ import OrderIds
 import SimError
 import Assets
 import ChannelAbilityPreset
-import Lodash
 
 // Local imports:
 import LocalObjectIDs
@@ -42,26 +41,30 @@ let ABIL_TT = "Your pet goes to sleep, recovering {0} health point.".format(HEAL
         ..setLvlDataUnreal("aran", 1, 0, 99999.0)
         ..setLvlDataString("atar", 1, 0, "ground,nonhero")
 
-class PetSleepSpell extends ChannelAbilityPreset
-    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
-        super(newAbilityId, 1, true)
-        this.setAnimationNames("")
-        this.setIconNormal(Icons.bTNElunesBlessing)
-        this.setButtonPositionNormalX(buttonPos.a)
-        this.setButtonPositionNormalY(buttonPos.b)
-        this.setCooldown(1, 20.0)
-        this.setFollowThroughTime(1, 1.0)
-        this.setHotkeyNormal(hotkey)
-        this.setName("Pet Sleep")
-        this.setTooltipNormal(1, makeToolTipNorm(hotkey, "Sleep"))
-        this.setTooltipNormalExtended(1, ABIL_TT)
-        this.setRequirements(UPGD_PET_TAMED_TRUE.toRawCode())
-        this.setEditorSuffix("(Wurst)")
+function createPetSleepSpell(int newAbilId) returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(newAbilId, 1, true)
+        ..setAnimationNames("")
+        ..setIconNormal(Icons.bTNElunesBlessing)
+        ..setCooldown(1, 20.0)
+        ..setFollowThroughTime(1, 1.0)
+        ..setName("Pet Sleep")
+        ..setTooltipNormalExtended(1, ABIL_TT)
+        ..setRequirements(UPGD_PET_TAMED_TRUE.toRawCode())
+        ..setEditorSuffix("(Wurst)")
 
-@compiletime function createPetSleepSpells()
-    new PetSleepSpell(ABILITY_PET_SLEEP, "E", new Pair(2, 0))
-    new PetSleepSpell(ABILITY_PET_SLEEP_SHAPESHIFTER, "D", new Pair(2, 2))
+@compiletime function createBasePetSleepSpell() returns ChannelAbilityPreset
+    return createPetSleepSpell(ABILITY_PET_SLEEP)
+    ..setButtonPositionNormalX(2)
+    ..setButtonPositionNormalY(0)
+    ..setHotkeyNormal("E")
+    ..setTooltipNormal(1, makeToolTipNorm("E", "Sleep"))
 
+@compiletime function createShapeShifterPetSleepSpell() returns ChannelAbilityPreset
+    return createPetSleepSpell(ABILITY_PET_SLEEP_SHAPESHIFTER)
+    ..setButtonPositionNormalX(2)
+    ..setButtonPositionNormalY(1)
+    ..setHotkeyNormal("D")
+    ..setTooltipNormal(1, makeToolTipNorm("D", "Sleep"))
 
 function onCast(unit caster)
     // Lookup the pet for the caster.

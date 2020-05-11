@@ -15,6 +15,7 @@ import PlayerExtensions
 import ColorUtils
 import StringExtensions
 import LocalObjectIDs
+import AbilityObjectCreationUtils
 
 // Time before pet revives.
 let PET_REVIVE_TIME = 90.
@@ -31,16 +32,14 @@ let DEATH_MESSAGE = "Your pet has died. It will revive in {0} seconds.".format(P
 let NAME = "Enduring Spirit"
 let REVIVE_INFO_TT = "Your pet will revive {0} seconds after it dies.".format(PET_REVIVE_TIME.toInt().toString().color(GOLD_COLOR))
 
-@compiletime function createPetReviveInfo() returns AbilityDefinition
-    return new AbilityDefinitionThornyShieldCreep(ABILITY_PET_REVIVE_INFO)
-    ..setTooltipNormal(1, NAME)
-    ..setTooltipNormalExtended(1, REVIVE_INFO_TT)
-    ..setDefenseBonus(1, 0)
-    ..setReceivedDamageFactor(1, 0)
-    ..setReturnedDamageFactor(1, 0)
-    ..setIconNormal(Icons.bTNReincarnation)
-    ..setButtonPositionNormalX(0)
-    ..setButtonPositionNormalY(1)
+// Only used to give information about revive system to players.
+@compiletime function createPetReviveInfo() returns AbilityDefinitionThornyShieldCreep
+    return createDummyTooltipAbility(ABILITY_PET_REVIVE_INFO)
+        ..presetTooltipNormal(lvl -> NAME)
+        ..presetTooltipNormalExtended(lvl -> REVIVE_INFO_TT)
+        ..setIconNormal(Icons.bTNReincarnation)
+        ..setButtonPositionNormalX(0)
+        ..setButtonPositionNormalY(1)
 
 public function onDeath(unit u)
     // Store the owner of the pet.

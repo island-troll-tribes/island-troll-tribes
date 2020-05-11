@@ -7,12 +7,14 @@ import OrderIds
 import MapBounds
 import InstantDummyCaster
 import Assets
+import AbilityObjEditing
 
 // Local imports:
 import Pets
 import PlayerExtensions
 import ColorUtils
 import StringExtensions
+import LocalObjectIDs
 
 // Time before pet revives.
 let PET_REVIVE_TIME = 90.
@@ -25,6 +27,20 @@ let MAP_BOUNDS_OFFSET = 1000.
 
 // Message printed to owner on pet death.
 let DEATH_MESSAGE = "Your pet has died. It will revive in {0} seconds.".format(PET_REVIVE_TIME.toInt().toString().color(GOLD_COLOR))
+
+let NAME = "Enduring Spirit"
+let REVIVE_INFO_TT = "Your pet will revive {0} seconds after it dies.".format(PET_REVIVE_TIME.toInt().toString().color(GOLD_COLOR))
+
+@compiletime function createPetReviveInfo() returns AbilityDefinition
+    return new AbilityDefinitionThornyShieldCreep(ABILITY_PET_REVIVE_INFO)
+    ..setTooltipNormal(1, NAME)
+    ..setTooltipNormalExtended(1, REVIVE_INFO_TT)
+    ..setDefenseBonus(1, 0)
+    ..setReceivedDamageFactor(1, 0)
+    ..setReturnedDamageFactor(1, 0)
+    ..setIconNormal(Icons.bTNReincarnation)
+    ..setButtonPositionNormalX(0)
+    ..setButtonPositionNormalY(1)
 
 public function onDeath(unit u)
     // Store the owner of the pet.

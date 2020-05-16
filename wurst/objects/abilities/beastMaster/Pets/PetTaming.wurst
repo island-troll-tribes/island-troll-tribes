@@ -2,16 +2,76 @@ package PetTaming
 
 // Standard library imports:
 import ClosureEvents
+import AbilityObjEditing
+import Assets
+import ObjectIds
+import Lodash
 
 // Local imports:
+import ColorUtils
+import LocalAssets
 import LocalObjectIDs
-import PetAbilities
 import Pets
+import StringExtensions
+import ToolTipsUtils
+import PlayerExtensions
+import LinkedList
+
+let PET_MAX_MANA = 6
+
+let PETS_TT = map((animal, _) -> animal.color(COLOR_YELLOW), asList("Elk", "Wolf", "Bear")).joinBy(", ")
+
+let ABIL_TT_EXT = "Tames a baby animal. The following animals dying will leave a baby behind: "
+                  + PETS_TT
+                  + ". You can tame only 1 animal at once."
+
+function createPetTameSpell(int newAbilId) returns AbilityDefinitionCharm
+    return new AbilityDefinitionCharm(newAbilId)
+        ..setIconNormal(LocalIcons.bTNTamePet)
+        ..setCooldown(1, 10.0)
+        ..setManaCost(1, 0)
+        ..setHeroAbility(false)
+        ..setName("Tame Pet")
+        ..setCastRange(1, 600.0)
+        ..setArtTarget(Abilities.controlMagicTarget)
+        ..setTargetsAllowed(1, commaList(
+                TargetsAllowed.neutral,
+                TargetsAllowed.nonhero,
+                TargetsAllowed.organic
+            ))
+        ..setTooltipNormalExtended(1, ABIL_TT_EXT)
+        ..setRequirements(UPGD_PET_TAMED_FALSE.toRawCode())
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createBasePetTameSpell() returns AbilityDefinitionCharm
+    return createPetTameSpell(ABILITY_PET_TAME)
+    ..setButtonPositionNormalX(0)
+    ..setButtonPositionNormalY(0)
+    ..setHotkeyNormal("Q")
+    ..setTooltipNormal(1, makeToolTipNorm("Q", "Tame"))
+
+@compiletime function createShapeShifterPetTameSpell() returns AbilityDefinitionCharm
+    return createPetTameSpell(ABILITY_PET_TAME_SHAPESHIFTER)
+    ..setButtonPositionNormalX(0)
+    ..setButtonPositionNormalY(1)
+    ..setHotkeyNormal("A")
+    ..setTooltipNormal(1, makeToolTipNorm("A", "Tame"))
+
+function onCast(unit caster, unit target)
+    // Record the owner of the new unit.
+    let owner = caster.getOwner()
+
+    owner.addPet(target)
+
+    owner.setTechResearched(UPGD_PET_TAMED_TRUE, 1)
+    owner.setTechResearched(UPGD_PET_TAMED_FALSE, 0)
+
+    // Set max mana used for growth abilities.
+    target.setMaxMana(PET_MAX_MANA)
+
 
 init
     EventListener.onTargetCast(ABILITY_PET_TAME) (unit caster, unit target) ->
-        // Record the owner of the new unit.
-        caster.getOwner().addPet(target)
-
-        // Unlock the new abilities.
-        setPetAbilities(caster.getOwner(), true)
+        onCast(caster, target)
+    EventListener.onTargetCast(ABILITY_PET_TAME_SHAPESHIFTER) (unit caster, unit target) ->
+        onCast(caster, target)

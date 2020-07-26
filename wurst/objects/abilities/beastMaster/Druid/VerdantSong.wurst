@@ -15,6 +15,8 @@ import LocalObjectIDs
 import LocalAssets
 import Pets
 import ToolTipsUtils
+import StringExtensions
+import ColorUtils
 
 let BUTTON_POS_X = 1
 let BUTTON_POS_Y = 0
@@ -47,13 +49,12 @@ let BEAR_ROAR_BUFF_ID = compiletime(BUFF_ID_GEN.next())
 let BEAR_ROAR_TT = "This unit witnessed a nearby bear shake the earth and is awestruck. It has reduced damage."
 
 let DRUID_ROAR_TT = "Verdant Song"
-let DRUID_ROAR_TT_EXT = "The Druid and his pet unleash a mighty roar, inspiring allies and striking fear into the hearts of enemies.\n" +
-                        "Druid: Increases nearby allies' damage by {0}%.\n".format((DRUID_ROAR_DAMAGE_BOOST * 100).toString().substring(0, 2)) +
-                        "Elk: Increases nearby allies movement speed by {0}%.\n".format(ELK_MS_BOOST.toString().substring(0, 2)) +
-                        "Wolf: Decreases nearby enemies' movement speed by {0}% and attack speed by {1}%.\n".format((WOLF_MS_REDUCTION * 100).toString().substring(0, 2),
-                                                                                                                    (WOLF_AS_REDUCTION * 100).toString().substring(0, 2)) +
-                        "Bear: Decreases nearby enemies' damage by {0}%.".format((BEAR_DAMAGE_REDUCTION * 100).toString().substring(0, 2)) +
-                        makeToolTipCooldown(COOLDOWN)
+let DRUID_ROAR_TT_EXT = "The Druid and his pet unleash a mighty roar, inspiring allies and striking fear into the hearts of enemies." + makeToolTipCooldown(COOLDOWN)
+                        + "\n\nDruid\n".color(SPECIAL_COLOR) + "Increases nearby allies' damage by {0}."                                 .format(DRUID_ROAR_DAMAGE_BOOST.toToolTipRed())
+                        + "\n\nElk\n"  .color(SPECIAL_COLOR) + "Increases nearby allies movement speed by {0}."                          .format(ELK_MS_BOOST.toToolTipOrange())
+                        + "\n\nWolf\n" .color(SPECIAL_COLOR) + "Decreases nearby enemies' movement speed by {0} and attack speed by {1}.".format(WOLF_MS_REDUCTION.toToolTipOrange(),
+                                                                                                                                                 WOLF_AS_REDUCTION.toToolTipYellow())
+                        + "\n\nBear\n" .color(SPECIAL_COLOR) + "Decreases nearby enemies' damage by {0}."                                .format(BEAR_DAMAGE_REDUCTION.toToolTipRed())
 
 // Used for druid roar icon, and all buffs left by the roars.
 let DRUID_ROAR_ICON = LocalIcons.bTNVerdantSong

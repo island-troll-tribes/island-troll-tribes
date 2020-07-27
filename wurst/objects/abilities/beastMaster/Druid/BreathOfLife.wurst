@@ -70,7 +70,9 @@ function plantBush(vec2 target)
     if not target.isTerrainLand()
         // Notify the player of their mistake.
         simError(EventData.getTriggerUnit().getOwner(), "Must be cast on land.")
-        EventData.getTriggerUnit().resetAbilityCooldown(ABILITY_BREATH_OF_LIFE)
+        // Need to refresh the cooldown this way since the ability is in a spellbook.
+        EventData.getTriggerUnit().disableAbility(ABILITY_BREATH_OF_LIFE, true, false)
+        EventData.getTriggerUnit().disableAbility(ABILITY_BREATH_OF_LIFE, false, false)
         return
 
     // Determine the positions of the bushes around the center point.

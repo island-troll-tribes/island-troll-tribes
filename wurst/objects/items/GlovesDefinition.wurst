@@ -1,0 +1,308 @@
+package GlovesDefinition
+
+// Standard-library imports:
+import Assets
+import ObjectIds
+import AbilityObjEditing
+
+// Local imports:
+import Items
+import ColorUtils
+import LocalAssets
+import ToolTipsUtils
+import LocalObjectIDs
+import StringExtensions
+import LocalItemObjEditing
+import BattleGlovesCritical
+import ScrollsDefinition
+
+let ABILITY_ID_ATTACK_BONUS_3 = "AIat".fromRawCode() // Item Damage bonus + 3, not implemented in stdlib
+
+let HYDRA_CLAW_POISON_MS_SLOW = 0.25
+let HYDRA_CLAW_POISON_DAMAGE = 2.
+let HYDRA_CLAW_POISON_AS_SLOW = 0.15
+let HYDRA_CLAW_POISON_DURATION_HERO = 4.5
+let HYDRA_CLAW_POISON_DURATION_NORMAL = 7.
+
+let TT_COMMON = "Increases wearer's attack speed by {0}"
+let TT_TRANSMUTE_SUFFIX = "\n|nAll basic gloves transmute into the same bone/iron/steel gloves.".color(COLOR_YELLOW)
+
+let TT_UNFORMAT_SKIN_GLOVE = TT_COMMON + " and provides warmth."
+let TT_UNFORMAT_ARMOR_GLOVE = TT_COMMON + ", damage by {1}, armor by {2} and provides warmth."
+let TT_UNFORMAT_BATTLE_GLOVE_STRING = "Increases wearer's attack speed by {0}, armor by {1} and all stats by {2}"
+                                      + " and a critical strike for {3} damage on a {4} second cooldown."
+                                      + " Attacking enemies reduces the cooldown of the critical strike by {5} second."
+
+let TT_UNFORMAT_HYDRA_CLAWS_STRING = "Increases wearer's attack speed by {0}, all stats by {1} "
+                                     + "and has a poisonous attack effect that lowers attack speed by {2} and movement speed by {3} and deals {4} "
+                                     + "damage per second for {5} seconds on trolls and {6} seconds on units. "
+                                     + "Can cast " + "Tsunami".color(SPECIAL_COLOR) + "."
+                                     + "\n\nTsunami\n".color(SPECIAL_COLOR)
+                                     + TSUNAMI_TT
+
+// We can retrieve the ability data field, returning an Int in those case
+// DataA1 being the bonus attack speed, damage or armor for each respective abilities
+public let TT_ELK_SKIN_GLOVES = TT_UNFORMAT_SKIN_GLOVE.format(
+    getAbilityDataFieldPercent(ABILITY_ATTACK_SPEED_10,  "DataA1").color(COLOR_ORANGE)
+    ) + TT_TRANSMUTE_SUFFIX
+
+public let TT_WOLF_SKIN_GLOVES = TT_UNFORMAT_ARMOR_GLOVE.format(
+    getAbilityDataFieldPercent(ABILITY_ATTACK_SPEED_15 , "DataA1").color(COLOR_ORANGE),
+    getAbilityDataField(AbilityIds.attackBonusPlus2    , "DataA1").color(COLOR_RED),
+    getAbilityDataField(ABILITY_ARMOR_BONUS_2          , "DataA1").color(COLOR_GREEN)
+) + TT_TRANSMUTE_SUFFIX
+
+public let TT_BEAR_SKIN_GLOVES = TT_UNFORMAT_ARMOR_GLOVE.format(
+    getAbilityDataFieldPercent(ABILITY_ATTACK_SPEED_20 , "DataA1").color(COLOR_ORANGE),
+    getAbilityDataField(ABILITY_ID_ATTACK_BONUS_3      , "DataA1").color(COLOR_RED),
+    getAbilityDataField(ABILITY_ARMOR_BONUS_3          , "DataA1").color(COLOR_GREEN)
+) + TT_TRANSMUTE_SUFFIX
+
+public let TT_BONE_GLOVES = TT_UNFORMAT_ARMOR_GLOVE.format(
+    getAbilityDataFieldPercent(ABILITY_ATTACK_SPEED_20 , "DataA1").color(COLOR_ORANGE),
+    getAbilityDataField(AbilityIds.attackBonusPlus1    , "DataA1").color(COLOR_RED),
+    getAbilityDataField(ABILITY_ARMOR_BONUS_2          , "DataA1").color(COLOR_GREEN)
+) + TT_TRANSMUTE_SUFFIX
+
+public let TT_IRON_GLOVES = TT_UNFORMAT_ARMOR_GLOVE.format(
+    getAbilityDataFieldPercent(ABILITY_ATTACK_SPEED_25 , "DataA1").color(COLOR_ORANGE),
+    getAbilityDataField(AbilityIds.attackBonusPlus2    , "DataA1").color(COLOR_RED),
+    getAbilityDataField(ABILITY_ARMOR_BONUS_3          , "DataA1").color(COLOR_GREEN)
+) + TT_TRANSMUTE_SUFFIX
+
+public let TT_STEEL_GLOVES = TT_UNFORMAT_ARMOR_GLOVE.format(
+    getAbilityDataFieldPercent(ABILITY_ATTACK_SPEED_35 , "DataA1").color(COLOR_ORANGE),
+    getAbilityDataField(AbilityIds.attackBonusPlus4    , "DataA1").color(COLOR_RED),
+    getAbilityDataField(ABILITY_ARMOR_BONUS_5          , "DataA1").color(COLOR_GREEN)
+) + TT_TRANSMUTE_SUFFIX
+
+public let TT_BATTLE_GLOVES = TT_UNFORMAT_BATTLE_GLOVE_STRING.format(
+    getAbilityDataFieldPercent(ABILITY_ATTACK_SPEED_30, "DataA1").color(COLOR_ORANGE),
+    getAbilityDataField(ABILITY_ARMOR_BONUS_5,          "DataA1").color(COLOR_GREEN),
+    4..toToolTipGreen(),
+    "1x6".color(COLOR_RED),
+    BG_COOLDOWN.toToolTipLightBlue(),
+    BG_COOLDOWN_SKIP_PER_ATTACK.toToolTipLightBlue()
+)
+
+public let TT_HYDRA_CLAWS = ARTIFACT_PREFIX + TT_UNFORMAT_HYDRA_CLAWS_STRING.format(
+    getAbilityDataFieldPercent(ABILITY_ATTACK_SPEED_35,    "DataA1").color(COLOR_ORANGE),
+    5..toToolTipGreen(),
+    getAbilityDataFieldPercent(ABILITY_HYDRA_CLAWS_POISON, "DataB1"  ).color(COLOR_YELLOW),
+    getAbilityDataFieldPercent(ABILITY_HYDRA_CLAWS_POISON, "DataC1"  ).color(COLOR_YELLOW),
+    getAbilityDataField(ABILITY_HYDRA_CLAWS_POISON,        "DataA1"  ).color(COLOR_RED),
+    getAbilityDataField(ABILITY_HYDRA_CLAWS_POISON,        "HeroDur1").color(COLOR_LIGHT_BLUE),
+    getAbilityDataField(ABILITY_HYDRA_CLAWS_POISON,        "Dur1"    ).color(COLOR_LIGHT_BLUE)
+)
+
+@compiletime function createSpeedBonusAbility()
+    new AbilityDefinitionAttackSpeedIncrease(ABILITY_ATTACK_SPEED_10)
+        ..setAttackSpeedIncrease(1, 0.10)
+        ..setName("Attack Speed Increase 10")
+        ..setEditorSuffix("(Wurst)")
+
+    new AbilityDefinitionAttackSpeedIncrease(ABILITY_ATTACK_SPEED_15)
+        ..setAttackSpeedIncrease(1, 0.15)
+        ..setName("Attack Speed Increase 15")
+        ..setEditorSuffix("(Wurst)")
+
+    new AbilityDefinitionAttackSpeedIncrease(ABILITY_ATTACK_SPEED_20)
+        ..setAttackSpeedIncrease(1, 0.20)
+        ..setName("Attack Speed Increase 20")
+        ..setEditorSuffix("(Wurst)")
+
+    new AbilityDefinitionAttackSpeedIncrease(ABILITY_ATTACK_SPEED_25)
+        ..setAttackSpeedIncrease(1, 0.25)
+        ..setName("Attack Speed Increase 25")
+        ..setEditorSuffix("(Wurst)")
+
+    new AbilityDefinitionAttackSpeedIncrease(ABILITY_ATTACK_SPEED_30)
+        ..setAttackSpeedIncrease(1, 0.30)
+        ..setName("Attack Speed Increase 30")
+        ..setEditorSuffix("(Wurst)")
+
+    new AbilityDefinitionAttackSpeedIncrease(ABILITY_ATTACK_SPEED_35)
+        ..setAttackSpeedIncrease(1, 0.35)
+        ..setName("Attack Speed Increase 35")
+        ..setEditorSuffix("(Wurst)")
+
+
+@compiletime function createHydraClawPoisonAbility()
+    new AbilityDefinitionSlowPoison(ABILITY_HYDRA_CLAWS_POISON)
+        ..setIconNormal(Icons.bTNImprovedStrengthOfTheWild)
+        ..setMissileArt("")
+        ..setAttackSpeedFactor(1, HYDRA_CLAW_POISON_AS_SLOW)
+        ..setDamagePerSecond(1, HYDRA_CLAW_POISON_DAMAGE)
+        ..setMovementSpeedFactor(1, HYDRA_CLAW_POISON_MS_SLOW)
+        ..setDurationHero(1, HYDRA_CLAW_POISON_DURATION_HERO)
+        ..setDurationNormal(1, HYDRA_CLAW_POISON_DURATION_NORMAL)
+        ..setName("Hydra Claw Poison")
+        ..setEditorSuffix("(Wurst)")
+
+
+@compiletime function createElkSkinGloves() returns ItemDefinition
+    return createBasicItem(ITEM_ELK_SKIN_GLOVES)
+        ..setAbilities(commaList(
+            ABILITY_ATTACK_SPEED_10
+            )
+        )
+        ..setInterfaceIcon(LocalIcons.bTNElkHideGloves)
+        ..setDescription("Increases wearer's attack speed speed and intelligence")
+        ..setTintingColor1Red(136)
+        ..setTintingColor2Green(0)
+        ..setTintingColor3Blue(255)
+        ..setModelUsed(LocalItems.skinGloves)
+        ..setHotkey("")
+        ..setLumberCost(19)
+        ..setScalingValue(0.8)
+        ..setNameEnhance("Elk Skin Gloves")
+        ..setTooltipExtended(TT_ELK_SKIN_GLOVES)
+        ..setCooldownGroup(toRawCode(ABILITY_ATTACK_SPEED_10))
+
+@compiletime function createWolfSkinGloves() returns ItemDefinition
+    return createBasicItem(ITEM_WOLF_SKIN_GLOVES)
+        ..setAbilities(commaList(
+            ABILITY_ATTACK_SPEED_15,
+            AbilityIds.attackBonusPlus2,
+            ABILITY_ARMOR_BONUS_2
+            )
+        )
+        ..setInterfaceIcon(LocalIcons.bTNWolfHideGloves)
+        ..setDescription("Increases wearer's attack speed, attack damage and armor")
+        ..setTintingColor1Red(128)
+        ..setTintingColor2Green(128)
+        ..setTintingColor3Blue(128)
+        ..setModelUsed(LocalItems.skinGloves)
+        ..setHotkey("")
+        ..setLumberCost(33)
+        ..setScalingValue(0.8)
+        ..setNameEnhance("Wolf Skin Gloves")
+        ..setTooltipExtended(TT_WOLF_SKIN_GLOVES)
+        ..setCooldownGroup(toRawCode(ABILITY_ATTACK_SPEED_15))
+
+@compiletime function createBearSkinGloves() returns ItemDefinition
+    return createBasicItem(ITEM_BEAR_SKIN_GLOVES)
+        ..setAbilities(commaList(
+            ABILITY_ATTACK_SPEED_20,
+            ABILITY_ID_ATTACK_BONUS_3,
+            ABILITY_ARMOR_BONUS_3
+            )
+        )
+        ..setInterfaceIcon(LocalIcons.bTNBearHideGloves)
+        ..setDescription("Increases wearer's attack speed speed, attack damage and armor")
+        ..setTintingColor1Red(139)
+        ..setTintingColor2Green(69)
+        ..setTintingColor3Blue(16)
+        ..setModelUsed(LocalItems.skinGloves)
+        ..setHotkey("")
+        ..setLumberCost(47)
+        ..setScalingValue(0.8)
+        ..setNameEnhance("Bear Skin Gloves")
+        ..setTooltipExtended(TT_BEAR_SKIN_GLOVES)
+        ..setCooldownGroup(toRawCode(ABILITY_ATTACK_SPEED_20))
+
+@compiletime function createBoneGloves() returns ItemDefinition
+    return createBasicItem(ITEM_BONE_GLOVES)
+        ..setAbilities(commaList(
+            ABILITY_ATTACK_SPEED_20,
+            AbilityIds.attackBonusPlus1,
+            ABILITY_ARMOR_BONUS_2
+            )
+        )
+        ..setInterfaceIcon(Icons.bTNGauntletsOfOgrePower)
+        ..setDescription("Increases wearer's attack speed speed, attack damage and armor")
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(255)
+        ..setModelUsed(LocalItems.boneGloves)
+        ..setHotkey("")
+        ..setLumberCost(34)
+        ..setScalingValue(0.8)
+        ..setNameEnhance("Bone Gloves")
+        ..setTooltipExtended(TT_BONE_GLOVES)
+        ..setCooldownGroup(toRawCode(ABILITY_ATTACK_SPEED_20))
+
+@compiletime function createIronGloves() returns ItemDefinition
+    return createBasicItem(ITEM_IRON_GLOVES)
+        ..setAbilities(commaList(
+            ABILITY_ATTACK_SPEED_25,
+            AbilityIds.attackBonusPlus2,
+            ABILITY_ARMOR_BONUS_3
+            )
+        )
+        ..setInterfaceIcon(LocalIcons.bTNIronGloves)
+        ..setDescription("Increases wearer's attack speed speed, attack damage and armor")
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(255)
+        ..setModelUsed(LocalItems.ironGloves)
+        ..setHotkey("")
+        ..setLumberCost(55)
+        ..setScalingValue(0.8)
+        ..setNameEnhance("Iron Gloves")
+        ..setTooltipExtended(TT_IRON_GLOVES)
+        ..setCooldownGroup(toRawCode(ABILITY_ATTACK_SPEED_25))
+
+@compiletime function createSteelGloves() returns ItemDefinition
+    return createBasicItem(ITEM_STEEL_GLOVES)
+        ..setAbilities(commaList(
+            ABILITY_ATTACK_SPEED_35,
+            AbilityIds.attackBonusPlus4,
+            ABILITY_ARMOR_BONUS_5
+            )
+        )
+        ..setInterfaceIcon(Icons.bTNAdvancedUnholyStrength)
+        ..setDescription("Increases wearer's attack speed speed, attack damage and armor")
+        ..setTintingColor1Red(0)
+        ..setTintingColor2Green(119)
+        ..setTintingColor3Blue(255)
+        ..setModelUsed(LocalItems.ironGloves)
+        ..setHotkey("")
+        ..setLumberCost(70)
+        ..setScalingValue(0.8)
+        ..setNameEnhance("Steel Gloves")
+        ..setTooltipExtended(TT_STEEL_GLOVES)
+        ..setCooldownGroup(toRawCode(ABILITY_ATTACK_SPEED_35))
+
+@compiletime function createBattleGloves() returns ItemDefinition
+    return createBasicItem(ITEM_BATTLE_GLOVES)
+        ..setAbilities(commaList(
+            ABILITY_ATTACK_SPEED_30,
+            ABILITY_STATS_BONUS_4 ,
+            ABILITY_ARMOR_BONUS_5
+            )
+        )
+        ..setInterfaceIcon(Icons.bTNImprovedUnholyStrength)
+        ..setDescription("Increases wearer's attack speed, armor, stats and grant critical strike every 4 attack")
+        ..setTintingColor1Red(128)
+        ..setTintingColor2Green(0)
+        ..setTintingColor3Blue(128)
+        ..setModelUsed(LocalItems.battleGloves)
+        ..setHotkey("")
+        ..setLumberCost(83)
+        ..setScalingValue(0.8)
+        ..setNameEnhance("Battle Gloves")
+        ..setTooltipExtended(TT_BATTLE_GLOVES)
+        ..setCooldownGroup(toRawCode(ABILITY_ATTACK_SPEED_10))
+
+@compiletime function createHydraClaws() returns ItemDefinition
+    return createUsableItem(ITEM_HYDRA_CLAWS)
+        ..setAbilities(commaList(
+            ABILITY_TSUNAMI,
+            ABILITY_ATTACK_SPEED_35,
+            ABILITY_STATS_BONUS_5,
+            ABILITY_HYDRA_CLAWS_POISON
+            )
+        )
+        ..setInterfaceIcon(Icons.bTNImprovedStrengthOfTheWild)
+        ..setDescription("Claws of the Great Hydra.")
+        ..setModelUsed(LocalItems.battleGloves)
+        ..setHotkey("")
+        ..setTintingColor1Red(60)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(30)
+        ..setLumberCost(104)
+        ..setScalingValue(0.8)
+        ..setNameEnhance("Hydra Claws")
+        ..setTooltipExtended(TT_HYDRA_CLAWS)
+        ..setCooldownGroup(toRawCode(ABILITY_TSUNAMI))

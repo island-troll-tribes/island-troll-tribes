@@ -52,6 +52,25 @@ let MAX_POINTS_PER_LEVEL = 3
 
 
 // TODO: Use an upgrade system or abilities instead of manual stat adjustment.
+@compiletime function createPetAttackDamageUpgrade() returns UpgradeDefinition
+    return new UpgradeDefinition(UPGD_PET_ATTACK_DAMAGE)
+        ..addEffectApplyAttackUpgradeBonus()
+        ..setLevels(10)
+        ..setName(1, "Pets Damage Upgrade")
+        ..setClass(UpgradeClass.Melee)
+        ..setIcon(1, Icons.bTNStrengthOfTheWild)
+
+@compiletime function createPetArmorUpgrade() returns UpgradeDefinition
+    return new UpgradeDefinition(UPGD_PET_ARMOR)
+        ..addEffectApplyDefenseUpgradeBonus()
+        ..setLevels(10)
+        ..setName(1, "Pets Armor Upgrade")
+        ..setClass(UpgradeClass.Armor)
+        ..setIcon(1, Icons.bTNReinforcedHides)
+
+@compiletime function createPetMagicResistanceUpgrade() returns UpgradeDefinition
+    return new UpgradeDefinition(UPGD_PET_MAGIC_RESISTANCE)
+
 
 // Tracks the amount of armor given to a specific unit.
 // Used to calculate new armor as armor carries over between transformations.
@@ -132,28 +151,38 @@ let TOTAL_MAGIC_RESIST = new HashMap<player, int>()
 
 // Increases damage of the pet by 1.
 function increaseDamage(unit caster)
+    let owner = caster.getOwner()
+
+    let techlvl = GetPlayerTechCount(owner, UPGD_PET_ATTACK_DAMAGE, false)
+    print(techlvl)
+    owner.setTechResearched(UPGD_PET_ATTACK_DAMAGE, techlvl + 1)
     // Increase the damage of the pet by 1.
-    caster.setBaseDamage(caster.getBaseDamage(0) + ATTACK_INCREASE, 0)
+    // caster.setBaseDamage(caster.getBaseDamage(0) + ATTACK_INCREASE, 0)
 
     // Increment the counter of points spent by the pet.
-    incrementPetLevelCounter(caster)
+    // incrementPetLevelCounter(caster)
 
     // Track the total amount of damage gained by all pets.
-    trackStatGrowth(TOTAL_DAMAGE, caster.getOwner())
+    // trackStatGrowth(TOTAL_DAMAGE, caster.getOwner())
 
 // Increases armor of the pet by 1.
 function increaseArmor(unit caster)
+    let owner = caster.getOwner()
+
+    let techlvl = GetPlayerTechCount(owner, UPGD_PET_ARMOR, false)
+    print(techlvl)
+    owner.setTechResearched(UPGD_PET_ARMOR, techlvl + 1)
     // Increase the armor of the pet by 1.
-    caster.setArmor(caster.getArmor() + ARMOR_INCREASE)
+    // caster.setArmor(caster.getArmor() + ARMOR_INCREASE)
 
     // Increment the counter of points spent by the pet.
-    incrementPetLevelCounter(caster)
+    // incrementPetLevelCounter(caster)
 
     // Track the armor gained by this unit.
-    trackStatGrowth(PET_ARMOR, caster)
+    // trackStatGrowth(PET_ARMOR, caster)
 
     // Track the total armor gained by any pet.
-    trackStatGrowth(TOTAL_ARMOR, caster.getOwner())
+    // trackStatGrowth(TOTAL_ARMOR, caster.getOwner())
 
 
 // Increases magic resistance of the pet by 10%.

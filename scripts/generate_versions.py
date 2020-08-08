@@ -60,7 +60,7 @@ if __name__ == "__main__":
     repo.git.checkout("--detach")
 
     # Mirror the originating branch, clearing any unsaved changes.
-    repo.git.reset("--hard", branch)
+    repo.git.reset("--hard", branch, "--")
 
     # Compute the number of digits required to represent the versions.
     num_digits = ceil(log(args.count, 10))

@@ -38,7 +38,7 @@ init
 
 
 def build_parser():
-    # Create the basea parser.
+    # Create the base parser.
     parser = ArgumentParser(
         "Release",
         description="Updates and releases the map based on recent commits.",

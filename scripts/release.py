@@ -120,8 +120,8 @@ def update_build(version):
     with open(path, "w") as target:
         dump(build, target, Dumper=Dumper, sort_keys=False)
 
-    # Output the path for later use.
-    return path, filename
+    # Output the paths for the build file and built map.
+    return path, join("_build", f"{filename}.w3x")
 
 
 def get_changelog(repo, sha, marker="$changelog: "):
@@ -277,10 +277,7 @@ if __name__ == "__main__":
     package = write_changelog(major, minor, patch, changelog)
 
     # Update the build file for the map.
-    build, filename = update_build(version)
-
-    # Compute the expected location of the built map.
-    target = join("_build", f"{filename}.w3x")
+    build, target = update_build(version)
 
     # Update the repository with the modified files.
     if args.dry_run:

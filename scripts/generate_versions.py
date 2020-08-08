@@ -1,6 +1,4 @@
-"""
-Generates recent versions according to the commit history of local master.
-"""
+#!/usr/bin/env python3.8
 
 # Standard library imports:
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
@@ -10,7 +8,7 @@ from math import ceil, log
 from git import Repo
 
 # Local imports:
-from .release import build_map, update_build
+from release import build_map, update_build
 
 
 if __name__ == "__main__":
@@ -35,6 +33,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "count",
+        nargs="?",
         type=int,
         default=2,
         help="Number of commits to iterate over.",

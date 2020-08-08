@@ -79,5 +79,8 @@ if __name__ == "__main__":
         # Build the map.
         build_map(args.base, target)
 
+        # Step back a commit.
+        repo.git.reset("--hard", "HEAD~1")
+
     # Reset to the originating branch.
     repo.git.checkout(branch)

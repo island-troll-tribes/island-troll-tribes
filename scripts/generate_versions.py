@@ -23,13 +23,16 @@ if __name__ == "__main__":
     parser.add_argument(
         "--force",
         type=bool,
-        help="Allow unsafe usage that may overwrite unsaved changes."
+        default=False,
+        help="Allow unsafe usage that may overwrite unsaved changes.",
     )
 
+    # Parse the arguments.
+    args = parser.parse_args()
 
     # Create the repository object to track git changes.
     repo = Repo()
 
     # Block potentially damaging operations.
-    if repo.is_dirty(untracked_files=True):
+    if repo.is_dirty(untracked_files=True) and not args.force:
         exit("")

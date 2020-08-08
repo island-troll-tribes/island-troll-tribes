@@ -1,0 +1,59 @@
+package PetUpgradeHandler
+
+// Standard library imports:
+import Assets
+import ChannelAbilityPreset
+import ClosureEvents
+import HashMap
+import LinkedList
+import UpgradeObjEditing
+
+// Local imports:
+import LocalAssets
+import LocalObjectIDs
+import MagicResistance
+import Pets
+import ToolTipsUtils
+import Transformation
+import PlayerExtensions
+import PetMana
+import ColorUtils
+import StringExtensions
+import UnitExtensions
+
+
+let Pets = new HashMap<unit, PetUpgradeHandler>()
+
+class PetUpgradeHandler
+    player petOwner
+    unit pet
+    unit caster
+
+    construct(unit caster, unit pet)
+        this.petOwner = caster.getOwner()
+        this.pet = pet
+        EventListener.add(pet, EVENT_PLAYER_UNIT_SPELL_CAST, () -> upgradePet())
+
+    function release()
+        destroy this
+
+    function upgradePet()
+        let abilId = EventData.getSpellAbilityId()
+
+        switch abilId
+            case ABILITY_PET_DAMAGE
+                petOwner.addTechResearched(UPGD_PET_ATTACK_DAMAGE, 1)
+            case ABILITY_PET_ARMOR
+                petOwner.addTechResearched(UPGD_PET_ARMOR, 1)
+            case ABILITY_PET_MAGIC_RESIST
+                petOwner.addTechResearched(UPGD_PET_MAGIC_RESISTANCE, 1)
+            case ABILITY_PET_HEALTH
+                petOwner.addTechResearched(UPGD_PET_HEALTH, 1)
+
+    ondestroy
+        Pets.remove(pet)
+
+
+init
+    EventListener.onTargetCast(ABILITY_PET_TAME, (unit caster, unit target) -> Pets.put(target, new PetUpgradeHandler(caster, target)))
+    EventListener.onCast(ABILITY_PET_RELEASE, (unit caster) -> Pets.get(caster).release())

@@ -6,6 +6,8 @@ import AbilityObjEditing
 import Assets
 import ObjectIds
 import Lodash
+import TimerUtils
+import ClosureForGroups
 
 // Local imports:
 import ColorUtils
@@ -16,6 +18,10 @@ import StringExtensions
 import ToolTipsUtils
 import PlayerExtensions
 import LinkedList
+import HashMap
+import SimError
+import UnitExtensions
+import Transformation
 
 let PET_MAX_MANA = 6
 
@@ -24,6 +30,15 @@ let PETS_TT = map((animal, _) -> animal.color(COLOR_YELLOW), asList("Elk", "Wolf
 let ABIL_TT_EXT = "Tames a baby animal. The following animals killed by the " + "Beast Master".color(HIGHLIGHT_COLOR) + " will leave a baby behind: "
                   + PETS_TT + "."
                   + "\n\nYou can tame only 1 animal at once.".color(COLOR_RED)
+
+let petFeedMap = new HashMap<int, int>()
+    ..put(UNIT_ELK                    , 2)
+    ..put(UNIT_JUNGLE_WOLF            , 8)
+    ..put(UNIT_JUNGLE_BEAR            , 12)
+    ..put(UNIT_PANTHER                , 20)
+    ..put(UNIT_HAWK_HATCHLING         , 4)
+    ..put(UNIT_NETHER_DRAGON_HATCHLING, 8)
+
 
 function createPetTameSpell(int newAbilId) returns AbilityDefinitionCharm
     return new AbilityDefinitionCharm(newAbilId)
@@ -35,13 +50,13 @@ function createPetTameSpell(int newAbilId) returns AbilityDefinitionCharm
         ..setCastRange(1, 600.0)
         ..setArtTarget(Abilities.controlMagicTarget)
         ..setTargetsAllowed(1, commaList(
-                TargetsAllowed.neutral,
                 TargetsAllowed.nonhero,
                 TargetsAllowed.organic
             ))
         ..setTooltipNormalExtended(1, ABIL_TT_EXT)
         ..setRequirements(UPGD_PET_TAMED_FALSE.toRawCode())
         ..setEditorSuffix("(Wurst)")
+        ..setAnimationNames("Attack - 1")
 
 @compiletime function createBasePetTameSpell() returns AbilityDefinitionCharm
     return createPetTameSpell(ABILITY_PET_TAME)
@@ -57,17 +72,112 @@ function createPetTameSpell(int newAbilId) returns AbilityDefinitionCharm
     ..setHotkeyNormal("A")
     ..setTooltipNormal(1, makeToolTipNorm("A", "Tame"))
 
+// Gonna make the parabola formula work!
+class foodProjectile
+    use TimedLoop
+    unit u
+    unit target
+    vec3 targetPos
+
+    effect efx
+
+    vec3 pos
+    real speed
+    real elapse_time = 0
+
+    vec3 initPos
+    real duration
+    real distance
+    angle angle
+    real displacement
+    real gravity
+
+    construct(unit u, unit target, string efxArt, real speed)
+        this.u = u
+        this.target = target
+        this.targetPos = target.getPos3Real()
+
+        this.speed = speed
+        this.pos = u.getPos().polarOffset(u.getPos().angleTo(target.getPos()), 50).withTerrainZ()
+        this.initPos = pos
+        this.efx = addEffect(efxArt, this.pos)
+        this.duration = initPos.distanceTo2d(targetPos) / speed
+        this.distance = initPos.distanceTo2d(targetPos)
+        this.startTimedLoop()
+        this.gravity = 50
+
+    override function onTimedLoop()
+        forUnitsInRange(pos.toVec2(), 50) (unit u) ->
+            stopTimedLoopAndDestroy()
+        vec3 newPos = this.pos.offset2d(pos.angleTo2d(targetPos), speed * ANIMATION_PERIOD)
+
+        let x = ((initPos.x - pos.x).squared() + (initPos.y - pos.y).squared()) * 0.5
+        let x1 = initPos.distanceTo2d(pos)
+
+        let maxH = ((speed * speed) * (angle.sin() * angle.sin())) / (2 * 100)
+        let travX = ((speed * speed) * (2 * angle.sin())) / (2 * 100)
+        let travT = (2 * speed * angle.sin()) / 100
+
+
+
+        // print(maxH)
+        print(x)
+        //let h = (speed * speed) * (angle.sin() * angle.sin()) / (2 * - 50)
+        //let h = angle.tan() * x - (-50 * (x * x)) / (2 * (speed * speed) * ( angle.cos() *  angle.cos()))
+        // newPos.z = 0.5 * (-200) * (elapse_time * elapse_time) + speed * elapse_time + initPos.z
+       // newPos.z = angle.tan() * x - (50 * (x * x)) / 2 * (speed * speed) * (angle.cos() * angle.cos())
+
+        //print("{0} + {1}".format((speed * elapse_time * angle.sin()).toString(), (0.5 * (-200) * (elapse_time * elapse_time)).toString()))
+        //newPos.z = initPos.z + speed * elapse_time * angle.sin() - 0.5 * (200) * (elapse_time * elapse_time)
+
+        // let x = initPos.distanceTo2d(pos)
+        // let h = 200
+        //newPos.z = 4 * 500 * x * (distance - x) / (distance * distance) + x * (targetPos.z - initPos.z) / distance + initPos.z
+        print(newPos.z)
+        print("\n")
+
+        efx.setPos(newPos)
+        pos = newPos
+        elapse_time += ANIMATION_PERIOD
+
+    ondestroy
+        this.efx.destr()
+
+function feedAnimal(unit caster, unit target)
+    let inventory = caster.getInventory()
+    let meatInv = inventory.filter(elem -> elem.getTypeId() == ITEM_COOKED_MEAT)
+    meatInv.pop()..remove()
+    caster.setFacing(caster.getPos().angleTo(target.getPos()))
+    //caster.setAnimation("Attack - 1")
+    new foodProjectile(caster, target, Abilities.catapultMissile, 300)
+
+
 function onCast(unit caster, unit target)
     // Record the owner of the new unit.
     let owner = caster.getOwner()
 
-    owner.addPet(target)
+    // feedAnimal(caster, target)
 
+    // if petFeedMap.has(target.getTypeId())
+    //     let foodRequired = petFeedMap.get(target.getTypeId())
+
+    //     let inventory = caster.getInventory()
+    //     let meatInv = inventory.filter(elem -> elem.getTypeId() == ITEM_COOKED_MEAT)
+    //     for elem in meatInv
+    //         var stack = elem.getCharges()
+    //         print(elem.getCharges())
+
+    transformUnit(target, UNIT_TAMED_WOLF)
+    owner.addPet(target)
     owner.setTechResearched(UPGD_PET_TAMED_TRUE, 1)
     owner.setTechResearched(UPGD_PET_TAMED_FALSE, 0)
 
     // Set max mana used for growth abilities.
     target.setMaxMana(PET_MAX_MANA)
+
+    // else
+    //     simError(caster.getOwner(), "Cannot pet this target")
+    //     return
 
 
 init

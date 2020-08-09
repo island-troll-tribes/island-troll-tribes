@@ -11,6 +11,9 @@ import LodashExtensions
 // Local imports:
 import LocalObjectIDs
 import Transformation
+import ChatCommands
+import StringExtensions
+import ColorUtils
 
 let emptyChain = new LinkedList<int>()
 
@@ -98,3 +101,13 @@ public function group.enumPets()
 init
     // Register the transformations at runtime.
     registerTransformations(transformations, transformationIDs, true)
+
+    registerCommandAll("cnp") (triggerPlayer, args) ->
+        // 25 characters Max
+        let name = args.get(1).substring(0, 25)
+
+        if triggerPlayer.getPet() != null
+            printTimedToPlayer("You have renamed your pet to ".color(GENERAL_COLOR) + name.color(HIGHLIGHT_COLOR), 5, triggerPlayer)
+            triggerPlayer.getPet().setName(name)
+        else
+            printTimedToPlayer("You do not own any pet".color(COLOR_RED), 5, triggerPlayer)

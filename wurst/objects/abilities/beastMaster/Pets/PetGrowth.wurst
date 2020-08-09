@@ -59,7 +59,6 @@ let PET_UPGDRADE_REMAINING = new HashMap<player, int>()
 let MAX_POINTS_PER_LEVEL = 3
 
 
-// TODO: Use an upgrade system or abilities instead of manual stat adjustment.
 @compiletime function createPetAttackDamageUpgrade() returns UpgradeDefinition
     return new UpgradeDefinition(UPGD_PET_ATTACK_DAMAGE)
         ..addEffectApplyAttackUpgradeBonus()
@@ -67,6 +66,7 @@ let MAX_POINTS_PER_LEVEL = 3
         ..setName(1, "Pets Damage Upgrade")
         ..setClass(UpgradeClass.Melee)
         ..setIcon(1, Icons.bTNStrengthOfTheWild)
+        ..addEffectAbilityLevelBonus(1, 1, ABILITY_PET_DAMAGE.toRawCode())
 
 @compiletime function createPetArmorUpgrade() returns UpgradeDefinition
     return new UpgradeDefinition(UPGD_PET_ARMOR)
@@ -75,9 +75,12 @@ let MAX_POINTS_PER_LEVEL = 3
         ..setName(1, "Pets Armor Upgrade")
         ..setClass(UpgradeClass.Armor)
         ..setIcon(1, Icons.bTNReinforcedHides)
+        ..addEffectAbilityLevelBonus(1, 1, ABILITY_PET_ARMOR.toRawCode())
 
 @compiletime function createPetMagicResistanceUpgrade() returns UpgradeDefinition
     return new UpgradeDefinition(UPGD_PET_MAGIC_RESISTANCE)
+        ..addEffectAbilityLevelBonus(1, 1, ABILITY_PET_MAGIC_RESIST.toRawCode())
+        ..setLevels(10)
 
 @compiletime function createPetHealthUpgrade() returns UpgradeDefinition
     return new UpgradeDefinition(UPGD_PET_HEALTH)
@@ -85,79 +88,66 @@ let MAX_POINTS_PER_LEVEL = 3
         ..setLevels(10)
         ..setName(1, "Pets Health Upgrade")
         ..setIcon(1, Icons.bTNStatUp)
-
-
-// Tracks the amount of armor given to a specific unit.
-// Used to calculate new armor as armor carries over between transformations.
-let PET_ARMOR = new HashMap<unit, int>()
+        ..addEffectAbilityLevelBonus(1, 1, ABILITY_PET_HEALTH.toRawCode())
 
 // Stores the total amount of times a pet upgraded magic resist. Used to reapply stats for new pet.
 let TOTAL_MAGIC_RESIST = new HashMap<player, int>()
 
-@compiletime function createPetLvlUpgrade() returns UpgradeDefinition
-    return new UpgradeDefinition(UPGD_PET_STATS_ALLOWED)
-        ..setName(1, "Upgrade limit reached.")
-
 @compiletime function createPetDamageAbility() returns ChannelAbilityPreset
-    return new ChannelAbilityPreset(ABILITY_PET_DAMAGE, 1, true)
+    return new ChannelAbilityPreset(ABILITY_PET_DAMAGE, 10, true)
         ..setHeroAbility(false)
         ..presetCastRange(lvl -> 99999)
         ..setName("Increase Damage")
         ..setIconNormal(Icons.bTNStrengthOfTheWild)
-        ..setButtonPositionNormalX(0)
-        ..setButtonPositionNormalY(2)
+        ..presetButtonPosNormal(0, 2)
         ..setHotkeyNormal("Z")
         ..presetCooldown(lvl -> 0)
-        ..setManaCost(1, STAT_MANA_COST)
-        ..presetTooltipNormal(lvl -> makeToolTipNorm("Z", DAMAGE_TOOLTIP))
-        ..presetTooltipNormalExtended(lvl -> DAMAGE_TOOLTIP_EXT)
-        ..setRequirementsLevels("1")
+        ..presetManaCost(lvl -> STAT_MANA_COST * lvl)
+        ..presetTooltipNormal(lvl -> makeToolTipNormLevel("Z", DAMAGE_TOOLTIP, lvl))
+        // Attack Bonus can be set in the unit definition allowing more option regarding the variable bonus so this isn't ideal
+        // but will do the job for now
+        ..presetTooltipNormalExtended(lvl -> DAMAGE_TOOLTIP_EXT  + "\n\n" + toolTipCurrentUpgradeData("Damage", ATTACK_INCREASE, lvl, COLOR_GREEN))
 
 @compiletime function createPetArmorAbility() returns ChannelAbilityPreset
-    return new ChannelAbilityPreset(ABILITY_PET_ARMOR, 1, true)
+    return new ChannelAbilityPreset(ABILITY_PET_ARMOR, 10, true)
         ..setHeroAbility(false)
         ..presetCastRange(lvl -> 99999)
         ..setName("Increase Armor")
         ..setIconNormal(Icons.bTNReinforcedHides)
-        ..setButtonPositionNormalX(1)
-        ..setButtonPositionNormalY(2)
+        ..presetButtonPosNormal(1, 2)
         ..setHotkeyNormal("X")
         ..presetCooldown(lvl -> 0)
-        ..setManaCost(1, STAT_MANA_COST)
-        ..presetTooltipNormal(lvl -> makeToolTipNorm("X", ARMOR_TOOLTIP))
-        ..presetTooltipNormalExtended(lvl -> ARMOR_TOOLTIP_EXT)
-        ..setRequirementsLevels("1")
+        ..presetManaCost(lvl -> STAT_MANA_COST * lvl)
+        ..presetTooltipNormal(lvl -> makeToolTipNormLevel("X", ARMOR_TOOLTIP, lvl))
+        // Armor Bonus can be set in the unit definition allowing more option regarding the variable bonus so this isn't ideal
+        // but will do the job for now
+        ..presetTooltipNormalExtended(lvl -> ARMOR_TOOLTIP_EXT  + "\n\n" + toolTipCurrentUpgradeData("Armor", ARMOR_INCREASE, lvl, COLOR_GREEN))
 
 @compiletime function createPetMagicResistAbility() returns ChannelAbilityPreset
-    return new ChannelAbilityPreset(ABILITY_PET_MAGIC_RESIST, 1, true)
+    return new ChannelAbilityPreset(ABILITY_PET_MAGIC_RESIST, 10, true)
         ..setHeroAbility(false)
         ..presetCastRange(lvl -> 99999)
         ..setName("Increase Magic Resistance")
         ..setIconNormal(Icons.bTNThickFur)
-        ..setButtonPositionNormalX(2)
-        ..setButtonPositionNormalY(2)
+        ..presetButtonPosNormal(2, 2)
         ..setHotkeyNormal("C")
         ..presetCooldown(lvl -> 0)
-        ..presetManaCost(lvl -> STAT_MANA_COST)
-        ..presetTooltipNormal(lvl -> makeToolTipNorm("C", MAGIC_RESIST_TOOLTIP))
-        ..presetTooltipNormalExtended(lvl -> MAGIC_RESIST_TOOLTIP_EXT)
-        ..setRequirementsLevels("1")
+        ..presetManaCost(lvl -> STAT_MANA_COST * lvl)
+        ..presetTooltipNormal(lvl -> makeToolTipNormLevel("C", MAGIC_RESIST_TOOLTIP, lvl))
+        ..presetTooltipNormalExtended(lvl -> MAGIC_RESIST_TOOLTIP_EXT  + "\n\n" + toolTipCurrentUpgradeData("Magic Resistance", MAGIC_RESIST_INCREASE, lvl, COLOR_GREEN))
 
 @compiletime function createPetHealthAbility() returns ChannelAbilityPreset
-    return new ChannelAbilityPreset(ABILITY_PET_HEALTH, 1, true)
+    return new ChannelAbilityPreset(ABILITY_PET_HEALTH, 10, true)
         ..setHeroAbility(false)
         ..presetCastRange(lvl -> 99999)
         ..setName("Increase Health")
         ..setIconNormal(Icons.bTNStatUp)
-        ..setButtonPositionNormalX(3)
-        ..setButtonPositionNormalY(2)
-        ..setHotkeyNormal("V")
+        ..presetButtonPosNormal(3, 2)
+        ..presetHotkey("V")
         ..presetCooldown(lvl -> 0)
-        ..presetManaCost(lvl -> STAT_MANA_COST)
-        ..presetTooltipNormal(lvl -> makeToolTipNorm("V", HEALTH_TOOLTIP))
-        ..presetTooltipNormalExtended(lvl -> HEALTH_TOOLTIP_EXT)
-        ..setRequirementsLevels("1")
-
+        ..presetManaCost(lvl -> STAT_MANA_COST * lvl)
+        ..presetTooltipNormal(lvl -> makeToolTipNormLevel("V", HEALTH_TOOLTIP, lvl))
+        ..presetTooltipNormalExtended(lvl -> HEALTH_TOOLTIP_EXT + "\n\n" + toolTipCurrentUpgradeData("Health", HEALTH_INCREASE, lvl, COLOR_GREEN))
 
 @compiletime function createPetGrowthAbility() returns ChannelAbilityPreset
     return new ChannelAbilityPreset(ABILITY_GROW_PET, 1, true)
@@ -173,8 +163,6 @@ let TOTAL_MAGIC_RESIST = new HashMap<player, int>()
         ..setTooltipNormalExtended(1, GROWTH_TOOLTIP_EXT)
 
 function growPet(unit pet)
-    // Update true value for pet's mana.
-    updatePetMana(pet, -GROWTH_MANACOST.toReal())
 
     // Look up the growth chain for the pet.
     let chain = pet.getPetGrowthChain()
@@ -186,21 +174,7 @@ function growPet(unit pet)
     transformUnit(pet, next)
 
 init
-    // EventListener.onCast(ABILITY_PET_DAMAGE       , (unit caster) -> increaseDamage(caster))
-    // EventListener.onCast(ABILITY_PET_ARMOR        , (unit caster) -> increaseArmor(caster))
-    // EventListener.onCast(ABILITY_PET_MAGIC_RESIST , (unit caster) -> increasePetMagicResist(caster))
     // EventListener.onCast(ABILITY_GROW_PET         , (unit caster) -> growPet(caster))
 
     // EventListener.onCast(ABILITY_PET_RELEASE             , (unit caster) -> resetStats(EventData.getTriggerPlayer()))
     // EventListener.onCast(ABILITY_PET_RELEASE_SHAPESHIFTER, (unit caster) -> resetStats(EventData.getTriggerPlayer()))
-
-    // EventListener.add(EVENT_PLAYER_HERO_LEVEL) ->
-    //     resetPetLevelCounter(EventData.getTriggerUnit().getOwner())
-
-    // EventListener.onCast(ABILITY_PET_TAME) (unit caster) ->
-    //     enableAbilities(caster)
-    //     reapplyStats(caster.getOwner(), EventData.getSpellTargetUnit())
-
-    // EventListener.onCast(ABILITY_PET_TAME_SHAPESHIFTER) (unit caster) ->
-    //     enableAbilities(caster)
-    //     reapplyStats(caster.getOwner(), EventData.getSpellTargetUnit())

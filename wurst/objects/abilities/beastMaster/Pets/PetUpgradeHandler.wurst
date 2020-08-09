@@ -7,6 +7,7 @@ import ClosureEvents
 import HashMap
 import LinkedList
 import UpgradeObjEditing
+import Ability
 
 // Local imports:
 import LocalAssets
@@ -28,16 +29,24 @@ class PetUpgradeHandler
     player petOwner
     unit pet
     unit caster
+    real initialScale
+    real currentScale
 
     construct(unit caster, unit pet)
         this.petOwner = caster.getOwner()
         this.pet = pet
+        this.initialScale = BlzGetUnitRealField(pet, UNIT_RF_SCALING_VALUE)
         EventListener.add(pet, EVENT_PLAYER_UNIT_SPELL_CAST, () -> upgradePet())
 
     function release()
+        petOwner.setTechResearched(UPGD_PET_ATTACK_DAMAGE, 0)
+        petOwner.setTechResearched(UPGD_PET_ARMOR, 0)
+        petOwner.setTechResearched(UPGD_PET_MAGIC_RESISTANCE, 0)
+        petOwner.setTechResearched(UPGD_PET_HEALTH, 0)
         destroy this
 
     function upgradePet()
+        let abil = EventData.getSpellAbility()
         let abilId = EventData.getSpellAbilityId()
 
         switch abilId
@@ -47,8 +56,14 @@ class PetUpgradeHandler
                 petOwner.addTechResearched(UPGD_PET_ARMOR, 1)
             case ABILITY_PET_MAGIC_RESIST
                 petOwner.addTechResearched(UPGD_PET_MAGIC_RESISTANCE, 1)
+                pet.setMagicResist(petOwner.getTechCount(UPGD_PET_MAGIC_RESISTANCE, false))
             case ABILITY_PET_HEALTH
+                // Increase scale by 5% for every upgrade, durr durr big bear
+                pet.setScale(initialScale + initialScale * 0.05 * petOwner.getTechCount(UPGD_PET_HEALTH, false))
                 petOwner.addTechResearched(UPGD_PET_HEALTH, 1)
+
+        if pet.getAbilityLevel(abilId) > BlzGetAbilityIntegerField(abil, ABILITY_IF_LEVELS)
+            pet.disableAbility(abilId, false, false)
 
     ondestroy
         Pets.remove(pet)

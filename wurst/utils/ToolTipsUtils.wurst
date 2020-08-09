@@ -16,7 +16,7 @@ function real.formatForTooltip() returns string
     else
         return this.toInt().toString()
 
-public function makeToolTipNormHero(string hotkey, string tooltip, int level) returns string
+public function makeToolTipNormLevel(string hotkey, string tooltip, int level) returns string
     return asList(
         "[".color(GENERAL_COLOR),
         hotkey.color(SPECIAL_COLOR),
@@ -36,7 +36,7 @@ public function makeToolTipNormAura(string tooltip) returns string
 public function makeToolTipLearn(string tooltip) returns string
     return ("Learn " + tooltip + " Level %d").color(GENERAL_COLOR)
 
-public function makeToolTipNormHeroAura(string tooltip, int level) returns string
+public function makeToolTipNormLevelAura(string tooltip, int level) returns string
     return (tooltip + " - Level " + level.toString()).color(GENERAL_COLOR)
 
 public function makeToolTipCooldown(real COOLDOWN) returns string
@@ -110,3 +110,9 @@ public function formatDuration(int abilId) returns string
 **/
 public function getAbilityDataField(int abilId, string dataField) returns string
     return "<{0},{1}>".format(abilId.toRawCode(), dataField)
+
+public function toolTipCurrentUpgradeData(string dataName, int data, int lvl, color color) returns string
+    return "Current {0} bonus : {1}".format(dataName, (data * (lvl - 1)).toString()).color(color)
+
+public function toolTipCurrentUpgradeData(string dataName, real data, int lvl, color color) returns string
+    return "Current {0} bonus : {1}".format(dataName, (data * (lvl - 1)).formatForTooltip()).color(color)

@@ -168,15 +168,19 @@ function onTame(unit caster, unit target)
     //         var stack = elem.getCharges()
     //         print(elem.getCharges())
 
-    transformUnit(target, UNIT_TAMED_WOLF)
+    // Look up the growth chain for the pet.
+    let chain = target.getPetGrowthChain()
+
+    // Look up the next unit along the chain.
+    let next = chain.get(chain.indexOf(target.getTypeId()) + 1)
+
+    transformUnit(target, next)
 
     owner.addPet(target)
     petUpgradeHandlerInstance.put(target, new PetUpgradeHandler(caster, target))
 
     owner.setTechResearched(UPGD_PET_TAMED_TRUE, 1)
     owner.setTechResearched(UPGD_PET_TAMED_FALSE, 0)
-    // Set max mana used for growth abilities.
-    // target.setMaxMana(PET_MAX_MANA)
 
     // else
     //     simError(caster.getOwner(), "Cannot pet this target")

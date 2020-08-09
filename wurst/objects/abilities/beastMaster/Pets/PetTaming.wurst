@@ -22,6 +22,7 @@ import HashMap
 import SimError
 import UnitExtensions
 import Transformation
+import PetUpgradeHandler
 
 let PET_MAX_MANA = 6
 
@@ -152,7 +153,7 @@ function feedAnimal(unit caster, unit target)
     new foodProjectile(caster, target, Abilities.catapultMissile, 300)
 
 
-function onCast(unit caster, unit target)
+function onTame(unit caster, unit target)
     // Record the owner of the new unit.
     let owner = caster.getOwner()
 
@@ -168,10 +169,12 @@ function onCast(unit caster, unit target)
     //         print(elem.getCharges())
 
     transformUnit(target, UNIT_TAMED_WOLF)
+
     owner.addPet(target)
+    petUpgradeHandlerInstance.put(target, new PetUpgradeHandler(caster, target))
+
     owner.setTechResearched(UPGD_PET_TAMED_TRUE, 1)
     owner.setTechResearched(UPGD_PET_TAMED_FALSE, 0)
-
     // Set max mana used for growth abilities.
     // target.setMaxMana(PET_MAX_MANA)
 
@@ -182,6 +185,6 @@ function onCast(unit caster, unit target)
 
 init
     EventListener.onTargetCast(ABILITY_PET_TAME) (unit caster, unit target) ->
-        onCast(caster, target)
+        onTame(caster, target)
     EventListener.onTargetCast(ABILITY_PET_TAME_SHAPESHIFTER) (unit caster, unit target) ->
-        onCast(caster, target)
+        onTame(caster, target)

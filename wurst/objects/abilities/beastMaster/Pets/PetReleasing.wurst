@@ -5,6 +5,7 @@ import ClosureEvents
 import ChannelAbilityPreset
 import ClosureTimers
 import LinkedList
+import Texttag
 
 // Local imports:
 import ColorUtils
@@ -17,11 +18,14 @@ import ToolTipsUtils
 import PlayerExtensions
 import GeometryUtils
 import OrderIds
+import PetUpgradeHandler
 
 let RELEASE_WANDER_DISTANCE = 2000.
 let TRANSPARENCY_NUM_LOOPS = 51
 let TRANSPARENCY_PER_LOOP = 5
 let LOOP_FREQUENCY = .1
+
+let releaseTextList = asList("Farewell", "Godspeed", "May we meet again", "Live freely", "Adieu")
 
 function createReleasePetAbility(int newAbilId) returns ChannelAbilityPreset
     return new ChannelAbilityPreset(newAbilId, 1, true)
@@ -77,18 +81,33 @@ public function releasePet(unit caster)
     // Move the pet to a random point away from it.
     pet.issuePointOrderById(OrderIds.smart, pet.getPos().polarOffset(randomAngle(), RELEASE_WANDER_DISTANCE))
 
+    // Texttag
+    releaseTextList.shuffle()
+    let text = "{0} {1}!".format(releaseTextList.getFirst(), pet.getName())
+    if localPlayer.canSee(caster)
+        CreateTextTag()
+            ..setText(text, 10)
+            ..setPos(caster.getPos3Real())
+            ..setColor(colorA(0, 197, 255, 255))
+            ..setVelocity(0., 0.04)
+            ..setVisibility(true)
+            ..setFadepoint(2.0)
+            ..setLifespan(5.0)
+            ..setPermanent(false)
+
     // Notify the owning tribe.
     let tribe = Tribe.ofPlayer(originalOwner)
     if tribe != null
         tribe.getMembers().forEach() (player member) ->
-            member.print("A pet was released!".color(GENERAL_COLOR))
+            member.print(pet.getName().color(HIGHLIGHT_COLOR) + " has been released into the wild...".color(GENERAL_COLOR))
+
+function onRelease(unit caster)
+    let originalOwner = caster.getOwner()
+    let pet = originalOwner.getPet()
+
+    petUpgradeHandlerInstance.get(pet).resetUpgrades()
+    releasePet(caster)
 
 init
-    EventListener.onCast(ABILITY_PET_RELEASE) (unit caster) ->
-        // Delay relasing pet so that bonus stats can be removed. See PetGrowth.wurst.
-        nullTimer() ->
-            releasePet(caster)
-    EventListener.onCast(ABILITY_PET_RELEASE_SHAPESHIFTER) (unit caster) ->
-        // Delay relasing pet so that bonus stats can be removed. See PetGrowth.wurst.
-        nullTimer() ->
-            releasePet(caster)
+    EventListener.onCast(ABILITY_PET_RELEASE, (unit caster) -> onRelease(caster))
+    EventListener.onCast(ABILITY_PET_RELEASE_SHAPESHIFTER, (unit caster) -> onRelease(caster))

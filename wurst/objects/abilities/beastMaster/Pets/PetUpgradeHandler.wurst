@@ -23,9 +23,9 @@ import StringExtensions
 import UnitExtensions
 
 
-let Pets = new HashMap<unit, PetUpgradeHandler>()
+public let petUpgradeHandlerInstance = new HashMap<unit, PetUpgradeHandler>()
 
-class PetUpgradeHandler
+public class PetUpgradeHandler
     player petOwner
     unit pet
     unit caster
@@ -38,7 +38,7 @@ class PetUpgradeHandler
         this.initialScale = BlzGetUnitRealField(pet, UNIT_RF_SCALING_VALUE)
         EventListener.add(pet, EVENT_PLAYER_UNIT_SPELL_CAST, () -> upgradePet())
 
-    function release()
+    function resetUpgrades()
         petOwner.setTechResearched(UPGD_PET_ATTACK_DAMAGE, 0)
         petOwner.setTechResearched(UPGD_PET_ARMOR, 0)
         petOwner.setTechResearched(UPGD_PET_MAGIC_RESISTANCE, 0)
@@ -66,9 +66,4 @@ class PetUpgradeHandler
             pet.disableAbility(abilId, false, false)
 
     ondestroy
-        Pets.remove(pet)
-
-
-init
-    EventListener.onTargetCast(ABILITY_PET_TAME, (unit caster, unit target) -> Pets.put(target, new PetUpgradeHandler(caster, target)))
-    EventListener.onCast(ABILITY_PET_RELEASE, (unit caster) -> Pets.get(caster).release())
+        petUpgradeHandlerInstance.remove(pet)

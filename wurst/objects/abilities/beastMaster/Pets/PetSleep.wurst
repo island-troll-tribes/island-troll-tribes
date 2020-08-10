@@ -15,33 +15,44 @@ import ToolTipsUtils
 
 // The ID for the ability used to put a pet to sleep.
 public let SLEEP_ID = compiletime(ABIL_ID_GEN.next())
+public let HEAL_ID  = compiletime(ABIL_ID_GEN.next())
 
 // The amount the pet is healed for when sleeping.
-let HEALING_AMOUNT = 60.
+let HEALING_AMOUNT = 90.
 
-let COOLDOWN = 20.
+let COOLDOWN = 25.
 let SLEEP_DURATION = 10.
 
-let ABIL_TT = "Your pet goes to sleep, recovering {0} health point.".format(HEALING_AMOUNT.toToolTipGreen())
-              + makeToolTipDuration(SLEEP_DURATION, COOLDOWN)
+let ABIL_TT = "Your pet goes to sleep, recovering {0} health point over {1} seconds.".format(
+              HEALING_AMOUNT.toToolTipGreen(), SLEEP_DURATION.toToolTipLightBlue())
+              + makeToolTipCooldown(COOLDOWN)
 
-@compiletime function createSleepSpell()
-    createObjectDefinition("w3a", SLEEP_ID, 'AUsl')
-        ..setLvlDataString("aart", 0, 0, Icons.bTNElunesBlessing)
-        ..setLvlDataInt("abpx", 0, 0, 3)
-        ..setLvlDataUnreal("acdn", 1, 0, COOLDOWN)
-        ..setLvlDataInt("amcs", 1, 0, 0)
-        ..setLvlDataUnreal("Usl1", 1, 1, 1.0)
-        ..setLvlDataUnreal("adur", 1, 0, SLEEP_DURATION)
-        ..setLvlDataString("ansf", 0, 0, "(pet, self)")
-        ..setLvlDataUnreal("ahdu", 1, 0, SLEEP_DURATION)
-        ..setLvlDataString("ahky", 0, 0, "")
-        ..setLvlDataInt("alev", 0, 0, 1)
-        ..setLvlDataInt("arlv", 0, 0, 2)
-        ..setLvlDataUnreal("aran", 1, 0, 99999.0)
-        ..setLvlDataString("atar", 1, 0, "ground,nonhero")
 
-function createPetSleepSpell(int newAbilId) returns ChannelAbilityPreset
+@compiletime function createPetSleepSpell() returns AbilityDefinitionSleepcreep
+    return new AbilityDefinitionSleepcreep(SLEEP_ID)
+        ..setDummyAbility()
+        ..setIconNormal(Icons.bTNElunesBlessing)
+        ..setDurationHero(1, SLEEP_DURATION)
+        ..setDurationNormal(1, SLEEP_DURATION)
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.nonhero
+            ))
+        ..setLevels(1)
+        ..setName("Pet Sleep")
+        ..setEditorSuffix("(Wurst)")
+        ..setStunDuration(1, 1)
+
+@compiletime function createPetSleepHealingAbility() returns AbilityDefinitionPotionofLifeRegen
+    return new AbilityDefinitionPotionofLifeRegen(HEAL_ID)
+        ..setDummyAbility()
+        ..setLifeRegenerated(1, HEALING_AMOUNT)
+        ..setDurationHero(1, SLEEP_DURATION)
+        ..setDurationNormal(1, SLEEP_DURATION)
+        ..setItemAbility(false)
+        ..setArtCaster("")
+        ..setName("Pet Healing")
+
+function createPetDummySleepSpell(int newAbilId) returns ChannelAbilityPreset
     return new ChannelAbilityPreset(newAbilId, 1, true)
         ..setAnimationNames("")
         ..setIconNormal(Icons.bTNElunesBlessing)
@@ -53,14 +64,14 @@ function createPetSleepSpell(int newAbilId) returns ChannelAbilityPreset
         ..setEditorSuffix("(Wurst)")
 
 @compiletime function createBasePetSleepSpell() returns ChannelAbilityPreset
-    return createPetSleepSpell(ABILITY_PET_SLEEP)
+    return createPetDummySleepSpell(ABILITY_PET_SLEEP)
     ..setButtonPositionNormalX(2)
     ..setButtonPositionNormalY(0)
     ..setHotkeyNormal("E")
     ..setTooltipNormal(1, makeToolTipNorm("E", "Sleep"))
 
 @compiletime function createShapeShifterPetSleepSpell() returns ChannelAbilityPreset
-    return createPetSleepSpell(ABILITY_PET_SLEEP_SHAPESHIFTER)
+    return createPetDummySleepSpell(ABILITY_PET_SLEEP_SHAPESHIFTER)
     ..setButtonPositionNormalX(2)
     ..setButtonPositionNormalY(1)
     ..setHotkeyNormal("D")
@@ -72,7 +83,7 @@ function onCast(unit caster)
 
     // Verify that the player has a pet, which should be guaranteed.
     if pet == null
-        simError(caster.getOwner(), "You do not have pet.")
+        simError(caster.getOwner(), "You do not own any pet.")
     // Perform the actions associated with a sleeping pet.
     else
         // Put the pet to sleep.
@@ -85,9 +96,16 @@ function onCast(unit caster)
         )
 
         // Heal the pet.
-        // TODO : Maybe do a periodic healing instead of an instant one?
-        // It kinda makes more sense since the sleep last 10 seconds
-        pet.addHP(HEALING_AMOUNT)
+        // I couldn't find the order Id for healing salve, so I looked it up on
+        // https://www.hiveworkshop.com/threads/how-to-make-unit-cast-healing-salve-through-triggers.213477/#post-2118173
+        InstantDummyCaster.castTarget(
+            pet.getOwner(),
+            HEAL_ID,
+            1,
+            852609,
+            pet
+        )
+
 
 init
     EventListener.onCast(ABILITY_PET_SLEEP) (unit caster) ->

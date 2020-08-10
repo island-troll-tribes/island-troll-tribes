@@ -31,6 +31,7 @@ public class PetUpgradeHandler
     unit caster
     real initialScale
     real currentScale
+    int upgdCount
 
     construct(unit caster, unit pet)
         this.petOwner = caster.getOwner()
@@ -43,27 +44,46 @@ public class PetUpgradeHandler
         petOwner.setTechResearched(UPGD_PET_ARMOR, 0)
         petOwner.setTechResearched(UPGD_PET_MAGIC_RESISTANCE, 0)
         petOwner.setTechResearched(UPGD_PET_HEALTH, 0)
-        destroy this
+        petOwner.setTechResearched(UPGD_PET_INVENTORY, 0)
+        petOwner.setTechResearched(UPGD_PET_LIFE_STEAL, 0)
+        petOwner.setTechResearched(UPGD_PET_BASH, 0)
 
     function upgradePet()
         let abil = EventData.getSpellAbility()
         let abilId = EventData.getSpellAbilityId()
 
         switch abilId
-            case ABILITY_PET_DAMAGE
+            // Stats Upgrades
+            case ABILITY_PET_DAMAGE_UPGD
                 petOwner.addTechResearched(UPGD_PET_ATTACK_DAMAGE, 1)
-            case ABILITY_PET_ARMOR
+            case ABILITY_PET_ARMOR_UPGD
                 petOwner.addTechResearched(UPGD_PET_ARMOR, 1)
-            case ABILITY_PET_MAGIC_RESIST
+            case ABILITY_PET_MAGIC_RESIST_UPGD
                 petOwner.addTechResearched(UPGD_PET_MAGIC_RESISTANCE, 1)
                 pet.setMagicResist(petOwner.getTechCount(UPGD_PET_MAGIC_RESISTANCE, false))
-            case ABILITY_PET_HEALTH
+            case ABILITY_PET_HEALTH_UPGD
                 // Increase scale by 5% for every upgrade, durr durr big bear
                 pet.setScale(initialScale + initialScale * 0.05 * petOwner.getTechCount(UPGD_PET_HEALTH, false))
                 petOwner.addTechResearched(UPGD_PET_HEALTH, 1)
 
+            // Abilities Upgrades
+            case ABILITY_PET_INVENTORY_UPGD
+                petOwner.addTechResearched(UPGD_PET_INVENTORY, 1)
+                pet.setAbilityLevel(ABILITY_PET_INVENTORY, petOwner.getTechCount(UPGD_PET_INVENTORY, false))
+            case ABILITY_PET_LIFE_STEAL_UPGD
+                petOwner.addTechResearched(UPGD_PET_LIFE_STEAL, 1)
+                pet.setAbilityLevel(ABILITY_PET_LIFE_STEAL, petOwner.getTechCount(UPGD_PET_LIFE_STEAL, false))
+            case ABILITY_PET_BASH_UPGD
+                petOwner.addTechResearched(UPGD_PET_BASH, 1)
+                pet.setAbilityLevel(ABILITY_PET_BASH, petOwner.getTechCount(UPGD_PET_BASH, false))
+
+        // Disable upgrade ability once it reach max level
         if pet.getAbilityLevel(abilId) > BlzGetAbilityIntegerField(abil, ABILITY_IF_LEVELS)
             pet.disableAbility(abilId, false, false)
+
+    function onRelease()
+        this.resetUpgrades()
+        destroy this
 
     ondestroy
         petUpgradeHandlerInstance.remove(pet)

@@ -12,7 +12,7 @@ function real.formatForTooltip() returns string
     if this > 1 and this - this.toInt() != 0
         return this.toString()
     else if this < 1 and this > 0
-        return R2I(this * 100).toString()+"%"
+        return R2I(this * 100).toString().substring(0, 4) + "%"
     else
         return this.toInt().toString()
 
@@ -21,6 +21,13 @@ public function makeToolTipNormLevel(string hotkey, string tooltip, int level) r
         "[".color(GENERAL_COLOR),
         hotkey.color(SPECIAL_COLOR),
         ("] - " + tooltip + " - Level " + level.toString()).color(GENERAL_COLOR)
+    ).join()
+
+public function makeToolTipNormUpgradeLevel(string hotkey, string tooltip, int level) returns string
+    return asList(
+        "[".color(GENERAL_COLOR),
+        hotkey.color(SPECIAL_COLOR),
+        ("] - " + tooltip + " - Upgrade to Level " + level.toString()).color(GENERAL_COLOR)
     ).join()
 
 public function makeToolTipNorm(string hotkey, string tooltip) returns string
@@ -112,7 +119,15 @@ public function getAbilityDataField(int abilId, string dataField) returns string
     return "<{0},{1}>".format(abilId.toRawCode(), dataField)
 
 public function toolTipCurrentUpgradeData(string dataName, int data, int lvl, color color) returns string
-    return "Current {0} bonus : {1}".format(dataName, (data * (lvl - 1)).toString()).color(color)
+    return "Current {0} bonus : ".format(dataName) + "{0}".format((data * (lvl - 1)).toString()).color(color)
 
-public function toolTipCurrentUpgradeData(string dataName, real data, int lvl, color color) returns string
-    return "Current {0} bonus : {1}".format(dataName, (data * (lvl - 1)).formatForTooltip()).color(color)
+/**
+    A method to compute current upgrade bonus, set percent to true to return an percent value out of data
+**/
+public function toolTipCurrentUpgradeData(string dataName, real data, int lvl, color color, boolean percent) returns string
+    var computedData = data * (lvl - 1) < 0 ? 0 : data * (lvl - 1)
+    computedData = (computedData * 1000).round().toReal() / 1000
+    return "Current {0} bonus : ".format(dataName)
+            + "{0}".format((percent ? computedData.formatForTooltip().color(color)
+                                    : computedData.toString()).color(color)
+                            )

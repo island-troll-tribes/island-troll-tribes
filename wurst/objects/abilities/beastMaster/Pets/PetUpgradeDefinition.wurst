@@ -3,20 +3,15 @@ package PetUpgradeDefinition
 // Standard library imports:
 import Assets
 import ChannelAbilityPreset
-import ClosureEvents
-import HashMap
 import LinkedList
 import UpgradeObjEditing
 
 // Local imports:
 import LocalAssets
 import LocalObjectIDs
-import MagicResistance
 import Pets
 import ToolTipsUtils
 import Transformation
-import PlayerExtensions
-import PetMana
 import ColorUtils
 import StringExtensions
 
@@ -53,11 +48,11 @@ let INVENTORY_UPGD_TOOLTIP_EXT = "Increase your pet's inventory by {0}, pet beco
 let INVENTORY_TOOLTIP_EXT = "Allows this unit to carry up to {0} items. Items cannot be used from this unit's inventory."
 
 let LIFE_STEAL_TOOLTIP = "Life Steal"
-let LIFE_STEAL_UPGD_TOOLTIP_EXT = "Increase your pet's life steal by {0}.".format(LIFE_STEAL_INCREASE.toToolTipRed().color(COLOR_ORANGE))
+let LIFE_STEAL_UPGD_TOOLTIP_EXT = "Increase your pet's life steal by {0} starting level 2.".format(LIFE_STEAL_INCREASE.toToolTipRed().color(COLOR_ORANGE))
 let LIFE_STEAL_TOOLTIP_EXT = "This unit recover {0} of their attack damage when it hit enemy units."
 
 let BASH_TOOLTIP = "Bash"
-let BASH_UPGD_TOOLTIP_EXT = "Increase your pet's bash duration by {0} seconds.".format(BASH_DURATION_INCREASE.toString().color(COLOR_ORANGE))
+let BASH_UPGD_TOOLTIP_EXT = "Increase your pet's bash duration by {0} seconds starting level 2.".format(BASH_DURATION_INCREASE.toString().color(COLOR_ORANGE))
 let BASH_TOOLTIP_EXT = "This unit stun the target for {0} seconds on every attack."
 
 // Variables used to grow pet to next stage of life.
@@ -92,7 +87,7 @@ let GROWTH_ICON = LocalIcons.bTNAdvanceLife
         ..addEffectAbilityLevelBonus(1, 1, ABILITY_PET_MAGIC_RESIST_UPGD.toRawCode())
         ..setName(1, "Pets Magic Resistance")
         ..setIcon(1, Icons.bTNThickFur)
-        ..setLevels(10)
+        ..setLevels(5)
 
 @compiletime function createPetHealthUpgrade() returns UpgradeDefinition
     return new UpgradeDefinition(UPGD_PET_HEALTH)
@@ -142,7 +137,10 @@ function createUpgradeAbility(int abilId, int lvls) returns ChannelAbilityPreset
         ..presetTooltipNormal(lvl -> makeToolTipNormUpgradeLevel("Z", DAMAGE_TOOLTIP, lvl))
         // Attack Bonus can be set in the unit definition allowing more option regarding the variable bonus so this isn't ideal
         // but will do the job for now
-        ..presetTooltipNormalExtended(lvl -> DAMAGE_UPGD_TOOLTIP_EXT  + "\n\n" + toolTipCurrentUpgradeData("Damage", ATTACK_INCREASE, lvl, COLOR_RED))
+        ..presetTooltipNormalExtended(lvl -> DAMAGE_UPGD_TOOLTIP_EXT  + "\n\n"
+                                     + toolTipUpgradeData("Current Damage Bonus", ATTACK_INCREASE, lvl, COLOR_RED) + "\n"
+                                     + toolTipUpgradeData("Max Damage Bonus", ATTACK_INCREASE, 11, COLOR_RED)
+                                     )
 
 @compiletime function createPetArmorAbilityUpgrade() returns ChannelAbilityPreset
     return createUpgradeAbility(ABILITY_PET_ARMOR_UPGD, 10)
@@ -154,10 +152,13 @@ function createUpgradeAbility(int abilId, int lvls) returns ChannelAbilityPreset
         ..presetTooltipNormal(lvl -> makeToolTipNormUpgradeLevel("X", ARMOR_TOOLTIP, lvl))
         // Armor Bonus can be set in the unit definition allowing more option regarding the variable bonus so this isn't ideal
         // but will do the job for now
-        ..presetTooltipNormalExtended(lvl -> ARMOR_UPGD_TOOLTIP_EXT  + "\n\n" + toolTipCurrentUpgradeData("Armor", ARMOR_INCREASE, lvl, COLOR_GREEN))
+        ..presetTooltipNormalExtended(lvl -> ARMOR_UPGD_TOOLTIP_EXT  + "\n\n"
+                                     + toolTipUpgradeData("Current Armor Bonus", ARMOR_INCREASE, lvl, COLOR_GREEN) + "\n"
+                                     + toolTipUpgradeData("Max Armor Bonus", ARMOR_INCREASE, 11, COLOR_GREEN)
+                                     )
 
 @compiletime function createPetMagicResistAbilityUpgrade() returns ChannelAbilityPreset
-    return createUpgradeAbility(ABILITY_PET_MAGIC_RESIST_UPGD, 10)
+    return createUpgradeAbility(ABILITY_PET_MAGIC_RESIST_UPGD, 5)
         ..setName("Increase Magic Resistance")
         ..setIconNormal(Icons.bTNThickFur)
         ..presetButtonPosNormal(2, 2)
@@ -165,7 +166,9 @@ function createUpgradeAbility(int abilId, int lvls) returns ChannelAbilityPreset
         ..presetManaCost(lvl -> STAT_MANA_COST * lvl)
         ..presetTooltipNormal(lvl -> makeToolTipNormUpgradeLevel("C", MAGIC_RESIST_TOOLTIP, lvl))
         ..presetTooltipNormalExtended(lvl -> MAGIC_RESIST_UPGD_TOOLTIP_EXT  + "\n\n"
-                                             + toolTipCurrentUpgradeData("Magic Resistance", MAGIC_RESIST_INCREASE, lvl, COLOR_TURQUOISE, true))
+                                     + toolTipUpgradeData("Current Magic Resistance Bonus", MAGIC_RESIST_INCREASE, lvl, COLOR_TURQUOISE, true) + "\n"
+                                     + toolTipUpgradeData("Max Magic Resistance Bonus", MAGIC_RESIST_INCREASE, 6, COLOR_TURQUOISE, true)
+                                     )
 
 @compiletime function createPetHealthAbilityUpgrade() returns ChannelAbilityPreset
     return createUpgradeAbility(ABILITY_PET_HEALTH_UPGD, 10)
@@ -175,7 +178,10 @@ function createUpgradeAbility(int abilId, int lvls) returns ChannelAbilityPreset
         ..presetHotkey("V")
         ..presetManaCost(lvl -> STAT_MANA_COST * lvl)
         ..presetTooltipNormal(lvl -> makeToolTipNormUpgradeLevel("V", HEALTH_TOOLTIP, lvl))
-        ..presetTooltipNormalExtended(lvl -> HEALTH_UPGD_TOOLTIP_EXT + "\n\n" + toolTipCurrentUpgradeData("Health", HEALTH_INCREASE, lvl, COLOR_GREEN))
+        ..presetTooltipNormalExtended(lvl -> HEALTH_UPGD_TOOLTIP_EXT + "\n\n"
+                                     + toolTipUpgradeData("Current Health Bonus", HEALTH_INCREASE, lvl, COLOR_GREEN) + "\n"
+                                     + toolTipUpgradeData("Max Health Bonus", HEALTH_INCREASE, 11, COLOR_GREEN)
+                                     )
 
 @compiletime function createPetInventoryAbilityUpgrade() returns ChannelAbilityPreset
     return createUpgradeAbility(ABILITY_PET_INVENTORY_UPGD, 6)
@@ -183,9 +189,12 @@ function createUpgradeAbility(int abilId, int lvls) returns ChannelAbilityPreset
         ..setIconNormal(Icons.bTNPackBeast)
         ..presetButtonPosNormal(3, 1)
         ..presetHotkey("V")
-        ..presetManaCost(lvl -> STAT_MANA_COST * lvl)
+        ..presetManaCost(lvl -> 4 * lvl)
         ..presetTooltipNormal(lvl -> makeToolTipNormUpgradeLevel("V", INVENTORY_TOOLTIP, lvl))
-        ..presetTooltipNormalExtended(lvl -> INVENTORY_UPGD_TOOLTIP_EXT + "\n\n" + toolTipCurrentUpgradeData("Inventory", 1, lvl, COLOR_GREEN))
+        ..presetTooltipNormalExtended(lvl -> INVENTORY_UPGD_TOOLTIP_EXT + "\n\n"
+                                     + toolTipUpgradeData("Current Inventory Bonus", 1, lvl, COLOR_GREEN) + "\n"
+                                     + toolTipUpgradeData("Max Inventory Bonus", 1, 7, COLOR_GREEN)
+                                     )
 
 @compiletime function createPetLifeStealAbilityUpgrade() returns ChannelAbilityPreset
     return createUpgradeAbility(ABILITY_PET_LIFE_STEAL_UPGD, 11)
@@ -193,11 +202,13 @@ function createUpgradeAbility(int abilId, int lvls) returns ChannelAbilityPreset
         ..setIconNormal(Icons.bTNVampiricAura)
         ..presetButtonPosNormal(3, 1)
         ..presetHotkey("V")
-        ..presetManaCost(lvl -> STAT_MANA_COST * lvl)
+        ..presetManaCost(lvl -> 3 * lvl)
         ..presetTooltipNormal(lvl -> makeToolTipNormUpgradeLevel("V", LIFE_STEAL_TOOLTIP, lvl))
         // At lvl 1, this ability is used to unlock the life steal ability, therefore it gives 0 bonus at lvl 1,
-        // passing "lvl - 1" as parameter to get 0 as return
-        ..presetTooltipNormalExtended(lvl -> LIFE_STEAL_UPGD_TOOLTIP_EXT + "\n\n" + toolTipCurrentUpgradeData("LifeSteal", LIFE_STEAL_INCREASE, lvl - 1, COLOR_RED, true))
+        ..presetTooltipNormalExtended(lvl -> LIFE_STEAL_UPGD_TOOLTIP_EXT + "\n\n"
+                                     + (lvl == 1 ? "" : toolTipUpgradeData("Current LifeSteal Bonus", LIFE_STEAL_INCREASE, lvl - 1, COLOR_RED, true) + "\n")
+                                     + toolTipUpgradeData("Max LifeSteal Bonus", LIFE_STEAL_INCREASE, 11, COLOR_RED, true)
+                                     )
 
 @compiletime function createPetBashAbilityUpgrade() returns ChannelAbilityPreset
     return createUpgradeAbility(ABILITY_PET_BASH_UPGD, 11)
@@ -205,18 +216,19 @@ function createUpgradeAbility(int abilId, int lvls) returns ChannelAbilityPreset
         ..setIconNormal(Icons.bTNBash)
         ..presetButtonPosNormal(3, 1)
         ..presetHotkey("V")
-        ..presetManaCost(lvl -> STAT_MANA_COST * lvl)
-        // At lvl 1, this ability is used to unlock the bash ability, therefore it gives 0 bonus at lvl 1,,
-        // passing "lvl - 1" as parameter to get 0 as return
+        ..presetManaCost(lvl -> 3 * lvl)
         ..presetTooltipNormal(lvl -> makeToolTipNormUpgradeLevel("V", BASH_TOOLTIP, lvl))
-        ..presetTooltipNormalExtended(lvl -> BASH_UPGD_TOOLTIP_EXT + "\n\n" + toolTipCurrentUpgradeData("Bash", BASH_DURATION_INCREASE, lvl - 1, COLOR_ORANGE, false))
-
+        // At lvl 1, this ability is used to unlock the bash ability, therefore it gives 0 bonus at lvl 1
+        ..presetTooltipNormalExtended(lvl -> BASH_UPGD_TOOLTIP_EXT + "\n\n"
+                                     + (lvl == 1 ? "" : toolTipUpgradeData("Current Bash Bonus", BASH_DURATION_INCREASE, lvl - 1, COLOR_ORANGE, false) + "\n")
+                                     + toolTipUpgradeData("Max Bash Bonus", BASH_DURATION_INCREASE, 11, COLOR_ORANGE, false)
+                                     )
 
 // Non-Upgrade Abilities
 @compiletime function createInventoryAbility() returns AbilityDefinitionInventoryPackMule
     return new AbilityDefinitionInventoryPackMule(ABILITY_PET_INVENTORY)
         ..setIconNormal(Icons.bTNPackBeast)
-        ..setLevels(7)
+        ..setLevels(6)
         ..presetItemCapacity(lvl -> lvl)
         ..presetCanDropItems(lvl -> true)
         ..presetCanGetItems(lvl -> true)
@@ -226,35 +238,36 @@ function createUpgradeAbility(int abilId, int lvls) returns ChannelAbilityPreset
         ..presetTooltipNormal(lvl -> makeToolTipNormLevelAura(INVENTORY_TOOLTIP, lvl))
         ..presetTooltipNormalExtended(lvl -> INVENTORY_TOOLTIP_EXT.format((1 * lvl).toString().color(COLOR_ORANGE)))
         ..setEditorSuffix("(Wurst)")
+        ..setCheckDependencies(true)
         ..setRequirements(UPGD_PET_INVENTORY.toRawCode())
 
 @compiletime function createLifeStealAbility() returns AbilityDefinitionVampiricattack
     return new AbilityDefinitionVampiricattack(ABILITY_PET_LIFE_STEAL)
         ..setIconNormal(Icons.pASBTNVampiricAura)
-        ..setLevels(11)
+        ..setLevels(10)
         ..presetButtonPosNormal(2, 1)
         ..presetLifeStolenPerAttack(lvl -> 0.17 + lvl * LIFE_STEAL_INCREASE)
-        ..setCheckDependencies(true)
         ..setName("Pet Life Steal")
         ..presetTooltipNormal(lvl -> makeToolTipNormLevelAura(LIFE_STEAL_TOOLTIP, lvl))
         ..presetTooltipNormalExtended(lvl -> LIFE_STEAL_TOOLTIP_EXT.format((0.17 + lvl * LIFE_STEAL_INCREASE).toToolTipOrange()))
         ..setEditorSuffix("(Wurst)")
+        ..setCheckDependencies(true)
         ..setRequirements(UPGD_PET_LIFE_STEAL.toRawCode())
 
 @compiletime function createBashAbility() returns AbilityDefinitionBashcreep
     return new AbilityDefinitionBashcreep(ABILITY_PET_BASH)
         ..setIconNormal(Icons.pASBTNBash)
-        ..setLevels(11)
+        ..setLevels(10)
         ..presetDamageBonus(lvl -> 0)
         ..presetChancetoBash(lvl -> 100)
         ..presetButtonPosNormal(2, 1)
         ..presetDurationHero(lvl -> 0.17 + lvl * BASH_DURATION_INCREASE)
         ..presetDurationNormal(lvl -> 0.17 + lvl * BASH_DURATION_INCREASE)
-        ..setCheckDependencies(true)
         ..setName("Pet Bash")
         ..presetTooltipNormal(lvl -> makeToolTipNormLevelAura(BASH_TOOLTIP, lvl))
         ..presetTooltipNormalExtended(lvl -> BASH_TOOLTIP_EXT.format((0.17 + lvl * BASH_DURATION_INCREASE).toString().color(COLOR_ORANGE)))
         ..setEditorSuffix("(Wurst)")
+        ..setCheckDependencies(true)
         ..setRequirements(UPGD_PET_BASH.toRawCode())
 
 @compiletime function createPetGrowthAbility() returns ChannelAbilityPreset

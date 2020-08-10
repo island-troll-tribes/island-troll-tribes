@@ -118,16 +118,19 @@ public function formatDuration(int abilId) returns string
 public function getAbilityDataField(int abilId, string dataField) returns string
     return "<{0},{1}>".format(abilId.toRawCode(), dataField)
 
-public function toolTipCurrentUpgradeData(string dataName, int data, int lvl, color color) returns string
-    return "Current {0} bonus : ".format(dataName) + "{0}".format((data * (lvl - 1)).toString()).color(color)
+public function toolTipUpgradeData(string whichData, int data, int lvl, color color) returns string
+    return "{0} : ".format(whichData) + "{0}".format((data * (lvl - 1)).toString()).color(color)
 
 /**
     A method to compute current upgrade bonus, set percent to true to return an percent value out of data
 **/
-public function toolTipCurrentUpgradeData(string dataName, real data, int lvl, color color, boolean percent) returns string
-    var computedData = data * (lvl - 1) < 0 ? 0 : data * (lvl - 1)
+public function toolTipUpgradeData(string whichData, real data, int lvl, color color, boolean percent) returns string
+    var computedData = data * (lvl - 1)
+
+    // Rouding the real value
     computedData = (computedData * 1000).round().toReal() / 1000
-    return "Current {0} bonus : ".format(dataName)
+
+    return "{0} : ".format(whichData)
             + "{0}".format((percent ? computedData.formatForTooltip().color(color)
                                     : computedData.toString()).color(color)
                             )

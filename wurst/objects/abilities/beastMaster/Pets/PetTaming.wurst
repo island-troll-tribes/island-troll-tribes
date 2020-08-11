@@ -2,12 +2,12 @@ package PetTaming
 
 // Standard library imports:
 import ClosureEvents
-import AbilityObjEditing
 import Assets
-import ObjectIds
 import Lodash
 import TimerUtils
 import ClosureForGroups
+import ChannelAbilityPreset
+import ClosureTimers
 
 // Local imports:
 import ColorUtils
@@ -23,248 +23,260 @@ import SimError
 import UnitExtensions
 import Transformation
 import PetUpgradeHandler
-
-let PET_MAX_MANA = 6
-
-let PETS_TT = map((animal, _) -> animal.color(COLOR_YELLOW), asList("Elk", "Wolf", "Bear")).joinBy(", ")
-
-let ABIL_TT_EXT = "Tames a baby animal. The following animals killed by the " + "Beast Master".color(HIGHLIGHT_COLOR) + " will leave a baby behind: "
-                  + PETS_TT + "."
-                  + "\n\nYou can tame only 1 animal at once.".color(COLOR_RED)
-
-let petFeedMap = new HashMap<int, int>()
-    ..put(UNIT_ELK                    , 2)
-    ..put(UNIT_JUNGLE_WOLF            , 8)
-    ..put(UNIT_JUNGLE_BEAR            , 12)
-    ..put(UNIT_PANTHER                , 20)
-    ..put(UNIT_HAWK_HATCHLING         , 4)
-    ..put(UNIT_NETHER_DRAGON_HATCHLING, 8)
+import IdListConstant
 
 
-function createPetTameSpell(int newAbilId) returns AbilityDefinitionCharm
-    return new AbilityDefinitionCharm(newAbilId)
-        ..setIconNormal(LocalIcons.bTNTamePet)
-        ..setCooldown(1, 10.0)
+// I wanted animals to have different diet, but I fear it might add too much complexity for players or tooltipping
+// Kinda want to be able to feed materials to drake based on their type (e.g red drake eats flint, nether eats darkness Orb)
+let petDietMap = new HashMap<int, LinkedList<int>>()
+    ..put(UNIT_ELK                     , asList(ITEM_ACORN, ITEM_MAGIC_ACORN))
+    ..put(UNIT_TAMED_ELK               , asList(ITEM_ACORN, ITEM_MAGIC_ACORN))
+    ..put(UNIT_JUNGLE_WOLF             , asList(ITEM_COOKED_MEAT, ITEM_ACORN, ITEM_MAGIC_ACORN))
+    ..put(UNIT_TAMED_WOLF              , asList(ITEM_COOKED_MEAT, ITEM_ACORN, ITEM_MAGIC_ACORN))
+    ..put(UNIT_TAMED_BEAR              , asList(ITEM_COOKED_MEAT, ITEM_ACORN, ITEM_MAGIC_ACORN))
+    ..put(UNIT_JUNGLE_BEAR             , asList(ITEM_COOKED_MEAT, ITEM_ACORN, ITEM_MAGIC_ACORN))
+    ..put(UNIT_HAWK_HATCHLING          , asList(ITEM_COOKED_MEAT, ITEM_ACORN, ITEM_MAGIC_ACORN))
+    ..put(UNIT_NETHER_DRAGON_HATCHLING , asList(ITEM_COOKED_MEAT, ITEM_ACORN, ITEM_MAGIC_ACORN))
+
+let foodMapMana = new HashMap<int, int>()
+    ..put(ITEM_COOKED_MEAT, 3)
+    ..put(ITEM_ACORN      , 4)
+    ..put(ITEM_MAGIC_ACORN, 8)
+
+let PETS_TT = map((animal, _) -> animal.color(COLOR_YELLOW), asList("Elk", "Wolf", "Bear", "Any hatchling from the hatchery")).joinBy(", ")
+let FOODS_TT = map((food, _) -> food.color(COLOR_ORANGE), asList(
+                    "Cooked Meat " + foodMapMana.get(ITEM_COOKED_MEAT).toString(),
+                    "Acorn "       + foodMapMana.get(ITEM_ACORN      ).toString(),
+                    "Magic Acorn " + foodMapMana.get(ITEM_MAGIC_ACORN).toString()
+                    )).joinBy(", ")
+
+let ABIL_TT_EXT = "Feed an animal by throwing the first edible item from the caster inventory, target will gain mana based on the item sent. "
+                  + "\nFollowing items are considered edible and give mana, format being " + "#Item #Mana gained :".color(COLOR_ORANGE)
+                  + FOODS_TT + ".\n\n"
+                  + "A wild animal will be tamed when its mana reach the maximum amount, last player to feed him will get the pet. "
+                  + "\nFollowing animals can be fed and tamed :"
+                  + PETS_TT + ".\n\n"
+                  + "You can tame only 1 animal at once.".color(COLOR_RED)
+                  + "You cannot steal other troll pet.".color(COLOR_RED)
+
+
+function createPetTameSpell(int newAbilId) returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(newAbilId, 1, true)
+        ..setIconNormal(Icons.bTNTameHippogriff)
+        ..setCooldown(1, 3.0)
         ..setManaCost(1, 0)
         ..setHeroAbility(false)
-        ..setName("Tame Pet")
+        ..setName("Feed Animal")
         ..setCastRange(1, 2000.0)
-        ..setArtTarget(Abilities.controlMagicTarget)
+        ..setFollowThroughTime(1, 1.5)
         ..setTargetsAllowed(1, commaList(
                 TargetsAllowed.nonhero,
                 TargetsAllowed.organic
             ))
         ..setTooltipNormalExtended(1, ABIL_TT_EXT)
-        ..setRequirements(UPGD_PET_TAMED_FALSE.toRawCode())
         ..setEditorSuffix("(Wurst)")
-        ..setAnimationNames("Attack - 1")
+        ..setAnimationNames("Attack")
+        ..presetTargetTypes(Targettype.UNIT)
 
-@compiletime function createBasePetTameSpell() returns AbilityDefinitionCharm
+@compiletime function createBasePetTameSpell() returns ChannelAbilityPreset
     return createPetTameSpell(ABILITY_PET_TAME)
     ..setButtonPositionNormalX(0)
     ..setButtonPositionNormalY(0)
     ..setHotkeyNormal("Q")
-    ..setTooltipNormal(1, makeToolTipNorm("Q", "Tame"))
+    ..setTooltipNormal(1, makeToolTipNorm("Q", "Feed Animal"))
 
-@compiletime function createShapeShifterPetTameSpell() returns AbilityDefinitionCharm
+@compiletime function createShapeShifterPetTameSpell() returns ChannelAbilityPreset
     return createPetTameSpell(ABILITY_PET_TAME_SHAPESHIFTER)
     ..setButtonPositionNormalX(0)
     ..setButtonPositionNormalY(1)
     ..setHotkeyNormal("A")
-    ..setTooltipNormal(1, makeToolTipNorm("A", "Tame"))
+    ..setTooltipNormal(1, makeToolTipNorm("A", "Feed Animal"))
 
-// Gonna make the parabola formula work!
-class foodProjectile
+
+// This projectile is thrown following a parabola trajectory and land on the target position
+// It behave like an artillery missile and doesn't follow the target it
+// On landing, it will restore mana to the nearest "feedable" unit, be it enemy or ally
+// If no suitable unit is found, the item with its charges will be dropped on the landing position
+class FoodProjectile
     use TimedLoop
-    unit u
+    unit caster
     unit target
     vec3 targetPos
-
     effect efx
-
     vec3 pos
     real speed
     real elapse_time = 0
-
+    real time_scale = 1.0
     vec3 initPos
     real duration
-    real distance
     angle angle
     real displacement
-    real gravity
-
-    real p
-    real a
-    real b
-    real c
-    real v0
     real teta
-    real f
-    real v
-    real n
-
-    real arc
-    real d
-
+    real distance
     vec3 vel
     vec3 acc
+    int charges
+    int itemId
 
-    construct(unit u, unit target, string efxArt, real speed)
-        this.u = u
+    construct(unit caster, unit target, real speed, real arc, item food)
+        this.caster = caster
         this.target = target
         this.targetPos = target.getPos3Real()
 
         this.speed = speed
-        this.pos = u.getPos().polarOffset(u.getPos().angleTo(target.getPos()), 50).withTerrainZ()
+        this.pos = caster.getPos().polarOffset(caster.getPos().angleTo(target.getPos()), 50).withTerrainZ()
         this.initPos = pos
-        this.efx = addEffect(efxArt, this.pos)
+
+        // Cancelling last order issued so Elk do not run away
+        doAfter(0.1) ->
+            target.issueImmediateOrder("stop")
+            target.setFacing(target.getPos().angleTo(pos.toVec2()))
+
+        this.charges = food.getCharges()
+        this.itemId = food.getTypeId()
+
+        // Choosing project Art model based on item sent
+        switch food.getTypeId()
+            case ITEM_COOKED_MEAT
+                this.efx = addEffect(LocalItems.ham, pos)..setScale(0.85)..setColor(255, 125, 160)
+            case ITEM_ACORN
+                this.efx = addEffect(Objects.thunderLizardEgg1, pos)..setScale(0.85)..setColor(128, 64, 0)
+            case ITEM_MAGIC_ACORN
+                this.efx = addEffect(Objects.crystalShard, pos)..setScale(0.65)..setColor(128, 64, 0)
+
+        // Removing item from the inventory
+        food.remove()
+
+        // Following code regarding the projectile trajectory has been picked up from a JASS custom projectile library
         this.duration = initPos.distanceTo2d(targetPos) / speed
         this.distance = initPos.distanceTo2d(targetPos)
-        this.gravity = -100
-        // this.angle = (45).asAngleDegrees()
-
-
-        // this.p = - gravity * (distance * distance)
-        // this.a = p / (2 * (45..cos() * 45..cos()))
-        // this.b = distance / 2
-        // this.c = pos.z - targetPos.z
-
-        // this.f = -b -c
-        // this.v = -a / (-b -c)
-        // this.v0 = SquareRoot(v)
-        // this.teta = b / (v0 * angle.cos())
-
-        print("hello")
-        this.arc = 0.250
-        this.d = initPos.distanceTo2d(targetPos)
-        print("y: " + (targetPos.y - initPos.y).toString())
-        print("x: " + (targetPos.x - initPos.x).toString())
-        this.a = Atan2(targetPos.y - initPos.y, targetPos.x - initPos.x)
-        print("distance: " + d.toString())
-        print("atan: " + a.toString())
-
-        this.acc.z = (-8*arc*speed*speed/d)
-        print("acc.z: " + acc.z.toString())
+        this.teta = Atan2(targetPos.y - initPos.y, targetPos.x - initPos.x)
+        this.acc.z = (-8*arc*speed*speed/distance)
         this.vel = vec3(
-            speed * Cos(a),
-            speed * Sin(a),
-            (-acc.z * (d / speed) / 2 + (targetPos.z - initPos.z) / (d / speed))
+            speed * Cos(teta),
+            speed * Sin(teta),
+            (-acc.z * (distance / speed) / 2 + (targetPos.z - initPos.z) / (distance / speed))
             )
-        print("ini vel: " + vel.toString())
         this.acc.z = acc.z * ANIMATION_PERIOD * ANIMATION_PERIOD
-        print("acc.z after : " + acc.z.toString())
         this.vel = this.vel.op_mult(ANIMATION_PERIOD)
-        print("end vel: " + vel.toString())
 
         this.startTimedLoop()
 
-
-
     override function onTimedLoop()
-        forUnitsInRange(pos.toVec2(), 50) (unit u) ->
-            if u.getTypeId() == UNIT_ELK
-                print("ded")
-                stopTimedLoopAndDestroy()
-        //vec3 newPos = this.pos.offset2d(pos.angleTo2d(targetPos), speed * ANIMATION_PERIOD)
+        // This is not a homing projectile, so it land and stop after duration time
+        if duration < elapse_time
+            if not onLanding()
+                createItem(itemId, pos)..setCharges(charges)
+            stopTimedLoopAndDestroy()
 
-        vel = vel.op_plus(acc.op_mult(1. * 1.))
-        pos = pos.op_plus(vel.op_mult(1))
+        // Following code regarding the projectile trajectory has been picked up from a JASS custom projectile library
+        vel = vel.op_plus(acc.op_mult(time_scale * time_scale))
+        pos = pos.op_plus(vel.op_mult(time_scale))
 
+        // Adjusting orientation
+        efx.setYaw(pos.angleTo2d(targetPos))
         efx.setPos(pos)
-        let anglexy = pos.angleTo2d(targetPos)
-        efx.setYaw(anglexy)
-        // pos = newPos
         elapse_time += ANIMATION_PERIOD
-        // let x = ((initPos.x - pos.x).squared() + (initPos.y - pos.y).squared()) * 0.5
-        // let x1 = initPos.distanceTo2d(pos)
 
-        // let travX = ((speed * speed) * (2 * angle.sin())) / (2 * 100)
-        // let travT = (2 * speed * angle.sin()) / 100
+    function onLanding() returns boolean
+        // Find nearest animals that can be fed near the landing zone
+        forNearestUnit(
+                        pos.toVec2(),
+                        100,
+                        Filter(->petDietMap.has(GetFilterUnit().getTypeId()))
+                        ) (unit u) ->
+            let maxManaAdded = charges * foodMapMana.get(itemId)
+            let totalMana = u.getMana() + maxManaAdded
 
-        // Guillaume
-        // print("elapsed time : " + elapse_time.toString())
-        // print("distance: " + this.distance.toString())
-        // print("x1: " + targetPos.x.toString())
-        // print("x0: " + initPos.x.toString())
-        // print("angle cos : " + angle.cos().toString())
-        // print("angle sin : " + angle.sin().toString())
-        // print("angle cos deg : " + (45..cos().toString()))
-        // print("angle sin deg : " + (45..sin().toString()))
-        // print("check 2 x cos: " + (2 * (45..cos() * 45..cos())).toString())
-        // print("check 2 x cos²: " + (2 * (angle.cos() * angle.cos())).toString())
-        // print("p: " + p.toString())
-        // print("a: " + a.toString())
-        // print("b: " + b.toString())
-        // print("c: " + c.toString())
-        // print("f: " + f.toString())
-        // print("v: " + v.toString())
-        // print("v0: " + v0.toString())
-        // print("v00: " + SquareRoot(v.abs()).toString())
-        // print("teta: " + teta.toString())
-        // print("gravity: " + gravity.toString())
+            if totalMana - u.getMaxMana() >= 0
+                if u.getOwner() == players[PLAYER_NEUTRAL_AGGRESSIVE]
+                    // Could allow pet stealing.... might be funny...
+                    // or u.getOwner().isEnemyOf(caster.getOwner())
+                    addPet(caster, u)
 
-        // // displacement Z?
-        // print("d: " + (0.5 * ((gravity) * (teta * teta)) + v0 * angle.sin() * teta + initPos.z).toString())
+                // In case there's too much food sent, we create an item stack with the remaining charges
+                // We could actually compute the remaning charges before and send the exact number needed, but I imagine funny
+                // situation will come out of this behavior
+                let leftover = (totalMana - u.getMaxMana()) / foodMapMana.get(itemId)
+                if leftover > 0
+                    createItem(itemId, pos)..setCharges(leftover.round())
 
-        // // distance
-        // print("dist: " + (v0 * angle.cos() * teta).toString())
-
-        // // maxH Time
-        // let tH =(-v0 * angle.sin()) / gravity
-        // print("tH: " + tH.toString())
-
-        // // maxH
-        // print("maxH: " + (0.5 * (gravity * (tH * tH)) + v0 * angle.sin() * tH + initPos.z ).toString())
-        // print("maxH2: " + (((v0 * v0) * (angle.sin() * angle.sin())) / (2 * gravity)).toString() )
+            if localPlayer.canSee(caster)
+                // Create a text tag to visualize the effect.
+                CreateTextTag()
+                    ..setText("+" + (totalMana - u.getMana()) .floor().toString(), 10)
+                    ..setPos(u.getPos3Zero())
+                    ..setColor(COLOR_TURQUOISE.withAlpha(255))
+                    ..setVelocity(0., 0.04)
+                    ..setVisibility(true)
+                    ..setFadepoint(2.0)
+                    ..setLifespan(5.0)
+                    ..setPermanent(false)
+            flashEffect(Abilities.aImaTarget, u, "origin")
+            u.setMana(maxManaAdded.toReal())
+            return true
+        return false
 
     ondestroy
         this.efx.destr()
 
-function feedAnimal(unit caster, unit target)
-    let inventory = caster.getInventory()
-    let meatInv = inventory.filter(elem -> elem.getTypeId() == ITEM_COOKED_MEAT)
-    meatInv.pop()..remove()
-    caster.setFacing(caster.getPos().angleTo(target.getPos()))
-    //caster.setAnimation("Attack - 1")
-    new foodProjectile(caster, target, Abilities.keeperGroveMissile, 600)
 
-
-function onTame(unit caster, unit target)
-    // Record the owner of the new unit.
+function addPet(unit caster, unit target)
     let owner = caster.getOwner()
 
-    feedAnimal(caster, target)
-
-    // if petFeedMap.has(target.getTypeId())
-    //     let foodRequired = petFeedMap.get(target.getTypeId())
-
-    //     let inventory = caster.getInventory()
-    //     let meatInv = inventory.filter(elem -> elem.getTypeId() == ITEM_COOKED_MEAT)
-    //     for elem in meatInv
-    //         var stack = elem.getCharges()
-    //         print(elem.getCharges())
+    // Prevent player from getting multiple pet
+    // Might add a mode to allow multiple pet
+    if owner.getPet() != null
+        simError(owner, "You already own a pet")
 
     // Look up the growth chain for the pet.
-    // let chain = target.getPetGrowthChain()
+    let chain = target.getPetGrowthChain()
 
-    // // Look up the next unit along the chain.
-    // let next = chain.get(chain.indexOf(target.getTypeId()) + 1)
+    // Look up the next unit along the chain.
+    let next = chain.get(chain.indexOf(target.getTypeId()) + 1)
 
-    // transformUnit(target, next)
+    transformUnit(target, next)
 
-    // owner.addPet(target)
-    // petUpgradeHandlerInstance.put(target, new PetUpgradeHandler(caster, target))
+    // Will you be my valentine?
+    flashEffect(LocalAbilities.heartParticle, target, "head")
 
-    // owner.setTechResearched(UPGD_PET_TAMED_TRUE, 1)
-    // owner.setTechResearched(UPGD_PET_TAMED_FALSE, 0)
+    target.setOwner(owner, true)
+    target.issueTargetOrder("move", caster)
+    print(target.getName())
+    target.setMana(0)
 
-    // else
-    //     simError(caster.getOwner(), "Cannot pet this target")
-    //     return
+    owner.addPet(target)
+
+    // Upgrade system wouldn't work properly with multiple pet, since upgrade are related to the player
+    petUpgradeHandlerInstance.put(target, new PetUpgradeHandler(caster, target))
+
+    // Enable release spell
+    owner.setTechResearched(UPGD_PET_TAMED_TRUE, 1)
+    owner.setTechResearched(UPGD_PET_TAMED_FALSE, 0)
+
+function feedAnimal(unit caster, unit target)
+    caster.setFacing(caster.getPos().angleTo(target.getPos()))
+
+    let inventory = caster.getInventory()
+    let foodInventory = inventory.filter(
+        elem -> petDietMap.get(target.getTypeId()).has(elem.getTypeId())
+        )
+
+    // Sending the first edible item coming from the caster inventory
+    if foodInventory.size() > 0
+        new FoodProjectile(caster, target, 600, 0.300, foodInventory.getFirst())
+    else
+        simError(caster.getOwner(), "You need the appropriate food to tame this animal, guess its diet")
+
+function onCast(unit caster, unit target)
+    if petDietMap.has(target.getTypeId())
+        feedAnimal(caster, target)
+    else
+        simError(caster.getOwner(), "Cannot feed this target")
 
 
 init
     EventListener.onTargetCast(ABILITY_PET_TAME) (unit caster, unit target) ->
-        onTame(caster, target)
+        onCast(caster, target)
     EventListener.onTargetCast(ABILITY_PET_TAME_SHAPESHIFTER) (unit caster, unit target) ->
-        onTame(caster, target)
+        onCast(caster, target)

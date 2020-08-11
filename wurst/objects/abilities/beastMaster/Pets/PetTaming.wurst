@@ -48,7 +48,7 @@ function createPetTameSpell(int newAbilId) returns AbilityDefinitionCharm
         ..setManaCost(1, 0)
         ..setHeroAbility(false)
         ..setName("Tame Pet")
-        ..setCastRange(1, 600.0)
+        ..setCastRange(1, 2000.0)
         ..setArtTarget(Abilities.controlMagicTarget)
         ..setTargetsAllowed(1, commaList(
                 TargetsAllowed.nonhero,
@@ -93,6 +93,22 @@ class foodProjectile
     real displacement
     real gravity
 
+    real p
+    real a
+    real b
+    real c
+    real v0
+    real teta
+    real f
+    real v
+    real n
+
+    real arc
+    real d
+
+    vec3 vel
+    vec3 acc
+
     construct(unit u, unit target, string efxArt, real speed)
         this.u = u
         this.target = target
@@ -104,42 +120,102 @@ class foodProjectile
         this.efx = addEffect(efxArt, this.pos)
         this.duration = initPos.distanceTo2d(targetPos) / speed
         this.distance = initPos.distanceTo2d(targetPos)
+        this.gravity = -100
+        // this.angle = (45).asAngleDegrees()
+
+
+        // this.p = - gravity * (distance * distance)
+        // this.a = p / (2 * (45..cos() * 45..cos()))
+        // this.b = distance / 2
+        // this.c = pos.z - targetPos.z
+
+        // this.f = -b -c
+        // this.v = -a / (-b -c)
+        // this.v0 = SquareRoot(v)
+        // this.teta = b / (v0 * angle.cos())
+
+        print("hello")
+        this.arc = 0.250
+        this.d = initPos.distanceTo2d(targetPos)
+        print("y: " + (targetPos.y - initPos.y).toString())
+        print("x: " + (targetPos.x - initPos.x).toString())
+        this.a = Atan2(targetPos.y - initPos.y, targetPos.x - initPos.x)
+        print("distance: " + d.toString())
+        print("atan: " + a.toString())
+
+        this.acc.z = (-8*arc*speed*speed/d)
+        print("acc.z: " + acc.z.toString())
+        this.vel = vec3(
+            speed * Cos(a),
+            speed * Sin(a),
+            (-acc.z * (d / speed) / 2 + (targetPos.z - initPos.z) / (d / speed))
+            )
+        print("ini vel: " + vel.toString())
+        this.acc.z = acc.z * ANIMATION_PERIOD * ANIMATION_PERIOD
+        print("acc.z after : " + acc.z.toString())
+        this.vel = this.vel.op_mult(ANIMATION_PERIOD)
+        print("end vel: " + vel.toString())
+
         this.startTimedLoop()
-        this.gravity = 50
+
+
 
     override function onTimedLoop()
         forUnitsInRange(pos.toVec2(), 50) (unit u) ->
-            stopTimedLoopAndDestroy()
-        vec3 newPos = this.pos.offset2d(pos.angleTo2d(targetPos), speed * ANIMATION_PERIOD)
+            if u.getTypeId() == UNIT_ELK
+                print("ded")
+                stopTimedLoopAndDestroy()
+        //vec3 newPos = this.pos.offset2d(pos.angleTo2d(targetPos), speed * ANIMATION_PERIOD)
 
-        let x = ((initPos.x - pos.x).squared() + (initPos.y - pos.y).squared()) * 0.5
-        let x1 = initPos.distanceTo2d(pos)
+        vel = vel.op_plus(acc.op_mult(1. * 1.))
+        pos = pos.op_plus(vel.op_mult(1))
 
-        let maxH = ((speed * speed) * (angle.sin() * angle.sin())) / (2 * 100)
-        let travX = ((speed * speed) * (2 * angle.sin())) / (2 * 100)
-        let travT = (2 * speed * angle.sin()) / 100
-
-
-
-        // print(maxH)
-        print(x)
-        //let h = (speed * speed) * (angle.sin() * angle.sin()) / (2 * - 50)
-        //let h = angle.tan() * x - (-50 * (x * x)) / (2 * (speed * speed) * ( angle.cos() *  angle.cos()))
-        // newPos.z = 0.5 * (-200) * (elapse_time * elapse_time) + speed * elapse_time + initPos.z
-       // newPos.z = angle.tan() * x - (50 * (x * x)) / 2 * (speed * speed) * (angle.cos() * angle.cos())
-
-        //print("{0} + {1}".format((speed * elapse_time * angle.sin()).toString(), (0.5 * (-200) * (elapse_time * elapse_time)).toString()))
-        //newPos.z = initPos.z + speed * elapse_time * angle.sin() - 0.5 * (200) * (elapse_time * elapse_time)
-
-        // let x = initPos.distanceTo2d(pos)
-        // let h = 200
-        //newPos.z = 4 * 500 * x * (distance - x) / (distance * distance) + x * (targetPos.z - initPos.z) / distance + initPos.z
-        print(newPos.z)
-        print("\n")
-
-        efx.setPos(newPos)
-        pos = newPos
+        efx.setPos(pos)
+        let anglexy = pos.angleTo2d(targetPos)
+        efx.setYaw(anglexy)
+        // pos = newPos
         elapse_time += ANIMATION_PERIOD
+        // let x = ((initPos.x - pos.x).squared() + (initPos.y - pos.y).squared()) * 0.5
+        // let x1 = initPos.distanceTo2d(pos)
+
+        // let travX = ((speed * speed) * (2 * angle.sin())) / (2 * 100)
+        // let travT = (2 * speed * angle.sin()) / 100
+
+        // Guillaume
+        // print("elapsed time : " + elapse_time.toString())
+        // print("distance: " + this.distance.toString())
+        // print("x1: " + targetPos.x.toString())
+        // print("x0: " + initPos.x.toString())
+        // print("angle cos : " + angle.cos().toString())
+        // print("angle sin : " + angle.sin().toString())
+        // print("angle cos deg : " + (45..cos().toString()))
+        // print("angle sin deg : " + (45..sin().toString()))
+        // print("check 2 x cos: " + (2 * (45..cos() * 45..cos())).toString())
+        // print("check 2 x cos²: " + (2 * (angle.cos() * angle.cos())).toString())
+        // print("p: " + p.toString())
+        // print("a: " + a.toString())
+        // print("b: " + b.toString())
+        // print("c: " + c.toString())
+        // print("f: " + f.toString())
+        // print("v: " + v.toString())
+        // print("v0: " + v0.toString())
+        // print("v00: " + SquareRoot(v.abs()).toString())
+        // print("teta: " + teta.toString())
+        // print("gravity: " + gravity.toString())
+
+        // // displacement Z?
+        // print("d: " + (0.5 * ((gravity) * (teta * teta)) + v0 * angle.sin() * teta + initPos.z).toString())
+
+        // // distance
+        // print("dist: " + (v0 * angle.cos() * teta).toString())
+
+        // // maxH Time
+        // let tH =(-v0 * angle.sin()) / gravity
+        // print("tH: " + tH.toString())
+
+        // // maxH
+        // print("maxH: " + (0.5 * (gravity * (tH * tH)) + v0 * angle.sin() * tH + initPos.z ).toString())
+        // print("maxH2: " + (((v0 * v0) * (angle.sin() * angle.sin())) / (2 * gravity)).toString() )
 
     ondestroy
         this.efx.destr()
@@ -150,14 +226,14 @@ function feedAnimal(unit caster, unit target)
     meatInv.pop()..remove()
     caster.setFacing(caster.getPos().angleTo(target.getPos()))
     //caster.setAnimation("Attack - 1")
-    new foodProjectile(caster, target, Abilities.catapultMissile, 300)
+    new foodProjectile(caster, target, Abilities.keeperGroveMissile, 600)
 
 
 function onTame(unit caster, unit target)
     // Record the owner of the new unit.
     let owner = caster.getOwner()
 
-    // feedAnimal(caster, target)
+    feedAnimal(caster, target)
 
     // if petFeedMap.has(target.getTypeId())
     //     let foodRequired = petFeedMap.get(target.getTypeId())
@@ -169,18 +245,18 @@ function onTame(unit caster, unit target)
     //         print(elem.getCharges())
 
     // Look up the growth chain for the pet.
-    let chain = target.getPetGrowthChain()
+    // let chain = target.getPetGrowthChain()
 
-    // Look up the next unit along the chain.
-    let next = chain.get(chain.indexOf(target.getTypeId()) + 1)
+    // // Look up the next unit along the chain.
+    // let next = chain.get(chain.indexOf(target.getTypeId()) + 1)
 
-    transformUnit(target, next)
+    // transformUnit(target, next)
 
-    owner.addPet(target)
-    petUpgradeHandlerInstance.put(target, new PetUpgradeHandler(caster, target))
+    // owner.addPet(target)
+    // petUpgradeHandlerInstance.put(target, new PetUpgradeHandler(caster, target))
 
-    owner.setTechResearched(UPGD_PET_TAMED_TRUE, 1)
-    owner.setTechResearched(UPGD_PET_TAMED_FALSE, 0)
+    // owner.setTechResearched(UPGD_PET_TAMED_TRUE, 1)
+    // owner.setTechResearched(UPGD_PET_TAMED_FALSE, 0)
 
     // else
     //     simError(caster.getOwner(), "Cannot pet this target")

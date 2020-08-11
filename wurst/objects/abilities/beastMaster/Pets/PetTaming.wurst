@@ -117,6 +117,7 @@ class FoodProjectile
     vec3 acc
     int charges
     int itemId
+    boolean foundTarget = false
 
     construct(unit caster, unit target, real speed, real arc, item food)
         this.caster = caster
@@ -165,8 +166,7 @@ class FoodProjectile
     override function onTimedLoop()
         // This is not a homing projectile, so it land and stop after duration time
         if duration < elapse_time
-            if not onLanding()
-                createItem(itemId, pos)..setCharges(charges)
+            onLanding()
             stopTimedLoopAndDestroy()
 
         // Following code regarding the projectile trajectory has been picked up from a JASS custom projectile library
@@ -178,15 +178,30 @@ class FoodProjectile
         efx.setPos(pos)
         elapse_time += ANIMATION_PERIOD
 
-    function onLanding() returns boolean
+    function onLanding()
         // Find nearest animals that can be fed near the landing zone
         forNearestUnit(
                         pos.toVec2(),
                         100,
                         Filter(->petDietMap.has(GetFilterUnit().getTypeId()))
                         ) (unit u) ->
+            foundTarget = true
             let maxManaAdded = charges * foodMapMana.get(itemId)
             let totalMana = u.getMana() + maxManaAdded
+
+            if localPlayer.canSee(caster)
+                // Create a text tag to visualize the effect.
+                CreateTextTag()
+                    ..setText("+" + (totalMana - u.getMana()) .floor().toString(), 10)
+                    ..setPos(u.getPos3Zero())
+                    ..setColor(COLOR_TURQUOISE.withAlpha(255))
+                    ..setVelocity(0., 0.04)
+                    ..setVisibility(true)
+                    ..setFadepoint(2.0)
+                    ..setLifespan(5.0)
+                    ..setPermanent(false)
+            flashEffect(Abilities.aImaTarget, u, "origin")
+            u.addMana(maxManaAdded.toReal())
 
             if totalMana - u.getMaxMana() >= 0
                 if u.getOwner() == players[PLAYER_NEUTRAL_AGGRESSIVE]
@@ -201,23 +216,9 @@ class FoodProjectile
                 if leftover > 0
                     createItem(itemId, pos)..setCharges(leftover.round())
 
-            if localPlayer.canSee(caster)
-                // Create a text tag to visualize the effect.
-                CreateTextTag()
-                    ..setText("+" + (totalMana - u.getMana()) .floor().toString(), 10)
-                    ..setPos(u.getPos3Zero())
-                    ..setColor(COLOR_TURQUOISE.withAlpha(255))
-                    ..setVelocity(0., 0.04)
-                    ..setVisibility(true)
-                    ..setFadepoint(2.0)
-                    ..setLifespan(5.0)
-                    ..setPermanent(false)
-            flashEffect(Abilities.aImaTarget, u, "origin")
-            u.setMana(maxManaAdded.toReal())
-            return true
-        return false
-
     ondestroy
+        if not foundTarget
+            createItem(itemId, pos)..setCharges(charges)
         this.efx.destr()
 
 
@@ -242,7 +243,6 @@ function addPet(unit caster, unit target)
 
     target.setOwner(owner, true)
     target.issueTargetOrder("move", caster)
-    print(target.getName())
     target.setMana(0)
 
     owner.addPet(target)

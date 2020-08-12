@@ -20,6 +20,10 @@ import HashMap
 import SimError
 import UnitExtensions
 import PetFeeding
+import Pets
+import Transformation
+import PetUpgradeHandler
+import PlayerExtensions
 
 
 let PETS_TT = map((animal, _) -> animal.color(COLOR_YELLOW), asList("Elk", "Wolf", "Bear", "Any hatchling from the hatchery")).joinBy(", ")
@@ -173,7 +177,7 @@ class FoodProjectile
         this.efx.destr()
 
 
-function feedAnimal(unit caster, unit target)
+function throwFood(unit caster, unit target)
     caster.setFacing(caster.getPos().angleTo(target.getPos()))
 
     let inventory = caster.getInventory()
@@ -189,10 +193,39 @@ function feedAnimal(unit caster, unit target)
 
 function onCast(unit caster, unit target)
     if petDietMap.has(target.getTypeId())
-        feedAnimal(caster, target)
+        throwFood(caster, target)
     else
         simError(caster.getOwner(), "Cannot feed this target")
 
+public function tamePet(player casterOwner, unit pet)
+    // Prevent player from getting multiple pet
+    // Might add a mode to allow multiple pet
+    if casterOwner.getPet() != null
+        simError(casterOwner, "Cannot tame more animal")
+    else
+        casterOwner.addPet(pet)
+
+        // Look up the growth chain for the pet.
+        let chain = pet.getPetGrowthChain()
+
+        // Look up the next unit along the chain.
+        let next = chain.get(chain.indexOf(pet.getTypeId()) + 1)
+
+        transformUnit(pet, next)
+
+        // Will you be my valentine?
+        flashEffect(LocalAbilities.heartParticle, pet, "head")
+
+        pet.setOwner(casterOwner, true)
+        pet.issueTargetOrder("move", casterOwner.getTroll())
+        pet.setMana(0)
+
+        // Upgrade system wouldn't work properly with multiple pet, since upgrade are linked to the player and not the unit
+        petUpgradeHandlerInstance.put(pet, new PetUpgradeHandler(casterOwner.getTroll(), pet))
+
+        // Enable release spell
+        casterOwner.setTechResearched(UPGD_PET_TAMED_TRUE, 1)
+        casterOwner.setTechResearched(UPGD_PET_TAMED_FALSE, 0)
 
 init
     EventListener.onTargetCast(ABILITY_PET_TAME) (unit caster, unit target) ->

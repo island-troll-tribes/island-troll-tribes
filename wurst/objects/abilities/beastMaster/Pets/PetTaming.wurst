@@ -13,35 +13,14 @@ import ClosureTimers
 import ColorUtils
 import LocalAssets
 import LocalObjectIDs
-import Pets
 import StringExtensions
 import ToolTipsUtils
-import PlayerExtensions
 import LinkedList
 import HashMap
 import SimError
 import UnitExtensions
-import Transformation
-import PetUpgradeHandler
-import IdListConstant
+import PetFeeding
 
-
-// I wanted animals to have different diet, but I fear it might add too much complexity for players or tooltipping
-// Kinda want to be able to feed materials to drake based on their type (e.g red drake eats flint, nether eats darkness Orb)
-let petDietMap = new HashMap<int, LinkedList<int>>()
-    ..put(UNIT_ELK                     , asList(ITEM_ACORN, ITEM_MAGIC_ACORN))
-    ..put(UNIT_TAMED_ELK               , asList(ITEM_ACORN, ITEM_MAGIC_ACORN))
-    ..put(UNIT_JUNGLE_WOLF             , asList(ITEM_COOKED_MEAT, ITEM_ACORN, ITEM_MAGIC_ACORN))
-    ..put(UNIT_TAMED_WOLF              , asList(ITEM_COOKED_MEAT, ITEM_ACORN, ITEM_MAGIC_ACORN))
-    ..put(UNIT_TAMED_BEAR              , asList(ITEM_COOKED_MEAT, ITEM_ACORN, ITEM_MAGIC_ACORN))
-    ..put(UNIT_JUNGLE_BEAR             , asList(ITEM_COOKED_MEAT, ITEM_ACORN, ITEM_MAGIC_ACORN))
-    ..put(UNIT_HAWK_HATCHLING          , asList(ITEM_COOKED_MEAT, ITEM_ACORN, ITEM_MAGIC_ACORN))
-    ..put(UNIT_NETHER_DRAGON_HATCHLING , asList(ITEM_COOKED_MEAT, ITEM_ACORN, ITEM_MAGIC_ACORN))
-
-let foodMapMana = new HashMap<int, int>()
-    ..put(ITEM_COOKED_MEAT, 3)
-    ..put(ITEM_ACORN      , 4)
-    ..put(ITEM_MAGIC_ACORN, 8)
 
 let PETS_TT = map((animal, _) -> animal.color(COLOR_YELLOW), asList("Elk", "Wolf", "Bear", "Any hatchling from the hatchery")).joinBy(", ")
 let FOODS_TT = map((food, _) -> food.color(COLOR_ORANGE), asList(
@@ -51,10 +30,10 @@ let FOODS_TT = map((food, _) -> food.color(COLOR_ORANGE), asList(
                     )).joinBy(", ")
 
 let ABIL_TT_EXT = "Feed an animal by throwing the first edible item from the caster inventory, target will gain mana based on the item sent. "
-                  + "\nFollowing items are considered edible and give mana, format being " + "#Item #Mana gained :".color(COLOR_ORANGE)
+                  + "\nFollowing items are considered edible and give mana, format being " + "#Item #Mana".color(COLOR_ORANGE) + " gained :\n"
                   + FOODS_TT + ".\n\n"
                   + "A wild animal will be tamed when its mana reach the maximum amount, last player to feed him will get the pet. "
-                  + "\nFollowing animals can be fed and tamed :"
+                  + "\nFollowing animals can be fed and tamed :\n"
                   + PETS_TT + ".\n\n"
                   + "You can tame only 1 animal at once.".color(COLOR_RED)
                   + "You cannot steal other troll pet.".color(COLOR_RED)
@@ -68,7 +47,7 @@ function createPetTameSpell(int newAbilId) returns ChannelAbilityPreset
         ..setHeroAbility(false)
         ..setName("Feed Animal")
         ..setCastRange(1, 2000.0)
-        ..setFollowThroughTime(1, 1.5)
+        ..setFollowThroughTime(1, 1)
         ..setTargetsAllowed(1, commaList(
                 TargetsAllowed.nonhero,
                 TargetsAllowed.organic
@@ -186,73 +165,13 @@ class FoodProjectile
                         Filter(->petDietMap.has(GetFilterUnit().getTypeId()))
                         ) (unit u) ->
             foundTarget = true
-            let maxManaAdded = charges * foodMapMana.get(itemId)
-            let totalMana = u.getMana() + maxManaAdded
-
-            if localPlayer.canSee(caster)
-                // Create a text tag to visualize the effect.
-                CreateTextTag()
-                    ..setText("+" + (totalMana - u.getMana()) .floor().toString(), 10)
-                    ..setPos(u.getPos3Zero())
-                    ..setColor(COLOR_TURQUOISE.withAlpha(255))
-                    ..setVelocity(0., 0.04)
-                    ..setVisibility(true)
-                    ..setFadepoint(2.0)
-                    ..setLifespan(5.0)
-                    ..setPermanent(false)
-            flashEffect(Abilities.aImaTarget, u, "origin")
-            u.addMana(maxManaAdded.toReal())
-
-            if totalMana - u.getMaxMana() >= 0
-                if u.getOwner() == players[PLAYER_NEUTRAL_AGGRESSIVE]
-                    // Could allow pet stealing.... might be funny...
-                    // or u.getOwner().isEnemyOf(caster.getOwner())
-                    addPet(caster, u)
-
-                // In case there's too much food sent, we create an item stack with the remaining charges
-                // We could actually compute the remaning charges before and send the exact number needed, but I imagine funny
-                // situation will come out of this behavior
-                let leftover = (totalMana - u.getMaxMana()) / foodMapMana.get(itemId)
-                if leftover > 0
-                    createItem(itemId, pos)..setCharges(leftover.round())
+            feedPet(u, caster, itemId, charges)
 
     ondestroy
         if not foundTarget
             createItem(itemId, pos)..setCharges(charges)
         this.efx.destr()
 
-
-function addPet(unit caster, unit target)
-    let owner = caster.getOwner()
-
-    // Prevent player from getting multiple pet
-    // Might add a mode to allow multiple pet
-    if owner.getPet() != null
-        simError(owner, "You already own a pet")
-
-    // Look up the growth chain for the pet.
-    let chain = target.getPetGrowthChain()
-
-    // Look up the next unit along the chain.
-    let next = chain.get(chain.indexOf(target.getTypeId()) + 1)
-
-    transformUnit(target, next)
-
-    // Will you be my valentine?
-    flashEffect(LocalAbilities.heartParticle, target, "head")
-
-    target.setOwner(owner, true)
-    target.issueTargetOrder("move", caster)
-    target.setMana(0)
-
-    owner.addPet(target)
-
-    // Upgrade system wouldn't work properly with multiple pet, since upgrade are related to the player
-    petUpgradeHandlerInstance.put(target, new PetUpgradeHandler(caster, target))
-
-    // Enable release spell
-    owner.setTechResearched(UPGD_PET_TAMED_TRUE, 1)
-    owner.setTechResearched(UPGD_PET_TAMED_FALSE, 0)
 
 function feedAnimal(unit caster, unit target)
     caster.setFacing(caster.getPos().angleTo(target.getPos()))
@@ -266,7 +185,7 @@ function feedAnimal(unit caster, unit target)
     if foodInventory.size() > 0
         new FoodProjectile(caster, target, 600, 0.300, foodInventory.getFirst())
     else
-        simError(caster.getOwner(), "You need the appropriate food to tame this animal, guess its diet")
+        simError(caster.getOwner(), "You need the appropriate food to feed this animal, guess its diet")
 
 function onCast(unit caster, unit target)
     if petDietMap.has(target.getTypeId())

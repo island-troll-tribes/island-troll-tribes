@@ -14,6 +14,10 @@ import Transformation
 import ChatCommands
 import StringExtensions
 import ColorUtils
+import PlayerExtensions
+import LocalAssets
+import SimError
+import PetUpgradeHandler
 
 let emptyChain = new LinkedList<int>()
 
@@ -80,7 +84,37 @@ public function player.getPet() returns unit
     return pets.get(this)
 
 public function player.addPet(unit pet)
-    pets.put(this, pet)
+    // Prevent player from getting multiple pet
+    // Might add a mode to allow multiple pet
+    if this.getPet() != null
+        simError(this, "Cannot tame more pet")
+    else
+        pets.put(this, pet)
+
+        // Look up the growth chain for the pet.
+        let chain = pet.getPetGrowthChain()
+
+        // Look up the next unit along the chain.
+        let next = chain.get(chain.indexOf(pet.getTypeId()) + 1)
+
+        transformUnit(pet, next)
+
+        // Will you be my valentine?
+        flashEffect(LocalAbilities.heartParticle, pet, "head")
+
+        pet.setOwner(this, true)
+        pet.issueTargetOrder("move", this.getTroll())
+        pet.setMana(0)
+
+        // Upgrade system wouldn't work properly with multiple pet, since upgrade are related to the player
+        petUpgradeHandlerInstance.put(pet, new PetUpgradeHandler(this.getTroll(), pet))
+
+        //if pet.hasAbility(ABILITY_FEED_PET)
+        // pet.hideAbility(ABILITY_FEED_PET, TRUE)
+
+        // Enable release spell
+        this.setTechResearched(UPGD_PET_TAMED_TRUE, 1)
+        this.setTechResearched(UPGD_PET_TAMED_FALSE, 0)
 
 public function player.removePet()
     pets.getAndRemove(this)

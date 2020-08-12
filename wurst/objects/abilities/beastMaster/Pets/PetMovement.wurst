@@ -14,8 +14,6 @@ import LocalObjectIDs
 import Pets
 import Classes
 
-// Array of the mouse positions kept for moving the pet in manual control mode.
-vec2 array MOUSE_POS
 
 public enum CONTROL_MODE
     AUTO
@@ -24,8 +22,6 @@ public enum CONTROL_MODE
 // Map of players to their chosen control scheme for pets.
 public let PET_CONTROLS = new HashMap<player, CONTROL_MODE>()
 
-// Radius that pet will search for enemy when moved in manual control.
-let PET_ATTACK_RADIUS = 100.
 
 // Pet will randomly choose a position in this radius from target position in automatic mode.
 // This is done to prevent the pet and troll from stacking as well as an aesthetic choice.
@@ -39,35 +35,6 @@ let ALLOWED_ORDERS = asList(
     Orders.stop,
     Orders.holdposition
 )
-
-// Used to continuously track the mouse position of players, used to order pet in manual control mode.
-function updateMousePos()
-    MOUSE_POS[EventData.getTriggerPlayer().getId()] = EventData.getMouseWorldPos()
-
-// Manual control pet movement.
-function onKeyDown(player triggerer)
-    // Exit if the player is not using manual control mode.
-    if PET_CONTROLS.get(triggerer) == AUTO
-        return
-    
-    // Get the triggerer's Pet.
-    let pet = triggerer.getPet() 
-
-    // Find the nearest enemy in range of the target position.
-    forNearestUnit(
-        MOUSE_POS[triggerer.getId()], 
-        PET_ATTACK_RADIUS, 
-        Filter(-> GetFilterUnit().isEnemyOf(GetTriggerPlayer()))
-        ) (unit u) ->
-        // If an enemy is found.
-        if u != null and u.isEnemyOf(triggerer)
-            // Attack the enemy
-            pet.issueTargetOrderById(Orders.attack, u)
-
-        // If no enemy is found.
-        else 
-            // Move to target location.
-            pet.issuePointOrderById(Orders.smart, MOUSE_POS[triggerer.getId()])
 
 // Auto control pet movement.
 function autoMovePet()
@@ -115,14 +82,3 @@ init
         autoMovePet()
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_ORDER) ->
         autoMovePet()
-
-    // Continually update the mouse positions of players.
-    registerPlayerEvent(EVENT_PLAYER_MOUSE_MOVE) ->
-        updateMousePos()
-
-    // Used for manual control of the pet.
-    // Using triggers for this as it seems the events don't work.
-    let t = CreateTrigger()..addAction(-> onKeyDown(GetTriggerPlayer()))
-
-    for index = 0 to bj_MAX_PLAYER_SLOTS - 1
-        t.registerPlayerKeyPress(players[index], OSKEY_R, OSKEY_META.CTRL, true)

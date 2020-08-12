@@ -1,6 +1,6 @@
 package HealingSystem
 
-import PlayerExtensions
+import TextTagUtils
 
 trigger eventTrigger = CreateTrigger()
 HealingInstance eventHealing = null
@@ -69,16 +69,7 @@ public class HealingInstance
         target.setHP(target.getHP() + modifiedHealAmount)
 
         // Create a text tag to visualize the effect.
-        if localPlayer.canSee(target)
-            CreateTextTag()
-                ..setText("+" + modifiedHealAmount.floor().toString(), 10)
-                ..setPos(target.getPos3Zero())
-                ..setColor(colorA(31, 191, 0, 255))
-                ..setVelocity(0., 0.04)
-                ..setVisibility(true)
-                ..setFadepoint(2.0)
-                ..setLifespan(5.0)
-                ..setPermanent(false)
+        createTeamFadingTextTag(target, "+" + modifiedHealAmount.floor().toString(), color(31, 191, 0))
 
         // Destroy upon completion.
         destroy this

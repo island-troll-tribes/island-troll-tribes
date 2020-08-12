@@ -2,26 +2,33 @@ package PetFeeding
 
 // Standard library imports:
 import ClosureEvents
-import UpgradeObjEditing
 import ClosuresForItems
 import ChannelAbilityPreset
 import Assets
+
+// Third party imports:
+import Lodash
 
 // Local imports:
 import LocalObjectIDs
 import Pets
 import ColorUtils
 import StringExtensions
-import ToolTipsUtils
-import LocalAssets
 import HashMap
 import LinkedList
 import SimError
 import TextTagUtils
-import initlater PetTaming
+import PetTaming
+import ToolTipsUtils
 
-// I wanted animals to have different diet, but I fear it might add too much complexity for players or tooltipping
-// Kinda want to be able to feed materials to drake based on their type (e.g red drake eats flint, nether eats darkness Orb)
+/**
+    Contains "Snack" spell abilityDefinition and the logic behind the pet mana handling
+    A neutral animal can only be fed from "Food Throw" spell
+    A tamed animal can feed upon nearby item using "Eat" spell
+    I wanted animals to have different diet, but I fear it might add too much complexity for players or tooltipping
+    Kinda want to be able to feed materials to drake based on their type (e.g red drake eats flint, nether eats darkness Orb)
+**/
+
 public let petDietMap = new HashMap<int, LinkedList<int>>()
     ..put(UNIT_ELK                     , asList(ITEM_ACORN, ITEM_MAGIC_ACORN))
     ..put(UNIT_TAMED_ELK               , asList(ITEM_ACORN, ITEM_MAGIC_ACORN))
@@ -37,26 +44,32 @@ public let foodMapMana = new HashMap<int, int>()
     ..put(ITEM_ACORN      , 4)
     ..put(ITEM_MAGIC_ACORN, 8)
 
-let MANA_GAINED = 1
-let HOTKEY = "D"
-let ICON = LocalIcons.aTCCannibalize
-let TOOLTIP = "Eat Corpse"
-let TOOLTIP_EXT = "Eat a raw corpse to gain {0} energy. energy can be used to grow your pet, or increase its stats. \n".format(MANA_GAINED.toString().color(ENERGY_COLOR)) +
-                    "You can upgrade any stat a total of {0} times every time your troll levels up.".format("3".color(GOLD_COLOR))
+public let FOODS_TT = map((food, _) -> food.color(HIGHLIGHT_COLOR), asList(
+                    "Cooked Meat " + foodMapMana.get(ITEM_COOKED_MEAT).toString(),
+                    "Acorn "       + foodMapMana.get(ITEM_ACORN      ).toString(),
+                    "Magic Acorn " + foodMapMana.get(ITEM_MAGIC_ACORN).toString()
+                    )).joinBy(", ")
 
-@compiletime function createManaDummyUpgrade() returns UpgradeDefinition
-    return new UpgradeDefinition(UPGD_PET_EATING_ALLOWED)
-        ..setName(1, "Maximum unused upgrade points reached.")
+let TOOLTIP = "Snack"
+let TOOLTIP_EXT = "Gains mana by ingesting the nearest edible item."
+                  + "\nFollowing items are considered edible and give mana, format being " + "#Item #Mana".color(HIGHLIGHT_COLOR) + " gained :\n"
+                  + FOODS_TT + ".\n\n"
+                  + "Note: Elk do not eat Meat".color(COLOR_RED)
+
 
 @compiletime function createAbilityFeedItemPet() returns ChannelAbilityPreset
-    return new ChannelAbilityPreset(ABILITY_FEED_PET, 1, true)
+    return new ChannelAbilityPreset(ABILITY_PET_SNACK, 1, true)
         ..setManaCost(1, 0)
         ..setCastRange(1, 9999)
         ..presetTargetTypes(Targettype.NONE)
         ..setIconNormal(Icons.bTNCannibalize)
         ..setButtonPositionNormalX(1)
         ..setButtonPositionNormalY(1)
-        ..setCooldown(1, 2)
+        ..setCooldown(1, 1)
+        ..setName(TOOLTIP)
+        ..setTooltipNormal(1, makeToolTipNorm("S", TOOLTIP))
+        ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+        ..setEditorSuffix("(Wurst)")
 
 public function feedPet(unit pet, unit caster, int itemId, int charges)
     let manaFromStack = (charges * foodMapMana.get(itemId)).toReal()
@@ -68,11 +81,11 @@ public function feedPet(unit pet, unit caster, int itemId, int charges)
                                : manaFromStack
 
     pet.addMana(correctAmount)
-    flashEffect(Abilities.aImaTarget, pet, "origin")
 
     // Create a text tag to visualize the effect.
     if correctAmount > 0
-        createTeamFadingTextTag(pet, pet.getPos3Real(), "+" + correctAmount.floor().toString(), COLOR_TURQUOISE)
+        createTeamFadingTextTag(caster, pet.getPos3Real(), "+" + correctAmount.floor().toString(), COLOR_TURQUOISE)
+        flashEffect(Abilities.aImaTarget, pet, "origin")
 
     if manaExcess >= 0
 
@@ -95,7 +108,7 @@ public function feedPet(unit pet, unit caster, int itemId, int charges)
         if leftover > 0
             createItem(itemId, pet.getPos())..setCharges(leftover)
 
-function petEat(unit caster)
+function onSnack(unit caster)
     let nearestFood = findNearestItem(caster.getPos(), 250, i -> petDietMap.get(caster.getTypeId()).has(i.getTypeId()))
 
     if caster.getMissingMana() == 0
@@ -108,5 +121,4 @@ function petEat(unit caster)
         simError(caster.getOwner(), "There's nothing edible for this pet to eat")
 
 init
-    EventListener.onCast(ABILITY_FEED_PET) (unit caster) ->
-        petEat(caster)
+    EventListener.onCast(ABILITY_PET_SNACK, (unit caster) -> onSnack(caster))

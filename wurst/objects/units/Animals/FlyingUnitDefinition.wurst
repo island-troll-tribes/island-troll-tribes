@@ -28,36 +28,43 @@ public let hawkAbilities = asList(
 // TODO: Use commaList for lists.
 constant TAMED_HAWK_ABIL = hawkAbilities.joinBy((int i) -> i.toRawCode(), ",")
 
+function createFlyingAnimal(int unitId) returns UnitDefinition
+    return new UnitDefinition(unitId, UnitIds.wareagle1)
+        ..setGoldBountyAwardedBase(0)
+        ..setGoldBountyAwardedNumberofDice(0)
+        ..setGoldBountyAwardedSidesperDie(0)
+        ..setSightRadiusDay(75)
+        ..setSightRadiusNight(75)
+        ..setHitPointsRegenerationType("")
+        ..setNameEditorSuffix("(Wurst)")
+        ..setMovementHeight(450)
+        ..setMovementHeightMinimum(50)
+
+
+@compiletime function createHawkHatchling() returns UnitDefinition
+    return createFlyingAnimal(UNIT_HAWK_HATCHLING)
+        ..setNormalAbilities(TAMED_HAWK_ABIL)
+        ..setScalingValue(0.5)
+        ..setSpeedBase(300)
+        ..setLevel(0)
+        ..setHitPointsMaximumBase(40)
+        ..setName("Hawk Hatchling")
+
 class HawkDefinition extends UnitDefinition
     construct(int unitId)
         super(unitId, UnitIds.wareagle1)
         this.setNormalAbilities(HAWK_ABIL)
         this.setUpgradesUsed("")
         this.setScalingValue(1)
-        this.setMovementHeight(450)
-        this.setMovementHeightMinimum(50)
         this.setSpeedBase(400)
-        this.setGoldBountyAwardedBase(0)
-        this.setGoldBountyAwardedNumberofDice(0)
-        this.setGoldBountyAwardedSidesperDie(0)
         this.setHitPointsMaximumBase(135)
-        this.setSightRadiusDay(75)
-        this.setSightRadiusNight(75)
         this.setLevel(4)
-        this.setHitPointsRegenerationType("")
-        this.setNameEditorSuffix("(Wurst)")
 
 // Hatchling
 class HawkHatchlingDefinition extends TamedHawkDefinition
     construct(int unitId)
         super(unitId)
-        this.setNormalAbilities(TAMED_HAWK_ABIL)
-        this.setScalingValue(0.5)
-        this.setMovementHeightMinimum(400)
-        this.setSpeedBase(300)
-        this.setLevel(3)
-        this.setHitPointsMaximumBase(40)
-        this.setName("Hawk Hatchling")
+
 
 class ForestDragonHatchlingDefinition extends HawkHatchlingDefinition
     construct(int unitId)
@@ -195,20 +202,15 @@ class GreaterNetherDragonDefinition extends GreaterForestDragonDefinition
     new HawkDefinition                 (UNIT_HAWK                   )
     new HawkHatchlingDefinition        (UNIT_HAWK_HATCHLING         )
     new TamedHawkDefinition            (UNIT_HAWK_ADOLESCENT        )
-    new AlphaHawkDefinition            (UNIT_ALPHA_HAWK             )
 
     new ForestDragonHatchlingDefinition(UNIT_FOREST_DRAGON_HATCHLING)
     new ForestDragonDefinition         (UNIT_FOREST_DRAGON          )
-    new GreaterForestDragonDefinition  (UNIT_GREATER_FOREST_DRAGON  )
 
     new RedDragonHatchlingDefinition   (UNIT_RED_DRAGON_HATCHLING   )
     new RedDragonDefinition            (UNIT_RED_DRAGON             )
-    new GreaterRedDragonDefinition     (UNIT_GREATER_RED_DRAGON     )
 
     new BronzeDragonHatchlingDefinition(UNIT_BRONZE_DRAGON_HATCHLING)
     new BronzeDragonDefinition         (UNIT_BRONZE_DRAGON          )
-    new GreaterBronzeDragonDefinition  (UNIT_GREATER_BRONZE_DRAGON  )
 
     new NetherDragonHatchlingDefinition(UNIT_NETHER_DRAGON_HATCHLING)
     new NetherDragonDefinition         (UNIT_NETHER_DRAGON)
-    new GreaterNetherDragonDefinition  (UNIT_GREATER_NETHER_DRAGON  )

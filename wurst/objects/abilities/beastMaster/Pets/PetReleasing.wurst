@@ -18,6 +18,7 @@ import PlayerExtensions
 import GeometryUtils
 import OrderIds
 import PetUpgradeHandler
+import TextTagUtils
 
 let RELEASE_WANDER_DISTANCE = 2000.
 let TRANSPARENCY_NUM_LOOPS = 51
@@ -47,11 +48,6 @@ function createReleasePetAbility(int newAbilId) returns ChannelAbilityPreset
     ..setHotkeyNormal("W")
     ..setTooltipNormal(1, makeToolTipNorm("W", "Release Your Pet"))
 
-@compiletime function createShapeShifterReleaseSpell() returns ChannelAbilityPreset
-    return createReleasePetAbility(ABILITY_PET_RELEASE_SHAPESHIFTER)
-    ..presetButtonPosNormal(1, 2)
-    ..setHotkeyNormal("S")
-    ..setTooltipNormal(1, makeToolTipNorm("S", "Release Your Pet"))
 
 public function releasePet(unit caster, unit pet, player originalOwner)
     // Deregister the pet.
@@ -80,16 +76,7 @@ public function releasePet(unit caster, unit pet, player originalOwner)
     // Texttag saying goodbye to the pet
     releaseTextList.shuffle()
     let text = "{0} {1}!".format(releaseTextList.getFirst(), pet.getName())
-    if localPlayer.canSee(caster)
-        CreateTextTag()
-            ..setText(text, 10)
-            ..setPos(caster.getPos3Real())
-            ..setColor(colorA(0, 197, 255, 255))
-            ..setVelocity(0., 0.04)
-            ..setVisibility(true)
-            ..setFadepoint(2.0)
-            ..setLifespan(5.0)
-            ..setPermanent(false)
+    createTeamFadingTextTag(caster, caster.getPos3Real(), text, color(0, 197, 255))
 
     // Notify the owning tribe.
     let tribe = Tribe.ofPlayer(originalOwner)
@@ -108,4 +95,3 @@ function onRelease(unit caster)
 
 init
     EventListener.onCast(ABILITY_PET_RELEASE, (unit caster) -> onRelease(caster))
-    EventListener.onCast(ABILITY_PET_RELEASE_SHAPESHIFTER, (unit caster) -> onRelease(caster))

@@ -70,12 +70,6 @@ function createPetDummySleepSpell(int newAbilId) returns ChannelAbilityPreset
     ..setHotkeyNormal("E")
     ..setTooltipNormal(1, makeToolTipNorm("E", "Sleep"))
 
-@compiletime function createShapeShifterPetSleepSpell() returns ChannelAbilityPreset
-    return createPetDummySleepSpell(ABILITY_PET_SLEEP_SHAPESHIFTER)
-    ..setButtonPositionNormalX(2)
-    ..setButtonPositionNormalY(1)
-    ..setHotkeyNormal("D")
-    ..setTooltipNormal(1, makeToolTipNorm("D", "Sleep"))
 
 function onCast(unit caster)
     // Lookup the pet for the caster.
@@ -108,7 +102,4 @@ function onCast(unit caster)
 
 
 init
-    EventListener.onCast(ABILITY_PET_SLEEP) (unit caster) ->
-        onCast(caster)
-    EventListener.onCast(ABILITY_PET_SLEEP_SHAPESHIFTER) (unit caster) ->
-        onCast(caster)
+    EventListener.onCast(ABILITY_PET_SLEEP, (unit caster) -> onCast(caster))

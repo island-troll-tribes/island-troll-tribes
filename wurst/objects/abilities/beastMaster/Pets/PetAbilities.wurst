@@ -61,6 +61,8 @@ let GROWTH_ICON = LocalIcons.bTNAdvanceLife
         ..setCheckDependencies(true)
         ..setRequirements(UPGD_PET_INVENTORY.toRawCode())
 
+// TODO: This ability actually regen 2x the life steal (50% will regen 100% ingame, atleast I tested hitting elks)
+// Find out why or swap it with another ability
 @compiletime function createLifeStealAbility() returns AbilityDefinitionVampiricAuracreep
     return new AbilityDefinitionVampiricAuracreep(ABILITY_PET_LIFE_STEAL)
         ..setIconNormal(Icons.pASBTNVampiricAura)
@@ -69,14 +71,14 @@ let GROWTH_ICON = LocalIcons.bTNAdvanceLife
         ..presetAttackDamageStolen(lvl -> 0.17 + lvl * LIFE_STEAL_INCREASE)
         ..setName("Pet Life Steal")
         ..presetTooltipNormal(lvl -> makeToolTipNormLevelAura(LIFE_STEAL_TOOLTIP, lvl))
-        ..presetTooltipNormalExtended(lvl -> LIFE_STEAL_TOOLTIP_EXT.format((0.17 + lvl * LIFE_STEAL_INCREASE).toToolTipOrange()))
+        ..presetTooltipNormalExtended(lvl -> LIFE_STEAL_TOOLTIP_EXT.format(
+            getAbilityDataFieldPercent(ABILITY_PET_LIFE_STEAL, "DataA" + lvl.toString()).color(COLOR_ORANGE)))
         ..setEditorSuffix("(Wurst)")
         ..setCheckDependencies(true)
-        ..presetAreaofEffect(lvl -> 1)
-        ..presetTargetsAllowed(lvl -> commaList(TargetsAllowed.self))
+        ..presetAreaofEffect(lvl -> 100)
+        //..presetTargetsAllowed(lvl -> commaList(TargetsAllowed.self))
         ..setArtTarget("")
         ..setBuffs(1, "")
-        ..setRequirements(UPGD_PET_LIFE_STEAL.toRawCode())
 
 @compiletime function createBashAbility() returns AbilityDefinitionBashcreep
     return new AbilityDefinitionBashcreep(ABILITY_PET_BASH)
@@ -89,10 +91,10 @@ let GROWTH_ICON = LocalIcons.bTNAdvanceLife
         ..presetDurationNormal(lvl -> 0.17 + lvl * BASH_DURATION_INCREASE)
         ..setName("Pet Bash")
         ..presetTooltipNormal(lvl -> makeToolTipNormLevelAura(BASH_TOOLTIP, lvl))
-        ..presetTooltipNormalExtended(lvl -> BASH_TOOLTIP_EXT.format((0.17 + lvl * BASH_DURATION_INCREASE).toString().color(COLOR_ORANGE)))
+        ..presetTooltipNormalExtended(lvl -> BASH_TOOLTIP_EXT.format(
+            (0.17 + lvl * BASH_DURATION_INCREASE).round().toString().color(COLOR_ORANGE)))
         ..setEditorSuffix("(Wurst)")
         ..setCheckDependencies(true)
-        ..setRequirements(UPGD_PET_BASH.toRawCode())
 
 @compiletime function createPetGrowthAbility() returns ChannelAbilityPreset
     return new ChannelAbilityPreset(ABILITY_GROW_PET, 1, true)

@@ -11,12 +11,25 @@ import PlayerExtensions
 
 
 public let petUpgradeHandlerInstance = new HashMap<unit, PetUpgradeHandler>()
+IterableMap<int, int> upgrades = new IterableMap<int, int>()
+    ..put(ABILITY_PET_DAMAGE_UPGD      , UPGD_PET_ATTACK_DAMAGE)
+    ..put(ABILITY_PET_ARMOR_UPGD       , UPGD_PET_ARMOR)
+    ..put(ABILITY_PET_MAGIC_RESIST_UPGD, UPGD_PET_MAGIC_RESISTANCE)
+    ..put(ABILITY_PET_HEALTH_UPGD      , UPGD_PET_HEALTH)
+    ..put(ABILITY_PET_INVENTORY_UPGD   , UPGD_PET_INVENTORY)
+    ..put(ABILITY_PET_LIFE_STEAL_UPGD  , UPGD_PET_LIFE_STEAL)
+    ..put(ABILITY_PET_BASH_UPGD        , UPGD_PET_BASH)
 
 /**
     Pet stats and abilities upgrades are handled using the followed class
     Every time an upgrade ability is casted, we increment the level of the casted
     ability, the level of the upgrade research and the level of the ability concerned
     by the upgrade.
+
+    Upgrade abilities max levels are set at tech maximum level minus 2 to allow
+    Druid spiritual guidance to be useful when the player increased upgrade level to its maximum
+    e.g you cannot increase bonus damage level over 10, but spiritual guidance will instantly put it to level 12
+    when the unit is in range
 
     Upgrades are reset on pet release
 **/
@@ -32,49 +45,45 @@ public class PetUpgradeHandler
         this.petOwner = caster.getOwner()
         this.pet = pet
         this.initialScale = BlzGetUnitRealField(pet, UNIT_RF_SCALING_VALUE)
-        EventListener.add(pet, EVENT_PLAYER_UNIT_SPELL_CAST, () -> upgradePet())
+        EventListener.add(pet, EVENT_PLAYER_UNIT_SPELL_CAST, () -> onIncreaseUpgradeCast())
 
-    function resetUpgrades()
-        petOwner.setTechResearched(UPGD_PET_ATTACK_DAMAGE, 0)
-        petOwner.setTechResearched(UPGD_PET_ARMOR, 0)
-        petOwner.setTechResearched(UPGD_PET_MAGIC_RESISTANCE, 0)
-        petOwner.setTechResearched(UPGD_PET_HEALTH, 0)
-        petOwner.setTechResearched(UPGD_PET_INVENTORY, 0)
-        petOwner.setTechResearched(UPGD_PET_LIFE_STEAL, 0)
-        petOwner.setTechResearched(UPGD_PET_BASH, 0)
-
-    function upgradePet()
+    function onIncreaseUpgradeCast()
         let abil = EventData.getSpellAbility()
         let abilId = EventData.getSpellAbilityId()
 
+        incrementUpgrade(1, abilId, true)
+        // Disable upgrade ability once it reach max level
+        if pet.getAbilityLevel(abilId) >= BlzGetAbilityIntegerField(abil, ABILITY_IF_LEVELS)
+            pet.disableAbility(abilId, false, true)
+
+    function incremenAllUpgrades(int value, boolean updateUpgradeAbilityLevel)
+        for upgradeAbilId in upgrades
+            incrementUpgrade(value, upgradeAbilId, updateUpgradeAbilityLevel)
+
+    function incrementUpgrade(int value, int abilId, boolean updateUpgradeAbilityLevel)
+        let upgradeId = upgrades.get(abilId)
+        let techCount = petOwner.getTechCount(upgradeId, false)
+
+        // addTechResearch do not work with negative value so we used setTechResearch
+        // If max research lvl == 6, current research lvl == 5, adding 2 lvl will set research to 6
+        petOwner.setTechResearched(upgradeId, techCount + value)
+
+        if updateUpgradeAbilityLevel
+            pet.setAbilityLevel(abilId, GetUnitAbilityLevel(pet, abilId) + value)
+
+        // Using switch give more flexibility on action triggered I believe
         switch abilId
             // Stats Upgrades
-            case ABILITY_PET_DAMAGE_UPGD
-                petOwner.addTechResearched(UPGD_PET_ATTACK_DAMAGE, 1)
-            case ABILITY_PET_ARMOR_UPGD
-                petOwner.addTechResearched(UPGD_PET_ARMOR, 1)
             case ABILITY_PET_MAGIC_RESIST_UPGD
-                petOwner.addTechResearched(UPGD_PET_MAGIC_RESISTANCE, 1)
-                pet.setMagicResist(petOwner.getTechCount(UPGD_PET_MAGIC_RESISTANCE, false))
+                pet.setMagicResist(techCount + value)
             case ABILITY_PET_HEALTH_UPGD
                 // Increase scale by 3% for every upgrade, durr durr big bear
-                pet.setScale(initialScale + initialScale * 0.03 * petOwner.getTechCount(UPGD_PET_HEALTH, false))
-                petOwner.addTechResearched(UPGD_PET_HEALTH, 1)
+                pet.setScale(initialScale + initialScale * 0.03 * (techCount + value))
 
-            // Abilities Upgrades
-            case ABILITY_PET_INVENTORY_UPGD
-                petOwner.addTechResearched(UPGD_PET_INVENTORY, 1)
-                pet.setAbilityLevel(ABILITY_PET_INVENTORY, petOwner.getTechCount(UPGD_PET_INVENTORY, false))
-            case ABILITY_PET_LIFE_STEAL_UPGD
-                petOwner.addTechResearched(UPGD_PET_LIFE_STEAL, 1)
-                pet.setAbilityLevel(ABILITY_PET_LIFE_STEAL, petOwner.getTechCount(UPGD_PET_LIFE_STEAL, false))
-            case ABILITY_PET_BASH_UPGD
-                petOwner.addTechResearched(UPGD_PET_BASH, 1)
-                pet.setAbilityLevel(ABILITY_PET_BASH, petOwner.getTechCount(UPGD_PET_BASH, false))
 
-        // Disable upgrade ability once it reach max level
-        if pet.getAbilityLevel(abilId) > BlzGetAbilityIntegerField(abil, ABILITY_IF_LEVELS)
-            pet.disableAbility(abilId, false, false)
+    function resetUpgrades()
+        for upgradeAbilId in upgrades
+            petOwner.setTechResearched(upgrades.get(upgradeAbilId), 0)
 
     function onRelease()
         this.resetUpgrades()

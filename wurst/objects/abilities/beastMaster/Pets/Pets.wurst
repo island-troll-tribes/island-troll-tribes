@@ -14,6 +14,7 @@ import Transformation
 import ChatCommands
 import StringExtensions
 import ColorUtils
+import PetUpgradeHandler
 
 let emptyChain = new LinkedList<int>()
 
@@ -82,7 +83,6 @@ public function player.getPet() returns unit
 public function player.addPet(unit pet)
     pets.put(this, pet)
 
-
 public function player.removePet()
     pets.getAndRemove(this)
 
@@ -99,6 +99,11 @@ public function group.enumPets()
         if value != null
             this.addUnit(value)
 
+public function player.addPetUpgrades(int value, boolean updateUpgradeAbilityLevel)
+    if this.getPet() != null
+        petUpgradeHandlerInstance.get(this.getPet()).incremenAllUpgrades(value, updateUpgradeAbilityLevel)
+
+
 init
     // Register the transformations at runtime.
     registerTransformations(transformations, transformationIDs, true)
@@ -112,3 +117,6 @@ init
             triggerPlayer.getPet().setName(name)
         else
             printTimedToPlayer("You do not own any pet".color(COLOR_RED), 5, triggerPlayer)
+    registerCommandAll("anim") (triggerPlayer, args) ->
+        let name = args.get(1).substring(0, 25)
+        triggerPlayer.getPet().setAnimation(name)

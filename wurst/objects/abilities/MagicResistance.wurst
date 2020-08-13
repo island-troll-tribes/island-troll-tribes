@@ -12,6 +12,7 @@ import LocalObjectIDs
 import LocalAssets
 import StringExtensions
 import ColorUtils
+import ToolTipsUtils
 
 let MAX_LEVEL = 10
 let MIN_LEVEL = 1
@@ -24,7 +25,7 @@ let MAGIC_RESIST_BUFFS = compiletime(map((lvl, _) -> createDummyBuff(lvl), range
 // Creates the buffs.
 function createDummyBuff(int lvl) returns int
     return createDummyBuffObject("Magic Resist level {0}".format(lvl.toString()).color(MAGIC_RESIST_COLOR),
-                                 "This unit is resisting {0} of magic damage.".format(((lvl * RESIST_PER_LVL * 100).round().toString() + "%").color(MAGIC_RESIST_COLOR)),
+                                 "This unit is resisting {0} of magic damage.".format(((lvl * RESIST_PER_LVL).toToolTipBlue())),
                                  LocalIcons.bTNResistMagic).abilId
 
 @compiletime function createMagicResistAbility() returns AbilityDefinitionRunedBracers
@@ -39,7 +40,7 @@ public function unit.getMagicResist() returns int
 // Used to set the level of magic resistance for a unit.
 public function unit.setMagicResist(int lvl)
     // Verify the lvl is in allowed range.
-    if lvl > MAX_LEVEL or lvl < MIN_LEVEL
+    if lvl > MAX_LEVEL or lvl < MIN_LEVEL - 1
         return
 
     // If the unit already has magic resistance.
@@ -48,9 +49,10 @@ public function unit.setMagicResist(int lvl)
         this.removeAbility(MAGIC_RESIST_BUFFS.get(this.getMagicResist()))
         // Remove the resist ability.
         this.removeAbility(ABILITY_MAGIC_RESIST)
-    // Add the resist ability.
-    this.addAbility(ABILITY_MAGIC_RESIST)
-    // Set the ability to the desired level.
-    this.setAbilityLevel(ABILITY_MAGIC_RESIST, lvl)
-    // Add the buff corresponding to the desired level.
-    this.addAbility(MAGIC_RESIST_BUFFS.get(lvl))
+    if lvl > 0
+        // Add the resist ability.
+        this.addAbility(ABILITY_MAGIC_RESIST)
+        // Set the ability to the desired level.
+        this.setAbilityLevel(ABILITY_MAGIC_RESIST, lvl)
+        // Add the buff corresponding to the desired level.
+        this.addAbility(MAGIC_RESIST_BUFFS.get(lvl))

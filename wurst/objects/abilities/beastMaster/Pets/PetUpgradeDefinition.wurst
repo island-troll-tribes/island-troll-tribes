@@ -10,6 +10,7 @@ import LocalObjectIDs
 import ToolTipsUtils
 import ColorUtils
 import StringExtensions
+import SpiritualGuidance
 
 // Mana cost for all stat growth abilities.
 let STAT_MANA_COST = 2
@@ -42,7 +43,7 @@ let INVENTORY_TOOLTIP = "Back Pack"
 let INVENTORY_UPGD_TOOLTIP_EXT = "Increase your pet's inventory by {0}, pet become slightly slower.".format("1".color(COLOR_GREEN))
 
 let LIFE_STEAL_TOOLTIP = "Life Steal"
-let LIFE_STEAL_UPGD_TOOLTIP_EXT = "Increase your pet's life steal by {0} starting level 2.".format(LIFE_STEAL_INCREASE.toToolTipRed().color(COLOR_ORANGE))
+let LIFE_STEAL_UPGD_TOOLTIP_EXT = "Increase your pet's life steal by {0} starting level 2.".format(LIFE_STEAL_INCREASE.toToolTipOrange().color(COLOR_ORANGE))
 
 let BASH_TOOLTIP = "Bash"
 let BASH_UPGD_TOOLTIP_EXT = "Increase your pet's bash duration by {0} seconds starting level 2.".format(BASH_DURATION_INCREASE.toString().color(COLOR_ORANGE))
@@ -52,56 +53,52 @@ let BASH_UPGD_TOOLTIP_EXT = "Increase your pet's bash duration by {0} seconds st
 @compiletime function createPetAttackDamageUpgrade() returns UpgradeDefinition
     return new UpgradeDefinition(UPGD_PET_ATTACK_DAMAGE)
         ..addEffectApplyAttackUpgradeBonus()
-        ..setLevels(10)
+        ..setLevels(12)
         ..setName(1, "Pets Damage")
         ..setClass(UpgradeClass.Melee)
         ..setIcon(1, Icons.bTNStrengthOfTheWild)
-        ..addEffectAbilityLevelBonus(1, 1, ABILITY_PET_DAMAGE_UPGD.toRawCode())
 
 // Bonus Armor can be set in the unit object definition
 @compiletime function createPetArmorUpgrade() returns UpgradeDefinition
     return new UpgradeDefinition(UPGD_PET_ARMOR)
         ..addEffectApplyDefenseUpgradeBonus()
-        ..setLevels(10)
+        ..setLevels(12)
         ..setName(1, "Pets Armor")
         ..setClass(UpgradeClass.Armor)
         ..setIcon(1, Icons.bTNReinforcedHides)
-        ..addEffectAbilityLevelBonus(1, 1, ABILITY_PET_ARMOR_UPGD.toRawCode())
 
 @compiletime function createPetMagicResistanceUpgrade() returns UpgradeDefinition
     return new UpgradeDefinition(UPGD_PET_MAGIC_RESISTANCE)
-        ..addEffectAbilityLevelBonus(1, 1, ABILITY_PET_MAGIC_RESIST_UPGD.toRawCode())
         ..setName(1, "Pets Magic Resistance")
         ..setIcon(1, Icons.bTNThickFur)
-        ..setLevels(5)
+        ..setLevels(7)
 
 @compiletime function createPetHealthUpgrade() returns UpgradeDefinition
     return new UpgradeDefinition(UPGD_PET_HEALTH)
         ..addEffectHitPointBonus(HEALTH_INCREASE, HEALTH_INCREASE)
-        ..setLevels(10)
+        ..setLevels(12)
         ..setName(1, "Pets Health")
         ..setIcon(1, Icons.bTNAnimalWarTraining)
-        ..addEffectAbilityLevelBonus(1, 1, ABILITY_PET_HEALTH_UPGD.toRawCode())
 
 // Easier to handle abilities lock/unlock through those kind of upgrades
 @compiletime function createPetInventoryUpgrade() returns UpgradeDefinition
     return new UpgradeDefinition(UPGD_PET_INVENTORY)
-        ..addEffectAbilityLevelBonus(1, 1, ABILITY_PET_INVENTORY_UPGD.toRawCode())
+        ..addEffectAbilityLevelBonus(0, 1, ABILITY_PET_INVENTORY.toRawCode())
         ..setLevels(6)
         ..setName(1, "Pets Inventory")
         ..setIcon(1, Icons.bTNPackBeast)
 
 @compiletime function createPetLifeStealUpgrade() returns UpgradeDefinition
     return new UpgradeDefinition(UPGD_PET_LIFE_STEAL)
-        ..addEffectAbilityLevelBonus(1, 1, ABILITY_PET_LIFE_STEAL_UPGD.toRawCode())
-        ..setLevels(11)
+        ..addEffectAbilityLevelBonus(0, 1, ABILITY_PET_LIFE_STEAL.toRawCode())
+        ..setLevels(13)
         ..setName(1, "Pets Life Steal")
         ..setIcon(1, Icons.bTNVampiricAura)
 
 @compiletime function createPetBashUpgrade() returns UpgradeDefinition
     return new UpgradeDefinition(UPGD_PET_BASH)
-        ..addEffectAbilityLevelBonus(1, 1, ABILITY_PET_BASH_UPGD.toRawCode())
-        ..setLevels(11)
+        ..addEffectAbilityLevelBonus(0, 1, ABILITY_PET_BASH.toRawCode())
+        ..setLevels(13)
         ..setName(1, "Pets Bash")
         ..setIcon(1, Icons.bTNBash)
 
@@ -116,7 +113,7 @@ function createUpgradeAbility(int abilId, int lvls) returns ChannelAbilityPreset
         ..presetArtDuration(lvl -> 0)
 
 @compiletime function createPetDamageAbilityUpgrade() returns ChannelAbilityPreset
-    return createUpgradeAbility(ABILITY_PET_DAMAGE_UPGD, 10)
+    return createUpgradeAbility(ABILITY_PET_DAMAGE_UPGD, 11)
         ..setName("Increase Damage")
         ..setIconNormal(Icons.bTNStrengthOfTheWild)
         ..presetButtonPosNormal(0, 2)
@@ -129,10 +126,11 @@ function createUpgradeAbility(int abilId, int lvls) returns ChannelAbilityPreset
         ..presetTooltipNormalExtended(lvl -> DAMAGE_UPGD_TOOLTIP_EXT  + "\n\n"
                                      + toolTipUpgradeData("Current Damage Bonus", ATTACK_INCREASE, lvl, COLOR_RED) + "\n"
                                      + toolTipUpgradeData("Max Damage Bonus", ATTACK_INCREASE, 11, COLOR_RED)
+                                     + " (+ {0} when playing as Druid)".format((ATTACK_INCREASE * PET_UPGRADE_BONUS).toString().color(COLOR_RED))
                                      )
 
 @compiletime function createPetArmorAbilityUpgrade() returns ChannelAbilityPreset
-    return createUpgradeAbility(ABILITY_PET_ARMOR_UPGD, 10)
+    return createUpgradeAbility(ABILITY_PET_ARMOR_UPGD, 11)
         ..setName("Increase Armor")
         ..setIconNormal(Icons.bTNReinforcedHides)
         ..presetButtonPosNormal(1, 2)
@@ -145,10 +143,11 @@ function createUpgradeAbility(int abilId, int lvls) returns ChannelAbilityPreset
         ..presetTooltipNormalExtended(lvl -> ARMOR_UPGD_TOOLTIP_EXT  + "\n\n"
                                      + toolTipUpgradeData("Current Armor Bonus", ARMOR_INCREASE, lvl, COLOR_GREEN) + "\n"
                                      + toolTipUpgradeData("Max Armor Bonus", ARMOR_INCREASE, 11, COLOR_GREEN)
+                                     + " (+ {0} when playing as Druid)".format((ARMOR_INCREASE * PET_UPGRADE_BONUS).toString().color(COLOR_GREEN))
                                      )
 
 @compiletime function createPetMagicResistAbilityUpgrade() returns ChannelAbilityPreset
-    return createUpgradeAbility(ABILITY_PET_MAGIC_RESIST_UPGD, 5)
+    return createUpgradeAbility(ABILITY_PET_MAGIC_RESIST_UPGD, 6)
         ..setName("Increase Magic Resistance")
         ..setIconNormal(Icons.bTNThickFur)
         ..presetButtonPosNormal(2, 2)
@@ -159,10 +158,11 @@ function createUpgradeAbility(int abilId, int lvls) returns ChannelAbilityPreset
         ..presetTooltipNormalExtended(lvl -> MAGIC_RESIST_UPGD_TOOLTIP_EXT  + "\n\n"
                                      + toolTipUpgradeData("Current Magic Resistance Bonus", MAGIC_RESIST_INCREASE, lvl, COLOR_TURQUOISE, true) + "\n"
                                      + toolTipUpgradeData("Max Magic Resistance Bonus", MAGIC_RESIST_INCREASE, 6, COLOR_TURQUOISE, true)
+                                     + " (+ {0} when playing as Druid)".format((MAGIC_RESIST_INCREASE * PET_UPGRADE_BONUS).toToolTipBlue())
                                      )
 
 @compiletime function createPetHealthAbilityUpgrade() returns ChannelAbilityPreset
-    return createUpgradeAbility(ABILITY_PET_HEALTH_UPGD, 10)
+    return createUpgradeAbility(ABILITY_PET_HEALTH_UPGD, 11)
         ..setName("Increase Health")
         ..setIconNormal(Icons.bTNAnimalWarTraining)
         ..presetButtonPosNormal(3, 2)
@@ -173,10 +173,11 @@ function createUpgradeAbility(int abilId, int lvls) returns ChannelAbilityPreset
         ..presetTooltipNormalExtended(lvl -> HEALTH_UPGD_TOOLTIP_EXT + "\n\n"
                                      + toolTipUpgradeData("Current Health Bonus", HEALTH_INCREASE, lvl, COLOR_GREEN) + "\n"
                                      + toolTipUpgradeData("Max Health Bonus", HEALTH_INCREASE, 11, COLOR_GREEN)
+                                     + " (+ {0} when playing as Druid)".format((HEALTH_INCREASE * PET_UPGRADE_BONUS).toString().color(COLOR_GREEN))
                                      )
 
 @compiletime function createPetInventoryAbilityUpgrade() returns ChannelAbilityPreset
-    return createUpgradeAbility(ABILITY_PET_INVENTORY_UPGD, 6)
+    return createUpgradeAbility(ABILITY_PET_INVENTORY_UPGD, 5)
         ..setName("Increase Inventory")
         ..setIconNormal(Icons.bTNPackBeast)
         ..presetButtonPosNormal(3, 1)
@@ -186,11 +187,12 @@ function createUpgradeAbility(int abilId, int lvls) returns ChannelAbilityPreset
         ..presetTooltipNormal(lvl -> makeToolTipNormUpgradeLevel("V", INVENTORY_TOOLTIP, lvl))
         ..presetTooltipNormalExtended(lvl -> INVENTORY_UPGD_TOOLTIP_EXT + "\n\n"
                                      + toolTipUpgradeData("Current Inventory Bonus", 1, lvl, COLOR_GREEN) + "\n"
-                                     + toolTipUpgradeData("Max Inventory Bonus", 1, 7, COLOR_GREEN)
+                                     + toolTipUpgradeData("Max Inventory Bonus", 1, 5, COLOR_GREEN)
+                                     + " (+ {0} when playing as Druid)".format((1 * PET_UPGRADE_BONUS).toString().color(COLOR_GREEN))
                                      )
 
 @compiletime function createPetLifeStealAbilityUpgrade() returns ChannelAbilityPreset
-    return createUpgradeAbility(ABILITY_PET_LIFE_STEAL_UPGD, 11)
+    return createUpgradeAbility(ABILITY_PET_LIFE_STEAL_UPGD, 12)
         ..setName("Increase Life Steal")
         ..setIconNormal(Icons.bTNVampiricAura)
         ..presetButtonPosNormal(3, 1)
@@ -202,10 +204,11 @@ function createUpgradeAbility(int abilId, int lvls) returns ChannelAbilityPreset
         ..presetTooltipNormalExtended(lvl -> LIFE_STEAL_UPGD_TOOLTIP_EXT + "\n\n"
                                      + (lvl == 1 ? "" : toolTipUpgradeData("Current LifeSteal Bonus", LIFE_STEAL_INCREASE, lvl - 1, COLOR_ORANGE, true) + "\n")
                                      + toolTipUpgradeData("Max LifeSteal Bonus", LIFE_STEAL_INCREASE, 11, COLOR_ORANGE, true)
+                                     + " (+ {0} when playing as Druid)".format((LIFE_STEAL_INCREASE * PET_UPGRADE_BONUS).toToolTipOrange())
                                      )
 
 @compiletime function createPetBashAbilityUpgrade() returns ChannelAbilityPreset
-    return createUpgradeAbility(ABILITY_PET_BASH_UPGD, 11)
+    return createUpgradeAbility(ABILITY_PET_BASH_UPGD, 12)
         ..setName("Increase Bash")
         ..setIconNormal(Icons.bTNBash)
         ..presetButtonPosNormal(3, 1)
@@ -217,4 +220,5 @@ function createUpgradeAbility(int abilId, int lvls) returns ChannelAbilityPreset
         ..presetTooltipNormalExtended(lvl -> BASH_UPGD_TOOLTIP_EXT + "\n\n"
                                      + (lvl == 1 ? "" : toolTipUpgradeData("Current Bash Bonus", BASH_DURATION_INCREASE, lvl - 1, COLOR_ORANGE, false) + "\n")
                                      + toolTipUpgradeData("Max Bash Bonus", BASH_DURATION_INCREASE, 11, COLOR_ORANGE, false)
+                                     + " (+ {0} when playing as Druid)".format((BASH_DURATION_INCREASE * PET_UPGRADE_BONUS).toString().color(COLOR_ORANGE))
                                      )

@@ -1,0 +1,190 @@
+package FoodThrow
+
+
+// Standard library imports:
+import ClosureEvents
+import Assets
+import TimerUtils
+import ClosureForGroups
+import ChannelAbilityPreset
+import ClosureTimers
+
+// Third party imports:
+import Lodash
+
+// Local imports:
+import ColorUtils
+import LocalAssets
+import LocalObjectIDs
+import StringExtensions
+import ToolTipsUtils
+import LinkedList
+import HashMap
+import SimError
+import UnitExtensions
+import PetFeeding
+
+
+let PETS_TT = map((animal, _) -> animal.color(COLOR_YELLOW), asList("Elk", "Wolf", "Bear", "Any hatchling from the hatchery")).joinBy(", ")
+
+let ABIL_TT_EXT = "Feed an animal by throwing the first edible item from the caster inventory, target will gain mana based on the item sent. "
+                  + "\nFollowing items are considered edible and give mana, format being " + "#Item #Mana".color(HIGHLIGHT_COLOR) + " gained :\n"
+                  + FOODS_TT + ".\n\n"
+                  + "A wild animal will be tamed when its mana reach the maximum amount, last player to feed him will get the pet. "
+                  + "\nFollowing animals can be fed and tamed :\n"
+                  + PETS_TT + ".\n\n"
+                  + "You can tame only 1 animal at once.".color(COLOR_RED) + "\n"
+                  + "You cannot steal other troll pet.".color(COLOR_RED)
+
+
+function createFeedAnimalSpell(int newAbilId) returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(newAbilId, 1, true)
+        ..setIconNormal(Icons.bTNTameHippogriff)
+        ..setCooldown(1, 3.0)
+        ..setManaCost(1, 0)
+        ..setHeroAbility(false)
+        ..setName("Food Throw")
+        ..setCastRange(1, 2000.0)
+        ..setFollowThroughTime(1, 1)
+        ..setTargetsAllowed(1, commaList(
+                TargetsAllowed.nonhero,
+                TargetsAllowed.organic
+            ))
+        ..setTooltipNormalExtended(1, ABIL_TT_EXT)
+        ..setEditorSuffix("(Wurst)")
+        ..setAnimationNames("Attack")
+        ..presetTargetTypes(Targettype.UNIT)
+
+@compiletime function createBaseFeedAnimalSpell() returns ChannelAbilityPreset
+    return createFeedAnimalSpell(ABILITY_FEED_ANIMAL)
+    ..setButtonPositionNormalX(0)
+    ..setButtonPositionNormalY(0)
+    ..setHotkeyNormal("Q")
+    ..setTooltipNormal(1, makeToolTipNorm("Q", "Food Throw"))
+
+
+// This projectile is thrown following a parabola trajectory and land on the target position
+// It behave like an artillery missile and doesn't follow the target it
+// On landing, it will restore mana to the nearest "feedable" unit, be it enemy or ally
+// If no suitable unit is found, the item with its charges will be dropped on the landing position
+// TODO: Refactor code using CustomProjectile abstract class from CustomProjectile.wurst
+class FoodProjectile
+    use TimedLoop
+    unit caster
+    unit target
+    vec3 targetPos
+    effect efx
+    vec3 pos
+    real speed
+    real elapse_time = 0
+    real time_scale = 1.0
+    vec3 initPos
+    real duration
+    angle angle
+    real displacement
+    real teta
+    real distance
+    vec3 vel
+    vec3 acc
+    int charges
+    int itemId
+    boolean foundTarget = false
+
+    construct(unit caster, unit target, real speed, real arc, item food)
+        this.caster = caster
+        this.target = target
+        this.targetPos = target.getPos3Real()
+
+        this.speed = speed
+        this.pos = caster.getPos().polarOffset(caster.getPos().angleTo(target.getPos()), 50).withTerrainZ()
+        this.initPos = pos
+
+        // Cancelling last order issued so Elk do not run away
+        doAfter(0.1) ->
+            target.issueImmediateOrder("stop")
+            target.setFacing(target.getPos().angleTo(pos.toVec2()))
+
+        this.charges = food.getCharges()
+        this.itemId = food.getTypeId()
+
+        // Choosing project Art model based on item sent
+        switch food.getTypeId()
+            case ITEM_COOKED_MEAT
+                this.efx = addEffect(LocalItems.ham, pos)..setScale(0.85)..setColor(255, 125, 160)
+            case ITEM_ACORN
+                this.efx = addEffect(Objects.thunderLizardEgg1, pos)..setScale(0.85)..setColor(128, 64, 0)
+            case ITEM_MAGIC_ACORN
+                this.efx = addEffect(Objects.crystalShard, pos)..setScale(0.65)..setColor(128, 64, 0)
+
+        // Removing item from the inventory
+        food.remove()
+
+        // Following code regarding the projectile trajectory has been picked up from a JASS custom projectile library
+        this.duration = initPos.distanceTo2d(targetPos) / speed
+        this.distance = initPos.distanceTo2d(targetPos)
+        this.teta = Atan2(targetPos.y - initPos.y, targetPos.x - initPos.x)
+        this.acc.z = (-8*arc*speed*speed/distance)
+        this.vel = vec3(
+            speed * Cos(teta),
+            speed * Sin(teta),
+            (-acc.z * (distance / speed) / 2 + (targetPos.z - initPos.z) / (distance / speed))
+            )
+        this.acc.z = acc.z * ANIMATION_PERIOD * ANIMATION_PERIOD
+        this.vel = this.vel.op_mult(ANIMATION_PERIOD)
+
+        this.startTimedLoop()
+
+    override function onTimedLoop()
+        // This is not a homing projectile, so it land and stop after duration time
+        if duration < elapse_time
+            onLanding()
+            stopTimedLoopAndDestroy()
+
+        // Following code regarding the projectile trajectory has been picked up from a JASS custom projectile library
+        vel = vel.op_plus(acc.op_mult(time_scale * time_scale))
+        pos = pos.op_plus(vel.op_mult(time_scale))
+
+        // Adjusting orientation
+        efx.setYaw(pos.angleTo2d(targetPos))
+        efx.setPos(pos)
+        elapse_time += ANIMATION_PERIOD
+
+    function onLanding()
+        // Find nearest animals that can be fed near the landing zone
+        forNearestUnit(
+                        pos.toVec2(),
+                        100,
+                        Filter(->petDietMap.has(GetFilterUnit().getTypeId()))
+                        ) (unit u) ->
+            foundTarget = true
+            feedPet(u, caster, itemId, charges)
+
+    ondestroy
+        if not foundTarget
+            createItem(itemId, pos)..setCharges(charges)
+        this.efx.destr()
+
+
+function throwFood(unit caster, unit target)
+    caster.setFacing(caster.getPos().angleTo(target.getPos()))
+
+    let inventory = caster.getInventory()
+    let foodInventory = inventory.filter(
+        elem -> petDietMap.get(target.getTypeId()).has(elem.getTypeId())
+        )
+
+    // Sending the first edible item coming from the caster inventory
+    if foodInventory.size() > 0
+        new FoodProjectile(caster, target, 600, 0.300, foodInventory.getFirst())
+    else
+        simError(caster.getOwner(), "You need the appropriate food to feed this animal, guess its diet")
+
+function onCast(unit caster, unit target)
+    if petDietMap.has(target.getTypeId())
+        throwFood(caster, target)
+    else
+        simError(caster.getOwner(), "Cannot feed this target")
+
+
+init
+    EventListener.onTargetCast(ABILITY_FEED_ANIMAL              , (unit caster, unit target) -> onCast(caster, target))

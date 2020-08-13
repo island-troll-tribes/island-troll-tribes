@@ -6,9 +6,7 @@ import ObjectIds
 import UnitObjEditing
 
 // Local imports:
-import ElkDefinition
 import LocalObjectIDs
-import LocalAssets
 
 constant JUNGLE_BEAR_ABIL = commaList('AOCN', ABILITY_BASH) // Bear Block, Bash
 
@@ -38,62 +36,43 @@ class JungleBearDefinition extends UnitDefinition
         this.setTooltipBasic("Raw meat that needs to be cooked")
         this.setName("Jungle Bear")
         this.setNameEditorSuffix("(Wurst)")
+        this.setManaMaximum(30)
 
-class BearCubDefinition extends FawnDefinition
-    construct(int unitId)
-        super(unitId)
-        this.setNormalAbilities(commaList(
-            ABILITY_PET_REVIVE_INFO.toRawCode(),
-            ABILITY_FEED_PET.toRawCode(),
-            ABILITY_PET_ARMOR.toRawCode(),
-            ABILITY_PET_MAGIC_RESIST.toRawCode(),
-            ABILITY_GROW_PET.toRawCode()
-            ))
-        this.setModelFile(Units.polarBear1)
-        this.setTintingColorRed(150)
-        this.setTintingColorBlue(150)
-        this.setArmorType(ArmorType.Small)
-        this.setSelectionScale(0.80)
-        this.setTooltipBasic("A little Cub...")
-        this.setName("Bear Cub")
-        this.setScalingValue(0.60)
 
 class AdolescentBearDefinition extends JungleBearDefinition
     construct(int unitId)
         super(unitId)
         this.setNormalAbilities(commaList(
             ABILITY_PET_REVIVE_INFO.toRawCode(),
-            ABILITY_FEED_PET.toRawCode(),
-            ABILITY_PET_DAMAGE.toRawCode(),
-            ABILITY_PET_ARMOR.toRawCode(),
-            ABILITY_PET_MAGIC_RESIST.toRawCode(),
-            ABILITY_GROW_PET.toRawCode()
+            ABILITY_PET_DAMAGE_UPGD.toRawCode(),
+            ABILITY_PET_ARMOR_UPGD.toRawCode(),
+            ABILITY_PET_MAGIC_RESIST_UPGD.toRawCode(),
+            ABILITY_PET_HEALTH_UPGD.toRawCode(),
+            ABILITY_PET_BASH_UPGD.toRawCode(),
+            ABILITY_PET_BASH.toRawCode(),
+            ABILITY_PET_SNACK.toRawCode()
             ))
+        this.setUpgradesUsed(commaList(
+            UPGD_PET_ATTACK_DAMAGE,
+            UPGD_PET_ARMOR,
+            UPGD_PET_MAGIC_RESISTANCE,
+            UPGD_PET_HEALTH,
+            UPGD_PET_BASH
+            ))
+        // Those 2 fields computed the time it takes to cast a spell
+        // it is used to adjust the cast time following the unit spell animation
+        this.setAnimationCastPoint(0.2)
+        this.setAnimationCastBackswing(0.2)
         this.setLevel(0)
-        this.setName("Adolescent Jungle Bear")
+        this.setAttack1CooldownTime(1.5)
+        this.setName("Tamed Jungle Bear")
         this.setHitPointsRegenerationRate(0)
         this.setFoodCost(0)
+        this.setAttack1DamageUpgradeAmount(1)
+        this.setDefenseUpgradeBonus(1)
+        this.setManaMaximum(100)
 
-class AdultJungleBearDefinition extends AdolescentBearDefinition
-    construct(int unitId)
-        super(unitId)
-        this.setAttack1DamageBase(33)
-        this.setAttack1DamageSidesperDie(3)
-        this.setNormalAbilities(commaList(
-            ABILITY_PET_REVIVE_INFO.toRawCode(),
-            ABILITY_FEED_PET.toRawCode(),
-            ABILITY_PET_DAMAGE.toRawCode(),
-            ABILITY_PET_ARMOR.toRawCode(),
-            ABILITY_PET_MAGIC_RESIST.toRawCode()
-            ))
-        this.setScalingValue(1.35)
-        this.setSpeedBase(320)
-        this.setHitPointsMaximumBase(300)
-        this.setPointValue(600)
-        this.setName("Adult Jungle Bear")
 
 @compiletime function createJungleBear()
-    new BearCubDefinition(UNIT_BEAR_CUB)
     new JungleBearDefinition(UNIT_JUNGLE_BEAR)
-    new AdolescentBearDefinition(UNIT_BEAR_ADOLESCENT)
-    new AdultJungleBearDefinition(UNIT_ADULT_JUNGLE_BEAR)
+    new AdolescentBearDefinition(UNIT_TAMED_BEAR)

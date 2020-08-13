@@ -2,10 +2,36 @@ package PetAbilities
 
 // Standard Library Imports
 import UpgradeObjEditing
+import Icons
+import ChannelAbilityPreset
 
 // Local imports:
 import LocalObjectIDs
 import PlayerExtensions
+import ToolTipsUtils
+import ColorUtils
+import StringExtensions
+import LocalAssets
+import Pets
+import Transformation
+
+let LIFE_STEAL_INCREASE = 0.03
+let BASH_DURATION_INCREASE = 0.03
+
+let INVENTORY_TOOLTIP = "Back Pack"
+let INVENTORY_TOOLTIP_EXT = "Allows this unit to carry up to {0} items. Items cannot be used from this unit's inventory."
+
+let LIFE_STEAL_TOOLTIP = "Life Steal"
+let LIFE_STEAL_TOOLTIP_EXT = "This unit recover {0} of their attack damage when it hit enemy units."
+
+let BASH_TOOLTIP = "Bash"
+let BASH_TOOLTIP_EXT = "This unit stun the target for {0} seconds on every attack."
+
+// Variables used to grow pet to next stage of life.
+let GROWTH_TOOLTIP = "Advance Life"
+let GROWTH_UPGD_TOOLTIP_EXT = "Your pet matures to the next stage of its development."
+let GROWTH_MANACOST = 3
+let GROWTH_ICON = LocalIcons.bTNAdvanceLife
 
 
 @compiletime function createPetUpgrades()
@@ -16,6 +42,85 @@ import PlayerExtensions
     // Used to check if BM has no pet and enable/disable icons, is researched when player tame a pet.
     new UpgradeDefinition(UPGD_PET_TAMED_TRUE)
         ..setName(1, "A tamed Pet")
+
+
+// Non-Upgrade Abilities
+@compiletime function createInventoryAbility() returns AbilityDefinitionInventoryPackMule
+    return new AbilityDefinitionInventoryPackMule(ABILITY_PET_INVENTORY)
+        ..setIconNormal(Icons.bTNPackBeast)
+        ..setLevels(6)
+        ..presetItemCapacity(lvl -> lvl)
+        ..presetCanDropItems(lvl -> true)
+        ..presetCanGetItems(lvl -> true)
+        ..presetCanUseItems(lvl -> false)
+        ..presetDropItemsOnDeath(lvl -> true)
+        ..setName("Pet Inventory")
+        ..presetTooltipNormal(lvl -> makeToolTipNormLevelAura(INVENTORY_TOOLTIP, lvl))
+        ..presetTooltipNormalExtended(lvl -> INVENTORY_TOOLTIP_EXT.format((1 * lvl).toString().color(COLOR_ORANGE)))
+        ..setEditorSuffix("(Wurst)")
+        ..setCheckDependencies(true)
+        ..setRequirements(UPGD_PET_INVENTORY.toRawCode())
+
+// TODO: This ability actually regen 2x the life steal (50% will regen 100% ingame, atleast I tested hitting elks)
+// Find out why or swap it with another ability
+@compiletime function createLifeStealAbility() returns AbilityDefinitionVampiricAuracreep
+    return new AbilityDefinitionVampiricAuracreep(ABILITY_PET_LIFE_STEAL)
+        ..setIconNormal(Icons.pASBTNVampiricAura)
+        ..setLevels(13)
+        ..presetButtonPosNormal(2, 1)
+        ..presetAttackDamageStolen(lvl -> 0.17 + lvl * LIFE_STEAL_INCREASE)
+        ..setName("Pet Life Steal")
+        ..presetTooltipNormal(lvl -> makeToolTipNormLevelAura(LIFE_STEAL_TOOLTIP, lvl))
+        ..presetTooltipNormalExtended(lvl -> LIFE_STEAL_TOOLTIP_EXT.format(
+            getAbilityDataFieldPercent(ABILITY_PET_LIFE_STEAL, "DataA" + lvl.toString()).color(COLOR_ORANGE)))
+        ..setEditorSuffix("(Wurst)")
+        ..setCheckDependencies(true)
+        ..presetAreaofEffect(lvl -> 100)
+        //..presetTargetsAllowed(lvl -> commaList(TargetsAllowed.self))
+        ..setArtTarget("")
+        ..setBuffs(1, "")
+
+@compiletime function createBashAbility() returns AbilityDefinitionBashcreep
+    return new AbilityDefinitionBashcreep(ABILITY_PET_BASH)
+        ..setIconNormal(Icons.pASBTNBash)
+        ..setLevels(13)
+        ..presetDamageBonus(lvl -> 0)
+        ..presetChancetoBash(lvl -> 100)
+        ..presetButtonPosNormal(2, 1)
+        ..presetDurationHero(lvl -> 0.17 + lvl * BASH_DURATION_INCREASE)
+        ..presetDurationNormal(lvl -> 0.17 + lvl * BASH_DURATION_INCREASE)
+        ..setName("Pet Bash")
+        ..presetTooltipNormal(lvl -> makeToolTipNormLevelAura(BASH_TOOLTIP, lvl))
+        ..presetTooltipNormalExtended(lvl -> BASH_TOOLTIP_EXT.format(
+            (0.17 + lvl * BASH_DURATION_INCREASE).round().toString().color(COLOR_ORANGE)))
+        ..setEditorSuffix("(Wurst)")
+        ..setCheckDependencies(true)
+
+@compiletime function createPetGrowthAbility() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_GROW_PET, 1, true)
+        ..setDummyAbility()
+        ..setName("Grow Pet")
+        ..setIconNormal(GROWTH_ICON)
+        ..setButtonPositionNormalX(3)
+        ..setButtonPositionNormalY(2)
+        ..setHotkeyNormal("V")
+        ..setCooldown(1, 0)
+        ..setManaCost(1, GROWTH_MANACOST)
+        ..setTooltipNormal(1, makeToolTipNorm("V", GROWTH_TOOLTIP))
+        ..setTooltipNormalExtended(1, GROWTH_UPGD_TOOLTIP_EXT)
+
+
+function growPet(unit pet)
+
+    // Look up the growth chain for the pet.
+    let chain = pet.getPetGrowthChain()
+
+    // Look up the next unit along the chain.
+    let next = chain.get(chain.indexOf(pet.getTypeId()) + 1)
+
+    // Grow the pet.
+    transformUnit(pet, next)
+
 
 init
     ForForce(bj_FORCE_ALL_PLAYERS) ->

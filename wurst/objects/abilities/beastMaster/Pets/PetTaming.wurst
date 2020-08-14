@@ -9,6 +9,7 @@ import SimError
 import Pets
 import Transformation
 import PetUpgradeHandler
+import IdListConstant
 import PlayerExtensions
 
 
@@ -20,13 +21,14 @@ public function tamePet(player casterOwner, unit pet)
     else
         casterOwner.addPet(pet)
 
-        // Look up the growth chain for the pet.
-        let chain = pet.getPetGrowthChain()
+        if not DRAGON_LIST.has(pet.getTypeId())
+            // Look up the growth chain for the pet.
+            let chain = pet.getPetGrowthChain()
 
-        // Look up the next unit along the chain.
-        let next = chain.get(chain.indexOf(pet.getTypeId()) + 1)
+            // Look up the next unit along the chain.
+            let next = chain.get(chain.indexOf(pet.getTypeId()) + 1)
 
-        transformUnit(pet, next)
+            transformUnit(pet, next)
 
         // Will you be my valentine?
         flashEffect(LocalAbilities.heartParticle, pet, "head")

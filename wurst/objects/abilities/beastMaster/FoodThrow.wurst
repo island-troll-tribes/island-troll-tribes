@@ -40,7 +40,7 @@ let ABIL_TT_EXT = "Feed an animal by throwing the first edible item from the cas
 function createFeedAnimalSpell(int newAbilId) returns ChannelAbilityPreset
     return new ChannelAbilityPreset(newAbilId, 1, true)
         ..setIconNormal(Icons.bTNTameHippogriff)
-        ..setCooldown(1, 3.0)
+        ..setCooldown(1, 1.0)
         ..setManaCost(1, 0)
         ..setHeroAbility(false)
         ..setName("Food Throw")
@@ -108,13 +108,16 @@ class FoodProjectile
         this.itemId = food.getTypeId()
 
         // Choosing project Art model based on item sent
-        switch food.getTypeId()
-            case ITEM_COOKED_MEAT
-                this.efx = addEffect(LocalItems.ham, pos)..setScale(0.85)..setColor(255, 125, 160)
-            case ITEM_ACORN
-                this.efx = addEffect(Objects.thunderLizardEgg1, pos)..setScale(0.85)..setColor(128, 64, 0)
-            case ITEM_MAGIC_ACORN
-                this.efx = addEffect(Objects.crystalShard, pos)..setScale(0.65)..setColor(128, 64, 0)
+        // Standard Fx, just look up the item model
+        print(BlzGetItemRealField(food, ITEM_RF_SCALING_VALUE))
+        this.efx = addEffect(BlzGetItemStringField(food, ITEM_SF_MODEL_USED), pos)
+                    ..setScale(BlzGetItemRealField(food, ITEM_RF_SCALING_VALUE))
+                    ..setColor(
+                                BlzGetItemIntegerField(food,ITEM_IF_TINTING_COLOR_RED),
+                                BlzGetItemIntegerField(food,ITEM_IF_TINTING_COLOR_GREEN),
+                                BlzGetItemIntegerField(food,ITEM_IF_TINTING_COLOR_BLUE)
+                                )
+                    ..playAnimation(ANIM_TYPE_STAND)
 
         // Removing item from the inventory
         food.remove()

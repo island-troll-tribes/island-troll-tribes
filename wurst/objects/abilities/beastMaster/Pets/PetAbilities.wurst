@@ -4,6 +4,7 @@ package PetAbilities
 import UpgradeObjEditing
 import Icons
 import ChannelAbilityPreset
+import ClosureEvents
 
 // Local imports:
 import LocalObjectIDs
@@ -14,6 +15,7 @@ import StringExtensions
 import LocalAssets
 import Pets
 import Transformation
+import PetUpgradeHandler
 
 let LIFE_STEAL_INCREASE = 0.03
 let BASH_DURATION_INCREASE = 0.03
@@ -118,11 +120,20 @@ function growPet(unit pet)
     // Look up the next unit along the chain.
     let next = chain.get(chain.indexOf(pet.getTypeId()) + 1)
 
+
     // Grow the pet.
     transformUnit(pet, next)
+
+    // Visual effect
+    flashEffect(LocalAbilities.growth, pet, "origin")
+
+    // Adjust scaling value used for Health bonus upgrade
+    petUpgradeHandlerInstance.get(pet).setScale(BlzGetUnitRealField(pet, UNIT_RF_SCALING_VALUE))
+
 
 
 init
     ForForce(bj_FORCE_ALL_PLAYERS) ->
         GetEnumPlayer().setTechResearched(UPGD_PET_TAMED_TRUE, 0)
         GetEnumPlayer().setTechResearched(UPGD_PET_TAMED_FALSE, 1)
+    EventListener.onCast(ABILITY_GROW_PET, (unit caster) -> growPet(caster))

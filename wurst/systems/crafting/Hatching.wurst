@@ -1,15 +1,21 @@
 package Hatching
 
+// Standard lib imports:
 import LinkedList
-import LocalObjectIDs
-import Lodash
-import LodashExtensions
 import HashMap
 import UnitExtensions
+import Assets
+
+// Third party imports:
+import Lodash
+import LodashExtensions
+
+// Local imports:
+import LocalObjectIDs
 
 constant let hatcheryRecipeList = new HashMap<int, Pair<int, OwnedLinkedList<int>>>()
 ..put(ABILITY_QM_HAWK_HATCHLING             , new Pair(UNIT_HAWK_HATCHLING             , asOwnedList(ITEM_HAWK_EGG)))
-..put(ABILITY_QM_CORROSIVE_DRAGON_HATCHLING , new Pair(UNIT_CORROSIVE_DRAGON_HATCHLING , asOwnedList(ITEM_HAWK_EGG, ITEM_POISON, ITEM_POISON)))
+..put(ABILITY_QM_CORROSIVE_DRAGON_HATCHLING , new Pair(UNIT_CORROSIVE_DRAGON_HATCHLING , asOwnedList(ITEM_HAWK_EGG, ITEM_ULTRA_POISON)))
 ..put(ABILITY_QM_FIRE_DRAGON_HATCHLING      , new Pair(UNIT_FIRE_DRAGON_HATCHLING      , asOwnedList(ITEM_HAWK_EGG, ITEM_FIRE_BOMB, ITEM_FIRE_BOMB)))
 ..put(ABILITY_QM_FROST_DRAGON_HATCHLING     , new Pair(UNIT_FROST_DRAGON_HATCHLING     , asOwnedList(ITEM_HAWK_EGG, ITEM_SPIRIT_WATER, ITEM_SPIRIT_WATER)))
 ..put(ABILITY_QM_STORM_DRAGON_HATCHLING     , new Pair(UNIT_STORM_DRAGON_HATCHLING     , asOwnedList(ITEM_HAWK_EGG, ITEM_SPIRIT_WIND, ITEM_SPIRIT_WIND)))
@@ -23,4 +29,16 @@ public function hatch(unit hatchery, int quickMakeSpellId)
 
     if inventory.map(elem -> elem.getTypeId()).equals(recipe)
         inventory.forEach(elem -> elem.remove())
-        createUnit(players[PLAYER_NEUTRAL_PASSIVE], unitToSpawn, hatchery.getPos(), (270.0).asAngleDegrees())
+        var spawnFx = Abilities.charmTarget
+        switch unitToSpawn
+            case UNIT_CORROSIVE_DRAGON_HATCHLING
+                spawnFx = Abilities.chimaeraAcidMissile
+            case UNIT_FIRE_DRAGON_HATCHLING
+                spawnFx = Abilities.doomDeath
+            case UNIT_FROST_DRAGON_HATCHLING
+                spawnFx = Abilities.frostNovaTarget
+            case UNIT_STORM_DRAGON_HATCHLING
+                spawnFx = Abilities.chimaeraLightningMissile
+            case UNIT_NETHER_DRAGON_HATCHLING
+                spawnFx = Abilities.deathPactTarget
+        flashEffect(spawnFx, createUnit(players[PLAYER_NEUTRAL_PASSIVE], unitToSpawn, hatchery.getPos(), (270.0).asAngleDegrees()), "origin")

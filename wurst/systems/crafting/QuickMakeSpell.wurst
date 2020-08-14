@@ -94,13 +94,14 @@ public constant BUILDING_CRAFT_SPELLBOOK = commaList(
     ABILITY_QM_TENT_KIT,
     ABILITY_QM_FORGE_KIT,
     ABILITY_QM_MUD_HUT_KIT,
-    ABILITY_QM_ARMORY_KIT,
     ABILITY_QM_WORKSHOP_KIT,
     ABILITY_QM_MIXING_POT_KIT,
-    ABILITY_QM_WITCH_DOCTORS_HUT_KIT,
     ABILITY_QM_TANNERY_KIT,
+    ABILITY_QM_WITCH_DOCTORS_HUT_KIT,
+    ABILITY_QM_ARMORY_KIT,
     ABILITY_QM_OMNI_TOWER_KIT,
-    ABILITY_BUILDING_CRAFT_SECOND_SPELLBOOK_ID
+    ABILITY_QM_HATCHERY_KIT
+    //ABILITY_BUILDING_CRAFT_SECOND_SPELLBOOK_ID
 )
 
 constant BUILDING_CRAFT_SECOND_SPELLBOOK = commaList(
@@ -186,7 +187,7 @@ public class QuickMakeSpellBook
         this.btnPositionX = x
         this.btnPositionY = y
         this.baseOrderId = baseOrderId
-        this.icon = "ReplaceableTextures\\CommandButtons\\BTN"+icon+".blp"
+        this.icon = icon
 
     function buildSpellBook()
         new AbilityDefinitionSpellBook(id)
@@ -336,9 +337,9 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
         new QuickMakeSpell("Hawk Hatchling"             , HATCH_TOOLTIP+HAWK_HATCHLING_RECIPE             , Icons.bTNWarEagle     , ABILITY_QM_HAWK_HATCHLING             , 0, 0, "Q", "", "berserk"),
         new QuickMakeSpell("Corrosive Dragon Hatchling" , HATCH_TOOLTIP+CORROSIVE_DRAGON_HATCHLING_RECIPE , Icons.bTNGreenDragon  , ABILITY_QM_CORROSIVE_DRAGON_HATCHLING , 1, 0, "W", "", "burrow"),
         new QuickMakeSpell("Fire Dragon Hatchling"      , HATCH_TOOLTIP+FIRE_DRAGON_HATCHLING_RECIPE      , Icons.bTNRedDragon    , ABILITY_QM_FIRE_DRAGON_HATCHLING      , 2, 0, "E", "", "cannibalize"),
-        new QuickMakeSpell("Frost Dragon Hatchling"     , HATCH_TOOLTIP+FROST_DRAGON_HATCHLING_RECIPE     , Icons.bTNAzureDragon  , ABILITY_QM_FROST_DRAGON_HATCHLING     , 0, 1, "A", "", "chemicalrage"),
-        new QuickMakeSpell("Storm Dragon Hatchling"     , HATCH_TOOLTIP+STORM_DRAGON_HATCHLING_RECIPE     , Icons.bTNBronzeDragon , ABILITY_QM_STORM_DRAGON_HATCHLING     , 1, 1, "S", "", "creepanimatedead"),
-        new QuickMakeSpell("Nether Dragon Hatchling"    , HATCH_TOOLTIP+NETHER_DRAGON_HATCHLING_RECIPE    , Icons.bTNNetherDragon , ABILITY_QM_NETHER_DRAGON_HATCHLING    , 2, 1, "D", "", "thunderclap"),
+        new QuickMakeSpell("Frost Dragon Hatchling"     , HATCH_TOOLTIP+FROST_DRAGON_HATCHLING_RECIPE     , Icons.bTNAzureDragon  , ABILITY_QM_FROST_DRAGON_HATCHLING     , 3, 0, "R", "", "chemicalrage"),
+        new QuickMakeSpell("Storm Dragon Hatchling"     , HATCH_TOOLTIP+STORM_DRAGON_HATCHLING_RECIPE     , Icons.bTNBronzeDragon , ABILITY_QM_STORM_DRAGON_HATCHLING     , 0, 1, "A", "", "creepanimatedead"),
+        new QuickMakeSpell("Nether Dragon Hatchling"    , HATCH_TOOLTIP+NETHER_DRAGON_HATCHLING_RECIPE    , Icons.bTNNetherDragon , ABILITY_QM_NETHER_DRAGON_HATCHLING    , 1, 1, "S", "", "thunderclap"),
 
         // Those are placeholder for tannery, just to fill the interface and make it look cleaner
         // new QuickMakeSpell("Tips on Stat" , "" , "SelectHeroOn" , PLACEHOLDER_STAT_TOOLTIP_SPELL , 3, 0, "", TANNERY_PLACEHOLDER_STAT_TOOLTIP, "manashieldoff"),
@@ -347,23 +348,23 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
 
         // Buildings
         // First three aren't added to master crafter because it's useless, button position set to 0 since they're in a spellbook
-        new QuickMakeSpell("Camp Fire Kit"         , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+CAMP_FIRE_KIT_RECIPE         , "Fire"                 , ABILITY_QM_CAMP_FIRE_KIT         , 0, 0, "Q", QM_BUILD_TOOLIP, "resurrection"),
-        new QuickMakeSpell("Tent Kit"              , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+TENT_KIT_RECIPE              , "Tent"                 , ABILITY_QM_TENT_KIT              , 0, 0, "W", QM_BUILD_TOOLIP, "battleroar"),
+        new QuickMakeSpell("Camp Fire Kit"         , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+CAMP_FIRE_KIT_RECIPE         , Icons.bTNFire                 , ABILITY_QM_CAMP_FIRE_KIT         , 0, 0, "Q", QM_BUILD_TOOLIP, "resurrection"),
+        new QuickMakeSpell("Tent Kit"              , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+TENT_KIT_RECIPE              , LocalIcons.bTNTent                 , ABILITY_QM_TENT_KIT              , 0, 0, "W", QM_BUILD_TOOLIP, "battleroar"),
         // new QuickMakeSpell("Troll Hut Kit"         , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+TROLL_HUT_KIT_RECIPE         , "SpiritLodge"          , ABILITY_QM_TROLL_HUT_KIT         , 0, 0, "E", QM_BUILD_TOOLIP, "spiritwolf"),
 
         // Following are also used in master crafter so they got proper button positioning
-        new QuickMakeSpell("Mud Hut Kit"           , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+MUD_HUT_KIT_RECIPE           , "GoldMine"             , ABILITY_QM_MUD_HUT_KIT           , 3, 0, "R", QM_BUILD_TOOLIP, "burrow"),
-        new QuickMakeSpell("Forge Kit"             , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+FORGE_KIT_RECIPE             , "Forge"                , ABILITY_QM_FORGE_KIT             , 0, 1, "E", QM_BUILD_TOOLIP, "divineshield"),
-        new QuickMakeSpell("Workshop Kit"          , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+WORKSHOP_KIT_RECIPE          , "TrollBurrow"          , ABILITY_QM_WORKSHOP_KIT          , 1, 1, "S", QM_BUILD_TOOLIP, "townbelloff"),
-        new QuickMakeSpell("Mixing Pot Kit"        , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+MIXING_POT_KIT_RECIPE        , "SacrificialPit"       , ABILITY_QM_MIXING_POT_KIT        , 2, 1, "D", QM_BUILD_TOOLIP, "chemicalrage"),
-        new QuickMakeSpell("Witch Doctors Hut Kit" , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+WITCH_DOCTORS_HUT_KIT_RECIPE , "VoodooLounge"         , ABILITY_QM_WITCH_DOCTORS_HUT_KIT , 3, 1, "F", QM_BUILD_TOOLIP, "creepanimatedead"),
-        new QuickMakeSpell("Tannery Kit"           , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+TANNERY_KIT_RECIPE           , "PigFarm"              , ABILITY_QM_TANNERY_KIT           , 0, 2, "Z", QM_BUILD_TOOLIP, "thunderclap"),
-        new QuickMakeSpell("Omnitower Kit"         , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+OMNI_TOWER_KIT_RECIPE        , "OrcTower"             , ABILITY_QM_OMNI_TOWER_KIT        , 1, 2, "X", QM_BUILD_TOOLIP, "warstomp"),
-        new QuickMakeSpell("Armory Kit"            , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+ARMORY_KIT_RECIPE            , "Armory"               , ABILITY_QM_ARMORY_KIT            , 2, 2, "A", QM_BUILD_TOOLIP, "locustswarm")
+        new QuickMakeSpell("Forge Kit"             , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+FORGE_KIT_RECIPE             , Icons.bTNForge               , ABILITY_QM_FORGE_KIT             , 2, 0, "E", QM_BUILD_TOOLIP, "divineshield"    ),
+        new QuickMakeSpell("Mud Hut Kit"           , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+MUD_HUT_KIT_RECIPE           , Icons.bTNGoldmine            , ABILITY_QM_MUD_HUT_KIT           , 3, 0, "R", QM_BUILD_TOOLIP, "burrow"          ),
+        new QuickMakeSpell("Workshop Kit"          , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+WORKSHOP_KIT_RECIPE          , Icons.bTNTrollBurrow         , ABILITY_QM_WORKSHOP_KIT          , 0, 1, "A", QM_BUILD_TOOLIP, "townbelloff"     ),
+        new QuickMakeSpell("Mixing Pot Kit"        , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+MIXING_POT_KIT_RECIPE        , Icons.bTNSacrificialPit      , ABILITY_QM_MIXING_POT_KIT        , 1, 1, "S", QM_BUILD_TOOLIP, "chemicalrage"    ),
+        new QuickMakeSpell("Tannery Kit"           , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+TANNERY_KIT_RECIPE           , Icons.bTNPigFarm             , ABILITY_QM_TANNERY_KIT           , 2, 1, "D", QM_BUILD_TOOLIP, "thunderclap"     ),
+        new QuickMakeSpell("Witch Doctors Hut Kit" , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+WITCH_DOCTORS_HUT_KIT_RECIPE , Icons.bTNVoodooLounge        , ABILITY_QM_WITCH_DOCTORS_HUT_KIT , 3, 1, "F", QM_BUILD_TOOLIP, "creepanimatedead"),
+        new QuickMakeSpell("Armory Kit"            , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+ARMORY_KIT_RECIPE            , LocalIcons.bTNArmory         , ABILITY_QM_ARMORY_KIT            , 0, 2, "Z", QM_BUILD_TOOLIP, "locustswarm"     ),
+        new QuickMakeSpell("Omnitower Kit"         , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+OMNI_TOWER_KIT_RECIPE        , Icons.bTNOrcTower            , ABILITY_QM_OMNI_TOWER_KIT        , 1, 2, "X", QM_BUILD_TOOLIP, "warstomp"        ),
+        new QuickMakeSpell("Hatchery Kit"          , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+HATCHERY_KIT_RECIPE          , LocalIcons.bTNHarpyNest      , ABILITY_QM_HATCHERY_KIT          , 2, 0, "C", QM_BUILD_TOOLIP, "summonwareagle"  )
 
         // Second Buildings Page
         // new QuickMakeSpell("Teleport Beacon Kit"   , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+TELEPORT_BEACON_KIT_RECIPE   , "EnergyTower"          , ABILITY_QM_TELEPORT_BEACON_KIT   , 0, 0, "E", QM_BUILD_TOOLIP, "defend"),
-        // new QuickMakeSpell("Hatchery Kit"          , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+HATCHERY_KIT_RECIPE          , "SnowOwl"              , ABILITY_QM_HATCHERY_KIT          , 1, 0, "R", QM_BUILD_TOOLIP, "summonwareagle")
     )
 
 // Additional pages created here
@@ -375,7 +376,7 @@ function getQuickMakeSpellBookSpells() returns LinkedList<QuickMakeSpellBook>
         new QuickMakeSpellBook(ABILITY_WDH_SPELLBOOK_ID        , "More Witch Doctors Hut Quick Make Page" , "C", WDH_SPELLBOOK_TOOLTIP      , WDH_SPELLBOOK          , 2, 2 , "spellbook"),
         new QuickMakeSpellBook(ABILITY_WORKSHOP_SPELLBOOK_ID   , "More Workshop Quick Make Page"          , "C", WORKSHOP_SPELLBOOK_TOOLTIP , WORKSHOP_SPELLBOOK     , 2, 2 , "spellbook"),
 
-        new QuickMakeSpellBook(ABILITY_BUILDING_CRAFT_SPELLBOOK_ID       , "Buildings Craft Recipe"  , "B", BUILDING_CRAFT_TOOLTIP, BUILDING_CRAFT_SPELLBOOK       , 0, 1 , "charm", "BasicStruct")
+        new QuickMakeSpellBook(ABILITY_BUILDING_CRAFT_SPELLBOOK_ID       , "Buildings Craft Recipe"  , "B", BUILDING_CRAFT_TOOLTIP, BUILDING_CRAFT_SPELLBOOK       , 0, 1 , "charm", Icons.bTNBasicStruct)
         // new QuickMakeSpellBook(ABILITY_BUILDING_CRAFT_SECOND_SPELLBOOK_ID, "More Buildings Recipe"   , "C", BUILDING_CRAFT_TOOLTIP, BUILDING_CRAFT_SECOND_SPELLBOOK, 2, 2 , "blight")
     )
 

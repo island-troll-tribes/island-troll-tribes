@@ -1,0 +1,26 @@
+package Hatching
+
+import LinkedList
+import LocalObjectIDs
+import Lodash
+import LodashExtensions
+import HashMap
+import UnitExtensions
+
+constant let hatcheryRecipeList = new HashMap<int, Pair<int, OwnedLinkedList<int>>>()
+..put(ABILITY_QM_HAWK_HATCHLING             , new Pair(UNIT_HAWK_HATCHLING             , asOwnedList(ITEM_HAWK_EGG)))
+..put(ABILITY_QM_CORROSIVE_DRAGON_HATCHLING , new Pair(UNIT_CORROSIVE_DRAGON_HATCHLING , asOwnedList(ITEM_HAWK_EGG, ITEM_POISON, ITEM_POISON)))
+..put(ABILITY_QM_FIRE_DRAGON_HATCHLING      , new Pair(UNIT_FIRE_DRAGON_HATCHLING      , asOwnedList(ITEM_HAWK_EGG, ITEM_FIRE_BOMB, ITEM_FIRE_BOMB)))
+..put(ABILITY_QM_FROST_DRAGON_HATCHLING     , new Pair(UNIT_FROST_DRAGON_HATCHLING     , asOwnedList(ITEM_HAWK_EGG, ITEM_SPIRIT_WATER, ITEM_SPIRIT_WATER)))
+..put(ABILITY_QM_STORM_DRAGON_HATCHLING     , new Pair(UNIT_STORM_DRAGON_HATCHLING     , asOwnedList(ITEM_HAWK_EGG, ITEM_SPIRIT_WIND, ITEM_SPIRIT_WIND)))
+..put(ABILITY_QM_NETHER_DRAGON_HATCHLING    , new Pair(UNIT_NETHER_DRAGON_HATCHLING    , asOwnedList(ITEM_HAWK_EGG, ITEM_SPIRIT_DARKNESS, ITEM_SPIRIT_DARKNESS)))
+
+
+public function hatch(unit hatchery, int quickMakeSpellId)
+    let recipe = hatcheryRecipeList.get(quickMakeSpellId).b
+    let inventory = hatchery.getInventory().take(recipe.size())
+    let unitToSpawn = hatcheryRecipeList.get(quickMakeSpellId).a
+
+    if inventory.map(elem -> elem.getTypeId()).equals(recipe)
+        inventory.forEach(elem -> elem.remove())
+        createUnit(players[PLAYER_NEUTRAL_PASSIVE], unitToSpawn, hatchery.getPos(), (270.0).asAngleDegrees())

@@ -45,22 +45,20 @@ public let flyingPetBasicUpgrades = asList(
 constant FLYING_PET_BASIC_ABIL = flyingPetBasicAbilities.joinBy((int i) -> i.toRawCode(), ",")
 constant FLYING_PET_BASIC_UPGD = flyingPetBasicUpgrades.joinBy((int i) -> i.toRawCode(), ",")
 
-function createFlyingAnimal(int unitId) returns UnitDefinition
+function createBaseHawk(int unitId) returns UnitDefinition
     return new UnitDefinition(unitId, UnitIds.wareagle1)
         ..setGoldBountyAwardedBase(0)
         ..setGoldBountyAwardedNumberofDice(0)
         ..setGoldBountyAwardedSidesperDie(0)
-        ..setSightRadiusDay(75)
-        ..setSightRadiusNight(75)
+        ..setSightRadiusDay(125)
+        ..setSightRadiusNight(125)
         ..setHitPointsRegenerationType("")
         ..setNameEditorSuffix("(Wurst)")
-        ..setMovementHeight(450)
-        ..setMovementHeightMinimum(50)
         ..setUpgradesUsed("")
         ..setDefenseUpgradeBonus(1)
 
 @compiletime function createHawk() returns UnitDefinition
-    return createFlyingAnimal(UNIT_HAWK)
+    return createBaseHawk(UNIT_HAWK)
         ..setNormalAbilities(HAWK_ABIL)
         ..setScalingValue(1)
         ..setSpeedBase(400)
@@ -69,8 +67,8 @@ function createFlyingAnimal(int unitId) returns UnitDefinition
         ..setName("Hawk")
 
 @compiletime function createHawkHatchling() returns UnitDefinition
-    return createFlyingAnimal(UNIT_HAWK_HATCHLING)
-        ..setNormalAbilities(FLYING_PET_BASIC_ABIL)
+    return createBaseHawk(UNIT_HAWK_HATCHLING)
+        ..setNormalAbilities(FLYING_PET_BASIC_ABIL + "," + ABILITY_GROW_PET.toRawCode())
         ..setUpgradesUsed(FLYING_PET_BASIC_UPGD)
         ..setScalingValue(0.5)
         ..setSpeedBase(300)
@@ -80,19 +78,39 @@ function createFlyingAnimal(int unitId) returns UnitDefinition
         ..setManaMaximum(20)
         ..setManaInitialAmount(0)
 
-
-function createDragonHatchling(int unitId) returns UnitDefinition
-    return createFlyingAnimal(unitId)
+function createBaseDragonHatchlingDefinition(int unitId) returns UnitDefinition
+    return new UnitDefinition(unitId, UnitIds.greendragonwhelp)
+        ..setAttacksEnabled(0)
+        ..setGoldBountyAwardedBase(0)
+        ..setGoldBountyAwardedNumberofDice(0)
+        ..setGoldBountyAwardedSidesperDie(0)
+        ..setSightRadiusDay(125)
+        ..setSightRadiusNight(125)
+        ..setHitPointsRegenerationType("")
+        ..setNameEditorSuffix("(Wurst)")
+        ..setUpgradesUsed("")
+        ..setDefenseUpgradeBonus(1)
+        ..setTintingColorRed(255)
+        ..setTintingColorGreen(255)
+        ..setTintingColorBlue(255)
+        ..setAnimationCastBackswing(0.2)
+        ..setAnimationCastPoint(0.2)
+        ..setManaInitialAmount(0)
+        ..setManaMaximum(20)
         ..setScalingValue(0.5)
+        ..setSelectionScale(1)
         ..setSpeedBase(300)
         ..setLevel(0)
         ..setHitPointsMaximumBase(75)
-        ..setUnitSoundSet(Soundsets.azureDragon)
-        ..setManaMaximum(20)
-        ..setManaInitialAmount(0)
+        ..setTurnRate(0.10)
+        ..setSelectionCircleHeight(200)
+        ..setDefenseBase(0)
+        ..setCategorizationSpecial(true)
+        ..setCollisionSize(16)
+        ..setElevationSampleRadius(20)
 
 @compiletime function fireDragonHatchling() returns UnitDefinition
-    return createDragonHatchling(UNIT_FIRE_DRAGON_HATCHLING)
+    return createBaseDragonHatchlingDefinition(UNIT_FIRE_DRAGON_HATCHLING)
         ..setNormalAbilities(FLYING_PET_BASIC_ABIL + "," + ABILITY_GROW_PET.toRawCode())
         ..setUpgradesUsed(FLYING_PET_BASIC_UPGD)
         ..setName("Fire Dragon Hatchling")
@@ -101,7 +119,7 @@ function createDragonHatchling(int unitId) returns UnitDefinition
         ..setHitPointsMaximumBase(75)
 
 @compiletime function corrosiveDragonHatchling() returns UnitDefinition
-    return createDragonHatchling(UNIT_CORROSIVE_DRAGON_HATCHLING)
+    return createBaseDragonHatchlingDefinition(UNIT_CORROSIVE_DRAGON_HATCHLING)
         ..setNormalAbilities(FLYING_PET_BASIC_ABIL + "," + ABILITY_GROW_PET.toRawCode())
         ..setUpgradesUsed(FLYING_PET_BASIC_UPGD)
         ..setName("Corrosive Dragon Hatchling")
@@ -109,7 +127,7 @@ function createDragonHatchling(int unitId) returns UnitDefinition
         ..setIconGameInterface(Icons.bTNGreenDragon)
 
 @compiletime function frostDragonHatchling() returns UnitDefinition
-    return createDragonHatchling(UNIT_FROST_DRAGON_HATCHLING)
+    return createBaseDragonHatchlingDefinition(UNIT_FROST_DRAGON_HATCHLING)
         ..setNormalAbilities(FLYING_PET_BASIC_ABIL + "," + ABILITY_GROW_PET.toRawCode())
         ..setUpgradesUsed(FLYING_PET_BASIC_UPGD)
         ..setName("Frost Dragon Hatchling")
@@ -118,7 +136,7 @@ function createDragonHatchling(int unitId) returns UnitDefinition
         ..setHitPointsMaximumBase(75)
 
 @compiletime function stormDragonHatchling() returns UnitDefinition
-    return createDragonHatchling(UNIT_STORM_DRAGON_HATCHLING)
+    return createBaseDragonHatchlingDefinition(UNIT_STORM_DRAGON_HATCHLING)
         ..setNormalAbilities(FLYING_PET_BASIC_ABIL + "," + ABILITY_GROW_PET.toRawCode())
         ..setUpgradesUsed(FLYING_PET_BASIC_UPGD)
         ..setName("Storm Dragon Hatchling")
@@ -127,7 +145,7 @@ function createDragonHatchling(int unitId) returns UnitDefinition
         ..setHitPointsMaximumBase(75)
 
 @compiletime function netherDragonHatchling() returns UnitDefinition
-    return createDragonHatchling(UNIT_NETHER_DRAGON_HATCHLING)
+    return createBaseDragonHatchlingDefinition(UNIT_NETHER_DRAGON_HATCHLING)
         ..setNormalAbilities(FLYING_PET_BASIC_ABIL + "," + ABILITY_GROW_PET.toRawCode())
         ..setUpgradesUsed(FLYING_PET_BASIC_UPGD)
         ..setName("Nether Dragon Hatchling")
@@ -138,7 +156,7 @@ function createDragonHatchling(int unitId) returns UnitDefinition
 
 // Matured
 @compiletime function createTamedHawk() returns UnitDefinition
-    return createFlyingAnimal(UNIT_TAMED_HAWK)
+    return createBaseHawk(UNIT_TAMED_HAWK)
         ..setNormalAbilities(FLYING_PET_BASIC_ABIL)
         ..setUpgradesUsed(FLYING_PET_BASIC_UPGD)
         ..setScalingValue(1)
@@ -149,19 +167,34 @@ function createDragonHatchling(int unitId) returns UnitDefinition
         ..setManaMaximum(100)
         ..setManaInitialAmount(0)
 
-function createDragon(int unitId) returns UnitDefinition
-    return createFlyingAnimal(unitId)
+function createDragonDefinition(int unitId) returns UnitDefinition
+    return new UnitDefinition(unitId, UnitIds.greendrake)
+        ..setAttacksEnabled(0)
+        ..setGoldBountyAwardedBase(0)
+        ..setGoldBountyAwardedNumberofDice(0)
+        ..setGoldBountyAwardedSidesperDie(0)
+        ..setSightRadiusDay(125)
+        ..setSightRadiusNight(125)
+        ..setHitPointsRegenerationType("")
+        ..setNameEditorSuffix("(Wurst)")
+        ..setUpgradesUsed("")
+        ..setDefenseUpgradeBonus(1)
+        ..setDefenseBase(0)
+        ..setHitPointsRegenerationRate(0)
+        ..setAnimationCastBackswing(0.2)
+        ..setAnimationCastPoint(0.2)
+        ..setManaInitialAmount(0)
+        ..setTurnRate(0.10)
+        ..setSelectionCircleHeight(200)
+        ..setHitPointsMaximumBase(165)
+        ..setManaMaximum(100)
         ..setScalingValue(1)
         ..setSpeedBase(400)
         ..setLevel(0)
-        ..setHitPointsMaximumBase(165)
-        ..setUnitSoundSet(Soundsets.azureDragon)
-        ..setManaMaximum(100)
-        ..setManaInitialAmount(0)
-        ..setArmorType(ArmorType.Large)
+
 
 @compiletime function fireDragonDefinition() returns UnitDefinition
-    return createDragon(UNIT_FIRE_DRAGON)
+    return createDragonDefinition(UNIT_FIRE_DRAGON)
         ..setNormalAbilities(FLYING_PET_BASIC_ABIL)
         ..setUpgradesUsed(FLYING_PET_BASIC_UPGD)
         ..setModelFile(Units.redDragon1)
@@ -169,7 +202,7 @@ function createDragon(int unitId) returns UnitDefinition
         ..setName("Tamed Fire Dragon")
 
 @compiletime function corrosiveDragonDefinition() returns UnitDefinition
-    return createDragon(UNIT_CORROSIVE_DRAGON)
+    return createDragonDefinition(UNIT_CORROSIVE_DRAGON)
         ..setNormalAbilities(FLYING_PET_BASIC_ABIL)
         ..setUpgradesUsed(FLYING_PET_BASIC_UPGD)
         ..setModelFile(Units.greenDragon1)
@@ -177,7 +210,7 @@ function createDragon(int unitId) returns UnitDefinition
         ..setName("Tamed Corrosive Dragon")
 
 @compiletime function frostDragonDefinition() returns UnitDefinition
-    return createDragon(UNIT_FROST_DRAGON)
+    return createDragonDefinition(UNIT_FROST_DRAGON)
         ..setNormalAbilities(FLYING_PET_BASIC_ABIL)
         ..setUpgradesUsed(FLYING_PET_BASIC_UPGD)
         ..setModelFile(Units.azureDragon1)
@@ -185,7 +218,7 @@ function createDragon(int unitId) returns UnitDefinition
         ..setName("Tamed Frost Dragon")
 
 @compiletime function stormDragonDefinition() returns UnitDefinition
-    return createDragon(UNIT_STORM_DRAGON)
+    return createDragonDefinition(UNIT_STORM_DRAGON)
         ..setNormalAbilities(FLYING_PET_BASIC_ABIL)
         ..setUpgradesUsed(FLYING_PET_BASIC_UPGD)
         ..setModelFile(Units.bronzeDragon1)
@@ -193,7 +226,7 @@ function createDragon(int unitId) returns UnitDefinition
         ..setName("Tamed Storm Dragon")
 
 @compiletime function netherDragonDefinition() returns UnitDefinition
-    return createDragon(UNIT_NETHER_DRAGON)
+    return createDragonDefinition(UNIT_NETHER_DRAGON)
         ..setNormalAbilities(FLYING_PET_BASIC_ABIL)
         ..setUpgradesUsed(FLYING_PET_BASIC_UPGD)
         ..setModelFile(Units.netherDragon)

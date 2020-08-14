@@ -32,7 +32,7 @@ let BASH_TOOLTIP_EXT = "This unit stun the target for {0} seconds on every attac
 // Variables used to grow pet to next stage of life.
 let GROWTH_TOOLTIP = "Advance Life"
 let GROWTH_UPGD_TOOLTIP_EXT = "Your pet matures to the next stage of its development."
-let GROWTH_MANACOST = 3
+let GROWTH_MANACOST = 20
 let GROWTH_ICON = LocalIcons.bTNAdvanceLife
 
 
@@ -103,12 +103,12 @@ let GROWTH_ICON = LocalIcons.bTNAdvanceLife
         ..setDummyAbility()
         ..setName("Grow Pet")
         ..setIconNormal(GROWTH_ICON)
-        ..setButtonPositionNormalX(3)
-        ..setButtonPositionNormalY(2)
-        ..setHotkeyNormal("V")
+        ..setButtonPositionNormalX(2)
+        ..setButtonPositionNormalY(1)
+        ..setHotkeyNormal("D")
         ..setCooldown(1, 0)
         ..setManaCost(1, GROWTH_MANACOST)
-        ..setTooltipNormal(1, makeToolTipNorm("V", GROWTH_TOOLTIP))
+        ..setTooltipNormal(1, makeToolTipNorm("D", GROWTH_TOOLTIP))
         ..setTooltipNormalExtended(1, GROWTH_UPGD_TOOLTIP_EXT)
 
 
@@ -120,6 +120,7 @@ function growPet(unit pet)
     // Look up the next unit along the chain.
     let next = chain.get(chain.indexOf(pet.getTypeId()) + 1)
 
+    let previousMana = pet.getMana()
 
     // Grow the pet.
     transformUnit(pet, next)
@@ -130,7 +131,7 @@ function growPet(unit pet)
     // Adjust scaling value used for Health bonus upgrade
     petUpgradeHandlerInstance.get(pet).setScale(BlzGetUnitRealField(pet, UNIT_RF_SCALING_VALUE))
 
-
+    pet.setMana(previousMana)
 
 init
     ForForce(bj_FORCE_ALL_PLAYERS) ->

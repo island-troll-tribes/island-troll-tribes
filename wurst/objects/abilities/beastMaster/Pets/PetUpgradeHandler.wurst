@@ -57,10 +57,11 @@ public class PetUpgradeHandler
         let abil = EventData.getSpellAbility()
         let abilId = EventData.getSpellAbilityId()
 
-        incrementUpgrade(1, abilId, true)
-        // Disable upgrade ability once it reach max level
-        if pet.getAbilityLevel(abilId) >= BlzGetAbilityIntegerField(abil, ABILITY_IF_LEVELS)
-            pet.disableAbility(abilId, false, true)
+        if upgrades.has(abilId)
+            incrementUpgrade(1, abilId, true)
+            // Disable upgrade ability once it reach max level
+            if pet.getAbilityLevel(abilId) >= BlzGetAbilityIntegerField(abil, ABILITY_IF_LEVELS)
+                pet.disableAbility(abilId, false, true)
 
     function incremenAllUpgrades(int value, boolean updateUpgradeAbilityLevel)
         for upgradeAbilId in upgrades
@@ -85,7 +86,6 @@ public class PetUpgradeHandler
             case ABILITY_PET_HEALTH_UPGD
                 // Increase scale by 3% for every upgrade, durr durr big bear
                 pet.setScale(initialScale + initialScale * 0.03 * (techCount + value))
-
 
     function resetUpgrades()
         for upgradeAbilId in upgrades

@@ -1,11 +1,16 @@
 package ReduceHealing
 
 // Standard library imports:
+import Assets
 import ClosureTimers
-import ErrorHandling
+import HashSet
+import EventHelper
 import LinkedList
+import MapBounds
 import OnUnitEnterLeave
-import HashMap
+import Quest
+import RegisterEvents
+import UnitIndexer
 
 // Third-party imports:
 import Lodash
@@ -14,42 +19,157 @@ import Lodash
 import Game
 import GameConfig
 import HealingSystem
+import Hints
+
+// The description of this system, accessible from the quest log.
+let DESCRIPTION = "" +
+    "Healing is a vital apsect of combat for trolls. Their bodes have "        +
+    "adapted to support rapid regeneration, allowing them to continue "        +
+    "fighting even after sustaining grievous wounds. However, a troll must "   +
+    "fuel this metabolic process by consuming copious amounts of food. "       +
+    "Experienced trolls will typically carry a handy supply of meat into "     +
+    "battle, valuing it above all else. Although these voracious creatures "   +
+    "have evolved to eat incredibly quickly, their bellies will still "        +
+    "eventually fill, at which point their digestion slows and healing "       +
+    "begins to worsen. This effect gradually wears off and is entirely reset " +
+    "when the troll dies. The exact mechanics of this are detailed in the "    +
+    "food supply and upkeep overlays in the top right of the screen."
+
+// The title of the quest used to describe this system.
+let TITLE = "Healing From Food"
+
+// The hint used to notify players of this system.
+let HINT = ("" +
+    "Your healing has been reduced for the first time. See '{0}' in the "      +
+    "quest log for more information."
+).format(TITLE)
 
 // The duration in seconds for which the moving sum is tracked.
-let DURATION = 300.
+let DURATION = 90.
 
-// The proportion per bracket.
+// The healing factor per bracket.
 let BRACKETS = asOwnedList(
     new Pair(REAL_MIN, 1.00),
-    new Pair(500.,     0.75),
-    new Pair(1000.,    0.50),
-    new Pair(1500.,    0.25),
+    new Pair(500.,     0.80),
+    new Pair(1000.,    0.60),
+    new Pair(1500.,    0.40),
     new Pair(REAL_MAX, 0.00)
 )
 
-// Arrays corresponding to brackets used to optimize some operations.
+// The brackers in array form, used to optimize some operations.
 let NUM_BRACKETS = BRACKETS.size() - 1
 real array BOUNDS
 real array FACTORS
 
-// The moving sum of the total amount healed by items per unit.
-let sums = new HashMap<unit, real>()
+// The array used to track the hint per player.
+bool array hinted
 
-function adjustAmountHealed(unit target, real amount)
-    if sums.has(target)
-        sums.put(target, sums.get(target) + amount)
+// The state of healing per unit.
+State array states
+
+// Displays a hint to a player the first their unit is affected.
+function player.displayHint()
+    // Exit if the player has hints disabled.
+    if not Hint.playersF.containsPlayer(this)
+        return
+
+    // Exit if the player has already seen this hint.
+    if hinted[this.getId()]
+        return
+
+    // Print the hint.
+    // TODO: Support this behavior within the Hint system.
+    this.print(HINT)
+
+    // Block the player from receiving this hint again.
+    hinted[this.getId()] = true
+
+// Formats an amount as a value to be displayed in the food supply overlay.
+function real.toDisplay() returns int
+    // Divide by 10 because the engine limits food cap to 999.
+    return (this / 10).floor()
+
+class State
+    // The unit whose state this is tracking.
+    unit target
+
+    // The moving sum of the total amount healed for the unit.
+    real sum
+
+    // The in-progress timers that would adjust this state.
+    HashSet<CallbackPeriodic> timers
+
+    construct(unit target)
+        this.target = target
+        this.sum = 0
+        this.timers = new HashSet<CallbackPeriodic>()
+
+    function adjustAmountHealed(real amount)
+        // Adjust the running sum.
+        this.sum += amount
+
+        // Display the total healing as the food used.
+        this.target.getOwner().setState(
+            PLAYER_STATE_RESOURCE_FOOD_USED,
+            sum.toDisplay()
+        )
+
+        // Search for the next boundary.
+        for index = 0 to NUM_BRACKETS
+            // Skip brackets below the threshold.
+            if BOUNDS[index] > this.sum
+                // Display the next boundary as the cap.
+                this.target.getOwner().setState(
+                    PLAYER_STATE_RESOURCE_FOOD_CAP,
+                    // Allow the upper bound to default to 999.
+                    BOUNDS[index].toDisplay()
+                )
+
+                // Exit once the cap has been set.
+                break
+
+        // Schedule inverse operations only for increases.
+        if amount <= 0
+            return
+
+        // Use a periodic callback only because it can reference itself.
+        let callback = doPeriodically(DURATION) callback ->
+            // Inverse the above operation after the configured duration.
+            this.adjustAmountHealed(-amount)
+
+            // Ensure that each timer only runs once.
+            destroy callback
+
+            // Remove the reference so that the timer is not doubly freed.
+            timers.remove(callback)
+
+        // Save the timer so that it can be destroyed upon unit removal.
+        timers.add(callback)
+
+    ondestroy
+        // Reset the state to produce side effects.
+        this.adjustAmountHealed(-this.sum)
+
+        // Unschedule any existing timers.
+        destroy this.timers..forEach(callback -> destroy callback)
 
 function onUnitHealed(HealingInstance instance)
     // Only items are considered for healing reduction.
     if instance.healingType != ITEM
         return
 
-    // Validate the state for the unit.
-    if not sums.has(instance.target)
-        error("No healing tracked for {0}.".format(instance.target.getName()))
+    // Cache the address for the state.
+    let address = instance.target.getIndex()
 
-    // Retrieve the current value for the target.
-    var sum = sums.get(instance.target)
+    // Initialize the state the first time a unit is healed.
+    if states[address] == null
+        states[address] = new State(instance.target)
+
+    // Retrieve the state for the target.
+    let state = states[address]
+
+    // Initialize the copy of the sum to be tracked across brackets.
+    var sum = state.sum
 
     // The actual value to be healed.
     var output = 0.
@@ -75,32 +195,35 @@ function onUnitHealed(HealingInstance instance)
         sum    += current
         index  += 1
 
-    // Adjust the healing factor accordingly.
-    instance.scaleMultiplier(output / instance.amount)
+    // Check if healing was actually reduced.
+    if output < instance.amount
+        // Notify the player of the reduction via hint.
+        instance.target.getOwner().displayHint()
+
+        // Adjust the healing factor accordingly.
+        instance.scaleMultiplier(output / instance.amount)
 
     // Adjust the moving sum.
-    adjustAmountHealed(instance.target, instance.amount)
+    state.adjustAmountHealed(instance.amount)
 
-    // Schedule the operation to reduce the sum.
-    doAfter(DURATION) ->
-        adjustAmountHealed(instance.target, -instance.amount)
+// Treats death the same as unit removal.
+function onUnitDeath(unit target)
+    onUnitLeave(target)
 
-function onUnitEnter(unit target)
-    sums.put(target, 0)
-
+// Deletes the state for a unit upon removal.
 function onUnitLeave(unit target)
-    sums.remove(target)
+    // Retrieve the state for the unit.
+    let state = states[target.getIndex()]
 
-function LinkedList<T>.asArray<T>() returns T array
-    // The array to be filled.
-    T array output
+    // Avoid deallocating a null state for units that never healed.
+    if state == null
+        return
 
-    // Iterate over the elements.
-    for index = 0 to this.size() - 1
-        output[index] = this.get(index)
+    // Null the reference in case the unit index is reused.
+    states[target.getIndex()] = null
 
-    // Output the filled array.
-    return output
+    // Let the destructor take care of all internal deallocation.
+    destroy state
 
 // Initializes the arrays used to optimize lookup.
 function initializeArrays()
@@ -115,15 +238,43 @@ function initializeArrays()
         BOUNDS[index]  = BRACKETS.get(index).a + buffer
         FACTORS[index] = BRACKETS.get(index).b
 
+    // Fill the hinted array.
+    for index = 0 to bj_MAX_PLAYER_SLOTS - 1
+        hinted[index] = false
+
 init
     onUnitHealed() ->
         onUnitHealed(getHealingInstance())
 
-    onEnter() ->
-        onUnitEnter(getEnterLeaveUnit())
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
+        onUnitDeath(EventData.getDyingUnit())
 
     onLeave() ->
         onUnitLeave(getEnterLeaveUnit())
 
     registerGameStartEvent() ->
+        // Initialize the arrays once the game configuration has been finalized.
         initializeArrays()
+
+        // Fake healing to initialize the player state.
+        for index = 0 to bj_MAX_PLAYER_SLOTS - 1
+            // Create a temporary unit to heal.
+            let temp = createUnit(
+                players[index],
+                UnitIds.footman,
+                boundMax,
+                angle(0)
+            )
+
+            // Heal the unit.
+            new HealingInstance(temp, 0, HealingType.ITEM)
+
+            // Remove the unit once it is no longer needed.
+            temp.remove()
+
+    // Create a quest to describe this system.
+    new Quest(false)
+        ..setTitle(TITLE)
+        ..setDescription(DESCRIPTION)
+        ..setIcon(Icons.bTNMonsterLure)
+        ..setState(QuestState.DISCOVERED)

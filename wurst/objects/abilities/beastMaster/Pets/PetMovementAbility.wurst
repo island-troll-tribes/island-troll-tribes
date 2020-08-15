@@ -1,0 +1,92 @@
+package PetMovementAbility
+
+
+// Standard Library Imports:
+import ChannelAbilityPreset
+import ClosureEvents
+import ClosureTimers
+import LodashExtensions
+import Assets
+
+// Local Imports:
+import LocalObjectIDs
+import PetMovement
+import Tribe
+import Game
+import ToolTipsUtils
+import StringExtensions
+import ColorUtils
+
+let STR_AUTOMATIC = "Automatic".color(COLOR_ORANGE)
+let STR_MANUAL = "Manual".color(COLOR_YELLOW)
+
+let NAME     = "Toggle Pet Control"
+let TOOLTIP  = "Toggle pet control."
+let TOOLTIP_EXT = "Toggle between " + STR_MANUAL + " and " + STR_AUTOMATIC + " pet controls.\n\n" +
+                    STR_MANUAL + " : Manual mode uses regular unit controls.\n\n" +
+                    STR_AUTOMATIC + " : In automatic mode the pet will copy actions taken by the owner."
+let ORDER_ID = "barkskinoff"
+
+let AUTO_CONTROL_MESSAGE = "Auto pet control."
+let MANUAL_CONTROL_MESSAGE = "Manual pet control."
+
+
+function createTogglePetControlSpell(int newAbilId) returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(newAbilId, 1, true)
+        ..setDummyAbility()
+        ..setAnimationNames("")
+        ..presetTargetTypes(Targettype.NONE)
+        ..setIconNormal(Icons.bTNSelectUnit)
+        ..setHeroAbility(true)
+        ..setName(NAME)
+        ..setLevels(1)
+        ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+        ..presetBaseOrderID(lvl -> ORDER_ID)
+        ..setAnimationNames("")
+        ..setCheckDependencies(true)
+        ..setRequirements(UPGD_PET_TAMED_TRUE.toRawCode())
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createBaseToggleSpell() returns ChannelAbilityPreset
+    return createTogglePetControlSpell(ABILITY_TOGGLE_PET_CONTROL)
+        ..setButtonPositionNormalX(3)
+        ..setButtonPositionNormalY(0)
+        ..setHotkeyNormal("R")
+        ..setTooltipNormal(1, makeToolTipNorm("R", TOOLTIP))
+
+@compiletime function createShapeShifterToggleSpell() returns ChannelAbilityPreset
+    return createTogglePetControlSpell(ABILITY_TOGGLE_PET_CONTROL_SHAPESHIFTER)
+        ..setButtonPositionNormalX(3)
+        ..setButtonPositionNormalY(1)
+        ..setHotkeyNormal("F")
+        ..setTooltipNormal(1, makeToolTipNorm("F", TOOLTIP))
+
+// Used to toggle pet controls stored in `PetMovement.wurst`.
+function togglePetControl(player triggerer)
+    // If auto controls are currently active.
+    if PET_CONTROLS.getAndRemove(triggerer) == AUTO
+        // Print message alerting the switch to manual controls.
+        triggerer.print(MANUAL_CONTROL_MESSAGE, 5)
+
+        // Reset the player's controls to manual mode.
+        PET_CONTROLS.put(triggerer, CONTROL_MODE.MANUAL)
+
+    // If manual controls are currently active.
+    else
+        // Print message alerting the switch to auto controls.
+        triggerer.print(AUTO_CONTROL_MESSAGE, 5)
+
+        // Reset the player's controls to auto mode.
+        PET_CONTROLS.put(triggerer, CONTROL_MODE.AUTO)
+
+// Initialize all player's controls to auto at the beginning of the game.
+function initializeControls()
+    Tribe.getTribes().each(t -> t.getMembers().each(member -> PET_CONTROLS.put(member, CONTROL_MODE.AUTO)))
+
+init
+    EventListener.onCast(ABILITY_TOGGLE_PET_CONTROL, _ -> togglePetControl(EventData.getTriggerPlayer()))
+    EventListener.onCast(ABILITY_TOGGLE_PET_CONTROL_SHAPESHIFTER, _ -> togglePetControl(EventData.getTriggerPlayer()))
+
+    registerGameStartEvent() ->
+        nullTimer() ->
+            initializeControls()

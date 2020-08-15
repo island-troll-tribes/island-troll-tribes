@@ -1,0 +1,36 @@
+package PetMana
+
+// Standard Library Imports:
+import HashMap
+import ClosureTimers
+import ClosureEvents
+
+// Used to track the absolute count of pet's mana.
+let TRUE_PET_MANA = new IterableMap<unit, real>()
+
+// Updates the count of mana.PetMana
+public function updatePetMana(unit pet, real adjustment)
+    // If the pet is already being tracked.
+    if TRUE_PET_MANA.has(pet)
+        // Add the adjustment.
+        TRUE_PET_MANA.put(pet, TRUE_PET_MANA.getAndRemove(pet) + adjustment)
+
+    // If the pet is not being tracked.
+    else
+        // Begin tracking it.
+        TRUE_PET_MANA.put(pet, adjustment)
+
+// Stop tracking a pet when it dies, since mana will be reset.
+function onDeath(unit triggerer)
+    TRUE_PET_MANA.remove(triggerer)
+
+init
+    EventListener.add(EVENT_PLAYER_UNIT_DEATH) -> 
+        onDeath(EventData.getTriggerUnit())
+        
+    // Used to continuously check the pets mana.
+    doPeriodicallyTimed(5, 999999) (CallbackCounted cb) ->
+        for pet in TRUE_PET_MANA
+            if not pet.getMana() == TRUE_PET_MANA.get(pet)
+                pet.getOwner().print("Pet has incorrect mana, this is a bug please report.")
+                pet.setMana(TRUE_PET_MANA.get(pet))

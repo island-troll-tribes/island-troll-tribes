@@ -2,22 +2,27 @@ package Transformation
 
 // Standard library imports:
 import AbilityObjEditing
+import Assets
 import LinkedList
 import ObjectIdGenerator
 import ObjectIds
+import Orders
 import MapBounds
 
 // Third-party imports:
 import Lodash
+import LodashExtensions
 import ObjectIDManager
 
 // Local imports:
 import HashingMap
-
-@configurable let BASE_ID = 'AZ00'
+import UnitExtensions
 
 // The option indicating whether proper names should be updated.
 @configurable let UPDATE_PROPER_NAME = true
+
+// The option indicating whether unit color should be corrected.
+@configurable let CORRECT_COLOR = true
 
 public interface Callback
     function run(unit target, int unitID)
@@ -30,9 +35,6 @@ public class Callbacks extends OwnedLinkedList<Pair<int, Callback>>
 let prior = new Callbacks()
 let after = new Callbacks()
 
-// Generator of ability IDs used for transformations.
-let GEN = new IdGenerator(BASE_ID)
-
 // Mapping of old and new unit IDs to the ability ID used for transforming.
 let abilities = new HashingMap<Pair<int, int>, int>(
     key -> StringHash(key.a.toString() + key.b.toString())
@@ -44,19 +46,19 @@ public function registerPriorEffect(Callback cb)
 public function registerAfterEffect(Callback cb)
     after.push(new Pair(1, cb))
 
+public function registerTransformation(int originID, int targetID) returns int
+    return registerTransformation(originID, targetID, ABIL_ID_GEN.next())
+
 // This must be called during compile time and run time for each desired pair
 // and the order of pairs for which it is called must match between the two.
-public function registerTransformation(int originID, int targetID)
+public function registerTransformation(int originID, int targetID, int abilityID) returns int
     // Construct the key used for the registration.
     let key = new Pair(originID, targetID)
 
     // Do not allow overwrites.
     if abilities.has(key)
         destroy key
-        return
-
-    // Compute the ability ID to use.
-    let abilityID = GEN.next()
+        return 0
 
     // Create the ability used for the transformation.
     if compiletime
@@ -67,6 +69,41 @@ public function registerTransformation(int originID, int targetID)
     // Register the ability.
     abilities.put(key, abilityID)
 
+    // Output the generated ability ID for local storage.
+    return abilityID
+
+public function registerTransformations(
+        LinkedList<Pair<int, int>> transformations) returns LinkedList<int>
+    return transformations.map(pair -> registerTransformation(pair.a, pair.b))
+
+// Performs a bulk operations for registrations. Designed to simplify what must
+// be called at runtime by external packages.
+function registerTransformations(
+        LinkedList<Pair<int, int>> transformations,
+        LinkedList<int> abilityIDs,
+        bool requiresFixing,
+        bool requiresAbility)
+    // Pair each tranformation with its pregenerated ability ID.
+    zip(transformations, abilityIDs).forEach() element ->
+        // Register the transformation.
+        registerTransformation(element.a.a, element.a.b, element.b)
+
+        // Register the fix, is required.
+        if requiresFixing
+            registerCorpseFix(element.a.a, element.a.b, requiresAbility)
+
+// Simplifies the call for the above bulk operation.
+public function registerTransformations(
+        LinkedList<Pair<int, int>> transformations,
+        LinkedList<int> abilityIDs)
+    registerTransformations(transformations, abilityIDs, false, false)
+
+// Simplifies the call for the above bulk operation.
+public function registerTransformations(
+        LinkedList<Pair<int, int>> transformations,
+        LinkedList<int> abilityIDs,
+        bool requiresAbility)
+    registerTransformations(transformations, abilityIDs, true, requiresAbility)
 
 function runCallbacks(Callbacks callbacks, unit target, int unitID)
     // Consider each callback in turn.
@@ -120,6 +157,72 @@ public function transformUnit(unit origin, int targetID)
     // Destroy local resources.
     destroy key
 
+// Mapping of transformation operations that need to be fixed to whether a new ability is needed.
+let fixes = new HashingMap<Pair<int, int>, bool>(
+    key -> StringHash(key.a.toString() + key.b.toString())
+)
+
+let DUMMY_CANNIBALIZE_ID = compiletime(ABIL_ID_GEN.next())
+
+@compiletime function consumeCorpse()
+    new AbilityDefinitionCannibalize(DUMMY_CANNIBALIZE_ID)
+        ..setName("Canniablize Dummy")
+        ..setCheckDependencies(false)
+        ..presetHitPointsperSecond(lvl -> 0)
+        ..presetDurationHero(lvl -> 0)
+        ..presetDurationNormal(lvl -> 0)
+
+public function registerCorpseFix(int originID, int targetID, bool requiresAbility)
+    fixes.put(new Pair(originID, targetID), requiresAbility)
+
+function fixCorpseSystem(Pair<int, int> key, unit target)
+    // Exit if this transformation does not require fixing.
+    if not fixes.has(key)
+        return
+
+    // Look up whether a dummy ability is required.
+    let requiresAbility = fixes.get(key)
+
+    // Add in the ability prior to the order, as necessary.
+    if requiresAbility
+        target.addAbility(DUMMY_CANNIBALIZE_ID)
+
+    // Create the corpse to be used.
+    let corpse = CreateCorpse(
+        players[PLAYER_NEUTRAL_AGGRESSIVE],
+        UnitIds.footman,
+        target.getX(),
+        target.getY(),
+        0
+    )
+
+    // Save the unit original hit points in order to reset them later.
+    let health = target.getHP()
+
+    // Ensure that the unit can attempt to consume the corpse.
+    target.setHP(1)
+
+    // Issue the order, allowing the target to default to the new corpse.
+    if not target.issueImmediateOrderById(Orders.cannibalize)
+        target.getOwner().print(
+            "Failed to fix corpse targeting for {0}".format(
+                target.getName()
+            )
+        )
+
+    // Cancel the order, masking that this operation ever occurred.
+    target.issueImmediateOrderById(Orders.stop)
+
+    // Reset the health.
+    target.setHP(health)
+
+    // Remove the corpse once it is no longer needed for targeting.
+    corpse.remove()
+
+    // Remove the ability once it is no longer needed.
+    if requiresAbility
+        target.removeAbility(DUMMY_CANNIBALIZE_ID)
+
 init
     // Allow for this feature to be disabled.
     if UPDATE_PROPER_NAME
@@ -140,3 +243,21 @@ init
 
                 // Remove the temporary unit once it is no longer needed.
                 temp.remove()
+
+    // Allow for this feature to be disabled.
+    if CORRECT_COLOR
+        // Set unit color manually, as it will default to slot color otherwise.
+        registerAfterEffect() (unit target, int unitID) ->
+            // Filter out units that do not glow.
+            target.correctColor()
+
+    // Issue a cannibalize order to fix corpse targeting.
+    registerAfterEffect() (unit target, int unitID) ->
+        // Create the key for the transformation.
+        let key = new Pair(unitID, target.getTypeId())
+
+        // Forward the call to handle the actual work.
+        fixCorpseSystem(key, target)
+
+        // Clean up the local state.
+        destroy key

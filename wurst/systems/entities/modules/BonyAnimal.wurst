@@ -2,6 +2,9 @@ package BonyAnimal
 import LocalObjectIDs
 import Hostile
 import LinkedList
+// Using initlater fixes a bug that causes unintended deaths of units.
+// I don't know why but think it's something related to data corruption.
+import initlater Pets
 
 
 public abstract class BonyAnimal extends Hostile
@@ -12,6 +15,8 @@ public abstract class BonyAnimal extends Hostile
         super.postCreate()
 
     override function getDrops() returns LinkedList<int>
+        if pets.has(getUnit().getOwner())
+            return new LinkedList<int>()
         let drops = super.getDrops()
             ..add(ITEM_BONE)
         return drops

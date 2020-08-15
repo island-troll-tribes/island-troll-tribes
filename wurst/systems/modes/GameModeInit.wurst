@@ -302,3 +302,14 @@ init
         else
             gameConfig.setPlayerScoreEnabled(false)
             mode.message("Player scoring disabled!.".color(ENERGY_COLOR))
+
+    new GameMode("start-level", "sl", "Fun", "Set Starting level, eg -sl 6", true) (mode, args) ->
+        if args.size() < 2
+            mode.error("Must specify the starting level, eg -sl 6 for level 6")
+        else
+            let lvl = args.get(1).toInt()
+            if (lvl <= 0 or lvl > 30)
+                mode.error("Level must be superior to 0 and inferior to 30.")
+            else
+                gameConfig.setStartingLevel(lvl)
+                mode.message("Troll Starting Level".color(ENERGY_COLOR) + " set to " + lvl.toString())

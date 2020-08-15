@@ -38,7 +38,7 @@ init
 
 
 def build_parser():
-    # Create the basea parser.
+    # Create the base parser.
     parser = ArgumentParser(
         "Release",
         description="Updates and releases the map based on recent commits.",
@@ -120,34 +120,8 @@ def update_build(version):
     with open(path, "w") as target:
         dump(build, target, Dumper=Dumper, sort_keys=False)
 
-    # Output the path for later use.
-    return path, filename
-
-
-# Updates the configuration of the versioning in the map interace.
-def update_config(version):
-    # Compute the path of the configuration file.
-    path = join("imports", "war3mapSkin.txt")
-
-    # Treat comments like keys without values.
-    config = ConfigParser(comment_prefixes=[], allow_no_value=True)
-
-    # Disable transformation of keys.
-    config.optionxform = str
-
-    # Read the given configuration file.
-    config.read(path)
-
-    # Update the version.
-    config["FrameDef"]["UPKEEP_NONE"] = f"|cffffd700{version}|r"
-
-    # Write back the updated file.
-    with open(path, "w") as target:
-        # Disable whitespace to preserve the formatting.
-        config.write(target, space_around_delimiters=False)
-
-    # Output the path for later use.
-    return path
+    # Output the paths for the build file and built map.
+    return path, join("_build", f"{filename}.w3x")
 
 
 def get_changelog(repo, sha, marker="$changelog: "):
@@ -299,17 +273,11 @@ if __name__ == "__main__":
     # Compute the changelog.
     changelog = sorted(get_changelog(repo, sha))
 
-    # Update the configuration file for the map.
-    config = update_config(version)
-
     # Write the changelog package.
     package = write_changelog(major, minor, patch, changelog)
 
     # Update the build file for the map.
-    build, filename = update_build(version)
-
-    # Compute the expected location of the built map.
-    target = join("_build", f"{filename}.w3x")
+    build, target = update_build(version)
 
     # Update the repository with the modified files.
     if args.dry_run:
@@ -319,7 +287,7 @@ if __name__ == "__main__":
         build_map(args.base, target)
 
         # Push the changes.
-        update_repo(args.remote, [package, config, build], version)
+        update_repo(args.remote, [package, build], version)
 
         # Release the changes.
         repo.create_git_release(

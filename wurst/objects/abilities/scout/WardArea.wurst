@@ -11,39 +11,46 @@ import Lodash
 import ColorUtils
 import LocalObjectIDs
 import ToolTipsUtils
+import StringExtensions
+import LivingClay
 
 let ABILITY_ICON = "ReplaceableTextures\\CommandButtons\\BTNGreenSentryWard.blp"
 
-let COOLDOWN = 80.
+let COOLDOWN = 70.
 let SPY_COOLDOWN = COOLDOWN - 30
 
-let WARD_BASE_DURATION = 240.
-let WARD_ADDED_DURATION = 120.
+// Radius that obs/spy wards are randomly dropped around target pos.
+let RANDOM_PLACEMENT_RANGE = 600.
+
+let WARD_DURATION = 480.
 
 let TOOLTIP_NORM = "Ward the Area"
-let TOOLTIP_EXTENDED = "Places {0}|r living clay in the area around you. Living clay last {1}|r seconds, has {2} seconds cooldown."
+let TOOLTIP_BASE_EXT = "Places a living clay at the target spot. Living clay last {0} seconds, has {1} seconds cooldown."
+let TOOLTIP_SUB_EXT = "Places a living clay at the target spot and {0}|r living clay in the area around you. Living clay last {1}|r seconds, has {2} seconds cooldown."
 
 let MANACOST = 10
 let CASTTIME = 1.0
 
 class WardAreaSpell extends ChannelAbilityPreset
-    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
-        super(newAbilityId, 3, true)
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos, int lvls)
+        super(newAbilityId, lvls, true)
         this.presetManaCost(lvl -> MANACOST)
-        this.presetCooldown(lvl -> COOLDOWN - lvl * 10)
+        this.presetCooldown(lvl -> COOLDOWN)
         this.setHeroAbility(true)
         this.setItemAbility(false)
         this.setRequiredLevel(0)
+        this.setCastRange(1, 50)
         this.setLevelSkipRequirement(0)
-        this.presetTargetTypes(Targettype.NONE)
+        this.presetTargetTypes(Targettype.POINT)
+        this.setAreaofEffect(1, SIGHT_RADIUS.toReal())
+        this.presetOption(Option.TARGETIMAGE, true)
         this.setHotkeyNormal(hotkey)
         this.setName(TOOLTIP_NORM)
         this.presetTooltipNormal(lvl -> makeToolTipNormHero(hotkey, TOOLTIP_NORM, lvl))
-        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED.format(COLOR_ORANGE.toColorString()+(lvl + 1).toString(),
-        (WARD_BASE_DURATION + WARD_ADDED_DURATION * lvl).toToolTipLightBlue(), (COOLDOWN - lvl * 10).toToolTipLightBlue()))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_BASE_EXT.format(WARD_DURATION.toString().substring(0, 3).color(COLOR_ORANGE), COOLDOWN.toString().substring(0, 2).color(COLOR_LIGHT_BLUE)))
 
         this.setTooltipLearn(makeToolTipLearn(TOOLTIP_NORM))
-        this.setTooltipLearnExtended(TOOLTIP_EXTENDED.format(COLOR_ORANGE.toColorString()+"2/3/4|r", COLOR_LIGHT_BLUE.toColorString()+"360/480/600|r", COLOR_LIGHT_BLUE.toColorString()+"70/60/50|r"))
+        this.setTooltipLearnExtended(TOOLTIP_BASE_EXT.format(WARD_DURATION.toString().color(COLOR_ORANGE).substring(0, 3), COOLDOWN.toString().color(COLOR_LIGHT_BLUE).substring(0, 2)))
         this.setIconNormal(ABILITY_ICON)
         this.setIconResearch(ABILITY_ICON)
         this.setIconTurnOff(ABILITY_ICON)
@@ -52,33 +59,60 @@ class WardAreaSpell extends ChannelAbilityPreset
         this.presetFollowThroughTime(lvl -> CASTTIME)
         this.setAnimationNames("spell,throw")
 
+class ObserverWardAreaSpell extends WardAreaSpell
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos, int lvls)
+        super(newAbilityId, hotkey, buttonPos, lvls)
+        this.presetCooldown(lvl -> COOLDOWN - lvl * 10)
+        this.presetTooltipNormal(lvl -> makeToolTipNormHero(hotkey, TOOLTIP_NORM, lvl))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_SUB_EXT.format(COLOR_ORANGE.toColorString()+(lvl + 1).toString(),
+        (WARD_DURATION).toToolTipLightBlue(), (COOLDOWN - lvl * 10).toToolTipLightBlue()))
+        this.setCheckDependencies(false)
+
 class SpyWardAreaSpell extends WardAreaSpell
-    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
-        super(newAbilityId, hotkey, buttonPos)
-        this.setLevels(1)
-        this.setHeroAbility(false)
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos, int lvls)
+        super(newAbilityId, hotkey, buttonPos, lvls)
         this.setCooldown(1, SPY_COOLDOWN)
         this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
-        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED.format(COLOR_ORANGE.toColorString()+"4", COLOR_LIGHT_BLUE.toColorString()+"600", SPY_COOLDOWN.toToolTipLightBlue()))
+        this.setTooltipNormalExtended(1, TOOLTIP_SUB_EXT.format(COLOR_ORANGE.toColorString()+"4", COLOR_LIGHT_BLUE.toColorString()+WARD_DURATION.toString().substring(0, 3), SPY_COOLDOWN.toToolTipLightBlue()))
 
 @compiletime function createWardAreaSpells()
-    new WardAreaSpell(ABILITY_WARD_AREA, "R", new Pair(2, 1))
-    new SpyWardAreaSpell(ABILITY_SPY_WARD_AREA, "R", new Pair(3, 1))
+    new WardAreaSpell(ABILITY_WARD_AREA, "R", new Pair(2, 1), 1)
+    new ObserverWardAreaSpell(ABILITY_OBSERVER_WARD_AREA, "D", new Pair(2, 1), 3)
+    new SpyWardAreaSpell(ABILITY_SPY_WARD_AREA, "R", new Pair(3, 1), 1)
 
-function onCast()
-    let caster = GetSpellAbilityUnit()
-    var wardNbr = GetSpellAbilityId() == ABILITY_WARD_AREA
-        ? caster.getAbilityLevel(ABILITY_WARD_AREA)
+function onCast(unit caster)
+
+    // Create ward at target position.
+    createUnit(caster.getOwner(), UNIT_LIVING_CLAY, EventData.getSpellTargetPos(), (270.0).asAngleDegrees())
+        ..setTimedLife(WARD_DURATION)
+        ..setAnimation("birth")
+
+    // Exit if this is the base spell.
+    if GetSpellAbilityId() == ABILITY_WARD_AREA
+        return
+
+    // Determine how many wards to place around the target pos.
+    var wardNbr = GetSpellAbilityId() == ABILITY_OBSERVER_WARD_AREA
+        ? caster.getAbilityLevel(ABILITY_OBSERVER_WARD_AREA)
         : 3
 
+    // Place that many wards.
     for i = wardNbr downto 0
-        var pos = caster.getPos()
-        pos.x += GetRandomReal(-500, 500)
-        pos.y += GetRandomReal(-500, 500)
+
+        // Get a random position around target pos.
+        var pos = EventData.getSpellTargetPos()
+        pos.x += GetRandomReal(-RANDOM_PLACEMENT_RANGE, RANDOM_PLACEMENT_RANGE)
+        pos.y += GetRandomReal(-RANDOM_PLACEMENT_RANGE, RANDOM_PLACEMENT_RANGE)
+
+        // Create the ward.
         createUnit(caster.getOwner(), UNIT_LIVING_CLAY, pos, (270.0).asAngleDegrees())
-            ..setTimedLife(240. + 120 * wardNbr)
+            ..setTimedLife(WARD_DURATION)
             ..setAnimation("birth")
 
 init
-    registerSpellEffectEvent(ABILITY_WARD_AREA, () -> onCast())
-    registerSpellEffectEvent(ABILITY_SPY_WARD_AREA, () -> onCast())
+    EventListener.onCast(ABILITY_WARD_AREA) (unit caster) ->
+        onCast(caster)
+    EventListener.onCast(ABILITY_OBSERVER_WARD_AREA) (unit caster) ->
+        onCast(caster)
+    EventListener.onCast(ABILITY_SPY_WARD_AREA) (unit caster) ->
+        onCast(caster)

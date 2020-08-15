@@ -1,0 +1,47 @@
+package SpiritOfTheBeast
+
+// Standard Library Imports:
+import AbilityObjEditing
+import ObjectIds
+import Assets
+
+// Local Imports:
+import LocalObjectIDs
+
+let ICON = Icons.bTNEnchantedBears
+let TOOLTIP = "Spirit of the Beast"
+let TOOLTIP_EXT = "Animals are more at ease around the Beast Master and move slowly. This makes them easier to hunt."
+
+function createSpiritBeastSpell(int abilId) returns AbilityDefinitionUnholyAuracreep
+    return new AbilityDefinitionUnholyAuracreep(abilId)
+        ..setAreaofEffect(1, 400)
+        ..setIconNormal(ICON)
+        ..setBuffs(1, BUFF_ATTRACTION.toRawCode())
+        ..setCheckDependencies(false)
+        ..setMovementSpeedIncrease(1, -0.4)
+        ..setLifeRegenerationIncrease(1, 0)
+        ..setHeroAbility(true)
+        ..setLevels(1)
+        ..setName("Spirit of the Beast")
+        ..setRace(Race.Nightelf)
+        ..setArtTarget("")
+        ..setTargetAttachmentPoint("")
+        ..setTargetsAllowed(1, commaList(
+                TargetsAllowed.enemies,
+                TargetsAllowed.ground,
+                TargetsAllowed.nonhero,
+                TargetsAllowed.organic,
+                TargetsAllowed.vulnerable
+            )
+        )
+        ..setTooltipNormal(1, TOOLTIP)
+        ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+@compiletime function createSpiritBeastBase() returns AbilityDefinitionUnholyAuracreep
+    return createSpiritBeastSpell(ABILITY_SPIRIT_BEAST)
+        ..setButtonPositionNormalX(1)
+        ..setButtonPositionNormalY(1)
+
+@compiletime function createSpiritBeastShapeShifter() returns AbilityDefinitionUnholyAuracreep
+    return createSpiritBeastSpell(ABILITY_SPIRIT_BEAST_SHAPESHIFTER)
+        ..setButtonPositionNormalX(0)
+        ..setButtonPositionNormalY(2)

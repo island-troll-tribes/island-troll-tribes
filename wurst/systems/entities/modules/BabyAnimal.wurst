@@ -3,6 +3,9 @@ import BonyAnimal
 import Orders
 import GeometryUtils
 import ClosureTimers
+// Using initlater fixes a bug that causes unintended deaths of units.
+// I don't know why but think it's something related to data corruption.
+import initlater Pets
 
 let SPAWN_WANDER_DISTANCE = 100.
 
@@ -18,3 +21,8 @@ public abstract class BabyAnimal extends BonyAnimal
         doAfter(1) ->
             if baby.isAlive()
                 baby.issueImmediateOrderById(Orders.stop)
+
+    override function getNumCorpses() returns int
+        if pets.has(getUnit().getOwner())
+            return 0
+        return super.getNumCorpses()

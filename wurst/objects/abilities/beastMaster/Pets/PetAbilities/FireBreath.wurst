@@ -1,0 +1,145 @@
+package FireBreath
+
+// Standard Library Imports
+import UpgradeObjEditing
+import ChannelAbilityPreset
+import ClosureEvents
+import ClosureForGroups
+import ClosureTimers
+import Assets
+import BuffObjEditing
+
+// Local imports:
+import LocalObjectIDs
+import PlayerExtensions
+import ToolTipsUtils
+import ColorUtils
+import StringExtensions
+import LocalAssets
+import Pets
+import Transformation
+import PetUpgradeHandler
+import CustomProjectile
+import SpiritualGuidance
+
+let FIRE_BREATH_TOOLTIP = "Fire Breath"
+let FIRE_BREATH_TOOLTIP_EXT = ""
+let FIRE_BREATH_COOLDOWN = 1.
+
+let FIRE_BREATH_AOE = 150.
+let FIRE_BREATH_AOE_INCREASE = 50.
+
+let GROUND_BURN_INTERVAL = 0.2
+
+let GROUND_BURN_DPS = 15.
+let GROUND_BURN_DPS_INCREASE = 5.
+
+let GROUND_BURN_DURATION = 4.
+let GROUND_BURN_DURATION_INCREASE = 1.
+
+@compiletime function createFireBreathUpgrade() returns UpgradeDefinition
+    return new UpgradeDefinition(UPGD_FIRE_BREATH)
+        ..addEffectAbilityLevelBonus(1, 1, ABILITY_FIRE_BREATH.toRawCode())
+        ..setLevels(5)
+        ..setName(1, "Fire Breath bonus")
+        ..setIcon(1, Icons.bTNFireBolt)
+
+@compiletime function createUpgradeAbility() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_PET_FIRE_BREATH_UPGD, 5, true)
+        ..setHeroAbility(false)
+        ..presetCastRange(lvl -> 99999)
+        ..presetCooldown(lvl -> 0)
+        ..presetFollowThroughTime(lvl -> 0)
+        ..presetArtDuration(lvl -> 0)
+        ..setAnimationNames("")
+        ..setName("Increase Fire Breath")
+        ..setIconNormal(Icons.bTNFireBolt)
+        ..presetButtonPosNormal(0, 2)
+        ..setHotkeyNormal("Z")
+        ..setArtCaster(Abilities.aIsmTarget)
+        ..presetManaCost(lvl -> 2 * lvl)
+        ..presetTooltipNormal(lvl -> makeToolTipNormUpgradeLevel("Z", FIRE_BREATH_TOOLTIP, lvl))
+        ..presetTooltipNormalExtended(lvl -> FIRE_BREATH_TOOLTIP_EXT  + "\n\n"
+                                     + toolTipUpgradeData("Current Damage Bonus", GROUND_BURN_DURATION_INCREASE.toInt(), lvl, COLOR_RED) + "\n"
+                                     + toolTipUpgradeData("Max Damage Bonus", GROUND_BURN_DURATION_INCREASE.toInt(), 11, COLOR_RED)
+                                     + " (+ {0} when playing as Druid)".format((GROUND_BURN_DURATION_INCREASE * PET_UPGRADE_BONUS).toString().color(COLOR_RED))
+                                     )
+
+@compiletime function createFireBreath() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_FIRE_BREATH, 5, true)
+        ..presetManaCost(lvl -> 0)
+        ..presetCooldown(lvl -> FIRE_BREATH_COOLDOWN)
+        ..setHeroAbility(false)
+        ..setItemAbility(false)
+        ..presetTargetTypes(Targettype.POINT)
+        ..setName(FIRE_BREATH_TOOLTIP)
+        ..presetTooltipNormal(lvl -> makeToolTipNormLevel("D", FIRE_BREATH_TOOLTIP, lvl))
+        ..presetTooltipNormalExtended(lvl -> FIRE_BREATH_TOOLTIP_EXT)
+        ..setIconNormal(Icons.bTNFireBolt)
+        ..setIconResearch(Icons.bTNFireBolt)
+        ..setIconTurnOff(Icons.bTNFireBolt)
+        ..setFollowThroughTime(1, 1.3)
+        ..setAnimationNames("")
+        ..presetOption(Option.TARGETIMAGE, true)
+        ..presetAreaofEffect(lvl -> FIRE_BREATH_AOE + FIRE_BREATH_AOE_INCREASE * lvl)
+
+
+class FireBreathProjectile extends CustomProjectile
+    int abilLevel
+    unit caster
+
+    construct(vec3 startPos, vec3 targetPos, real groundSpeed, string effectPath, int abilLevel, unit caster)
+        super(startPos, targetPos, groundSpeed, 20, effectPath)
+        this.abilLevel = abilLevel
+        this.caster = caster
+        print(abilLevel)
+
+    override function onImpact()
+
+        let boomFx = addEffect(Objects.neutralBuildingExplosion, targetPos)
+                    ..setScale(abilLevel * 0.5)
+        doAfter(2) ->
+            boomFx.destr()
+
+        forDestructablesInRange(targetPos.toVec2(), FIRE_BREATH_AOE + FIRE_BREATH_AOE_INCREASE * abilLevel) (destructable d) ->
+            d.kill()
+        handleGroundBurning()
+
+    function handleGroundBurning()
+        let owner = caster.getOwner()
+
+        let fxAmount = 10 + (abilLevel * 10)
+        //Spawn fire FX on ground
+        for i = 0 to fxAmount
+            let randAngle = angle(GetRandomReal(0, 2*bj_PI))
+            let randomDist = GetRandomReal(15, FIRE_BREATH_AOE + FIRE_BREATH_AOE_INCREASE * abilLevel)
+            let fireFX = addEffect(Abilities.breathOfFireDamage, targetPos.toVec2().polarOffset(randAngle, randomDist).withTerrainZ(0))
+            fireFX.setScale(0.7)
+            doAfter(GROUND_BURN_DURATION - 0.5) ->
+                fireFX.destr()
+
+        //Damage the units in area
+        doPeriodicallyTimed(GROUND_BURN_INTERVAL, GROUND_BURN_DURATION) burnAOE ->
+            forUnitsInRange(targetPos.toVec2(), FIRE_BREATH_AOE + FIRE_BREATH_AOE_INCREASE * abilLevel) u ->
+                if u.isAlive() and u.getOwner().isEnemyOf(owner)
+                     and not u.isType(UNIT_TYPE_FLYING)
+                     and not u.isInvulnerable()
+                     and not u.isHidden()
+                    UnitDamageTarget(caster, u, GROUND_BURN_DPS * GROUND_BURN_INTERVAL, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
+
+
+init
+    EventListener.onPointCast(ABILITY_FIRE_BREATH) (unit caster, vec2 target) ->
+        let casterPos = caster.getPos3Fly()
+        let lvl = caster.getAbilityLevel(ABILITY_FIRE_BREATH)
+
+        let fxPath = caster.getTypeId() == UNIT_FIRE_DRAGON ? Abilities.redDragonMissile : Abilities.fireBallMissile
+
+        new FireBreathProjectile(
+            casterPos + vec3(0, 90, -60),
+            target.withTerrainZ(),
+            400,
+            fxPath,
+            lvl,
+            caster
+            )

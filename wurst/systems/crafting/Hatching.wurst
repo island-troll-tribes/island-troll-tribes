@@ -12,6 +12,7 @@ import LodashExtensions
 
 // Local imports:
 import LocalObjectIDs
+import PetTaming
 
 constant let hatcheryRecipeList = new HashMap<int, Pair<int, OwnedLinkedList<int>>>()
 ..put(ABILITY_QM_HAWK_HATCHLING             , new Pair(UNIT_HAWK_HATCHLING             , asOwnedList(ITEM_HAWK_EGG)))
@@ -41,4 +42,6 @@ public function hatch(unit hatchery, int quickMakeSpellId)
                 spawnFx = Abilities.chimaeraLightningMissile
             case UNIT_NETHER_DRAGON_HATCHLING
                 spawnFx = Abilities.deathPactTarget
-        flashEffect(spawnFx, createUnit(players[PLAYER_NEUTRAL_PASSIVE], unitToSpawn, hatchery.getPos(), (270.0).asAngleDegrees()), "origin")
+        let newBorn = createUnit(players[PLAYER_NEUTRAL_PASSIVE], unitToSpawn, hatchery.getPos(), (270.0).asAngleDegrees())
+        tamePet(players[0], newBorn)
+        flashEffect(spawnFx, newBorn, "origin")

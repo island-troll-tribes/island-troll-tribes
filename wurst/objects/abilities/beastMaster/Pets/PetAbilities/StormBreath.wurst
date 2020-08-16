@@ -1,0 +1,172 @@
+package StormBreath
+
+// Standard Library Imports
+import UpgradeObjEditing
+import ChannelAbilityPreset
+import ClosureEvents
+import ClosureForGroups
+import ClosureTimers
+import Assets
+import BuffObjEditing
+import TimerUtils
+import HashMap
+import InstantDummyCaster
+import OrderIds
+
+// Local imports:
+import LocalObjectIDs
+import PlayerExtensions
+import ToolTipsUtils
+import ColorUtils
+import StringExtensions
+import LocalAssets
+import Pets
+import Transformation
+import PetUpgradeHandler
+import SpiritualGuidance
+import EffectUtils
+
+
+let STORM_BREATH_TOOLTIP = "Storm Breath"
+let STORM_BREATH_TOOLTIP_EXT = ""
+
+let STORM_BREATH_DURATION = 1.
+let STORM_BREATH_DURATION_INCREASE = 0.3
+
+let STORM_BREATH_AOE = 100.
+let STORM_BREATH_AOE_INCREASE = 25.
+
+let STORM_BREATH_PARALYZE_DURATION = 0.6
+let STORM_BREATH_PARALYZE_DURATION_INCREASE = 0.4
+
+
+@compiletime function createStormBreathUpgrade() returns UpgradeDefinition
+    return new UpgradeDefinition(UPGD_STORM_BREATH)
+        ..addEffectAbilityLevelBonus(1, 1, ABILITY_STORM_BREATH.toRawCode())
+        ..addEffectAbilityLevelBonus(1, 1, ABILITY_CORROSION.toRawCode())
+        ..setLevels(5)
+        ..setName(1, "Storm Breath bonus")
+        ..setIcon(1, Icons.bTNManaFlare)
+
+@compiletime function createUpgradeAbility() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_PET_STORM_BREATH_UPGD, 5, true)
+        ..setHeroAbility(false)
+        ..presetCastRange(lvl -> 99999)
+        ..presetCooldown(lvl -> 0)
+        ..presetFollowThroughTime(lvl -> 0)
+        ..presetArtDuration(lvl -> 0)
+        ..setAnimationNames("")
+        ..setName("Increase STORM Breath")
+        ..setIconNormal(Icons.bTNManaFlare)
+        ..presetButtonPosNormal(0, 2)
+        ..setHotkeyNormal("Z")
+        ..setArtCaster(Abilities.aIsmTarget)
+        ..presetManaCost(lvl -> 2 * lvl)
+        ..presetTooltipNormal(lvl -> makeToolTipNormUpgradeLevel("Z", STORM_BREATH_TOOLTIP, lvl))
+        ..presetTooltipNormalExtended(lvl -> STORM_BREATH_TOOLTIP_EXT  + "\n\n"
+                                     + toolTipUpgradeData("Current Damage Bonus", STORM_BREATH_AOE.toInt(), lvl, COLOR_RED) + "\n"
+                                     + toolTipUpgradeData("Max Damage Bonus", STORM_BREATH_AOE.toInt(), 11, COLOR_RED)
+                                     + " (+ {0} when playing as Druid)".format((STORM_BREATH_AOE * PET_UPGRADE_BONUS).toString().color(COLOR_RED))
+                                     )
+
+@compiletime function createStormBreath() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_STORM_BREATH, 5, true)
+        ..presetManaCost(lvl -> 0)
+        ..presetCooldown(lvl -> 0)
+        ..setHeroAbility(false)
+        ..setItemAbility(false)
+        ..presetTargetTypes(Targettype.POINT)
+        ..setName(STORM_BREATH_TOOLTIP)
+        ..presetTooltipNormal(lvl -> makeToolTipNormLevel("D", STORM_BREATH_TOOLTIP, lvl))
+        ..presetTooltipNormalExtended(lvl -> STORM_BREATH_TOOLTIP_EXT)
+        ..setIconNormal(Icons.bTNManaFlare)
+        ..setIconResearch(Icons.bTNManaFlare)
+        ..setIconTurnOff(Icons.bTNManaFlare)
+        ..presetFollowThroughTime(lvl -> STORM_BREATH_DURATION + lvl * STORM_BREATH_DURATION_INCREASE)
+        ..setAnimationNames("")
+        ..presetOption(Option.TARGETIMAGE, true)
+        ..presetAreaofEffect(lvl -> STORM_BREATH_AOE + STORM_BREATH_AOE_INCREASE * lvl)
+
+@compiletime function createParalyze() returns AbilityDefinitionEntanglingRootscreep
+    return new AbilityDefinitionEntanglingRootscreep(ABILITY_PARALYZE)
+        ..setDummyAbility()
+        ..setMissileArt("")
+        ..setArtTarget(Abilities.chimaeraLightningMissile)
+        ..setLevels(5)
+        ..presetDamageperSecond(lvl -> 0)
+        ..presetDurationHero(lvl -> STORM_BREATH_PARALYZE_DURATION + lvl * STORM_BREATH_PARALYZE_DURATION_INCREASE)
+        ..presetDurationNormal(lvl -> STORM_BREATH_PARALYZE_DURATION + lvl * STORM_BREATH_PARALYZE_DURATION_INCREASE)
+        ..presetBuffs(lvl -> "Bprg")
+
+HashMap<destructable, StormBreathLightning> treeToBurn = new HashMap<destructable, StormBreathLightning>()
+
+class StormBreathLightning
+    use TimedLoop
+    unit caster
+    vec2 targetPos
+    int abilLevel
+    real duration
+    lightning fx
+    real speed = 300
+    real time_elapsed = 0
+
+    construct(unit caster, vec2 targetPos, real duration)
+        this.caster = caster
+        this.abilLevel = caster.getAbilityLevel(ABILITY_STORM_BREATH)
+        this.targetPos = targetPos
+        this.duration = duration + abilLevel * STORM_BREATH_DURATION_INCREASE
+        this.fx = addLightning(
+            LIGHTNING_LIGHTNING_ATTACK,
+            true,
+            caster.getPos3Fly(),
+            targetPos.withTerrainZ()
+            )
+
+        EventListener.add(EVENT_PLAYER_UNIT_SPELL_ENDCAST) ->
+            if EventData.getSpellAbilityId() == ABILITY_STORM_BREATH
+                stopTimedLoopAndDestroy()
+
+        flashEffect(Abilities.chimaeraLightningMissile, this.targetPos)
+        doPeriodicallyTimed(0.2, this.duration - 0.2) (CallbackCounted cb) ->
+            flashEffect(Abilities.chimaeraLightningMissile, this.targetPos)
+        startTimedLoop()
+
+    override function onTimedLoop()
+        if duration < time_elapsed
+            stopTimedLoopAndDestroy()
+
+        targetPos = targetPos.polarOffset(caster.getPos().angleTo(targetPos), ANIMATION_PERIOD * speed)
+        fx.move(true, caster.getPos3Fly(), targetPos.withTerrainZ())
+
+        forUnitsInRange(targetPos, STORM_BREATH_AOE) (unit u) ->
+            if u.getOwner().isEnemyOf(caster.getOwner())
+                and not u.isHidden()
+                and not u.isType(UNIT_TYPE_STRUCTURE)
+                and not u.isType(UNIT_TYPE_FLYING)
+                and not u.isInvulnerable()
+                and u.isAlive()
+                InstantDummyCaster.castTarget(caster.getOwner(), ABILITY_PARALYZE, abilLevel, OrderIds.entanglingroots, u)
+
+        forDestructablesInRange(targetPos, STORM_BREATH_AOE) (destructable d) ->
+            if d.getTypeId() == DEST_CANOPY_TREE or d.getTypeId() == DEST_NORMAL_TREE and not treeToBurn.has(d)
+                treeToBurn.put(d, this)
+                let pos = d.getPos()
+
+
+                flashEffect(Abilities.chimaeraLightningMissile, pos)
+                let fx = addEffect(Abilities.flameStrikeEmbers, pos.withTerrainZ())..setScale(2)
+                doAfter(5) ->
+                    fx.destr()
+                    createDestructable(DEST_ROTTEN_TREE, pos, angle(GetRandomReal(0, 2*bj_PI)), GetRandomReal(0.65, 1.05), GetRandomInt(1, 10))
+                    treeToBurn.remove(d)
+                    d.remove()
+
+        time_elapsed += ANIMATION_PERIOD
+
+    ondestroy
+        fx.destr()
+
+
+init
+    EventListener.onPointCast(ABILITY_STORM_BREATH) (unit caster, vec2 target) ->
+        new StormBreathLightning(caster, target, STORM_BREATH_DURATION)

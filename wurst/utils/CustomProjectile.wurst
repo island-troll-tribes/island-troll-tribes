@@ -44,8 +44,15 @@ public abstract class CustomProjectile
 
         //Update vertical speed for appropriate flight arc
         let flightTime = distance2D / this.groundSpeed
-        real heightDifference = (this.targetPos - missileFx.getPos3()).z
+        let heightDifference = (this.targetPos - missileFx.getPos3()).z
         this.verticalSpeed = (heightDifference / flightTime) - (0.5 * this.gravity * flightTime)
+
+
+        // Adjust Pitch
+        this.missileFx.setPitch(Atan2(curPos3D.z - targetPos3D.z, distance2D))
+
+        // Adjust orientation
+        this.missileFx.setYaw(curPos3D.angleTo2d(targetPos2D))
 
         //Update position
         if this.groundSpeed * ANIMATION_PERIOD >= distance2D

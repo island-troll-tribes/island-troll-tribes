@@ -27,24 +27,31 @@ import SpiritualGuidance
 import EffectUtils
 
 
-let STORM_BREATH_TOOLTIP = "Storm Breath"
-let STORM_BREATH_TOOLTIP_EXT = ""
+let STORM_BREATH_COOLDOWN = 30.
 
 let STORM_BREATH_DURATION = 1.
-let STORM_BREATH_DURATION_INCREASE = 0.3
+let STORM_BREATH_DURATION_INCREASE = 0.2
+
+let STORM_BREATH_CAST_RANGE = 250.
+let STORM_BREATH_CAST_RANGE_INCREASE = 50.
 
 let STORM_BREATH_AOE = 100.
-let STORM_BREATH_AOE_INCREASE = 25.
+let STORM_BREATH_AOE_INCREASE = 10.
 
-let STORM_BREATH_PARALYZE_DURATION = 0.6
+let STORM_BREATH_PARALYZE_DURATION = 3.
 let STORM_BREATH_PARALYZE_DURATION_INCREASE = 0.4
 
+let STORM_BREATH_TOOLTIP = "Storm Breath"
+let STORM_BREATH_TOOLTIP_EXT = "Cast lightning in a line for the channeling duration, the longer the channeling, the longer distance the lightning travelled."
+                               + "\nEach enemy unit hit by the lightning gets paralyzed and cannot move or attack for the duration."
+                               + "\nAdditionaly burn tree, transforming them into rotten tree, destroyable by normal attack."
+                               + makeToolTipCooldown(STORM_BREATH_COOLDOWN)
 
 @compiletime function createStormBreathUpgrade() returns UpgradeDefinition
     return new UpgradeDefinition(UPGD_STORM_BREATH)
         ..addEffectAbilityLevelBonus(1, 1, ABILITY_STORM_BREATH.toRawCode())
         ..addEffectAbilityLevelBonus(1, 1, ABILITY_CORROSION.toRawCode())
-        ..setLevels(5)
+        ..setLevels(7)
         ..setName(1, "Storm Breath bonus")
         ..setIcon(1, Icons.bTNManaFlare)
 
@@ -56,21 +63,22 @@ let STORM_BREATH_PARALYZE_DURATION_INCREASE = 0.4
         ..presetFollowThroughTime(lvl -> 0)
         ..presetArtDuration(lvl -> 0)
         ..setAnimationNames("")
-        ..setName("Increase STORM Breath")
-        ..setIconNormal(Icons.bTNManaFlare)
+        ..setName("Increase Storm Breath")
+        ..setIconNormal(Icons.bTNSkillz)
         ..presetButtonPosNormal(0, 2)
         ..setHotkeyNormal("Z")
         ..setArtCaster(Abilities.aIsmTarget)
         ..presetManaCost(lvl -> 2 * lvl)
         ..presetTooltipNormal(lvl -> makeToolTipNormUpgradeLevel("Z", STORM_BREATH_TOOLTIP, lvl))
-        ..presetTooltipNormalExtended(lvl -> STORM_BREATH_TOOLTIP_EXT  + "\n\n"
-                                     + toolTipUpgradeData("Current Damage Bonus", STORM_BREATH_AOE.toInt(), lvl, COLOR_RED) + "\n"
-                                     + toolTipUpgradeData("Max Damage Bonus", STORM_BREATH_AOE.toInt(), 11, COLOR_RED)
-                                     + " (+ {0} when playing as Druid)".format((STORM_BREATH_AOE * PET_UPGRADE_BONUS).toString().color(COLOR_RED))
-                                     )
+        ..presetTooltipNormalExtended(lvl -> "Increase Storm Breath ability level." + "\n\n"
+            + "Paralyze duration : "    .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_PARALYZE_DURATION , STORM_BREATH_PARALYZE_DURATION_INCREASE , lvl, 7, COLOR_ORANGE, false) + " seconds.".color(SPECIAL_COLOR)
+            + "\nChanneling duration : ".color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_DURATION          , STORM_BREATH_DURATION_INCREASE          , lvl, 7, COLOR_ORANGE, false) + " seconds.".color(SPECIAL_COLOR)
+            + "\nArea of effect : "     .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_AOE               , STORM_BREATH_AOE_INCREASE               , lvl, 7, COLOR_ORANGE, true )
+            + "\nCast range : "         .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_CAST_RANGE        , STORM_BREATH_CAST_RANGE_INCREASE        , lvl, 7, COLOR_ORANGE, true )
+            )
 
 @compiletime function createStormBreath() returns ChannelAbilityPreset
-    return new ChannelAbilityPreset(ABILITY_STORM_BREATH, 5, true)
+    return new ChannelAbilityPreset(ABILITY_STORM_BREATH, 7, true)
         ..presetManaCost(lvl -> 0)
         ..presetCooldown(lvl -> 0)
         ..setHeroAbility(false)
@@ -78,7 +86,12 @@ let STORM_BREATH_PARALYZE_DURATION_INCREASE = 0.4
         ..presetTargetTypes(Targettype.POINT)
         ..setName(STORM_BREATH_TOOLTIP)
         ..presetTooltipNormal(lvl -> makeToolTipNormLevel("D", STORM_BREATH_TOOLTIP, lvl))
-        ..presetTooltipNormalExtended(lvl -> STORM_BREATH_TOOLTIP_EXT)
+        ..presetTooltipNormalExtended(lvl -> STORM_BREATH_TOOLTIP_EXT  + "\n\n"
+            + "Paralyze duration : "    .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_PARALYZE_DURATION , STORM_BREATH_PARALYZE_DURATION_INCREASE , lvl, 7, COLOR_ORANGE, false) + " seconds.".color(SPECIAL_COLOR)
+            + "\nChanneling duration : ".color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_DURATION          , STORM_BREATH_DURATION_INCREASE          , lvl, 7, COLOR_ORANGE, false) + " seconds.".color(SPECIAL_COLOR)
+            + "\nArea of effect : "     .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_AOE               , STORM_BREATH_AOE_INCREASE               , lvl, 7, COLOR_ORANGE, true )
+            + "\nCast range : "         .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_CAST_RANGE        , STORM_BREATH_CAST_RANGE_INCREASE        , lvl, 7, COLOR_ORANGE, true )
+            )
         ..setIconNormal(Icons.bTNManaFlare)
         ..setIconResearch(Icons.bTNManaFlare)
         ..setIconTurnOff(Icons.bTNManaFlare)
@@ -86,6 +99,8 @@ let STORM_BREATH_PARALYZE_DURATION_INCREASE = 0.4
         ..setAnimationNames("")
         ..presetOption(Option.TARGETIMAGE, true)
         ..presetAreaofEffect(lvl -> STORM_BREATH_AOE + STORM_BREATH_AOE_INCREASE * lvl)
+        ..presetButtonPosNormal(0, 1)
+        ..presetCastRange(lvl -> STORM_BREATH_CAST_RANGE + STORM_BREATH_CAST_RANGE_INCREASE * lvl)
 
 @compiletime function createParalyze() returns AbilityDefinitionEntanglingRootscreep
     return new AbilityDefinitionEntanglingRootscreep(ABILITY_PARALYZE)
@@ -100,35 +115,48 @@ let STORM_BREATH_PARALYZE_DURATION_INCREASE = 0.4
 
 HashMap<destructable, StormBreathLightning> treeToBurn = new HashMap<destructable, StormBreathLightning>()
 
+// TODO: Checkout multiple tree on same spot issue
 class StormBreathLightning
     use TimedLoop
+    boolean isChanneling
     unit caster
     vec2 targetPos
     int abilLevel
     real duration
     lightning fx
-    real speed = 300
+    real speed = 500
     real time_elapsed = 0
+    vec3 casterPos
 
     construct(unit caster, vec2 targetPos, real duration)
         this.caster = caster
         this.abilLevel = caster.getAbilityLevel(ABILITY_STORM_BREATH)
         this.targetPos = targetPos
         this.duration = duration + abilLevel * STORM_BREATH_DURATION_INCREASE
+        this.casterPos = caster.getPos().withTerrainZ().op_plus(vec3(0, 0, caster.getPos3Fly().z))
+
         this.fx = addLightning(
             LIGHTNING_LIGHTNING_ATTACK,
             true,
-            caster.getPos3Fly(),
+            casterPos + vec3(0, 60, -20),
             targetPos.withTerrainZ()
             )
+        this.isChanneling = true
 
         EventListener.add(EVENT_PLAYER_UNIT_SPELL_ENDCAST) ->
             if EventData.getSpellAbilityId() == ABILITY_STORM_BREATH
+                this.isChanneling = false
                 stopTimedLoopAndDestroy()
 
-        flashEffect(Abilities.chimaeraLightningMissile, this.targetPos)
+        let lightningFx = addEffect(Abilities.chimaeraLightningMissile, this.targetPos)..setScale(0.6 + abilLevel * 0.2)..playAnimation(ANIM_TYPE_DEATH)
         doPeriodicallyTimed(0.2, this.duration - 0.2) (CallbackCounted cb) ->
-            flashEffect(Abilities.chimaeraLightningMissile, this.targetPos)
+            if not this.isChanneling
+                lightningFx.destr()
+                cb.stop()
+            else
+            // TODO : this doesn't seems to stop when channel is interrupted, maybe just use flasheffect
+                lightningFx.setPos(this.targetPos.withTerrainZ())
+                lightningFx.playAnimation(ANIM_TYPE_DEATH)
         startTimedLoop()
 
     override function onTimedLoop()
@@ -136,19 +164,22 @@ class StormBreathLightning
             stopTimedLoopAndDestroy()
 
         targetPos = targetPos.polarOffset(caster.getPos().angleTo(targetPos), ANIMATION_PERIOD * speed)
-        fx.move(true, caster.getPos3Fly(), targetPos.withTerrainZ())
+        fx.move(true, casterPos, targetPos.withTerrainZ())
 
-        forUnitsInRange(targetPos, STORM_BREATH_AOE) (unit u) ->
+        forUnitsInRange(targetPos, STORM_BREATH_AOE + STORM_BREATH_AOE_INCREASE * abilLevel) (unit u) ->
             if u.getOwner().isEnemyOf(caster.getOwner())
                 and not u.isHidden()
                 and not u.isType(UNIT_TYPE_STRUCTURE)
                 and not u.isType(UNIT_TYPE_FLYING)
                 and not u.isInvulnerable()
+                and not u.hasAbility('Bprg')
                 and u.isAlive()
                 InstantDummyCaster.castTarget(caster.getOwner(), ABILITY_PARALYZE, abilLevel, OrderIds.entanglingroots, u)
 
-        forDestructablesInRange(targetPos, STORM_BREATH_AOE) (destructable d) ->
-            if d.getTypeId() == DEST_CANOPY_TREE or d.getTypeId() == DEST_NORMAL_TREE and not treeToBurn.has(d)
+        forDestructablesInRange(targetPos, STORM_BREATH_AOE + STORM_BREATH_AOE_INCREASE * abilLevel) (destructable d) ->
+            if d.getTypeId() == DEST_CANOPY_TREE or d.getTypeId() == DEST_NORMAL_TREE
+                and not treeToBurn.has(d)
+                and d.isAliveTrick()
                 treeToBurn.put(d, this)
                 let pos = d.getPos()
 

@@ -8,6 +8,8 @@ import ClosureForGroups
 import ClosureTimers
 import Assets
 import BuffObjEditing
+import OrderIds
+import InstantDummyCaster
 
 // Local imports:
 import LocalObjectIDs
@@ -22,25 +24,60 @@ import PetUpgradeHandler
 import CustomProjectile
 import SpiritualGuidance
 
-let FIRE_BREATH_TOOLTIP = "Fire Breath"
-let FIRE_BREATH_TOOLTIP_EXT = ""
+
+let ABILITY_DUMMY_STUN_ID = compiletime(ABIL_ID_GEN.next())
+let BUFF_STUN = "BSTN" // Stunned
+
 let FIRE_BREATH_COOLDOWN = 1.
 
-let FIRE_BREATH_AOE = 150.
-let FIRE_BREATH_AOE_INCREASE = 50.
+let FIRE_BREATH_AOE = 160.
+let FIRE_BREATH_AOE_INCREASE = 40.
+
+let FIRE_BREATH_CAST_RANGE = 300.
+let FIRE_BREATH_CAST_RANGE_INCREASE = 50.
 
 let GROUND_BURN_INTERVAL = 0.2
 
-let GROUND_BURN_DPS = 15.
-let GROUND_BURN_DPS_INCREASE = 5.
+let GROUND_BURN_DPS = 13.
+let GROUND_BURN_DPS_INCREASE = 2.
 
 let GROUND_BURN_DURATION = 4.
 let GROUND_BURN_DURATION_INCREASE = 1.
 
+let IMPACT_STUN_DURATION_HERO = 0.5
+let IMPACT_STUN_DURATION_NORMAL = 1.5
+
+let FIRE_BREATH_TOOLTIP = "Fire Breath"
+let FIRE_BREATH_TOOLTIP_EXT = "Spit a fire ball on the target position. On impact, stun enemies for {0} seconds and burn the grounds, enemies walking in the fire suffer damage each seconds, "
+                              .format(IMPACT_STUN_DURATION_HERO.toString().color(COLOR_LIGHT_BLUE))
+                              + " deals twice less damage against buildings. Additionally destroys trees and burning corpses will be cooked into Cooked Meat."
+                              + makeToolTipCooldown(FIRE_BREATH_COOLDOWN)
+
+
+@compiletime function createDummyStunSpell() returns AbilityDefinitionFireBolt
+    return new AbilityDefinitionFireBolt(ABILITY_DUMMY_STUN_ID)
+        ..setAnimationNames("")
+        ..setMissileSpeed(9000)
+        ..setMissileArt("")
+        ..setMissileHomingEnabled(true)
+        ..setCastingTime(1, 0)
+        ..setBuffs(1, BUFF_STUN)
+        ..setCastRange(1, 9999)
+        ..setCooldown(1, 0)
+        ..setDamage(1, 0)
+        ..setDurationHero(1, IMPACT_STUN_DURATION_HERO)
+        ..setDurationNormal(1, IMPACT_STUN_DURATION_NORMAL)
+        ..setHeroAbility(false)
+        ..setItemAbility(false)
+        ..setLevels(1)
+        ..setManaCost(1, 0)
+        ..setRace(Race.Creeps)
+        ..setName("Fire Breath Stun Dummy Spell")
+
 @compiletime function createFireBreathUpgrade() returns UpgradeDefinition
     return new UpgradeDefinition(UPGD_FIRE_BREATH)
         ..addEffectAbilityLevelBonus(1, 1, ABILITY_FIRE_BREATH.toRawCode())
-        ..setLevels(5)
+        ..setLevels(7)
         ..setName(1, "Fire Breath bonus")
         ..setIcon(1, Icons.bTNFireBolt)
 
@@ -53,35 +90,43 @@ let GROUND_BURN_DURATION_INCREASE = 1.
         ..presetArtDuration(lvl -> 0)
         ..setAnimationNames("")
         ..setName("Increase Fire Breath")
-        ..setIconNormal(Icons.bTNFireBolt)
+        ..setIconNormal(Icons.bTNSkillz)
         ..presetButtonPosNormal(0, 2)
         ..setHotkeyNormal("Z")
         ..setArtCaster(Abilities.aIsmTarget)
         ..presetManaCost(lvl -> 2 * lvl)
         ..presetTooltipNormal(lvl -> makeToolTipNormUpgradeLevel("Z", FIRE_BREATH_TOOLTIP, lvl))
-        ..presetTooltipNormalExtended(lvl -> FIRE_BREATH_TOOLTIP_EXT  + "\n\n"
-                                     + toolTipUpgradeData("Current Damage Bonus", GROUND_BURN_DURATION_INCREASE.toInt(), lvl, COLOR_RED) + "\n"
-                                     + toolTipUpgradeData("Max Damage Bonus", GROUND_BURN_DURATION_INCREASE.toInt(), 11, COLOR_RED)
-                                     + " (+ {0} when playing as Druid)".format((GROUND_BURN_DURATION_INCREASE * PET_UPGRADE_BONUS).toString().color(COLOR_RED))
-                                     )
+        ..presetTooltipNormalExtended(lvl -> "Increase Fire Breath ability to the next level."  + "\n\n"
+            + "Damage per seconds : "       .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_BURN_DPS       , GROUND_BURN_DPS_INCREASE       , lvl, 7, COLOR_RED, true)
+            + "\nBurning ground duration : ".color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_BURN_DURATION  , GROUND_BURN_DURATION_INCREASE  , lvl, 7, COLOR_RED, true) + " seconds.".color(SPECIAL_COLOR)
+            + "\nArea of effect : "         .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(FIRE_BREATH_AOE       , FIRE_BREATH_AOE_INCREASE       , lvl, 7, COLOR_RED, true)
+            + "\nCast range : "             .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(FIRE_BREATH_CAST_RANGE, FIRE_BREATH_CAST_RANGE_INCREASE, lvl, 7, COLOR_RED, true)
+            )
 
 @compiletime function createFireBreath() returns ChannelAbilityPreset
-    return new ChannelAbilityPreset(ABILITY_FIRE_BREATH, 5, true)
+    return new ChannelAbilityPreset(ABILITY_FIRE_BREATH, 7, true)
         ..presetManaCost(lvl -> 0)
         ..presetCooldown(lvl -> FIRE_BREATH_COOLDOWN)
         ..setHeroAbility(false)
         ..setItemAbility(false)
         ..presetTargetTypes(Targettype.POINT)
         ..setName(FIRE_BREATH_TOOLTIP)
-        ..presetTooltipNormal(lvl -> makeToolTipNormLevel("D", FIRE_BREATH_TOOLTIP, lvl))
-        ..presetTooltipNormalExtended(lvl -> FIRE_BREATH_TOOLTIP_EXT)
+        ..presetTooltipNormal(lvl -> makeToolTipNormLevel("A", FIRE_BREATH_TOOLTIP, lvl))
+        ..presetTooltipNormalExtended(lvl -> FIRE_BREATH_TOOLTIP_EXT  + "\n\n"
+            + "Damage per seconds : "       .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_BURN_DPS       , GROUND_BURN_DPS_INCREASE       , lvl, 7, COLOR_RED, true)
+            + "\nBurning ground duration : ".color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_BURN_DURATION  , GROUND_BURN_DURATION_INCREASE  , lvl, 7, COLOR_RED, true) + " seconds.".color(SPECIAL_COLOR)
+            + "\nArea of effect : "         .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(FIRE_BREATH_AOE       , FIRE_BREATH_AOE_INCREASE       , lvl, 7, COLOR_RED, true)
+            + "\nCast range : "             .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(FIRE_BREATH_CAST_RANGE, FIRE_BREATH_CAST_RANGE_INCREASE, lvl, 7, COLOR_RED, true)
+            )
         ..setIconNormal(Icons.bTNFireBolt)
         ..setIconResearch(Icons.bTNFireBolt)
         ..setIconTurnOff(Icons.bTNFireBolt)
-        ..setFollowThroughTime(1, 1.3)
+        ..presetFollowThroughTime(lvl -> 1.3)
         ..setAnimationNames("")
         ..presetOption(Option.TARGETIMAGE, true)
         ..presetAreaofEffect(lvl -> FIRE_BREATH_AOE + FIRE_BREATH_AOE_INCREASE * lvl)
+        ..presetButtonPosNormal(0, 1)
+        ..presetCastRange(lvl -> FIRE_BREATH_CAST_RANGE + FIRE_BREATH_CAST_RANGE_INCREASE * lvl)
 
 
 class FireBreathProjectile extends CustomProjectile
@@ -92,14 +137,21 @@ class FireBreathProjectile extends CustomProjectile
         super(startPos, targetPos, groundSpeed, 20, effectPath)
         this.abilLevel = abilLevel
         this.caster = caster
-        print(abilLevel)
+        this.missileFx.setScale(abilLevel * 0.2 + 0.4)
 
     override function onImpact()
 
         let boomFx = addEffect(Objects.neutralBuildingExplosion, targetPos)
-                    ..setScale(abilLevel * 0.5)
+                    ..setScale(abilLevel * 0.4)
         doAfter(2) ->
             boomFx.destr()
+        forUnitsInRange(targetPos.toVec2(), FIRE_BREATH_AOE + FIRE_BREATH_AOE_INCREASE * abilLevel) (unit u) ->
+            if u.isAlive() and u.getOwner().isEnemyOf(caster.getOwner())
+                and not u.isType(UNIT_TYPE_FLYING)
+                and not u.isInvulnerable()
+                and not u.isHidden()
+                and not u.isType(UNIT_TYPE_STRUCTURE)
+                InstantDummyCaster.castTarget(caster.getOwner(), ABILITY_DUMMY_STUN_ID, 1, OrderIds.firebolt, u)
 
         forDestructablesInRange(targetPos.toVec2(), FIRE_BREATH_AOE + FIRE_BREATH_AOE_INCREASE * abilLevel) (destructable d) ->
             d.kill()
@@ -121,24 +173,31 @@ class FireBreathProjectile extends CustomProjectile
         //Damage the units in area
         doPeriodicallyTimed(GROUND_BURN_INTERVAL, GROUND_BURN_DURATION) burnAOE ->
             forUnitsInRange(targetPos.toVec2(), FIRE_BREATH_AOE + FIRE_BREATH_AOE_INCREASE * abilLevel) u ->
-                if u.isAlive() and u.getOwner().isEnemyOf(owner)
+                if u.getTypeId() == UNIT_ICE_BLOCK
+                    u.kill()
+                else if u.isAlive() and u.getOwner().isEnemyOf(owner)
                      and not u.isType(UNIT_TYPE_FLYING)
                      and not u.isInvulnerable()
                      and not u.isHidden()
-                    UnitDamageTarget(caster, u, GROUND_BURN_DPS * GROUND_BURN_INTERVAL, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
-
+                    if u.isType(UNIT_TYPE_STRUCTURE)
+                        UnitDamageTarget(caster, u, ((GROUND_BURN_DPS + GROUND_BURN_DPS_INCREASE * abilLevel) / 2) * GROUND_BURN_INTERVAL, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
+                    else
+                        UnitDamageTarget(caster, u, (GROUND_BURN_DPS + GROUND_BURN_DPS_INCREASE * abilLevel) * GROUND_BURN_INTERVAL, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
+                else if u.getTypeId() == UNIT_MEAT
+                    createItem(ITEM_COOKED_MEAT, u.getPos())
+                    u.remove()
 
 init
     EventListener.onPointCast(ABILITY_FIRE_BREATH) (unit caster, vec2 target) ->
-        let casterPos = caster.getPos3Fly()
+        let casterPos3D = caster.getPos().withTerrainZ().op_plus(vec3(0, 0, caster.getPos3Fly().z))
         let lvl = caster.getAbilityLevel(ABILITY_FIRE_BREATH)
 
         let fxPath = caster.getTypeId() == UNIT_FIRE_DRAGON ? Abilities.redDragonMissile : Abilities.fireBallMissile
 
         new FireBreathProjectile(
-            casterPos + vec3(0, 90, -60),
+            casterPos3D + vec3(0, 40, -30),
             target.withTerrainZ(),
-            400,
+            500,
             fxPath,
             lvl,
             caster

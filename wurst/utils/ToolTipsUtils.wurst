@@ -141,3 +141,21 @@ public function toolTipUpgradeData(string whichData, real data, int lvl, color c
             + "{0}".format((percent ? computedData.formatForTooltip().color(color)
                                     : computedData.toString()).color(color)
                             )
+
+public function toolTipAbilityEffectPerLevel(real value, real valueIncrease, int currentLevel, int totalLevel, color highlight, boolean isInt) returns string
+    var toReturn = ""
+    for i = 1 to totalLevel
+        let valToStr = value + valueIncrease * i
+        var newStr = ""
+        if isInt
+            newStr += valToStr.round().toString()
+        else
+            newStr += valToStr.toString(1)
+        if i == currentLevel
+            newStr = newStr.color(highlight)
+        else
+            newStr = newStr.color(GRAY_COLOR)
+        if i < totalLevel
+            newStr += "/"
+        toReturn += newStr
+    return toReturn

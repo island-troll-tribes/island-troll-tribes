@@ -11,7 +11,7 @@ import PlayerExtensions
 
 
 public let petUpgradeHandlerInstance = new HashMap<unit, PetUpgradeHandler>()
-IterableMap<int, int> upgrades = new IterableMap<int, int>()
+public IterableMap<int, int> upgrades = new IterableMap<int, int>()
     ..put(ABILITY_PET_DAMAGE_UPGD           , UPGD_PET_ATTACK_DAMAGE)
     ..put(ABILITY_PET_ARMOR_UPGD            , UPGD_PET_ARMOR)
     ..put(ABILITY_PET_MAGIC_RESIST_UPGD     , UPGD_PET_MAGIC_RESISTANCE)
@@ -77,14 +77,14 @@ public class PetUpgradeHandler
         let upgradeId = upgrades.get(abilId)
         let techCount = petOwner.getTechCount(upgradeId, false)
 
+        upgdCount += value
+
         // addTechResearch do not work with negative value so we used setTechResearch
         // If max research lvl == 6, current research lvl == 5, adding 2 lvl will set research to 6
         petOwner.setTechResearched(upgradeId, techCount + value)
-        print(techCount + value)
 
         // Increase upgrade ability
         if updateUpgradeAbilityLevel
-            print(GetUnitAbilityLevel(pet, abilId))
             pet.setAbilityLevel(abilId, GetUnitAbilityLevel(pet, abilId) + value)
 
         // Using switch give more flexibility on action triggered I believe
@@ -97,8 +97,12 @@ public class PetUpgradeHandler
                 pet.setScale(initialScale + initialScale * 0.03 * (techCount + value))
 
     function resetUpgrades()
+        upgdCount = 0
         for upgradeAbilId in upgrades
             petOwner.setTechResearched(upgrades.get(upgradeAbilId), 0)
+
+    function getUpgradeCount() returns int
+        return upgdCount
 
     function onRelease()
         this.resetUpgrades()

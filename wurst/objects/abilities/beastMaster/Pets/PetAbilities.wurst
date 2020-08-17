@@ -119,6 +119,8 @@ function growPet(unit pet)
 
     // Look up the next unit along the chain.
     let next = chain.get(chain.indexOf(pet.getTypeId()) + 1)
+    if next == 0
+        return
 
     let previousMana = pet.getMana()
 
@@ -138,3 +140,9 @@ init
         GetEnumPlayer().setTechResearched(UPGD_PET_TAMED_TRUE, 0)
         GetEnumPlayer().setTechResearched(UPGD_PET_TAMED_FALSE, 1)
     EventListener.onCast(ABILITY_GROW_PET, (unit caster) -> growPet(caster))
+    EventListener.add(EVENT_PLAYER_UNIT_SPELL_ENDCAST) ->
+        let caster = EventData.getSpellAbilityUnit()
+        if upgrades.has(EventData.getSpellAbilityId())
+            and caster.isPet()
+            if petUpgradeHandlerInstance.get(caster).getUpgradeCount() > 5
+                growPet(caster)

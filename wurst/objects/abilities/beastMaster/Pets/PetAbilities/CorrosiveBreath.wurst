@@ -24,23 +24,33 @@ import PetUpgradeHandler
 import SpiritualGuidance
 import CustomProjectile
 
-let CORROSIVE_BREATH_TOOLTIP = "Corrosive Breath"
-let CORROSIVE_BREATH_TOOLTIP_EXT = ""
 
-let GROUND_CORROSION_DURATION = 5.
+let CORROSIVE_BREATH_CAST_RANGE = 300.
+let CORROSIVE_BREATH_CAST_RANGE_INCREASE = 50.
+
+let GROUND_CORROSION_DURATION = 4.
+let GROUND_CORROSION_DURATION_INCREASE = 1.
 
 let GROUND_CORROSION_AOE = 100.
 let GROUND_CORROSION_AOE_INCREASE = 50.
+
+let ARMOR_REDUCED = 2
+let ARMOR_REDUCED_INCREASE = 1
+
 let CORROSIVE_BREATH_COOLDOWN = 30.
 
 let GROUND_CORROSION_INTERVAL_CAST = 1.
+
+let CORROSIVE_BREATH_TOOLTIP = "Corrosive Breath"
+let CORROSIVE_BREATH_TOOLTIP_EXT = "Spit corrosive saliva on the target position, creating an acid zone, each enemy unit walking into the zone have their armor reduced."
+                                   + makeToolTipCooldown(CORROSIVE_BREATH_COOLDOWN)
 
 
 @compiletime function createCorrosiveBreathUpgrade() returns UpgradeDefinition
     return new UpgradeDefinition(UPGD_CORROSIVE_BREATH)
         ..addEffectAbilityLevelBonus(1, 1, ABILITY_CORROSIVE_BREATH.toRawCode())
         ..addEffectAbilityLevelBonus(1, 1, ABILITY_CORROSION.toRawCode())
-        ..setLevels(5)
+        ..setLevels(7)
         ..setName(1, "Corrosive Breath bonus")
         ..setIcon(1, Icons.bTNCorrosiveBreath)
 
@@ -52,46 +62,54 @@ let GROUND_CORROSION_INTERVAL_CAST = 1.
         ..presetFollowThroughTime(lvl -> 0)
         ..presetArtDuration(lvl -> 0)
         ..setAnimationNames("")
-        ..setName("Increase CORROSIVE Breath")
-        ..setIconNormal(Icons.bTNCorrosiveBreath)
+        ..setName("Increase Corrosive Breath")
+        ..setIconNormal(Icons.bTNSkillz)
         ..presetButtonPosNormal(0, 2)
         ..setHotkeyNormal("Z")
         ..setArtCaster(Abilities.aIsmTarget)
         ..presetManaCost(lvl -> 2 * lvl)
         ..presetTooltipNormal(lvl -> makeToolTipNormUpgradeLevel("Z", CORROSIVE_BREATH_TOOLTIP, lvl))
-        ..presetTooltipNormalExtended(lvl -> CORROSIVE_BREATH_TOOLTIP_EXT  + "\n\n"
-                                     + toolTipUpgradeData("Current Damage Bonus", GROUND_CORROSION_AOE_INCREASE.toInt(), lvl, COLOR_RED) + "\n"
-                                     + toolTipUpgradeData("Max Damage Bonus", GROUND_CORROSION_AOE_INCREASE.toInt(), 11, COLOR_RED)
-                                     + " (+ {0} when playing as Druid)".format((GROUND_CORROSION_AOE_INCREASE * PET_UPGRADE_BONUS).toString().color(COLOR_RED))
-                                     )
+        ..presetTooltipNormalExtended(lvl -> "Increase Corrosive Breath ability to the next level."  + "\n\n"
+            + "Armor reduced : "              .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(ARMOR_REDUCED.toReal()     , ARMOR_REDUCED_INCREASE.toReal()      , lvl, 7, COLOR_GREEN, true)
+            + "\nCorrosive ground duration : ".color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_CORROSION_DURATION  , GROUND_CORROSION_DURATION_INCREASE   , lvl, 7, COLOR_GREEN, true) + " seconds.".color(SPECIAL_COLOR)
+            + "\nArea of effect : "           .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_CORROSION_AOE       , GROUND_CORROSION_AOE_INCREASE        , lvl, 7, COLOR_GREEN, true)
+            + "\nCast range : "               .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(CORROSIVE_BREATH_CAST_RANGE, CORROSIVE_BREATH_CAST_RANGE_INCREASE , lvl, 7, COLOR_GREEN, true)
+            )
 
 @compiletime function createCorrosiveBreath() returns ChannelAbilityPreset
-    return new ChannelAbilityPreset(ABILITY_CORROSIVE_BREATH, 5, true)
+    return new ChannelAbilityPreset(ABILITY_CORROSIVE_BREATH, 7, true)
         ..presetManaCost(lvl -> 0)
         ..presetCooldown(lvl -> 0)
         ..setHeroAbility(true)
         ..setItemAbility(false)
         ..presetTargetTypes(Targettype.POINT)
         ..setName(CORROSIVE_BREATH_TOOLTIP)
-        ..presetTooltipNormal(lvl -> makeToolTipNormLevel("D", CORROSIVE_BREATH_TOOLTIP, lvl))
-        ..presetTooltipNormalExtended(lvl -> CORROSIVE_BREATH_TOOLTIP_EXT)
+        ..presetHotkey("A")
+        ..presetTooltipNormal(lvl -> makeToolTipNormLevel("A", CORROSIVE_BREATH_TOOLTIP, lvl))
+        ..presetTooltipNormalExtended(lvl -> CORROSIVE_BREATH_TOOLTIP_EXT  + "\n\n"
+            + "Armor reduced : "              .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(ARMOR_REDUCED.toReal()     , ARMOR_REDUCED_INCREASE.toReal()      , lvl, 7, COLOR_GREEN, true)
+            + "\nCorrosive ground duration : ".color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_CORROSION_DURATION  , GROUND_CORROSION_DURATION_INCREASE   , lvl, 7, COLOR_GREEN, true) + " seconds.".color(SPECIAL_COLOR)
+            + "\nArea of effect : "           .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_CORROSION_AOE       , GROUND_CORROSION_AOE_INCREASE        , lvl, 7, COLOR_GREEN, true)
+            + "\nCast range : "               .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(CORROSIVE_BREATH_CAST_RANGE, CORROSIVE_BREATH_CAST_RANGE_INCREASE , lvl, 7, COLOR_GREEN, true)
+            )
         ..setIconNormal(Icons.bTNCorrosiveBreath)
         ..setIconResearch(Icons.bTNCorrosiveBreath)
         ..setIconTurnOff(Icons.bTNCorrosiveBreath)
-        ..setFollowThroughTime(1, 1.3)
         ..setAnimationNames("")
         ..presetOption(Option.TARGETIMAGE, true)
         ..presetAreaofEffect(lvl -> GROUND_CORROSION_AOE + GROUND_CORROSION_AOE_INCREASE * lvl)
         ..setCheckDependencies(true)
-        ..presetButtonPosNormal(3, 1)
+        ..presetButtonPosNormal(0, 1)
+        ..presetCastRange(lvl -> CORROSIVE_BREATH_CAST_RANGE + CORROSIVE_BREATH_CAST_RANGE_INCREASE * lvl)
+        ..presetFollowThroughTime(lvl -> 1.3)
 
 @compiletime function createCorrosion() returns AbilityDefinitionAlchemistAcidBomb
     return new AbilityDefinitionAlchemistAcidBomb(ABILITY_CORROSION)
         ..setDummyAbility()
         ..setMissileArt(Abilities.chimaeraAcidMissile)
         ..setMissileSpeed(1000)
-        ..setLevels(5)
-        ..presetArmorPenalty(lvl -> lvl * 2)
+        ..setLevels(7)
+        ..presetArmorPenalty(lvl -> ARMOR_REDUCED + ARMOR_REDUCED_INCREASE * lvl)
         ..presetPrimaryDamage(lvl -> 0)
         ..presetSecondaryDamage(lvl -> 0)
         ..presetAreaofEffect(lvl -> 1)
@@ -104,16 +122,17 @@ class CorrosiveBreathProjectile extends CustomProjectile
     unit caster
 
     construct(vec3 startPos, vec3 targetPos, real groundSpeed, string effectPath, int abilLevel, unit caster)
-        super(startPos, targetPos, groundSpeed, 20, effectPath)
+        super(startPos, targetPos, groundSpeed, 300, effectPath)
         this.abilLevel = abilLevel
         this.caster = caster
-        print("abil lvl" + abilLevel.toString())
+        this.missileFx.setScale(abilLevel * 0.2 + 0.4)
 
     override function onImpact()
 
         let boomFx = addEffect(Abilities.bottleMissile, targetPos)
                     ..setScale(abilLevel * 0.5)
-                    ..playAnimation(ANIM_TYPE_DEATH)
+                    // ..playAnimation(ANIM_TYPE_DEATH)
+                    ..destr()
         handleGroundCorrosion()
 
     function handleGroundCorrosion()
@@ -126,30 +145,32 @@ class CorrosiveBreathProjectile extends CustomProjectile
             let randomDist = GetRandomReal(15, GROUND_CORROSION_AOE + GROUND_CORROSION_AOE_INCREASE * abilLevel)
             let acidFx = addEffect(Abilities.bottleImpact, targetPos.toVec2().polarOffset(randAngle, randomDist).withTerrainZ(0))
             //acidFx.setScale(0.7)
-            doAfter(GROUND_CORROSION_DURATION - 0.5) ->
+            doAfter(GROUND_CORROSION_DURATION + GROUND_CORROSION_DURATION_INCREASE * abilLevel - 0.5) ->
                 acidFx.destr()
 
         //Damage the units in area
-        doPeriodicallyTimed(GROUND_CORROSION_INTERVAL_CAST, GROUND_CORROSION_DURATION) corrosionAOE ->
+        doPeriodicallyTimed(GROUND_CORROSION_INTERVAL_CAST, GROUND_CORROSION_DURATION + GROUND_CORROSION_DURATION_INCREASE * abilLevel) corrosionAOE ->
             forUnitsInRange(targetPos.toVec2(), GROUND_CORROSION_AOE + GROUND_CORROSION_AOE_INCREASE * abilLevel) u ->
                 if u.isAlive() and u.getOwner().isEnemyOf(owner)
                     and not u.isType(UNIT_TYPE_FLYING)
                     and not u.isInvulnerable()
                     and not u.isHidden()
-                    print("acid")
                     InstantDummyCaster.castTarget(owner, ABILITY_CORROSION, abilLevel, OrderIds.acidbomb, u)
 
 
 init
     EventListener.onPointCast(ABILITY_CORROSIVE_BREATH) (unit caster, vec2 target) ->
-        let casterPos = caster.getPos3Fly()
+        // Note : When the unit goes over
+        let casterPos3D = caster.getPos().withTerrainZ().op_plus(vec3(0, 0, caster.getPos3Fly().z))
         let lvl = caster.getAbilityLevel(ABILITY_CORROSIVE_BREATH)
 
+        let fxPath = Abilities.greenDragonMissile
+
         new CorrosiveBreathProjectile(
-            casterPos + vec3(0, 90, -60),
+            casterPos3D + vec3(0, 60, -10),
             target.withTerrainZ(),
-            350,
-            Abilities.chimaeraAcidMissile,
+            400,
+            fxPath,
             lvl,
             caster
             )

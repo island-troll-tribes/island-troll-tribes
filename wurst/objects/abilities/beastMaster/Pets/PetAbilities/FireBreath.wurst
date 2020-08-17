@@ -32,7 +32,10 @@ let FIRE_BREATH_CAST_RANGE_INCREASE = 50.
 
 let GROUND_BURN_INTERVAL = 0.2
 
-let GROUND_BURN_DPS = 13.
+let INITIAL_DAMAGE = 20.
+let INITIAL_DAMAGE_INCREASE = 4.
+
+let GROUND_BURN_DPS = 8.
 let GROUND_BURN_DPS_INCREASE = 2.
 
 let GROUND_BURN_DURATION = 4.
@@ -41,11 +44,15 @@ let GROUND_BURN_DURATION_INCREASE = 1.
 let IMPACT_STUN_DURATION_HERO = 0.5
 let IMPACT_STUN_DURATION_NORMAL = 1.5
 
+let ADDITIONAL_EFFECT_STR = "\nGain an additional effect when the unit reach adulthood.".color(HIGHLIGHT_COLOR) + "\n\nAdditional Effect : ".color(GOLD_COLOR)
+
 let FIRE_BREATH_TOOLTIP = "Fire Breath"
-let FIRE_BREATH_TOOLTIP_EXT = "Spit a fire ball on the target position. On impact, stun enemies for {0} seconds and burn the grounds, enemies walking in the fire suffer damage each seconds, "
-                              .format(IMPACT_STUN_DURATION_HERO.toString().color(COLOR_LIGHT_BLUE))
-                              + " deals twice less damage against buildings. Additionally destroys trees and burning corpses will be cooked into Cooked Meat."
+let FIRE_BREATH_TOOLTIP_EXT = "Spit a fire ball on the target position. Deals damage to enemy units and destroys trees on impact area of effect."
                               + makeToolTipCooldown(FIRE_BREATH_COOLDOWN)
+                              + ADDITIONAL_EFFECT_STR
+                              + "Stun enemies for {0} seconds and burn the grounds, enemies walking in the fire suffer damage each seconds, "
+                              .format(IMPACT_STUN_DURATION_HERO.toString().color(COLOR_LIGHT_BLUE))
+                              + "deals twice less damage against buildings, burning corpses will be cooked into Cooked Meat."
 
 // Druid Spiritual guidance allow max level to be reached
 let MAX_LEVEL = 7
@@ -72,6 +79,7 @@ let UPGD_MANA_COST = 5 // mana cost * abilLevel
         ..setManaCost(1, 0)
         ..setRace(Race.Creeps)
         ..setName("Fire Breath Stun Dummy Spell")
+        ..setEditorSuffix("(Wurst)")
 
 @compiletime function createFireBreathUpgrade() returns UpgradeDefinition
     return new UpgradeDefinition(UPGD_FIRE_BREATH)
@@ -96,11 +104,13 @@ let UPGD_MANA_COST = 5 // mana cost * abilLevel
         ..presetManaCost(lvl -> UPGD_MANA_COST * lvl)
         ..presetTooltipNormal(lvl -> makeToolTipNormUpgradeLevel("Z", FIRE_BREATH_TOOLTIP, lvl))
         ..presetTooltipNormalExtended(lvl -> "Increase Fire Breath ability to the next level."  + "\n\n"
-            + "Damage per seconds : "       .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_BURN_DPS       , GROUND_BURN_DPS_INCREASE       , lvl, MAX_LEVEL, COLOR_RED, true)
-            + "\nBurning ground duration : ".color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_BURN_DURATION  , GROUND_BURN_DURATION_INCREASE  , lvl, MAX_LEVEL, COLOR_RED, true) + " seconds.".color(SPECIAL_COLOR)
-            + "\nArea of effect : "         .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(FIRE_BREATH_AOE       , FIRE_BREATH_AOE_INCREASE       , lvl, MAX_LEVEL, COLOR_RED, true)
-            + "\nCast range : "             .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(FIRE_BREATH_CAST_RANGE, FIRE_BREATH_CAST_RANGE_INCREASE, lvl, MAX_LEVEL, COLOR_RED, true)
+            + "Impact damage : "             .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(INITIAL_DAMAGE        , INITIAL_DAMAGE_INCREASE        , lvl, MAX_LEVEL, COLOR_RED, true)
+            + "\nBurning ground damage : "     .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_BURN_DPS       , GROUND_BURN_DPS_INCREASE       , lvl, MAX_LEVEL, COLOR_RED, true) + " per seconds".color(SPECIAL_COLOR)
+            + "\nBurning ground duration : " .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_BURN_DURATION  , GROUND_BURN_DURATION_INCREASE  , lvl, MAX_LEVEL, COLOR_RED, true) + " seconds.".color(SPECIAL_COLOR)
+            + "\nArea of effect : "          .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(FIRE_BREATH_AOE       , FIRE_BREATH_AOE_INCREASE       , lvl, MAX_LEVEL, COLOR_RED, true)
+            + "\nCast range : "              .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(FIRE_BREATH_CAST_RANGE, FIRE_BREATH_CAST_RANGE_INCREASE, lvl, MAX_LEVEL, COLOR_RED, true)
             )
+        ..setEditorSuffix("(Wurst)")
 
 @compiletime function createFireBreath() returns ChannelAbilityPreset
     return new ChannelAbilityPreset(ABILITY_FIRE_BREATH, MAX_LEVEL, true)
@@ -112,10 +122,11 @@ let UPGD_MANA_COST = 5 // mana cost * abilLevel
         ..setName(FIRE_BREATH_TOOLTIP)
         ..presetTooltipNormal(lvl -> makeToolTipNormLevel("A", FIRE_BREATH_TOOLTIP, lvl))
         ..presetTooltipNormalExtended(lvl -> FIRE_BREATH_TOOLTIP_EXT  + "\n\n"
-            + "Damage per seconds : "       .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_BURN_DPS       , GROUND_BURN_DPS_INCREASE       , lvl, MAX_LEVEL, COLOR_RED, true)
-            + "\nBurning ground duration : ".color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_BURN_DURATION  , GROUND_BURN_DURATION_INCREASE  , lvl, MAX_LEVEL, COLOR_RED, true) + " seconds.".color(SPECIAL_COLOR)
-            + "\nArea of effect : "         .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(FIRE_BREATH_AOE       , FIRE_BREATH_AOE_INCREASE       , lvl, MAX_LEVEL, COLOR_RED, true)
-            + "\nCast range : "             .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(FIRE_BREATH_CAST_RANGE, FIRE_BREATH_CAST_RANGE_INCREASE, lvl, MAX_LEVEL, COLOR_RED, true)
+            + "Impact damage : "             .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(INITIAL_DAMAGE        , INITIAL_DAMAGE_INCREASE        , lvl, MAX_LEVEL, COLOR_RED, true)
+            + "\nBurning ground damage : "     .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_BURN_DPS       , GROUND_BURN_DPS_INCREASE       , lvl, MAX_LEVEL, COLOR_RED, true) + " per seconds".color(SPECIAL_COLOR)
+            + "\nBurning ground duration : " .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_BURN_DURATION  , GROUND_BURN_DURATION_INCREASE  , lvl, MAX_LEVEL, COLOR_RED, true) + " seconds.".color(SPECIAL_COLOR)
+            + "\nArea of effect : "          .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(FIRE_BREATH_AOE       , FIRE_BREATH_AOE_INCREASE       , lvl, MAX_LEVEL, COLOR_RED, true)
+            + "\nCast range : "              .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(FIRE_BREATH_CAST_RANGE, FIRE_BREATH_CAST_RANGE_INCREASE, lvl, MAX_LEVEL, COLOR_RED, true)
             )
         ..setIconNormal(Icons.bTNFireBolt)
         ..setIconResearch(Icons.bTNFireBolt)
@@ -126,6 +137,7 @@ let UPGD_MANA_COST = 5 // mana cost * abilLevel
         ..presetAreaofEffect(lvl -> FIRE_BREATH_AOE + FIRE_BREATH_AOE_INCREASE * lvl)
         ..presetButtonPosNormal(0, 1)
         ..presetCastRange(lvl -> FIRE_BREATH_CAST_RANGE + FIRE_BREATH_CAST_RANGE_INCREASE * lvl)
+        ..setEditorSuffix("(Wurst)")
 
 
 // Spell projectile, manual adjust the numbers so it looks cool ingame
@@ -143,20 +155,30 @@ class FireBreathProjectile extends CustomProjectile
         // Booom
         flashEffect(Objects.neutralBuildingExplosion, targetPos, abilLevel * 0.4)
 
-        // Stun enemies in AoE
-        forUnitsInRange(targetPos.toVec2(), FIRE_BREATH_AOE + FIRE_BREATH_AOE_INCREASE * abilLevel) (unit u) ->
+        // Initial Damage
+        forUnitsInRange(targetPos.toVec2(), FIRE_BREATH_AOE + FIRE_BREATH_AOE_INCREASE * abilLevel) u ->
             if u.isAlive() and u.getOwner().isEnemyOf(caster.getOwner())
                 and not u.isType(UNIT_TYPE_FLYING)
                 and not u.isInvulnerable()
                 and not u.isHidden()
                 and not u.isType(UNIT_TYPE_STRUCTURE)
-                InstantDummyCaster.castTarget(caster.getOwner(), ABILITY_DUMMY_STUN_ID, 1, OrderIds.firebolt, u)
+            UnitDamageTarget(caster, u, INITIAL_DAMAGE + INITIAL_DAMAGE_INCREASE * abilLevel, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
 
         // Destroy trees
         forDestructablesInRange(targetPos.toVec2(), FIRE_BREATH_AOE + FIRE_BREATH_AOE_INCREASE * abilLevel) (destructable d) ->
             d.kill()
 
-        handleGroundBurning()
+        if caster.getTypeId() == UNIT_FIRE_DRAGON
+            // Stun enemies in AoE
+            forUnitsInRange(targetPos.toVec2(), FIRE_BREATH_AOE + FIRE_BREATH_AOE_INCREASE * abilLevel) (unit u) ->
+                if u.isAlive() and u.getOwner().isEnemyOf(caster.getOwner())
+                    and not u.isType(UNIT_TYPE_FLYING)
+                    and not u.isInvulnerable()
+                    and not u.isHidden()
+                    and not u.isType(UNIT_TYPE_STRUCTURE)
+                    InstantDummyCaster.castTarget(caster.getOwner(), ABILITY_DUMMY_STUN_ID, 1, OrderIds.firebolt, u)
+
+            handleGroundBurning()
 
     function handleGroundBurning()
         let owner = caster.getOwner()

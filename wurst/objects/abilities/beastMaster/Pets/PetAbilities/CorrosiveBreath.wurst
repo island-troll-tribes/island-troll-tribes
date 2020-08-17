@@ -9,6 +9,7 @@ import ClosureTimers
 import Assets
 import OrderIds
 import InstantDummyCaster
+import BuffObjEditing
 
 // Local imports:
 import LocalObjectIDs
@@ -18,6 +19,7 @@ import StringExtensions
 import SpiritualGuidance
 import CustomProjectile
 
+let BUFF_ID_DMG_DEC = compiletime(BUFF_ID_GEN.next())
 
 let CORROSIVE_BREATH_COOLDOWN = 75.
 
@@ -33,11 +35,17 @@ let GROUND_CORROSION_AOE_INCREASE = 50.
 let ARMOR_REDUCED = 2
 let ARMOR_REDUCED_INCREASE = 1
 
+let DAMAGE_DECREASE_FACTOR = 0.05
+
 let GROUND_CORROSION_INTERVAL_CAST = 1.
+
+let ADDITIONAL_EFFECT_STR = "\nGain an additional effect when the unit reach adulthood.".color(HIGHLIGHT_COLOR) + "\n\nAdditional Effect : ".color(GOLD_COLOR)
 
 let CORROSIVE_BREATH_TOOLTIP = "Corrosive Breath"
 let CORROSIVE_BREATH_TOOLTIP_EXT = "Spit corrosive saliva on the target position, creating an acid zone, each enemy unit walking into the zone have their armor reduced."
                                    + makeToolTipCooldown(CORROSIVE_BREATH_COOLDOWN)
+                                   + ADDITIONAL_EFFECT_STR
+                                   + "Unit walking in the acid zone have their weapons corroded, reducing their attack damage."
 
 // Druid Spiritual guidance allow max level to be reached
 let MAX_LEVEL = 7
@@ -48,7 +56,8 @@ let UPGD_MANA_COST = 4 // mana cost * abilLevel
 @compiletime function createCorrosiveBreathUpgrade() returns UpgradeDefinition
     return new UpgradeDefinition(UPGD_CORROSIVE_BREATH)
         ..addEffectAbilityLevelBonus(1, 1, ABILITY_CORROSIVE_BREATH.toRawCode())
-        ..addEffectAbilityLevelBonus(1, 1, ABILITY_CORROSION.toRawCode())
+        ..addEffectAbilityLevelBonus(1, 1, ABILITY_CORROSION_ARMOR.toRawCode())
+        ..addEffectAbilityLevelBonus(1, 1, ABILITY_CORROSION_DAMAGE.toRawCode())
         ..setLevels(MAX_LEVEL)
         ..setName(1, "Corrosive Breath bonus")
         ..setIcon(1, Icons.bTNCorrosiveBreath)
@@ -70,10 +79,12 @@ let UPGD_MANA_COST = 4 // mana cost * abilLevel
         ..presetTooltipNormal(lvl -> makeToolTipNormUpgradeLevel("Z", CORROSIVE_BREATH_TOOLTIP, lvl))
         ..presetTooltipNormalExtended(lvl -> "Increase Corrosive Breath ability to the next level."  + "\n\n"
             + "Armor reduced : "              .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(ARMOR_REDUCED.toReal()     , ARMOR_REDUCED_INCREASE.toReal()      , lvl, MAX_LEVEL, COLOR_GREEN, true)
+            + "\nDamage reduced : "           .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(0.                         , DAMAGE_DECREASE_FACTOR * 100         , lvl, MAX_LEVEL, COLOR_GREEN, true) + " percents".color(SPECIAL_COLOR)
             + "\nCorrosive ground duration : ".color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_CORROSION_DURATION  , GROUND_CORROSION_DURATION_INCREASE   , lvl, MAX_LEVEL, COLOR_GREEN, true) + " seconds.".color(SPECIAL_COLOR)
             + "\nArea of effect : "           .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_CORROSION_AOE       , GROUND_CORROSION_AOE_INCREASE        , lvl, MAX_LEVEL, COLOR_GREEN, true)
             + "\nCast range : "               .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(CORROSIVE_BREATH_CAST_RANGE, CORROSIVE_BREATH_CAST_RANGE_INCREASE , lvl, MAX_LEVEL, COLOR_GREEN, true)
             )
+        ..setEditorSuffix("(Wurst)")
 
 @compiletime function createCorrosiveBreath() returns ChannelAbilityPreset
     return new ChannelAbilityPreset(ABILITY_CORROSIVE_BREATH, MAX_LEVEL, true)
@@ -87,6 +98,7 @@ let UPGD_MANA_COST = 4 // mana cost * abilLevel
         ..presetTooltipNormal(lvl -> makeToolTipNormLevel("A", CORROSIVE_BREATH_TOOLTIP, lvl))
         ..presetTooltipNormalExtended(lvl -> CORROSIVE_BREATH_TOOLTIP_EXT  + "\n\n"
             + "Armor reduced : "              .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(ARMOR_REDUCED.toReal()     , ARMOR_REDUCED_INCREASE.toReal()      , lvl, MAX_LEVEL, COLOR_GREEN, true)
+            + "\nDamage reduced : "           .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(0.                         , DAMAGE_DECREASE_FACTOR * 100         , lvl, MAX_LEVEL, COLOR_GREEN, true) + " percents".color(SPECIAL_COLOR)
             + "\nCorrosive ground duration : ".color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_CORROSION_DURATION  , GROUND_CORROSION_DURATION_INCREASE   , lvl, MAX_LEVEL, COLOR_GREEN, true) + " seconds.".color(SPECIAL_COLOR)
             + "\nArea of effect : "           .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_CORROSION_AOE       , GROUND_CORROSION_AOE_INCREASE        , lvl, MAX_LEVEL, COLOR_GREEN, true)
             + "\nCast range : "               .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(CORROSIVE_BREATH_CAST_RANGE, CORROSIVE_BREATH_CAST_RANGE_INCREASE , lvl, MAX_LEVEL, COLOR_GREEN, true)
@@ -101,9 +113,10 @@ let UPGD_MANA_COST = 4 // mana cost * abilLevel
         ..presetButtonPosNormal(0, 1)
         ..presetCastRange(lvl -> CORROSIVE_BREATH_CAST_RANGE + CORROSIVE_BREATH_CAST_RANGE_INCREASE * lvl)
         ..presetFollowThroughTime(lvl -> 1.3)
+        ..setEditorSuffix("(Wurst)")
 
 @compiletime function createCorrosion() returns AbilityDefinitionAlchemistAcidBomb
-    return new AbilityDefinitionAlchemistAcidBomb(ABILITY_CORROSION)
+    return new AbilityDefinitionAlchemistAcidBomb(ABILITY_CORROSION_ARMOR)
         ..setDummyAbility()
         ..setMissileArt(Abilities.chimaeraAcidMissile)
         ..setMissileSpeed(1000)
@@ -113,7 +126,34 @@ let UPGD_MANA_COST = 4 // mana cost * abilLevel
         ..presetSecondaryDamage(lvl -> 0)
         ..presetAreaofEffect(lvl -> 1)
         ..presetDurationHero(lvl -> 2)
-        ..presetDurationNormal(lvl -> 3)
+        ..presetDurationNormal(lvl -> 4)
+        ..setName("Corrode Armor")
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createBuffDecreaseDamage()
+    new BuffDefinition(BUFF_ID_DMG_DEC, 'Acri')
+        ..setIcon(Icons.bTNCorrosiveBreath)
+        ..setTargetAttachments(2)
+        ..setTargetAttachmentPoint0("hand,left")
+        ..setTargetAttachmentPoint1("hand,right")
+        ..setArtTarget(Abilities.bottleImpact)
+        ..setTooltipNormal(1, "Corroded Weapon")
+        ..setTooltipNormalExtended(1, "This unit weapons are corroded; its attack damage have been decreased")
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createCorrosionDamageDecrease() returns AbilityDefinitionCripple
+    return new AbilityDefinitionCripple(ABILITY_CORROSION_DAMAGE)
+        ..setDummyAbility()
+        ..setLevels(MAX_LEVEL)
+        ..presetDamageReduction(lvl -> 0 + lvl * DAMAGE_DECREASE_FACTOR)
+        ..presetMovementSpeedReduction(lvl -> 0)
+        ..presetAttackSpeedReduction(lvl -> 0)
+        ..presetDurationHero(lvl -> 2)
+        ..presetDurationNormal(lvl -> 4)
+        ..presetBuffs(lvl -> BUFF_ID_DMG_DEC.toRawCode())
+        ..setEditorSuffix("(Wurst)")
+        ..setName("Corrode Weapons")
+
 
 
 // Spell projectile, manual adjust the numbers so it looks cool ingame
@@ -151,7 +191,10 @@ class CorrosiveBreathProjectile extends CustomProjectile
                     and not u.isType(UNIT_TYPE_FLYING)
                     and not u.isInvulnerable()
                     and not u.isHidden()
-                    InstantDummyCaster.castTarget(owner, ABILITY_CORROSION, abilLevel, OrderIds.acidbomb, u)
+                    InstantDummyCaster.castTarget(owner, ABILITY_CORROSION_ARMOR, abilLevel, OrderIds.acidbomb, u)
+                    if caster.getTypeId() == UNIT_CORROSIVE_DRAGON
+                        InstantDummyCaster.castTarget(owner, ABILITY_CORROSION_DAMAGE, abilLevel, OrderIds.cripple, u)
+
 
 
 init

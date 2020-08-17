@@ -7,20 +7,14 @@ import ClosureEvents
 import ClosureForGroups
 import ClosureTimers
 import Assets
-import BuffObjEditing
 import OrderIds
 import InstantDummyCaster
 
 // Local imports:
 import LocalObjectIDs
-import PlayerExtensions
 import ToolTipsUtils
 import ColorUtils
 import StringExtensions
-import LocalAssets
-import Pets
-import Transformation
-import PetUpgradeHandler
 import CustomProjectile
 import SpiritualGuidance
 
@@ -28,7 +22,7 @@ import SpiritualGuidance
 let ABILITY_DUMMY_STUN_ID = compiletime(ABIL_ID_GEN.next())
 let BUFF_STUN = "BSTN" // Stunned
 
-let FIRE_BREATH_COOLDOWN = 1.
+let FIRE_BREATH_COOLDOWN = 90.
 
 let FIRE_BREATH_AOE = 160.
 let FIRE_BREATH_AOE_INCREASE = 40.
@@ -53,6 +47,11 @@ let FIRE_BREATH_TOOLTIP_EXT = "Spit a fire ball on the target position. On impac
                               + " deals twice less damage against buildings. Additionally destroys trees and burning corpses will be cooked into Cooked Meat."
                               + makeToolTipCooldown(FIRE_BREATH_COOLDOWN)
 
+// Druid Spiritual guidance allow max level to be reached
+let MAX_LEVEL = 7
+let MAX_UPGD_ABIL_LEVEL = MAX_LEVEL - PET_UPGRADE_BONUS
+
+let UPGD_MANA_COST = 5 // mana cost * abilLevel
 
 @compiletime function createDummyStunSpell() returns AbilityDefinitionFireBolt
     return new AbilityDefinitionFireBolt(ABILITY_DUMMY_STUN_ID)
@@ -77,12 +76,12 @@ let FIRE_BREATH_TOOLTIP_EXT = "Spit a fire ball on the target position. On impac
 @compiletime function createFireBreathUpgrade() returns UpgradeDefinition
     return new UpgradeDefinition(UPGD_FIRE_BREATH)
         ..addEffectAbilityLevelBonus(1, 1, ABILITY_FIRE_BREATH.toRawCode())
-        ..setLevels(7)
+        ..setLevels(MAX_LEVEL)
         ..setName(1, "Fire Breath bonus")
         ..setIcon(1, Icons.bTNFireBolt)
 
 @compiletime function createUpgradeAbility() returns ChannelAbilityPreset
-    return new ChannelAbilityPreset(ABILITY_PET_FIRE_BREATH_UPGD, 5, true)
+    return new ChannelAbilityPreset(ABILITY_PET_FIRE_BREATH_UPGD, MAX_UPGD_ABIL_LEVEL, true)
         ..setHeroAbility(false)
         ..presetCastRange(lvl -> 99999)
         ..presetCooldown(lvl -> 0)
@@ -94,17 +93,17 @@ let FIRE_BREATH_TOOLTIP_EXT = "Spit a fire ball on the target position. On impac
         ..presetButtonPosNormal(0, 2)
         ..setHotkeyNormal("Z")
         ..setArtCaster(Abilities.aIsmTarget)
-        ..presetManaCost(lvl -> 2 * lvl)
+        ..presetManaCost(lvl -> UPGD_MANA_COST * lvl)
         ..presetTooltipNormal(lvl -> makeToolTipNormUpgradeLevel("Z", FIRE_BREATH_TOOLTIP, lvl))
         ..presetTooltipNormalExtended(lvl -> "Increase Fire Breath ability to the next level."  + "\n\n"
-            + "Damage per seconds : "       .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_BURN_DPS       , GROUND_BURN_DPS_INCREASE       , lvl, 7, COLOR_RED, true)
-            + "\nBurning ground duration : ".color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_BURN_DURATION  , GROUND_BURN_DURATION_INCREASE  , lvl, 7, COLOR_RED, true) + " seconds.".color(SPECIAL_COLOR)
-            + "\nArea of effect : "         .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(FIRE_BREATH_AOE       , FIRE_BREATH_AOE_INCREASE       , lvl, 7, COLOR_RED, true)
-            + "\nCast range : "             .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(FIRE_BREATH_CAST_RANGE, FIRE_BREATH_CAST_RANGE_INCREASE, lvl, 7, COLOR_RED, true)
+            + "Damage per seconds : "       .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_BURN_DPS       , GROUND_BURN_DPS_INCREASE       , lvl, MAX_LEVEL, COLOR_RED, true)
+            + "\nBurning ground duration : ".color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_BURN_DURATION  , GROUND_BURN_DURATION_INCREASE  , lvl, MAX_LEVEL, COLOR_RED, true) + " seconds.".color(SPECIAL_COLOR)
+            + "\nArea of effect : "         .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(FIRE_BREATH_AOE       , FIRE_BREATH_AOE_INCREASE       , lvl, MAX_LEVEL, COLOR_RED, true)
+            + "\nCast range : "             .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(FIRE_BREATH_CAST_RANGE, FIRE_BREATH_CAST_RANGE_INCREASE, lvl, MAX_LEVEL, COLOR_RED, true)
             )
 
 @compiletime function createFireBreath() returns ChannelAbilityPreset
-    return new ChannelAbilityPreset(ABILITY_FIRE_BREATH, 7, true)
+    return new ChannelAbilityPreset(ABILITY_FIRE_BREATH, MAX_LEVEL, true)
         ..presetManaCost(lvl -> 0)
         ..presetCooldown(lvl -> FIRE_BREATH_COOLDOWN)
         ..setHeroAbility(false)
@@ -113,10 +112,10 @@ let FIRE_BREATH_TOOLTIP_EXT = "Spit a fire ball on the target position. On impac
         ..setName(FIRE_BREATH_TOOLTIP)
         ..presetTooltipNormal(lvl -> makeToolTipNormLevel("A", FIRE_BREATH_TOOLTIP, lvl))
         ..presetTooltipNormalExtended(lvl -> FIRE_BREATH_TOOLTIP_EXT  + "\n\n"
-            + "Damage per seconds : "       .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_BURN_DPS       , GROUND_BURN_DPS_INCREASE       , lvl, 7, COLOR_RED, true)
-            + "\nBurning ground duration : ".color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_BURN_DURATION  , GROUND_BURN_DURATION_INCREASE  , lvl, 7, COLOR_RED, true) + " seconds.".color(SPECIAL_COLOR)
-            + "\nArea of effect : "         .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(FIRE_BREATH_AOE       , FIRE_BREATH_AOE_INCREASE       , lvl, 7, COLOR_RED, true)
-            + "\nCast range : "             .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(FIRE_BREATH_CAST_RANGE, FIRE_BREATH_CAST_RANGE_INCREASE, lvl, 7, COLOR_RED, true)
+            + "Damage per seconds : "       .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_BURN_DPS       , GROUND_BURN_DPS_INCREASE       , lvl, MAX_LEVEL, COLOR_RED, true)
+            + "\nBurning ground duration : ".color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(GROUND_BURN_DURATION  , GROUND_BURN_DURATION_INCREASE  , lvl, MAX_LEVEL, COLOR_RED, true) + " seconds.".color(SPECIAL_COLOR)
+            + "\nArea of effect : "         .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(FIRE_BREATH_AOE       , FIRE_BREATH_AOE_INCREASE       , lvl, MAX_LEVEL, COLOR_RED, true)
+            + "\nCast range : "             .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(FIRE_BREATH_CAST_RANGE, FIRE_BREATH_CAST_RANGE_INCREASE, lvl, MAX_LEVEL, COLOR_RED, true)
             )
         ..setIconNormal(Icons.bTNFireBolt)
         ..setIconResearch(Icons.bTNFireBolt)
@@ -129,6 +128,7 @@ let FIRE_BREATH_TOOLTIP_EXT = "Spit a fire ball on the target position. On impac
         ..presetCastRange(lvl -> FIRE_BREATH_CAST_RANGE + FIRE_BREATH_CAST_RANGE_INCREASE * lvl)
 
 
+// Spell projectile, manual adjust the numbers so it looks cool ingame
 class FireBreathProjectile extends CustomProjectile
     int abilLevel
     unit caster
@@ -140,11 +140,10 @@ class FireBreathProjectile extends CustomProjectile
         this.missileFx.setScale(abilLevel * 0.2 + 0.4)
 
     override function onImpact()
+        // Booom
+        flashEffect(Objects.neutralBuildingExplosion, targetPos, abilLevel * 0.4)
 
-        let boomFx = addEffect(Objects.neutralBuildingExplosion, targetPos)
-                    ..setScale(abilLevel * 0.4)
-        doAfter(2) ->
-            boomFx.destr()
+        // Stun enemies in AoE
         forUnitsInRange(targetPos.toVec2(), FIRE_BREATH_AOE + FIRE_BREATH_AOE_INCREASE * abilLevel) (unit u) ->
             if u.isAlive() and u.getOwner().isEnemyOf(caster.getOwner())
                 and not u.isType(UNIT_TYPE_FLYING)
@@ -153,15 +152,17 @@ class FireBreathProjectile extends CustomProjectile
                 and not u.isType(UNIT_TYPE_STRUCTURE)
                 InstantDummyCaster.castTarget(caster.getOwner(), ABILITY_DUMMY_STUN_ID, 1, OrderIds.firebolt, u)
 
+        // Destroy trees
         forDestructablesInRange(targetPos.toVec2(), FIRE_BREATH_AOE + FIRE_BREATH_AOE_INCREASE * abilLevel) (destructable d) ->
             d.kill()
+
         handleGroundBurning()
 
     function handleGroundBurning()
         let owner = caster.getOwner()
 
         let fxAmount = 10 + (abilLevel * 10)
-        //Spawn fire FX on ground
+        // Spawn fire FX on ground
         for i = 0 to fxAmount
             let randAngle = angle(GetRandomReal(0, 2*bj_PI))
             let randomDist = GetRandomReal(15, FIRE_BREATH_AOE + FIRE_BREATH_AOE_INCREASE * abilLevel)
@@ -170,32 +171,39 @@ class FireBreathProjectile extends CustomProjectile
             doAfter(GROUND_BURN_DURATION - 0.5) ->
                 fireFX.destr()
 
-        //Damage the units in area
+        // Damage the units in area
         doPeriodicallyTimed(GROUND_BURN_INTERVAL, GROUND_BURN_DURATION) burnAOE ->
             forUnitsInRange(targetPos.toVec2(), FIRE_BREATH_AOE + FIRE_BREATH_AOE_INCREASE * abilLevel) u ->
+                // Instantly kill Ice Block unit
                 if u.getTypeId() == UNIT_ICE_BLOCK
                     u.kill()
+
                 else if u.isAlive() and u.getOwner().isEnemyOf(owner)
                      and not u.isType(UNIT_TYPE_FLYING)
                      and not u.isInvulnerable()
                      and not u.isHidden()
+                     // Twice less damage against buildings
                     if u.isType(UNIT_TYPE_STRUCTURE)
                         UnitDamageTarget(caster, u, ((GROUND_BURN_DPS + GROUND_BURN_DPS_INCREASE * abilLevel) / 2) * GROUND_BURN_INTERVAL, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
                     else
                         UnitDamageTarget(caster, u, (GROUND_BURN_DPS + GROUND_BURN_DPS_INCREASE * abilLevel) * GROUND_BURN_INTERVAL, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
+
+                // Its hot! Cook the corpse!
                 else if u.getTypeId() == UNIT_MEAT
                     createItem(ITEM_COOKED_MEAT, u.getPos())
                     u.remove()
 
 init
     EventListener.onPointCast(ABILITY_FIRE_BREATH) (unit caster, vec2 target) ->
+        // Get correct Z value when dragon fly over cliff
         let casterPos3D = caster.getPos().withTerrainZ().op_plus(vec3(0, 0, caster.getPos3Fly().z))
         let lvl = caster.getAbilityLevel(ABILITY_FIRE_BREATH)
 
+        // Adjust fx following the model, small fireball for hatchling
         let fxPath = caster.getTypeId() == UNIT_FIRE_DRAGON ? Abilities.redDragonMissile : Abilities.fireBallMissile
 
         new FireBreathProjectile(
-            casterPos3D + vec3(0, 40, -30),
+            casterPos3D + vec3(0, 40, -30), // Trying to adjust starting pos with dragon mouth
             target.withTerrainZ(),
             500,
             fxPath,

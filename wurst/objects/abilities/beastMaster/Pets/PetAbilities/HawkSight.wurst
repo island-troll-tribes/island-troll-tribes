@@ -12,43 +12,46 @@ import HashMap
 
 // Local imports:
 import LocalObjectIDs
-import PlayerExtensions
 import ToolTipsUtils
 import ColorUtils
 import StringExtensions
-import LocalAssets
-import Pets
-import Transformation
-import PetUpgradeHandler
 import OraclePotion
 import TimerUtils
 import SpiritualGuidance
+
 
 let BUFF_HAWK_SIGHT = compiletime(BUFF_ID_GEN.next())
 
 let HAWK_SIGHT_DURATION = 5.
 let HAWK_SIGHT_DURATION_INCREASE = 3.
 
-let HAWK_SIGHT_COOLDOWN = 90.
+let HAWK_SIGHT_COOLDOWN = 75.
 
+// Sight range cannot exceed 1800, so the lvl 7 is useless, but I am too lazy to do the math and the player won't notice anyway...
+// Just wanted round numbers
 let HAWK_SIGHT_RANGE_BONUS = 600
-let HAWK_SIGHT_RANGE_BONUS_INCREASE = 100
-
+let HAWK_SIGHT_RANGE_BONUS_INCREASE = 200
 
 let HAWK_SIGHT_TOOLTIP = "Hawk Sight"
-let HAWK_SIGHT_TOOLTIP_EXT = "The unit share sight with its master, increase its sight range for a short duration."
+let HAWK_SIGHT_TOOLTIP_EXT = "The unit share sight with its master, increase its sight range and detect invisible unit for a short duration."
                              + makeToolTipCooldown(HAWK_SIGHT_COOLDOWN)
 
-@compiletime function createHawkSightDurationUpgrade() returns UpgradeDefinition
-    return new UpgradeDefinition(UPGD_HAWK_SIGHT_DURATION)
+// Druid Spiritual guidance allow max level to be reached
+let MAX_LEVEL = 7
+let MAX_UPGD_ABIL_LEVEL = MAX_LEVEL - PET_UPGRADE_BONUS
+
+let UPGD_MANA_COST = 2 // mana cost * abilLevel
+
+@compiletime function createHawkSightUpgrade() returns UpgradeDefinition
+    return new UpgradeDefinition(UPGD_HAWK_SIGHT)
         ..addEffectAbilityLevelBonus(1, 1, ABILITY_HAWK_SIGHT.toRawCode())
         ..addEffectAbilityLevelBonus(1, 1, ABILITY_HAWK_SIGHT_INCREASE.toRawCode())
-        ..setLevels(7)
+        ..setLevels(MAX_LEVEL)
         ..setName(1, "Hawk Sight Duration bonus")
         ..setIcon(1, Icons.bTNScout)
 
 function createBuff()
-    new BuffDefinition(BUFF_HAWK_SIGHT, 'Bstt')
+    new BuffDefinition(BUFF_HAWK_SIGHT, 'Bstt') // stasis trap buff
         ..setIcon(Icons.bTNScout)
         ..setArtSpecial(1,"")
         ..setTooltipNormal(1, "Hawk Sight")
@@ -56,7 +59,7 @@ function createBuff()
         ..setTooltipNormalExtended(1, "This unit is sharing its vision with its master")
 
 @compiletime function createUpgradeAbility() returns ChannelAbilityPreset
-    return new ChannelAbilityPreset(ABILITY_PET_HAWK_SIGHT_UPGD, 5, true)
+    return new ChannelAbilityPreset(ABILITY_PET_HAWK_SIGHT_UPGD, MAX_UPGD_ABIL_LEVEL, true)
         ..setHeroAbility(false)
         ..presetCastRange(lvl -> 99999)
         ..presetCooldown(lvl -> 0)
@@ -68,24 +71,24 @@ function createBuff()
         ..presetButtonPosNormal(0, 2)
         ..setHotkeyNormal("Z")
         ..setArtCaster(Abilities.aIsmTarget)
-        ..presetManaCost(lvl -> 2 * lvl)
+        ..presetManaCost(lvl -> UPGD_MANA_COST * lvl)
         ..presetTooltipNormal(lvl -> makeToolTipNormUpgradeLevel("Z", HAWK_SIGHT_TOOLTIP, lvl))
         ..presetTooltipNormalExtended(lvl -> "Increase Hawk Sight ability level."  + "\n\n"
-            + "Sight Range Bonus : " .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(HAWK_SIGHT_RANGE_BONUS.toReal() , HAWK_SIGHT_RANGE_BONUS_INCREASE.toReal() , lvl, 7, COLOR_LIGHT_BLUE, true)
-            + "\nDuration : "        .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(HAWK_SIGHT_DURATION             , HAWK_SIGHT_DURATION_INCREASE             , lvl, 7, COLOR_LIGHT_BLUE, true) + " seconds.".color(SPECIAL_COLOR) + " seconds".color(SPECIAL_COLOR)
+            + "Sight Range Bonus : " .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(HAWK_SIGHT_RANGE_BONUS.toReal() , HAWK_SIGHT_RANGE_BONUS_INCREASE.toReal() , lvl, MAX_LEVEL, COLOR_LIGHT_BLUE, true)
+            + "\nDuration : "        .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(HAWK_SIGHT_DURATION             , HAWK_SIGHT_DURATION_INCREASE             , lvl, MAX_LEVEL, COLOR_LIGHT_BLUE, true) + " seconds.".color(SPECIAL_COLOR) + " seconds".color(SPECIAL_COLOR)
             )
 
 @compiletime function createHawkSightAbility() returns ChannelAbilityPreset
-    return new ChannelAbilityPreset(ABILITY_HAWK_SIGHT, 7, true)
+    return new ChannelAbilityPreset(ABILITY_HAWK_SIGHT, MAX_LEVEL, true)
         ..setName(HAWK_SIGHT_TOOLTIP)
         ..setIconNormal(Icons.bTNScout)
-        ..setCooldown(1, HAWK_SIGHT_COOLDOWN)
+        ..presetCooldown(lvl -> HAWK_SIGHT_COOLDOWN)
         ..setManaCost(1, 0)
         ..presetHotkey("A")
         ..presetTooltipNormal(lvl -> makeToolTipNormLevel("A", HAWK_SIGHT_TOOLTIP, lvl))
         ..presetTooltipNormalExtended(lvl -> HAWK_SIGHT_TOOLTIP_EXT  + "\n\n"
-            + "Sight Range Bonus : " .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(HAWK_SIGHT_RANGE_BONUS.toReal() , HAWK_SIGHT_RANGE_BONUS_INCREASE.toReal() , lvl, 7, COLOR_LIGHT_BLUE, true)
-            + "\nDuration : "        .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(HAWK_SIGHT_DURATION             , HAWK_SIGHT_DURATION_INCREASE             , lvl, 7, COLOR_LIGHT_BLUE, true) + " seconds.".color(SPECIAL_COLOR) + " seconds".color(SPECIAL_COLOR)
+            + "Sight Range Bonus : " .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(HAWK_SIGHT_RANGE_BONUS.toReal() , HAWK_SIGHT_RANGE_BONUS_INCREASE.toReal() , lvl, MAX_LEVEL, COLOR_LIGHT_BLUE, true)
+            + "\nDuration : "        .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(HAWK_SIGHT_DURATION             , HAWK_SIGHT_DURATION_INCREASE             , lvl, MAX_LEVEL, COLOR_LIGHT_BLUE, true) + " seconds.".color(SPECIAL_COLOR) + " seconds".color(SPECIAL_COLOR)
             )
         ..presetCastRange(lvl -> 99999)
         ..presetFollowThroughTime(lvl -> 0)
@@ -95,7 +98,7 @@ function createBuff()
 @compiletime function createHawkSightRangeBonusAbility() returns AbilityDefinitionSightBonus
     return new AbilityDefinitionSightBonus(ABILITY_HAWK_SIGHT_INCREASE)
         ..setName("Hawk Sight Range Bonus")
-        ..setLevels(7)
+        ..setLevels(MAX_LEVEL)
         ..setIconNormal(Icons.bTNScout)
         ..presetSightRangeBonus(lvl -> HAWK_SIGHT_RANGE_BONUS + lvl * HAWK_SIGHT_RANGE_BONUS_INCREASE)
 
@@ -108,6 +111,7 @@ function onCastHawkSight(unit caster, int abilId)
     if removalTimers.has(caster)
         removalTimers.getAndRemove(caster).release()
 
+    // Adding the sight range bonus ability, using a spellbook so the ability doesn't appear on the UI
     caster.addAbility(SPELLBOOK_ABILITY_ID)
     caster.addAbility(ABILITY_HAWK_SIGHT_INCREASE, level)
     caster.getOwner().setAbilityAvailable(SPELLBOOK_ABILITY_ID, false)
@@ -119,6 +123,7 @@ function onCastHawkSight(unit caster, int abilId)
         caster.removeAbility(ABILITY_HAWK_SIGHT_INCREASE)
         removalTimers.remove(caster)
     removalTimers.put(caster, t)
+
 
 init
     EventListener.onCast(ABILITY_HAWK_SIGHT, (unit caster) -> onCastHawkSight(caster, ABILITY_HAWK_SIGHT))

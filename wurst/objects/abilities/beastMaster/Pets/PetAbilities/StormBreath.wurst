@@ -15,19 +15,13 @@ import OrderIds
 
 // Local imports:
 import LocalObjectIDs
-import PlayerExtensions
 import ToolTipsUtils
 import ColorUtils
 import StringExtensions
-import LocalAssets
-import Pets
-import Transformation
-import PetUpgradeHandler
 import SpiritualGuidance
-import EffectUtils
 
 
-let STORM_BREATH_COOLDOWN = 30.
+let STORM_BREATH_COOLDOWN = 60.
 
 let STORM_BREATH_DURATION = 1.
 let STORM_BREATH_DURATION_INCREASE = 0.2
@@ -38,8 +32,8 @@ let STORM_BREATH_CAST_RANGE_INCREASE = 50.
 let STORM_BREATH_AOE = 100.
 let STORM_BREATH_AOE_INCREASE = 10.
 
-let STORM_BREATH_PARALYZE_DURATION = 3.
-let STORM_BREATH_PARALYZE_DURATION_INCREASE = 0.4
+let STORM_BREATH_PARALYZE_DURATION = 2.
+let STORM_BREATH_PARALYZE_DURATION_INCREASE = 0.2
 
 let STORM_BREATH_TOOLTIP = "Storm Breath"
 let STORM_BREATH_TOOLTIP_EXT = "Cast lightning in a line for the channeling duration, the longer the channeling, the longer distance the lightning travelled."
@@ -47,16 +41,22 @@ let STORM_BREATH_TOOLTIP_EXT = "Cast lightning in a line for the channeling dura
                                + "\nAdditionaly burn tree, transforming them into rotten tree, destroyable by normal attack."
                                + makeToolTipCooldown(STORM_BREATH_COOLDOWN)
 
+// Druid Spiritual guidance allow max level to be reached
+let MAX_LEVEL = 7
+let MAX_UPGD_ABIL_LEVEL = MAX_LEVEL - PET_UPGRADE_BONUS
+
+let UPGD_MANA_COST = 4 // mana cost * abilLevel
+
 @compiletime function createStormBreathUpgrade() returns UpgradeDefinition
     return new UpgradeDefinition(UPGD_STORM_BREATH)
         ..addEffectAbilityLevelBonus(1, 1, ABILITY_STORM_BREATH.toRawCode())
         ..addEffectAbilityLevelBonus(1, 1, ABILITY_CORROSION.toRawCode())
-        ..setLevels(7)
+        ..setLevels(MAX_LEVEL)
         ..setName(1, "Storm Breath bonus")
         ..setIcon(1, Icons.bTNManaFlare)
 
 @compiletime function createUpgradeAbility() returns ChannelAbilityPreset
-    return new ChannelAbilityPreset(ABILITY_PET_STORM_BREATH_UPGD, 5, true)
+    return new ChannelAbilityPreset(ABILITY_PET_STORM_BREATH_UPGD, MAX_UPGD_ABIL_LEVEL, true)
         ..setHeroAbility(false)
         ..presetCastRange(lvl -> 99999)
         ..presetCooldown(lvl -> 0)
@@ -68,29 +68,29 @@ let STORM_BREATH_TOOLTIP_EXT = "Cast lightning in a line for the channeling dura
         ..presetButtonPosNormal(0, 2)
         ..setHotkeyNormal("Z")
         ..setArtCaster(Abilities.aIsmTarget)
-        ..presetManaCost(lvl -> 2 * lvl)
+        ..presetManaCost(lvl -> UPGD_MANA_COST * lvl)
         ..presetTooltipNormal(lvl -> makeToolTipNormUpgradeLevel("Z", STORM_BREATH_TOOLTIP, lvl))
         ..presetTooltipNormalExtended(lvl -> "Increase Storm Breath ability level." + "\n\n"
-            + "Paralyze duration : "    .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_PARALYZE_DURATION , STORM_BREATH_PARALYZE_DURATION_INCREASE , lvl, 7, COLOR_ORANGE, false) + " seconds.".color(SPECIAL_COLOR)
-            + "\nChanneling duration : ".color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_DURATION          , STORM_BREATH_DURATION_INCREASE          , lvl, 7, COLOR_ORANGE, false) + " seconds.".color(SPECIAL_COLOR)
-            + "\nArea of effect : "     .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_AOE               , STORM_BREATH_AOE_INCREASE               , lvl, 7, COLOR_ORANGE, true )
-            + "\nCast range : "         .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_CAST_RANGE        , STORM_BREATH_CAST_RANGE_INCREASE        , lvl, 7, COLOR_ORANGE, true )
+            + "Paralyze duration : "    .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_PARALYZE_DURATION , STORM_BREATH_PARALYZE_DURATION_INCREASE , lvl, MAX_LEVEL, COLOR_ORANGE, false) + " seconds.".color(SPECIAL_COLOR)
+            + "\nChanneling duration : ".color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_DURATION          , STORM_BREATH_DURATION_INCREASE          , lvl, MAX_LEVEL, COLOR_ORANGE, false) + " seconds.".color(SPECIAL_COLOR)
+            + "\nArea of effect : "     .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_AOE               , STORM_BREATH_AOE_INCREASE               , lvl, MAX_LEVEL, COLOR_ORANGE, true )
+            + "\nCast range : "         .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_CAST_RANGE        , STORM_BREATH_CAST_RANGE_INCREASE        , lvl, MAX_LEVEL, COLOR_ORANGE, true )
             )
 
 @compiletime function createStormBreath() returns ChannelAbilityPreset
-    return new ChannelAbilityPreset(ABILITY_STORM_BREATH, 7, true)
+    return new ChannelAbilityPreset(ABILITY_STORM_BREATH, MAX_LEVEL, true)
         ..presetManaCost(lvl -> 0)
-        ..presetCooldown(lvl -> 0)
+        ..presetCooldown(lvl -> STORM_BREATH_COOLDOWN)
         ..setHeroAbility(false)
         ..setItemAbility(false)
         ..presetTargetTypes(Targettype.POINT)
         ..setName(STORM_BREATH_TOOLTIP)
-        ..presetTooltipNormal(lvl -> makeToolTipNormLevel("D", STORM_BREATH_TOOLTIP, lvl))
+        ..presetTooltipNormal(lvl -> makeToolTipNormLevel("A", STORM_BREATH_TOOLTIP, lvl))
         ..presetTooltipNormalExtended(lvl -> STORM_BREATH_TOOLTIP_EXT  + "\n\n"
-            + "Paralyze duration : "    .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_PARALYZE_DURATION , STORM_BREATH_PARALYZE_DURATION_INCREASE , lvl, 7, COLOR_ORANGE, false) + " seconds.".color(SPECIAL_COLOR)
-            + "\nChanneling duration : ".color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_DURATION          , STORM_BREATH_DURATION_INCREASE          , lvl, 7, COLOR_ORANGE, false) + " seconds.".color(SPECIAL_COLOR)
-            + "\nArea of effect : "     .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_AOE               , STORM_BREATH_AOE_INCREASE               , lvl, 7, COLOR_ORANGE, true )
-            + "\nCast range : "         .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_CAST_RANGE        , STORM_BREATH_CAST_RANGE_INCREASE        , lvl, 7, COLOR_ORANGE, true )
+            + "Paralyze duration : "    .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_PARALYZE_DURATION , STORM_BREATH_PARALYZE_DURATION_INCREASE , lvl, MAX_LEVEL, COLOR_ORANGE, false) + " seconds.".color(SPECIAL_COLOR)
+            + "\nChanneling duration : ".color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_DURATION          , STORM_BREATH_DURATION_INCREASE          , lvl, MAX_LEVEL, COLOR_ORANGE, false) + " seconds.".color(SPECIAL_COLOR)
+            + "\nArea of effect : "     .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_AOE               , STORM_BREATH_AOE_INCREASE               , lvl, MAX_LEVEL, COLOR_ORANGE, true )
+            + "\nCast range : "         .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(STORM_BREATH_CAST_RANGE        , STORM_BREATH_CAST_RANGE_INCREASE        , lvl, MAX_LEVEL, COLOR_ORANGE, true )
             )
         ..setIconNormal(Icons.bTNManaFlare)
         ..setIconResearch(Icons.bTNManaFlare)
@@ -107,7 +107,7 @@ let STORM_BREATH_TOOLTIP_EXT = "Cast lightning in a line for the channeling dura
         ..setDummyAbility()
         ..setMissileArt("")
         ..setArtTarget(Abilities.chimaeraLightningMissile)
-        ..setLevels(5)
+        ..setLevels(MAX_LEVEL)
         ..presetDamageperSecond(lvl -> 0)
         ..presetDurationHero(lvl -> STORM_BREATH_PARALYZE_DURATION + lvl * STORM_BREATH_PARALYZE_DURATION_INCREASE)
         ..presetDurationNormal(lvl -> STORM_BREATH_PARALYZE_DURATION + lvl * STORM_BREATH_PARALYZE_DURATION_INCREASE)
@@ -116,6 +116,7 @@ let STORM_BREATH_TOOLTIP_EXT = "Cast lightning in a line for the channeling dura
 HashMap<destructable, StormBreathLightning> treeToBurn = new HashMap<destructable, StormBreathLightning>()
 
 // TODO: Checkout multiple tree on same spot issue
+// Spell projectile, manual adjust the numbers so it looks cool ingame
 class StormBreathLightning
     use TimedLoop
     boolean isChanneling
@@ -128,17 +129,19 @@ class StormBreathLightning
     real time_elapsed = 0
     vec3 casterPos
 
-    construct(unit caster, vec2 targetPos, real duration)
+    construct(unit caster, vec2 targetPos, real duration, int abilLevel)
         this.caster = caster
-        this.abilLevel = caster.getAbilityLevel(ABILITY_STORM_BREATH)
+        this.abilLevel = abilLevel
         this.targetPos = targetPos
         this.duration = duration + abilLevel * STORM_BREATH_DURATION_INCREASE
+
+        // Get correct Z value when dragon fly over cliff
         this.casterPos = caster.getPos().withTerrainZ().op_plus(vec3(0, 0, caster.getPos3Fly().z))
 
         this.fx = addLightning(
             LIGHTNING_LIGHTNING_ATTACK,
             true,
-            casterPos + vec3(0, 60, -20),
+            casterPos + vec3(0, 60, -20), // Trying to adjust starting pos with dragon mouth
             targetPos.withTerrainZ()
             )
         this.isChanneling = true
@@ -148,13 +151,16 @@ class StormBreathLightning
                 this.isChanneling = false
                 stopTimedLoopAndDestroy()
 
-        let lightningFx = addEffect(Abilities.chimaeraLightningMissile, this.targetPos)..setScale(0.6 + abilLevel * 0.2)..playAnimation(ANIM_TYPE_DEATH)
+        // Smasl electric burst on the ground
+        let lightningFx = addEffect(Abilities.chimaeraLightningMissile, this.targetPos)
+                          ..setScale(0.6 + abilLevel * 0.2)
+                          ..playAnimation(ANIM_TYPE_DEATH)
+
         doPeriodicallyTimed(0.2, this.duration - 0.2) (CallbackCounted cb) ->
             if not this.isChanneling
                 lightningFx.destr()
                 cb.stop()
             else
-            // TODO : this doesn't seems to stop when channel is interrupted, maybe just use flasheffect
                 lightningFx.setPos(this.targetPos.withTerrainZ())
                 lightningFx.playAnimation(ANIM_TYPE_DEATH)
         startTimedLoop()
@@ -163,6 +169,7 @@ class StormBreathLightning
         if duration < time_elapsed
             stopTimedLoopAndDestroy()
 
+        // Move lightning edge to new pos
         targetPos = targetPos.polarOffset(caster.getPos().angleTo(targetPos), ANIMATION_PERIOD * speed)
         fx.move(true, casterPos, targetPos.withTerrainZ())
 
@@ -172,13 +179,14 @@ class StormBreathLightning
                 and not u.isType(UNIT_TYPE_STRUCTURE)
                 and not u.isType(UNIT_TYPE_FLYING)
                 and not u.isInvulnerable()
-                and not u.hasAbility('Bprg')
+                and not u.hasAbility('Bprg') // Purge buff
                 and u.isAlive()
                 InstantDummyCaster.castTarget(caster.getOwner(), ABILITY_PARALYZE, abilLevel, OrderIds.entanglingroots, u)
 
         forDestructablesInRange(targetPos, STORM_BREATH_AOE + STORM_BREATH_AOE_INCREASE * abilLevel) (destructable d) ->
+            // lightning should burn down trees
             if d.getTypeId() == DEST_CANOPY_TREE or d.getTypeId() == DEST_NORMAL_TREE
-                and not treeToBurn.has(d)
+                and not treeToBurn.has(d) // Avoiding burning the same tree multiple time
                 and d.isAliveTrick()
                 treeToBurn.put(d, this)
                 let pos = d.getPos()
@@ -200,4 +208,4 @@ class StormBreathLightning
 
 init
     EventListener.onPointCast(ABILITY_STORM_BREATH) (unit caster, vec2 target) ->
-        new StormBreathLightning(caster, target, STORM_BREATH_DURATION)
+        new StormBreathLightning(caster, target, STORM_BREATH_DURATION, caster.getAbilityLevel(ABILITY_STORM_BREATH))

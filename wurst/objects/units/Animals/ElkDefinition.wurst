@@ -1,9 +1,36 @@
 package ElkDefinition
 
+// Standard library imports:
 import UnitObjEditing
-import LocalObjectIDs
 import Assets
 import ObjectIds
+import LinkedList
+
+// Local imports:
+import LocalObjectIDs
+
+
+constant tamedElkfAbilities = asList(
+    ABILITY_PET_REVIVE_INFO,
+    ABILITY_PET_DAMAGE_UPGD,
+    ABILITY_PET_ARMOR_UPGD,
+    ABILITY_PET_MAGIC_RESIST_UPGD,
+    ABILITY_PET_HEALTH_UPGD,
+    ABILITY_PET_INVENTORY_UPGD,
+    ABILITY_PET_INVENTORY,
+    ABILITY_PET_SNACK
+)
+
+constant tamedElkfUpgrades = asList(
+    UPGD_PET_ATTACK_DAMAGE,
+    UPGD_PET_ARMOR,
+    UPGD_PET_MAGIC_RESISTANCE,
+    UPGD_PET_HEALTH,
+    UPGD_PET_INVENTORY
+)
+
+constant TAMED_ELK_ABIL = tamedElkfAbilities.joinBy((int i) -> i.toRawCode(), ",")
+constant TAMED_ELK_UPGD = tamedElkfUpgrades.joinBy((int i) -> i.toRawCode(), ",")
 
 class ElkDefinition extends UnitDefinition
     construct(int unitId)
@@ -27,23 +54,8 @@ class ElkDefinition extends UnitDefinition
 class TamedElkDefinition extends ElkDefinition
     construct(int unitId)
         super(unitId)
-        this.setNormalAbilities(commaList(
-            ABILITY_PET_REVIVE_INFO.toRawCode(),
-            ABILITY_PET_DAMAGE_UPGD.toRawCode(),
-            ABILITY_PET_ARMOR_UPGD.toRawCode(),
-            ABILITY_PET_MAGIC_RESIST_UPGD.toRawCode(),
-            ABILITY_PET_HEALTH_UPGD.toRawCode(),
-            ABILITY_PET_INVENTORY_UPGD.toRawCode(),
-            ABILITY_PET_INVENTORY.toRawCode(),
-            ABILITY_PET_SNACK.toRawCode()
-            ))
-        this.setUpgradesUsed(commaList(
-            UPGD_PET_ATTACK_DAMAGE,
-            UPGD_PET_ARMOR,
-            UPGD_PET_MAGIC_RESISTANCE,
-            UPGD_PET_HEALTH,
-            UPGD_PET_INVENTORY
-            ))
+        this.setNormalAbilities(TAMED_ELK_ABIL)
+        this.setUpgradesUsed(TAMED_ELK_UPGD)
         this.setAttack1RangeMotionBuffer(250)
         this.setAttack1AnimationDamagePoint(0.3)
         this.setAttack1WeaponSound(WeaponSound.WoodHeavyBash)

@@ -5,6 +5,8 @@ import LinkedList
 import HashMap
 import UnitExtensions
 import Assets
+import ClosureEvents
+import ClosureTimers
 
 // Third party imports:
 import Lodash
@@ -12,6 +14,7 @@ import LodashExtensions
 
 // Local imports:
 import LocalObjectIDs
+import LocalAssets
 import PetTaming
 
 constant let hatcheryRecipeList = new HashMap<int, Pair<int, OwnedLinkedList<int>>>()
@@ -22,6 +25,7 @@ constant let hatcheryRecipeList = new HashMap<int, Pair<int, OwnedLinkedList<int
 ..put(ABILITY_QM_STORM_DRAGON_HATCHLING     , new Pair(UNIT_STORM_DRAGON_HATCHLING     , asOwnedList(ITEM_HAWK_EGG, ITEM_SPIRIT_WIND, ITEM_SPIRIT_WIND)))
 ..put(ABILITY_QM_NETHER_DRAGON_HATCHLING    , new Pair(UNIT_NETHER_DRAGON_HATCHLING    , asOwnedList(ITEM_HAWK_EGG, ITEM_SPIRIT_DARKNESS, ITEM_SPIRIT_DARKNESS)))
 
+let instances = new HashMap<unit, HatchingInstance>()
 
 public function hatch(unit hatchery, int quickMakeSpellId)
     let recipe = hatcheryRecipeList.get(quickMakeSpellId).b
@@ -29,19 +33,83 @@ public function hatch(unit hatchery, int quickMakeSpellId)
     let unitToSpawn = hatcheryRecipeList.get(quickMakeSpellId).a
 
     if inventory.map(elem -> elem.getTypeId()).equals(recipe)
-        inventory.forEach(elem -> elem.remove())
-        var spawnFx = Abilities.charmTarget
+        instances.put(hatchery, new HatchingInstance(hatchery, recipe, unitToSpawn))
+
+
+class HatchingInstance
+    unit hatchery
+    effect hatchFx
+    effect eggFx
+    int unitToSpawnId
+    LinkedList<int> recipe
+
+    construct(unit hatchery, LinkedList<int> recipe, int unitToSpawn)
+        this.unitToSpawnId = unitToSpawn
+        this.recipe = recipe
+        this.hatchery = hatchery
+
+        eggFx = addEffect(LocalAbilities.eggAttachment, hatchery, "origin")
+        hatchFx = addEffect("", hatchery, "origin")
         switch unitToSpawn
             case UNIT_CORROSIVE_DRAGON_HATCHLING
-                spawnFx = Abilities.chimaeraAcidMissile
+                hatchFx = addEffect(Abilities.chimaeraAcidTargetArt, hatchery, "origin")
+                eggFx.setColor(50, 255, 124)
             case UNIT_FIRE_DRAGON_HATCHLING
-                spawnFx = Abilities.doomDeath
+                hatchFx = addEffect(Abilities.immolationREDTarget, hatchery, "origin")
+                eggFx.setColor(255, 100, 100)
             case UNIT_FROST_DRAGON_HATCHLING
-                spawnFx = Abilities.frostNovaTarget
+                hatchFx = addEffect(Abilities.frostDamage, hatchery, "origin")
+                eggFx.setColor(50, 190, 255)
             case UNIT_STORM_DRAGON_HATCHLING
-                spawnFx = Abilities.chimaeraLightningMissile
+                hatchFx = addEffect(Abilities.purgeBuffTarget, hatchery, "origin")
+                eggFx.setColor(255, 255, 124)
             case UNIT_NETHER_DRAGON_HATCHLING
-                spawnFx = Abilities.deathPactTarget
-        let newBorn = createUnit(players[PLAYER_NEUTRAL_PASSIVE], unitToSpawn, hatchery.getPos(), (270.0).asAngleDegrees())
-        tamePet(players[0], newBorn)
-        flashEffect(spawnFx, newBorn, "origin")
+                hatchFx = addEffect(Abilities.curseTarget, hatchery, "overhead")
+                eggFx.setColor(40, 0, 90)
+
+        SetPlayerTechMaxAllowedSwap(unitToSpawn, 8, hatchery.getOwner())
+        hatchery.issueImmediateOrderById(unitToSpawn)
+        SetPlayerTechMaxAllowedSwap(unitToSpawn, 0, hatchery.getOwner())
+
+    function onTrainingCancel()
+        hatchFx.destr()
+        eggFx.destr()
+        instances.remove(hatchery)
+        destroy this
+
+    function onTrainingEnd()
+        hatchFx.destr()
+        eggFx.destr()
+        switch unitToSpawnId
+            case UNIT_FIRE_DRAGON_HATCHLING
+                flashEffect(Abilities.doomDeath, hatchery.getPos())
+            case UNIT_CORROSIVE_DRAGON_HATCHLING
+                flashEffect(Abilities.chimaeraAcidMissile, hatchery.getPos())
+            case UNIT_FROST_DRAGON_HATCHLING
+                flashEffect(Abilities.frostNovaTarget, hatchery.getPos())
+            case UNIT_STORM_DRAGON_HATCHLING
+                flashEffect(Abilities.monsoonBoltTarget, hatchery.getPos())
+            case UNIT_NETHER_DRAGON_HATCHLING
+                flashEffect(Abilities.deathPactTarget, hatchery.getPos())
+
+        for ingredient in recipe
+            hatchery.getItemById(ingredient)..remove()
+
+        instances.remove(hatchery)
+        doAfter(2) ->
+            hatchery.kill()
+            destroy this
+
+        //let newBorn = createUnit(players[PLAYER_NEUTRAL_PASSIVE], unitToSpawn, hatchery.getPos(), (270.0).asAngleDegrees())
+        //tamePet(players[0], newBorn)
+        //flashEffect(spawnFx, newBorn, "origin")
+
+init
+    EventListener.add(EVENT_PLAYER_UNIT_TRAIN_CANCEL) ->
+        let u = EventData.getTriggerUnit()
+        if instances.has(u)
+            instances.get(u).onTrainingCancel()
+    EventListener.add(EVENT_PLAYER_UNIT_TRAIN_FINISH) ->
+        let u = EventData.getTriggerUnit()
+        if instances.has(u)
+            instances.get(u).onTrainingEnd()

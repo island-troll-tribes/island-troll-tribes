@@ -3,9 +3,11 @@ package Hatchery
 // Local imports:
 import Building
 import LocalObjectIDs
+import LocalAssets
 
 public class Hatchery extends Building
     private static let unitTypeId = UNIT_HATCHERY
+    private effect eggFx
 
     static function initialize()
         register(unitTypeId, building -> new Hatchery(building))
@@ -16,19 +18,16 @@ public class Hatchery extends Building
     override function postCreate()
         super.postCreate()
 
-
-        SetPlayerTechMaxAllowedSwap(UNIT_HAWK_HATCHLING            , 0, getUnit().getOwner())
-        SetPlayerTechMaxAllowedSwap(UNIT_FIRE_DRAGON_HATCHLING     , 0, getUnit().getOwner())
-        SetPlayerTechMaxAllowedSwap(UNIT_CORROSIVE_DRAGON_HATCHLING, 0, getUnit().getOwner())
-        SetPlayerTechMaxAllowedSwap(UNIT_FROST_DRAGON_HATCHLING    , 0, getUnit().getOwner())
-        SetPlayerTechMaxAllowedSwap(UNIT_STORM_DRAGON_HATCHLING    , 0, getUnit().getOwner())
-        SetPlayerTechMaxAllowedSwap(UNIT_NETHER_DRAGON_HATCHLING   , 0, getUnit().getOwner())
+        eggFx = addEffect(LocalItems.egg, getUnit(), "origin")
         getUnit().addAbility(ABILITY_QM_HAWK_HATCHLING)
         getUnit().addAbility(ABILITY_QM_CORROSIVE_DRAGON_HATCHLING)
         getUnit().addAbility(ABILITY_QM_FIRE_DRAGON_HATCHLING)
         getUnit().addAbility(ABILITY_QM_FROST_DRAGON_HATCHLING)
         getUnit().addAbility(ABILITY_QM_STORM_DRAGON_HATCHLING)
         getUnit().addAbility(ABILITY_QM_NETHER_DRAGON_HATCHLING)
+
+    override function postDeath()
+        eggFx.destr()
 
 
 init

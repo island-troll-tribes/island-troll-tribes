@@ -1,0 +1,31 @@
+package PackMule
+
+// Standard Library Imports
+import Icons
+import ChannelAbilityPreset
+
+// Local imports:
+import LocalObjectIDs
+import ToolTipsUtils
+import ColorUtils
+import StringExtensions
+
+
+let INVENTORY_TOOLTIP = "Back Pack"
+let INVENTORY_TOOLTIP_EXT = "Allows this unit to carry up to {0} items. Items cannot be used from this unit's inventory."
+
+@compiletime function createInventoryAbility() returns AbilityDefinitionInventoryPackMule
+    return new AbilityDefinitionInventoryPackMule(ABILITY_PET_INVENTORY)
+        ..setIconNormal(Icons.bTNPackBeast)
+        ..setLevels(6)
+        ..presetItemCapacity(lvl -> lvl)
+        ..presetCanDropItems(lvl -> true)
+        ..presetCanGetItems(lvl -> true)
+        ..presetCanUseItems(lvl -> false)
+        ..presetDropItemsOnDeath(lvl -> true)
+        ..setName("Pet Inventory")
+        ..presetTooltipNormal(lvl -> makeToolTipNormLevelAura(INVENTORY_TOOLTIP, lvl))
+        ..presetTooltipNormalExtended(lvl -> INVENTORY_TOOLTIP_EXT.format((1 * lvl).toString().color(COLOR_ORANGE)))
+        ..setEditorSuffix("(Wurst)")
+        ..setCheckDependencies(true)
+        ..setRequirements(UPGD_PET_INVENTORY.toRawCode())

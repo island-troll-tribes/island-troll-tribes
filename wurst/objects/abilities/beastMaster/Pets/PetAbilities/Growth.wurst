@@ -1,0 +1,70 @@
+package Growth
+
+// Standard Library Imports
+import ChannelAbilityPreset
+import ClosureEvents
+
+// Local imports:
+import LocalObjectIDs
+import ToolTipsUtils
+import LocalAssets
+import Pets
+import Transformation
+import PetUpgradeHandler
+
+// Variables used to grow pet to next stage of life.
+let GROWTH_TOOLTIP = "Advance Life"
+let GROWTH_UPGD_TOOLTIP_EXT = "Your pet matures to the next stage of its development."
+let GROWTH_MANACOST = 20
+let GROWTH_ICON = LocalIcons.bTNAdvanceLife
+
+
+@compiletime function createPetGrowthAbility() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_GROW_PET, 1, true)
+        ..setDummyAbility()
+        ..setName("Grow Pet")
+        ..setIconNormal(GROWTH_ICON)
+        ..setButtonPositionNormalX(2)
+        ..setButtonPositionNormalY(1)
+        ..setHotkeyNormal("D")
+        ..setCooldown(1, 0)
+        ..setManaCost(1, GROWTH_MANACOST)
+        ..setTooltipNormal(1, makeToolTipNorm("D", GROWTH_TOOLTIP))
+        ..setTooltipNormalExtended(1, GROWTH_UPGD_TOOLTIP_EXT)
+
+
+function growPet(unit pet)
+
+    // Look up the growth chain for the pet.
+    let chain = pet.getPetGrowthChain()
+
+    // Look up the next unit along the chain.
+    let next = chain.get(chain.indexOf(pet.getTypeId()) + 1)
+    if next == 0
+        return
+
+    // Save pet mana to reset it for next unit
+    // otherwise, current mana will scale with max mana increase
+    // e.g a unit with 10/20 mana will have 50/100 when transformed
+    let previousMana = pet.getMana()
+
+    // Grow the pet.
+    transformUnit(pet, next)
+
+    // Visual effect
+    flashEffect(LocalAbilities.growth, pet, "origin")
+
+    // Adjust scaling value used for Health bonus upgrade
+    petUpgradeHandlerInstance.get(pet).setScale(BlzGetUnitRealField(pet, UNIT_RF_SCALING_VALUE))
+
+    pet.setMana(previousMana)
+
+
+init
+    EventListener.onCast(ABILITY_GROW_PET, (unit caster) -> growPet(caster))
+    EventListener.add(EVENT_PLAYER_UNIT_SPELL_ENDCAST) ->
+        let caster = EventData.getSpellAbilityUnit()
+        if upgrades.has(EventData.getSpellAbilityId())
+            and caster.isPet()
+            if petUpgradeHandlerInstance.get(caster).getUpgradeCount() > 5
+                growPet(caster)

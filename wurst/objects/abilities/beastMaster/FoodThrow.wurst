@@ -62,6 +62,17 @@ function createFeedAnimalSpell(int newAbilId) returns ChannelAbilityPreset
     ..setHotkeyNormal("Q")
     ..setTooltipNormal(1, makeToolTipNorm("Q", "Food Throw"))
 
+let projectileFxMap = new HashMap<int, Pair<string, real>>()
+    ..put(ITEM_COOKED_MEAT     , new Pair(LocalItems    .ham              , 0.85))
+    ..put(ITEM_ACORN           , new Pair(Objects       .thunderLizardEgg1, 1.0))
+    ..put(ITEM_HAWK_EGG        , new Pair(LocalAbilities.eggProjectile    , 0.7))
+    ..put(ITEM_MAGIC_ACORN     , new Pair(Objects       .crystalShard     , 0.65))
+    ..put(ITEM_POISON          , new Pair(LocalItems    .poison           , 1.5))
+    ..put(ITEM_ULTRA_POISON    , new Pair(LocalItems    .ultraPoison      , 1.0))
+    ..put(ITEM_FIRE_BOMB       , new Pair(Abilities     .batRiderMissile  , 1.0))
+    ..put(ITEM_SPIRIT_WATER    , new Pair(LocalItems    .spiritOfWater    , 0.75))
+    ..put(ITEM_SPIRIT_WIND     , new Pair(LocalItems    .spiritOfWind     , 0.75))
+    ..put(ITEM_SPIRIT_DARKNESS , new Pair(LocalItems    .orbDarknessX     , 0.75))
 
 // This projectile is thrown following a parabola trajectory and land on the target position
 // It behave like an artillery missile and doesn't follow the target it
@@ -71,19 +82,13 @@ function createFeedAnimalSpell(int newAbilId) returns ChannelAbilityPreset
 class FoodProjectile
     use TimedLoop
     unit caster
-    unit target
     vec3 targetPos
     effect efx
     vec3 pos
-    real speed
     real elapse_time = 0
     real time_scale = 1.0
     vec3 initPos
     real duration
-    angle angle
-    real displacement
-    real teta
-    real distance
     vec3 vel
     vec3 acc
     int charges
@@ -92,10 +97,8 @@ class FoodProjectile
 
     construct(unit caster, unit target, real speed, real arc, item food)
         this.caster = caster
-        this.target = target
         this.targetPos = target.getPos3Real()
 
-        this.speed = speed
         this.pos = caster.getPos().polarOffset(caster.getPos().angleTo(target.getPos()), 50).withTerrainZ()
         this.initPos = pos
 
@@ -109,14 +112,22 @@ class FoodProjectile
 
         // Choosing project Art model based on item sent
         // Standard Fx, just look up the item model
-        print(BlzGetItemRealField(food, ITEM_RF_SCALING_VALUE))
-        this.efx = addEffect(BlzGetItemStringField(food, ITEM_SF_MODEL_USED), pos)
-                    ..setScale(BlzGetItemRealField(food, ITEM_RF_SCALING_VALUE))
+        let fxPath = projectileFxMap.get(this.itemId).a
+        let fxScale = projectileFxMap.get(this.itemId).b
+
+        // This function should return the scale defined in the object definition
+        // but for some reason it only return 1
+        //print(BlzGetItemRealField(food, ITEM_RF_SCALING_VALUE))
+
+        this.efx = addEffect(fxPath, pos)
+                    ..setScale(fxScale)
+                    // ..setScale(BlzGetItemRealField(food, ITEM_RF_SCALING_VALUE))
                     ..setColor(
                                 BlzGetItemIntegerField(food,ITEM_IF_TINTING_COLOR_RED),
                                 BlzGetItemIntegerField(food,ITEM_IF_TINTING_COLOR_GREEN),
                                 BlzGetItemIntegerField(food,ITEM_IF_TINTING_COLOR_BLUE)
                                 )
+                    // Making sure the stand animation is played and not the birth one
                     ..playAnimation(ANIM_TYPE_STAND)
 
         // Removing item from the inventory
@@ -124,8 +135,9 @@ class FoodProjectile
 
         // Following code regarding the projectile trajectory has been picked up from a JASS custom projectile library
         this.duration = initPos.distanceTo2d(targetPos) / speed
-        this.distance = initPos.distanceTo2d(targetPos)
-        this.teta = Atan2(targetPos.y - initPos.y, targetPos.x - initPos.x)
+        let distance = initPos.distanceTo2d(targetPos)
+
+        let teta = Atan2(targetPos.y - initPos.y, targetPos.x - initPos.x)
         this.acc.z = (-8*arc*speed*speed/distance)
         this.vel = vec3(
             speed * Cos(teta),
@@ -190,4 +202,4 @@ function onCast(unit caster, unit target)
 
 
 init
-    EventListener.onTargetCast(ABILITY_FEED_ANIMAL              , (unit caster, unit target) -> onCast(caster, target))
+    EventListener.onTargetCast(ABILITY_FEED_ANIMAL , (unit caster, unit target) -> onCast(caster, target))

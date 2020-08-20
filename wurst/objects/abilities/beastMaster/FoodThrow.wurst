@@ -67,7 +67,7 @@ let projectileFxMap = new HashMap<int, Pair<string, real>>()
     ..put(ITEM_ACORN           , new Pair(Objects       .thunderLizardEgg1, 1.0))
     ..put(ITEM_HAWK_EGG        , new Pair(LocalAbilities.eggProjectile    , 0.7))
     ..put(ITEM_MAGIC_ACORN     , new Pair(Objects       .crystalShard     , 0.65))
-    ..put(ITEM_POISON          , new Pair(LocalItems    .poison           , 1.5))
+    ..put(ITEM_POISON          , new Pair(LocalItems    .poison           , 0.7))
     ..put(ITEM_ULTRA_POISON    , new Pair(LocalItems    .ultraPoison      , 1.0))
     ..put(ITEM_FIRE_BOMB       , new Pair(Abilities     .batRiderMissile  , 1.0))
     ..put(ITEM_SPIRIT_WATER    , new Pair(LocalItems    .spiritOfWater    , 0.75))
@@ -97,7 +97,7 @@ class FoodProjectile
 
     construct(unit caster, unit target, real speed, real arc, item food)
         this.caster = caster
-        this.targetPos = target.getPos3Real()
+        this.targetPos =  target.getPos().withTerrainZ().op_plus(vec3(0, 0, target.getPos3Fly().z))
 
         this.pos = caster.getPos().polarOffset(caster.getPos().angleTo(target.getPos()), 50).withTerrainZ()
         this.initPos = pos

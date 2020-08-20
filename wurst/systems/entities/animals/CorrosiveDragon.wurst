@@ -1,0 +1,25 @@
+package CorrosiveDragon
+
+// Standard library imports:
+import HashMap
+
+// Local imports:
+import LocalObjectIDs
+import BonyAnimal
+
+// The number of corpses dropped per unit type.
+let typeIDs = new IterableMap<int, int>()
+    ..put(UNIT_CORROSIVE_DRAGON_HATCHLING,   0)
+    ..put(UNIT_CORROSIVE_DRAGON,       0)
+
+public class CorrosiveDragon extends BonyAnimal
+    construct(unit whichUnit)
+        super(whichUnit)
+
+    override function getNumCorpses() returns int
+        return typeIDs.get(getUnit().getTypeId())
+
+
+init
+    typeIDs.forEach() (integer typeID, integer value) ->
+        CorrosiveDragon.register(typeID, target -> new CorrosiveDragon(target))

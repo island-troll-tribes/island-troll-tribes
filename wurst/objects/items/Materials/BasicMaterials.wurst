@@ -1,0 +1,288 @@
+package BasicMaterials
+
+
+import Items
+import SpearsDefinition
+import ToolTipsUtils
+import LocalObjectIDs
+import ChannelAbilityPreset
+import Assets
+import LocalAssets
+import LocalItemObjEditing
+
+constant ABIL_STONE = compiletime(ABIL_ID_GEN.next())
+constant ABIL_MAGIC = compiletime(ABIL_ID_GEN.next())
+
+constant HATCHERY_TRANSMUTABLE = "|n|c00ff8000Hatchery Transmutable|r"
+
+constant TINDER_ICON    = Icons.bTNShimmerWeed
+constant STICK_ICON     = Icons.bTNNatureTouchGrow
+constant FLINT_ICON     = Icons.bTNStaffOfSanctuary
+constant MUSHROOM_ICON  = LocalIcons.bTNMushroom
+constant CLAY_ICON      = Icons.bTNThunderLizardEgg
+constant STONE_ICON     = Icons.bTNGolemStormBolt
+constant ELK_HIDE_ICON  = LocalIcons.bTNElkHide
+constant WOLF_HIDE_ICON = LocalIcons.bTNWolfHide
+constant BEAR_HIDE_ICON = LocalIcons.bTNBearHide
+constant BONE_ICON      = LocalIcons.bTNBone
+constant MAGIC_ICON     = Icons.bTNMoonStone
+constant MC_ICON        = Icons.bTNManaStone
+constant THISTLES_ICON  = Icons.bTNQuillSprayOff
+constant DTHISTLES_ICON = Icons.bTNQuillSpray
+
+constant TINDER_MODEL    = Doodads.ruins_Shrub1
+constant STICK_MODEL     = Doodads.felwoodLogStraight
+constant FLINT_MODEL     = Doodads.rubbleRock5
+constant MUSHROOM_MODEL  = Doodads.shroomsBlue
+constant CLAY_MODEL      = Objects.thunderLizardEgg1
+constant STONE_MODEL     = Doodads.lords_Rock6
+constant ELK_HIDE_MODEL  = LocalItems.hideElk
+constant WOLF_HIDE_MODEL = LocalItems.hideWolf
+constant BEAR_HIDE_MODEL = LocalItems.hideBear
+constant BONE_MODEL      = Doodads.skull0
+constant MAGIC_MODEL     = LocalItems.moonStone
+constant MC_MODEL        = LocalItems.manaStone
+constant THISTLES_MODEL  = Doodads.felwood_Thorns5
+
+constant STONE_DMG = 25.
+constant STONE_COOLDOWN   = 8.
+constant STONE_STUN_DURATION = 1.
+constant STONE_STUN_DURATION_NORMAL = 7.
+constant STONE_CAST_RANGE = 1000.
+
+constant TT_TINDER    = "Some small leaves and twigs. Used in camp fire (Tinder Flint Stick), or for making ensnare traps and nets."
+constant TT_STICK     = "Increases the damage of the troll by 1 when carried. Used in Troll hut, Storage hut, Witch Doctors hut, camp fire, tent, and tannery. Can make various items in the armory too."
+constant TT_FLINT     = "Used for starting fires or making iron and steel in the armory."
+constant TT_MUSHROOM  = "Erk, this is clearly not edible, should be used to craft poison."+HATCHERY_TRANSMUTABLE
+constant TT_CLAY      = "A ball of clay that can be used for building."
+constant TT_STONE     = "A sturdy stone. Can be thrown at enemies or used in buildings. Deals {0} damage, stun for {1} seconds."
+                        .format(STONE_DMG.toToolTipRed(), STONE_STUN_DURATION.toToolTipRed()) + makeToolTipCooldown(STONE_COOLDOWN)
+constant TT_ELK_HIDE  = "A hide from an Elk, can be tanned to make armor."+HATCHERY_TRANSMUTABLE
+constant TT_WOLF_HIDE = "A hide from a Wolf, can be tanned to make armor."+HATCHERY_TRANSMUTABLE
+constant TT_BEAR_HIDE = "A hide from a Bear, can be tanned to make armor."+HATCHERY_TRANSMUTABLE
+constant TT_BONE      = "A sharp bone that can be used to cut an opponent adding 2 to damage. Can be used to make bone armor and weapons."
+constant TT_MAGIC     = "A very rare and unpredictable activated Mana Complex. Use with extreme caution. Who knows what it will do."
+constant TT_MC        = "A glowing crystal of mana. Used to craft magic gear."
+constant TT_THISTLES  = "Some slightly poisonous thistles from a thistle bush. Use with the blowgun!"
+constant TT_DTHISTLES = "Inflicts depressing on the enemy unit zapping some energy and slowing. When combined with any other form of depression (spell or aura), the effects are increased."
+
+@compiletime function createBasicSpearAbility() returns AbilityDefinitionThunderBoltCreep
+    return createSpearAbility(ABIL_STONE)
+        ..setName("Spear Cast ({0})".format("Stone"))
+        ..setDamage(1, STONE_DMG)
+        ..setDurationHero(1, STONE_STUN_DURATION)
+        ..setDurationNormal(1, STONE_STUN_DURATION_NORMAL)
+        ..setCooldown(1, STONE_COOLDOWN)
+        ..setCastRange(1, STONE_CAST_RANGE)
+        ..setMissileArt(Abilities.rockBoltMissile)
+
+@compiletime function createMagicAbility() returns AbilityDefinitionBerserk
+    return createItemBerserkCast(ABIL_MAGIC)
+        ..setName("Magic cast")
+        ..setCooldown(1, 0)
+
+@compiletime function createTinder() returns ItemDefinition
+    return createBasicItem(ITEM_TINDER)
+        ..setInterfaceIcon(TINDER_ICON)
+        ..setModelUsed(TINDER_MODEL)
+        ..setNameEnhance("Tinder")
+        ..setTooltipExtended(TT_TINDER)
+        ..setDescription(TT_TINDER)
+        ..setLumberCost(2)
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(255)
+        ..setCooldownGroup("")
+        ..setScalingValue(0.80)
+
+@compiletime function createStick() returns ItemDefinition
+    return createBasicItem(ITEM_STICK)
+        ..setInterfaceIcon(STICK_ICON)
+        ..setModelUsed(STICK_MODEL)
+        ..setNameEnhance("Stick")
+        ..setTooltipExtended(TT_STICK)
+        ..setDescription(TT_STICK)
+        ..setLumberCost(3)
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(255)
+        ..setScalingValue(0.40)
+        ..setAbilities("AItg") // +1 Damage
+
+@compiletime function createFlint() returns ItemDefinition
+    return createBasicItem(ITEM_FLINT)
+        ..setInterfaceIcon(FLINT_ICON)
+        ..setModelUsed(FLINT_MODEL)
+        ..setNameEnhance("Flint")
+        ..setTooltipExtended(TT_FLINT)
+        ..setDescription(TT_FLINT)
+        ..setLumberCost(3)
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(255)
+        ..setCooldownGroup("")
+        ..setScalingValue(0.50)
+
+@compiletime function createMushroom() returns ItemDefinition
+    return createBasicItem(ITEM_MUSHROOM)
+        ..setInterfaceIcon(MUSHROOM_ICON)
+        ..setModelUsed(MUSHROOM_MODEL)
+        ..setNameEnhance("Mushroom")
+        ..setTooltipExtended(TT_MUSHROOM)
+        ..setDescription(TT_MUSHROOM)
+        ..setLumberCost(2)
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(255)
+        ..setCooldownGroup("")
+        ..setScalingValue(0.50)
+
+@compiletime function createClayBall() returns ItemDefinition
+    return createBasicItem(ITEM_CLAY_BALL)
+        ..setInterfaceIcon(CLAY_ICON)
+        ..setModelUsed(CLAY_MODEL)
+        ..setNameEnhance("Clay Ball")
+        ..setTooltipExtended(TT_CLAY)
+        ..setDescription("A ball of clay that can be used for building")
+        ..setLumberCost(3)
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(255)
+        ..setCooldownGroup("")
+        ..setScalingValue(1.50)
+
+@compiletime function createElkHide() returns ItemDefinition
+    return createBasicItem(ITEM_ELK_HIDE)
+        ..setInterfaceIcon(ELK_HIDE_ICON)
+        ..setModelUsed(ELK_HIDE_MODEL)
+        ..setNameEnhance("Elk Hide")
+        ..setTooltipExtended(TT_ELK_HIDE)
+        ..setDescription(TT_ELK_HIDE)
+        ..setLumberCost(9)
+        ..setTintingColor1Red(180)
+        ..setTintingColor2Green(180)
+        ..setTintingColor3Blue(180)
+        ..setCooldownGroup("")
+        ..setScalingValue(0.90)
+
+@compiletime function createWolfHide() returns ItemDefinition
+    return createBasicItem(ITEM_JUNGLE_WOLF_HIDE)
+        ..setInterfaceIcon(WOLF_HIDE_ICON)
+        ..setModelUsed(WOLF_HIDE_MODEL)
+        ..setNameEnhance("Wolf Hide")
+        ..setTooltipExtended(TT_WOLF_HIDE)
+        ..setDescription(TT_WOLF_HIDE)
+        ..setLumberCost(15)
+        ..setTintingColor1Red(150)
+        ..setTintingColor2Green(190)
+        ..setTintingColor3Blue(140)
+        ..setCooldownGroup("")
+        ..setScalingValue(0.90)
+
+@compiletime function createBearHide() returns ItemDefinition
+    return createBasicItem(ITEM_JUNGLE_BEAR_HIDE)
+        ..setInterfaceIcon(BEAR_HIDE_ICON)
+        ..setModelUsed(BEAR_HIDE_MODEL)
+        ..setNameEnhance("Bear Hide")
+        ..setTooltipExtended(TT_BEAR_HIDE)
+        ..setDescription(TT_BEAR_HIDE)
+        ..setLumberCost(21)
+        ..setTintingColor1Red(150)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(150)
+        ..setCooldownGroup("")
+        ..setScalingValue(1.20)
+
+@compiletime function createBone() returns ItemDefinition
+    return createBasicItem(ITEM_BONE)
+        ..setInterfaceIcon(BONE_ICON)
+        ..setModelUsed(BONE_MODEL)
+        ..setNameEnhance("Bone")
+        ..setTooltipExtended(TT_BONE)
+        ..setDescription(TT_BONE)
+        ..setLumberCost(3)
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(255)
+        ..setAbilities("AIth") // +2 Damage
+        ..setScalingValue(1.00)
+
+@compiletime function createManaCrystal() returns ItemDefinition
+    return createBasicItem(ITEM_MANA_CRYSTAL)
+        ..setInterfaceIcon(MC_ICON)
+        ..setModelUsed(MC_MODEL)
+        ..setNameEnhance("Mana Crystal")
+        ..setTooltipExtended(TT_MC)
+        ..setDescription(TT_MC)
+        ..setLumberCost(5)
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(255)
+        ..setCooldownGroup("")
+        ..setScalingValue(0.55)
+
+@compiletime function createStone() returns ItemDefinition
+    return createPerishableItem(ITEM_STONE)
+        ..setInterfaceIcon(STONE_ICON)
+        ..setModelUsed(STONE_MODEL)
+        ..setNameEnhance("Stone")
+        ..setTooltipExtended(TT_STONE)
+        ..setDescription(TT_STONE)
+        ..setLumberCost(5)
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(255)
+        ..setCooldownGroup("")
+        ..setScalingValue(0.33)
+        ..setAbilities(ABIL_STONE.toRawCode())
+        ..setCooldownGroup(ABILITY_SPEAR.toRawCode())
+        ..setNumberofCharges(1)
+
+@compiletime function createMagic() returns ItemDefinition
+    return createPerishableItem(ITEM_MAGIC)
+        ..setInterfaceIcon(MAGIC_ICON)
+        ..setModelUsed(MAGIC_MODEL)
+        ..setNameEnhance("Magic")
+        ..setTooltipExtended(TT_MAGIC)
+        ..setDescription(TT_MAGIC)
+        ..setLumberCost(5)
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(255)
+        ..setCooldownGroup("")
+        ..setScalingValue(0.75)
+        ..setCooldownGroup("Asp6")
+        ..setAbilities(ABIL_MAGIC.toRawCode())
+        ..setNumberofCharges(1)
+
+@compiletime function createThistles() returns ItemDefinition
+    return createPerishableItem(ITEM_THISTLES)
+        ..setInterfaceIcon(THISTLES_ICON)
+        ..setModelUsed(THISTLES_MODEL)
+        ..setNameEnhance("Thistles")
+        ..setTooltipExtended(TT_THISTLES)
+        ..setDescription(TT_THISTLES)
+        ..setLumberCost(2)
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(255)
+        ..setCooldownGroup("")
+        ..setScalingValue(0.75)
+        ..setCooldownGroup("Asp6")
+        ..setNumberofCharges(3)
+
+@compiletime function createDarkThistles() returns ItemDefinition
+    return createPerishableItem(ITEM_DARK_THISTLES)
+        ..setInterfaceIcon(THISTLES_ICON)
+        ..setModelUsed(THISTLES_MODEL)
+        ..setNameEnhance("Dark Thistles")
+        ..setTooltipExtended(TT_DTHISTLES)
+        ..setDescription(TT_DTHISTLES)
+        ..setLumberCost(10)
+        ..setTintingColor1Red(0)
+        ..setTintingColor2Green(0)
+        ..setTintingColor3Blue(0)
+        ..setCooldownGroup("")
+        ..setScalingValue( 0.75)
+        ..setCooldownGroup("Asp6")
+        ..setNumberofCharges(3)

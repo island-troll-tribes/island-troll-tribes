@@ -1,0 +1,256 @@
+package CoatDefinition
+
+
+import Items
+import LocalItemObjEditing
+import AbilityObjEditing
+import ObjectIds
+import LocalObjectIDs
+import Orders
+import ObjectIdGenerator
+import ColorUtils
+import ToolTipsUtils
+import Assets
+import LocalAssets
+import ClosureEvents
+import InstantDummyCaster
+import ClosureForGroups
+import UnitExtensions
+import StringExtensions
+
+constant ABIL_STATS_BATTLE            = compiletime(ABIL_ID_GEN.next())
+constant ABIL_SPELL_RESISTANCE_BATTLE = compiletime(ABIL_ID_GEN.next())
+constant ABIL_CAST_BATTLE             = compiletime(ABIL_ID_GEN.next())
+constant ABIL_HARDENED_SCALE          = compiletime(ABIL_ID_GEN.next())
+
+constant IRON_ICON      = Icons.bTNImprovedMoonArmor
+constant BONE_ICON      = LocalIcons.bTNBoneCoat
+constant STEEL_ICON     = Icons.bTNAdvancedMoonArmor
+constant BATTLE_ICON    = Icons.bTNRobeOfTheMagi
+constant SCALE_ICON     = Icons.bTNNagaArmorUp3
+constant ELK_SKIN_ICON  = LocalIcons.bTNElkHideCoat
+constant WOLF_SKIN_ICON = LocalIcons.bTNWolfHideCoat
+constant BEAR_SKIN_ICON = LocalIcons.bTNBearHideCoat
+
+constant SKIN_MODEL  = LocalItems.skinCoat
+constant BONE_MODEL  = LocalItems.boneCoat
+constant ARMOR_MODEL = LocalItems.armor
+constant SCALE_MODEL = LocalItems.hydraCoat
+
+constant BATTLE_COOLDOWN = 75.
+constant ABILITY_RADIUS = 800.
+
+constant BATTLE_ARMOR_SPELL_RESISTANCE_FACTOR = 0.30
+constant SCALE_COAT_RETURN_DAMAGE_FACTOR = 0.35
+
+constant TT_BASIC  =  "\n\nBasic Coat|r".color(COLOR_ORANGE) + "\n\nAll basic Coat transmute into the same Bone/Iron/Steel Coat.".color(COLOR_YELLOW)
+constant TT_COMMON = "Increases Strenght by {0}, Intelligence by {1}, Armor by {2}"
+constant TT_SKIN   = "A coat made from animals pelt. " + TT_COMMON + " and provides warmth."
+constant TT_ARMOR  = "A coat reinforced with metals. " + TT_COMMON + " and provides warmth."
+
+constant ABIL_ELK    = commaList(ABILITY_STR_BONUS_2, ABILITY_INT_BONUS_1, ABILITY_ARMOR_BONUS_1)
+constant ABIL_WOLF   = commaList(ABILITY_STR_BONUS_3, ABILITY_INT_BONUS_2, ABILITY_ARMOR_BONUS_2)
+constant ABIL_BEAR   = commaList(ABILITY_STR_BONUS_4, ABILITY_INT_BONUS_3, ABILITY_ARMOR_BONUS_3)
+constant ABIL_BONE   = commaList(ABILITY_STR_BONUS_3, ABILITY_INT_BONUS_2, ABILITY_ARMOR_BONUS_2)
+constant ABIL_IRON   = commaList(ABILITY_STR_BONUS_4, ABILITY_INT_BONUS_3, ABILITY_ARMOR_BONUS_3)
+constant ABIL_STEEL  = commaList(ABILITY_STR_BONUS_8, ABILITY_INT_BONUS_6, ABILITY_ARMOR_BONUS_5, ABILITY_OMNICURE_ITEM)
+constant ABIL_BATTLE = commaList(ABIL_CAST_BATTLE, ABIL_STATS_BATTLE , ABILITY_ARMOR_BONUS_7, ABIL_SPELL_RESISTANCE_BATTLE)
+constant ABIL_SCALE  = commaList(ABIL_CAST_BATTLE, ABIL_STATS_BATTLE , ABILITY_ARMOR_BONUS_10, ABIL_HARDENED_SCALE)
+
+public constant TT_ELK_COAT = TT_SKIN.format(
+    getAbilityDataField(ABILITY_STR_BONUS_2   , "DataC1").color(COLOR_GREEN),
+    getAbilityDataField(ABILITY_INT_BONUS_1   , "DataB1").color(COLOR_GREEN),
+    getAbilityDataField(ABILITY_ARMOR_BONUS_1 , "DataA1").color(COLOR_GREEN)
+) + TT_BASIC
+
+public constant TT_WOLF_COAT = TT_SKIN.format(
+    getAbilityDataField(ABILITY_STR_BONUS_3   , "DataC1").color(COLOR_GREEN),
+    getAbilityDataField(ABILITY_INT_BONUS_2   , "DataB1").color(COLOR_GREEN),
+    getAbilityDataField(ABILITY_ARMOR_BONUS_2 , "DataA1").color(COLOR_GREEN)
+) + TT_BASIC
+
+public constant TT_BEAR_COAT = TT_SKIN.format(
+    getAbilityDataField(ABILITY_STR_BONUS_4   , "DataC1").color(COLOR_GREEN),
+    getAbilityDataField(ABILITY_INT_BONUS_3   , "DataB1").color(COLOR_GREEN),
+    getAbilityDataField(ABILITY_ARMOR_BONUS_3 , "DataA1").color(COLOR_GREEN)
+) + TT_BASIC
+
+public constant TT_BONE_COAT = TT_SKIN.format(
+    getAbilityDataField(ABILITY_STR_BONUS_3   , "DataC1").color(COLOR_GREEN),
+    getAbilityDataField(ABILITY_INT_BONUS_2   , "DataB1").color(COLOR_GREEN),
+    getAbilityDataField(ABILITY_ARMOR_BONUS_2 , "DataA1").color(COLOR_GREEN)
+)
+
+public constant TT_IRON_COAT = TT_SKIN.format(
+    getAbilityDataField(ABILITY_STR_BONUS_4   , "DataC1").color(COLOR_GREEN),
+    getAbilityDataField(ABILITY_INT_BONUS_3   , "DataB1").color(COLOR_GREEN),
+    getAbilityDataField(ABILITY_ARMOR_BONUS_3 , "DataA1").color(COLOR_GREEN)
+)
+
+public constant TT_STEEL_COAT = TT_SKIN.format(
+    getAbilityDataField(ABILITY_STR_BONUS_8   , "DataC1").color(COLOR_GREEN),
+    getAbilityDataField(ABILITY_INT_BONUS_6   , "DataB1").color(COLOR_GREEN),
+    getAbilityDataField(ABILITY_ARMOR_BONUS_5 , "DataA1").color(COLOR_GREEN)
+)
+
+public constant TT_BATTLE_ARMOR = ("A coat embedded with a protective mana layer. Increase all stats by {0}, Armor by {1} and provides {2} magic resistance. "
+                                    +"Can cast Anti-Magic on nearby allied heroes.")
+                                    .format(
+                                        4..toToolTipGreen(),
+                                        getAbilityDataField(ABILITY_ARMOR_BONUS_7 , "DataA1").color(COLOR_GREEN),
+                                        BATTLE_ARMOR_SPELL_RESISTANCE_FACTOR.toToolTipBlue()
+                                        )
+                                    + makeToolTipCooldown(BATTLE_COOLDOWN)
+
+public constant TT_SCALE_COAT = ("A coat embedded with the scale of the Great Hydra. Increase all stats by {0}, Armor by {1} and "
+                                    +"returns {2} melee damage received. ")
+                                    .format(
+                                        2..toToolTipGreen(),
+                                        getAbilityDataField(ABILITY_ARMOR_BONUS_10 , "DataA1").color(COLOR_GREEN),
+                                        SCALE_COAT_RETURN_DAMAGE_FACTOR.toToolTipPurple()
+                                        )
+                                    + makeToolTipCooldown(BATTLE_COOLDOWN)
+
+@compiletime function createCoatAbilities()
+    createItemBerserkCast(ABIL_CAST_BATTLE)
+        ..setName("Battle Armor Cast")
+        ..setCooldown(1, BATTLE_COOLDOWN)
+
+    new AbilityDefinitionCryptLordSpikedCarapace(ABIL_HARDENED_SCALE)
+        ..setDefenseBonus(1, 0)
+        ..setLevels(1)
+        ..setReceivedDamageFactor(1, SCALE_COAT_RETURN_DAMAGE_FACTOR)
+        ..setHeroAbility(false)
+        ..setItemAbility(true)
+        ..setName("Hydra HARDENED Scale")
+        ..setEditorSuffix("(Wurst)")
+
+    new AbilityDefinitionRunedBracers(ABIL_SPELL_RESISTANCE_BATTLE)
+        ..setDamageReduction(1, BATTLE_ARMOR_SPELL_RESISTANCE_FACTOR)
+        ..setName("Battle Armor Spell Damage Reduction")
+        ..setEditorSuffix("(Wurst)")
+
+    new StatBonusAbility(ABIL_STATS_BATTLE , "Battle Armor" , 4, 4, 4)
+
+
+@compiletime function createElkSkinCoat() returns ItemDefinition
+    return createBasicItem(ITEM_ELK_SKIN_COAT)
+        ..setInterfaceIcon(ELK_SKIN_ICON)
+        ..setModelUsed(SKIN_MODEL)
+        ..setNameEnhance("Elk Skin Coat")
+        ..setTooltipExtended(TT_ELK_COAT)
+        ..setDescription(TT_ELK_COAT)
+        ..setLumberCost(27)
+        ..setTintingColor1Red(136)
+        ..setTintingColor2Green(0)
+        ..setTintingColor3Blue(255)
+        ..setScalingValue(1.5)
+        ..setAbilities(ABIL_ELK)
+
+@compiletime function createWolfSkinCoat() returns ItemDefinition
+    return createBasicItem(ITEM_WOLF_SKIN_COAT)
+        ..setInterfaceIcon(WOLF_SKIN_ICON)
+        ..setModelUsed(SKIN_MODEL)
+        ..setNameEnhance("Wolf Skin Coat")
+        ..setTooltipExtended(TT_WOLF_COAT)
+        ..setDescription(TT_WOLF_COAT)
+        ..setLumberCost(49)
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(255)
+        ..setScalingValue(1.5)
+        ..setAbilities(ABIL_WOLF)
+
+@compiletime function createBearSkinCoat() returns ItemDefinition
+    return createBasicItem(ITEM_BEAR_SKIN_COAT)
+        ..setInterfaceIcon(BEAR_SKIN_ICON)
+        ..setModelUsed(SKIN_MODEL)
+        ..setNameEnhance("Bear Skin Coat")
+        ..setTooltipExtended(TT_BEAR_COAT)
+        ..setDescription(TT_BEAR_COAT)
+        ..setLumberCost(70)
+        ..setTintingColor1Red(139)
+        ..setTintingColor2Green(6)
+        ..setTintingColor3Blue(19)
+        ..setScalingValue(1.5)
+        ..setAbilities(ABIL_BEAR)
+
+@compiletime function createBoneCoat() returns ItemDefinition
+    return createBasicItem(ITEM_BONE_COAT)
+        ..setInterfaceIcon(BONE_ICON)
+        ..setModelUsed(BONE_MODEL)
+        ..setNameEnhance("Bone Coat")
+        ..setTooltipExtended(TT_BONE_COAT)
+        ..setDescription(TT_BONE_COAT)
+        ..setLumberCost(47)
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(255)
+        ..setScalingValue(1.5)
+        ..setAbilities(ABIL_BONE)
+
+@compiletime function createIronCoat() returns ItemDefinition
+    return createBasicItem(ITEM_IRON_COAT)
+        ..setInterfaceIcon(IRON_ICON)
+        ..setModelUsed(ARMOR_MODEL)
+        ..setNameEnhance("Iron Coat")
+        ..setTooltipExtended(TT_IRON_COAT)
+        ..setDescription(TT_IRON_COAT)
+        ..setLumberCost(63)
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(255)
+        ..setScalingValue(1.5)
+        ..setAbilities(ABIL_IRON)
+
+@compiletime function createSteelCoat() returns ItemDefinition
+    return createUsableItem(ITEM_STEEL_COAT)
+        ..setInterfaceIcon(STEEL_ICON)
+        ..setModelUsed(ARMOR_MODEL)
+        ..setNameEnhance("Steel Coat")
+        ..setTooltipExtended(TT_STEEL_COAT)
+        ..setDescription(TT_STEEL_COAT)
+        ..setLumberCost(68)
+        ..setTintingColor1Red(0)
+        ..setTintingColor2Green(119)
+        ..setTintingColor3Blue(255)
+        ..setScalingValue(1.5)
+        ..setAbilities(ABIL_STEEL)
+        ..setCooldownGroup("AIms")
+
+@compiletime function createBattleArmor() returns ItemDefinition
+    return createUsableItem(ITEM_BATTLE_ARMOR)
+        ..setInterfaceIcon(BATTLE_ICON)
+        ..setModelUsed(ARMOR_MODEL)
+        ..setNameEnhance("Battle Armor")
+        ..setTooltipExtended(TT_BATTLE_ARMOR)
+        ..setDescription(TT_BATTLE_ARMOR)
+        ..setLumberCost(66)
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(0)
+        ..setTintingColor3Blue(128)
+        ..setScalingValue(1.5)
+        ..setAbilities(ABIL_BATTLE)
+        ..setCooldownGroup("AIms")
+
+@compiletime function createScaleCoat() returns ItemDefinition
+    return createBasicItem(ITEM_HARDEN_SCALES)
+        ..setInterfaceIcon(SCALE_ICON)
+        ..setModelUsed(SCALE_MODEL)
+        ..setNameEnhance("Hydra Scale Coat")
+        ..setTooltipExtended(TT_SCALE_COAT)
+        ..setDescription(TT_SCALE_COAT)
+        ..setLumberCost(156)
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(255)
+        ..setScalingValue(1.5)
+        ..setAbilities(ABIL_BATTLE)
+
+init
+    EventListener.onCast(ABIL_CAST_BATTLE) (unit caster) ->
+        let caster = GetSpellAbilityUnit()
+
+        forUnitsInRange(caster.getPos(), ABILITY_RADIUS) u ->
+            if u.isTroll() and u.getOwner().isAllyOf(caster.getOwner())
+                InstantDummyCaster.castTarget(caster.getOwner(), ABILITY_ANTI_MAGIC, 1, Orders.antimagicshell, u)

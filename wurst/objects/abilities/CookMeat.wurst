@@ -1,10 +1,32 @@
 package CookMeat
+
 import RegisterEvents
 import LocalObjectIDs
 import ClosureForGroups
+import ChannelAbilityPreset
+import Assets
+import ToolTipsUtils
 
-public constant ABILITY_COOK_MEAT = 'A04B'
 @configurable let COOK_MEAT_RANGE = 600.0
+
+@compiletime function createCookMeat() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_COOK_MEAT, 1, true)
+        ..presetManaCost(lvl -> 0)
+        ..presetCooldown(lvl -> 1.0)
+        ..setHeroAbility(false)
+        ..setItemAbility(false)
+        ..setHotkeyNormal("Q")
+        ..setName("Cook Meat")
+        ..presetTooltipNormal(lvl -> makeToolTipNorm("Q", ("Cook Meat")))
+        ..presetTooltipNormalExtended(lvl -> "Cooks all the corpses around the fire into Cooked Meat")
+        ..setIconNormal(Icons.bTNMonsterLure)
+        ..setIconResearch(Icons.bTNMonsterLure)
+        ..setIconTurnOff(Icons.bTNMonsterLure)
+        ..setButtonPositionNormalX(0)
+        ..setButtonPositionNormalY(0)
+        ..setFollowThroughTime(1, 0)
+        ..setEditorSuffix("(Wurst)")
+
 
 init
     registerSpellEffectEvent(ABILITY_COOK_MEAT) ->

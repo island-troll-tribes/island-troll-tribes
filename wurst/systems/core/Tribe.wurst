@@ -15,6 +15,8 @@ import GameMode
 import TribeUtils
 import PlayerExtensions
 import StringExtensions
+import initlater TribeBoard
+import initlater Boards
 
 let listeners = CreateTrigger()
 
@@ -111,12 +113,19 @@ public class Tribe
         return defeated
 
     function makePlayersObservers()
-        getMembers().forEach(member -> member.makeObserver())
+        getMembers().forEach() member ->
+            member.makeObserver()
+
+            // Removing the tribeboard
+            TribeBoard.findForPlayer(member).board.display(member, false)
+
+            // Enabling the score board, maximizing it so the player doesn't miss it
+            scoreBoard.board..display(true)..maximize(member)
 
     function displayDefeated()
-        tribes.forEach() (Tribe t) ->
-            if t != this and t.getForce().containsPlayer(localPlayer)
-                printTimed("The " + this.name.color(SPECIAL_COLOR) + " tribe has been defeated", 7)
+        // Displaying which tribe has been defeated to every player & observer
+        // Might be redondant with the "You have won/been defeated" but I think that's passable
+        printTimed("The ".color(ENERGY_COLOR) + this.name.color(SPECIAL_COLOR) + " tribe has been defeated".color(ENERGY_COLOR), 7)
 
     function wasDefeated()
         makePlayersObservers()
@@ -137,6 +146,9 @@ public class Tribe
 
     function getMembers() returns LinkedList<player>
         return tribePlayers
+
+    function getNonMember() returns player
+        return players[12 + tribeId]
 
     function setSpawn(rect _spawn)
         spawn = _spawn

@@ -1,0 +1,64 @@
+package AcidBomb
+
+// Standard lib Imports:
+import Assets
+import AbilityObjEditing
+import ObjectIds
+import ObjectIdGenerator
+
+// Local lib Imports:
+import Items
+import LocalObjectIDs
+import ToolTipsUtils
+import LocalItemObjEditing
+
+constant ABIL  = compiletime(ABIL_ID_GEN.next())
+
+constant ARMOR_PENALTY = 8.
+constant COOLDOWN = 10.
+constant DURATION = 50.
+public constant TT_ACID_BOMB = "A bomb with nasty liquid from an unknown origin. Throw at a target to reduce their amor by {0}."
+                                .format(ARMOR_PENALTY.toToolTipRed())
+                                +makeToolTipDuration(DURATION, COOLDOWN)
+
+@compiletime function createAbil()
+    new AbilityDefinitionAlchemistAcidBomb(ABIL)
+    ..setName("Acid Bomb")
+    ..setCheckDependencies(false)
+    ..setPrimaryDamage(1, 0)
+    ..setSecondaryDamage(1, 0)
+    ..setArmorPenalty(1, ARMOR_PENALTY.toInt())
+    ..setMissileSpeed(900)
+    ..setTargetsAllowed(1, commaList(
+        TargetsAllowed.air,
+        TargetsAllowed.enemies,
+        TargetsAllowed.ground,
+        TargetsAllowed.neutral,
+        TargetsAllowed.organic
+        )
+    )
+    ..setHeroAbility(false)
+    ..setItemAbility(true)
+    ..setManaCost(1, 0)
+    ..setDurationHero(1, DURATION)
+    ..setDurationNormal(1, DURATION)
+    ..setLevels(1)
+    ..setCastRange(1, 600.)
+    ..setCooldown(1, COOLDOWN)
+    ..setEditorSuffix("(Wurst)")
+
+@compiletime function createAcidBomb() returns ItemDefinition
+    return createPerishableItem(ITEM_ACID_BOMB)
+        ..setInterfaceIcon(Icons.bTNAcidBomb)
+        ..setModelUsed(Buildings.barrelsUnit0)
+        ..setNameEnhance("Acid Bomb")
+        ..setTooltipExtended(TT_ACID_BOMB)
+        ..setDescription(TT_ACID_BOMB)
+        ..setLumberCost(40)
+        ..setTintingColor1Red(50)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(50)
+        ..setAbilities(commaList(ABIL))
+        ..setScalingValue(0.40)
+        ..setCooldownGroup(commaList(ABIL))
+        ..setStockReplenishInterval(180)

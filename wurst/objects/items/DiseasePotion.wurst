@@ -6,14 +6,58 @@ import HashMap
 import ClosureTimers
 import ClosureForGroups
 import HealingSystem
+import Assets
+import Items
+import LocalAssets
+import LocalItemObjEditing
+import ToolTipsUtils
+import ChannelAbilityPreset
+
+let ABIL = compiletime(ABIL_ID_GEN.next())
 
 public let DISEASE_HEALING_REDUCTION_FACTOR = 0.3
 let DURATION = 25.
 let DAMAGE_TICK_INTERVAL = 0.5
 let DAMAGE_PER_SECOND = 3
 let AOE = 200.
-let EFFECT_PATH = "Abilities\\Spells\\Undead\\PlagueCloud\\PlagueCloudCaster.mdl"
 HashMap<unit, DiseaseInstance> diseaseInstances = new HashMap<unit,DiseaseInstance>()
+
+public constant TT_DISEASE_POTION = "Biological warfare! Throw at an enemy to give him and all units in a small radius a disease. Dealing "
+                                    +"{0} damage per second. Reduces healing received from items and potions by {1}. Last {2} seconds."
+                                    .format(DAMAGE_PER_SECOND.toReal().toToolTipRed(),
+                                    DISEASE_HEALING_REDUCTION_FACTOR.toToolTipOrange(),
+                                    DURATION.toToolTipLightBlue())
+
+
+@compiletime function createDiseaseAbility() returns ChannelAbilityPreset
+    return createItemChannelCast(ABIL)
+        ..setCooldown(1, 0.3)
+        ..setFollowThroughTime(1, 0.1)
+        ..presetTargetTypes(Targettype.UNIT)
+        ..setOptions(1, 29)
+        ..setMissileArc(0.2)
+        ..setMissileArt(Abilities.bottleMissile)
+        ..setMissileHomingEnabled(true)
+        ..setMissileSpeed(750)
+        ..setDurationHero(1, DURATION)
+        ..setName("Disease Cloud Cast")
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.enemies
+            )
+        )
+
+@compiletime function createDiseasePotion() returns ItemDefinition
+    return createPerishableItem(ITEM_DISEASE_POTION)
+        ..setInterfaceIcon(Icons.bTNPotionGreen)
+        ..setModelUsed(LocalItems.potionGreen)
+        ..setNameEnhance("Disease Potion")
+        ..setTooltipExtended(TT_DISEASE_POTION)
+        ..setDescription(TT_DISEASE_POTION)
+        ..setLumberCost(40)
+        ..setAbilities(commaList(ABIL))
+        ..setScalingValue(0.70)
+        ..setCooldownGroup(commaList(ABIL))
+        ..setStockReplenishInterval(120)
 
 public function isUnitDiseased(unit u) returns bool
     return diseaseInstances.has(u)
@@ -21,6 +65,7 @@ public function isUnitDiseased(unit u) returns bool
 function onCastDisease()
     let caster = GetSpellAbilityUnit()
     let target = GetSpellTargetUnit()
+
     forUnitsInRange(target.getPos(), AOE) u ->
         if isValidTarget(caster.getOwner(), u)
             applyDisease(caster, u)
@@ -56,7 +101,9 @@ class DiseaseInstance
         this.owner = owner
         this.target = target
         this.t = CreateTimer()
-        this.fx = addEffect(EFFECT_PATH, target, "origin")
+        // I tried to add a buff instead of fx so the player has a tooltip to read to understand
+        // the spell effect, but for some reason the buff never applied, w/e
+        this.fx = addEffect(Abilities.plagueCloudCaster, target, "origin")
 
         t.doPeriodicallyTimed(DAMAGE_TICK_INTERVAL, DURATION) cb ->
             this.tickDamage()
@@ -67,8 +114,9 @@ class DiseaseInstance
         t.destr()
         fx.destr()
 
+
 init
-    registerSpellEffectEvent(ABILITY_DISEASE) ->
+    registerSpellEffectEvent(ABIL) ->
         onCastDisease()
 
     onUnitHealed() ->

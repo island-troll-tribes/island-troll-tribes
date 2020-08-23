@@ -1,22 +1,22 @@
 package ObserverBoard
 
-// Standard library imports:
+// Standard Library imports:
 import Dialog
-import ClosureTimers
 import HashMap
 import LinkedList
+import ClosureTimers
+import RegisterEvents
 
 // Third-party imports:
 import Lodash
 
 // Local imports:
-import Boards
-import DialogExtensions
 import GameMode
-import PlayerExtensions
-import RegisterEvents
-import StringUtils
 import Tribe
+import Boards
+import StringUtils
+import PlayerExtensions
+import DialogExtensions
 
 let OPTION_NAME_COLOR = colorA(180, 180, 180, 255)
 let OPTION_VALUE_COLOR = colorA(115, 152, 255, 255)
@@ -188,11 +188,15 @@ init
     GameMode.onModeSelectionFinish() ->
         let observers = getObservers()
         for observer in observers
-            let options = asList<ObserverBoardControl>(
-                new ObserverBoardVisionControl(observer),
-                new ObserverBoardZoomControl(observer)
-            )
-            new ObserverBoard(observer, options)
+            nullTimer() () ->
+                scoreBoard.board.display(observer, true)
+            // Desync occur when you toggle the observer board
+            // Replaced it by scoreboard
+            // let options = asList<ObserverBoardControl>(
+            //     new ObserverBoardVisionControl(observer),
+            //     new ObserverBoardZoomControl(observer)
+            // )
+            // new ObserverBoard(observer, options)
 
         destroy observers
 

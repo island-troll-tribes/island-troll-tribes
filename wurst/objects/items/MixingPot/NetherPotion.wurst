@@ -1,0 +1,54 @@
+package NetherPotion
+
+// Standard lib Imports:
+import Assets
+import ChannelAbilityPreset
+
+// Local lib Imports:
+import Items
+import LocalAssets
+import LocalItemObjEditing
+import LocalObjectIDs
+import ToolTipsUtils
+
+
+constant ABIL = compiletime(ABIL_ID_GEN.next())
+
+constant DURATION_HERO = 15.
+constant DURATION_NORMAL = 40.
+constant COOLDOWN = 20.
+public constant TT_NETHER_POTION = "Banish a target into the ethereal realm, target takes increased magical damage, "
+                                    +"cannot attack but can cast spells and use items."
+                                    +makeToolTipDuration(DURATION_HERO, DURATION_NORMAL, COOLDOWN)
+
+
+@compiletime function createAbil()
+    new AbilityDefinitionBloodMageBanish(ABIL)
+    ..setName("Nether Potion")
+    ..setCheckDependencies(false)
+    ..setMissileSpeed(800)
+    ..setHeroAbility(false)
+    ..setItemAbility(true)
+    ..setManaCost(1, 0)
+    ..setLevels(1)
+    ..setCastRange(1, 350.)
+    ..setDurationHero(1, DURATION_HERO)
+    ..setDurationNormal(1, DURATION_NORMAL)
+    ..setCooldown(1, COOLDOWN)
+    ..setMovementSpeedReduction(1, 0)
+    ..setMissileArc(0.15)
+    ..setMissileArt(Abilities.goldBottleMissile)
+    ..setEditorSuffix("(Wurst)")
+
+@compiletime function createNetherPotion() returns ItemDefinition
+    return createPerishableItem(ITEM_NETHER_POTION)
+        ..setInterfaceIcon(Icons.bTNPotionOfOmniscience)
+        ..setModelUsed(LocalItems.potionOmniscience)
+        ..setNameEnhance("Nether Potion")
+        ..setTooltipExtended(TT_NETHER_POTION)
+        ..setDescription(TT_NETHER_POTION)
+        ..setLumberCost(13)
+        ..setAbilities(commaList(ABIL))
+        ..setScalingValue(0.70)
+        ..setCooldownGroup(commaList(ABIL))
+        ..setStockReplenishInterval(120)

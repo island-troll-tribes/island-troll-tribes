@@ -1,0 +1,75 @@
+package Huts
+
+// Standard library imports:
+import Assets
+import ObjectIds
+import UnitObjEditing
+import ClosureEvents
+
+// Local imports:
+import LocalAssets
+import LocalObjectIDs
+
+public constant ABILITY_MUD_HUT_AURA = 'A0CK'
+
+@compiletime function createTentDefinition() returns BuildingDefinition
+    return new BuildingDefinition(UNIT_TENT, UnitIds.tent2)
+        ..setNormalAbilities(commaList(
+            'A003',
+            ABILITY_SHOP_SHARING,
+            ABILITY_SLEEP_INSIDE_TENT
+            )
+        )
+        ..setIconGameInterface(LocalIcons.bTNTent)
+        ..setHitPointsMaximumBase(160)
+        ..setSightRadiusNight(600)
+        ..setPathingMap(PathingTextures.simpleSolid4x4)
+        ..setPlacementRequires("unbuildable")
+        ..setSightRadiusDay(900)
+        ..setTooltipBasic("Set up Tent")
+        ..setGroundTexture("")
+
+
+function createHut(int unitId) returns BuildingDefinition
+    return new BuildingDefinition(unitId, UnitIds.spiritlodge)
+        ..setNormalAbilities(commaList(
+            LocalAbilityIds.inventoryBuilding,
+            ABILITY_SHOP_SHARING,
+            ABILITY_SLEEP_INSIDE_HUT
+            )
+        )
+        ..setBuildTime(10)
+        ..setHitPointsMaximumBase(250)
+        ..setPathingMap(PathingTextures.simpleSolid4x4)
+        ..setRequirements("")
+        ..setResearchesAvailable("")
+        ..setUnitsTrained("")
+        ..setGroundTexture("")
+        ..setUpgradesUsed("")
+        ..setSelectionScale(3.0)
+
+@compiletime function createTrollHut() returns BuildingDefinition
+    return createHut(UNIT_TROLL_HUT)
+        ..setScalingValue(0.8)
+        ..setName("Troll Hut")
+        ..setTooltipBasic("Build Troll hut")
+        ..setTooltipExtended("A little clay, some sticks, and some hides and you have a very nice home.")
+
+@compiletime function createTrollMudHut() returns BuildingDefinition
+    return createHut(UNIT_MUD_HUT)
+        ..setIconGameInterface(Icons.bTNGoldmine)
+        ..setTintingColorBlue(0)
+        ..setModelFile(Doodads.igloo)
+        ..setTintingColorGreen(75)
+        ..setName("Mud Hut")
+        ..setTintingColorRed(150)
+        ..setTooltipBasic("Build Mud hut")
+        ..setTooltipExtended("A hut made out of mud. Good for sleeping in")
+
+
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_CONSTRUCT_FINISH) () ->
+        let structure = GetConstructedStructure()
+        if structure.getTypeId() == UNIT_MUD_HUT
+            structure.addAbility(ABILITY_MUD_HUT_AURA)
+            structure.makeAbilityPermanent(ABILITY_MUD_HUT_AURA, true)

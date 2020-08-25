@@ -1,0 +1,108 @@
+package MidBossDefinition
+
+// Standard library imports:
+import Assets
+import UnitObjEditing
+import LinkedList
+
+// Local imports:
+import LocalObjectIDs
+import LocalAssets
+import ObjEditingUtils
+
+let midBossAbilities = asList(
+    AbilityIds.trueSight1,
+    AbilityIds.resistantSkin,
+    ABILITY_HARDENED_SKIN
+)
+
+// Add the given abilities to the standard list, rather than overwriting.
+function UnitDefinition.addAbilities(LinkedList<int> additional)
+    this.setNormalAbilities(commaList(midBossAbilities, additional))
+
+function createMidBoss(int unitId) returns UnitDefinition
+    return new UnitDefinition(unitId, UnitIds.diremammoth)
+        ..setNormalAbilities(commaList(midBossAbilities))
+        ..setAcquisitionRange(250.0)
+        ..setGoldBountyAwardedNumberofDice(0)
+        ..setGoldBountyAwardedBase(0)
+        ..setGoldBountyAwardedSidesperDie(0)
+        ..setCollisionSize(200.0)
+        ..setArmorType(ArmorType.Medium)
+        ..setLevel(30)
+        ..setUnitClassification("ancient")
+
+@compiletime function createJungleMammoth() returns UnitDefinition
+    return createMidBoss(UNIT_MAMMOTH)
+        ..setAttack1CooldownTime(1.75)
+        ..setAttack1DamageNumberofDice(2)
+        ..setAttack1DamageBase(50)
+        ..setHitPointsMaximumBase(2750)
+        ..setScalingValue(3.0)
+        ..setName("Jungle Mammoth")
+        ..setSelectionScale(6.0)
+        ..setSpeedBase(200)
+        ..setTooltipBasic("Hire THE MAMMOTH!?!")
+        ..setTooltipExtended("Super Heavy melee unit")
+        ..setTilesets("Z")
+
+@compiletime function createDiscoDuck() returns UnitDefinition
+    return createMidBoss(UNIT_DISCO_DUCK)
+        ..addAbilities(asList(ABILITY_BOSS_ENSNARE, AbilityIds.orbofLightning))
+        ..setAttack1CooldownTime(1.5)
+        ..setAttack1DamageNumberofDice(3)
+        ..setAttack1DamageBase(55)
+        ..setModelFile(LocalUnits.dodo)
+        ..setHitPointsMaximumBase(3000)
+        ..setScalingValue(7.0)
+        ..setName("Disc0-Duck")
+        ..setSelectionScale(5.0)
+        ..setTooltipBasic("Hire the Disco Duck? Its not worth it..")
+        ..setTooltipExtended("No Attack Animation FTL")
+
+@compiletime function createAncientHydra() returns UnitDefinition
+    return new UnitDefinition(UNIT_ANCIENT_HYDRA, UnitIds.ancienthydra)
+        ..addAbilities(asList('A09V'))
+        ..setAttack1AnimationBackswingPoint(0.0)
+        ..setSleeps(false)
+        ..setAttack1DamageBase(47)
+        ..setFoodCost(0)
+        ..setGoldCost(0)
+        ..setHitPointsMaximumBase(2200)
+        ..setLevel(30)
+        ..setSpeedMaximum(522)
+        ..setSpeedMinimum(120)
+        ..setScalingValue(2.5)
+        ..setSightRadiusNight(1400)
+        ..setAttack1Range(600)
+        ..setHitPointsRegenerationRate(0.35)
+        ..setManaRegeneration(4.0)
+        ..setSelectionScale(7.0)
+        ..setAttack1DamageSidesperDie(4)
+        ..setSpeedBase(250)
+        // Boss Shared attribute
+        ..setAcquisitionRange(250.0)
+        ..setGoldBountyAwardedNumberofDice(0)
+        ..setGoldBountyAwardedBase(0)
+        ..setGoldBountyAwardedSidesperDie(0)
+        ..setCollisionSize(200.0)
+        ..setArmorType(ArmorType.Medium)
+        ..setLevel(30)
+        ..setUnitClassification("ancient")
+
+@compiletime function createLesserHydra() returns UnitDefinition
+    return new UnitDefinition(UNIT_LESSER_HYDRA, UnitIds.hydra)
+        ..setNormalAbilities("")
+        ..setAttack1AttackType(AttackType.Chaos)
+        ..setGoldBountyAwardedNumberofDice(0)
+        ..setGoldBountyAwardedBase(0)
+        ..setGoldBountyAwardedSidesperDie(0)
+        ..setAttack1CooldownTime(1.3)
+        ..setArmorType(ArmorType.Medium)
+        ..setAttack1DamageBase(13)
+        ..setHitPointsMaximumBase(650)
+        ..setSpeedMaximum(522)
+        ..setSpeedMinimum(150)
+        ..setName("Lesser Hydra")
+        ..setHitPointsRegenerationRate(0.35)
+        ..setSpeedBase(350)

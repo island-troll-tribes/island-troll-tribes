@@ -4,7 +4,7 @@ package TrollBuildings
 import Assets
 import HashMap
 import LinkedList
-import UnitObjEditing
+import AbilityObjEditing
 
 // Local imports:
 import LocalObjectIDs
@@ -17,6 +17,11 @@ let abilities = asList(
     ABILITY_SHOP_SHARING,
     LocalAbilityIds.inventoryBuilding,
     ABILITY_DROP_ITEMS
+)
+
+let teleportBeaconAbilities = asList(
+    ABILITY_SHOP_SHARING,
+    ABILITY_INVENTORY_BUILDING_2_SLOT
 )
 
 // The indicators used for the publicly visible recipes.
@@ -113,6 +118,23 @@ function createBuilding(int newId, int oldId) returns BuildingDefinition
         ..setTooltipBasic("You can create a variety of magical items here.")
         ..setTooltipExtended("You can create a variety of magical items here.")
         ..setName("Workshop")
+
+@compiletime function createTeleportBeacon() returns BuildingDefinition
+    return new BuildingDefinition(UNIT_TELEPORTATION_BEACON, UnitIds.farm)
+        ..setNormalAbilities(commaList(teleportBeaconAbilities))
+        ..setIconGameInterface(Icons.bTNEnergyTower)
+        ..setModelFile(Buildings.elvenGuardTower1)
+        ..setBuildTime(10)
+        ..setFoodProduced(0)
+        ..setHitPointsMaximumBase(200)
+        ..setUnitSoundSet(Soundsets.voodooLounge)
+        ..setTooltipBasic("Teleports Units a short distance around it")
+        ..setTooltipExtended("Teleports Units a short distance around it")
+        ..setName("Teleportation Beacon")
+        ..setPathingMap(PathingTextures.simpleSolid4x4)
+        ..setGroundTexture("")
+        ..setUpgradesUsed("")
+
 
 init
     // Register the indicators to create neutral units on the island.

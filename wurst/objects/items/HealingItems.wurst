@@ -1,26 +1,119 @@
 package HealingItems
 
-import LocalObjectIDs
+// Standard Lib Imports:
 import HashMap
 import ClosureEvents
+import Assets
+import ObjectIdGenerator
+import ObjectIds
+import ItemObjEditing
+
+// Local Imports:
+import Items
 import HealingSystem
+import LocalObjectIDs
+import LocalAssets
+import ToolTipsUtils
+import HealingPotion
+
+constant ABIL_MEAT   = compiletime(ABIL_ID_GEN.next())
+constant ABIL_ACORN  = compiletime(ABIL_ID_GEN.next())
+constant ABIL_MACORN = compiletime(ABIL_ID_GEN.next())
+
+constant MEAT_ICON   = Icons.bTNMonsterLure
+constant ACORN_ICON  = Icons.bTNAcorn1
+constant MACORN_ICON = Icons.bTNDizzy
+
+constant MEAT_MODEL   = LocalItems.ham
+constant ACORN_MODEL  = Objects.thunderLizardEgg1
+constant MACORN_MODEL = Objects.crystalShard
+
+public constant MEAT_HEAL   = 50.
+public constant ACORN_HEAL  = 38.
+public constant MACORN_HEAL = 90.
+
+constant TT_MEAT   = "A well done steak. Instantly heals {0} health point on use.".format(MEAT_HEAL.toToolTipGreen())
+constant TT_ACORN  = "An acorn left by an animal. Restores {0} health point on use.".format(ACORN_HEAL.toToolTipGreen())
+constant TT_MACORN = "An acorn embedded by mana, left by an animal. Restores {0} health point on use.".format(MACORN_HEAL.toToolTipGreen())
+
+@compiletime function createHealingItems()
+    createItemBerserkCast(ABIL_MEAT)
+        ..setName("Cooked Meat Heal")
+        ..setCooldown(1, 0)
+        ..setArtCaster(Abilities.healTarget)
+
+    createItemBerserkCast(ABIL_ACORN)
+        ..setName("Acorn Heal")
+        ..setCooldown(1, 0)
+        ..setArtCaster(Abilities.healTarget)
+
+    createItemBerserkCast(ABIL_MACORN)
+        ..setName("Magic Acorn Heal")
+        ..setCooldown(1, 0)
+        ..setArtCaster(Abilities.healTarget)
+
+@compiletime function createCookedMeat() returns ItemDefinition
+    return createPerishableItem(ITEM_COOKED_MEAT)
+        ..setInterfaceIcon(MEAT_ICON)
+        ..setModelUsed(MEAT_MODEL)
+        ..setName("Cooked Meat")
+        ..setTooltipExtended(TT_MEAT)
+        ..setDescription(TT_MEAT)
+        ..setLumberCost(2)
+        ..setScalingValue(0.85)
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(160)
+        ..setTintingColor3Blue(125)
+        ..setAbilities(ABIL_MEAT.toRawCode())
+        ..setCooldownGroup(ABIL_MEAT.toRawCode())
+        ..setNumberofCharges(1)
+
+@compiletime function createAcorn() returns ItemDefinition
+    return createPerishableItem(ITEM_ACORN)
+        ..setInterfaceIcon(ACORN_ICON)
+        ..setModelUsed(ACORN_MODEL)
+        ..setName("Acorn")
+        ..setTooltipExtended(TT_ACORN)
+        ..setDescription(TT_ACORN)
+        ..setLumberCost(2)
+        ..setScalingValue(1)
+        ..setTintingColor1Red(128)
+        ..setTintingColor2Green(64)
+        ..setTintingColor3Blue(0)
+        ..setAbilities(ABIL_ACORN.toRawCode())
+        ..setCooldownGroup(ABIL_ACORN.toRawCode())
+        ..setNumberofCharges(1)
+
+@compiletime function createMagicAcorn() returns ItemDefinition
+    return createPerishableItem(ITEM_MAGIC_ACORN)
+        ..setInterfaceIcon(MACORN_ICON)
+        ..setModelUsed(MACORN_MODEL)
+        ..setName("Magic Acorn")
+        ..setTooltipExtended(TT_MACORN)
+        ..setDescription(TT_MACORN)
+        ..setLumberCost(10)
+        ..setScalingValue(0.65)
+        ..setTintingColor1Red(128)
+        ..setTintingColor2Green(64)
+        ..setTintingColor3Blue(0)
+        ..setAbilities(ABIL_MACORN.toRawCode())
+        ..setCooldownGroup(ABIL_MACORN.toRawCode())
+        ..setNumberofCharges(1)
 
 HashMap<int, real> itemSelfHealAmount = null
 HashMap<int, real> itemTargetedHealAmount = null
 
-let ABILITY_HEAL_POTION = 'A0DO'
-
 
 function initHealItemTable()
     itemSelfHealAmount = new HashMap<int,real>()
-    itemSelfHealAmount.put(ITEM_COOKED_MEAT, 50.)
+    itemSelfHealAmount.put(ITEM_COOKED_MEAT, MEAT_HEAL)
     itemSelfHealAmount.put(ITEM_SMOKED_MEAT, 40.)
-    itemSelfHealAmount.put(ITEM_ACORN, 38.)
-    itemSelfHealAmount.put(ITEM_MAGIC_ACORN, 90.)
+    itemSelfHealAmount.put(ITEM_ACORN, ACORN_HEAL)
+    itemSelfHealAmount.put(ITEM_MAGIC_ACORN, MACORN_HEAL)
 
 function initHealAbilityTable()
     itemTargetedHealAmount = new HashMap<int,real>()
-    itemTargetedHealAmount.put(ABILITY_HEAL_POTION, 65)
+    itemTargetedHealAmount.put(ABILITY_HEALING_POTION, POT_HEAL)
 
 
 function onSelfHealItem()
@@ -31,11 +124,12 @@ function onSelfHealItem()
         new HealingInstance(user, itemSelfHealAmount.get(itemId), HealingType.ITEM)
 
 function onSpellEffect()
+    let caster = GetSpellAbilityUnit()
     let target = GetSpellTargetUnit()
     let spellId = GetSpellAbilityId()
 
     if itemTargetedHealAmount.has(spellId)
-        new HealingInstance(target, itemTargetedHealAmount.get(spellId), HealingType.ITEM)
+        new HealingInstance(target, caster, itemTargetedHealAmount.get(spellId), HealingType.ITEM)
 
 init
     initHealItemTable()

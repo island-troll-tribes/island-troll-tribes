@@ -1,0 +1,320 @@
+package PlayerScore
+
+// Standard-library imports:
+import HashMap
+import LinkedList
+import ClosureTimers
+import Assets
+import ClosureEvents
+import DamageEvent
+
+// Local imports:
+import GameMode
+import Tribe
+import Boards
+import ColorUtils
+import GameConfig
+import LocalAssets
+import ChatCommands
+import HealingSystem
+import UnitExtensions
+import LocalObjectIDs
+import StringExtensions
+import PlayerExtensions
+
+// Only used on print score command
+public let animalName = new IterableMap<int, string>()
+..put(UNIT_ELK, "Elk" )
+..put(UNIT_HAWK, "Hawk" )
+..put(UNIT_SNAKE, "Snake" )
+..put(UNIT_JUNGLE_WOLF, "Jungle Wolf" )
+..put(UNIT_JUNGLE_BEAR, "Jungle Bear" )
+..put(UNIT_PANTHER, "Panther" )
+
+let UPDATE_PERIOD = 1.0
+let KILL_COLUMN_WIDTH = 0.055
+let STAT_LABEL_WIDTH = 0.09
+let NAME_LABEL_WIDTH = 0.13
+let LEVEL_LABEL_WIDTH = 0.05
+
+let iconPlayerInGame = "UI\\widgets\\escmenu\\nightelf\\nightelf-checkbox-depressed.blp"
+let iconPlayerDefeated = "UI\\widgets\\escmenu\\orc\\orc-checkbox-depressed.blp"
+
+ // A hashMap to link a player to its score
+public let playerScores = new IterableMap<player, PlayerScore>
+
+
+/**
+Store the player's animals kill count, damage dealt to troll, healing done to ally and gold acquired from selling stuff
+**/
+public class PlayerScore
+
+    static function createScoreMap()
+        let tribes = Tribe.getTribes()
+
+        for tribe in tribes
+            if gameConfig.isTribeOwnsBuildingsEnabled()
+                let tribePlayer = players[12 + tribe.getId()]
+                playerScores.put(tribePlayer, new PlayerScore(tribePlayer))
+            for member in tribe.getMembers()
+                playerScores.put(member, new PlayerScore(member))
+
+    static function initialize()
+        registerTribeInitializationFinishEvent(function createScoreMap)
+
+    IterableMap<LinkedList<int>, int> playerKill
+    int damageTroll = 0
+    int healTroll = 0
+    int meatEaten = 0
+    int goldAmount = 0
+    int previousGoldAmount = 0
+    player _player
+
+    construct(player _player)
+        this._player = _player
+        playerKill = new IterableMap<LinkedList<int>, int>()
+        ..put(asList(UNIT_ELK, UNIT_ELK_ADOLESCENT, UNIT_ADULT_ELK), 0)
+        ..put(asList(UNIT_HAWK, UNIT_HAWK_ADOLESCENT, UNIT_ALPHA_HAWK), 0)
+        ..put(asList(UNIT_SNAKE), 0)
+        ..put(asList(UNIT_JUNGLE_WOLF, UNIT_ADULT_JUNGLE_WOLF), 0)
+        ..put(asList(UNIT_JUNGLE_BEAR, UNIT_ADULT_JUNGLE_BEAR), 0)
+        ..put(asList(UNIT_PANTHER, UNIT_ELDER_PANTHER), 0)
+
+    /**
+        This function compute the gold acquired from selling an item
+    **/
+    function addGold()
+        // Get player gold amount before item sale
+        previousGoldAmount = this._player.getLumber()
+
+        // nulltimer neccessary here to get the gold before the sold event gold are added to the player
+        nullTimer() ->
+            // Substracting new gold amount with previous one to determine the gold acquired by selling the item
+            let goldAdded = this._player.getLumber() - previousGoldAmount
+            goldAmount += goldAdded
+
+            // Updating gold amount for tribe player
+            // TODO: Disable if -tb isn't on?
+            playerScores.get(this._player.getTribe().getNonMember()).goldAmount += goldAdded
+
+    /**
+        This function update the previousGoldAmount attribute when an item is bought
+    **/
+    function removeGold()
+        if gameConfig.isTeamGoldEnabled()
+            // Since every player share gold, update gold amount for every one
+            for member in this._player.getTribe().getMembers()
+                playerScores.get(member).previousGoldAmount = member.getLumber()
+        else
+            playerScores.get(this._player).previousGoldAmount = this._player.getLumber()
+
+    // TODO: Rework healing cloak so it uses healing event when healing
+    function addHeal(int heal)
+        healTroll += heal
+
+    function addDamage(int damage)
+        damageTroll += damage
+
+    function addKill(int unitId)
+        for unitType in playerKill
+            if unitType.has(unitId)
+                let killCount = playerKill.get(unitType)
+                playerKill.put(unitType, killCount + 1)
+
+    function addMeatEaten()
+        meatEaten++
+
+    function printScore()
+        var msg = ("Damage dealt (troll) : "  .color(GOLD_COLOR) + "{0}\n".color(SPECIAL_COLOR)+
+                   "Healing done (allies)  : ".color(GOLD_COLOR) + "{1}\n".color(SPECIAL_COLOR)+
+                   "Gold acquired : "         .color(GOLD_COLOR) + "{2}\n".color(SPECIAL_COLOR)+
+                   "Meat Eaten : "            .color(GOLD_COLOR) + "{3}\n".color(SPECIAL_COLOR)
+                   ).format(damageTroll.toString(), healTroll.toString(), goldAmount.toString(), meatEaten.toString())
+
+        for unitType in playerKill
+            msg += ("{0} kill count : ".color(GOLD_COLOR) + "{1}\n").format(animalName.get(unitType.getFirst()), playerKill.get(unitType).toString())
+        printTimedToPlayer(msg, 10, this._player)
+
+    function setMultiBoardRow(int row)
+        // Check is the row belong to a tribe
+        let isTribe = this._player.getId() > 11
+
+        // Red square icon is displayed next to the label in case tribe is defeated or player has left
+        if isTribe
+            scoreBoard
+            ..setNewItem(row, 0, this._player.getName(),  this._player.getTribe().isDefeated() ? iconPlayerDefeated : iconPlayerInGame)
+        else
+            scoreBoard
+            ..setNewItem(row, 0, this._player.getName(),  this._player.getTroll().isAlive() ? iconPlayerInGame : iconPlayerDefeated)
+            ..setNewItem(row, 1, this._player.getTroll().getLevel().toString(), this._player.getTrollIcon())
+
+        var column = 2
+        for key in playerKill
+            scoreBoard
+            ..setNewItem(row, column , playerKill.get(key).toString(), null)
+            column++
+        scoreBoard
+        ..setNewItem(row, 8  , this.damageTroll.toString() , null)
+        ..setNewItem(row, 9  , this.healTroll  .toString() , null)
+        ..setNewItem(row, 10 , this.goldAmount .toString() , null)
+        ..setNewItem(row, 11 , this.meatEaten  .toString() , null)
+
+// Using this to make a clear distinction between tribes on the board
+// Make the board look a bit better
+function createEmptyRow(int row)
+    scoreBoard.board.getItem(row, 0)..setStyle(false, false)..setWidth(NAME_LABEL_WIDTH)
+    scoreBoard.board.getItem(row, 1)..setStyle(false, false)..setWidth(LEVEL_LABEL_WIDTH)
+    scoreBoard.board.getItem(row, 2)..setStyle(false, false)..setWidth(KILL_COLUMN_WIDTH)
+    scoreBoard.board.getItem(row, 3)..setStyle(false, false)..setWidth(KILL_COLUMN_WIDTH)
+    scoreBoard.board.getItem(row, 4)..setStyle(false, false)..setWidth(KILL_COLUMN_WIDTH)
+    scoreBoard.board.getItem(row, 5)..setStyle(false, false)..setWidth(KILL_COLUMN_WIDTH)
+    scoreBoard.board.getItem(row, 6)..setStyle(false, false)..setWidth(KILL_COLUMN_WIDTH)
+    scoreBoard.board.getItem(row, 7)..setStyle(false, false)..setWidth(KILL_COLUMN_WIDTH)
+    scoreBoard.board.getItem(row, 8)..setStyle(false, false)..setWidth(STAT_LABEL_WIDTH)
+    scoreBoard.board.getItem(row, 9)..setStyle(false, false)..setWidth(STAT_LABEL_WIDTH)
+    scoreBoard.board.getItem(row, 10)..setStyle(false, false)..setWidth(STAT_LABEL_WIDTH)
+    scoreBoard.board.getItem(row, 11)..setStyle(false, false)..setWidth(STAT_LABEL_WIDTH)
+
+function updateBoard()
+    let title = getGameTimersBoardTitle()
+
+    scoreBoard.board.setTitle(title)
+    var i = 1
+    // Go through every playerscore and update the board row
+    for ps in playerScores
+        let isTribe = ps.getId() > 11
+        if isTribe
+            // Do not create an empty row prior to the first tribe row, I find the board clearer this way
+            if ps.getId() != 12
+                createEmptyRow(i)
+                i++
+            scoreBoard.board.getItem(i, 0)..setStyle(true, true)..setWidth(NAME_LABEL_WIDTH)..setValueColor(SPECIAL_COLOR.withAlpha(0))
+            // Hiding the level column, neccessary to maintain row formatting
+            scoreBoard.board.getItem(i, 1)..setStyle(false, false)..setWidth(LEVEL_LABEL_WIDTH)
+        else
+            scoreBoard.board.getItem(i, 0)..setStyle(true, true)..setWidth(NAME_LABEL_WIDTH)..setValueColor(ps.isIngame() ? GOLD_COLOR.withAlpha(0) : COLOR_GRAY.withAlpha(0))
+            scoreBoard.board.getItem(i, 1)..setStyle(true, true)..setWidth(LEVEL_LABEL_WIDTH)
+        scoreBoard.board.getItem(i, 2)..setStyle(true, false)..setWidth(KILL_COLUMN_WIDTH)
+        scoreBoard.board.getItem(i, 3)..setStyle(true, false)..setWidth(KILL_COLUMN_WIDTH)
+        scoreBoard.board.getItem(i, 4)..setStyle(true, false)..setWidth(KILL_COLUMN_WIDTH)
+        scoreBoard.board.getItem(i, 5)..setStyle(true, false)..setWidth(KILL_COLUMN_WIDTH)
+        scoreBoard.board.getItem(i, 6)..setStyle(true, false)..setWidth(KILL_COLUMN_WIDTH)
+        scoreBoard.board.getItem(i, 7)..setStyle(true, false)..setWidth(KILL_COLUMN_WIDTH)
+        scoreBoard.board.getItem(i, 8 )..setStyle(true, false)..setWidth(STAT_LABEL_WIDTH)..setValueColor(COLOR_RED   .withAlpha(0))
+        scoreBoard.board.getItem(i, 9 )..setStyle(true, false)..setWidth(STAT_LABEL_WIDTH)..setValueColor(COLOR_GREEN .withAlpha(0))
+        scoreBoard.board.getItem(i, 10)..setStyle(true, false)..setWidth(STAT_LABEL_WIDTH)..setValueColor(COLOR_YELLOW.withAlpha(0))
+        scoreBoard.board.getItem(i, 11)..setStyle(true, false)..setWidth(STAT_LABEL_WIDTH)..setValueColor(COLOR_ORANGE.withAlpha(0))
+        playerScores.get(ps).setMultiBoardRow(i)
+        i++
+
+function initBoard()
+    // Tribe player contained in playerScore, getting the number of tribe to create the empty rows
+    var rowCount = playerScores.size() + Tribe.getTribes().size()
+    // Trying to display a multiboard with 0 row result in wc3 crashing
+    if rowCount == 0
+        rowCount = 1
+    scoreBoard = new Board(rowCount, 12)
+
+    // Initializing first row
+    scoreBoard.board.getItem(0, 0  )..setStyle(true, false)..setWidth(NAME_LABEL_WIDTH  )..setValueColor(HIGHLIGHT_COLOR.withAlpha(0))
+    scoreBoard.board.getItem(0, 1  )..setStyle(true, false)..setWidth(LEVEL_LABEL_WIDTH )..setValueColor(HIGHLIGHT_COLOR.withAlpha(0))
+    scoreBoard.board.getItem(0, 2  )..setStyle(true, true )..setWidth(KILL_COLUMN_WIDTH )..setValueColor(HIGHLIGHT_COLOR.withAlpha(0))
+    scoreBoard.board.getItem(0, 3  )..setStyle(true, true )..setWidth(KILL_COLUMN_WIDTH )..setValueColor(HIGHLIGHT_COLOR.withAlpha(0))
+    scoreBoard.board.getItem(0, 4  )..setStyle(true, true )..setWidth(KILL_COLUMN_WIDTH )..setValueColor(HIGHLIGHT_COLOR.withAlpha(0))
+    scoreBoard.board.getItem(0, 5  )..setStyle(true, true )..setWidth(KILL_COLUMN_WIDTH )..setValueColor(HIGHLIGHT_COLOR.withAlpha(0))
+    scoreBoard.board.getItem(0, 6  )..setStyle(true, true )..setWidth(KILL_COLUMN_WIDTH )..setValueColor(HIGHLIGHT_COLOR.withAlpha(0))
+    scoreBoard.board.getItem(0, 7  )..setStyle(true, true )..setWidth(KILL_COLUMN_WIDTH )..setValueColor(HIGHLIGHT_COLOR.withAlpha(0))
+    scoreBoard.board.getItem(0, 8  )..setStyle(true, true )..setWidth(STAT_LABEL_WIDTH  )..setValueColor(COLOR_RED      .withAlpha(0))
+    scoreBoard.board.getItem(0, 9  )..setStyle(true, true )..setWidth(STAT_LABEL_WIDTH  )..setValueColor(COLOR_GREEN    .withAlpha(0))
+    scoreBoard.board.getItem(0, 10 )..setStyle(true, true )..setWidth(STAT_LABEL_WIDTH  )..setValueColor(COLOR_YELLOW   .withAlpha(0))
+    scoreBoard.board.getItem(0, 11 )..setStyle(true, true )..setWidth(STAT_LABEL_WIDTH  )..setValueColor(COLOR_ORANGE   .withAlpha(0))
+
+    scoreBoard.setNewItem(0, 0 , "PlayerName"    , null)
+    scoreBoard.setNewItem(0, 1 , "Level"         , null)
+    scoreBoard.setNewItem(0, 2 , "Elk"           , Icons.bTNStag)
+    scoreBoard.setNewItem(0, 3 , "Hawk"          , Icons.bTNWarEagle)
+    scoreBoard.setNewItem(0, 4 , "Snake"         , Icons.bTNWindSerpent)
+    scoreBoard.setNewItem(0, 5 , "Wolf"          , Icons.bTNTimberWolf)
+    scoreBoard.setNewItem(0, 6 , "Bear"          , Icons.bTNFrostBear)
+    scoreBoard.setNewItem(0, 7 , "Panther"       , LocalIcons.bTNPanther)
+    scoreBoard.setNewItem(0, 8 , "Damage Dealt"  , Icons.bTNCriticalStrike)
+    scoreBoard.setNewItem(0, 9 , "Healing Done"  , Icons.bTNHeal)
+    scoreBoard.setNewItem(0, 10, "Gold Acquired" , Icons.bTNMGExchange)
+    scoreBoard.setNewItem(0, 11, "Meat Eaten"    , Icons.bTNMonsterLure)
+    scoreBoard.board.display(false)
+
+    // Updating the board value every UPDATE_PERIOD second
+    // TODO: Instead of updating the board item every second, update it using updateItem method fro Board class
+    // This way we should be able to update the board item only when the value is updated
+    doPeriodically(UPDATE_PERIOD, cb -> updateBoard())
+
+
+init
+    PlayerScore.initialize()
+    GameMode.onModeSelectionFinish() ->
+        if gameConfig.isPlayerScoreEnabled()
+            initBoard()
+            // Register kill count if unit has been killed by a player
+            EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
+                let dead = GetDyingUnit()
+                let killerOwner = GetKillingUnit().getOwner()
+                if killerOwner != players[PLAYER_NEUTRAL_AGGRESSIVE]
+                    and killerOwner != players[PLAYER_NEUTRAL_PASSIVE]
+                    playerScores.get(killerOwner).addKill(dead.getTypeId())
+                    playerScores.get(killerOwner.getTribe().getNonMember()).addKill(dead.getTypeId())
+
+            // Register damage dealt amount if unit damaged is a troll
+            DamageEvent.addListener() () ->
+                let attackerOwner = DamageEvent.getSource().getOwner()
+                let target = DamageEvent.getTarget()
+                let dmgAmount = DamageEvent.getAmount()
+
+                if attackerOwner != players[PLAYER_NEUTRAL_AGGRESSIVE]
+                    and attackerOwner != players[PLAYER_NEUTRAL_PASSIVE]
+                    and target.getOwner().isEnemyOf(attackerOwner)
+                    and target.isTroll()
+                    and playerScores.has(attackerOwner)
+                    playerScores.get(attackerOwner).addDamage(dmgAmount.toInt())
+                    playerScores.get(attackerOwner.getTribe().getNonMember()).addDamage(dmgAmount.toInt())
+
+            // Register healing amount if player heals an ally
+            onUnitHealed() ->
+                let instance = getHealingInstance()
+                let caster = instance.getCaster()
+                let target = instance.getTarget()
+                let healerOwner = caster.getOwner()
+
+                if caster != target
+                    let healAmount = instance.getAmount()
+                    playerScores.get(healerOwner).addHeal(healAmount.toInt())
+                    playerScores.get(healerOwner.getTribe().getNonMember()).addHeal(healAmount.toInt())
+
+            // Register cooked meat eaten amount
+            EventListener.add(EVENT_PLAYER_UNIT_USE_ITEM) ->
+                let itm = GetManipulatedItem()
+                let itemId = itm.getTypeId()
+                let user = GetManipulatingUnit()
+                let owner = user.getOwner()
+
+                // Other unit apart from troll can eat, like pets
+                if (itemId == ITEM_COOKED_MEAT or itemId == ITEM_SMOKED_MEAT) and playerScores.has(owner)
+                    playerScores.get(owner).addMeatEaten()
+                    playerScores.get(owner.getTribe().getNonMember()).addMeatEaten()
+
+            // This event is triggered when a player BUY an item
+            EventListener.add(EVENT_PLAYER_UNIT_SELL_ITEM) ->
+                let owner = GetBuyingUnit().getOwner()
+
+                // TODO: Find a way to handle case where tribe ownership is enabled
+                // and player buy from a building
+                playerScores.get(owner).removeGold()
+
+            // Register gold acquired
+            EventListener.add(EVENT_PLAYER_UNIT_PAWN_ITEM) ->
+                let owner = GetTriggerUnit().getOwner()
+                playerScores.get(owner).addGold()
+
+            // Dunno if I should let player see their score during the game, but I'll let this
+            // here as trial, might be useful for debug, only display the triggered player score
+            registerCommandAll("score") (player triggerPlayer, LinkedList<string> arguments) ->
+                playerScores.get(triggerPlayer).printScore()

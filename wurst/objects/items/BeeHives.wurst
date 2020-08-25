@@ -1,0 +1,123 @@
+package BeeHives
+
+
+// Standard lib Imports:
+import Assets
+import ChannelAbilityPreset
+import ClosureTimers
+import Orders
+import GeometryUtils
+import TerrainUtils
+import DummyCaster
+import OnUnitEnterLeave
+
+// Local lib Imports:
+import ToolTipsUtils
+import Items
+import LocalItemObjEditing
+import LocalObjectIDs
+import LocalAssets
+
+let ABIL_BEE_FACTORY = compiletime(ABIL_ID_GEN.next())
+let ABIL_BEE_FACTORY_UBER = compiletime(ABIL_ID_GEN.next())
+
+let HIVE_SPAWN_INTERVAL = 10.0
+let LOCATION_ATTEMPTS = 20
+let HIVE_SPAWN_MIN_RADIUS = 0.
+let HIVE_SPAWN_MAX_RADIUS = 200.
+
+let BEE_HIVE_DURATION = 20.
+let BEE_HIVE_COOLDOWN = 60.
+let BEE_DURATION = 12.
+
+public constant TT_ESSENCE_BEES = "Create a primary hive releasing bees, if it is not killed, it spawns lesser hives around it, up to 3 hives over {0} seconds. Each hive behave like a normal bee hive."
+                            .format(BEE_HIVE_DURATION.toToolTipLightBlue())
+public constant TT_BEE_HIVE = "Creates a Bee Hive that releases bees to sting enemies. If the bee hive is destroyed, bees stop spawning."
+                        +" Each bee deal 1 magic damage and last for {0} seconds, the hive spawn 1 bee every seconds.".format(BEE_DURATION.toToolTipLightBlue())
+                        +makeToolTipDuration(BEE_HIVE_DURATION, BEE_HIVE_COOLDOWN)
+
+
+function createBasicBeeHiveAbility(int abilId) returns AbilityDefinitionTinkererSummonFactoryLevel0
+    return new AbilityDefinitionTinkererSummonFactoryLevel0(abilId)
+        ..setIconNormal(Icons.bTNSkink)
+        ..setCooldown(1, BEE_HIVE_COOLDOWN)
+        ..setManaCost(1, 0)
+        ..setSpawnUnitID(1, UNIT_BEE.toRawCode())
+        ..setSpawnInterval(1, 1)
+        ..setDurationHero(1, BEE_HIVE_DURATION)
+        ..setDurationNormal(1, BEE_HIVE_DURATION)
+        ..setLevels(1)
+        ..setHeroAbility(false)
+        ..setCastRange(1, 350)
+        ..setSpawnUnitDuration(1, BEE_DURATION)
+
+@compiletime function createBeeHiveAbility() returns AbilityDefinitionTinkererSummonFactoryLevel0
+    return createBasicBeeHiveAbility(ABIL_BEE_FACTORY)
+        ..setTooltipNormal(1, "Cultivate Bee Hive")
+        ..setTooltipNormalExtended(1, "Summons a bee hive that generates bees")
+        ..setFactoryUnitID(1, UNIT_BEE_HIVE.toRawCode())
+
+@compiletime function createHiveSpawnerAbility() returns AbilityDefinitionTinkererSummonFactoryLevel0
+    return createBasicBeeHiveAbility(ABIL_BEE_FACTORY_UBER)
+        ..setSpawnUnitDuration(1, 6)
+        ..setName("Uber Hive")
+        ..setTooltipNormal(1, "Cultivate Uber Hive")
+        ..setTooltipNormalExtended(1, "This is the uber hive")
+        ..setFactoryUnitID(1, UNIT_UBER_HIVE.toRawCode())
+
+@compiletime function createUberBeeHiveItem() returns ItemDefinition
+    return createPerishableItem(ITEM_ESSENCE_BEES)
+        ..setInterfaceIcon(LocalIcons.bTNBeeHive)
+        ..setModelUsed(Doodads.emptyCrates1)
+        ..setNameEnhance("Essence Of Bees")
+        ..setTooltipExtended(TT_ESSENCE_BEES)
+        ..setDescription(TT_ESSENCE_BEES)
+        ..setLumberCost(45)
+        ..setAbilities(commaList(ABIL_BEE_FACTORY_UBER))
+        ..setScalingValue(1)
+        ..setCooldownGroup(ABIL_BEE_FACTORY.toRawCode())
+        ..setStockReplenishInterval(1)
+
+@compiletime function createBeeHiveItem() returns ItemDefinition
+    return createPerishableItem(ITEM_BEE_HIVE)
+        ..setInterfaceIcon(Icons.bTNCrate)
+        ..setModelUsed(Doodads.emptyCrates2)
+        ..setNameEnhance("Bee Hive")
+        ..setTooltipExtended(TT_BEE_HIVE)
+        ..setDescription(TT_BEE_HIVE)
+        ..setLumberCost(45)
+        ..setAbilities(commaList(ABIL_BEE_FACTORY))
+        ..setScalingValue(1)
+        ..setCooldownGroup(ABIL_BEE_FACTORY.toRawCode())
+        ..setStockStartDelay(1500)
+
+
+function onEobEnter(unit hive)
+    let hivePos = hive.getPos()
+    let owner = hive.getOwner()
+    spawnChildHive(owner, hivePos)
+    doPeriodically(HIVE_SPAWN_INTERVAL) spawnerLoop ->
+        if hive.isAlive()
+            spawnChildHive(owner, hivePos)
+        else
+            destroy spawnerLoop
+
+function spawnChildHive(player owner, vec2 hivePos)
+    //Attempt multiple times to get a walkable pos
+    for i = 1 to LOCATION_ATTEMPTS
+        let randomAngle = randomAngle()
+        let randomDistance = GetRandomReal(HIVE_SPAWN_MIN_RADIUS, HIVE_SPAWN_MAX_RADIUS)
+        let spawnPos = hivePos.polarOffset(randomAngle, randomDistance)
+        if spawnPos.isTerrainWalkable()
+            new DummyCaster()
+                ..owner(owner)
+                ..origin(spawnPos)
+                ..castPoint(ABIL_BEE_FACTORY, 1, Orders.summonfactory, spawnPos)
+            break
+
+
+init
+    onEnter() ->
+        let maybeHive = getEnterLeaveUnit()
+        if maybeHive.getTypeId() == UNIT_UBER_HIVE
+            onEobEnter(maybeHive)

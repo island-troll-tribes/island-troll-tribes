@@ -1,0 +1,141 @@
+package Omnitower
+
+// Standard lib Imports:
+import Assets
+import ObjectIds
+import ClosureEvents
+import AbilityObjEditing
+import ObjectIdGenerator
+
+// Local Imports:
+import ItemExtensions
+import LocalObjectIDs
+import LocalAssets
+import ColorUtils
+import StringExtensions
+
+constant ABILITY_OMNI_ITEM_CAST_HERO     = compiletime(ABIL_ID_GEN.next())
+constant ABILITY_OMNI_ITEM_CAST_NON_HERO = compiletime(ABIL_ID_GEN.next())
+
+constant TT = "Causes the Omnitower to use the item in slot 1 on any {0} within 575 range.\n"
+constant ALLOWED_ITEMS = ("Can cast any charged items which can target units and following scrolls :"
+                        +"\nScroll Of Fire Ball, Entangling Root, Stone Armor, Tsunami").color(GOLD_COLOR)
+
+
+@compiletime function createOmniTowerDummyCastNonHero() returns AbilityDefinitionFaerieFirecreep
+    return new AbilityDefinitionFaerieFirecreep(ABILITY_OMNI_ITEM_CAST_NON_HERO)
+        ..setIconNormal(Icons.bTNStag)
+        ..setBuffs(1, "")
+        ..setButtonPositionNormalX(1)
+        ..setButtonPositionNormalY(1)
+        ..setCooldown(1, 3.0)
+        ..setManaCost(1, 0)
+        ..setDefenseReduction(1, 0)
+        ..setDurationNormal(1, 0.01)
+        ..setEditorSuffix("(Wurst)")
+        ..setDurationHero(1, 0.01)
+        ..setHotkeyNormal("S")
+        ..setName("Tower Item Dummy Cast Enemy")
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.nonhero,
+            TargetsAllowed.enemies,
+            TargetsAllowed.nonancient,
+            TargetsAllowed.organic
+            )
+        )
+        ..setCastRange(1, 575.0)
+        ..setTooltipNormal(1, "Enemy Targeting".color(GENERAL_COLOR))
+        ..setTooltipNormalExtended(1, TT.format("enemy non troll unit") + ALLOWED_ITEMS)
+        ..setIconTurnOff(Icons.bTNStag)
+        ..setButtonPositionTurnOffX(1)
+        ..setButtonPositionTurnOffY(1)
+        ..setHotkeyTurnOff("S")
+
+@compiletime function createOmniTowerDummyCastHero() returns AbilityDefinitionFaerieFirecreep
+    return new AbilityDefinitionFaerieFirecreep(ABILITY_OMNI_ITEM_CAST_HERO)
+        ..setIconNormal(LocalIcons.aTCTrack)
+        ..setBuffs(1, "")
+        ..setButtonPositionNormalY(1)
+        ..setCooldown(1, 3.0)
+        ..setManaCost(1, 0)
+        ..setDurationNormal(1, 0.01)
+        ..setEditorSuffix("(Wurst)")
+        ..setDurationHero(1, 0.01)
+        ..setHotkeyNormal("A")
+        ..setName("Troll Targeting")
+        ..setCastRange(1, 575.0)
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.hero,
+            TargetsAllowed.enemies,
+            TargetsAllowed.nonancient,
+            TargetsAllowed.organic
+            )
+        )
+        ..setTooltipNormal(1, "Troll Targeting".color(GENERAL_COLOR))
+        ..setTooltipNormalExtended(1, TT.format("enemy troll") + ALLOWED_ITEMS)
+        ..setIconTurnOff(LocalIcons.aTCTrack)
+        ..setButtonPositionTurnOffY(1)
+        ..setHotkeyTurnOff("A")
+
+@compiletime function createOmniTower() returns BuildingDefinition
+    return new BuildingDefinition(UNIT_OMNITOWER, UnitIds.farm)
+        ..setNormalAbilities(commaList(
+            ABILITY_INVENTORY_BUILDING_3_SLOT,
+            ABILITY_OMNI_ITEM_CAST_HERO,
+            ABILITY_OMNI_ITEM_CAST_NON_HERO,
+            ABILITY_SHOP_SHARING
+            )
+        )
+        ..setArmorSoundType(ArmorSoundType.Stone)
+        ..setIconGameInterface(Icons.bTNOrcTower)
+        ..setDefaultActiveAbility(ABILITY_OMNI_ITEM_CAST_HERO.toRawCode())
+        ..setBuildTime(15)
+        ..setAttack1CooldownTime(0.55)
+        ..setAttack1DamageNumberofDice(1)
+        ..setAttack1DamageBase(3)
+        ..setAttack1AnimationDamagePoint(0.3)
+        ..setModelFile(Buildings.watchTower)
+        ..setFoodProduced(0)
+        ..setHitPointsMaximumBase(150)
+        ..setAttack1ProjectileArc(0.15)
+        ..setAttack1ProjectileArt(Abilities.bristleBackMissile)
+        ..setAttack1ProjectileSpeed(1200)
+        ..setName("Omnitower")
+        ..setAttack1AttackType(AttackType.Pierce)
+        ..setAttack1AnimationBackswingPoint(0.3)
+        ..setAcquisitionRange(600.0)
+        ..setAttack1Range(600)
+        ..setAttack1RangeMotionBuffer(250.0)
+        ..setAttack1DamageSidesperDie(4)
+        ..setAttack1MaximumNumberofTargets(1)
+        ..setAttacksEnabled(1)
+        ..setAttack1WeaponType(WeaponType.Missile)
+        ..setPathingMap(PathingTextures.simpleSolid4x4)
+        ..setGroundTexture("")
+        ..setUpgradesUsed("")
+        ..setAttack1TargetsAllowed(commaList(
+            TargetsAllowed.ground,
+            TargetsAllowed.structure,
+            TargetsAllowed.debris,
+            TargetsAllowed.air,
+            TargetsAllowed.item_t,
+            TargetsAllowed.ward
+            )
+        )
+
+function castSlotOne()
+    let tower = GetTriggerUnit()
+    let target = GetSpellTargetUnit()
+    tower.useItemTarget(tower.itemInSlot(0), target)
+
+
+init
+    EventListener.add(EVENT_PLAYER_UNIT_PICKUP_ITEM) () ->
+        let theItem = GetManipulatedItem()
+        let theUnit = GetManipulatingUnit()
+        // Scroll allowed are : FireBall, Root, Stone Armor, Tsunami
+        if  theUnit.getTypeId() == UNIT_OMNITOWER and theItem.getType() != ITEM_TYPE_CHARGED
+            theUnit.removeItem(theItem)
+
+    registerSpellEffectEvent(ABILITY_OMNI_ITEM_CAST_HERO, function castSlotOne)
+    registerSpellEffectEvent(ABILITY_OMNI_ITEM_CAST_NON_HERO, function castSlotOne)

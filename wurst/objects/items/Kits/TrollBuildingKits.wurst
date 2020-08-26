@@ -14,6 +14,7 @@ import ObjectIds
 constant ABIL_ARMORY       = compiletime(ABIL_ID_GEN.next())
 constant ABIL_ENSNARE_TRAP = compiletime(ABIL_ID_GEN.next())
 constant ABIL_FIRE         = compiletime(ABIL_ID_GEN.next())
+constant ABIL_MAGE_FIRE    = compiletime(ABIL_ID_GEN.next())
 constant ABIL_TENT         = compiletime(ABIL_ID_GEN.next())
 constant ABIL_TROLL_HUT    = compiletime(ABIL_ID_GEN.next())
 constant ABIL_SMOKEHOUSE   = compiletime(ABIL_ID_GEN.next())
@@ -30,48 +31,10 @@ constant ABIL_HATCHERY     = compiletime(ABIL_ID_GEN.next())
 constant ABIL_MAGIC_SEED   = compiletime(ABIL_ID_GEN.next())
 constant ABIL_FORGE        = compiletime(ABIL_ID_GEN.next())
 
-
-constant ICON_ARMORY       = LocalIcons.bTNArmory
-constant ICON_ENSNARE_TRAP = Icons.bTNCOP
-constant ICON_FIRE         = Icons.bTNFire
-constant ICON_TENT         = LocalIcons.bTNTent
-constant ICON_TROLL_HUT    = Icons.bTNSpiritLodge
-constant ICON_SMOKEHOUSE   = Icons.bTNRockTower
-constant ICON_STORAGE_HUT  = LocalIcons.bTNForestTrollHut1
-constant ICON_SPIRIT_WARD  = Icons.bTNAbsorbMagic
-constant ICON_MUD_HUT      = Icons.bTNGoldmine
-constant ICON_TOWER        = Icons.bTNOrcTower
-constant ICON_POT          = Icons.bTNSacrificialPit
-constant ICON_TANNERY      = Icons.bTNPigFarm
-constant ICON_WORKSHOP     = Icons.bTNTrollBurrow
-constant ICON_TP_BEACON    = Icons.bTNEnergyTower
-constant ICON_WDH          = Icons.bTNVoodooLounge
-constant ICON_HATCHERY     = Icons.bTNSnowOwl
-constant ICON_MAGIC_SEED   = Icons.bTNRoot
-constant ICON_FORGE        = LocalIcons.bTNForge
-
-constant MODEL_ARMORY       = Doodads.barricade0
-constant MODEL_ENSNARE_TRAP = Doodads.junkPile0
-constant MODEL_FIRE         = Doodads.firePitTrashed
-constant MODEL_TENT         = Doodads.emptyCrates0
-constant MODEL_TROLL_HUT    = Doodads.crates1
-constant MODEL_SMOKEHOUSE   = Doodads.barricade0
-constant MODEL_STORAGE_HUT  = Doodads.treasurePile0
-constant MODEL_SPIRIT_WARD  = Objects.humanCaptureFlag
-constant MODEL_MUD_HUT      = Doodads.crates0
-constant MODEL_TOWER        = Doodads.barricade0
-constant MODEL_POT          = Doodads.barricade1
-constant MODEL_TANNERY      = Buildings.barrelsUnit
-constant MODEL_WORKSHOP     = Doodads.barricade1
-constant MODEL_TP_BEACON    = Doodads.barricade0
-constant MODEL_WDH          = Units.tNTBarrel
-constant MODEL_HATCHERY     = Doodads.barricade1
-constant MODEL_MAGIC_SEED   = Objects.crystalShard
-constant MODEL_FORGE        = Doodads.barricade0
-
 constant TT_ARMORY       = "Creates a Armory at target location. Armory can craft advanced weapons and armors."
 constant TT_ENSNARE_TRAP = "Creates a defensive Ensnare Trap at target location."
 constant TT_FIRE         = "Creates a Camp Fire at a target location."
+constant TT_MAGE_FIRE    = "Creates a Mage Fire at a target location."
 constant TT_TENT         = "Creates a Tent at target location. Can use it to sleep."
 constant TT_TROLL_HUT    = "Creates a Troll Hut at target location. Can use it to sleep."
 constant TT_SMOKEHOUSE   = "Creates a Smoke House at target location. Can use it to sleep."
@@ -96,126 +59,133 @@ function createKitAbility(int abilId) returns AbilityDefinitionBuildTinyCastle
 
 @compiletime function createArmoryAbility() returns AbilityDefinitionBuildTinyCastle
     return createKitAbility(ABIL_ARMORY)
-        ..setIconNormal(ICON_ARMORY)
+        ..setIconNormal(LocalIcons.bTNArmory)
         ..setName("Build Armory")
         ..setDurationNormal(1, 10.0)
         ..setUnitCreatedperplayerrace(1, commaList(UNIT_ARMORY))
 
 @compiletime function createEnsnareTrapAbility() returns AbilityDefinitionBuildTinyCastle
     return createKitAbility(ABIL_ENSNARE_TRAP)
-        ..setIconNormal(ICON_ENSNARE_TRAP)
+        ..setIconNormal(Icons.bTNCOP)
         ..setName("Build Ensnare Trap")
         ..setDurationNormal(1, 10.0)
         ..setUnitCreatedperplayerrace(1, commaList(UNIT_ENSNARE_TRAP))
 
 @compiletime function createCampFireAbility() returns AbilityDefinitionBuildTinyCastle
     return createKitAbility(ABIL_FIRE)
-        ..setIconNormal(ICON_FIRE)
+        ..setIconNormal(Icons.bTNFire)
         ..setName("Build Camp Fire")
         ..setDurationNormal(1, 7.0)
         ..setUnitCreatedperplayerrace(1, commaList(UNIT_FIRE))
 
+@compiletime function createMageFireAbility() returns AbilityDefinitionBuildTinyCastle
+    return createKitAbility(ABIL_MAGE_FIRE)
+        ..setIconNormal(Icons.bTNFire)
+        ..setName("Build Mage Fire")
+        ..setDurationNormal(1, 7.0)
+        ..setUnitCreatedperplayerrace(1, commaList(UNIT_MAGE_FIRE))
+
 @compiletime function createTentAbility() returns AbilityDefinitionBuildTinyCastle
     return createKitAbility(ABIL_TENT)
-        ..setIconNormal(ICON_TENT)
+        ..setIconNormal(LocalIcons.bTNTent)
         ..setName("Build Tent")
         ..setDurationNormal(1, 7.0)
         ..setUnitCreatedperplayerrace(1,  commaList(UNIT_TENT))
 
 @compiletime function createTrollHutAbility() returns AbilityDefinitionBuildTinyCastle
     return createKitAbility(ABIL_TROLL_HUT)
-        ..setIconNormal(ICON_TROLL_HUT)
+        ..setIconNormal(Icons.bTNSpiritLodge)
         ..setName("Build Troll Hut")
         ..setDurationNormal(1, 10.0)
         ..setUnitCreatedperplayerrace(1,  commaList(UNIT_TROLL_HUT))
 
 @compiletime function createSmokeHouseAbility() returns AbilityDefinitionBuildTinyCastle
     return createKitAbility(ABIL_SMOKEHOUSE)
-        ..setIconNormal(ICON_SMOKEHOUSE)
+        ..setIconNormal(Icons.bTNRockTower)
         ..setName("Build Smoke House")
         ..setDurationNormal(1, 8.0)
         ..setUnitCreatedperplayerrace(1, commaList(UNIT_SMOKE_HOUSE))
 
 @compiletime function createStorageHutAbility() returns AbilityDefinitionBuildTinyCastle
     return createKitAbility(ABIL_STORAGE_HUT)
-        ..setIconNormal(ICON_STORAGE_HUT)
+        ..setIconNormal(LocalIcons.bTNForestTrollHut1)
         ..setName("Build Storage Hut")
         ..setDurationNormal(1, 10.0)
         ..setUnitCreatedperplayerrace(1,  commaList(UNIT_STORAGE_HUT))
 
 @compiletime function createSpiritWardAbility() returns AbilityDefinitionBuildTinyCastle
     return createKitAbility(ABIL_SPIRIT_WARD)
-        ..setIconNormal(ICON_SPIRIT_WARD)
+        ..setIconNormal(Icons.bTNAbsorbMagic)
         ..setName("Build Spirit Ward")
         ..setDurationNormal(1, 30.0)
         ..setUnitCreatedperplayerrace(1, commaList(UNIT_SPIRIT_WARD))
 
 @compiletime function createMudHutAbility() returns AbilityDefinitionBuildTinyCastle
     return createKitAbility(ABIL_MUD_HUT)
-        ..setIconNormal(ICON_MUD_HUT)
+        ..setIconNormal(Icons.bTNGoldmine)
         ..setName("Build Mud Hut")
         ..setDurationNormal(1, 10.0)
         ..setUnitCreatedperplayerrace(1, commaList(UNIT_MUD_HUT))
 
 @compiletime function createOmniTowerAbility() returns AbilityDefinitionBuildTinyCastle
     return createKitAbility(ABIL_TOWER)
-        ..setIconNormal(ICON_TOWER)
+        ..setIconNormal(Icons.bTNOrcTower)
         ..setName("Build Omnidefender")
         ..setDurationNormal(1, 10.0)
         ..setUnitCreatedperplayerrace(1, commaList(UNIT_OMNITOWER))
 
 @compiletime function createPotAbility() returns AbilityDefinitionBuildTinyCastle
     return createKitAbility(ABIL_POT)
-        ..setIconNormal(ICON_POT)
+        ..setIconNormal(Icons.bTNSacrificialPit)
         ..setName("Build Mixing Pot")
         ..setDurationNormal(1, 10.0)
         ..setUnitCreatedperplayerrace(1, commaList(UNIT_POT))
 
 @compiletime function createTanneryAbility() returns AbilityDefinitionBuildTinyCastle
     return createKitAbility(ABIL_TANNERY)
-        ..setIconNormal(ICON_TANNERY)
+        ..setIconNormal(Icons.bTNPigFarm)
         ..setName("Build Tannery")
         ..setDurationNormal(1, 10.0)
         ..setUnitCreatedperplayerrace(1, commaList(UNIT_TANNERY))
 
 @compiletime function createWorkshopAbility() returns AbilityDefinitionBuildTinyCastle
     return createKitAbility(ABIL_WORKSHOP)
-        ..setIconNormal(ICON_WORKSHOP)
+        ..setIconNormal(Icons.bTNTrollBurrow)
         ..setName("Build Workshop")
         ..setDurationNormal(1, 13.0)
         ..setUnitCreatedperplayerrace(1, commaList(UNIT_WORKSHOP))
 
 @compiletime function createTeleportBeaconAbility() returns AbilityDefinitionBuildTinyCastle
     return createKitAbility(ABIL_TP_BEACON)
-        ..setIconNormal(ICON_TP_BEACON)
+        ..setIconNormal(Icons.bTNEnergyTower)
         ..setName("Build Teleport Beacon")
         ..setDurationNormal(1, 10.0)
         ..setUnitCreatedperplayerrace(1, commaList(UNIT_TELEPORTATION_BEACON))
 
 @compiletime function createWitchDoctorsHutAbility() returns AbilityDefinitionBuildTinyCastle
     return createKitAbility(ABIL_WDH)
-        ..setIconNormal(ICON_WDH)
+        ..setIconNormal(Icons.bTNVoodooLounge)
         ..setName("Build Witch Doctor's Hut")
         ..setDurationNormal(1, 10.0)
         ..setUnitCreatedperplayerrace(1, commaList(UNIT_WITCH_DOCTORS_HUT))
 
 @compiletime function createHatcheryAbility() returns AbilityDefinitionBuildTinyCastle
     return createKitAbility(ABIL_HATCHERY)
-        ..setIconNormal(ICON_HATCHERY)
+        ..setIconNormal(Icons.bTNSnowOwl)
         ..setName("Build Hatchery")
         ..setDurationNormal(1, 10.0)
         ..setUnitCreatedperplayerrace(1, commaList(UNIT_HATCHERY))
 
 @compiletime function createMagicSeedAbility() returns AbilityDefinitionBuildTinyCastle
     return createKitAbility(ABIL_MAGIC_SEED)
-        ..setIconNormal(ICON_MAGIC_SEED)
+        ..setIconNormal(Icons.bTNRoot)
         ..setName("Build Magic Seed")
         ..setDurationNormal(1, 5.0)
         ..setUnitCreatedperplayerrace(1,  commaList(UNIT_BUILDING_TREE))
 
 @compiletime function createForgeAbility() returns AbilityDefinitionBuildTinyCastle
     return createKitAbility(ABIL_FORGE)
-        ..setIconNormal(ICON_FORGE)
+        ..setIconNormal(LocalIcons.bTNForge)
         ..setName("Build Forge")
         ..setDurationNormal(1, 10.0)
         ..setUnitCreatedperplayerrace(1,  commaList(UNIT_FORGE))
@@ -233,8 +203,8 @@ function createKit(int itemId) returns ItemDefinition
 
 @compiletime function createArmoryKit() returns ItemDefinition
     return createKit(ITEM_ARMORY_KIT)
-    ..setInterfaceIcon(ICON_ARMORY)
-    ..setModelUsed(MODEL_ARMORY)
+    ..setInterfaceIcon(LocalIcons.bTNArmory)
+    ..setModelUsed(Doodads.barricade0)
     ..setNameEnhance("Armory Kit")
     ..setDescription("Build a Armory Kit")
     ..setTooltipExtended(TT_ARMORY)
@@ -245,8 +215,8 @@ function createKit(int itemId) returns ItemDefinition
 
 @compiletime function createEnsnareTrapKit() returns ItemDefinition
     return createKit(ITEM_ENSNARE_TRAP_KIT)
-    ..setInterfaceIcon(ICON_ENSNARE_TRAP)
-    ..setModelUsed(MODEL_ENSNARE_TRAP)
+    ..setInterfaceIcon(Icons.bTNCOP)
+    ..setModelUsed(Doodads.junkPile0)
     ..setNameEnhance("Ensnare Trap Kit")
     ..setDescription("Build a Ensnare Trap Kit")
     ..setTooltipExtended(TT_ENSNARE_TRAP)
@@ -257,8 +227,8 @@ function createKit(int itemId) returns ItemDefinition
 
 @compiletime function createFireKit() returns ItemDefinition
     return createKit(ITEM_FIRE_KIT)
-    ..setInterfaceIcon(ICON_FIRE)
-    ..setModelUsed(MODEL_FIRE)
+    ..setInterfaceIcon(Icons.bTNFire)
+    ..setModelUsed(Doodads.firePitTrashed)
     ..setNameEnhance("Camp Fire Kit")
     ..setDescription("Build a Camp Fire Kit")
     ..setTooltipExtended(TT_FIRE)
@@ -267,10 +237,23 @@ function createKit(int itemId) returns ItemDefinition
     ..setScalingValue(1.0)
     ..setStockReplenishInterval(30)
 
+@compiletime function createMageFireKit() returns ItemDefinition
+    return createKit(ITEM_MAGE_FIRE_KIT)
+    ..setInterfaceIcon(Icons.bTNFire)
+    ..setModelUsed(Doodads.firePitTrashed)
+    ..setNameEnhance("Mage Fire Kit")
+    ..setDescription("Build a Mage Fire Kit")
+    ..setTooltipExtended(TT_MAGE_FIRE)
+    ..setLumberCost(10)
+    ..setAbilities(commaList(ABIL_MAGE_FIRE))
+    ..setScalingValue(1.0)
+    ..setStockReplenishInterval(30)
+    ..setTintingColor2Green(100)
+
 @compiletime function createTentKit() returns ItemDefinition
     return createKit(ITEM_TENT_KIT)
-    ..setInterfaceIcon(ICON_TENT)
-    ..setModelUsed(MODEL_TENT)
+    ..setInterfaceIcon(LocalIcons.bTNTent)
+    ..setModelUsed(Doodads.emptyCrates0)
     ..setNameEnhance("Tent Kit")
     ..setDescription("Build a Tent Kit")
     ..setTooltipExtended(TT_TENT)
@@ -281,8 +264,8 @@ function createKit(int itemId) returns ItemDefinition
 
 @compiletime function createTrollHutKit() returns ItemDefinition
     return createKit(ITEM_TROLL_HUT_KIT)
-    ..setInterfaceIcon(ICON_TROLL_HUT)
-    ..setModelUsed(MODEL_TROLL_HUT)
+    ..setInterfaceIcon(Icons.bTNSpiritLodge)
+    ..setModelUsed(Doodads.crates1)
     ..setNameEnhance("Troll Hut Kit")
     ..setDescription("Build a Troll Hut Kit")
     ..setTooltipExtended(TT_TROLL_HUT)
@@ -293,8 +276,8 @@ function createKit(int itemId) returns ItemDefinition
 
 @compiletime function createSmokeHouseKit() returns ItemDefinition
     return createKit(ITEM_SMOKE_HOUSE_KIT)
-    ..setInterfaceIcon(ICON_SMOKEHOUSE)
-    ..setModelUsed(MODEL_SMOKEHOUSE)
+    ..setInterfaceIcon(Icons.bTNRockTower)
+    ..setModelUsed(Doodads.barricade0)
     ..setNameEnhance("Smoke House Kit")
     ..setDescription("Build a Smoke House Kit")
     ..setTooltipExtended(TT_SMOKEHOUSE)
@@ -305,8 +288,8 @@ function createKit(int itemId) returns ItemDefinition
 
 @compiletime function createStorageHutKit() returns ItemDefinition
     return createKit(ITEM_STORAGE_HUT_KIT)
-    ..setInterfaceIcon(ICON_STORAGE_HUT)
-    ..setModelUsed(MODEL_STORAGE_HUT)
+    ..setInterfaceIcon(LocalIcons.bTNForestTrollHut1)
+    ..setModelUsed(Doodads.treasurePile0)
     ..setNameEnhance("Storage Hut Kit")
     ..setDescription("Build a Storage Hut Kit")
     ..setTooltipExtended(TT_STORAGE_HUT)
@@ -317,8 +300,8 @@ function createKit(int itemId) returns ItemDefinition
 
 @compiletime function createSpiritWardKit() returns ItemDefinition
     return createKit(ITEM_SPIRIT_WARD_KIT)
-    ..setInterfaceIcon(ICON_SPIRIT_WARD)
-    ..setModelUsed(MODEL_SPIRIT_WARD)
+    ..setInterfaceIcon(Icons.bTNAbsorbMagic)
+    ..setModelUsed(Objects.humanCaptureFlag)
     ..setNameEnhance("Spirit Ward Kit")
     ..setDescription("Build a Spirit Ward Kit")
     ..setTooltipExtended(TT_SPIRIT_WARD)
@@ -329,8 +312,8 @@ function createKit(int itemId) returns ItemDefinition
 
 @compiletime function createMudHutKit() returns ItemDefinition
     return createKit(ITEM_MUD_HUT_KIT)
-    ..setInterfaceIcon(ICON_MUD_HUT)
-    ..setModelUsed(MODEL_MUD_HUT)
+    ..setInterfaceIcon(Icons.bTNGoldmine)
+    ..setModelUsed(Doodads.crates0)
     ..setNameEnhance("Mud Hut Kit")
     ..setDescription("Build a Mud Hut Kit")
     ..setTooltipExtended(TT_MUD_HUT)
@@ -341,8 +324,8 @@ function createKit(int itemId) returns ItemDefinition
 
 @compiletime function createTowerKit() returns ItemDefinition
     return createKit(ITEM_OMNITOWER_KIT)
-    ..setInterfaceIcon(ICON_TOWER)
-    ..setModelUsed(MODEL_TOWER)
+    ..setInterfaceIcon(Icons.bTNOrcTower)
+    ..setModelUsed(Doodads.barricade0)
     ..setNameEnhance("Omnitower Kit")
     ..setDescription("Build a Omnitower Kit")
     ..setTooltipExtended(TT_TOWER)
@@ -353,8 +336,8 @@ function createKit(int itemId) returns ItemDefinition
 
 @compiletime function createPotKit() returns ItemDefinition
     return createKit(ITEM_POT_KIT)
-    ..setInterfaceIcon(ICON_POT)
-    ..setModelUsed(MODEL_POT)
+    ..setInterfaceIcon(Icons.bTNSacrificialPit)
+    ..setModelUsed(Doodads.barricade1)
     ..setNameEnhance("Mixing Pot Kit")
     ..setDescription("Build a Mixing Pot Kit")
     ..setTooltipExtended(TT_POT)
@@ -365,8 +348,8 @@ function createKit(int itemId) returns ItemDefinition
 
 @compiletime function createTanneryKit() returns ItemDefinition
     return createKit(ITEM_TANNERY_KIT)
-    ..setInterfaceIcon(ICON_TANNERY)
-    ..setModelUsed(MODEL_TANNERY)
+    ..setInterfaceIcon(Icons.bTNPigFarm)
+    ..setModelUsed(Buildings.barrelsUnit)
     ..setNameEnhance("Tannery Kit")
     ..setDescription("Build a Tannery Kit")
     ..setTooltipExtended(TT_TANNERY)
@@ -377,8 +360,8 @@ function createKit(int itemId) returns ItemDefinition
 
 @compiletime function createWorkshopKit() returns ItemDefinition
     return createKit(ITEM_WORKSHOP_KIT)
-    ..setInterfaceIcon(ICON_WORKSHOP)
-    ..setModelUsed(MODEL_WORKSHOP)
+    ..setInterfaceIcon(Icons.bTNTrollBurrow)
+    ..setModelUsed(Doodads.barricade1)
     ..setNameEnhance("Workshop Kit")
     ..setDescription("Build a Workshop Kit")
     ..setTooltipExtended(TT_WORKSHOP)
@@ -389,8 +372,8 @@ function createKit(int itemId) returns ItemDefinition
 
 @compiletime function createTeleportBeaconKit() returns ItemDefinition
     return createKit(ITEM_TELEPORT_BEACON_KIT)
-    ..setInterfaceIcon(ICON_TP_BEACON)
-    ..setModelUsed(MODEL_TP_BEACON)
+    ..setInterfaceIcon(Icons.bTNEnergyTower)
+    ..setModelUsed(Doodads.barricade0)
     ..setNameEnhance("Teleport beacon Kit")
     ..setDescription("Build a Teleport beacon Kit")
     ..setTooltipExtended(TT_TP_BEACON)
@@ -401,8 +384,8 @@ function createKit(int itemId) returns ItemDefinition
 
 @compiletime function createWdhKit() returns ItemDefinition
     return createKit(ITEM_WITCH_DOCTORS_HUT_KIT)
-    ..setInterfaceIcon(ICON_WDH)
-    ..setModelUsed(MODEL_WDH)
+    ..setInterfaceIcon(Icons.bTNVoodooLounge)
+    ..setModelUsed(Units.tNTBarrel)
     ..setNameEnhance("Witch Doctors Hut Kit")
     ..setDescription("Build a Witch Doctors Hut Kit")
     ..setTooltipExtended(TT_WDH)
@@ -413,8 +396,8 @@ function createKit(int itemId) returns ItemDefinition
 
 @compiletime function createHatcheryKit() returns ItemDefinition
     return createKit(ITEM_HATCHERY_KIT)
-    ..setInterfaceIcon(ICON_HATCHERY)
-    ..setModelUsed(MODEL_HATCHERY)
+    ..setInterfaceIcon(Icons.bTNSnowOwl)
+    ..setModelUsed(Doodads.barricade1)
     ..setNameEnhance("Hatchery Kit")
     ..setDescription("Build a Hatchery Kit")
     ..setTooltipExtended(TT_HATCHERY)
@@ -425,8 +408,8 @@ function createKit(int itemId) returns ItemDefinition
 
 @compiletime function createMagicSeed() returns ItemDefinition
     return createKit(ITEM_MAGIC_SEED)
-    ..setInterfaceIcon(ICON_MAGIC_SEED)
-    ..setModelUsed(MODEL_MAGIC_SEED)
+    ..setInterfaceIcon(Icons.bTNRoot)
+    ..setModelUsed(Objects.crystalShard)
     ..setNameEnhance("Magic Seed")
     ..setDescription("Build a Magic Seed")
     ..setTooltipExtended(TT_MAGIC_SEED)
@@ -437,8 +420,8 @@ function createKit(int itemId) returns ItemDefinition
 
 @compiletime function createForgeKit() returns ItemDefinition
     return createKit(ITEM_FORGE_KIT)
-    ..setInterfaceIcon(ICON_FORGE)
-    ..setModelUsed(MODEL_FORGE)
+    ..setInterfaceIcon(LocalIcons.bTNForge)
+    ..setModelUsed(Doodads.barricade0)
     ..setNameEnhance("Forge Kit")
     ..setDescription("Build a Forge")
     ..setTooltipExtended(TT_FORGE)

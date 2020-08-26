@@ -8,6 +8,7 @@ import ClosureTimers
 import LinkedList
 import Orders
 import RegisterEvents
+import TimerUtils
 
 // Third-party imports:
 import Lodash
@@ -16,13 +17,11 @@ import Lodash
 import ColorUtils
 import LocalObjectIDs
 import ToolTipsUtils
+import LocalAssets
+import StringExtensions
 
 let MANACOST = 15
 let COOLDOWN  = 20.
-
-let TOOLTIP_NORM_NEL = "Summon Nel Rune"
-let TOOLTIP_NORM_KA  = "Summon Ka Rune"
-let TOOLTIP_NORM_LEZ = "Summon Lez Rune"
 
 let COOLDOWN_TOOLTIP = "Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
 let RUNE_TOOLTIP = "They circle the caster until activated and when activated they seek a nearby enemy and blast it with their element. 5 runes at a time max. "
@@ -31,11 +30,6 @@ let TOOLTIP_EXT_NEL = "Summons a {0}Nel|r rune from dementia space. {0}Nel|r run
 let TOOLTIP_EXT_KA  = "Summons a {0}Ka|r rune from dementia space. {0}Ka|r runes are commonly used in fire spells. ".format(COLOR_RED.toColorString())+RUNE_TOOLTIP+COOLDOWN_TOOLTIP
 let TOOLTIP_EXT_LEZ = "Summons a {0}Lez|r rune from dementia space. {0}Lez|r runes are commonly used in frost spells. ".format(COLOR_TEAL.toColorString())+RUNE_TOOLTIP+COOLDOWN_TOOLTIP
 
-let ICON_NEL = "ReplaceableTextures\\CommandButtons\\BTNNelRune.blp"
-let ICON_KA  = "ReplaceableTextures\\CommandButtons\\BTNKaRune.blp"
-let ICON_LEZ = "ReplaceableTextures\\CommandButtons\\BTNLezRune.blp"
-
-let LOOP_INTERVAL      = 0.03125
 let ORBIT_ANGULARSPEED = 80.
 let ORBIT_DISTANCE     = 170.
 let MAX_RUNE_COUNT     = 5
@@ -47,9 +41,9 @@ let RUNE_ABILITY_NULL_DAMAGE  = 'A01Y'
 let RUNE_ABILITY_DRUNKEN_HAZE = 'A03E'
 let RUNE_ABILITY_FROST_NOVA   = 'A02A'
 
-let RUNE_LEZ_EFFECT_PATH = Doodads.glowingRunes4
-let RUNE_NEL_EFFECT_PATH = Doodads.glowingRunes6
-let RUNE_KA_EFFECT_PATH  = Doodads.glowingRunes0
+let UNIT_LOCUST_LEZ = compiletime(UNIT_ID_GEN.next())
+let UNIT_LOCUST_NEL = compiletime(UNIT_ID_GEN.next())
+let UNIT_LOCUST_KA = compiletime(UNIT_ID_GEN.next())
 
 let dementiaRunesInstances = new HashMap<unit, DementiaRunesInstance>()
 let runeSpellsList = new LinkedList<DementiaRuneSpell>()
@@ -70,6 +64,34 @@ public class DementiaRuneSpell
         this.spellId = spellId
         this.orderId = orderId
 
+function createLocustRune(int unitId) returns UnitDefinition
+    return new UnitDefinition(unitId, UnitIds.locust)
+        ..setManaInitialAmount(3000)
+        ..setManaMaximum(3000)
+        ..setScalingValue(1.5)
+        ..setMovementHeightMinimum(0.0)
+        ..setMovementHeight(0.0)
+        ..setSightRadiusNight(500)
+        ..setSightRadiusDay(500)
+        ..setShadowImageUnit("")
+        ..setAttacksEnabled(0)
+
+@compiletime function createLocustRunesDefinition()
+    createLocustRune(UNIT_LOCUST_LEZ)
+        ..setName("Lez Rune")
+        ..setModelFile(Doodads.glowingRunes4)
+        ..setNameEditorSuffix("(Wurst)")
+
+    createLocustRune(UNIT_LOCUST_NEL)
+        ..setName("Ka Rune")
+        ..setModelFile(Doodads.glowingRunes6)
+        ..setNameEditorSuffix("(Wurst)")
+
+    createLocustRune(UNIT_LOCUST_KA)
+        ..setName("Nel Rune")
+        ..setModelFile(Doodads.glowingRunes0)
+        ..setNameEditorSuffix("(Wurst)")
+
 class InvokeRune extends ChannelAbilityPreset
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos, string toolTipNorm, string toolTipExt, string icon)
         super(newAbilityId, 1, true)
@@ -88,14 +110,13 @@ class InvokeRune extends ChannelAbilityPreset
         this.setName(toolTipNorm)
 
 @compiletime function createRuneSpells()
-    new InvokeRune(ABILITY_INVOKE_RUNE_1, "W", new Pair(1, 0), TOOLTIP_NORM_NEL, TOOLTIP_EXT_NEL, ICON_NEL)
-    new InvokeRune(ABILITY_INVOKE_RUNE_2, "E", new Pair(2, 0), TOOLTIP_NORM_KA , TOOLTIP_EXT_KA , ICON_KA)
-    new InvokeRune(ABILITY_INVOKE_RUNE_3, "R", new Pair(3, 0), TOOLTIP_NORM_LEZ, TOOLTIP_EXT_LEZ, ICON_LEZ)
+    new InvokeRune(ABILITY_INVOKE_RUNE_1, "W", new Pair(1, 0), "Summon " + "Nel".color(COLOR_GREEN    ) + " Rune" , TOOLTIP_EXT_NEL , LocalIcons.bTNNelRune)
+    new InvokeRune(ABILITY_INVOKE_RUNE_2, "E", new Pair(2, 0), "Summon " + "Ka" .color(COLOR_RED      ) + " Rune" , TOOLTIP_EXT_KA  , LocalIcons.bTNKaRune )
+    new InvokeRune(ABILITY_INVOKE_RUNE_3, "R", new Pair(3, 0), "Summon " + "Lez".color(COLOR_TURQUOISE) + " Rune" , TOOLTIP_EXT_LEZ , LocalIcons.bTNLezRune)
 
 class DementiaRune
     DementiaRunesInstance instance
     Runes runeType
-    //effect FX = null
     unit dummy
     vec3 pos
 
@@ -109,13 +130,9 @@ class DementiaRune
             dummy = createUnit(instance.ownerUnit.getOwner(), UNIT_LOCUST_NEL, pos, angle(0))
         else if this.runeType == Runes.Ka
             dummy = createUnit(instance.ownerUnit.getOwner(), UNIT_LOCUST_KA, pos, angle(0))
-        //FX.setScale(1.5)
-        //FX.setTimeScale(0.1)
 
     function setPos(vec3 newpos)
         pos = newpos
-        //Adjust orbs a little lower since the SFX looks like its higher
-        //FX.setPos(pos - vec3(0,0,75))
         dummy.setPos(pos.toVec2())
         dummy.setFlyHeight(50, 600)
 
@@ -130,18 +147,16 @@ class DementiaRune
         else
             return runeSpellsList.get(4)
 
-
     ondestroy
         if instance.runes.has(this)
             instance.runes.remove(this)
         dummy.remove()
-        //FX.destr()
 
 public class DementiaRunesInstance
+    use TimedLoop
     angle runeAngleBase
     unit ownerUnit
     real elapsedLifetime
-    CallbackPeriodic runeLoop = null
 
     LinkedList<DementiaRune> runes
 
@@ -150,24 +165,23 @@ public class DementiaRunesInstance
         elapsedLifetime = 0
         runeAngleBase = angle(0)
         runes = new LinkedList<DementiaRune>()
-        startRuneLoop()
+        startTimedLoop()
 
-    function startRuneLoop()
-        runeLoop = doPeriodically(LOOP_INTERVAL) runeUpdateLoop ->
-            if ownerUnit.isAlive()
-                elapsedLifetime += LOOP_INTERVAL
-                runeAngleBase = angle(runeAngleBase.radians() + LOOP_INTERVAL * ORBIT_ANGULARSPEED * DEGTORAD)
-                updateRunePositions()
-            else
-                destroy this
+    override function onTimedLoop()
+        if ownerUnit.isAlive()
+            elapsedLifetime += ANIMATION_PERIOD
+            runeAngleBase = angle(runeAngleBase.radians() + ANIMATION_PERIOD * ORBIT_ANGULARSPEED * DEGTORAD)
+            updateRunePositions()
+        else
+            stopTimedLoopAndDestroy()
 
     function updateRunePositions()
         //Calculate orb angles and set it
-        angle offset = angle((360 / runes.size())*DEGTORAD)
+        let offset = angle((360 / runes.size())*DEGTORAD)
         int i = 0
-        vec3 ownerpos = ownerUnit.getPos3Real()
+        let ownerpos = ownerUnit.getPos3Real()
         for r in runes
-            angle indexRuneAngle = runeAngleBase + offset * i.toReal()
+            let indexRuneAngle = runeAngleBase + offset * i.toReal()
             r.setPos(ownerpos.offset2d(indexRuneAngle, ORBIT_DISTANCE))
             r.setFacing(r.pos.angleTo2d(ownerUnit.getPos()))
             i = i + 1
@@ -179,10 +193,7 @@ public class DementiaRunesInstance
             destroy runes.get(0)
             runes.add(rune)
 
-
     ondestroy
-        destroy runeLoop
-
         runes.forEach(r -> destroy r)
         destroy runes
 

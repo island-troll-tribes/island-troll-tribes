@@ -1,14 +1,21 @@
 package Dysentery
 
+// Standard lib Imports:
 import LocalObjectIDs
-import Lodash
 import Assets
-import ToolTipsUtils
 import BuffObjEditing
 import ClosureTimers
 import RegisterEvents
 import ObjectIds
+import ObjectIdGenerator
 import AbilityObjEditing
+
+// Third party Imports:
+import Lodash
+
+// Local Imports:
+import ToolTipsUtils
+import LocalAssets
 
 let BUFF_ID = BUFF_DYSENTERY
 let BUFF_ORIGINAL_ID = 'BNab'
@@ -17,16 +24,15 @@ let COOLDOWN = 40.
 let MANACOST = 0
 let DURATION = 45.
 
-let ICON = "ReplaceableTextures\\CommandButtons\\BTNTracking.blp"
-
 let TOOLTIP_NORM = "Dysentery Track AKA \"Charlie Brown"
 let TOOLTIP_EXTENDED = "Throws a bottle filled with dirty stuff, causing the target to get dysentery-like symptoms and poop hot, steaming diarrhea uncontrollably. "+
                         "Tracks a lot longer than normal track and is good for tracking long range."+makeToolTipDuration(DURATION, COOLDOWN)
-let TARGET_ALLOWED = "organic,enemies,ground"
+
+let UNIT_LOCUST_POOP_ID = compiletime(UNIT_ID_GEN.next())
 
 function createBuff()
     new BuffDefinition(BUFF_ID, BUFF_ORIGINAL_ID)
-        ..setIcon(ICON)
+        ..setIcon(LocalIcons.bTNTracking)
         ..setArtTarget(1,"")
         ..setTooltipNormal(1, TOOLTIP_NORM)
         ..setTooltipNormalExtended(1, "This unit is leaving a trail of feces.")
@@ -42,8 +48,8 @@ class Dysentery extends AbilityDefinitionParasite
         this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
         this.setButtonPositionNormalX(buttonPos.a)
         this.setButtonPositionNormalY(buttonPos.b)
-        this.setIconNormal(ICON)
-        this.setIconResearch(ICON)
+        this.setIconNormal(LocalIcons.bTNTracking)
+        this.setIconResearch(LocalIcons.bTNTracking)
         this.setManaCost(1, MANACOST)
         this.setCooldown(1, COOLDOWN)
         this.setDurationHero(1, DURATION)
@@ -53,13 +59,30 @@ class Dysentery extends AbilityDefinitionParasite
         this.setSummonedUnitCount(1, 0)
         this.setMissileArc(0.35)
         this.setMissileArt(Abilities.brewmasterMissile1)
-        this.setTargetsAllowed(1, TARGET_ALLOWED)
+        this.setTargetsAllowed(1, commaList(
+            TargetsAllowed.organic,
+            TargetsAllowed.enemies,
+            TargetsAllowed.ground
+        ))
         this.setCastRange(1, CAST_RANGE)
 
 
 @compiletime function createDysentery()
     new Dysentery(ABILITY_DYSENTERY, "Q", new Pair(0, 0))
     createBuff()
+
+    new UnitDefinition(UNIT_LOCUST_POOP_ID, UnitIds.locust)
+        ..setNameEditorSuffix("(Wurst)")
+        ..setModelFile(Objects.illidanSpawnFootPrint1)
+        ..setManaInitialAmount(3000)
+        ..setManaMaximum(3000)
+        ..setScalingValue(1.2)
+        ..setMovementHeightMinimum(0.0)
+        ..setMovementHeight(0.0)
+        ..setShadowImageUnit("")
+        ..setAttacksEnabled(0)
+        ..setName("Dysentry poop effect")
+        ..setDescription("A locust used to display 'poop' left behind by target affected by dysentry")
 
 function onCast()
     let caster = GetSpellAbilityUnit()
@@ -68,7 +91,7 @@ function onCast()
     doPeriodicallyTimed(0.5, DURATION) cb ->
         if target.isAlive() and target.hasAbility(BUFF_ID)
             // Well since it's about diarrhea and hot poop....
-            let poopPrint = createUnit(caster.getOwner(), UNIT_LOCUST_POOP, target.getPos(), target.getFacingAngle())
+            let poopPrint = createUnit(caster.getOwner(), UNIT_LOCUST_POOP_ID, target.getPos(), target.getFacingAngle())
             poopPrint.setTimedLife(30)
 
 

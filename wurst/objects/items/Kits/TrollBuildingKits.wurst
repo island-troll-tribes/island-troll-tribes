@@ -30,6 +30,7 @@ constant ABIL_WDH          = compiletime(ABIL_ID_GEN.next())
 constant ABIL_HATCHERY     = compiletime(ABIL_ID_GEN.next())
 constant ABIL_MAGIC_SEED   = compiletime(ABIL_ID_GEN.next())
 constant ABIL_FORGE        = compiletime(ABIL_ID_GEN.next())
+constant ABIL_SHIP         = compiletime(ABIL_ID_GEN.next())
 
 constant TT_ARMORY       = "Creates a Armory at target location. Armory can craft advanced weapons and armors."
 constant TT_ENSNARE_TRAP = "Creates a defensive Ensnare Trap at target location."
@@ -50,6 +51,7 @@ constant TT_WDH          = "Creates a Witch Doctor's Hut at target location."
 constant TT_HATCHERY     = "Creates a Hatchery at target location."
 constant TT_MAGIC_SEED   = "This seed can grow a tree really fast when planted."
 constant TT_FORGE        = "Create a Forge at target location, the Forge is used to create ingots"
+constant TT_SHIP         = "Creates a ship somewhere in the water."
 
 function createKitAbility(int abilId) returns AbilityDefinitionBuildTinyCastle
     return new AbilityDefinitionBuildTinyCastle(abilId)
@@ -189,6 +191,13 @@ function createKitAbility(int abilId) returns AbilityDefinitionBuildTinyCastle
         ..setName("Build Forge")
         ..setDurationNormal(1, 10.0)
         ..setUnitCreatedperplayerrace(1,  commaList(UNIT_FORGE))
+
+@compiletime function createTransportShipAbility() returns AbilityDefinitionBuildTinyCastle
+    return createKitAbility(ABIL_SHIP)
+        ..setIconNormal(Icons.bTNNightElfTransport)
+        ..setName("Build Forge")
+        ..setDurationNormal(1, 10.0)
+        ..setUnitCreatedperplayerrace(1,  commaList(UNIT_TROLL_TRANSPORT_SHIP))
 
 
 function createKit(int itemId) returns ItemDefinition
@@ -427,5 +436,17 @@ function createKit(int itemId) returns ItemDefinition
     ..setTooltipExtended(TT_FORGE)
     ..setLumberCost(20)
     ..setAbilities(commaList(ABIL_FORGE))
+    ..setScalingValue(1)
+    ..setStockReplenishInterval(30)
+
+@compiletime function createTransportKit() returns ItemDefinition
+    return createKit(ITEM_TRANSPORT_SHIP_KIT)
+    ..setInterfaceIcon(Icons.bTNNightElfTransport)
+    ..setModelUsed(Doodads.barricade0)
+    ..setNameEnhance("Transport Ship Kit")
+    ..setDescription("Build a Transport Ship")
+    ..setTooltipExtended(TT_SHIP)
+    ..setLumberCost(40)
+    ..setAbilities(commaList(ABIL_SHIP))
     ..setScalingValue(1)
     ..setStockReplenishInterval(30)

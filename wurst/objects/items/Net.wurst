@@ -1,0 +1,109 @@
+package HuntingNet
+
+// Standard library imports:
+import AbilityObjEditing
+import Assets
+import ClosureEvents
+import ClosureTimers
+import ObjectIdGenerator
+import ObjectIds
+
+// Local imports:
+import Ensnare
+import LocalObjectIDs
+import UnitExtensions
+import PreventNet
+import Items
+import LocalAssets
+import LocalItemObjEditing
+import ToolTipsUtils
+
+constant HUNTING_NET_ENSNARE = compiletime(ABIL_ID_GEN.next())
+let HUNTING_NET_HERO_DURATION = 2.5
+let HUNTING_NET_NORMAL_DURATION = 13.
+let HUNTING_NET_COOLDOWN = 12.
+let HUNTING_NET_CAST_RANGE = 700.
+
+let NET_HERO_DURATION = 2.5
+let NET_NORMAL_DURATION = 10.
+let NET_COOLDOWN = 15.
+let NET_CAST_RANGE = 600.
+
+let TT_HUNTING_NET = "A net primarily used for hunting. If the animal dies while ensnared the net will be retrievable."
+                    +" Last {0}/{1} seconds on heroes/animals.".format(
+                        HUNTING_NET_HERO_DURATION.toToolTipLightBlue(),
+                        HUNTING_NET_NORMAL_DURATION.toToolTipLightBlue()
+                    )
+                    +makeToolTipCooldown(HUNTING_NET_COOLDOWN)
+let TT_NET = "A twine net that can be used to net enemies."
+            +" Last {0}/{1} seconds on heroes/animals.".format(
+                NET_HERO_DURATION.toToolTipLightBlue(),
+                NET_NORMAL_DURATION.toToolTipLightBlue()
+            )
+            +makeToolTipCooldown(NET_COOLDOWN)
+
+
+@compiletime function createDummyAbility()
+    new AbilityDefinitionEnsnare(HUNTING_NET_ENSNARE)
+        ..setItemAbility(true)
+        ..setName("Hunting net Ensnare")
+        ..setTooltipNormal(1, "Hunting net Ensnare")
+        ..setTooltipNormalExtended(1, "Hunting net Ensnare")
+        ..setCooldown(1, HUNTING_NET_COOLDOWN)
+        ..setDurationHero(1, HUNTING_NET_HERO_DURATION)
+        ..setDurationNormal(1, HUNTING_NET_NORMAL_DURATION)
+        ..setCastRange(1, HUNTING_NET_CAST_RANGE)
+        ..setEditorSuffix("(Wurst)")
+
+    new AbilityDefinitionEnsnare(ABILITY_ENSNARE)
+        ..setButtonPositionNormalX(1)
+        ..setButtonPositionNormalY(1)
+        ..setCooldown(1, NET_COOLDOWN)
+        ..setDurationNormal(1,NET_NORMAL_DURATION)
+        ..setDurationHero(1, NET_HERO_DURATION)
+        ..setCastRange(1, NET_CAST_RANGE)
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createHuntingNet()
+    createPerishableItem(ITEM_HUNTING_NET)
+        ..setAbilities(toRawCode(HUNTING_NET_ENSNARE))
+        ..setCooldownGroup(toRawCode(ABILITY_ENSNARE))
+        ..setInterfaceIcon(LocalIcons.bTNHuntingNet)
+        ..setModelUsed(Abilities.ensnareTarget)
+        ..setTintingColor1Red(100)
+        ..setTintingColor2Green(100)
+        ..setHotkey("N")
+        ..setLumberCost(8)
+        ..setName("Hunting Net")
+        ..setTooltipExtended(TT_HUNTING_NET)
+        ..setDescription("Reusable net as long as target dies while ensnared")
+        ..setNumberofCharges(1)
+
+    createPerishableItem(ITEM_NETS)
+        ..setAbilities(toRawCode(ABILITY_ENSNARE))
+        ..setCooldownGroup(toRawCode(ABILITY_ENSNARE))
+        ..setInterfaceIcon(Icons.bTNEnsnare)
+        ..setModelUsed(Abilities.ensnareTarget)
+        ..setHotkey("N")
+        ..setLumberCost(4)
+        ..setNameEnhance("Net")
+        ..setStockMaximum(3)
+        ..setTooltipExtended(TT_NET)
+        ..setDescription("Can net opponents")
+        ..setNumberofCharges(3)
+
+function onHuntNet()
+    let target = GetSpellTargetUnit()
+    let pos = target.getPos()
+    let NET_DURATION = target.isTroll() ? HUNTING_NET_HERO_DURATION : HUNTING_NET_NORMAL_DURATION
+    doPeriodicallyTimed(ANIMATION_PERIOD, NET_DURATION) netCounter ->
+        if not target.isAlive()
+            createItem(ITEM_HUNTING_NET, pos)
+            netCounter.stop()
+
+
+init
+    registerSpellEffectEvent(HUNTING_NET_ENSNARE) ->// TODO moveTarget and onHuntNet need to be happen if !preventNet
+        preventNet()
+        moveTarget()
+        onHuntNet()

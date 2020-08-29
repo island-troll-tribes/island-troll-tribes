@@ -1,0 +1,47 @@
+package BuildingSelection
+
+// Standard lib Imports:
+import AbilityObjEditing
+
+// Local Imports:
+import LocalObjectIDs
+
+/**
+    Building selection spell, used to see the recipe on the recipe island demo,
+    neutral building spell such as craftmaster/ominous altar
+    or allied shared building so every body in a team can use the buildings
+**/
+
+// Used for island recipe
+@compiletime function createNeutralBuildingSelectLongRange() returns AbilityDefinitionNeutralBuildinganyunit
+    return new AbilityDefinitionNeutralBuildinganyunit(ABILITY_BUILDING_SELECT_LONG_RANGE)
+        ..setArtCaster("")
+        ..setCasterAttachmentPoint("")
+        ..setActivationRadius(1, 5.0)
+        ..setInteractionType(1, 2)
+        ..setEditorSuffix("(Long RAnged)")
+        ..setCastRange(1, 5.0)
+        ..setArtTarget("")
+        ..setTargetAttachmentPoint("")
+
+// Doesn't seem to work as intended, behave just like createNeutralBuildingSelectLongRange()
+// GUI ability had the same behavior
+@compiletime function createNeutralBuildingSelectShortRange() returns AbilityDefinitionNeutralBuilding
+    return new AbilityDefinitionNeutralBuilding(ABILITY_BUILDING_SELECT_SHORT_RANGE)
+        ..setArtCaster("")
+        ..setCasterAttachmentPoint("")
+        ..setActivationRadius(1, 200.0)
+        ..setShowSelectUnitButton(1, false)
+        ..setShowUnitIndicator(1, false)
+        ..setName("Select Hero (Short Ranged)")
+        ..setCastRange(1, 200.0)
+        ..setArtTarget("")
+        ..setTargetAttachmentPoint("")
+        ..setIconTurnOff("")
+
+// Used for granting allies control of inventory and spells for a building.
+// TODO: Remove this once the "-tb" mode and a tribe player is always enabled.
+@compiletime function createAlliedBuilding()
+    new AbilityDefinitionAlliedBuilding(ABILITY_SHOP_SHARING)
+        ..presetShowSelectUnitButton(lvl -> false)
+        ..presetShowUnitIndicator(lvl -> false)

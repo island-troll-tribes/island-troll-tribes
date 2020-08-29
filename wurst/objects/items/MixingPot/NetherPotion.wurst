@@ -3,6 +3,7 @@ package NetherPotion
 // Standard lib Imports:
 import Assets
 import ChannelAbilityPreset
+import BuffObjEditing
 
 // Local lib Imports:
 import Items
@@ -21,6 +22,11 @@ public constant TT_NETHER_POTION = "" +
     +makeToolTipDuration(DURATION_HERO, DURATION_NORMAL, COOLDOWN)
 
 
+@compiletime function createNetherBuff()
+    new BuffDefinition(BUFF_NETHER, 'BHbn')
+        ..setTooltipNormal("In The Nether")
+        ..setTooltipNormalExtended("This unit is in the Nether World; it cannot attack")
+
 @compiletime function createAbil()
     new AbilityDefinitionBloodMageBanish(ABILITY_NETHER_POTION_BANISH)
     ..setName("Nether Potion")
@@ -34,6 +40,7 @@ public constant TT_NETHER_POTION = "" +
     ..setDurationHero(1, DURATION_HERO)
     ..setDurationNormal(1, DURATION_NORMAL)
     ..setCooldown(1, COOLDOWN)
+    ..setBuffs(1, BUFF_NETHER.toRawCode())
     ..setMovementSpeedReduction(1, 0)
     ..setMissileArc(0.15)
     ..setMissileArt(Abilities.goldBottleMissile)

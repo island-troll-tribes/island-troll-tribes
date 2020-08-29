@@ -67,15 +67,22 @@ init
         GameMode.find("tb").enable()
         GameMode.find("rs").enable()
 
-    new GameMode("team-gold", "tg", "Pro", "Players on a team share gold in the same pool") (mode, args) ->
-        let enabled = args.size() > 1 ? args.get(0).isConfirmation() : true
-        gameConfig.setTeamGoldEnabled(enabled)
-        mode.message("Team gold ".color(COLOR_GOLD) + enabled.toOnOff() + "!")
+    new GameMode("team-gold", "tg", "General", "Players on a team share gold in the same pool", false) (mode, args) ->
+        if not gameConfig.isTeamGoldEnabled()
+            gameConfig.setTeamGoldEnabled(true)
+            mode.message("Team gold ".color(COLOR_GOLD) +"enabled")
+        else
+            gameConfig.setTeamGoldEnabled(false)
+            mode.message("Team gold ".color(COLOR_GOLD) + "disabled")
 
-    new GameMode("tribe-owns-buildings", "tb", "Building ownership is transferred to the tribe") (mode, args) ->
-        let value = args.size() > 1 ? args.get(0).isConfirmation() : true
-        gameConfig.setTribeOwnsBuildingsEnabled(value)
-        mode.message("Tribe building ownership".color(ENERGY_COLOR) + " enabled")
+    new GameMode("tribe-owns-buildings", "tb", "General", "Building ownership is transferred to the tribe", false) (mode, args) ->
+        if not gameConfig.isTribeOwnsBuildingsEnabled()
+            gameConfig.setTribeOwnsBuildingsEnabled(true)
+            mode.message("Tribe building ownership".color(ENERGY_COLOR) + " enabled")
+        else
+            gameConfig.setTribeOwnsBuildingsEnabled(false)
+            mode.message("Tribe building ownership".color(ENERGY_COLOR) + " disabled")
+
 
     new GameMode("all", "ar", "General", "Each player is given the same or a random troll, eg: \"-all random\" or \"-all mage\"") (mode, args) ->
         let classArgs = drop(1, args)

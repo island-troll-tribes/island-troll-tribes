@@ -9,17 +9,17 @@ import ToolTipsUtils
 import ChannelAbilityPreset
 import Lodash
 import Assets
+import LocalObjectIDs
 
-constant let ABILITY_ID = 'ESMD'
-constant let COOLDOWN = 72.
-constant let MANACOST = 0
-constant let DURATION = 7.
-constant let PERIOD_INTERVAL = 0.2
-constant let MANA_PER_SECOND = 18.
-constant let ABILITY_ICON = "ReplaceableTextures\\CommandButtons\\BTNMedidate.blp"
-constant let EFFECT_PATH = Abilities.darkRitualTarget
-constant let TOOLTIP_NORM = "Meditate"
-constant let TOOLTIP_EXTENDED = "Channels to recover {0} mana over {1} seconds. Cancels on damage. Has {2} seconds cooldown."
+let COOLDOWN = 72.
+let MANACOST = 0
+let DURATION = 7.
+let PERIOD_INTERVAL = 0.2
+let MANA_PER_SECOND = 18.
+let ABILITY_ICON = "ReplaceableTextures\\CommandButtons\\BTNMedidate.blp"
+let EFFECT_PATH = Abilities.darkRitualTarget
+let TOOLTIP_NORM = "Meditate"
+let TOOLTIP_EXTENDED = "Channels to recover {0} mana over {1} seconds. Cancels on damage. Has {2} seconds cooldown."
                                 .format((MANA_PER_SECOND * DURATION).toToolTipTeal(), DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
 
 class Medidate extends ChannelAbilityPreset
@@ -44,7 +44,7 @@ class Medidate extends ChannelAbilityPreset
         this.setManaCost(1, MANACOST)
 
 @compiletime function createMeditate()
-    new Medidate(ABILITY_ID, "D", new Pair(2, 1))
+    new Medidate(ABILITY_MEDITATE, "D", new Pair(2, 1))
 
 HashMap<unit, MeditateInstance> instances = new HashMap<unit,MeditateInstance>()
 
@@ -105,13 +105,13 @@ function onDamage(unit target, real amount)
         instance.isOvercharged = false
 
 function onEndCast()
-    if GetSpellAbilityId() == ABILITY_ID
+    if GetSpellAbilityId() == ABILITY_MEDITATE
         var caster = GetSpellAbilityUnit()
         if (instances.has(caster))
             var instance = instances.get(caster)
             instance.isChanneling = false
 init
-    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerSpellEffectEvent(ABILITY_MEDITATE, () -> onCast())
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST, () -> onEndCast())
 
     EventListener.add(EVENT_UNIT_DAMAGED) ->

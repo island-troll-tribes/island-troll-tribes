@@ -6,6 +6,7 @@ import Assets
 import ItemObjEditing
 import ObjectIds
 import ObjectIdGenerator
+import BuffObjEditing
 
 // Local imports:
 import Items
@@ -116,6 +117,17 @@ let ITEM_DESCRIPTION = "" +
     "A hollowed out piece of wood. If blown through, could be used to fire "+
     "small projectiles such as thistles."
 
+let BUFF_ID = compiletime(BUFF_ID_GEN.next())
+
+@compiletime function createThistleBuff() returns BuffDefinition
+    return new BuffDefinition(BUFF_ID, 'BEsh')
+        ..setIconNormal(1, Icons.bTNEnvenomedSpear)
+        ..setTooltipNormal("Poisoned Thistle")
+        ..setTooltipNormalExtended("This unit was hit by a slightly poisoned projectile. Although it wont take much damage from the poison")
+        ..setArtTarget(Abilities.poisonStingTarget)
+        ..setTargetAttachmentPoint0("")
+
+
 @compiletime function createBoneAmmoAbility()
     new AbilityDefinitionThunderBoltCreep(ABILITY_BONE_THISTLE)
         ..setDummyAbility()
@@ -136,7 +148,7 @@ let ITEM_DESCRIPTION = "" +
 function createThistleAbility(int newId) returns AbilityDefinitionWardenShadowStrike
     return new AbilityDefinitionWardenShadowStrike(newId)
         ..setDummyAbility()
-        ..presetBuffs(lvl -> "B099")
+        ..presetBuffs(lvl -> BUFF_ID.toRawCode())
         ..presetTargetsAllowed(lvl -> "air,enemies,ground,neutral,organic,terrain")
         ..setMissileArt(Abilities.bristleBackMissile)
         ..setMissileSpeed(2100)

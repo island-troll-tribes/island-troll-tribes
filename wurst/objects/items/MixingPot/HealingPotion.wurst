@@ -1,0 +1,49 @@
+package HealingPotion
+
+// Standard lib Imports:
+import Assets
+import ChannelAbilityPreset
+
+// Local lib Imports:
+import Items
+import LocalAssets
+import LocalItemObjEditing
+import LocalObjectIDs
+import ToolTipsUtils
+
+public constant POT_HEAL = 65.
+
+public constant TT_HEALING_POTION = "A dilute potion made from Athelas Seed. Instantly restores {0} Health point to a target ally."
+                                    .format(POT_HEAL.toToolTipGreen())
+
+@compiletime function createAbil() returns ChannelAbilityPreset
+    return createItemChannelCast(ABILITY_HEALING_POTION)
+    ..setName("Healing Potion")
+    ..presetTargetTypes(Targettype.UNIT)
+    ..setManaCost(1, 0)
+    ..setCooldown(1, 0)
+    ..setArtTarget(Abilities.healingSalveTarget)
+    ..setCastRange(1, 500.)
+    ..setTargetsAllowed(1, commaList(
+        TargetsAllowed.friend,
+        TargetsAllowed.ground,
+        TargetsAllowed.hero,
+        TargetsAllowed.invulnerable,
+        TargetsAllowed.organic,
+        TargetsAllowed.self,
+        TargetsAllowed.vulnerable
+        )
+    )
+
+@compiletime function createHealingPotion() returns ItemDefinition
+    return createPerishableItem(ITEM_HEALING_POTION)
+        ..setInterfaceIcon(Icons.bTNLesserRejuvPotion)
+        ..setModelUsed(LocalItems.potionPurpleLesser)
+        ..setNameEnhance("Healing Potion")
+        ..setTooltipExtended(TT_HEALING_POTION)
+        ..setDescription(TT_HEALING_POTION)
+        ..setLumberCost(5)
+        ..setAbilities(commaList(ABILITY_HEALING_POTION))
+        ..setScalingValue(0.7)
+        ..setCooldownGroup(commaList(ABILITY_HEALING_POTION))
+        ..setStockReplenishInterval(120)

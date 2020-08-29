@@ -1,10 +1,11 @@
-package BuildingSelection
+package SelectAbilities
 
 // Standard lib Imports:
 import AbilityObjEditing
 
 // Local Imports:
 import LocalObjectIDs
+import LocalAssets
 
 /**
     Building selection spell, used to see the recipe on the recipe island demo,
@@ -24,20 +25,6 @@ import LocalObjectIDs
         ..setArtTarget("")
         ..setTargetAttachmentPoint("")
 
-// Doesn't seem to work as intended, behave just like createNeutralBuildingSelectLongRange()
-// GUI ability had the same behavior
-@compiletime function createNeutralBuildingSelectShortRange() returns AbilityDefinitionNeutralBuilding
-    return new AbilityDefinitionNeutralBuilding(ABILITY_BUILDING_SELECT_SHORT_RANGE)
-        ..setArtCaster("")
-        ..setCasterAttachmentPoint("")
-        ..setActivationRadius(1, 200.0)
-        ..setShowSelectUnitButton(1, false)
-        ..setShowUnitIndicator(1, false)
-        ..setName("Select Hero (Short Ranged)")
-        ..setCastRange(1, 200.0)
-        ..setArtTarget("")
-        ..setTargetAttachmentPoint("")
-        ..setIconTurnOff("")
 
 // Used for granting allies control of inventory and spells for a building.
 // TODO: Remove this once the "-tb" mode and a tribe player is always enabled.
@@ -45,3 +32,8 @@ import LocalObjectIDs
     new AbilityDefinitionAlliedBuilding(ABILITY_SHOP_SHARING)
         ..presetShowSelectUnitButton(lvl -> false)
         ..presetShowUnitIndicator(lvl -> false)
+
+// Used for merchants that do not display a swap icon or unit indicator.
+@compiletime function createUnitSelection()
+    new AbilityDefinitionNeutralBuildinganyunit(LocalAbilityIds.selectUnit)
+        ..presetActivationRadius(lvl -> 900.)

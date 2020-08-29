@@ -1,0 +1,33 @@
+package BossAbilities
+
+// Standard lib Imports:
+import AbilityObjEditing
+import BuffObjEditing
+import ObjectIdGenerator
+import ObjectIds
+import Assets
+
+// Local Imports:
+import LocalObjectIDs
+import LocalAssets
+
+
+@compiletime function createPanic() returns AbilityDefinitionBreathofFrostCreep
+    let buffId = BUFF_ID_GEN.next()
+    new BuffDefinition(buffId, 'BCbf')
+        ..setIconNormal(1, Icons.bTNCorrosiveBreath)
+        ..setTooltipNormal("Poisonous Breath")
+        ..setTooltipNormalExtended("This unit was hit by the Breath of a Hydra and will take damage over time.")
+        ..setName("Poisonous Breath")
+        ..setArtTarget(Abilities.chimaeraAcidTargetArt)
+
+    return new AbilityDefinitionBreathofFrostCreep(ABILITY_HYDRA_BREATH)
+        ..setIconNormal(Icons.bTNCorrosiveBreath)
+        ..setBuffs(1, buffId.toRawCode())
+        ..setDamagePerSecond(1, 20.0)
+        ..setDurationNormal(1, 10.0)
+        ..setDurationHero(1, 10.0)
+        ..setMissileArt(LocalAbilities.breatOfAcidMissile)
+        ..setName("Breath of Hydra")
+        ..setCastRange(1, 800.0)
+        ..setTargetsAllowed(1, "terrain")

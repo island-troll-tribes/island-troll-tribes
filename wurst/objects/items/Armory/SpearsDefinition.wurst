@@ -5,6 +5,7 @@ import AbilityObjEditing
 import Assets
 import BuffObjEditing
 import ObjectIds
+import ObjectIdGenerator
 
 // Local imports:
 import Items
@@ -12,6 +13,9 @@ import LocalAssets
 import LocalItemObjEditing
 import LocalObjectIDs
 import ToolTipsUtils
+
+let BUFF_DARK = compiletime(BUFF_ID_GEN.next())
+let BUFF_POISON = compiletime(BUFF_ID_GEN.next())
 
 let SPEAR_DMG = 40.
 let IRON_DMG  = 70.
@@ -246,6 +250,7 @@ function createPoisonSpearAbility(int newId) returns AbilityDefinitionShadowStri
         ..setMissileSpeed(700)
         ..setItemAbility(true)
         ..setManaCost(1, 0)
+        ..setBuffs(1, BUFF_POISON.toRawCode())
         ..setEditorSuffix("(Wurst)")
 
 @compiletime function createBasicPoisonSpearAbility() returns AbilityDefinitionShadowStrikeCreep
@@ -290,4 +295,13 @@ function createPoisonSpearAbility(int newId) returns AbilityDefinitionShadowStri
     ..setArtTarget(1, Abilities.deathandDecayTarget)
     ..setName(1, "Dark Spear Buff")
     ..setTargetAttachmentPoint0(1, "origin")
+    ..setEditorSuffix(1, "(Wurst)")
+
+@compiletime function createPoisonSpearBuff()
+    // I believe this buff was made just so we can see the effect when dark spear hit?
+    new BuffDefinition(BUFF_POISON, 'BEsh')
+    ..setIcon(Icons.bTNEnvenomedSpear)
+    ..setName(1, "Poison Slow")
+    ..setTooltipNormal("Poison Slow")
+    ..setTooltipNormalExtended(1, "This unit has been hit by a poison spear; it takes damage over time and its movement and attack speed are slowed")
     ..setEditorSuffix(1, "(Wurst)")

@@ -1,0 +1,39 @@
+package Panic
+
+// Standard lib Imports:
+import AbilityObjEditing
+
+// Local Imports:
+import LocalObjectIDs
+import ToolTipsUtils
+
+let MS_FACTOR = 0.3
+let AS_FACTOR = 0.2
+let DAMAGE_FACTOR = 0.1
+let DURATION = 15.
+let COOLDOWN = 15.
+let TT = "" +
+    ("Causes your troll to go into a panic making him move {0} faster and attack {1} faster. "+
+    "Causes you to take {2} extra damage.")
+    .format(
+        MS_FACTOR.toToolTipOrange(),
+        AS_FACTOR.toToolTipOrange(),
+        DAMAGE_FACTOR.toToolTipRed()
+    )
+    +makeToolTipDuration(DURATION, COOLDOWN)+
+    "|n|cffffd700Tip: Use this as much as possible for maximal gathering and combat efficiency|r"
+
+@compiletime function createPanic() returns AbilityDefinitionBerserk
+    return new AbilityDefinitionBerserk(ABILITY_PANIC)
+        ..setButtonPositionNormalX(2)
+        ..setCooldown(1, COOLDOWN)
+        ..setManaCost(1, 20)
+        ..setMovementSpeedIncrease(1, MS_FACTOR)
+        ..setAttackSpeedIncrease(1, AS_FACTOR)
+        ..setDamageTakenIncrease(1, DAMAGE_FACTOR)
+        ..setDurationNormal(1, DURATION)
+        ..setDurationHero(1, DURATION)
+        ..setHotkeyNormal("N")
+        ..setName("Panic")
+        ..setTooltipNormal(1, makeToolTipNorm("N", "Panic"))
+        ..setTooltipNormalExtended(1, TT)

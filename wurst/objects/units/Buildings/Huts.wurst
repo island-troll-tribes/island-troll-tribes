@@ -3,14 +3,16 @@ package Huts
 // Standard library imports:
 import Assets
 import ObjectIds
-import UnitObjEditing
 import ClosureEvents
+import AbilityObjEditing
+import ObjectIdGenerator
 
 // Local imports:
 import LocalAssets
 import LocalObjectIDs
 
-public constant ABILITY_MUD_HUT_AURA = 'A0CK'
+public constant ABILITY_MUD_HUT_AURA = compiletime(ABIL_ID_GEN.next())
+
 
 @compiletime function createTentDefinition() returns BuildingDefinition
     return new BuildingDefinition(UNIT_TENT, UnitIds.tent2)
@@ -56,6 +58,18 @@ function createHut(int unitId) returns BuildingDefinition
         ..setTooltipExtended("A little clay, some sticks, and some hides and you have a very nice home.")
 
 @compiletime function createTrollMudHut() returns BuildingDefinition
+    new AbilityDefinitionItemAuraDevotion(ABILITY_MUD_HUT_AURA)
+        ..setIconNormal(Icons.pASBTNDevotion)
+        ..setButtonPositionNormalX(2)
+        ..setButtonPositionNormalY(2)
+        ..setArmorBonus(1, 3.0)
+        ..setItemAbility(false)
+        ..setName("Mud Hut Resilience")
+        ..setArtTarget("")
+        ..setBuffs(1, BUFF_FORTITUDE.toRawCode())
+        ..setTargetsAllowed(1, "air,friend,ground,hero,invulnerable,self,vulnerable")
+        ..setTooltipNormal(1, "|cffffd700Home|r|n|nGives units around the mud hut armour")
+
     return createHut(UNIT_MUD_HUT)
         ..setIconGameInterface(Icons.bTNGoldmine)
         ..setTintingColorBlue(0)

@@ -4,7 +4,6 @@ package DementiaRunesNew
 import Assets
 import ChannelAbilityPreset
 import HashMap
-import ClosureTimers
 import LinkedList
 import Orders
 import RegisterEvents
@@ -35,11 +34,11 @@ let ORBIT_DISTANCE     = 170.
 let MAX_RUNE_COUNT     = 5
 
 // Spells Casted by Runes
-let RUNE_ABILITY_FIRE_BOLT    = 'A07C'
-let RUNE_ABILITY_BURN         = 'A064'
-let RUNE_ABILITY_NULL_DAMAGE  = 'A01Y'
-let RUNE_ABILITY_DRUNKEN_HAZE = 'A03E'
-let RUNE_ABILITY_FROST_NOVA   = 'A02A'
+let RUNE_ABILITY_BURN         = compiletime(ABIL_ID_GEN.next())
+let RUNE_ABILITY_FIRE_BOLT    = compiletime(ABIL_ID_GEN.next())
+let RUNE_ABILITY_NULL_DAMAGE  = compiletime(ABIL_ID_GEN.next())
+let RUNE_ABILITY_DRUNKEN_HAZE = ABILITY_DRUNK_POTION
+let RUNE_ABILITY_FROST_NOVA   = ABILITY_METRONOME_FROSTNOVA
 
 let UNIT_LOCUST_LEZ = compiletime(UNIT_ID_GEN.next())
 let UNIT_LOCUST_NEL = compiletime(UNIT_ID_GEN.next())
@@ -47,6 +46,48 @@ let UNIT_LOCUST_KA = compiletime(UNIT_ID_GEN.next())
 
 let dementiaRunesInstances = new HashMap<unit, DementiaRunesInstance>()
 let runeSpellsList = new LinkedList<DementiaRuneSpell>()
+
+@compiletime function createRuneAbilities()
+
+    new AbilityDefinitionFirelordSoulBurn(RUNE_ABILITY_BURN)
+        ..setBuffs(1, "BNsi")
+        ..setManaCost(1, 0)
+        ..setDamageAmount(1, 2.0)
+        ..setDamagePenalty(1, 0.0)
+        ..setDurationNormal(1, 5.0)
+        ..setEditorSuffix("Ka Rune Spell Soul Burn")
+        ..setHeroAbility(false)
+        ..setDurationHero(1, 5.0)
+        ..setLevels(1)
+        ..setName("Burn")
+        ..setTargetsAllowed(1, "air,enemies,ground,neutral,organic")
+
+
+    new AbilityDefinitionThunderBoltCreep(RUNE_ABILITY_FIRE_BOLT)
+        ..setManaCost(1, 0)
+        ..setDamage(1, 25.0)
+        ..setDurationNormal(1, 7.0)
+        ..setEditorSuffix("Ka Rune Spell Thunder Bolt")
+        ..setDurationHero(1, 1.0)
+        ..setMissileArc(0.05)
+        ..setMissileArt(Abilities.phoenix_Missile)
+        ..setName("Firebolt")
+        ..setCastRange(1, 1000.0)
+
+    new AbilityDefinitionCripplecreep(RUNE_ABILITY_NULL_DAMAGE)
+        ..setButtonPositionNormalY(1)
+        ..setCheckDependencies(false)
+        ..setCooldown(1, 45.0)
+        ..setManaCost(1, 20)
+        ..setMovementSpeedReduction(1, 0.1)
+        ..setAttackSpeedReduction(1, 0.25)
+        ..setDurationNormal(1, 30.0)
+        ..setHotkeyNormal("R")
+        ..setName("Null Damage")
+        ..setRequirements("")
+        ..setRequirementsLevels("")
+        ..setTooltipNormal(1, "Nel Rune Spell")
+
 
 public enum Runes
     Nel

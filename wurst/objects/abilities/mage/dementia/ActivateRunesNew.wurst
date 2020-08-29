@@ -6,10 +6,10 @@ import ChannelAbilityPreset
 import ClosureEvents
 import ClosureForGroups
 import ClosureTimers
-import DummyCaster
 import LinkedList
 import Orders
 import BuffObjEditing
+import InstantDummyCaster
 
 // Third-party imports:
 import Lodash
@@ -45,9 +45,11 @@ let DEMENTIA_SUMMON_TOOLTIP_EXTENDED = ("Passively gives the Dementia Master the
                                        "to be summoned for no reason!|r").color(COLOR_RED)
 
 let ACTIVATE_RUNES_TOOLTIP_NORM     = "Activates Runes"
-let ACTIVATE_RUNES_TOOLTIP_EXTENDED = "Casting this spell causes nearby runes to become active and seek targets. Runes will seek any enemies inside "+
-                                      "a dark gate if the caster casts this inside the gate as well. This skill can also be used in a gate to perform "+
-                                      "a dementia summoning. Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
+let ACTIVATE_RUNES_TOOLTIP_EXTENDED = "" +
+    "Casting this spell causes nearby runes to become active and seek targets in a very close range around the caster. "+
+    "Runes will seek any enemies inside a dark gate if the caster casts this inside the gate as well. "+
+    "This skill can also be used in a gate to perform "+
+    "a dementia summoning. Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
 
 let UNIT_LOCUST_FIRE_LORD  = compiletime(UNIT_ID_GEN.next())
 let UNIT_LOCUST_WATER_LORD = compiletime(UNIT_ID_GEN.next())
@@ -295,11 +297,13 @@ function runesCastSpells(unit caster, DementiaRunesInstance runesInstance)
 
             for r in runesInstance.runes
                 DementiaRuneSpell spell = r.getRandomRuneSpellID()
-                new DummyCaster()
-                    ..delay(1)
-                    ..owner(owner)
-                    ..origin(r.pos.toVec2())
-                    ..castTarget(spell.spellId, 1, spell.orderId, target)
+                InstantDummyCaster.castTarget(
+                    owner,
+                    spell.spellId,
+                    1,
+                    spell.orderId,
+                    target
+                )
                 destroy r
 
 function Runes.toString() returns string

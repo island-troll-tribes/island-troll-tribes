@@ -1,0 +1,67 @@
+package Devour
+
+// Standard lib Imports:
+import ChannelAbilityPreset
+import ClosureEvents
+import HashMap
+import ObjectIdGenerator
+import ObjectIds
+
+// Local Imports:
+import LocalAssets
+import LocalObjectIDs
+
+constant BUFF_ID = compiletime(BUFF_ID_GEN.next())
+constant BUFF_ORIGINAL_ID = 'origId'
+constant CAST_RANGE = castRange.
+constant COOLDOWN = cooldown.
+constant MANACOST = manaCost
+constant DURATION = duration.
+constant TOOLTIP_NORM = toolTipNorm
+constant TOOLTIP_EXTENDED = "toolTipExtended".format(DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
+constant TARGET_ALLOWED = "targetAllowed"
+
+let ABIL_DODGE = compiletime(ABIL_ID_GEN.next())
+
+let abilityFromAnimal = new HashMap<int, int>()
+    ..put(UNIT_ELK, ABIL_DODGE)
+
+
+@compiletime function createDevourSpell() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(newId, 1, true)
+        ..presetTargetTypes(Targettype.UNIT)
+        ..presetCooldown(lvl -> 0)
+        ..presetManaCost(lvl -> 0)
+
+let evolutionInstances = new HashMap<unit, EvolutionHandler>
+
+class EvolutionHandler
+    unit caster
+    int currentAbilId
+    int castCount
+    int targetId
+    boolean isEnabled
+
+    construct(unit caster, unit target)
+        this.targetId = target.getTypeId()
+        currentAbilId = abilityFromAnimal.get(target.getTypeId())
+        caster.addAbility(currentAbilId)
+        isEnabled = true
+        EventListener.onCast(caster, currentAbilId) (unit caster) ->
+            updateCastCount(-1)
+
+    function updateCastCount(int amount)
+        castCount += amount
+        if castCount <= 0 and isEnabled
+            caster.disableAbility(currentAbilId, true, false)
+        else if castCount >= 0 and not isEnabled
+            caster.disableAbility(currentAbilId, false, false)
+
+    function getUnitDevoured() returns int
+        return targetId
+
+init
+    EventListener.onTargetCast(abilId) (unit caster, unit target) ->
+        if target.getHP() < 50
+            if evolutionInstances.has(caster)
+                if evolutionInstances.get(caster).getUnitDevoured() == target.getTypeId()

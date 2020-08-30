@@ -58,17 +58,16 @@ class CustomSkin
 //       See the associated PR for an in-depth explanation.
 //       This is not fixed part of it because skins are currently defunct.
 @compiletime function buildSkins()
-    new CustomSkin(UNIT_BEAST_MASTER,  UNIT_BEAST_MASTER_1,  "skin-bm-1"     )
-    new CustomSkin(UNIT_HUNTER,        UNIT_HUNTER_1,        "skin-hunter-1" )
-    new CustomSkin(UNIT_MAGE,          UNIT_MAGE_1,          "skin-mage-1"   )
-    new CustomSkin(UNIT_MASTER_HEALER, UNIT_MASTER_HEALER_1, "skin-mh-1"     )
-    new CustomSkin(UNIT_BOOSTER,       UNIT_BOOSTER_1,       "skin-booster-1")
-    new CustomSkin(UNIT_ELEMENTALIST,  UNIT_ELEMENTALIST_1,  "skin-ele-1"    )
+    new CustomSkin(UNIT_BEAST_MASTER,      UNIT_BEAST_MASTER_1,  "skin-bm-1"     )
+    new CustomSkin(UNIT_HUNTER,            UNIT_HUNTER_1,        "skin-hunter-1" )
+    new CustomSkin(UNIT_MAGE,              UNIT_MAGE_1,          "skin-mage-1"   )
+    new CustomSkin(UNIT_MASTER_HEALER,     UNIT_MASTER_HEALER_1, "skin-mh-1"     )
+    new CustomSkin(UNIT_BOOSTER,           UNIT_BOOSTER_1,       "skin-booster-1")
+    new CustomSkin(UNIT_ELEMENTALIST_NEW,  UNIT_ELEMENTALIST_1,  "skin-ele-1"    )
 
 function onEnterHandler(unit target)
     // Store the original type ID of the target.
     let originID = target.getTypeId()
-
     // Look up the feature corresponding to the custom skin for the unit.
     let skin = CustomSkin.customSkinList.get(originID)
 
@@ -86,8 +85,14 @@ function onEnterHandler(unit target)
     // Register the command used to switch to the custom skin.
     registerCommand(target.getOwner(), skin.featureName) (owner, args) ->
         // Transform the unit to impart the custom skin.
-        // TODO: Generate skins to match trolls and uncomment this.
-        // transformUnit(target, skin.newUnitTypeId)
+        BlzSetUnitSkin(target, skin.newUnitTypeId)
+
+        // For some reason the hero glow disappear on skin switch
+        // but the unit still has the ability, resetting it to "re-enable" the glow
+        // Master Healer skin already has hero glow
+        if skin.newUnitTypeId != UNIT_MASTER_HEALER_1
+            target.removeAbility(ABILITY_HERO_GLOW)
+            target.addAbility(ABILITY_HERO_GLOW)
 
     // Prevent the user from using the transformation during gameplay.
     doAfter(TIMEOUT) ->

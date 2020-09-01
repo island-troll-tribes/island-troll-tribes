@@ -230,9 +230,12 @@ init
         registerAfterEffect() (unit target, int unitID) ->
             // Only heroes have proper name.
             if IsHeroUnitId(target.getTypeId())
-                // Create a temporary unit to generate the new peroper name.
+                // Create a temporary unit to generate the new proper name.
+                // This is required as the getter does not work correctly.
+                // TODO: Look up UNIT_SF_PROPER_NAMES / 'upro' directly.
                 let temp = createUnit(
-                    target.getOwner(),
+                    // Use a neutural owner to minimize side effects.
+                    players[PLAYER_NEUTRAL_PASSIVE],
                     target.getTypeId(),
                     boundMax,
                     target.getFacingAngle()

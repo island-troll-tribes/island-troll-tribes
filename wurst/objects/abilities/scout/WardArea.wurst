@@ -39,16 +39,16 @@ class WardAreaSpell extends ChannelAbilityPreset
         this.setHeroAbility(true)
         this.setItemAbility(false)
         this.setRequiredLevel(0)
-        this.setCastRange(1, 50)
+        this.presetCastRange(lvl -> 50)
         this.setLevelSkipRequirement(0)
         this.presetTargetTypes(Targettype.POINT)
-        this.setAreaofEffect(1, SIGHT_RADIUS.toReal())
+        this.presetAreaofEffect(lvl -> SIGHT_RADIUS.toReal())
+        this.presetOption(Option.VISIBLE, true)
         this.presetOption(Option.TARGETIMAGE, true)
         this.setHotkeyNormal(hotkey)
         this.setName(TOOLTIP_NORM)
         this.presetTooltipNormal(lvl -> makeToolTipNormHero(hotkey, TOOLTIP_NORM, lvl))
         this.presetTooltipNormalExtended(lvl -> TOOLTIP_BASE_EXT.format(WARD_DURATION.toString().substring(0, 3).color(COLOR_ORANGE), COOLDOWN.toString().substring(0, 2).color(COLOR_LIGHT_BLUE)))
-
         this.setTooltipLearn(makeToolTipLearn(TOOLTIP_NORM))
         this.setTooltipLearnExtended(TOOLTIP_BASE_EXT.format(WARD_DURATION.toString().color(COLOR_ORANGE).substring(0, 3), COOLDOWN.toString().color(COLOR_LIGHT_BLUE).substring(0, 2)))
         this.setIconNormal(ABILITY_ICON)
@@ -92,7 +92,7 @@ function onCast(unit caster)
         return
 
     // Determine how many wards to place around the target pos.
-    var wardNbr = GetSpellAbilityId() == ABILITY_OBSERVER_WARD_AREA
+    let wardNbr = GetSpellAbilityId() == ABILITY_OBSERVER_WARD_AREA
         ? caster.getAbilityLevel(ABILITY_OBSERVER_WARD_AREA)
         : 3
 

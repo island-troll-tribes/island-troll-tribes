@@ -9,33 +9,81 @@ import InstantDummyCaster
 import OrderIds
 import Assets
 import ErrorHandling
+import ClosureEvents
+import TerrainUtils
+import UnitExtensions
 
-constant let DEFAULT_GRAVITY = 175.
-constant let MAX_TURNSPEED = 3.
-constant let HEIGHT_CHANGE_RATE = 10000.
-constant let CROWFORM_ID = 'Amrf'
+let DEFAULT_GRAVITY = 175.
+let MAX_TURNSPEED = 3.
+let HEIGHT_CHANGE_RATE = 10000.
+let CROWFORM_ID = 'Amrf'
+
+let TARGET_SEARCH_MIN_RANGE = 200.
+let TARGET_SEARCH_INCREMENT = 25
 
 init
     registerCommandAll("jump") (triggerPlayer, args) ->
+        let indexAnim = args.size() > 1 ? args.get(1).toInt() : 2
+        let startinTimeScale = args.size() > 2 ? args.get(2).toReal() : 8.
+        let flyingTimeScale = args.size() > 3 ? args.get(3).toReal() : 0.85
         if (gameConfig.isTestModeEnabled() == true)
             forUnitsSelected(triggerPlayer) u ->
                 if (u.isType(UNIT_TYPE_HERO))
-                    performJump(u, u.getPos().polarOffset(angle(0), 400))
+                    performJump(u, u.getPos().polarOffset(u.getFacingAngle(), 400), indexAnim, startinTimeScale, flyingTimeScale)
         else
             printTimedToPlayer("Requires test mode!", 5., triggerPlayer)
 
-public function performJump(unit u, vec2 targetPos)
+function canJumpToTarget(vec2 targetPos) returns bool
+    return targetPos.isTerrainWalkable()
+
+public function onStartCast(real maxRange)
+    let spellId = GetSpellAbilityId()
+    if spellId != ABILITY_JUMP and spellId != ABILITY_RENDO_JUMP
+        return
+    let caster = GetSpellAbilityUnit()
+    let targetPos = vec2(GetSpellTargetX(), GetSpellTargetY())
+    let casterPos = caster.getPos()
+    let jumpPos = getJumpPos(casterPos, targetPos, maxRange)
+
+    //Stop casting if non-jumpable target or we are immobilized
+    if not canJumpToTarget(jumpPos) or caster.isImmobilized()
+        caster.issueImmediateOrderById(Orders.stop)
+        //Set stand animation to prevent looping the cast-animation
+        caster.setAnimation(0)
+
+public function getJumpPos(vec2 casterPos, vec2 targetPos, real maxRange) returns vec2
+    var jumpPos = targetPos
+    let ang = casterPos.angleTo(jumpPos)
+
+    //Limit range if ability used beyond jump range
+    if (casterPos.distanceTo(jumpPos) >= maxRange)
+        var distance = maxRange
+        jumpPos = casterPos.polarOffset(ang, distance)
+
+        //Find furthest point towards cast point where we can jump
+        while distance >= TARGET_SEARCH_MIN_RANGE and not canJumpToTarget(jumpPos)
+            distance = distance - TARGET_SEARCH_INCREMENT
+            jumpPos = casterPos.polarOffset(ang, distance)
+
+    return jumpPos
+
+/**
+    indexAnimation is used to pick a precise animation to be played during the jump
+    startingTimeScale is used to accelerate the beginning of the animation
+    flyingTimeScale is used to slow down the animation during flight time
+**/
+public function performJump(unit u, vec2 targetPos, int indexAnim, real startingTimeScale, real flyingTimeScale)
     let distance = u.getPos().distanceTo(targetPos)
     let groundSpeed = 1.5 * distance
     new JumpInstance(u, targetPos)
 
     //Play backflip animation
     u.pause()
-    u.setAnimation(2)
+    u.setAnimation(indexAnim)
     //Skip to the actual backflip portion of the animation
-    u.setTimeScale(8)
+    u.setTimeScale(startingTimeScale)
     doAfter(0.05) ->
-        u.setTimeScale(0.85)
+        u.setTimeScale(flyingTimeScale)
     //Reset animation to stand after jumping
     doAfter(distance / groundSpeed) ->
         u.setAnimation("stand")
@@ -120,3 +168,5 @@ class JumpInstance
 
     ondestroy
         finishJump()
+
+init

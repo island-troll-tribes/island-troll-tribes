@@ -1,0 +1,54 @@
+package ElkLeg
+
+// Standard lib Imports:
+import ChannelAbilityPreset
+import ClosureEvents
+import ObjectIdGenerator
+import ObjectIds
+import Assets
+import UpgradeObjEditing
+
+// Local Imports:
+import PlayerExtensions
+import LocalAssets
+import ToolTipsUtils
+import LocalObjectIDs
+import JumpSystem
+
+@configurable let JUMP_MAX_RANGE = 550.
+
+@compiletime function createRendoJump() returns ChannelAbilityPreset
+    new UpgradeDefinition(UPGD_RENDO_JUMP)
+        ..setName(1, "Devoured Elk")
+        ..setLevels(1)
+        ..setIcon(1, Icons.bTNNagaUnBurrow)
+        ..addEffectAbilityLevelBonus(0, 1, ABILITY_RENDO_JUMP.toRawCode())
+
+    return new ChannelAbilityPreset(ABILITY_RENDO_JUMP, 1, true)
+        ..presetManaCost(lvl -> 0)
+        ..presetCooldown(lvl -> 0)
+        ..setHeroAbility(false)
+        ..setItemAbility(false)
+        ..presetTargetTypes(Targettype.POINT)
+        ..setHotkeyNormal("Q")
+        ..setName("Elk Leg")
+        ..presetTooltipNormal(lvl -> makeToolTipNorm("Q", "Elk Leg"))
+        ..presetTooltipNormalExtended(lvl -> "Elk Leg")
+        ..setIconNormal(Icons.bTNNagaUnBurrow)
+        ..setIconResearch(Icons.bTNNagaUnBurrow)
+        ..setIconTurnOff(Icons.bTNNagaUnBurrow)
+        ..setButtonPositionNormalX(0)
+        ..setButtonPositionNormalY(0)
+        ..setFollowThroughTime(1, 0)
+        ..setCheckDependencies(true)
+        ..presetCastRange(lvl -> 99999.)
+        ..setRequirements(UPGD_RENDO_JUMP.toRawCode())
+
+init
+    EventListener.onPointCast(ABILITY_RENDO_JUMP) (unit caster, vec2 targetPos) ->
+        let jumpPos = getJumpPos(caster.getPos(), targetPos, JUMP_MAX_RANGE)
+        performJump(caster, jumpPos, 3, 5, 0.8)
+
+    EventListener.add(EVENT_PLAYER_UNIT_SPELL_CAST) ->
+        if GetSpellAbilityId() == ABILITY_RENDO_JUMP
+            onStartCast(JUMP_MAX_RANGE)

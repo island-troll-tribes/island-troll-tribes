@@ -6,62 +6,40 @@ import ClosureEvents
 import HashMap
 import ObjectIdGenerator
 import ObjectIds
+import Assets
+import UpgradeObjEditing
 
 // Local Imports:
+import PlayerExtensions
 import LocalAssets
+import ToolTipsUtils
 import LocalObjectIDs
-
-constant BUFF_ID = compiletime(BUFF_ID_GEN.next())
-constant BUFF_ORIGINAL_ID = 'origId'
-constant CAST_RANGE = castRange.
-constant COOLDOWN = cooldown.
-constant MANACOST = manaCost
-constant DURATION = duration.
-constant TOOLTIP_NORM = toolTipNorm
-constant TOOLTIP_EXTENDED = "toolTipExtended".format(DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
-constant TARGET_ALLOWED = "targetAllowed"
 
 let ABIL_DODGE = compiletime(ABIL_ID_GEN.next())
 
-let abilityFromAnimal = new HashMap<int, int>()
-    ..put(UNIT_ELK, ABIL_DODGE)
+let upgradeFromAnimalMap = new HashMap<int, int>()
+    ..put(UNIT_ELK, UPGD_RENDO_JUMP)
+
+let upgradeAbilityMap = new HashMap<int, int>()
+    ..put(ABILITY_RENDO_JUMP, UPGD_RENDO_JUMP)
 
 
 @compiletime function createDevourSpell() returns ChannelAbilityPreset
-    return new ChannelAbilityPreset(newId, 1, true)
+    return new ChannelAbilityPreset(ABILITY_RENDO_DEVOUR, 1, true)
         ..presetTargetTypes(Targettype.UNIT)
         ..presetCooldown(lvl -> 0)
         ..presetManaCost(lvl -> 0)
+        ..presetCastRange(lvl -> 100)
+        ..presetButtonPosNormal(3, 1)
+        ..setFollowThroughTime(1, 1.5)
+        ..setIconNormal(Icons.bTNDevour)
 
-let evolutionInstances = new HashMap<unit, EvolutionHandler>
-
-class EvolutionHandler
-    unit caster
-    int currentAbilId
-    int castCount
-    int targetId
-    boolean isEnabled
-
-    construct(unit caster, unit target)
-        this.targetId = target.getTypeId()
-        currentAbilId = abilityFromAnimal.get(target.getTypeId())
-        caster.addAbility(currentAbilId)
-        isEnabled = true
-        EventListener.onCast(caster, currentAbilId) (unit caster) ->
-            updateCastCount(-1)
-
-    function updateCastCount(int amount)
-        castCount += amount
-        if castCount <= 0 and isEnabled
-            caster.disableAbility(currentAbilId, true, false)
-        else if castCount >= 0 and not isEnabled
-            caster.disableAbility(currentAbilId, false, false)
-
-    function getUnitDevoured() returns int
-        return targetId
 
 init
-    EventListener.onTargetCast(abilId) (unit caster, unit target) ->
+    EventListener.onTargetCast(ABILITY_RENDO_DEVOUR) (unit caster, unit target) ->
         if target.getHP() < 50
-            if evolutionInstances.has(caster)
-                if evolutionInstances.get(caster).getUnitDevoured() == target.getTypeId()
+            if upgradeFromAnimalMap.has(target.getTypeId())
+                caster.getOwner().setTechResearched(upgradeFromAnimalMap.get(target.getTypeId()), 1)
+
+    EventListener.onPointCast(ABILITY_RENDO_JUMP) (unit caster, vec2 target) ->
+        caster.getOwner().setTechResearched(upgradeAbilityMap.get(ABILITY_RENDO_JUMP), 0)

@@ -8,79 +8,79 @@ import ObjectIds
 import Assets
 import UpgradeObjEditing
 import BuffObjEditing
+import DamageEvent
+import ClosureTimers
+import InstantDummyCaster
+import OrderIds
 
 // Local Imports:
 import PlayerExtensions
 import LocalAssets
 import ToolTipsUtils
 import LocalObjectIDs
+import TextTagUtils
+import ColorUtils
 
-constant BUFF_ID = compiletime(BUFF_ID_GEN.next())
-constant BUFF_ORIGINAL_ID = 'Bpsh' // PhaseShift
+let BUFF_ID = compiletime(BUFF_ID_GEN.next())
+let BUFF_ORIGINAL_ID = 'Bpsh' // PhaseShift
 
-constant DUMMY_ABIL_ID = compiletime(ABIL_ID_GEN.next())
+let DUMMY_ABIL_ID = compiletime(ABIL_ID_GEN.next())
 
-constant CAST_RANGE = 0
-constant COOLDOWN = 20.
-constant MANACOST = 5
-constant DURATION = 4.
-constant TOOLTIP_NORM = "Phase Shift"
-constant TOOLTIP_EXTENDED = "The Conjurer shift between dimension and cannot be harmed." + makeToolTipDuration(DURATION, COOLDOWN)
+let COOLDOWN = 20.
+let DURATION = 4.
+let TOOLTIP_NORM = "Panther Instinct"
+let TOOLTIP_EXTENDED = "" +
+    "Rendo uses the Panther inner instinct to predict incoming attack and dodge their damage." +
+    makeToolTipDuration(DURATION, COOLDOWN)
 
-function createBuff()
+@compiletime function createPantherInstinctBuff()
     new BuffDefinition(BUFF_ID, BUFF_ORIGINAL_ID)
-        ..setIcon(Icons.bTNPhaseShift)
+        ..setIcon(Icons.bTNEvasion)
         ..setArtSpecial(1,"")
         ..setTooltipNormal(1, TOOLTIP_NORM)
-        ..setTooltipNormalExtended(1, "This troll is shifting between dimension, he doesn't take any damage in this state.")
+        ..setTooltipNormalExtended(1, "This unit uses panther inner instinct to dodge incoming damage")
 
-class DummyPhaseShift extends AbilityDefinitionInnerFire
-    construct(int newAbilityId)
-        super(newAbilityId)
-        this.setName("PhaseShiftDummy")
-        this.setBuffs(1, toRawCode(BUFF_ID))
-        this.setDurationHero(1, DURATION)
-        this.setDurationNormal(1, DURATION)
-        this.setCastRange(1, 99999)
-        this.setManaCost(1, 0)
-        this.setRequirements("")
-        this.setDamageIncrease(1, 0)
-        this.setDefenseIncrease(1, 0)
+@compiletime function createDummyInnerFire()
+    new AbilityDefinitionInnerFire(DUMMY_ABIL_ID)
+        ..setDummyAbility()
+        ..setDamageIncrease(1, 0)
+        ..setDefenseIncrease(1, 0)
+        ..setBuffs(1, BUFF_ID.toRawCode())
+        ..setDurationHero(1, DURATION)
+        ..setDurationNormal(1, DURATION)
+        ..setName("Panther Instinct Dummy Cast")
 
-class PhaseShift extends AbilityDefinitionWindWalk
-    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
-        super(newAbilityId)
-        this.presetManaCost(lvl -> MANACOST)
-        this.presetCooldown(lvl -> COOLDOWN)
-        this.setHeroAbility(false)
-        this.setItemAbility(false)
-        this.setHotkeyNormal(hotkey)
-        this.setName(TOOLTIP_NORM)
-        this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM))
-        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
-        this.setIconNormal(Icons.bTNPhaseShift)
-        this.setIconResearch(Icons.bTNPhaseShift)
-        this.setIconTurnOff(Icons.bTNPhaseShift)
-        this.setButtonPositionNormalX(buttonPos.a)
-        this.setButtonPositionNormalY(buttonPos.b)
-        this.setEffectSound("")
-        this.setDurationHero(1, 0.01)
-
-@compiletime function createPhaseShift()
-    new PhaseShift(ABILITY_PHASE_SHIFT, "E", new Pair(1, 1))
-    new DummyPhaseShift(DUMMY_ABIL_ID)
-    createBuff()
+@compiletime function createPantherInstinctAbility() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_RENDO_PANTHER_INSTINCT, 1, true)
+        ..presetManaCost(lvl -> 0)
+        ..setLevelSkipRequirement(0)
+        ..setRequiredLevel(1)
+        ..setCheckDependencies(false)
+        ..setCooldown(1, 1)
+        ..setIconNormal(Icons.bTNEvasion)
+        ..setName("Panther Instinct")
+        ..setTooltipNormal(1, makeToolTipNorm("W", "Panther Instinct"))
+        ..setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        ..setAnimationNames("stand - 3")
+        ..setFollowThroughTime(1, 0)
 
 
 init
-    DamageEvent.addListener() () ->
-        let damaged = DamageEvent.getTarget()
-        if damaged.hasAbility(BUFF_ID)
-            DamageEvent.setAmount(0)
-    EventListener.onCast(ABILITY_PHASE_SHIFT) (unit caster) ->
-        InstantDummyCaster.castTarget(caster.getOwner(), DUMMY_ABIL_ID, 1, Orders.innerfire, caster)
-        doPeriodicallyTimed(0.3, DURATION) cb ->
-            if caster.isAlive()
-                var fx = addEffect(Abilities.aIilTarget, caster.getPos())
-                doAfter(0.5) () ->
-                    fx.destr()
+    EventListener.onCast(ABILITY_RENDO_PANTHER_INSTINCT) (unit caster) ->
+        InstantDummyCaster.castTarget(caster.getOwner(), DUMMY_ABIL_ID, 1, OrderIds.innerfire, caster)
+        let dmgListener = DamageEvent.addListener()  ->
+            let damaged = DamageEvent.getTarget()
+            if damaged.hasAbility(BUFF_ID)
+                let text = "Dodged " + DamageEvent.getAmount().round().toString()
+                createFadingTextTag(caster, text, COLOR_RED)
+                    ..setText(text, 8)
+                    ..setVelocity(0, 0.06)
+                    ..setLifespan(3)
+                DamageEvent.setAmount(0)
+
+        doPeriodically(0.3) cb ->
+            if caster.isAlive() and caster.hasAbility(BUFF_ID)
+                flashEffect(Abilities.mirrorImageCaster, caster.getPos())
+            else
+                destroy dmgListener
+                destroy cb

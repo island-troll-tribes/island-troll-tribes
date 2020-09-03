@@ -3,13 +3,84 @@ package SnakeToxin
 // Standard lib Imports:
 import ChannelAbilityPreset
 import ClosureEvents
-import ObjectIdGenerator
-import ObjectIds
 import Assets
-import UpgradeObjEditing
+import ClosureTimers
+import BuffObjEditing
 
 // Local Imports:
-import PlayerExtensions
-import LocalAssets
 import ToolTipsUtils
 import LocalObjectIDs
+import StringExtensions
+import ColorUtils
+
+let BUFF_ID = compiletime(BUFF_ID_GEN.next())
+let DUMMY_ABIL_ID = compiletime(ABIL_ID_GEN.next())
+let ABIL_POISON_TOXIN = compiletime(ABIL_ID_GEN.next())
+
+let COOLDOWN = 60.
+let DURATION = 15.
+let POISON_DURATION = 5.
+let AS_FACTOR = 0.3
+let MS_FACTOR = 0.2
+
+let TOOLTIP_NORM = "Snake Toxin"
+let TOOLTIP_EXTENDED = "" +
+    "Rendo uses the Snake anatomy to embed his claws with poison toxin." +
+    makeToolTipDuration(DURATION, COOLDOWN)
+
+@compiletime function createSnakeToxinBuffDummyAbility()
+    new BuffDefinition(BUFF_ID, 'Basl') // slow tornado
+        ..setName(1, TOOLTIP_NORM)
+        ..setTooltipNormal(1, TOOLTIP_NORM.color(COLOR_GREEN))
+        ..setTooltipNormalExtended(1, TOOLTIP_NORM)
+        ..setIcon(Icons.bTNSlowPoison)
+
+    new AbilityDefinitionAuraSlow(DUMMY_ABIL_ID)
+        ..setName("Aura Dummy: " + TOOLTIP_NORM)
+        ..setMovementSpeedFactor(1, 0)
+        ..setBuffs(1, BUFF_ID.toRawCode())
+        ..presetIcon(Icons.bTNSlowPoison)
+        ..setArtTarget("")
+        ..setTargetsAllowed(1, "self")
+        ..setArtTarget(Abilities.poisonStingTarget)
+        ..setTargetAttachments(2)
+        ..setTargetAttachmentPoint("hand,left")
+        ..setTargetAttachmentPoint1("hand,right")
+        ..setEditorSuffix("wurst")
+
+@compiletime function createSnakeToxinAbility()
+    new AbilityDefinitionSlowPoison(ABIL_POISON_TOXIN)
+        ..setDummyAbility()
+        ..setAttackSpeedFactor(1, AS_FACTOR)
+        ..setMovementSpeedFactor(1, MS_FACTOR)
+        ..setDamagePerSecond(1, 0)
+        ..setDurationHero(1, DURATION)
+        ..setDurationNormal(1, DURATION)
+        ..setName(TOOLTIP_NORM + " True Cast")
+
+@compiletime function createSnakeToxinChannelAbility() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_RENDO_SNAKE_TOXIN, 1, true)
+        ..presetManaCost(lvl -> 0)
+        ..setLevelSkipRequirement(0)
+        ..setRequiredLevel(1)
+        ..setCheckDependencies(false)
+        ..setCooldown(1, 1)
+        ..setIconNormal(Icons.bTNSlowPoison)
+        ..setName(TOOLTIP_NORM)
+        ..setHotkeyNormal("Q")
+        ..setTooltipNormal(1, makeToolTipNorm("Q", TOOLTIP_NORM))
+        ..setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        ..setAnimationNames("stand - 3")
+        ..setFollowThroughTime(1, 0)
+        // Should we note down somewhere which orderId are used by channel abilities?
+        ..setBaseOrderID(1, "fanofknives")
+
+
+init
+    EventListener.onCast(ABILITY_RENDO_SNAKE_TOXIN) (unit caster) ->
+        caster.addAbility(ABIL_POISON_TOXIN)
+        caster.addAbility(DUMMY_ABIL_ID)
+        doAfter(DURATION) ->
+            if caster.isAlive() and caster.hasAbility(ABIL_POISON_TOXIN)
+                caster.removeAbility(ABIL_POISON_TOXIN)
+                caster.removeAbility(DUMMY_ABIL_ID)

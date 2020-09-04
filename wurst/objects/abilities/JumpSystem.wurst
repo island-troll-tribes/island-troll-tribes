@@ -9,7 +9,6 @@ import InstantDummyCaster
 import OrderIds
 import Assets
 import ErrorHandling
-import ClosureEvents
 import TerrainUtils
 import UnitExtensions
 
@@ -161,6 +160,10 @@ class JumpInstance
         u.setTurnSpeed(this.originalTurnspeed)
         u.setPathing(true)
         u.setFlyHeight(u.getDefaultFlyHeight(), HEIGHT_CHANGE_RATE)
+
+        // Small water splash effect
+        if targetPos.isTerrainShallowWater()
+            flashEffect(Abilities.crushingWaveDamage, targetPos)
         if u.getTypeId() == UNIT_ONE
             if InstantDummyCaster.castImmediate(u.getOwner(), JUMP_STOMP_ID, 1, OrderIds.creepthunderclap, u.getPos()) == false
                 error("Jump Stomp cast failed")

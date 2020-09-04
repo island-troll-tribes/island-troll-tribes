@@ -1,21 +1,24 @@
-package ElkLeg
+package ElkJump
 
 // Standard lib Imports:
 import ChannelAbilityPreset
 import ClosureEvents
-import ObjectIdGenerator
-import ObjectIds
 import Assets
 import UpgradeObjEditing
 
 // Local Imports:
-import PlayerExtensions
-import LocalAssets
 import ToolTipsUtils
 import LocalObjectIDs
 import JumpSystem
 
 @configurable let JUMP_MAX_RANGE = 550.
+
+let COOLDOWN = 1.
+
+let TOOLTIP_NORM = "Elk Jump"
+let TOOLTIP_EXTENDED = "" +
+    "Rendo uses the Elk potent calves to jump a short distance." +
+    makeToolTipCooldown(COOLDOWN)
 
 @compiletime function createRendoJump() returns ChannelAbilityPreset
     new UpgradeDefinition(UPGD_RENDO_JUMP)
@@ -25,15 +28,15 @@ import JumpSystem
         ..addEffectAbilityLevelBonus(0, 1, ABILITY_RENDO_JUMP.toRawCode())
 
     return new ChannelAbilityPreset(ABILITY_RENDO_JUMP, 1, true)
-        ..presetManaCost(lvl -> 0)
-        ..presetCooldown(lvl -> 0)
+        ..presetManaCost(lvl -> 20)
+        ..presetCooldown(lvl -> COOLDOWN)
         ..setHeroAbility(false)
         ..setItemAbility(false)
         ..presetTargetTypes(Targettype.POINT)
-        ..setHotkeyNormal("Q")
-        ..setName("Elk Leg")
-        ..presetTooltipNormal(lvl -> makeToolTipNorm("Q", "Elk Leg"))
-        ..presetTooltipNormalExtended(lvl -> "Elk Leg")
+        ..setHotkeyNormal("R")
+        ..setName(TOOLTIP_NORM)
+        ..presetTooltipNormal(lvl -> makeToolTipNorm("R", TOOLTIP_NORM))
+        ..presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
         ..setIconNormal(Icons.bTNNagaUnBurrow)
         ..setIconResearch(Icons.bTNNagaUnBurrow)
         ..setIconTurnOff(Icons.bTNNagaUnBurrow)
@@ -42,7 +45,7 @@ import JumpSystem
         ..setFollowThroughTime(1, 0)
         ..setCheckDependencies(true)
         ..presetCastRange(lvl -> 99999.)
-        ..setRequirements(UPGD_RENDO_JUMP.toRawCode())
+        // ..setRequirements(UPGD_RENDO_JUMP.toRawCode())
 
 init
     EventListener.onPointCast(ABILITY_RENDO_JUMP) (unit caster, vec2 targetPos) ->

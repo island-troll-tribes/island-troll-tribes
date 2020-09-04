@@ -6,6 +6,7 @@ import ClosureEvents
 import Assets
 import TimerUtils
 import BuffObjEditing
+import UpgradeObjEditing
 
 // Local Imports:
 import LocalAssets
@@ -23,26 +24,37 @@ let DAMAGE_FACTOR = 0.04
 let BLOOD_TRAIL_PERIOD = 2.4
 
 let TOOLTIP_NORM = "Wolf Bite"
-let TOOLTIP_EXTENDED = "Rendo uses the Wolf inner instinct to bite off a vital spot of the target, causing it to bleed profusely."
-                            + makeToolTipDuration(DURATION, COOLDOWN)
+let TOOLTIP_EXTENDED = "" +
+    "Rendo uses the Wolf inner instinct to bite off a vital spot of the target, " +
+    "causing it to bleed profusely. The more ground covered, the more damage taken. " +
+    "The target leaves traces of blood on the ground when moving." +
+    makeToolTipDuration(DURATION, COOLDOWN)
 
 @compiletime function createWolfBiteBuff()
     new BuffDefinition(BUFF_ID, BUFF_ORIGINAL_ID)
         ..setIcon(Icons.bTNRedDragonDevour)
         ..setTooltipNormal(1, TOOLTIP_NORM)
-        ..setTooltipNormalExtended(1, "This unit is bleeding¸ the faster it run¸ the more damage it takes, last {0}".format(DURATION.toToolTipLightBlue()))
+        ..setTooltipNormalExtended(1,
+            "This unit is bleeding¸ the faster it run¸ the more damage it takes; last {0}"
+            .format(DURATION.toToolTipLightBlue())
+        )
         ..setArtTarget(1, LocalAbilities.bloodDrop)
 
+@compiletime function createWolfBite()
+    new UpgradeDefinition(UPGD_RENDO_WOLF_BITE)
+        ..setName(1, "Devoured Wolf")
+        ..setLevels(1)
+        ..setIcon(1, Icons.bTNRedDragonDevour)
+        ..addEffectAbilityLevelBonus(0, 1, ABILITY_RENDO_WOLF_BITE.toRawCode())
 
-@compiletime function createWolfBite() returns AbilityDefinitionMindRot
-    return new AbilityDefinitionMindRot(ABILITY_RENDO_WOLF_BITE)
+    new AbilityDefinitionMindRot(ABILITY_RENDO_WOLF_BITE)
         ..setName(TOOLTIP_NORM)
+        ..setIconNormal(Icons.bTNRedDragonDevour)
         ..setHotkeyNormal("W")
         ..setTooltipNormal(1, makeToolTipNorm("W", TOOLTIP_NORM))
         ..setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
         ..setCooldown(1, COOLDOWN)
         ..setManaCost(1, 0)
-        ..setIconNormal(Icons.bTNRedDragonDevour)
         ..setAnimationNames("attack")
         ..setHeroAbility(false)
         ..setTargetsAllowed(1, commaList(
@@ -55,10 +67,12 @@ let TOOLTIP_EXTENDED = "Rendo uses the Wolf inner instinct to bite off a vital s
         ..setDurationNormal(1, DURATION)
         ..setEffectSound(Sounds.devour)
         ..setArtTarget("")
+        ..setRequiredLevel(4)
         ..setCastRange(1, 128)
+        //..setRequirements(UPGD_RENDO_WOLF_BITE.toRawCode())
 
 
-class Rupture
+class WolfBite
     use TimedLoop
     vec2 pos
     unit caster
@@ -102,5 +116,5 @@ class Rupture
 
 init
     EventListener.onTargetCast(ABILITY_RENDO_WOLF_BITE) (unit caster, unit target) ->
-        new Rupture(caster, target)
+        new WolfBite(caster, target)
         addEffect(Objects.orcSmallDeathExplode, target.getPos())

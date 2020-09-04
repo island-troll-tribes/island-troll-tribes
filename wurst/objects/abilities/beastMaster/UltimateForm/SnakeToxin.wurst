@@ -6,6 +6,7 @@ import ClosureEvents
 import Assets
 import ClosureTimers
 import BuffObjEditing
+import UpgradeObjEditing
 
 // Local Imports:
 import ToolTipsUtils
@@ -25,14 +26,25 @@ let MS_FACTOR = 0.2
 
 let TOOLTIP_NORM = "Snake Toxin"
 let TOOLTIP_EXTENDED = "" +
-    "Rendo uses the Snake anatomy to embed his claws with poison toxin." +
+    ("Rendo uses the Snake anatomy to soak his claws with poison toxin. " +
+    "Target affected by the poison got their attack speed reduced by {0} " +
+    "and movement speed reduced by {1}, the poison last {2} seconds.")
+    .format(
+        AS_FACTOR.toToolTipOrange(),
+        MS_FACTOR.toToolTipOrange(),
+        POISON_DURATION.toToolTipLightBlue()
+    )+
     makeToolTipDuration(DURATION, COOLDOWN)
+
 
 @compiletime function createSnakeToxinBuffDummyAbility()
     new BuffDefinition(BUFF_ID, 'Basl') // slow tornado
         ..setName(1, TOOLTIP_NORM)
         ..setTooltipNormal(1, TOOLTIP_NORM.color(COLOR_GREEN))
-        ..setTooltipNormalExtended(1, TOOLTIP_NORM)
+        ..setTooltipNormalExtended(1,
+            ("This unit has its claws soaked with poison; "+
+            "it applies a slow poison when hitting enemies")
+            )
         ..setIcon(Icons.bTNSlowPoison)
 
     new AbilityDefinitionAuraSlow(DUMMY_ABIL_ID)
@@ -49,6 +61,12 @@ let TOOLTIP_EXTENDED = "" +
         ..setEditorSuffix("wurst")
 
 @compiletime function createSnakeToxinAbility()
+    new UpgradeDefinition(UPGD_RENDO_SNAKE_TOXIN)
+        ..setName(1, "Devoured Snake")
+        ..setLevels(1)
+        ..setIcon(1, Icons.bTNSlowPoison)
+        ..addEffectAbilityLevelBonus(0, 1, ABILITY_RENDO_SNAKE_TOXIN.toRawCode())
+
     new AbilityDefinitionSlowPoison(ABIL_POISON_TOXIN)
         ..setDummyAbility()
         ..setAttackSpeedFactor(1, AS_FACTOR)
@@ -58,12 +76,10 @@ let TOOLTIP_EXTENDED = "" +
         ..setDurationNormal(1, DURATION)
         ..setName(TOOLTIP_NORM + " True Cast")
 
-@compiletime function createSnakeToxinChannelAbility() returns ChannelAbilityPreset
-    return new ChannelAbilityPreset(ABILITY_RENDO_SNAKE_TOXIN, 1, true)
+    new ChannelAbilityPreset(ABILITY_RENDO_SNAKE_TOXIN, 1, true)
         ..presetManaCost(lvl -> 0)
         ..setLevelSkipRequirement(0)
         ..setRequiredLevel(1)
-        ..setCheckDependencies(false)
         ..setCooldown(1, 1)
         ..setIconNormal(Icons.bTNSlowPoison)
         ..setName(TOOLTIP_NORM)
@@ -74,6 +90,7 @@ let TOOLTIP_EXTENDED = "" +
         ..setFollowThroughTime(1, 0)
         // Should we note down somewhere which orderId are used by channel abilities?
         ..setBaseOrderID(1, "fanofknives")
+        //..setRequirements(UPGD_RENDO_SNAKE_TOXIN.toRawCode())
 
 
 init

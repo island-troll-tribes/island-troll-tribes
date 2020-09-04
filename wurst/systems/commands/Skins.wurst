@@ -3,6 +3,7 @@ package Skins
 // Standard library imports:
 import ClosureTimers
 import HashMap
+import HashSet
 import LinkedList
 import OnUnitEnterLeave
 
@@ -10,9 +11,7 @@ import OnUnitEnterLeave
 import ChatCommands
 import Classes
 import ColorUtils
-import Feature
 import LocalObjectIDs
-import PlayerFeature
 import StringExtensions
 import Transformation
 
@@ -30,34 +29,53 @@ let MSG = compiletime(
 )
 
 class CustomSkin
-    static let customSkinList = new HashMap<integer, thistype>()
+    // A global list of skins per unit type ID.
+    // TODO: Support multiple skins per unit.
+    static let skins = new HashMap<integer, thistype>()
 
-    integer newUnitTypeId
-    string featureName
+    // The type ID for the unit that this skin applies to
+    integer originID
 
-    construct(integer unitTypeId, integer newUnitTypeId, string featureName)
-        this.newUnitTypeId = newUnitTypeId
-        this.featureName = featureName
-        customSkinList.put(unitTypeId, this)
+    // The type ID for the unit that holds the new skin.
+    integer targetID
 
-        // Register the transformation used to provide the model.
-        registerTransformation(unitTypeId, newUnitTypeId)
+    // The name of the skin, used to select it via text command.
+    string name
 
-        // Register the transformation used to inverse the change.
-        registerTransformation(newUnitTypeId, unitTypeId)
+    // The names of players this feature is enabled for.
+    HashSet<string> enabled
 
-        // Undo the transformation prior to any other ones.
-        registerPriorEffect() (unit target, int unitID) ->
-            // Verify that the current transformation involves this skin.
-            if target.getTypeId() == newUnitTypeId
-                // Avoid repeating this callback recursively.
-                transformUnit(target, unitTypeId)
+    construct(integer originID, integer targetID, string name)
+        // Initialize the state.
+        this.originID = originID
+        this.targetID = targetID
+        this.name = name
+        this.enabled = new HashSet<string>()
 
-// This function is called externally.
-// TODO: This won't work with the new transformation registration methodology.
-//       See the associated PR for an in-depth explanation.
-//       This is not fixed part of it because skins are currently defunct.
-@compiletime function buildSkins()
+        // Update the global mapping.
+        skins.put(originID, this)
+
+        // Enable skins for local testing automatically.
+        register("Local Player")
+
+    static function lookup(int originID) returns thistype
+        return skins.get(originID)
+
+    static function lookup(unit target) returns thistype
+        return lookup(target.getTypeId())
+
+    function register(vararg string names)
+        for name in names
+            enabled.add(name)
+
+    function isEnabled(string name) returns bool
+        return enabled.has(name)
+
+    function isEnabled(player target) returns bool
+        return enabled.has(target.getName())
+
+// TODO: Run this at compiletime once transformations are used.
+function buildSkins()
     new CustomSkin(UNIT_BEAST_MASTER,  UNIT_BEAST_MASTER_1,  "skin-bm-1"     )
     new CustomSkin(UNIT_HUNTER,        UNIT_HUNTER_1,        "skin-hunter-1" )
     new CustomSkin(UNIT_MAGE,          UNIT_MAGE_1,          "skin-mage-1"   )
@@ -65,35 +83,51 @@ class CustomSkin
     new CustomSkin(UNIT_BOOSTER,       UNIT_BOOSTER_1,       "skin-booster-1")
     new CustomSkin(UNIT_ELEMENTALIST,  UNIT_ELEMENTALIST_1,  "skin-ele-1"    )
 
+// This handler is responsible for allowing players to transform new units
+// using the BlzSetUnitSkin native. This function does not change the type ID
+// of the unit, which facilitates operations that depend on that. However, it
+// removes any art effects currently on the target and those are not refreshed
+// unless the source of those effects is refreshed. For example, the visual aura
+// associated with Immolation will disappear, only reappearing if Immolation is
+// toggled. The system could instead use the transformation library, which does
+// not have this problems, if the various systems that check exact type IDs are
+// corrected to treat original units and their skins the same. This would also
+// require that object definitions for the skins be based directly on the origin
+// unit definition in order to guarantee that all fields other than appearance
+// remain synced.
+// TODO: Use the transformation library instead of BlzSetUnitSkin.
 function onEnterHandler(unit target)
-    // Store the original type ID of the target.
-    let originID = target.getTypeId()
-
     // Look up the feature corresponding to the custom skin for the unit.
-    let skin = CustomSkin.customSkinList.get(originID)
+    let skin = CustomSkin.lookup(target)
 
     // Exit if the unit does not have a skin.
     if skin == null
         return
 
-    // Exit if the owner is not enabled for the custom skins.
-    if not PlayerFeature.isPlayerEnabled(target.getOwner(), skin.featureName)
+    // Exit if the owner is not enabled for the custom skin.
+    if not skin.isEnabled(target.getOwner())
         return
 
     // Notify the owner of the option to use the custom skin.
-    target.getOwner().print(MSG.format(skin.featureName), TIMEOUT)
+    target.getOwner().print(MSG.format(skin.name), TIMEOUT)
 
     // Register the command used to switch to the custom skin.
-    registerCommand(target.getOwner(), skin.featureName) (owner, args) ->
+    registerCommand(target.getOwner(), skin.name) (owner, args) ->
         // Transform the unit to impart the custom skin.
-        // TODO: Generate skins to match trolls and uncomment this.
-        // transformUnit(target, skin.newUnitTypeId)
+        BlzSetUnitSkin(target, skin.targetID)
+
+        // Refresh the ability responsible for hero glow, which is not
+        // attached properly automatically following a skin change.
+        if target.hasAbility(ABILITY_HERO_GLOW)
+            target.removeAbility(ABILITY_HERO_GLOW)
+            target.addAbility(ABILITY_HERO_GLOW)
 
     // Prevent the user from using the transformation during gameplay.
     doAfter(TIMEOUT) ->
-        deregisterCommand(target.getOwner(), skin.featureName)
+        deregisterCommand(target.getOwner(), skin.name)
 
 init
+    // Build the registry at runtime.
     buildSkins()
 
     // Register the callback used to handle skins for new units.
@@ -106,75 +140,66 @@ init
         if getTrollClassType(target) != getTrollClassType(unitID)
             onEnterHandler(target)
 
-    PlayerFeature
-        .get("WorldEdit")
-        ..enableFeature("skin-bm-1")
-        ..enableFeature("skin-hunter-1")
-        ..enableFeature("skin-mage-1")
-        ..enableFeature("skin-mh-1")
-        ..enableFeature("skin-booster-1")
-        ..enableFeature("skin-ele-1")
+    CustomSkin.lookup(UNIT_BOOSTER).register(
+        "Quantum",
+        "Mambo",
+        "Davee3",
+        "Bananbuske",
+        "Oh_snap",
+        "Bliss-darkeyes",
+        "LiquidSwords",
+        "Srup",
+        "Lasvegass",
+        "Kicuch",
+        "Albinoblackbat",
+        "Mephisto.",
+        "Master-Troll",
+        "Scatman33",
+        "Tahsis",
+        "PIC",
+        "Rukhal",
+        "Quazz",
+        "Xan_Xriegor",
+        "Viking."
+    )
 
-    Feature
-        .get("skin-booster-1")
-        ..addPlayer("Quantum")
-        ..addPlayer("Mambo")
-        ..addPlayer("Davee3")
-        ..addPlayer("Bananbuske")
-        ..addPlayer("Oh_snap")
-        ..addPlayer("Bliss-darkeyes")
-        ..addPlayer("Liquid.")
-        ..addPlayer("Srup")
-        ..addPlayer("Lasvegass")
-        ..addPlayer("Kicuch")
-        ..addPlayer("Albinoblackbat")
-        ..addPlayer("Mephisto.")
-        ..addPlayer("Master-Troll")
-        ..addPlayer("Scatman33")
-        ..addPlayer("Tahsis")
-        ..addPlayer("PIC")
-        ..addPlayer("Rukhal")
-        ..addPlayer("Quazz")
-        ..addPlayer("Xan_Xriegor")
-        ..addPlayer("Viking.")
+    CustomSkin.lookup(UNIT_HUNTER).register(
+        "Quantum",
+        "Mambo",
+        "Davee3",
+        "Bananbuske",
+        "Oh_snap",
+        "Bliss-darkeyes",
+        "LiquidSwords",
+        "Srup",
+        "Lasvegass",
+        "Kicuch",
+        "Albinoblackbat",
+        "Mephisto.",
+        "bmxsesh",
+        "Tahsis",
+        "Quazz",
+        "Xan_Xriegor",
+        "Nik"
+    )
 
-    Feature
-        .get("skin-hunter-1")
-        ..addPlayer("Quantum")
-        ..addPlayer("Mambo")
-        ..addPlayer("Davee3")
-        ..addPlayer("Bananbuske")
-        ..addPlayer("Oh_snap")
-        ..addPlayer("Bliss-darkeyes")
-        ..addPlayer("Liquid.")
-        ..addPlayer("Srup")
-        ..addPlayer("Lasvegass")
-        ..addPlayer("Kicuch")
-        ..addPlayer("Albinoblackbat")
-        ..addPlayer("Mephisto.")
-        ..addPlayer("bmxsesh")
-        ..addPlayer("Tahsis")
-        ..addPlayer("Quazz")
-        ..addPlayer("Xan_Xriegor")
-        ..addPlayer("Nik")
+    CustomSkin.lookup(UNIT_MASTER_HEALER).register(
+        "Quantum",
+        "Bananbuske",
+        "Oh_snap"
+    )
 
-    Feature
-        .get("skin-mh-1")
-        ..addPlayer("Quantum")
-        ..addPlayer("Bananbuske")
-        ..addPlayer("Oh_snap")
+    CustomSkin.lookup(UNIT_MAGE).register(
+        "Quantum",
+        "Mambo",
+        "Davee3"
+    )
 
-    Feature
-        .get("skin-mage-1")
-        ..addPlayer("Quantum")
-        ..addPlayer("Mambo")
-        ..addPlayer("Davee3")
+    CustomSkin.lookup(UNIT_ELEMENTALIST).register(
+        "Quantum",
+        "Mambo"
+    )
 
-    Feature
-        .get("skin-ele-1")
-        ..addPlayer("Quantum")
-        ..addPlayer("Mambo")
-
-    Feature
-        .get("skin-bm-1")
-        ..addPlayer("Quantum")
+    CustomSkin.lookup(UNIT_BEAST_MASTER).register(
+        "Quantum"
+    )

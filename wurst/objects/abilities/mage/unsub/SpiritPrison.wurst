@@ -98,6 +98,7 @@ function createCageBuffAir(int newId) returns BuffDefinition
         ..setButtonPositionNormalY(1)
         ..setCastRange(1, MISSILE_SPEED * MISSILE_LIFETIME)
         ..setFollowThroughTime(1, 0.5)
+        ..setBaseOrderID(1, "blink")
 
 class SpiritPrisonProjectile
     use TimedLoop
@@ -134,7 +135,7 @@ class SpiritPrisonProjectile
 
     function checkForImpacts()
         forUnitsInRange(this.pos.toVec2(), IMPACT_TRIGGER_AOE) u ->
-            if isValidTarget(ownerUnit, u)
+            if isValidTarget(ownerUnit, u) and this.exploded == false
                 this.target = u
                 if u.isTroll()
                     spawnTemporaryVision(VISION_RANGE, DURATION_HERO)

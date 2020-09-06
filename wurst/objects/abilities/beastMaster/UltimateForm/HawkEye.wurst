@@ -1,0 +1,74 @@
+package HawkEye
+
+
+
+// Standard Library Imports
+import UpgradeObjEditing
+import ChannelAbilityPreset
+import ClosureEvents
+import ClosureTimers
+import Assets
+import HashMap
+
+// Local imports:
+import LocalObjectIDs
+import ToolTipsUtils
+import OraclePotion
+import TimerUtils
+
+let BUFF_HAWK_EYE = compiletime(BUFF_ID_GEN.next())
+
+let DURATION = 25.
+let COOLDOWN = 60.
+
+let TOOLTIP_NORM = "Hawk Eye"
+let TOOLTIP_EXTENDED = "" +
+    ("Rendo uses the Hawk piercing eye to spot invisible unit around him.") +
+    makeToolTipDuration(DURATION, COOLDOWN)
+
+
+@compiletime function createHawkEyeAbility() returns ChannelAbilityPreset
+    new UpgradeDefinition(UPGD_RENDO_HAWK_EYE)
+        ..setName(1, "Devoured Hawk")
+        ..setLevels(1)
+        ..setIcon(1, Icons.bTNScout)
+        ..addEffectAbilityLevelBonus(0, 1, ABILITY_RENDO_HAWK_EYE.toRawCode())
+
+    return new ChannelAbilityPreset(ABILITY_RENDO_HAWK_EYE, 1, true)
+        ..presetManaCost(lvl -> 10)
+        ..setLevelSkipRequirement(0)
+        ..setRequiredLevel(1)
+        ..setCooldown(1, COOLDOWN)
+        ..setIconNormal(Icons.bTNScout)
+        ..setName(TOOLTIP_NORM)
+        ..setHotkeyNormal("Q")
+        ..setTooltipNormal(1, makeToolTipNorm("Q", TOOLTIP_NORM))
+        ..setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        ..setFollowThroughTime(1, 0)
+        // Should we note down somewhere which orderId are used by channel abilities?
+        ..setBaseOrderID(1, "unimmolation")
+        ..setRequirements(UPGD_RENDO_HAWK_EYE.toRawCode())
+
+
+HashMap<unit, timer> removalTimers = new HashMap<unit,timer>()
+
+function onCastHawkSight(unit caster)
+    if removalTimers.has(caster)
+        removalTimers.getAndRemove(caster).release()
+
+    // Adding same ability as oracle potion
+    if caster.getTypeId() == UNIT_ULTIMATE_FORM
+        caster.addAbility(SPELLBOOK_ABILITY_ID)
+        caster.getOwner().setAbilityAvailable(SPELLBOOK_ABILITY_ID, false)
+
+    let t = getTimer()
+    t.doAfter(DURATION) ->
+        if caster.getTypeId() == UNIT_ULTIMATE_FORM
+            caster.removeAbility(SPELLBOOK_ABILITY_ID)
+            caster.removeAbility(BUFF_TRUE_SIGHT_AURA_ID)
+        removalTimers.remove(caster)
+    removalTimers.put(caster, t)
+
+
+init
+    EventListener.onCast(ABILITY_RENDO_HAWK_EYE, (unit caster) -> onCastHawkSight(caster))

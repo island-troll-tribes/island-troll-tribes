@@ -6,9 +6,14 @@ import ClosureEvents
 import HashMap
 import Assets
 import OrderIds
+import ErrorHandling
+import SoundUtils
 
 // Local Imports:
+import UnitEntity
+import Hostile
 import SimError
+import HealingSystem
 import PlayerExtensions
 import LocalObjectIDs
 import ColorUtils
@@ -16,6 +21,9 @@ import StringExtensions
 import ToolTipsUtils
 
 let ABIL_DODGE = compiletime(ABIL_ID_GEN.next())
+let DEVOUR_SOUND = new SoundDefinition(Sounds.devour, false, true)
+
+let HEALTH_THRESHOLD = 50
 
 let upgradeFromAnimalMap = new HashMap<int, int>()
     ..put(UNIT_ELK, UPGD_RENDO_JUMP)
@@ -29,11 +37,11 @@ let upgradeAbilityMap = new HashMap<int, int>()
     ..put(ABILITY_RENDO_SNAKE_TOXIN, UPGD_RENDO_SNAKE_TOXIN)
     ..put(ABILITY_RENDO_PANTHER_INSTINCT, UPGD_RENDO_PANTHER_INSTINCT)
 
-let COOLDOWN = 30.
+let COOLDOWN = 25.
 
 let TT_NORM = "Devour"
 let TT_EXT = "" +
-    "Rendo devour an animal and absord its genes, gaining an ability based on the type of " +
+    "Rendo savagely devour an animal and absord its gene pool, gaining an ability based on the type of " +
     "animal he ate. Rendo swallow up and digest every part of the animal, therefore, no hides " +
     "or bones are dropped upon the animal death.\n" +
     "Following animal give an ability upon devoration :\n" +
@@ -43,12 +51,14 @@ let TT_EXT = "" +
 @compiletime function createDevourSpell() returns ChannelAbilityPreset
     return new ChannelAbilityPreset(ABILITY_RENDO_DEVOUR, 1, true)
         ..presetTargetTypes(Targettype.UNIT)
-        ..presetCooldown(lvl -> 0)
+        ..setName(TT_NORM)
+        ..setTooltipNormal(1, TT_NORM)
+        ..setTooltipNormalExtended(1, TT_EXT)
+        ..presetCooldown(lvl -> COOLDOWN)
         ..presetManaCost(lvl -> 0)
         ..presetCastRange(lvl -> 100)
         ..presetButtonPosNormal(3, 1)
-        ..setFollowThroughTime(1, 1.5)
-        ..setEffectSound(Sounds.devour)
+        ..setFollowThroughTime(1, 0)
         ..setIconNormal(Icons.bTNDevour)
         ..setTargetsAllowed(1, commaList(
             TargetsAllowed.enemies,
@@ -56,23 +66,48 @@ let TT_EXT = "" +
             TargetsAllowed.organic,
             TargetsAllowed.nonancient
         ))
-        ..setAnimationNames("stand - 3")
+        ..setAnimationNames("stand")
 
 
 init
     EventListener.onTargetCast(ABILITY_RENDO_DEVOUR) (unit caster, unit target) ->
-        if target.getHP() < 50
+        if target.getHP() < HEALTH_THRESHOLD
+            // Play a specific animation which... look like rendo's devouring something?
+            caster.setAnimation(2)
+
+            let entity = UnitEntity.findForUnit(target)
+            // Check if unit eaten is an hostile entity
+            if entity instanceof Hostile
+                let hostile = entity castTo Hostile
+
+                // Disable item & corpses drop
+                hostile.setDropOndeath(false)
+                target.kill()
+
+                // Heal caster based on target corpses dropped amount
+                let healAmount = hostile.getNumCorpses() * 25.
+                new HealingInstance(caster, healAmount, HealingType.ABILITY)
+                flashEffect(Abilities.vampiricAuraTarget, caster, "origin")
+            else
+                error("Devoured unregistered unit, report this please")
+
+            // Small effect on target getting devoured
             flashEffect(Objects.humanSmallDeathExplode, target.getPos())
-            target.remove()
+
+            // Unlock Rendo ability if target's eligible for an rendo "evolution"
             if upgradeFromAnimalMap.has(target.getTypeId())
                 caster.getOwner().setTechResearched(
                     upgradeFromAnimalMap.get(target.getTypeId()), 1)
         else
-            simError(caster.getOwner(), "Target health point must be below 50")
+            simError(caster.getOwner(),
+                "Target health point must be below " + HEALTH_THRESHOLD.toString()
+                )
             caster.issueImmediateOrderById(Orders.stop)
 
     EventListener.add(EVENT_PLAYER_UNIT_SPELL_CAST) ->
         let abilId = EventData.getSpellAbilityId()
         let caster = EventData.getSpellAbilityUnit()
+
+        // Disable Rendo evolution ability
         if upgradeAbilityMap.has(abilId)
             caster.getOwner().setTechResearched(upgradeAbilityMap.get(abilId), 0)

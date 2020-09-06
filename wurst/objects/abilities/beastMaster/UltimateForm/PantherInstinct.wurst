@@ -18,11 +18,10 @@ import TextTagUtils
 import ColorUtils
 
 let BUFF_ID = compiletime(BUFF_ID_GEN.next())
-let BUFF_ORIGINAL_ID = 'Bpsh' // PhaseShift
 
 let DUMMY_ABIL_ID = compiletime(ABIL_ID_GEN.next())
 
-let COOLDOWN = 20.
+let COOLDOWN = 60.
 let DURATION = 4.
 let TOOLTIP_NORM = "Panther Instinct"
 let TOOLTIP_EXTENDED = "" +
@@ -30,7 +29,7 @@ let TOOLTIP_EXTENDED = "" +
     makeToolTipDuration(DURATION, COOLDOWN)
 
 @compiletime function createPantherInstinctBuff()
-    new BuffDefinition(BUFF_ID, BUFF_ORIGINAL_ID)
+    new BuffDefinition(BUFF_ID, 'Bpsh') // PhaseShift
         ..setIcon(Icons.bTNEvasion)
         ..setArtSpecial(1,"")
         ..setTooltipNormal(1, TOOLTIP_NORM)
@@ -56,30 +55,30 @@ let TOOLTIP_EXTENDED = "" +
         ..addEffectAbilityLevelBonus(0, 1, ABILITY_RENDO_PANTHER_INSTINCT.toRawCode())
 
     new ChannelAbilityPreset(ABILITY_RENDO_PANTHER_INSTINCT, 1, true)
-        ..presetManaCost(lvl -> 0)
+        ..presetManaCost(lvl -> 20)
         ..setLevelSkipRequirement(0)
         ..setRequiredLevel(1)
         ..setCheckDependencies(true)
         ..setCooldown(1, 1)
         ..setIconNormal(Icons.bTNEvasion)
         ..setName(TOOLTIP_NORM)
-        ..setHotkeyNormal("E")
         ..setTooltipNormal(1, makeToolTipNorm("E", TOOLTIP_NORM))
         ..setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
-        ..setAnimationNames("stand - 3")
         ..setFollowThroughTime(1, 0)
+        // Should we note down somewhere which orderId are used by channel abilities?
         ..setBaseOrderID(1, "immolation")
         ..setRequirements(UPGD_RENDO_PANTHER_INSTINCT.toRawCode())
 
 
 init
     EventListener.onCast(ABILITY_RENDO_PANTHER_INSTINCT) (unit caster) ->
-        print("hello")
         InstantDummyCaster.castTarget(caster.getOwner(), DUMMY_ABIL_ID, 1, OrderIds.innerfire, caster)
         let dmgListener = DamageEvent.addListener()  ->
             let damaged = DamageEvent.getTarget()
             if damaged.hasAbility(BUFF_ID)
                 let text = "Dodged " + DamageEvent.getAmount().round().toString()
+                // Create a small fading text to indicate how much damage has been dodged
+                // Think player would like to know what they have dodged
                 createFadingTextTag(caster, text, COLOR_RED)
                     ..setText(text, 8)
                     ..setVelocity(0, 0.06)

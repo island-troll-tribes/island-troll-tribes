@@ -25,10 +25,11 @@ let BLOOD_TRAIL_PERIOD = 2.4
 
 let TOOLTIP_NORM = "Wolf Bite"
 let TOOLTIP_EXTENDED = "" +
-    "Rendo uses the Wolf inner instinct to bite off a vital spot of the target, " +
+    "Rendo uses the Wolf inner instinct to target a vital spot of the enemy and bite it off, " +
     "causing it to bleed profusely. The more ground covered, the more damage taken. " +
     "The target leaves traces of blood on the ground when moving." +
     makeToolTipDuration(DURATION, COOLDOWN)
+
 
 @compiletime function createWolfBiteBuff()
     new BuffDefinition(BUFF_ID, BUFF_ORIGINAL_ID)
@@ -41,18 +42,20 @@ let TOOLTIP_EXTENDED = "" +
         )
         ..setArtTarget(1, LocalAbilities.bloodDrop)
 
-@compiletime function createWolfBite()
+@compiletime function createWolfBiteUpgrade()
     new UpgradeDefinition(UPGD_RENDO_WOLF_BITE)
         ..setName(1, "Devoured Wolf")
         ..setLevels(1)
         ..setIcon(1, Icons.bTNRedDragonDevour)
         ..addEffectAbilityLevelBonus(0, 1, ABILITY_RENDO_WOLF_BITE.toRawCode())
 
+
+@compiletime function createWolfBite()
     new AbilityDefinitionMindRot(ABILITY_RENDO_WOLF_BITE)
         ..setName(TOOLTIP_NORM)
         ..setIconNormal(Icons.bTNRedDragonDevour)
-        ..setHotkeyNormal("W")
-        ..setTooltipNormal(1, makeToolTipNorm("W", TOOLTIP_NORM))
+        ..setHotkeyNormal("A")
+        ..setTooltipNormal(1, makeToolTipNorm("A", TOOLTIP_NORM))
         ..setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
         ..setCooldown(1, COOLDOWN)
         ..setManaCost(1, 20)
@@ -66,7 +69,6 @@ let TOOLTIP_EXTENDED = "" +
         ..setBuffs(1, toRawCode(BUFF_ID))
         ..setDurationHero(1, DURATION)
         ..setDurationNormal(1, DURATION)
-        ..setEffectSound(Sounds.devour)
         ..setArtTarget("")
         ..setRequiredLevel(4)
         ..setCastRange(1, 128)
@@ -103,7 +105,7 @@ class WolfBite
             damageCount += DAMAGE_FACTOR * distanceCovered
 
             // Sprout blood effect that leave a blood splat on the ground every
-            // The blood splat is set in Splats/SplatData.slk file and decay over 120 seconds
+            // The blood splat decay time is set in Splats/SplatData.slk file and decay over 120 seconds
             if duration % BLOOD_TRAIL_PERIOD == BLOOD_TRAIL_PERIOD
                 flashEffect(Objects.orcSmallDeathExplode, pos)
 
@@ -111,7 +113,7 @@ class WolfBite
         if duration <= 0 or not target.hasAbility(BUFF_ID)
             stopTimedLoopAndDestroy()
     ondestroy
-        // Debug, max pure damage inflicted is 410 over 6 seconds (when you run with anabolic boots)
+        // Debug
         //print(damageCount)
 
 

@@ -26,7 +26,7 @@ let MS_FACTOR = 0.2
 
 let TOOLTIP_NORM = "Snake Toxin"
 let TOOLTIP_EXTENDED = "" +
-    ("Rendo uses the Snake anatomy to soak his claws with poison toxin. " +
+    ("Rendo uses the Snake poisonous glands to soak his claws with poison toxin. " +
     "Target affected by the poison got their attack speed reduced by {0} " +
     "and movement speed reduced by {1}, the poison last {2} seconds.")
     .format(
@@ -36,6 +36,13 @@ let TOOLTIP_EXTENDED = "" +
     )+
     makeToolTipDuration(DURATION, COOLDOWN)
 
+
+@compiletime function createSnakeToxinUpgrade()
+    new UpgradeDefinition(UPGD_RENDO_SNAKE_TOXIN)
+        ..setName(1, "Devoured Snake")
+        ..setLevels(1)
+        ..setIcon(1, Icons.bTNSlowPoison)
+        ..addEffectAbilityLevelBonus(0, 1, ABILITY_RENDO_SNAKE_TOXIN.toRawCode())
 
 @compiletime function createSnakeToxinBuffDummyAbility()
     new BuffDefinition(BUFF_ID, 'Basl') // slow tornado
@@ -61,12 +68,6 @@ let TOOLTIP_EXTENDED = "" +
         ..setEditorSuffix("wurst")
 
 @compiletime function createSnakeToxinAbility()
-    new UpgradeDefinition(UPGD_RENDO_SNAKE_TOXIN)
-        ..setName(1, "Devoured Snake")
-        ..setLevels(1)
-        ..setIcon(1, Icons.bTNSlowPoison)
-        ..addEffectAbilityLevelBonus(0, 1, ABILITY_RENDO_SNAKE_TOXIN.toRawCode())
-
     new AbilityDefinitionSlowPoison(ABIL_POISON_TOXIN)
         ..setDummyAbility()
         ..setAttackSpeedFactor(1, AS_FACTOR)
@@ -83,8 +84,8 @@ let TOOLTIP_EXTENDED = "" +
         ..setCooldown(1, 1)
         ..setIconNormal(Icons.bTNSlowPoison)
         ..setName(TOOLTIP_NORM)
-        ..setHotkeyNormal("Q")
-        ..setTooltipNormal(1, makeToolTipNorm("Q", TOOLTIP_NORM))
+        ..setHotkeyNormal("W")
+        ..setTooltipNormal(1, makeToolTipNorm("W", TOOLTIP_NORM))
         ..setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
         ..setFollowThroughTime(1, 0)
         // Should we note down somewhere which orderId are used by channel abilities?

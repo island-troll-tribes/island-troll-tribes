@@ -31,6 +31,7 @@ public enum HealingType
 public class HealingInstance
     HealingType healingType
     real amount
+    real trueAmount
     real multiplier
     unit target
     unit caster
@@ -39,6 +40,8 @@ public class HealingInstance
     construct(unit target, real amount, HealingType healingType)
         this.healingType = healingType
         this.amount = amount
+        // Computing the actual amount of health point healed
+        this.trueAmount = target.getMissingHP() - amount < 0 ? target.getMissingHP() : amount
         this.multiplier = 1
         this.target = target
         this.caster = target
@@ -47,6 +50,8 @@ public class HealingInstance
     construct(unit target, unit caster, real amount, HealingType healingType)
         this.healingType = healingType
         this.amount = amount
+        // Computing the actual amount of health point healed
+        this.trueAmount = target.getMissingHP() - amount < 0 ? target.getMissingHP() : amount
         this.multiplier = 1
         this.target = target
         this.caster = caster
@@ -106,8 +111,14 @@ public class HealingInstance
     function getAmount() returns real
         return this.amount
 
+    function getTrueAmount() returns real
+        return this.trueAmount
+
     function getTarget() returns unit
         return this.target
 
     function getCaster() returns unit
         return this.caster
+
+    function getHealingType() returns HealingType
+        return this.healingType

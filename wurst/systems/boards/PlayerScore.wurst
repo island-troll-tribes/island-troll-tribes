@@ -33,7 +33,7 @@ public let animalName = new IterableMap<int, string>()
 
 let UPDATE_PERIOD = 1.0
 let KILL_COLUMN_WIDTH = 0.055
-let STAT_LABEL_WIDTH = 0.09
+let STAT_LABEL_WIDTH = 0.1
 let NAME_LABEL_WIDTH = 0.13
 let LEVEL_LABEL_WIDTH = 0.05
 
@@ -64,7 +64,8 @@ public class PlayerScore
 
     IterableMap<LinkedList<int>, int> playerKill
     int damageTroll = 0
-    int healTroll = 0
+    int selfHealing = 0
+    int allyHealing = 0
     int meatEaten = 0
     int goldAmount = 0
     int previousGoldAmount = 0
@@ -108,9 +109,14 @@ public class PlayerScore
         else
             playerScores.get(this._player).previousGoldAmount = this._player.getLumber()
 
-    // TODO: Rework healing cloak so it uses healing event when healing
-    function addHeal(int heal)
-        healTroll += heal
+    function addSelfHealing(int healingAmount)
+        selfHealing += healingAmount
+
+    function addAllyHealing(int healingAmount)
+        allyHealing += healingAmount
+
+    function getHealing() returns string
+        return this.selfHealing.toString() + "/" + this.allyHealing.toString()
 
     function addDamage(int damage)
         damageTroll += damage
@@ -125,11 +131,15 @@ public class PlayerScore
         meatEaten++
 
     function printScore()
-        var msg = ("Damage dealt (troll) : "  .color(GOLD_COLOR) + "{0}\n".color(SPECIAL_COLOR)+
-                   "Healing done (allies)  : ".color(GOLD_COLOR) + "{1}\n".color(SPECIAL_COLOR)+
-                   "Gold acquired : "         .color(GOLD_COLOR) + "{2}\n".color(SPECIAL_COLOR)+
-                   "Meat Eaten : "            .color(GOLD_COLOR) + "{3}\n".color(SPECIAL_COLOR)
-                   ).format(damageTroll.toString(), healTroll.toString(), goldAmount.toString(), meatEaten.toString())
+        var msg = ("Damage dealt (troll) : "    .color(GOLD_COLOR) + "{0}\n".color(SPECIAL_COLOR)+
+                   "Healing done (self/ally) : ".color(GOLD_COLOR) + "{1}\n".color(SPECIAL_COLOR)+
+                   "Gold acquired : "           .color(GOLD_COLOR) + "{2}\n".color(SPECIAL_COLOR)+
+                   "Meat Eaten : "              .color(GOLD_COLOR) + "{3}\n".color(SPECIAL_COLOR)
+                   ).format(
+                       damageTroll.toString(),
+                       getHealing(),
+                       goldAmount.toString(),
+                       meatEaten.toString())
 
         for unitType in playerKill
             msg += ("{0} kill count : ".color(GOLD_COLOR) + "{1}\n").format(animalName.get(unitType.getFirst()), playerKill.get(unitType).toString())
@@ -155,7 +165,7 @@ public class PlayerScore
             column++
         scoreBoard
         ..setNewItem(row, 8  , this.damageTroll.toString() , null)
-        ..setNewItem(row, 9  , this.healTroll  .toString() , null)
+        ..setNewItem(row, 9  , this.getHealing()           , null)
         ..setNewItem(row, 10 , this.goldAmount .toString() , null)
         ..setNewItem(row, 11 , this.meatEaten  .toString() , null)
 
@@ -229,23 +239,23 @@ function initBoard()
     scoreBoard.board.getItem(0, 10 )..setStyle(true, true )..setWidth(STAT_LABEL_WIDTH  )..setValueColor(COLOR_YELLOW   .withAlpha(0))
     scoreBoard.board.getItem(0, 11 )..setStyle(true, true )..setWidth(STAT_LABEL_WIDTH  )..setValueColor(COLOR_ORANGE   .withAlpha(0))
 
-    scoreBoard.setNewItem(0, 0 , "PlayerName"    , null)
-    scoreBoard.setNewItem(0, 1 , "Level"         , null)
-    scoreBoard.setNewItem(0, 2 , "Elk"           , Icons.bTNStag)
-    scoreBoard.setNewItem(0, 3 , "Hawk"          , Icons.bTNWarEagle)
-    scoreBoard.setNewItem(0, 4 , "Snake"         , Icons.bTNWindSerpent)
-    scoreBoard.setNewItem(0, 5 , "Wolf"          , Icons.bTNTimberWolf)
-    scoreBoard.setNewItem(0, 6 , "Bear"          , Icons.bTNFrostBear)
-    scoreBoard.setNewItem(0, 7 , "Panther"       , LocalIcons.bTNPanther)
-    scoreBoard.setNewItem(0, 8 , "Damage Dealt"  , Icons.bTNCriticalStrike)
-    scoreBoard.setNewItem(0, 9 , "Healing Done"  , Icons.bTNHeal)
-    scoreBoard.setNewItem(0, 10, "Gold Acquired" , Icons.bTNMGExchange)
-    scoreBoard.setNewItem(0, 11, "Meat Eaten"    , Icons.bTNMonsterLure)
+    scoreBoard.setNewItem(0, 0 , "PlayerName"       , null)
+    scoreBoard.setNewItem(0, 1 , "Level"            , null)
+    scoreBoard.setNewItem(0, 2 , "Elk"              , Icons.bTNStag)
+    scoreBoard.setNewItem(0, 3 , "Hawk"             , Icons.bTNWarEagle)
+    scoreBoard.setNewItem(0, 4 , "Snake"            , Icons.bTNWindSerpent)
+    scoreBoard.setNewItem(0, 5 , "Wolf"             , Icons.bTNTimberWolf)
+    scoreBoard.setNewItem(0, 6 , "Bear"             , Icons.bTNFrostBear)
+    scoreBoard.setNewItem(0, 7 , "Panther"          , LocalIcons.bTNPanther)
+    scoreBoard.setNewItem(0, 8 , "Damage Dealt"     , Icons.bTNCriticalStrike)
+    scoreBoard.setNewItem(0, 9 , "Healing self/ally", Icons.bTNHeal)
+    scoreBoard.setNewItem(0, 10, "Gold Acquired"    , Icons.bTNMGExchange)
+    scoreBoard.setNewItem(0, 11, "Meat Eaten"       , Icons.bTNMonsterLure)
     scoreBoard.board.display(false)
 
     // Updating the board value every UPDATE_PERIOD second
-    // TODO: Instead of updating the board item every second, update it using updateItem method fro Board class
-    // This way we should be able to update the board item only when the value is updated
+    // TODO: Instead of updating all the board items every second, update it using updateItem method from Board class
+    // This way we should be able to update the board item only when the item value is updated
     doPeriodically(UPDATE_PERIOD, cb -> updateBoard())
 
 
@@ -283,11 +293,21 @@ init
                 let caster = instance.getCaster()
                 let target = instance.getTarget()
                 let healerOwner = caster.getOwner()
+                let healingAmount = instance.getTrueAmount()
 
-                if caster != target
-                    let healAmount = instance.getAmount()
-                    playerScores.get(healerOwner).addHeal(healAmount.toInt())
-                    playerScores.get(healerOwner.getTribe().getNonMember()).addHeal(healAmount.toInt())
+                // Do not take pet healing into account, atleast for now
+                if target.isTroll()
+                    if healerOwner != target.getOwner()
+                        playerScores.get(healerOwner).addAllyHealing(healingAmount.toInt())
+                        playerScores.get(healerOwner.getTribe().getNonMember()).addAllyHealing(healingAmount.toInt())
+
+                    // Do not include self healing consumable items
+                    // I have mixed opinion on this, we should differentiate healing done from ability/item
+                    // This we can "quantify" how much cooked meat priest can actually save through healing spells
+                    // Still, I think having the healing done from meat could also be useful
+                    else if healerOwner == target.getOwner() and instance.getHealingType() != HealingType.ITEM
+                        playerScores.get(healerOwner).addSelfHealing(healingAmount.toInt())
+                        playerScores.get(healerOwner.getTribe().getNonMember()).addSelfHealing(healingAmount.toInt())
 
             // Register cooked meat eaten amount
             EventListener.add(EVENT_PLAYER_UNIT_USE_ITEM) ->

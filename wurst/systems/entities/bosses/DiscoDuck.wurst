@@ -10,6 +10,8 @@ import LocalObjectIDs
 import ItemPoolExtensions
 import LocalSoundUtils
 import StringExtensions
+import ColorUtils
+import PingMinimap
 
 public class DiscoDuck extends Hostile
     private static let unitTypeId = UNIT_DISCO_DUCK
@@ -56,6 +58,10 @@ public class DiscoDuck extends Hostile
         let pos = getPos()
         let pinion = pinions.placeRandomItem(pos)
         pinions.removeItemType(pinion.getTypeId())
+        // TODO : Wrap this up in a Boss entity class?
+        PlaySound(Sounds.warning)
+        printTimed(("The " + getUnit().getName() + " has been killed!").color("red".toColor()), 5)
+        pingMinimap(getUnit().getPos(), 5, COLOR_YELLOW, PingMinimapStyle.ATTACK)
         super.onDeath()
 
     override function postDeath()

@@ -2,17 +2,22 @@ package Hostile
 
 // Standard library imports:
 import ClosureTimers
-import EventHelper
 import LinkedList
+import Sounds
 
 // Local imports:
 import DummyCorpse
 import Sniff
 import UnitEntity
+import PingMinimap
+import ColorUtils
+import StringExtensions
 
 import initlater GreenFish
 import initlater Fish
 import initlater Hawk
+import initlater Mammoth
+import initlater DiscoDuck
 
 public abstract class Hostile extends UnitEntity
     construct(unit whichUnit)
@@ -61,5 +66,11 @@ public abstract class Hostile extends UnitEntity
             udg_FISH_CURRENT -= 1
         else
             udg_ANIMAL_CURRENT -= 1
+
+        if this instanceof Mammoth
+            or this instanceof DiscoDuck
+            PlaySound(Sounds.warning)
+            printTimed(("The {0} has been killed!".format(getUnit().getName())).color(COLOR_RED), 5)
+            pingMinimap(getUnit().getPos(), 5, COLOR_YELLOW, PingMinimapStyle.ATTACK)
 
         super.onDeath()

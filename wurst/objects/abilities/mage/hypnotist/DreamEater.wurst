@@ -1,5 +1,5 @@
 package DreamEater
-import RegisterEvents
+import ClosureEvents
 import LocalObjectIDs
 import Icons
 import Lodash
@@ -10,18 +10,17 @@ import SimError
 
 //@configurable constant int ABILITY_ID = 'A04Z' Old GUI
 @configurable constant int BUFF_ID = BUFF_HYPNOTIZED
-@configurable constant string EFFECT_PATH = Abilities.aIsoTarget
 
 let HP_RESTORED = 50.
 let MANA_RESTORED = 30.
 let MANA_EATEN = 50.
-let DAMAGE = 20.
+let DAMAGE = 40.
 let MANACOST = 10
 let COOLDOWN = 20.
 
 let ANIMATION_NAME = "channel"
 let TOOLTIP_NORM = "Dream Eater"
-let TOOLTIP_EXTENDED = ("Steals an enemy dream restoring {0} Health Point and {1} Mana. Also reduces enemy's Mana by {2} and deals {3} damage. "+
+let TOOLTIP_EXTENDED = ("Steals an enemy dream restoring {0} Health Point and {1} Mana. Also reduces enemy's Mana by {2} and deals {3} pure damage. "+
                         "Only works if the enemy is dreaming. Has {4} seconds cooldown.")
                        .format(HP_RESTORED.toToolTipGreen(), MANA_RESTORED.toToolTipTeal(), MANA_EATEN.toToolTipTeal(), DAMAGE.toToolTipRed(),
                         COOLDOWN.toToolTipLightBlue())
@@ -48,23 +47,18 @@ class DreamEater extends ChannelAbilityPreset
 @compiletime function createDreamEater()
     new DreamEater(ABILITY_DREAM_EATER, "W", new Pair(1, 0))
 
-function onStartCast()
-    if GetSpellAbilityId() == ABILITY_DREAM_EATER and not GetSpellTargetUnit().hasAbility(BUFF_ID)
-        GetSpellAbilityUnit().abortOrder()
-        simError(GetTriggerPlayer(), "Target is not Hypnotized.")
-
-function onCast()
-    var target = GetSpellTargetUnit()
-    target.addEffect(EFFECT_PATH, "overhead").destr()
-    target.subHP(DAMAGE)
-
-    var value = target.getMana() - MANA_EATEN
-    target.setMana(max(value, 10))
-
-    var caster = GetSpellAbilityUnit()
-    caster.addHP(HP_RESTORED)
-    caster.addMana(MANA_RESTORED)
 
 init
-    registerSpellEffectEvent(ABILITY_DREAM_EATER, () -> onCast())
-    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_CAST, () -> onStartCast())
+    EventListener.onTargetCast(ABILITY_DREAM_EATER) (unit caster, unit target) ->
+        if target.hasAbility(BUFF_ID)
+            flashEffect(Abilities.aIsoTarget, target, "overhead")
+
+            // Deals pure damage
+            UnitDamageTarget(caster, target, DAMAGE, false, false, ATTACK_TYPE_CHAOS, DAMAGE_TYPE_UNIVERSAL, null)
+            target.subMana(MANA_EATEN)
+
+            caster.addHP(HP_RESTORED)
+            caster.addMana(MANA_RESTORED)
+        else
+            GetSpellAbilityUnit().abortOrder()
+            simError(GetTriggerPlayer(), "Target is not Hypnotized.")

@@ -95,8 +95,8 @@ public class PlayerScore
             goldAmount += goldAdded
 
             // Updating gold amount for tribe player
-            // TODO: Disable if -tb isn't on?
-            playerScores.get(this._player.getTribe().getNonMember()).goldAmount += goldAdded
+            if this._player.getTribe() != null
+                playerScores.get(this._player.getTribe().getNonMember()).goldAmount += goldAdded
 
     /**
         This function update the previousGoldAmount attribute when an item is bought
@@ -271,7 +271,9 @@ init
                 if killerOwner != players[PLAYER_NEUTRAL_AGGRESSIVE]
                     and killerOwner != players[PLAYER_NEUTRAL_PASSIVE]
                     playerScores.get(killerOwner).addKill(dead.getTypeId())
-                    playerScores.get(killerOwner.getTribe().getNonMember()).addKill(dead.getTypeId())
+
+                    if gameConfig.isTribeOwnsBuildingsEnabled()
+                        playerScores.get(killerOwner.getTribe().getNonMember()).addKill(dead.getTypeId())
 
             // Register damage dealt amount if unit damaged is a troll
             DamageEvent.addListener() () ->
@@ -285,7 +287,9 @@ init
                     and target.isTroll()
                     and playerScores.has(attackerOwner)
                     playerScores.get(attackerOwner).addDamage(dmgAmount.toInt())
-                    playerScores.get(attackerOwner.getTribe().getNonMember()).addDamage(dmgAmount.toInt())
+
+                    if gameConfig.isTribeOwnsBuildingsEnabled()
+                        playerScores.get(attackerOwner.getTribe().getNonMember()).addDamage(dmgAmount.toInt())
 
             // Register healing amount if player heals an ally
             onUnitHealed() ->
@@ -299,7 +303,9 @@ init
                 if target.isTroll()
                     if healerOwner != target.getOwner()
                         playerScores.get(healerOwner).addAllyHealing(healingAmount.toInt())
-                        playerScores.get(healerOwner.getTribe().getNonMember()).addAllyHealing(healingAmount.toInt())
+
+                        if gameConfig.isTribeOwnsBuildingsEnabled()
+                            playerScores.get(healerOwner.getTribe().getNonMember()).addAllyHealing(healingAmount.toInt())
 
                     // Do not include self healing consumable items
                     // I have mixed opinion on this, we should differentiate healing done from ability/item
@@ -307,7 +313,9 @@ init
                     // Still, I think having the healing done from meat could also be useful
                     else if healerOwner == target.getOwner() and instance.getHealingType() != HealingType.ITEM
                         playerScores.get(healerOwner).addSelfHealing(healingAmount.toInt())
-                        playerScores.get(healerOwner.getTribe().getNonMember()).addSelfHealing(healingAmount.toInt())
+
+                        if gameConfig.isTribeOwnsBuildingsEnabled()
+                            playerScores.get(healerOwner.getTribe().getNonMember()).addSelfHealing(healingAmount.toInt())
 
             // Register cooked meat eaten amount
             EventListener.add(EVENT_PLAYER_UNIT_USE_ITEM) ->
@@ -319,7 +327,9 @@ init
                 // Other unit apart from troll can eat, like pets
                 if (itemId == ITEM_COOKED_MEAT or itemId == ITEM_SMOKED_MEAT) and playerScores.has(owner)
                     playerScores.get(owner).addMeatEaten()
-                    playerScores.get(owner.getTribe().getNonMember()).addMeatEaten()
+
+                    if gameConfig.isTribeOwnsBuildingsEnabled()
+                        playerScores.get(owner.getTribe().getNonMember()).addMeatEaten()
 
             // This event is triggered when a player BUY an item
             EventListener.add(EVENT_PLAYER_UNIT_SELL_ITEM) ->

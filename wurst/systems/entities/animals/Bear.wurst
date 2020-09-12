@@ -9,17 +9,23 @@ import RearingAnimal
 
 // The number of corpses dropped per unit type.
 let typeIDs = new IterableMap<int, int>()
+    ..put(UNIT_BEAR_ADOLESCENT,   0)
     ..put(UNIT_JUNGLE_BEAR,       7)
-    ..put(UNIT_ADULT_JUNGLE_BEAR, 9)
+    ..put(UNIT_ADULT_JUNGLE_BEAR, 0)
 
 public class Bear extends RearingAnimal
     construct(unit whichUnit)
         super(whichUnit)
 
     override function getHideTypeId() returns int
+        // Preventing player from farming hides off pets
+        if not getUnit().getOwner() == players[PLAYER_NEUTRAL_AGGRESSIVE]
+            return 0
         return ITEM_JUNGLE_BEAR_HIDE
 
     override function getChild() returns int
+        if not getUnit().getOwner() == players[PLAYER_NEUTRAL_AGGRESSIVE]
+            return 0
         return UNIT_BEAR_CUB
 
     override function getNumCorpses() returns int

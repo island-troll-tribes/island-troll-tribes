@@ -9,6 +9,78 @@ import ForcedDuel
 import StringExtensions
 import TimeUtils
 
+// Following code imported from https://github.com/Frotty/EBR/blob/8e58de4a392b1d6fef6a089b2d1b3d0ced5404b3/wurst/MapStuff/MultiboardClass.wurst
+// My initial design was bad so I just decided to look up frotty's code
+tuple MbItem(string value, string icon)
+
+int counter = 0
+MbItem array data
+public Board scoreBoard
+
+public class Board
+    multiboard board
+    hashtable mbdata
+
+    construct(int row, int column)
+        board = CreateMultiboard()
+        board.setColumnCount(column)
+        board.setRowCount(row)
+        mbdata = InitHashtable()
+        for int i = 1 to row //we need to register them so the USER wont have to.
+            for int j = 1 to column
+                setNewItem(i,j,null,null)
+                board.getItem(i,j).setStyle(false,false) //Hide everything, updateItem() func will show stuff automatically
+
+    function setNewItem(int i,int j,string value, string icon)
+        SaveInteger(mbdata,i,j,counter)
+        data[counter] = MbItem(value, icon)
+        board.getItem(i,j).setValue(value)
+        board.getItem(i,j).setIcon(icon)
+        counter +=1
+
+    // Not used in ITT for now, but why not keep it
+    function removeRow(int r)
+        for int j =0 to board.getColumnCount()
+            for int i =r to board.getRowCount()
+                if i == board.getRowCount()-1
+                    //destroy data[LoadInteger(mbdata,i,j)]
+                    RemoveSavedInteger(mbdata,i,j) //clear the last row
+                else
+                    let nextitem = data[LoadInteger(mbdata,i+1,j)]
+                    updateItem(i,j,nextitem.value,nextitem.icon)
+        board.setRowCount(board.getRowCount()-1)
+
+    function updateItem(int i,int j,string value, string icon)
+        data[LoadInteger(mbdata,i,j)] = MbItem(value , icon)
+        if value != null
+            updateValue(i,j,value)
+            if icon != null
+                updateIcon(i, j,icon)
+                board.getItem(i,j).setStyle(true,true)
+            else
+                board.getItem(i,j).setStyle(true,false) // need to avoid green missing icon images
+        else if icon != null
+            updateIcon(i, j,icon)
+            board.getItem(i,j).setStyle(false,true)
+
+    function updateValue(int i, int j,string value)
+        data[LoadInteger(mbdata,i,j)].value = value
+        board.getItem(i,j).setValue(value)
+
+    function updateIcon(int i, int j,string icon)
+        data[LoadInteger(mbdata,i,j)].icon = icon
+        board.getItem(i,j).setIcon(icon)
+
+    function getPlayerPos(string name) returns integer //Get string coz players can have different names on the Multiboard
+        for int i = 1 to board.getRowCount()
+            if name == data[LoadInteger(mbdata,i,0)].value
+                return i
+        return 0
+
+    ondestroy
+        DestroyMultiboard(board)
+        FlushParentHashtable(mbdata)
+
 public function getGameTimersBoardTitle() returns string
     let time = GAME_TIMER.getElapsed().toInt()
     let gpRemaining = GRACE_PERIOD_TIMER.getRemaining().toInt()

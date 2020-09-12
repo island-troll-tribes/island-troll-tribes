@@ -1,10 +1,13 @@
 package Experience
 
 // Standard library imports:
+import Assets
 import ClosureTimers
-import DummyCaster
+import DummyRecycler
+import EventHelper
 import LinkedList
 import RegisterEvents
+import UpgradeObjEditing
 
 // Local imports:
 import Classes
@@ -16,11 +19,32 @@ import PlayerExtensions
 import UnitEntity
 import UnitExtensions
 
+import ObjectIDManager
+
 constant creepExp = [3, 25]
 constant heroExp = [0, 100, 120, 160, 220, 300]
 constant expPerLevel = [0, 200]
 constant expRange = 1200.0
 public constant GOK_MULTIPLIER = 1.5
+
+// The maximum level a hero can achieve
+// TODO: Base this on the MaxHeroLevel gameplay constant.
+let MAX_LEVEL = 30
+
+// Create the upgrade whose levels research correspond to troll level.
+@compiletime function createUpgrades()
+    new UpgradeDefinition(UPGD_TROLL_LEVEL)
+        ..setLevels(MAX_LEVEL)
+        ..presetName(lvl -> "Level {0}".format(lvl.toString()))
+
+    new UpgradeDefinition(UPGD_TROLL_LEVEL_AND_MEDAL)
+        ..setLevels(MAX_LEVEL)
+        ..presetName(lvl -> "Level {0}".format(lvl.toString()))
+
+// Maps hero level to the total experience required to reach the next level.
+// TODO: Base this on the NeedHeroXP gameplay constants.
+@configurable function calcRequiredExp(int level) returns int
+    return 150 * level + 50 * level * level
 
 public function getMultiplier(unit troll) returns integer
     switch getTrollClassType(troll)
@@ -57,7 +81,7 @@ function performExperienceGain()
     // Add the appropriate unit responsible for the kill.
     if killer.isType(UNIT_TYPE_HERO)
         heroes.add(killer)
-    else
+    else if killer.getTypeId() == DUMMY_UNIT_ID
         heroes.add(killer.getOwner().getTroll())
 
     let deadUnitLevel = dead.getLevel()
@@ -74,7 +98,7 @@ function performExperienceGain()
 
         // Increase experience for Gem of Knowledge holders.
         if hero.hasItemById(ITEM_GEM_OF_KNOWLEDGE)
-            var entity = UnitEntity.findForUnit(hero)
+            let entity = UnitEntity.findForUnit(hero)
             if not (entity instanceof BeastMaster or entity instanceof Hunter)
                 experience = (experience * GOK_MULTIPLIER).floor()
 
@@ -97,7 +121,46 @@ function performExperienceGain()
     // Deallocate the structures used.
     destroy heroes
 
+function checkStatDeath(unit target)
+    // Exit if no work is required.
+    if not target.isAlive() or (target.getMana() > 0 and target.getHeat() > 0)
+        return
 
+    // Cache the relevant properties of the target.
+    let owner = target.getOwner()
+    let pos = target.getPos()
+
+    // Compute the nearest non-neutral enemy.
+    let killer = ENUM_GROUP
+        ..enumUnitsInRange(
+            pos,
+            expRange,
+            Filter(() -> GetFilterUnit().getOwner().getTroll() != null)
+        )
+        .asList()
+        .filter(x -> not x.getOwner().isAllyOf(owner))
+        ..sortWith(
+            (a, b) -> (
+                a.getPos().distanceToSq(pos) - b.getPos().distanceToSq(pos)
+            ).toInt()
+        )
+        .getFirst()
+
+    // Have the enemy kill the target, if necessary.
+    if killer == null
+        target.kill()
+    else
+        killer.damageTarget(target, target.getHP() * 2, ATTACK_TYPE_CHAOS)
+
+// Unlock the research corresponding to the new level.
+// TODO: Make this private once compound requirements for abilities are fixed.
+public function unlockResearch(unit target)
+    target.getOwner().setTechResearched(UPGD_TROLL_LEVEL, target.getLevel())
+
+    // Update the compound requirement manually.
+    // TODO: Remove this once compound requirements for abilities are fixed.
+    if target.getOwner().getTechResearched(UPGD_MEDALLION_COURAGE, true)
+        target.getOwner().setTechResearched(UPGD_TROLL_LEVEL_AND_MEDAL, target.getLevel())
 
 init
     for i = 2 to 30
@@ -111,28 +174,30 @@ init
         players[i].setHandicapXP(0)
 
     doPeriodically(ANIMATION_PERIOD) (cb) ->
-        for troll in getTrolls()
-            let owner = troll.getOwner()
-            if (troll.getMana() < 1 or troll.getHeat() < 1) and troll.isAlive()
-                let pos = troll.getPos()
-                let killer = ENUM_GROUP
-                    ..enumUnitsInRange(
-                        pos,
-                        expRange,
-                        Filter(() -> GetFilterUnit().getOwner().getTroll() != null)
-                    )
-                    .asList()
-                    .filter(x -> not x.getOwner().isAllyOf(owner))
-                    ..sortWith(
-                        (a, b) -> (
-                            a.getPos().distanceToSq(pos) - b.getPos().distanceToSq(pos)
-                        ).toInt()
-                    )
-                    .getFirst()
-
-                if killer == null
-                    troll.kill()
-                else
-                    killer.damageTarget(troll, troll.getHP() * 2, ATTACK_TYPE_CHAOS)
+        for target in getTrolls()
+            checkStatDeath(target)
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH, function performExperienceGain)
+
+    registerPlayerUnitEvent(EVENT_PLAYER_HERO_LEVEL) ->
+        unlockResearch(EventData.getTriggerUnit())
+
+
+// Verifies that the gameplay constants for hero levelling are correctly mirrored.
+// TODO: Use this as @Test once unit functionality is supported.
+function testConstants()
+    // Create a fresh hero unit.
+    let hero = createUnit(
+        players[0],
+        UnitIds.blademaster,
+        vec2(0, 0),
+        angle(0)
+    )
+
+    // Test each level.
+    for level = 0 to MAX_LEVEL - 1
+        // Verify that the function produces the correct level requirements.
+        hero..setXp(calcRequiredExp(level)).getLevel().assertEquals(level + 1)
+
+    // Verify the maximum level.
+    hero..setXp(INT_MAX).getLevel().assertEquals(MAX_LEVEL)

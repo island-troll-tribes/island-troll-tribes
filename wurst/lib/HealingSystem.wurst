@@ -1,0 +1,113 @@
+package HealingSystem
+
+import PlayerExtensions
+
+trigger eventTrigger = CreateTrigger()
+HealingInstance eventHealing = null
+
+/** Gets the class instance uof the current healing event.
+Can be modified during the event to change the healing done via multiplier or amount.*/
+public function getHealingInstance() returns HealingInstance
+    return eventHealing
+
+public function getHealingAmount() returns real
+    return eventHealing.amount
+
+public function getHealingMultiplier() returns real
+    return eventHealing.multiplier
+
+public function getHealingTarget() returns unit
+    return eventHealing.target
+
+/** Only supports healing done by HealingSystem package. So no support stock WC3 healing abilities. */
+public function onUnitHealed(code c) returns triggercondition
+    return eventTrigger.addCondition(Condition(c))
+
+public enum HealingType
+    ITEM
+    ABILITY
+    OTHER
+
+public class HealingInstance
+    HealingType healingType
+    real amount
+    real multiplier
+    unit target
+    unit caster
+
+    /** Creates a new HealingInstance, fires onUnitHealed events for it and applies the healing after possible event modifications */
+    construct(unit target, real amount, HealingType healingType)
+        this.healingType = healingType
+        this.amount = amount
+        this.multiplier = 1
+        this.target = target
+        this.caster = target
+        execute()
+
+    construct(unit target, unit caster, real amount, HealingType healingType)
+        this.healingType = healingType
+        this.amount = amount
+        this.multiplier = 1
+        this.target = target
+        this.caster = caster
+        execute()
+
+    private function fireHealingEvent()
+        let prev = eventHealing
+        eventHealing = this
+        eventTrigger.evaluate()
+        eventHealing = prev
+
+    private function execute()
+        // Fire callbacks to modify the instance.
+        this.fireHealingEvent()
+
+        // Compute the final amount to be healed.
+        let modifiedHealAmount = this.amount * this.multiplier
+
+        // Perform the operation.
+        target.setHP(target.getHP() + modifiedHealAmount)
+
+        // Create a text tag to visualize the effect.
+        if localPlayer.canSee(target)
+            CreateTextTag()
+                ..setText("+" + modifiedHealAmount.floor().toString(), 10)
+                ..setPos(target.getPos3Zero())
+                ..setColor(colorA(31, 191, 0, 255))
+                ..setVelocity(0., 0.04)
+                ..setVisibility(true)
+                ..setFadepoint(2.0)
+                ..setLifespan(5.0)
+                ..setPermanent(false)
+
+        // Destroy upon completion.
+        destroy this
+
+    function reduceHealAmount(real reduction) returns real
+        this.amount = max(0, this.amount - reduction)
+        return this.multiplier
+
+    function increaseHealAmount(real increase) returns real
+        this.amount = max(0, this.amount + increase)
+        return this.multiplier
+
+    function reduceMultiplier(real reduction) returns real
+        this.multiplier = max(0, this.multiplier - reduction)
+        return this.multiplier
+
+    function increaseMultiplier(real increase) returns real
+        this.multiplier = max(0, this.multiplier + increase)
+        return this.multiplier
+
+    function scaleMultiplier(real factor) returns real
+        this.multiplier = max(0, this.multiplier*factor)
+        return this.multiplier
+
+    function getAmount() returns real
+        return this.amount
+
+    function getTarget() returns unit
+        return this.target
+
+    function getCaster() returns unit
+        return this.caster

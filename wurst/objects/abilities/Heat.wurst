@@ -1,18 +1,152 @@
 package Heat
-import RegisterEvents
-import GameConfig
-import UnitExtensions
-import LocalObjectIDs
 
-public constant ABILITY_HEAT = 'A002'
-public constant ABILITY_MAGE_HEAT = 'A023'
+// Standard Lib Imports:
+import Assets
+import ChannelAbilityPreset
+import ClosureEvents
+import BuffObjEditing
+
+// Local Imports:
+import UnitExtensions
+import GameConfig
+import LocalObjectIDs
+import ToolTipsUtils
+
+
 public constant BUFF_FROZEN_TO_BONE = BUFF_FROZE_TO_BONE
 
-// TODO sync with cast range
 @configurable let FIRE_RANGE = 380.0
+@configurable let MAGE_FIRE_RANGE = 600.0
 
-function heat()
-    let heroes = CreateGroup()..enumUnitsInRange(GetSpellAbilityUnit().getPos(), FIRE_RANGE, Condition(() -> begin
+let FIRE_BUILDING_BURN_RANGE = 175.0
+let MAGE_FIRE_BUILDING_BURN_RANGE = 360.0
+
+let BUFF_HEATED_UNIT = compiletime(BUFF_ID_GEN.next())
+let BUFF_HEATED_BUILDING = compiletime(BUFF_ID_GEN.next())
+
+constant CAMP_FIRE_DMG_PER_SEC = 7.0
+constant MAGE_FIRE_DMG_PER_SEC = 20.0
+
+@compiletime function createBuffHeated()
+    new BuffDefinition(BUFF_HEATED_UNIT, 'Bhea')
+        ..setTooltipNormal("Heat Units")
+        ..setTooltipNormalExtended("This unit is being heated.")
+        ..setIconNormal(1, Icons.bTNIncinerate)
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createBuffHeatedBonfire()
+    new BuffDefinition(BUFF_BON_FIRE_HEAT, 'Bhea')
+        ..setTooltipNormal("Bonfire Heat Units")
+        ..setTooltipNormalExtended("This unit is being heated.")
+        ..setIconNormal(1, Icons.bTNIncinerate)
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createBuffHeatedBuildings()
+    new BuffDefinition(BUFF_HEATED_BUILDING, 'Bhea')
+        ..setTooltipNormal("Heat Buildings")
+        ..setTooltipNormalExtended("This building is burning.")
+        ..setIconNormal(1, Icons.bTNFire)
+        ..setEditorSuffix("(Wurst)")
+
+function createUnsafeHeat(int abilId) returns AbilityDefinitionTornadoDamage
+    return new AbilityDefinitionTornadoDamage(abilId)
+        ..setBuffs(1, BUFF_HEATED_BUILDING.toRawCode()) // Doesn't actually apply the buff though :(
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.nonsapper,
+            TargetsAllowed.notself,
+            TargetsAllowed.structure
+        ))
+        ..setArtTarget(Abilities.breathOfFireTarget)
+        ..setTargetAttachments(1)
+        ..setTargetAttachmentPoint("origin")
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createCampFireUnsafeHeat() returns AbilityDefinitionTornadoDamage
+    return createUnsafeHeat(ABILITY_CAMP_FIRE_UNSAFE_HEAT)
+        ..setAreaofEffect(1, FIRE_BUILDING_BURN_RANGE)
+        ..setMediumDamagePerSecond(1, CAMP_FIRE_DMG_PER_SEC)
+        ..setName("Unsafe Heat Camp Fire")
+
+@compiletime function createMageFireUnsafeHeat() returns AbilityDefinitionTornadoDamage
+    return createUnsafeHeat(ABILITY_MAGE_FIRE_UNSAFE_HEAT)
+        ..setAreaofEffect(1, MAGE_FIRE_BUILDING_BURN_RANGE)
+        ..setMediumDamagePerSecond(1, MAGE_FIRE_DMG_PER_SEC)
+        ..setName("Unsafe Heat Mage Fire")
+
+// Used on arena fire
+@compiletime function createBonfireAura() returns AbilityDefinitionArchMageBrillianceAura
+    return new AbilityDefinitionArchMageBrillianceAura(ABILITY_BONFIRE_AURA)
+        ..setAreaofEffect(1, 200.0)
+        ..setIconNormal(Icons.dISPASBTNImmolation)
+        ..setBuffs(1, BUFF_BON_FIRE_HEAT.toRawCode())
+        ..setButtonPositionNormalX(0)
+        ..setButtonPositionNormalY(0)
+        ..setManaRegenerationIncrease(1, 0.0)
+        ..setHeroAbility(false)
+        ..setLevels(1)
+        ..setName("Bonfire")
+        ..setArtTarget("")
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.enemies,
+            TargetsAllowed.hero,
+            TargetsAllowed.player_t
+            )
+        )
+        ..setTooltipNormal(1, "Bonfire")
+        ..setTooltipNormalExtended(1, "Gives heat to nearby units")
+        ..setEditorSuffix("(Wurst)")
+
+function createHeatCast(int abilId) returns AbilityDefinitionFaerieFire
+    return new AbilityDefinitionFaerieFire(abilId)
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.enemies,
+            TargetsAllowed.friend,
+            TargetsAllowed.ground,
+            TargetsAllowed.hero,
+            TargetsAllowed.invulnerable,
+            TargetsAllowed.neutral,
+            TargetsAllowed.nonancient,
+            TargetsAllowed.organic,
+            TargetsAllowed.vulnerable
+            )
+        )
+        ..setButtonPositionNormalX(1)
+        ..setButtonPositionTurnOffX(1)
+        ..setIconNormal(Icons.bTNIncinerateOn)
+        ..setIconTurnOff(Icons.bTNIncinerateOff)
+        ..setBuffs(1, toRawCode(BUFF_HEATED_UNIT))
+        ..setCooldown(1, 0.5)
+        ..setManaCost(1, 0)
+        ..setDefenseReduction(1, 0)
+        ..setAlwaysAutocast(1, true)
+        ..setDurationNormal(1, 5.0)
+        ..setDurationHero(1, 1.75)
+        ..setButtonPositionNormalX(1)
+        ..setButtonPositionNormalY(2)
+        ..setTooltipTurnOffExtended(1, "Deactivate auto casting|n|cffff0000Not Recommended|r")
+        ..setTooltipTurnOff(1, "Activate auto casting")
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createCampFireHeatCast() returns AbilityDefinitionFaerieFire
+    return createHeatCast(ABILITY_CAMP_FIRE_HEAT_CAST)
+        ..setName("Camp Fire Heat Aura")
+        ..setCastRange(1, FIRE_RANGE)
+        ..setHotkeyNormal("R")
+        ..setTooltipNormal(1, makeToolTipNorm("R", "Camp Fire Heat"))
+        ..setTooltipNormalExtended(1, "Heats all friendly trolls in a distance of {0} around the fire.".format(FIRE_RANGE.toToolTipOrange()))
+
+@compiletime function createMageFireHeatCast() returns AbilityDefinitionFaerieFire
+    return createHeatCast(ABILITY_MAGE_FIRE_HEAT_CAST)
+        ..setName("Mage Fire Heat Aura")
+        ..setCastRange(1, MAGE_FIRE_RANGE)
+        ..setHotkeyNormal("R")
+        ..setTooltipNormal(1, makeToolTipNorm("R", "Mage Fire Heat"))
+        ..setTooltipNormalExtended(1, "Heats all friendly trolls in a distance of {0} around the fire.".format(MAGE_FIRE_RANGE.toToolTipOrange()))
+        ..setTooltipTurnOff(1, "Activate auto casting")
+
+function onCast(real fire_range)
+    let heroes = CreateGroup()..enumUnitsInRange(GetSpellAbilityUnit().getPos(), fire_range, Condition(() -> begin
         return GetFilterUnit().isTroll()
     end))
     for hero from heroes
@@ -20,6 +154,7 @@ function heat()
         if hero.hasAbility(BUFF_FROZEN_TO_BONE)
             hero.removeAbility(BUFF_FROZEN_TO_BONE)
 
+
 init
-    registerSpellEffectEvent(ABILITY_HEAT, function heat)
-    registerSpellEffectEvent(ABILITY_MAGE_HEAT, function heat)
+    EventListener.onTargetCast(ABILITY_CAMP_FIRE_HEAT_CAST, (unit caster, unit target) -> onCast(FIRE_RANGE))
+    EventListener.onTargetCast(ABILITY_MAGE_FIRE_HEAT_CAST, (unit caster, unit target) -> onCast(MAGE_FIRE_RANGE))

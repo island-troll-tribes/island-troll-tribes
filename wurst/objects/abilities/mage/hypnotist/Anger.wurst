@@ -1,49 +1,115 @@
 package Anger
 
-import LocalObjectIDs
-import Icons
-import Lodash
-import ToolTipsUtils
+// Standard library imports:
 import ChannelAbilityPreset
+import Icons
+import BuffObjEditing
+import ClosureEvents
+import ClosureTimers
+import InstantDummyCaster
+import OrderIds
+
+// Local imports:
+import LocalObjectIDs
+import ToolTipsUtils
+import UnitExtensions
+import StringExtensions
+import ColorUtils
+
+
+let BUFF_EXHAUST = compiletime(BUFF_ID_GEN.next())
+let BUFF_ORIGINAL_ID = 'BHtc' // Thunderclap
 
 let AS_BONUS = 0.75
 let DAMAGE = 10.
 let MANACOST = 20
-let COOLDOWN = 12.
-let DURATION_HERO = 10.
-let DURATION_NORMAL = 10.
+let ANGER_COOLDOWN = 12.
+let ANGER_DURATION_HERO = 10.
+let ANGER_DURATION_NORMAL = 10.
 
-let BUFF = toRawCode(BUFF_ANGER)
+let EXHAUST_DURATION_HERO = 4.
+let EXHAUST_DURATION_NORMAL = 4.
+let EXHAUST_AS_FACTOR = 0.50
+let EXHAUST_MS_FACTOR = 0.25
+
 let ANIMATION_NAME = "channel"
 let TOOLTIP_NORM = "Anger"
-let TOOLTIP_EXTENDED = ("Causes a target to become angery, increasing its attack speed by {0} while doing {1} damage per second to it. Lasts {2} seconds. "+
-                        "Has {3} seconds cooldown.")
-                       .format(AS_BONUS.toToolTipOrange(), DAMAGE.toToolTipRed(), DURATION_NORMAL.toToolTipOrange(), COOLDOWN.toToolTipLightBlue())
+let TOOLTIP_EXTENDED = ("Causes a target to become angery, increasing its attack speed by {0} while doing {1} damage per second to it. Anger last {2} seconds, "
+                        + "target become {3} afterward. Has {4} seconds cooldown.").format(AS_BONUS.toToolTipOrange(),
+                                                                                           DAMAGE.toToolTipRed(),
+                                                                                           ANGER_DURATION_NORMAL.toToolTipOrange(),
+                                                                                           "Exhausted".color(SPECIAL_COLOR),
+                                                                                           ANGER_COOLDOWN.toToolTipLightBlue()
+                                                                                           )
+                       + "\n\nExhausted\n".color(SPECIAL_COLOR)
+                       + ("Target attack speed is reduced by {0}, movement speed by {1} for {2} seconds."
+                          .format(EXHAUST_AS_FACTOR.toToolTipOrange(), EXHAUST_MS_FACTOR.toToolTipOrange(), EXHAUST_DURATION_HERO.toToolTipLightBlue()))
 
-let TARGET_ALLOWED = "air,ground,hero,organic"
+let TARGET_ALLOWED = commaList(TargetsAllowed.air,
+                               TargetsAllowed.ground,
+                               TargetsAllowed.hero,
+                               TargetsAllowed.organic
+                               )
 
-class Anger extends AbilityDefinitionUnholyFrenzy
-    construct(int newAbility, string hotkey, Pair<int , int> buttonPos)
-        super(newAbility)
-        this.setName(TOOLTIP_NORM)
-        this.setHotkeyNormal(hotkey)
-        this.setCooldown(1, COOLDOWN)
-        this.setManaCost(1, MANACOST)
-        this.setDurationHero(1, DURATION_HERO)
-        this.setDurationNormal(1, DURATION_NORMAL)
-        this.setIconNormal(Icons.bTNUnholyFrenzy)
-        this.setButtonPositionNormalX(buttonPos.a)
-        this.setButtonPositionNormalY(buttonPos.b)
-        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
-        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
-        this.setAnimationNames(ANIMATION_NAME)
-        this.setTargetsAllowed(1, TARGET_ALLOWED)
-        this.setRequirements("")
-        this.setCheckDependencies(false)
-        this.setAttackSpeedBonus(1, AS_BONUS)
-        this.setDamageperSecond(1, DAMAGE)
-        this.setBuffs(1, BUFF)
 
-@compiletime function createAnger()
-    new Anger(ABILITY_ANGER, "E", new Pair(2, 0))
-    new Anger(ABILITY_DEMENTIA_MASTER_ANGER, "F", new Pair(2, 0))
+@compiletime function createExhaustBuff() returns BuffDefinition
+    return new BuffDefinition(BUFF_EXHAUST, BUFF_ORIGINAL_ID)
+        ..setTooltipNormal(1, "Exhausted")
+        ..setTooltipNormalExtended("This unit is exhausted; its movement speed and attack rate are reduced.")
+        ..setIcon(Icons.bTNDizzy)
+        ..setEditorSuffix("(Wurst)")
+
+
+@compiletime function createExhaustAbility() returns AbilityDefinitionCripple
+    return new AbilityDefinitionCripple(ABILITY_EXHAUST)
+        ..setDummyAbility()
+        ..setDamageReduction(1, 0)
+        ..setDurationHero(1, EXHAUST_DURATION_HERO)
+        ..setDurationNormal(1, EXHAUST_DURATION_NORMAL)
+        ..setAttackSpeedReduction(1, EXHAUST_AS_FACTOR)
+        ..setMovementSpeedReduction(1, EXHAUST_MS_FACTOR)
+        ..setTargetsAllowed(1, TARGET_ALLOWED)
+        ..setBuffs(1, toRawCode(BUFF_EXHAUST))
+
+
+function createAngerAbility(int abilId, string hotkey) returns AbilityDefinitionUnholyFrenzy
+    return new AbilityDefinitionUnholyFrenzy(abilId)
+        ..setName(TOOLTIP_NORM)
+        ..setCooldown(1, ANGER_COOLDOWN)
+        ..setManaCost(1, MANACOST)
+        ..setHotkeyNormal(hotkey)
+        ..setDurationHero(1, ANGER_DURATION_HERO)
+        ..setDurationNormal(1, ANGER_DURATION_NORMAL)
+        ..setIconNormal(Icons.bTNUnholyFrenzy)
+        ..setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        ..setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        ..setAnimationNames(ANIMATION_NAME)
+        ..setTargetsAllowed(1, TARGET_ALLOWED)
+        ..setRequirements("")
+        ..setCheckDependencies(false)
+        ..setAttackSpeedBonus(1, AS_BONUS)
+        ..setDamageperSecond(1, DAMAGE)
+        ..setBuffs(1, toRawCode(BUFF_ANGER))
+
+@compiletime function createHypnoAngerAbility() returns AbilityDefinitionUnholyFrenzy
+    return createAngerAbility(ABILITY_ANGER, "E")
+        ..setButtonPositionNormalX(2)
+        ..setButtonPositionNormalY(0)
+
+@compiletime function createDementiaMasterAngerAbility() returns AbilityDefinitionUnholyFrenzy
+    return createAngerAbility(ABILITY_DEMENTIA_MASTER_ANGER, "F")
+        ..setButtonPositionNormalX(2)
+        ..setButtonPositionNormalY(0)
+
+
+function onCast(unit caster, unit target)
+    let duration = target.isTroll() ? ANGER_DURATION_HERO : ANGER_DURATION_NORMAL
+
+    doAfter(duration) ->
+        if target.hasAbility(BUFF_ANGER)
+            InstantDummyCaster.castTarget(caster.getOwner(), ABILITY_EXHAUST, 1, OrderIds.cripple, target)
+
+
+init
+    EventListener.onTargetCast(ABILITY_ANGER, (unit caster, unit target) -> onCast(caster, target))
+    EventListener.onTargetCast(ABILITY_DEMENTIA_MASTER_ANGER, (unit caster, unit target) -> onCast(caster, target))

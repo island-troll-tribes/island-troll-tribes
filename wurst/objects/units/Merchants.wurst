@@ -4,8 +4,11 @@ package Merchants
 import Assets
 import ObjectIds
 import UnitObjEditing
+import ClosureForGroups
 
 // Local imports:
+import Game
+import GameConfig
 import DummyUnits
 import LocalObjectIDs
 import LocalAssets
@@ -87,7 +90,7 @@ function createMerchantShip(int newId) returns UnitDefinition
                 ITEM_IRON_INGOT,
                 ITEM_MAGIC,
                 ITEM_ENSNARE_TRAP_KIT,
-                ITEM_OMNIDEFENDER_KIT,
+                ITEM_OMNITOWER_KIT,
                 ITEM_MAGIC_SEED,
                 ITEM_STONE,
                 ITEM_MANA_CRYSTAL
@@ -102,7 +105,7 @@ function createMerchantShip(int newId) returns UnitDefinition
                 ITEM_SCROLL_FIREBALL,
                 ITEM_SCROLL_LIVING_DEAD,
                 ITEM_SCROLL_STONE_ARMOR,
-                ITEM_SCROLL_SWIFTNESS,
+                ITEM_SCROLL_HASTE,
                 ITEM_FORGE_KIT,
                 ITEM_TANNERY_KIT,
                 ITEM_ARMORY_KIT,
@@ -193,3 +196,10 @@ function createMerchantShip(int newId) returns UnitDefinition
                 ITEM_MAGIC
             )
         )
+
+init
+    registerGameStartEvent() ->
+        if not gameConfig.getTradeEnabled()
+            forUnitsAll() (unit u) ->
+                if u.getTypeId() == UNIT_TROLL_MERCHANT
+                    u.remove()

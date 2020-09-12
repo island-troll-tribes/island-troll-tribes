@@ -6,6 +6,7 @@ import LocalObjectIDs
 import HashMap
 import LinkedList
 import SpellBookHashMap
+import Transformation
 
 constant TOOLTIP_TRACKER_SPELLBOOK         = "The Tracker Knowledge, contains various spells to track a target."
 constant TOOLTIP_WARRIOR_SPELLBOOK         = "The Warrior Skills, contains description of the warrior abilities."
@@ -22,8 +23,10 @@ constant TOOLTIP_SHAPESHIFTER_SPELLBOOK    = "Choose another animal form to beco
 constant TOOLTIP_ESCAPE_ARTIST_SPELLBOOK   = "The Escape Artist Physical Abilities, contains another set of evasion spells."
 constant TOOLTIP_CONTORTIONIST_SPELLBOOK   = "The Contortionist Magical Abilities, contais another set of evasion spells."
 constant TOOLTIP_TRAPPER_SPELLBOOK         = "The Trapper Toolkit, contains a few trap spell."
+constant TOOLTIP_OBSERVER_SPELLBOOK        = "The Observer spells, contains various spells to observe those around him."
 constant TOOLTIP_ADVANCED_RADAR_SPELLBOOK  = "An improved better radar to locate unit around him with high precision."
 constant TOOLTIP_ITEM_RADAR                = "Contains spells allowing the gatherer to locate the items nearby using minimap ping."
+constant TOOLTIP_DRUID_SPELLBOOK           = "Spells that connect the Druid and his team with the ebb and flow of life."
 
 constant TOOLTIP_MAGE_INHERITED         = "Inherited Spells from the Mage."
 constant TOOLTIP_DEMENTIA_INHERITED     = "A bunch of assorted mage spells."
@@ -44,7 +47,6 @@ function getSpellBooks() returns LinkedList<SpellBookObject>
         // Hero Spellbooks
         new HeroSpellBookObject(ABILITY_TRACKER_SPELLBOOK          , "Way of the Tracker"      , "E", TOOLTIP_TRACKER_SPELLBOOK         , TRACKER_ABILITY_HASH         , new Pair(1, 1), "NecromancerAdept"  , 3, 0, 0),
         new HeroSpellBookObject(ABILITY_WARRIOR_SPELLBOOK          , "Warrior Skills"          , "E", TOOLTIP_WARRIOR_SPELLBOOK         , WARRIOR_ABILITY_HASH         , new Pair(1, 1), "TrollPredator"     , 3, 0, 0),
-        new HeroSpellBookObject(ABILITY_JUGGERNAUT_SPELLBOOK       , "Juggernaut Skills"       , "E", TOOLTIP_JUGGERNAUT_SPELLBOOK      , JUGGERNAUT_ABILITY_HASH      , new Pair(1, 1), "TrollPredator"     , 3, 0, 0),
         new HeroSpellBookObject(ABILITY_MAGE_SPELLBOOK             , "Offensive Spells"        , "R", TOOLTIP_MAGE_SPELLBOOK            , MAGE_ABILITY_HASH            , new Pair(2, 1), "NecromancerAdept"  , 3, 2, 1),
         new HeroSpellBookObject(ABILITY_ELEMENTALIST_NEW_SPELLBOOK , "Elementalist Spells"     , "E", TOOLTIP_ELEMENTALIST_SPELLBOOK    , ELEMENTALIST_ABILITY_HASH    , new Pair(1, 1), "Manual"            , 3, 0, 0),
         new HeroSpellBookObject(ABILITY_HYPNOTIST_SPELLBOOK        , "Hypnotist Spells"        , "E", TOOLTIP_HYPNOTIST_SPELLBOOK       , HYPNOTIST_ABILITY_HASH       , new Pair(1, 1), "BookOfTheDead"     , 3, 0, 0),
@@ -57,17 +59,21 @@ function getSpellBooks() returns LinkedList<SpellBookObject>
         new HeroSpellBookObject(ABILITY_ESCAPE_ARTIST_SPELLBOOK    , "Physical Evasion Spells" , "E", TOOLTIP_ESCAPE_ARTIST_SPELLBOOK   , ESCAPE_ARTIST_ABILITY_HASH   , new Pair(1, 1), "SpellBookBLS"      , 3, 0, 0),
         new HeroSpellBookObject(ABILITY_CONTORTIONIST_SPELLBOOK    , "Magical Evasion Spells"  , "E", TOOLTIP_CONTORTIONIST_SPELLBOOK   , CONTORTIONIST_ABILITY_HASH   , new Pair(1, 1), "SpellBookBLS"      , 3, 0, 0),
         new HeroSpellBookObject(ABILITY_ASSASSIN_SPELLBOOK         , "Assassin Spells"         , "E", TOOLTIP_ASSASSIN                  , ASSASSIN_ABILITY_HASH        , new Pair(1, 1), "Tome"              , 1, 1, 1),
-        new HeroSpellBookObject(ABILITY_TRAPPER_SPELLBOOK          , "Trap Toolkit"            , "E", TOOLTIP_TRAPPER_SPELLBOOK         , TRAPPER_ABILITY_HASH         , new Pair(1, 1), "PackBeast"         , 3, 0, 0),
+        new HeroSpellBookObject(ABILITY_TRAPPER_SPELLBOOK          , "Trap Toolkit"            , "R", TOOLTIP_TRAPPER_SPELLBOOK         , TRAPPER_ABILITY_HASH         , new Pair(1, 1), "PackBeast"         , 3, 0, 0),
+        new HeroSpellBookObject(ABILITY_OBSERVER_SPELLBOOK         , "Oberserver Spells"       , "R", TOOLTIP_OBSERVER_SPELLBOOK        , OBSERVER_ABILITY_HASH        , new Pair(2, 1), "Tome"              , 3, 0, 0),
         new HeroSpellBookObject(ABILITY_GATHERER_SPELLBOOK         , "Item Radar"              , "R", TOOLTIP_ITEM_RADAR                , GATHERER_ABILITY_HASH        , new Pair(2, 1), "Spy"               , 3, 2, 1),
+        // Icon for druid spellbook.
+        new HeroSpellBookObject(ABILITY_DRUID_SPELLBOOK            , "Druidic Spells"          , "E", TOOLTIP_DRUID_SPELLBOOK           , DRUID_ABILITY_HASH           , new Pair(1, 1), "EntrapmentWard"    , 3, 0, 0),
 
         // Most of those are inherited Spellbooks
+        new SpellBookObject(ABILITY_JUGGERNAUT_SPELLBOOK                , "Juggernaut Inherited Spells"   , "E", TOOLTIP_JUGGERNAUT_SPELLBOOK     , SS_HUNTER_INHERITED_SPELL    , new Pair(1, 1), "TrollPredator"   ),
         new SpellBookObject(ABILITY_SUB_MAGE_INHERITED_SPELLBOOK        , "Mage Inherited Spells"         , "R", TOOLTIP_MAGE_INHERITED           , SUB_MAGE_INHERITED_SPELL     , new Pair(2, 1), "NecromancerAdept"),
         new SpellBookObject(ABILITY_DEMENTIA_MASTER_INHERITED_SPELLBOOK , "Dementia Inherited Spells"     , "R", TOOLTIP_DEMENTIA_INHERITED       , SS_MAGE_INHERITED_SPELL      , new Pair(2, 1), "NecromancerAdept"),
         new SpellBookObject(ABILITY_SUB_PRIEST_SPELLBOOK                , "Priest Inherited Spells"       , "R", TOOLTIP_PRIEST_INHERITED         , SUB_PRIEST_INHERITED_SPELL   , new Pair(2, 1), "Manual"),
         new SpellBookObject(ABILITY_SAGE_INHERITED_SPELLBOOK            , "Sage Inherited Spells"         , "R", TOOLTIP_SAGE_INHERITED           , SS_PRIEST_INHERITED_SPELL    , new Pair(2, 1), "Manual"),
-        new SpellBookObject(ABILITY_PET_SPELLS                          , "Pet Spells"                    , "R", TOOLTIP_PET_SPELLS               , PET_SPELLS                   , new Pair(2, 1), "SpiritWalker"),
+        new SpellBookObject(ABILITY_PET_SPELLS                          , "Pet Spells"                    , "R", TOOLTIP_PET_SPELLS               , PET_SPELLS                   , new Pair(2, 1), "BeastCall"),
         new SpellBookObject(ABILITY_ULTIMATE_FORM_SPELLBOOK             , "Rendo's auras"                 , "E", TOOLTIP_RENDO_AURA               , RENDO_AURA                   , new Pair(1, 1), "SpiritWolf"),
-        new SpellBookObject(ABILITY_ADVANCED_RADAR_SPELLBOOK_ID         , "Advanced Scout Radar"          , "R", TOOLTIP_ADVANCED_RADAR_SPELLBOOK , TRAPPER_ADVANCED_RADAR       , new Pair(2, 1), "Spy"         , 10),
+        new SpellBookObject(ABILITY_ADVANCED_RADAR_SPELLBOOK_ID         , "Advanced Scout Radar"          , "R", TOOLTIP_ADVANCED_RADAR_SPELLBOOK , TRAPPER_ADVANCED_RADAR       , new Pair(2, 1), "Spy"),
         new SpellBookObject(ABILITY_SPY_INHERITED_SPELLBOOK             , "Spy Inherited Spells"          , "R", TOOLTIP_SPY_INHERITED            , SS_SCOUT_INHERITED_SPELL     , new Pair(2, 1), "Tome"),
         new SpellBookObject(ABILITY_RADAR_GATHERER_SPELLBOOK            , "Advanced Item Radar"           , "R", TOOLTIP_GATHERER_INHERITED       , SUB_GATHERER_INHERITED_SPELL , new Pair(2, 1), "Spy"),
         new SpellBookObject(ABILITY_OMNIGATHERER_INHERITED_SPELLBOOK    , "Omnigatherer Inherited Spells" , "R", TOOLTIP_OMNIGATHERER_INHERITED   , SS_GATHERER_INHERITED_SPELL  , new Pair(2, 1), "Tome")
@@ -75,3 +81,11 @@ function getSpellBooks() returns LinkedList<SpellBookObject>
 
 @compiletime function buildSpellBooks()
         getSpellBooks().forEach(spellbook -> spellbook.buildSpellBook())
+
+init
+        registerAfterEffect() (unit target, int unitID) ->
+                // Refresh the spellbook to fix access issues.
+                // TODO: Figure out why only this spellbook breaks.
+                if target.hasAbility(ABILITY_PET_SPELLS)
+                        target.removeAbility(ABILITY_PET_SPELLS)
+                        target.addAbility(ABILITY_PET_SPELLS)

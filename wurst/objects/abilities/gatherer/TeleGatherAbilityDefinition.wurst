@@ -1,11 +1,16 @@
 package TeleGatherAbilityDefinition
 
-import ChannelAbilityPreset
-import LocalObjectIDs
-import Lodash
+// Standard-library imports:
 import Assets
-import ToolTipsUtils
 import BuffObjEditing
+import ChannelAbilityPreset
+
+// Third-party imports:
+import Lodash
+
+// Local imports:
+import LocalObjectIDs
+import ToolTipsUtils
 
 public let DUMMY_TELE_GATHER_ID = compiletime(ABIL_ID_GEN.next())
 public let BUFF_TELE_TARGET = compiletime(BUFF_ID_GEN.next())
@@ -22,12 +27,12 @@ let OMNI_DURATION = DURATION + 4 * 20
 let OMNI_MANACOST = 30
 
 let TOOLTIP_NORM = "Tele-Gathering"
-let TOOLTIP_EXTENDED = "The Tele-Gatherer psychically links up with the targeted campfire as its "+
-                       "outlet and starts Tele-gathering. While Tele-Gathering, items"+
-                       " picked up are warped directly to the outlet."
+let TOOLTIP_EXTENDED = "The Tele-Gatherer magically links up with the targeted campfire as its "+
+                       "outlet and starts Tele-gathering. While Tele-Gathering, items "+
+                       "picked up are warped directly to the outlet."
 
-let TARGET_ALLOWED = "friend,ground,mechanical,neutral,structure,worker"
-let DUMMY_TARGET_ALLOWED = "air,friend,ground,neutral,organic"
+let TARGET_ALLOWED = commaList(TargetsAllowed.sapper, TargetsAllowed.friend) // I didn't manage to make it castable on allied fire only, so lets say you can cast it on enemy fire...
+let DUMMY_TARGET_ALLOWED = commaList(TargetsAllowed.air,TargetsAllowed.friend,TargetsAllowed.ground,TargetsAllowed.neutral,TargetsAllowed.organic)
 
 
 function createTargetBuff()
@@ -37,6 +42,7 @@ function createTargetBuff()
         ..setArtTarget(1, Abilities.crystalBallCaster)
         ..setTooltipNormal(1, "Tele-Gathering target")
         ..setTooltipNormalExtended(1, "Items are being Tele-Gathered to this fire.")
+        ..setEditorSuffix(1, "(Wurst)")
 
 function createTeleGatherBuff()
     new BuffDefinition(BUFF_TELE_GATHER, BUFF_ORIGINAL_ID)
@@ -45,7 +51,9 @@ function createTeleGatherBuff()
         ..setArtTarget(1, Abilities.faerieFireTarget)
         ..setTooltipNormal(1, TOOLTIP_NORM)
         ..setTooltipNormalExtended(1, "This unit is using Tele-Gathering. Items picked up will be warp to its campfire.")
+        ..setEditorSuffix(1, "(Wurst)")
 
+// Dummy casting refer to the spell casted on the caster
 public class OldTeleGatherDummyCasting extends AbilityDefinitionCurse
     construct(int newAbilityId)
         super(newAbilityId)
@@ -60,6 +68,7 @@ public class OldTeleGatherDummyCasting extends AbilityDefinitionCurse
         this.setName("Tele-Gather person buff")
         this.presetChancetoMiss(lvl -> 0)
         this.presetTargetsAllowed(lvl -> DUMMY_TARGET_ALLOWED)
+        this.setEditorSuffix("(Wurst)")
 
 //Small Work around, didn't manage to dummycast lvl 2,3 or 4 ability in telegathering.wurst
 public class TeleGatherDummyCasting extends AbilityDefinitionCurse
@@ -73,6 +82,7 @@ public class TeleGatherDummyCasting extends AbilityDefinitionCurse
         this.setName("Tele-Gather person buff")
         this.presetChancetoMiss(lvl -> 0)
         this.presetTargetsAllowed(lvl -> DUMMY_TARGET_ALLOWED)
+        this.setEditorSuffix("(Wurst)")
 
 public class TeleGatheringDefinition extends AbilityDefinitionCurse
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
@@ -89,6 +99,7 @@ public class TeleGatheringDefinition extends AbilityDefinitionCurse
         this.presetChancetoMiss(lvl -> 0)
         this.presetBuffs(lvl -> toRawCode(BUFF_TELE_TARGET))
         this.presetCastRange(lvl -> CAST_RANGE)
+        this.setEditorSuffix("(Wurst)")
 
 class TeleGathering extends TeleGatheringDefinition
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
@@ -104,8 +115,8 @@ class TeleGathering extends TeleGatheringDefinition
         this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED+makeToolTipDuration(DURATION + (lvl * 20), COOLDOWN))
         this.setTooltipLearn(makeToolTipLearn(TOOLTIP_NORM))
         this.setTooltipLearnExtended(TOOLTIP_EXTENDED)
-
-
+        this.presetTargetsAllowed(lvl -> TARGET_ALLOWED)
+        this.setEditorSuffix("(Wurst)")
 
 class OmnigathererTeleGathering extends TeleGatheringDefinition
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
@@ -114,8 +125,8 @@ class OmnigathererTeleGathering extends TeleGatheringDefinition
         this.presetDurationHero(lvl -> OMNI_DURATION)
         this.presetDurationNormal(lvl -> OMNI_DURATION)
         this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED+makeToolTipDuration(OMNI_DURATION, COOLDOWN))
-
-
+        this.presetTargetsAllowed(lvl -> TARGET_ALLOWED)
+        this.setEditorSuffix("(Wurst)")
 
 @compiletime function createTeleGatheringSpells()
     createTargetBuff()

@@ -1,12 +1,17 @@
 package RangedHeal
 
-import RegisterEvents
-import ChannelAbilityPreset
+// Standard-library imports:
 import Assets
-import LocalObjectIDs
-import HealingSystem
+import ClosureEvents
+import ChannelAbilityPreset
 import ClosureTimers
+
+// Third-party imports:
 import Lodash
+
+// Local imports:
+import HealingSystem
+import LocalObjectIDs
 import ToolTipsUtils
 
 //let ABILITY_ID = 'XPRH'
@@ -20,7 +25,6 @@ let TOOLTIP_EXTENDED = "Heals a friendly unit for {0} health. Can be casted from
                         .format(HEALING_AMOUNT.toToolTipGreen(),COOLDOWN.toToolTipLightBlue())
 
 let HEAL_HIT_FX = Abilities.healTarget
-let TARGET_ALLOWED = "air,ground,friend,vuln,invu,self,organic,nonancient,neutral"
 
 
 class RangedHeal extends ChannelAbilityPreset
@@ -35,8 +39,19 @@ class RangedHeal extends ChannelAbilityPreset
         this.presetCooldown(lvl -> COOLDOWN)
         this.presetManaCost(lvl -> MANACOST)
         this.presetTargetType(lvl -> 1)
-        this.presetTargetsAllowed(lvl -> TARGET_ALLOWED)
+        this.presetTargetsAllowed(lvl -> commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.ground,
+            TargetsAllowed.friend,
+            TargetsAllowed.vulnerable,
+            TargetsAllowed.invulnerable,
+            TargetsAllowed.self,
+            TargetsAllowed.organic,
+            TargetsAllowed.nonancient,
+            TargetsAllowed.neutral
+        ))
         this.presetOptions(lvl -> 1)
+        this.presetBaseOrderID(lvl -> "heal")
         this.setHeroAbility(false)
         this.setHotkeyNormal(hotkey)
         this.setName(TOOLTIP_NORM)
@@ -46,13 +61,11 @@ class RangedHeal extends ChannelAbilityPreset
 @compiletime function createRangedHeal()
     new RangedHeal(ABILITY_RANGED_HEAL, "R", new Pair(3, 0))
 
-function onCast()
-    var target = GetSpellTargetUnit()
-    new HealingInstance(target, HEALING_AMOUNT, HealingType.ABILITY)
+function onCast(unit caster, unit target)
+    new HealingInstance(target, caster, HEALING_AMOUNT, HealingType.ABILITY)
     let fx = target.addEffect(HEAL_HIT_FX, "origin")
     doAfter(1.5) ->
         fx.destr()
 
 init
-    registerSpellEffectEvent(ABILITY_RANGED_HEAL) ->
-        onCast()
+    EventListener.onTargetCast(ABILITY_RANGED_HEAL, (unit caster, unit target) -> onCast(caster, target))

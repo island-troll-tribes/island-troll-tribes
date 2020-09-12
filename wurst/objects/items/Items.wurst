@@ -2,7 +2,12 @@ package Items
 
 import ItemObjEditing
 import ChannelAbilityPreset
+import ColorUtils
+import StringExtensions
 
+
+// A prefix used on hydra's item for now
+public constant ARTIFACT_PREFIX = "Artifact\n".color(ARTIFACT_COLOR)
 
 // Default to the base ID most commonly used.
 // bspd is the id of boot of speed
@@ -32,6 +37,7 @@ function createUsableItem(int newId, int oldId) returns ItemDefinition
 function createPerishableItem(int newId, int oldId) returns ItemDefinition
     return createUsableItem(newId, oldId)
         ..setPerishable(true)
+        ..setNumberofCharges(1)
 
 //Item Abilities
 //Attack Bonus ability (Axes)
@@ -77,8 +83,8 @@ public function createItemChannelCast(int abilId) returns ChannelAbilityPreset
     Use this to create an item spell who doesn't play an animation
     Contrary to the Channel ability, Berserk do not stop the unit current order when casted.
 **/
-public function createItemBerserkCast(int newId) returns AbilityDefinitionBeserk
-    return new AbilityDefinitionBeserk(newId)
+public function createItemBerserkCast(int newId) returns AbilityDefinitionBerserk
+    return new AbilityDefinitionBerserk(newId)
         ..setArtCaster("")
         ..setArtEffect("")
         ..setArtTarget("")
@@ -90,6 +96,7 @@ public function createItemBerserkCast(int newId) returns AbilityDefinitionBeserk
         ..setTooltipNormalExtended(1, "dummy spell")
         ..setManaCost(1, 0)
         ..setAnimationNames("")
+        ..setCooldown(1, 0)
         ..setDurationHero(1, 0.01)
         ..setDurationNormal(1, 0.01)
         ..setCastingTime(1, 0)

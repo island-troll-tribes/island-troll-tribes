@@ -1,17 +1,19 @@
 package TrollUpgrade
 
 // Standard library imports:
-import ClosureTimers
 import EventHelper
 import HashMap
+import LinkedList
 import RegisterEvents
+
+// Third-party imports
+import Lodash
 
 // Local imports:
 import AutoSkill
-import Classes
+import Experience
 import LocalObjectIDs
 import Transformation
-import IdListConstant
 
 // TODO: Build this out automatically.
 public constant trollUpgradeMap = new HashMap<int, int>()
@@ -24,7 +26,7 @@ public constant trollUpgradeMap = new HashMap<int, int>()
     ..put(ABILITY_BOOSTER,          UNIT_BOOSTER)
     ..put(ABILITY_MASTER_HEALER,    UNIT_MASTER_HEALER)
     ..put(ABILITY_SAGE,             UNIT_SAGE)
-    ..put(ABILITY_CHICKEN,          UNIT_CHICKEN_FORM)
+    ..put(ABILITY_DRUID,            UNIT_DRUID)
     ..put(ABILITY_SHAPESHIFTER,     UNIT_SHAPESHIFTER_WOLF)
     ..put(ABILITY_ULTIMATE_FORM,    UNIT_ULTIMATE_FORM)
     ..put(ABILITY_ESCAPE_ARTIST,    UNIT_ESCAPE_ARTIST)
@@ -37,57 +39,52 @@ public constant trollUpgradeMap = new HashMap<int, int>()
     ..put(ABILITY_HERB_MASTER,      UNIT_HERB_MASTER)
     ..put(ABILITY_OMNIGATHERER,     UNIT_OMNIGATHERER)
 
-// TODO: Do this while creating the classes.
-@compiletime function registerTransformations()
+let transformations = new LinkedList<Pair<int, int>>()
     // Hunter
-    registerTransformation(UNIT_HUNTER, UNIT_WARRIOR)
-    registerTransformation(UNIT_HUNTER, UNIT_TRACKER)
-    registerTransformation(UNIT_HUNTER, UNIT_JUGGERNAUT)
-    registerTransformation(UNIT_WARRIOR, UNIT_JUGGERNAUT)
-    registerTransformation(UNIT_TRACKER, UNIT_JUGGERNAUT)
-
+    ..add(new Pair(UNIT_HUNTER, UNIT_WARRIOR))
+    ..add(new Pair(UNIT_HUNTER, UNIT_TRACKER))
+    ..add(new Pair(UNIT_HUNTER, UNIT_JUGGERNAUT))
+    ..add(new Pair(UNIT_WARRIOR, UNIT_JUGGERNAUT))
+    ..add(new Pair(UNIT_TRACKER, UNIT_JUGGERNAUT))
     // Beastmaster
-    registerTransformation(UNIT_BEAST_MASTER, UNIT_SHAPESHIFTER_WOLF)
-    registerTransformation(UNIT_BEAST_MASTER, UNIT_CHICKEN_FORM)
-    registerTransformation(UNIT_BEAST_MASTER, UNIT_ULTIMATE_FORM)
-    registerTransformation(UNIT_SHAPESHIFTER_WOLF, UNIT_ULTIMATE_FORM)
-    registerTransformation(UNIT_CHICKEN_FORM, UNIT_ULTIMATE_FORM)
-
+    ..add(new Pair(UNIT_BEAST_MASTER, UNIT_SHAPESHIFTER_WOLF))
+    ..add(new Pair(UNIT_BEAST_MASTER, UNIT_DRUID))
+    ..add(new Pair(UNIT_BEAST_MASTER, UNIT_ULTIMATE_FORM))
+    ..add(new Pair(UNIT_SHAPESHIFTER_WOLF, UNIT_ULTIMATE_FORM))
+    ..add(new Pair(UNIT_DRUID, UNIT_ULTIMATE_FORM))
     // Priest
-    registerTransformation(UNIT_PRIEST, UNIT_BOOSTER)
-    registerTransformation(UNIT_PRIEST, UNIT_MASTER_HEALER)
-    registerTransformation(UNIT_PRIEST, UNIT_SAGE)
-    registerTransformation(UNIT_BOOSTER, UNIT_SAGE)
-    registerTransformation(UNIT_MASTER_HEALER, UNIT_SAGE)
-
+    ..add(new Pair(UNIT_PRIEST, UNIT_BOOSTER))
+    ..add(new Pair(UNIT_PRIEST, UNIT_MASTER_HEALER))
+    ..add(new Pair(UNIT_PRIEST, UNIT_SAGE))
+    ..add(new Pair(UNIT_BOOSTER, UNIT_SAGE))
+    ..add(new Pair(UNIT_MASTER_HEALER, UNIT_SAGE))
     // Mage
-    registerTransformation(UNIT_MAGE, UNIT_ELEMENTALIST_NEW)
-    registerTransformation(UNIT_MAGE, UNIT_HYPNOTIST)
-    registerTransformation(UNIT_MAGE, UNIT_DEMENTIA_MASTER)
-    registerTransformation(UNIT_ELEMENTALIST_NEW, UNIT_DEMENTIA_MASTER)
-    registerTransformation(UNIT_HYPNOTIST, UNIT_DEMENTIA_MASTER)
-
+    ..add(new Pair(UNIT_MAGE, UNIT_ELEMENTALIST_NEW))
+    ..add(new Pair(UNIT_MAGE, UNIT_HYPNOTIST))
+    ..add(new Pair(UNIT_MAGE, UNIT_DEMENTIA_MASTER))
+    ..add(new Pair(UNIT_ELEMENTALIST_NEW, UNIT_DEMENTIA_MASTER))
+    ..add(new Pair(UNIT_HYPNOTIST, UNIT_DEMENTIA_MASTER))
     // Scout
-    registerTransformation(UNIT_SCOUT, UNIT_TRAPPER)
-    registerTransformation(UNIT_SCOUT, UNIT_OBSERVER)
-    registerTransformation(UNIT_SCOUT, UNIT_SPY)
-    registerTransformation(UNIT_TRAPPER, UNIT_SPY)
-    registerTransformation(UNIT_OBSERVER, UNIT_SPY)
-
+    ..add(new Pair(UNIT_SCOUT, UNIT_TRAPPER))
+    ..add(new Pair(UNIT_SCOUT, UNIT_OBSERVER))
+    ..add(new Pair(UNIT_SCOUT, UNIT_SPY))
+    ..add(new Pair(UNIT_TRAPPER, UNIT_SPY))
+    ..add(new Pair(UNIT_OBSERVER, UNIT_SPY))
     // Gatherer
-    registerTransformation(UNIT_GATHERER, UNIT_RADAR_GATHERER)
-    registerTransformation(UNIT_GATHERER, UNIT_HERB_MASTER)
-    registerTransformation(UNIT_GATHERER, UNIT_OMNIGATHERER)
-    registerTransformation(UNIT_RADAR_GATHERER, UNIT_OMNIGATHERER)
-    registerTransformation(UNIT_HERB_MASTER, UNIT_OMNIGATHERER)
-
+    ..add(new Pair(UNIT_GATHERER, UNIT_RADAR_GATHERER))
+    ..add(new Pair(UNIT_GATHERER, UNIT_HERB_MASTER))
+    ..add(new Pair(UNIT_GATHERER, UNIT_OMNIGATHERER))
+    ..add(new Pair(UNIT_RADAR_GATHERER, UNIT_OMNIGATHERER))
+    ..add(new Pair(UNIT_HERB_MASTER, UNIT_OMNIGATHERER))
     // Thief
-    registerTransformation(UNIT_THIEF, UNIT_CONTORTIONIST)
-    registerTransformation(UNIT_THIEF, UNIT_ESCAPE_ARTIST)
-    registerTransformation(UNIT_THIEF, UNIT_ASSASSIN)
-    registerTransformation(UNIT_CONTORTIONIST, UNIT_ASSASSIN)
-    registerTransformation(UNIT_ESCAPE_ARTIST, UNIT_ASSASSIN)
+    ..add(new Pair(UNIT_THIEF, UNIT_CONTORTIONIST))
+    ..add(new Pair(UNIT_THIEF, UNIT_ESCAPE_ARTIST))
+    ..add(new Pair(UNIT_THIEF, UNIT_ASSASSIN))
+    ..add(new Pair(UNIT_CONTORTIONIST, UNIT_ASSASSIN))
+    ..add(new Pair(UNIT_ESCAPE_ARTIST, UNIT_ASSASSIN))
 
+// Generate the transformations during compilation.
+let transformationIDs = compiletime(registerTransformations(transformations))
 
 function upgradeUnit(unit origin, int targetID)
     // Save the statistics for the unit for restoration after level reduction.
@@ -106,6 +103,8 @@ function upgradeUnit(unit origin, int targetID)
     // Reset the experience for the unit.
     // TODO: Avoid level resetting.
     origin.removeLevels(30)
+    // TODO: Remove this once compound requirements for abilities are fixed.
+    unlockResearch(origin)
 
     // Restore the statistics.
     // TODO: Avoid level resetting.
@@ -122,7 +121,7 @@ function upgradeUnit(unit origin, int targetID)
     if GetLocalPlayer() == origin.getOwner()
         ForceUICancel()
 
-function onLearn(unit origin, int abilityID)
+function onCast(unit origin, int abilityID)
     // Look up the transformation denoted by the learned ability.
     let targetID = trollUpgradeMap.get(abilityID)
 
@@ -130,26 +129,15 @@ function onLearn(unit origin, int abilityID)
     if targetID == 0
         return
 
-    // Verify that the level requirements are meant.
-    // TODO: Enforce this using an automatic upgrade / research system.
-    if getTrollClassType(targetID) == ClassType.SUPER_CLASS and origin.getLevel() < 9
-        origin.getOwner().print("You must be at least level 9 to choose that class.")
-        return
-    if getTrollClassType(targetID) == ClassType.SUB_CLASS and origin.getLevel() < 6
-        origin.getOwner().print("You must be at least level 6 to choose that class.")
-        return
-
     // Perform the upgrade after allowing casting to finish.
-    // TODO: Remove this once a helper unit performs the casting.
-    nullTimer() ->
-        upgradeUnit(origin, targetID)
+    upgradeUnit(origin, targetID)
 
 init
-    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_CAST) ->
-        onLearn(
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_FINISH) ->
+        onCast(
             EventData.getSpellAbilityUnit(),
             EventData.getSpellAbilityId()
         )
 
     // Register the transformations at runtime.
-    registerTransformations()
+    registerTransformations(transformations, transformationIDs, false)

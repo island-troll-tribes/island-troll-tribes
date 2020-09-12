@@ -41,6 +41,13 @@ class JungleBearDefinition extends UnitDefinition
 class BearCubDefinition extends FawnDefinition
     construct(int unitId)
         super(unitId)
+        this.setNormalAbilities(commaList(
+            ABILITY_PET_REVIVE_INFO.toRawCode(),
+            ABILITY_FEED_PET.toRawCode(),
+            ABILITY_PET_ARMOR.toRawCode(),
+            ABILITY_PET_MAGIC_RESIST.toRawCode(),
+            ABILITY_GROW_PET.toRawCode()
+            ))
         this.setModelFile(Units.polarBear1)
         this.setTintingColorRed(150)
         this.setTintingColorBlue(150)
@@ -50,22 +57,42 @@ class BearCubDefinition extends FawnDefinition
         this.setName("Bear Cub")
         this.setScalingValue(0.60)
 
-class AdultJungleBearDefinition extends JungleBearDefinition
+class AdolescentBearDefinition extends JungleBearDefinition
     construct(int unitId)
         super(unitId)
-        this.setAttack1DamageBase(33)
+        this.setNormalAbilities(commaList(
+            ABILITY_PET_REVIVE_INFO.toRawCode(),
+            ABILITY_FEED_PET.toRawCode(),
+            ABILITY_PET_DAMAGE.toRawCode(),
+            ABILITY_PET_ARMOR.toRawCode(),
+            ABILITY_PET_MAGIC_RESIST.toRawCode(),
+            ABILITY_GROW_PET.toRawCode()
+            ))
+        this.setLevel(0)
+        this.setName("Adolescent Jungle Bear")
+        this.setHitPointsRegenerationRate(0)
+        this.setFoodCost(0)
+
+class AdultJungleBearDefinition extends AdolescentBearDefinition
+    construct(int unitId)
+        super(unitId)
+        this.setAttack1DamageBase(21)
         this.setAttack1DamageSidesperDie(3)
+        this.setNormalAbilities(commaList(
+            ABILITY_PET_REVIVE_INFO.toRawCode(),
+            ABILITY_FEED_PET.toRawCode(),
+            ABILITY_PET_DAMAGE.toRawCode(),
+            ABILITY_PET_ARMOR.toRawCode(),
+            ABILITY_PET_MAGIC_RESIST.toRawCode()
+            ))
         this.setScalingValue(1.35)
         this.setSpeedBase(320)
-        this.setFoodCost(0)
-        this.setLevel(15)
         this.setHitPointsMaximumBase(300)
         this.setPointValue(600)
-        this.setHitPointsRegenerationRate(0)
         this.setName("Adult Jungle Bear")
-        this.setNameEditorSuffix("(Wurst)")
 
 @compiletime function createJungleBear()
     new BearCubDefinition(UNIT_BEAR_CUB)
     new JungleBearDefinition(UNIT_JUNGLE_BEAR)
+    new AdolescentBearDefinition(UNIT_BEAR_ADOLESCENT)
     new AdultJungleBearDefinition(UNIT_ADULT_JUNGLE_BEAR)

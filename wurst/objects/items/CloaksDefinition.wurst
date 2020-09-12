@@ -1,0 +1,284 @@
+package CloaksDefinition
+
+// Standard library imports:
+import Orders
+import Assets
+import ClosureEvents
+import ClosureTimers
+import BuffObjEditing
+import ClosureForGroups
+import InstantDummyCaster
+import ChannelAbilityPreset
+
+// Local imports:
+import LocalObjectIDs
+import ToolTipsUtils
+import LocalAssets
+import Items
+import LocalItemObjEditing
+import HealingSystem
+import StringExtensions
+import ColorUtils
+
+// Dummy abilities, I don't think they belong in LocalObjectsIDs
+let ABILITY_CLOAK_HEALING = compiletime(ABIL_ID_GEN.next())
+let ABILITY_CLOAK_MANA    = compiletime(ABIL_ID_GEN.next())
+let ABILITY_CLOAK_FROST   = compiletime(ABIL_ID_GEN.next())
+
+let FLAMES_WEARER_MODEL = Abilities.immolationREDTarget
+let FLAMES_TARGET_MODEL = Abilities.immolationRedDamage
+
+let RESTORE_RADIUS   = 700.
+let FROST_RADIUS  = 500.
+let FLAMES_RADIUS = 300.
+
+let HEALTH_RESTORED = 150.
+let  CLOAK_MANA_RESTORED   = 100.
+
+let FROST_DMG = 5.
+let FROST_MS_DEBUFF = 0.35
+let FROST_AS_DEBUFF = 0.35
+
+let FLAMES_DMG = 7.
+
+let RESTORE_COOLDOWN = 35.
+let FROST_COOLDOWN = 35.
+
+let RESTORE_DURATION = 5.
+let FROST_CASTER_DURATION = 5.
+let FROST_TARGET_DURATION = 2.
+let FROST_INTERVAL_PROC = 1.
+
+let HEAL_BUFF_TT   = "This unit benefit from Mana Rejuvenation; it is restoring mana points over time."
+let MANA_BUFF_TT   = "This unit benefit from Health Rejuvenation; it is healing health points over time."
+let FROST_CASTER_BUFF_TT  = "This unit is engulfed in a Ice Veil; it slows and damage nearby enemies over time."
+let FROST_TARGET_BUFF_TT  = "This unit is cold; it is slowed."
+
+let BUFF_HEAL = compiletime(BUFF_ID_GEN.next())
+let BUFF_MANA = compiletime(BUFF_ID_GEN.next())
+let BUFF_FLAMES = compiletime(BUFF_ID_GEN.next())
+let BUFF_FROST_CASTER = compiletime(createDummyBuffObject("Frost Cloak Caster", FROST_CASTER_BUFF_TT,
+                            LocalIcons.bTNCloakOfFrost, "", "origin"))
+let BUFF_FROST_TARGET = compiletime(createDummyBuffObject("Frost Cloak Target", FROST_TARGET_BUFF_TT,
+                            Icons.bTNFrost, Abilities.frostDamage, "chest"))
+
+// We can fetch the armor ability data this way, I find it cleaner as it lookup the data field from the ability
+let COMMON_TT  = "Provides +{0} armor, +{1} all stats and ".format(getAbilityDataField(ABILITY_ARMOR_BONUS_3, "DataA1").color(COLOR_GREEN), "3".color(COLOR_GREEN))
+
+public let CLOAK_FLAMES_TT  = COMMON_TT + "burns nearby enemies within melee range for {0} damage per second.".format(getAbilityDataField(ABILITY_CLOAK_FLAMES, "DataA1").color(COLOR_RED))
+public let CLOAK_FROST_TT   = COMMON_TT + ("can be cast to emit {0} ice waves, each wave freezes nearby enemy units dealing {1} damage, and slowing their movement and attack speeds by {2} for {3} seconds."+
+                              " Each wave refresh the slow duration, the slow amount does not stack.")
+                              .format((FROST_CASTER_DURATION / FROST_INTERVAL_PROC).toToolTipBlue(),
+                                       FROST_DMG.toToolTipRed(),
+                                       FROST_AS_DEBUFF.toToolTipOrange(),
+                                       FROST_TARGET_DURATION.toToolTipLightBlue()) +
+                              makeToolTipCooldown(FROST_COOLDOWN)
+
+public let CLOAK_HEALING_TT = COMMON_TT + "can be cast to restore all {0} health points to nearby allies over {1} seconds."
+                              .format(HEALTH_RESTORED.toToolTipGreen(), RESTORE_DURATION.toToolTipLightBlue()) + makeToolTipCooldown(RESTORE_COOLDOWN)
+public let CLOAK_MANA_TT    = COMMON_TT + "can be cast to restore {0} mana points to nearby allies over {1} seconds."
+                              .format(CLOAK_MANA_RESTORED.toToolTipBlue(), RESTORE_DURATION.toToolTipLightBlue()) + makeToolTipCooldown(RESTORE_COOLDOWN)
+
+// Cloaks ItemDefinition
+function createCloak(int newId) returns ItemDefinition
+    return createUsableItem(newId)
+        ..setScalingValue(1)
+        ..setModelUsed(LocalItems.cloak)
+        ..setCooldownGroup(commaList(ABILITY_CLOAK_FLAMES))
+
+@compiletime function createCloakOfFlames() returns ItemDefinition
+    return createCloak(ITEM_CLOAK_OF_FLAMES)
+        ..setInterfaceIcon(LocalIcons.bTNCloakOfInferno)
+        ..setNameEnhance("Cloak of Flames")
+        ..setTooltipExtended(CLOAK_FLAMES_TT)
+        ..setLumberCost(68)
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(0)
+        ..setTintingColor3Blue(0)
+        ..setAbilities(commaList(ABILITY_CLOAK_FLAMES, ABILITY_ARMOR_BONUS_3, ABILITY_CLOAK_STATS_BONUS)) // Immolation,+ 3 Armor, +3 all stats
+
+@compiletime function createCloakOfHealing() returns ItemDefinition
+    return createCloak(ITEM_CLOAK_OF_HEALING)
+        ..setInterfaceIcon(LocalIcons.bTNCloakOfHealing)
+        ..setNameEnhance("Cloak of Healing")
+        ..setTooltipExtended(CLOAK_HEALING_TT)
+        ..setLumberCost(68)
+        ..setTintingColor1Red(0)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(0)
+        ..setAbilities(commaList(ABILITY_CLOAK_HEALING, ABILITY_ARMOR_BONUS_3, ABILITY_CLOAK_STATS_BONUS)) // Frost Cast,+ 3 Armor, +3 all stats
+
+@compiletime function createCloakOfMana() returns ItemDefinition
+    return createCloak(ITEM_CLOAK_OF_MANA)
+        ..setInterfaceIcon(LocalIcons.bTNCloakOfMana)
+        ..setNameEnhance("Cloak of Mana")
+        ..setTooltipExtended(CLOAK_MANA_TT)
+        ..setLumberCost(68)
+        ..setTintingColor1Red(90)
+        ..setTintingColor2Green(0)
+        ..setTintingColor3Blue(255)
+        ..setAbilities(commaList(ABILITY_CLOAK_MANA, ABILITY_ARMOR_BONUS_3, ABILITY_CLOAK_STATS_BONUS)) // Healing Cast,+ 3 Armor, +3 all stats
+
+@compiletime function createCloakOfFrost() returns ItemDefinition
+    return createCloak(ITEM_CLOAK_OF_FROST)
+        ..setInterfaceIcon(LocalIcons.bTNCloakOfFrost)
+        ..setNameEnhance("Cloak of Frost")
+        ..setTooltipExtended(CLOAK_FROST_TT)
+        ..setLumberCost(74)
+        ..setTintingColor1Red(0)
+        ..setTintingColor2Green(100)
+        ..setTintingColor3Blue(255)
+        ..setAbilities(commaList(ABILITY_CLOAK_FROST, ABILITY_ARMOR_BONUS_3, ABILITY_CLOAK_STATS_BONUS)) // Mana Cast,+ 3 Armor, +3 all stats
+
+
+// Cloaks Item Cast
+@compiletime function createCloakItemCast()
+    createItemBerserkCast(ABILITY_CLOAK_HEALING)
+        ..setName("Healing Cloak Cast")
+        ..setCooldown(1, RESTORE_COOLDOWN)
+
+    createItemBerserkCast(ABILITY_CLOAK_MANA)
+        ..setName("Mana Cloak Cast")
+        ..setCooldown(1, RESTORE_COOLDOWN)
+
+    createItemBerserkCast(ABILITY_CLOAK_FROST)
+        ..setName("Frost Cloak Cast")
+        ..setCooldown(1, FROST_COOLDOWN)
+
+
+// Cloaks Healing/Mana Buffs
+@compiletime function createBuffRejuvenationHealth() returns BuffDefinition
+    return new BuffDefinition(BUFF_HEAL, 'Brej') // Rejuvination
+        ..setName(1, "Health Rejuvenation")
+        ..setIcon(Icons.bTNReplenishHealth)
+        ..setArtTarget(1, LocalAbilities.rejuvHealth)
+        ..setTooltipNormal(1, "Health Rejuvenation")
+        ..setTooltipNormalExtended(1, HEAL_BUFF_TT)
+        ..setEditorSuffix(1, "(Wurst)")
+
+@compiletime function createBuffRejuvenationMana() returns BuffDefinition
+    return new BuffDefinition(BUFF_MANA, 'Brej') // Rejuvination
+        ..setName(1, "Mana Rejuvenation")
+        ..setIcon(Icons.bTNReplenishMana)
+        ..setArtTarget(1, LocalAbilities.rejuvMana)
+        ..setTooltipNormal(1, "Mana Rejuvenation")
+        ..setTooltipNormalExtended(1, MANA_BUFF_TT)
+        ..setEditorSuffix(1, "(Wurst)")
+
+// Cloaks Healing/Mana abilities
+@compiletime function createAbilityRejuvenationHealth() returns AbilityDefinitionRejuvinationcreep
+    return new AbilityDefinitionRejuvinationcreep(ABILITY_REJUV_HEALING)
+        ..setDummyAbility()
+        ..setHitPointsGained(1, 1) // We use the healing system to heal, see function castRejuvHeal
+        ..setManaPointsGained(1, 0)
+        ..setDurationHero(1, RESTORE_DURATION)
+        ..setDurationNormal(1, RESTORE_DURATION)
+        ..setName("Health Rejuv")
+        ..setBuffs(1, BUFF_HEAL.toRawCode())
+        ..setIconNormal(Icons.bTNReplenishHealth)
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createAbilityRejuvenationMana() returns AbilityDefinitionRejuvinationcreep
+    return new AbilityDefinitionRejuvinationcreep(ABILITY_REJUV_MANA)
+        ..setDummyAbility()
+        ..setHitPointsGained(1, 0)
+        ..setManaPointsGained(1, CLOAK_MANA_RESTORED)
+        ..setDurationHero(1, RESTORE_DURATION)
+        ..setDurationNormal(1, RESTORE_DURATION)
+        ..setName("Mana Rejuv")
+        ..setBuffs(1, BUFF_MANA.toRawCode())
+        ..setIconNormal(Icons.bTNReplenishMana)
+        ..setEditorSuffix("(Wurst)")
+        ..setTargetsAllowed(1, TargetsAllowed.hero)
+
+// Frost cloak abilities
+// Using acidbomb because it can slow as, ms and deal damage
+@compiletime function createAbilityIceVeil() returns AbilityDefinitionAlchemistAcidBomb
+    return new AbilityDefinitionAlchemistAcidBomb(ABILITY_ICE_VEIL_DEBUFF)
+        ..setDummyAbility()
+        ..setName("Ice Veil")
+        ..setArmorPenalty(1, 0)
+        ..setMissileArt("")
+        ..setArtTarget(Abilities.frostArmorDamage)
+        ..setAttackSpeedReduction(1, -FROST_AS_DEBUFF)
+        ..setMovementSpeedReduction(1, -FROST_MS_DEBUFF)
+        ..setPrimaryDamage(1, FROST_DMG)
+        ..setSecondaryDamage(1, 0)
+        ..setAreaofEffect(1, 1)
+        ..setBuffs(1, BUFF_FROST_TARGET.buffId.toRawCode())
+        ..setDurationHero(1, FROST_TARGET_DURATION)
+        ..setDurationNormal(1, FROST_TARGET_DURATION)
+        ..setEditorSuffix("(Wurst)")
+
+// Cloak of flames abilities
+@compiletime function createBuffImmolation() returns BuffDefinition
+    return new BuffDefinition(BUFF_FLAMES, 'BEim') //Immolation
+        ..setName(1, "Red Immolation")
+        ..setArtTarget(1, FLAMES_WEARER_MODEL)
+        ..setArtSpecial(1, FLAMES_TARGET_MODEL)
+        ..setTargetAttachmentPoint0(1, "chest")
+        ..setEditorSuffix(1, "(Wurst)")
+
+@compiletime function createAbilityImmolation() returns AbilityDefinitionPermanentImmolation
+    return new AbilityDefinitionPermanentImmolation(ABILITY_CLOAK_FLAMES)
+        ..setDamageperInterval(1, FLAMES_DMG)
+        ..setAreaofEffect(1, FLAMES_RADIUS)
+        ..setName("Cloak of Flames Immolation")
+        ..setBuffs(1, BUFF_FLAMES.toRawCode())
+        ..setItemAbility(true)
+        ..setEditorSuffix("(Wurst)")
+
+
+function castRejuvHeal(unit target, real duration, real amount)
+    // Every second we check if the unit has the rejuv buff, if yes, new healing instance
+    doPeriodicallyCounted(1, duration.toInt()) (CallbackCounted cb) ->
+        if not target.hasAbility(BUFF_HEAL)
+            destroy cb
+        new HealingInstance(target, amount / duration, HealingType.ABILITY)
+
+function castRejuv(unit caster, int rejuvAbility)
+    forUnitsInRange(caster.getPos(), RESTORE_RADIUS) (unit u) ->
+        if u.isAlive() and u.getOwner().isAllyOf(caster.getOwner())
+            InstantDummyCaster.castTarget(caster.getOwner(), rejuvAbility, 1, Orders.rejuvination, u)
+            if rejuvAbility == ABILITY_REJUV_HEALING
+                castRejuvHeal(u, RESTORE_DURATION, HEALTH_RESTORED)
+
+function castAoESlowDebuff(unit caster)
+    forUnitsInRange(caster.getPos(), FROST_RADIUS) (unit u) ->
+        if isValidTarget(caster, u)
+            InstantDummyCaster.castTarget(caster.getOwner(), ABILITY_ICE_VEIL_DEBUFF, 1, Orders.acidbomb, u)
+            u.setVertexColor(96, 170, 255, 255)
+            doAfter(FROST_TARGET_DURATION + 0.1) () ->
+                if not u.hasAbility(BUFF_FROST_TARGET.buffId)
+                    u.setVertexColor(255, 255, 255, 255)
+
+function castIceVeil(unit caster)
+    caster.addAbility(BUFF_FROST_CASTER.abilId)
+    doAfter(FROST_CASTER_DURATION) () ->
+        caster.removeAbility(BUFF_FROST_CASTER.abilId)
+
+    let efx = addEffect(LocalAbilities.iceVeil, caster, "origin")
+    doAfter(FROST_CASTER_DURATION) ->
+        efx.destr()
+    // casting aoe slow before the periodic loop so the effect are instant
+    castAoESlowDebuff(caster)
+
+    // Periodic loop start after FROST_INTERVAL_PROC (1 second), that's why we do a first cast on line 260
+    // FROST_CASTER_DURATION - 1 count so we ended up with 1 + ( 5 - 1) ice veil cast
+    doPeriodicallyTimed(FROST_INTERVAL_PROC, FROST_CASTER_DURATION - 1) (CallbackCounted cb) ->
+        if not (caster.hasAbility(BUFF_FROST_CASTER.buffId))
+            destroy cb
+        castAoESlowDebuff(caster)
+
+function isValidTarget(unit caster, unit target) returns bool
+    return target.getOwner().isEnemyOf(caster.getOwner())
+        and not target.isInvulnerable()
+        and not target.isType(UNIT_TYPE_FLYING)
+        and target.isAlive()
+        and not target.isHidden()
+        and not target.isType(UNIT_TYPE_STRUCTURE)
+
+init
+    EventListener.onCast(ABILITY_CLOAK_HEALING, caster -> castRejuv(caster, ABILITY_REJUV_HEALING))
+    EventListener.onCast(ABILITY_CLOAK_MANA, caster -> castRejuv(caster, ABILITY_REJUV_MANA))
+    EventListener.onCast(ABILITY_CLOAK_FROST, caster -> castIceVeil(caster))

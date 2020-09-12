@@ -1,41 +1,88 @@
 package MedallionOfCourage
 
 // Stanard library imports:
+import Assets
+import ChannelAbilityPreset
+import ItemObjEditing
 import EventHelper
 import LinkedList
 import RegisterEvents
 import SimError
+import UpgradeObjEditing
 
 // Local imports:
 import ColorUtils
-import LocalObjectIDs
 import IdListConstant
+import Items
+import LocalObjectIDs
+import PlayerExtensions
 import StringExtensions
 
-// Medallion item cast
-function onCast(unit caster, item target)
+// The description for the item.
+let DESCRIPTION = "" +
+    "Unique|n".color(COLOR_PURPLE) +
+    "A strange medallion that installs courage in its bearer.|n" +
+    "Using this will allow you to upgrade directly into your final form.|n" +
+    "Usable by Gatherer, Mage, Priest, Scout, and Thief.".color(COLOR_GOLD)
+
+@compiletime function createMedallionAbility()
+    createItemBerserkCast(ABILITY_SUPERSUB_COURAGE)
+
+@compiletime function createMedallionOfCourage()
+    createUsableItem(ITEM_MEDALLION_COURAGE)
+        ..setAbilities(commaList(ABILITY_SUPERSUB_COURAGE))
+        ..setName("Medallion of Courage")
+        ..setDescription(DESCRIPTION)
+        ..setTooltipExtended(DESCRIPTION)
+        ..setInterfaceIcon(Icons.bTNMedalionOfCourage)
+        ..setModelUsed(Objects.potofGold)
+        ..setCanBeSoldToMerchants(false)
+
+// The message used to notify players
+let hint =  "{0} unlocked a new class choice!".color(GENERAL_COLOR)
+
+// The upgrade that allows a player to upgrade into a supersub.
+@compiletime function createMedallionDummyUpgrade()
+    new UpgradeDefinition(UPGD_MEDALLION_COURAGE)
+        ..setName(1, "Subclass or Medallion Of Courage")
+
+// Validates and unlocks the research corresponding to the Medallion of Courage.
+function onUse(unit caster, item target)
+    // Exit if the item used is not relevant.
+    if target.getTypeId() != ITEM_MEDALLION_COURAGE
+        return
+    // Cache the state of the the operation.
     let owner = caster.getOwner()
     let unitId = caster.getTypeId()
 
+    // Block certain classes from using the medallion.
     if unitId == UNIT_HUNTER or unitId == UNIT_BEAST_MASTER
-        simError(owner, "This unit cannot use this item, read the item description")
-        return
-    if SUB_TROLL_UNIT_LIST.has(unitId) or SUPERSUB_TROLL_UNIT_LIST.has(unitId)
-        simError(owner, "You need to be a basic troll (mage, priest, thief, scout, gatherer) in order to use this item")
+        simError(owner, "This unit cannot use this item.")
         return
 
-    if GetPlayerTechResearched(caster.getOwner(), UPGD_MEDALLION_COURAGE, true) == false
-        SetPlayerTechResearched(caster.getOwner(), UPGD_MEDALLION_COURAGE, 1)
-        let medalHint = caster.getProperName().color(GOLD_COLOR) + " acquired a super class choice! Check your hero skill and reach level 9 to use it.".color(GENERAL_COLOR)
-        printTimedToPlayer(medalHint, 5, owner)
-        target.remove()
-    else
-        simError(owner, "This unit already used the Medallion of Courage")
+    // Block unnecessary usage of the medallion.
+    if SUB_TROLL_UNIT_LIST.has(unitId) or SUPERSUB_TROLL_UNIT_LIST.has(unitId)
+        simError(owner, "This unit does not benefit from this item.")
+        return
+
+    // Block redundant usage of the medallion.
+    if GetPlayerTechResearched(owner, UPGD_MEDALLION_COURAGE, true)
+        simError(owner, "This unit has already benefitted from this item.")
+        return
+
+    // Consume the item manually, having verified it can be used.
+    target.remove()
+
+    // Unlock the research.
+    owner.setTechResearched(UPGD_MEDALLION_COURAGE, 1)
+
+    // Update the compound requirement manually.
+    // TODO: Remove this once compound requirements for abilities are fixed.
+    owner.setTechResearched(UPGD_TROLL_LEVEL_AND_MEDAL, caster.getLevel())
+
+    // Notify the user.
+    owner.print(hint.format(caster.getProperName().color(GOLD_COLOR)))
 
 init
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_USE_ITEM) ->
-        if EventData.getManipulatedItem().getTypeId() == ITEM_MEDALLION_COURAGE
-            onCast(
-                EventData.getManipulatingUnit(),
-                EventData.getManipulatedItem()
-            )
+        onUse(EventData.getManipulatingUnit(), EventData.getManipulatedItem())

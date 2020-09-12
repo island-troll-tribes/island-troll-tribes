@@ -1,18 +1,23 @@
 package NewBlur
 
-import ChannelAbilityPreset
-import LocalObjectIDs
-import Lodash
+// Standard-library imports:
 import Assets
-import ToolTipsUtils
-import BuffObjEditing
 import OrderIds
-import DummyCaster
 import LinkedList
 import ClosureTimers
+import ClosureEvents
+import BuffObjEditing
 import ClosureForGroups
-import RegisterEvents
+import ChannelAbilityPreset
+import InstantDummyCaster
+
+// Third-party imports:
+import Lodash
+
+// Local imports:
 import UnitExtensions
+import LocalObjectIDs
+import ToolTipsUtils
 
 let DAZZLE_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
 let DAZZLE_BUFF_ID    = compiletime(BUFF_ID_GEN.next())
@@ -23,12 +28,12 @@ let BLUR_BUFF_ORIGINAL_ID = 'Bspe'
 let COOLDOWN = 40.
 let MANACOST = 30
 
-let CHANCE_TO_MISS = .20
+let CHANCE_TO_MISS = .3
 let DURATION = 10.
 let DURATION_DAZZLE = 3.
 let TOOLTIP_NORM = "Blur"
 let TOOLTIP_EXTENDED = "Makes the Escape Artist sprint as fast as he can, leaving blurs. If an enemy comes in contact "+
-                       "with blurs, he has accuracy temporarily decreased by {0}."
+                       "with blurs, its attack accuracy is temporarily decreased by {0}."
                        .format(CHANCE_TO_MISS.toToolTipOrange())+makeToolTipDuration(DURATION, COOLDOWN)
 
 let EA_AFTER_IMAGE = compiletime(UNIT_ID_GEN.next())
@@ -71,10 +76,8 @@ function createBlurBuff()
 class Dazzle extends AbilityDefinitionCurse
     construct(int newAbilityId)
         super(newAbilityId)
+        this.setDummyAbility()
         this.setName("Dazzle")
-        this.setCastRange(1, 99999)
-        this.setManaCost(1, 0)
-        this.setCooldown(1, 0)
         this.setDurationHero(1, DURATION_DAZZLE)
         this.setDurationNormal(1, DURATION_DAZZLE)
         this.setBuffs(1, toRawCode(DAZZLE_BUFF_ID))
@@ -111,19 +114,24 @@ class Blur extends AbilityDefinitionItemSpeed
 function dazzled(LinkedList<unit> afterImages)
     afterImages.forEach() afterImage ->
         forUnitsInRange(afterImage.getPos(), 200) u ->
-            if u.getOwner().isEnemyOf(afterImage.getOwner()) and not u.hasAbility(DAZZLE_BUFF_ID) and not u.isStructure()
-                new DummyCaster()
-                    ..owner(afterImage.getOwner())
-                    ..origin(afterImage.getPos() + vec2(100,0))
-                    ..castTarget(DAZZLE_ABILITY_ID,1, Orders.curse, u)
+            if isValidTarget(afterImage, u)
+                InstantDummyCaster.castTarget(afterImage.getOwner(), DAZZLE_ABILITY_ID, 1, Orders.curse, u)
+
+function isValidTarget(unit caster, unit target) returns bool
+    return target.getOwner().isEnemyOf(caster.getOwner())
+        and not target.isInvulnerable()
+        and not target.isType(UNIT_TYPE_FLYING)
+        and target.isAlive()
+        and not target.isHidden()
+        and not target.isType(UNIT_TYPE_STRUCTURE)
+        and not target.hasAbility(DAZZLE_BUFF_ID)
 
 // Change afterImage Transparency following it's position in the list
 function updateTransparency(LinkedList<unit> afterImages)
     afterImages.forEach() afterImage ->
         afterImage.setVertexColor(255, 255, 255, (90 - 10 * afterImages.indexOf(afterImage)))
 
-function onCast()
-    let caster = GetSpellAbilityUnit()
+function onCast(unit caster)
     let afterImageList = new LinkedList<unit>
     // AfterImage model
     var afterImageUnit = EA_AFTER_IMAGE
@@ -140,7 +148,7 @@ function onCast()
             // Create new afterImage as long as the unit is buffed
             // Don't create if unit is jumping, jump currentOrders is "stunned" for some reason"
             if caster.hasAbility(BLUR_BUFF_ID) and caster.getCurrentOrder() != Orders.stunned
-                var afterImage = createUnit(caster.getOwner(), afterImageUnit, caster.getPos3Real(), caster.getFacingAngle())
+                let afterImage = createUnit(caster.getOwner(), afterImageUnit, caster.getPos3Real(), caster.getFacingAngle())
                 afterImage.setPathing(false)
                 // Set afterImage animation to run when caster's running, else it should be random
                 if caster.getCurrentOrder() != 0
@@ -151,4 +159,4 @@ function onCast()
                     afterImageList.pop().remove()
 
 init
-    registerSpellEffectEvent(ABILITY_BLUR, () -> onCast())
+    EventListener.onCast(ABILITY_BLUR, (unit caster) -> onCast(caster))

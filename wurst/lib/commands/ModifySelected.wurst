@@ -2,11 +2,25 @@ package ModifySelected
 
 // Standard library imports:
 import ClosureForGroups
+import ClosureEvents
+import ClosureTimers
 
 // Third-party imports:
 import Toolkit
 
 init
+    // Set Health Point to argument (e.g -hp 100).
+    registerToolkitCommand("hp") (triggerPlayer, arguments) ->
+        forUnitsSelected(triggerPlayer) (unit target) ->
+            let amount = arguments.get(1).toReal()
+            target.setHP(amount)
+
+    // Set Mana Point to argument (e.g -mp 100).
+    registerToolkitCommand("mp") (triggerPlayer, arguments) ->
+        forUnitsSelected(triggerPlayer) (unit target) ->
+            let amount = arguments.get(1).toReal()
+            target.setMana(amount)
+
     // Heals each unit fully.
     registerToolkitCommand("heal") (triggerPlayer, arguments) ->
         forUnitsSelected(triggerPlayer) (unit target) ->
@@ -53,9 +67,9 @@ init
         forUnitsSelected(triggerPlayer) (unit target) ->
             target.setInt(arguments.get(1).toInt())
 
-    // Reset Cooldown.
-    // TODO: Improve it so we get same effect as old Jurst one
-    // Currently reset cd only when the command is entered
+    // Reset Cooldown and mana.
     registerToolkitCommand("nocd") (triggerPlayer, arguments) ->
         forUnitsSelected(triggerPlayer) (unit target) ->
-            target..resetCooldown()..setMana(target.getMaxMana())
+            EventListener.add(EVENT_PLAYER_UNIT_SPELL_CAST) ->
+                nullTimer() ->
+                    target..resetCooldown()..setMana(target.getMaxMana())

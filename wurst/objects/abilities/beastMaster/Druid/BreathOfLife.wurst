@@ -1,0 +1,111 @@
+package BreathOfLife
+
+
+// Standard Library Imports:
+import Assets
+import ClosureEvents
+import ClosureTimers
+import ChannelAbilityPreset
+
+// Local Imports:
+import LocalAssets
+import LocalObjectIDs
+import SimError
+import TerrainUtils
+import ToolTipsUtils
+
+
+// Life time of the spawns bushes.
+let BUSH_DURATION = 60.
+
+// Distance between the center of the bushes.
+let BUSH_OFFSET = 150.
+
+// Number of bushes around the center.
+let MAX_BUSHES = 4
+
+// ID for the bush destructable.
+let BUSH_ID = 'B000'
+
+let BIRTH_ANIMATION_PERIOD = 1.5
+
+let ICON = LocalIcons.bTNBreathOfLife
+
+// Array of the positions for the bushes around the center point.
+vec2 array bushes
+
+let COOLDOWN = 30.
+let MANA_COST = 15
+let BUTTON_POS_X = 2
+let BUTTON_POS_Y = 0
+let HOTKEY = "E"
+let NAME = "Breath of Life"
+let TOOLTIP = "Breath of Life"
+let TOOLTIP_EXT = "The Druid breathes life into the ground growing bushes at the target location. Must be used on dry ground." + makeToolTipDuration(BUSH_DURATION, COOLDOWN)
+
+
+@compiletime function createBreathOfLife() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_BREATH_OF_LIFE, 1, true)
+        ..setDummyAbility()
+        ..presetBaseOrderID(lvl -> "forceofnature")
+        ..presetManaCost(lvl -> MANA_COST)
+        ..presetCooldown(lvl -> COOLDOWN)
+        ..setButtonPositionNormalX(BUTTON_POS_X)
+        ..setButtonPositionNormalY(BUTTON_POS_Y)
+        ..setHotkeyNormal(HOTKEY)
+        ..presetTargetTypes(Targettype.POINT)
+        ..presetIcon(ICON)
+        ..setName(NAME)
+        ..setTooltipNormal(1, makeToolTipNorm(HOTKEY, TOOLTIP))
+        ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+        ..setFollowThroughTime(1, 1.5)
+        ..setCastingTime(1, 0)
+        // AoE indicator
+        ..presetOption(Option.TARGETIMAGE, true)
+        ..setAreaofEffect(1, BUSH_OFFSET * 2)
+
+// Plants the bushes in and around the target position.
+function plantBush(vec2 target)
+    // Exit if the target position is not on land.
+    if not target.isTerrainLand()
+        // Notify the player of their mistake.
+        simError(EventData.getTriggerUnit().getOwner(), "Must be cast on land.")
+        // Need to refresh the cooldown this way since the ability is in a spellbook.
+        EventData.getTriggerUnit().disableAbility(ABILITY_BREATH_OF_LIFE, true, false)
+        EventData.getTriggerUnit().disableAbility(ABILITY_BREATH_OF_LIFE, false, false)
+        return
+
+    // Determine the positions of the bushes around the center point.
+    initializeBushes(target)
+
+    // Iterate through all the side bushes.
+    for int i = 0 to MAX_BUSHES
+        // If the side bush would be created on land.
+        if bushes[i].isTerrainLand()
+            // Create the bush.
+            flashEffect(Objects.entBirthTarget, bushes[i])
+            let bush = createDestructable(BUSH_ID, bushes[i], angle(0), 1.2, 0)
+                        ..setAnimation("birth")
+                        ..setOccluderHeight(0)
+
+            // Setting the occlusion height to 0 remove the vision block, this way we can see all the bush birth animation
+            // After the birth animation's finished, we reset the vision block, the value is taken from the world editor
+            // And based off tree destructible I believe
+            doAfter(BIRTH_ANIMATION_PERIOD) ->
+                bush.setOccluderHeight(230)
+
+            // Killing the bush after its lifetime. Using kill instead of remove so we can see the death animation.
+            doAfter(BUSH_DURATION) ->
+                bush.kill()
+
+// Used to calculate the positions of the bushes surrounding the target position.
+function initializeBushes(vec2 target)
+    bushes[0] = target
+    bushes[1] = target.add(0, BUSH_OFFSET)
+    bushes[2] = target.add(0, -BUSH_OFFSET)
+    bushes[3] = target.add(-BUSH_OFFSET, 0)
+    bushes[4] = target.add(BUSH_OFFSET, 0)
+
+init
+    EventListener.onPointCast(ABILITY_BREATH_OF_LIFE) (unit caster, vec2 target) ->
+        plantBush(target)

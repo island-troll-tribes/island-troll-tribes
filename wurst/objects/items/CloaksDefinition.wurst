@@ -229,19 +229,19 @@ function createCloak(int newId) returns ItemDefinition
         ..setEditorSuffix("(Wurst)")
 
 
-function castRejuvHeal(unit target, real duration, real amount)
+function castRejuvHeal(unit caster, unit target, real duration, real amount)
     // Every second we check if the unit has the rejuv buff, if yes, new healing instance
     doPeriodicallyCounted(1, duration.toInt()) (CallbackCounted cb) ->
         if not target.hasAbility(BUFF_HEAL)
             destroy cb
-        new HealingInstance(target, amount / duration, HealingType.ABILITY)
+        new HealingInstance(target, caster, amount / duration, HealingType.ABILITY)
 
 function castRejuv(unit caster, int rejuvAbility)
     forUnitsInRange(caster.getPos(), RESTORE_RADIUS) (unit u) ->
         if u.isAlive() and u.getOwner().isAllyOf(caster.getOwner())
             InstantDummyCaster.castTarget(caster.getOwner(), rejuvAbility, 1, Orders.rejuvination, u)
             if rejuvAbility == ABILITY_REJUV_HEALING
-                castRejuvHeal(u, RESTORE_DURATION, HEALTH_RESTORED)
+                castRejuvHeal(caster, u, RESTORE_DURATION, HEALTH_RESTORED)
 
 function castAoESlowDebuff(unit caster)
     forUnitsInRange(caster.getPos(), FROST_RADIUS) (unit u) ->

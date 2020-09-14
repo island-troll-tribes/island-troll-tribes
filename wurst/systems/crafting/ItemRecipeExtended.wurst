@@ -2,35 +2,115 @@ package ItemRecipeExtended
 
 // Standard library imports:
 import LinkedList
+import ClosureEvents
 
 // Extension library imports:
+import LocalObjectIDs
 import ItemRecipe
 import IdListConstant
 import ResourceSpawns
+import UnitExtensions
+import ClosuresForItems
+import Lodash
+import Mixing
+import Tannering
 
 
 public class ItemRecipeExt extends ItemRecipe
-    
-    construct(int reward, int charges, boolean ordered, boolean permanent, boolean pickupable)
+    var pickUpRange = 700.
+
+    construct(int reward, int charges, boolean ordered, boolean permanent, boolean pickupable, int quickMakeAbilId)
         super(reward, charges, ordered, permanent, pickupable)
+        if quickMakeAbilId != 0
+            this.setAbility(quickMakeAbilId)
+            EventListener.onCast(quickMakeAbilId) (unit caster) ->
+                onQuickMakeCast(caster)
 
     override function assemble(unit whichUnit, LinkedList<item> fromItems) returns boolean
+        return super.assemble(whichUnit, fromItems)
+
+    override function assemble(unit whichUnit) returns boolean
+        // let inventoryItem = whichUnit.getInventory()
+        return super.assemble(whichUnit)
+        //     lowerMaterialCount(inventoryItem)
+        //     return true
+        // return false
+
+    function lowerMaterialCount(LinkedList<item> fromItems)
         let max = fromItems.size()
         for i = 0 to max
+            // If item is a spawned material, lower
             if(MATERIAL_COUNTER_LIST.has(fromItems.get(i).getTypeId()))
                 lowerItem(1)
-        return super.assemble(whichUnit, fromItems)
+
+    function onQuickMakeCast(unit caster)
+        print(caster.getName())
+        let pos = caster.getPos()
+        let items = new OwnedLinkedList<item>()
+        let inventory = caster.getInventory()
+
+        // specialHerb.put(ITEM_BLUE_HERB, 0)
+        // specialHerb.put(ITEM_YELLOW_HERB, 0)
+        // specialHerb.put(ITEM_PURPLE_HERB, 0)
+        // specialHerb.put(ITEM_ORANGE_HERB, 0)
+
+        if caster.isTroll()
+            pickUpRange = 100
+        if caster.getTypeId() == UNIT_CRAFT_MASTER
+            pickUpRange = 300
+
+        caster.dropItems()
+
+        var iter = this.getIngredients().iterator()
+
+        while iter.hasNext()
+            var ingredient = iter.next()
+            print(ingredient.index)
+            let found = findNearestItem(pos, pickUpRange, i -> i.getTypeId() == ingredient.itemTypeId)
+
+            if found != null
+                while iter.hasNext() and iter.lookahead().index == ingredient.index
+                    iter.next()
+                print(found.getName())
+                // if specialHerb.has(found.getTypeId())
+                //     specialHerb.put(found.getTypeId(), specialHerb.get(found.getTypeId()) + 1)
+
+                //In order to avoid picking up the same special herb too much time
+                // if specialHerb.get(found.getTypeId()) > herbThreshold
+                //     found = null
+
+                //Special case for eob, once you get 2 spec, you don't want to be able to pick up 2 spec of another type
+                //Not pretty but couldn't figure out something else
+                // if this.getAbility() == ABILITY_QM_ESSENCE_BEES and specialHerb.get(found.getTypeId()) == herbThreshold
+                //     herbThreshold = 1
+                items.add(found)
+                // We don't want to iterate over same item multiple time
+                found.setVisible(false)
+            else if found == null and iter.lookahead().index != ingredient.index
+                return
+
+        iter.close()
 
 
-public class IngredientCharge extends ItemRecipeExt
+        for elem in items
+            elem.setVisible(true)
+            // Remove transmutable item from inventory list
+            inventory.remove(elem)
+            caster.addItemHandle(elem)
 
-    construct(int reward, boolean ordered, boolean permanent, boolean pickupable)
-        super(reward, charges, ordered, permanent, pickupable)
+        if caster.getTypeId() == UNIT_POT
+            mix(caster)
+        else if caster.getTypeId() == UNIT_TANNERY or caster.getTypeId() == UNIT_OMINOUS_ALTAR
+            tan(caster, this.getAbility())
 
-    override function assemble(unit whichUnit, LinkedList<item> fromItems) returns boolean
-        let max = fromItems.size()
-        for i = 0 to max
-            if(fromItems.get(i).getCharges() > this.charges)
-                this.charges = fromItems.get(i).getCharges()
-        return super.assemble(whichUnit, fromItems)
-            
+        // Transmute items
+        this.assemble(caster)
+
+        for elem in inventory
+            caster.addItemHandle(elem)
+        caster.moveInventoryDown()
+
+        // if this.getAbility() == ABILITY_QM_ESSENCE_BEES
+        //     herbThreshold = 2
+        destroy items
+        destroy inventory

@@ -1,14 +1,38 @@
 package JungleWolfDefinition
 
+// Standard library imports:
 import UnitObjEditing
-import LocalObjectIDs
-import LocalAssets
 import Assets
-import ElkDefinition
 import ObjectIds
+import LinkedList
+
+// Local imports:
+import LocalObjectIDs
 
 let CRITICAL_STRIKE = "AIcs"
 let LIFE_STEAL = "S00X"
+
+constant tamedWolfAbilities = asList(
+    ABILITY_PET_REVIVE_INFO,
+    ABILITY_PET_DAMAGE_UPGD,
+    ABILITY_PET_ARMOR_UPGD,
+    ABILITY_PET_MAGIC_RESIST_UPGD,
+    ABILITY_PET_HEALTH_UPGD,
+    ABILITY_PET_LIFE_STEAL_UPGD,
+    ABILITY_PET_LIFE_STEAL,
+    ABILITY_PET_SNACK
+)
+
+constant tamedWolfUpgrades = asList(
+    UPGD_PET_ATTACK_DAMAGE,
+    UPGD_PET_ARMOR,
+    UPGD_PET_MAGIC_RESISTANCE,
+    UPGD_PET_HEALTH,
+    UPGD_PET_LIFE_STEAL
+)
+
+constant TAMED_WOLF_ABIL = tamedWolfAbilities.joinBy((int i) -> i.toRawCode(), ",")
+constant TAMED_WOLF_UPGD = tamedWolfUpgrades.joinBy((int i) -> i.toRawCode(), ",")
 
 public class JungleWolfDefinition extends UnitDefinition
     construct(int unitId)
@@ -37,59 +61,22 @@ public class JungleWolfDefinition extends UnitDefinition
         this.setTooltipBasic("Raw meat that needs to be cooked")
         this.setName("Jungle Wolf")
         this.setNameEditorSuffix("(Wurst)")
+        this.setManaMaximum(20)
 
-class WolfPupDefinition extends FawnDefinition
+
+class TamedWolfDefinition extends JungleWolfDefinition
     construct(int unitId)
         super(unitId)
-        this.setNormalAbilities(commaList(
-            ABILITY_PET_REVIVE_INFO.toRawCode(),
-            ABILITY_FEED_PET.toRawCode(), 
-            ABILITY_PET_ARMOR.toRawCode(),
-            ABILITY_PET_MAGIC_RESIST.toRawCode(),
-            ABILITY_GROW_PET.toRawCode()
-            ))
-        this.setModelFile(Units.whiteWolf1)
-        this.setArmorType(ArmorType.Small)
-        this.setSelectionScale(0.80)
-        this.setTooltipBasic("A little Pup...")
-        this.setName("Wolf Pup")
-        this.setScalingValue(0.60)
-
-class AdolescentJungleWolfDefinition extends JungleWolfDefinition
-    construct(int unitId)
-        super(unitId)
-        this.setNormalAbilities(commaList(
-            ABILITY_PET_REVIVE_INFO.toRawCode(),
-            ABILITY_FEED_PET.toRawCode(),
-            ABILITY_PET_DAMAGE.toRawCode(), 
-            ABILITY_PET_ARMOR.toRawCode(),
-            ABILITY_PET_MAGIC_RESIST.toRawCode(),
-            ABILITY_GROW_PET.toRawCode()
-            ))
-        this.setName("Adolescent Jungle Wolf")
+        this.setNormalAbilities(TAMED_WOLF_ABIL)
+        this.setUpgradesUsed(TAMED_WOLF_UPGD)
+        this.setName("Tamed Jungle Wolf")
         this.setHitPointsRegenerationRate(0)
         this.setLevel(0)
+        this.setAttack1DamageUpgradeAmount(1)
+        this.setDefenseUpgradeBonus(1)
+        this.setManaMaximum(100)
 
-class AdultJungleWolfDefinition extends AdolescentJungleWolfDefinition
-    construct(int unitId)
-        super(unitId)
-        this.setAttack1CooldownTime(1.20)
-        this.setAttack1DamageBase(17)
-        this.setNormalAbilities(commaList(
-            ABILITY_PET_REVIVE_INFO.toRawCode(),
-            ABILITY_FEED_PET.toRawCode(),
-            ABILITY_PET_DAMAGE.toRawCode(), 
-            ABILITY_PET_ARMOR.toRawCode(),
-            ABILITY_PET_MAGIC_RESIST.toRawCode()
-            ))
-        this.setSpeedBase(320)
-        this.setScalingValue(1.15)
-        this.setPointValue(500)
-        this.setName("Adult Jungle Wolf")
-        this.setNameEditorSuffix("(Wurst)")
 
 @compiletime function createJungleWolf()
-    new WolfPupDefinition(UNIT_WOLF_PUP)
     new JungleWolfDefinition(UNIT_JUNGLE_WOLF)
-    new AdolescentJungleWolfDefinition(UNIT_WOLF_ADOLESCENT)
-    new AdultJungleWolfDefinition(UNIT_ADULT_JUNGLE_WOLF)
+    new TamedWolfDefinition(UNIT_TAMED_WOLF)

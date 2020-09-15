@@ -1,103 +1,148 @@
 package PetFeeding
 
 // Standard library imports:
-import AbilityObjEditing
 import ClosureEvents
-import UpgradeObjEditing
-import ObjectIds
-import ClosureTimers
+import ClosuresForItems
+import ChannelAbilityPreset
+import Assets
+
+// Third party imports:
+import Lodash
 
 // Local imports:
 import LocalObjectIDs
 import Pets
-import PlayerExtensions
 import ColorUtils
 import StringExtensions
+import HashMap
+import LinkedList
+import SimError
+import TextTagUtils
+import PetTaming
 import ToolTipsUtils
-import LocalAssets
-import PetMana
 
-let MANA_GAINED = 1
-let HOTKEY = "D"
-let ICON = LocalIcons.aTCCannibalize
-let TOOLTIP = "Eat Corpse"
-let TOOLTIP_EXT = "Eat a raw corpse to gain {0} energy. energy can be used to grow your pet, or increase its stats. \n".format(MANA_GAINED.toString().color(ENERGY_COLOR)) +
-                    "You can upgrade any stat a total of {0} times every time your troll levels up.".format("3".color(GOLD_COLOR))
+/**
+    Contains "Snack" spell abilityDefinition and the logic behind the pet mana handling
+    A neutral animal can only be fed from "Food Throw" spell
+    A tamed animal can feed upon nearby item using "Eat" spell
+    I wanted animals to have different diet, but I fear it might add too much complexity for players or tooltipping
+    Kinda want to be able to feed materials to drake based on their type (e.g red drake eats flint, nether eats darkness Orb)
+**/
 
-@compiletime function createManaDummyUpgrade() returns UpgradeDefinition
-    return new UpgradeDefinition(UPGD_PET_EATING_ALLOWED)
-        ..setName(1, "Maximum unused upgrade points reached.")
+public let petDietMap = new HashMap<int, LinkedList<int>>()
+    ..put(UNIT_ELK                        , asList(ITEM_ACORN, ITEM_MAGIC_ACORN))
+    ..put(UNIT_TAMED_ELK                  , asList(ITEM_ACORN, ITEM_MAGIC_ACORN))
+    ..put(UNIT_JUNGLE_WOLF                , asList(ITEM_COOKED_MEAT, ITEM_HAWK_EGG, ITEM_ACORN, ITEM_MAGIC_ACORN))
+    ..put(UNIT_TAMED_WOLF                 , asList(ITEM_COOKED_MEAT, ITEM_HAWK_EGG, ITEM_ACORN, ITEM_MAGIC_ACORN))
+    ..put(UNIT_TAMED_BEAR                 , asList(ITEM_COOKED_MEAT, ITEM_HAWK_EGG, ITEM_ACORN, ITEM_MAGIC_ACORN))
+    ..put(UNIT_JUNGLE_BEAR                , asList(ITEM_COOKED_MEAT, ITEM_HAWK_EGG, ITEM_ACORN, ITEM_MAGIC_ACORN))
+    ..put(UNIT_HAWK_HATCHLING             , asList(ITEM_COOKED_MEAT, ITEM_HAWK_EGG, ITEM_ACORN, ITEM_MAGIC_ACORN))
+    ..put(UNIT_TAMED_HAWK                 , asList(ITEM_COOKED_MEAT, ITEM_HAWK_EGG, ITEM_ACORN, ITEM_MAGIC_ACORN))
+    ..put(UNIT_CORROSIVE_DRAGON_HATCHLING , asList(ITEM_COOKED_MEAT, ITEM_HAWK_EGG, ITEM_POISON, ITEM_ULTRA_POISON))
+    ..put(UNIT_CORROSIVE_DRAGON           , asList(ITEM_COOKED_MEAT, ITEM_HAWK_EGG, ITEM_POISON, ITEM_ULTRA_POISON))
+    ..put(UNIT_FIRE_DRAGON_HATCHLING      , asList(ITEM_COOKED_MEAT, ITEM_HAWK_EGG, ITEM_FIRE_BOMB))
+    ..put(UNIT_FIRE_DRAGON                , asList(ITEM_COOKED_MEAT, ITEM_HAWK_EGG, ITEM_FIRE_BOMB))
+    ..put(UNIT_FROST_DRAGON_HATCHLING     , asList(ITEM_COOKED_MEAT, ITEM_HAWK_EGG, ITEM_SPIRIT_WATER))
+    ..put(UNIT_FROST_DRAGON               , asList(ITEM_COOKED_MEAT, ITEM_HAWK_EGG, ITEM_SPIRIT_WATER))
+    ..put(UNIT_STORM_DRAGON_HATCHLING     , asList(ITEM_COOKED_MEAT, ITEM_HAWK_EGG, ITEM_SPIRIT_WIND))
+    ..put(UNIT_STORM_DRAGON               , asList(ITEM_COOKED_MEAT, ITEM_HAWK_EGG, ITEM_SPIRIT_WIND))
+    ..put(UNIT_NETHER_DRAGON_HATCHLING    , asList(ITEM_COOKED_MEAT, ITEM_HAWK_EGG, ITEM_SPIRIT_DARKNESS))
+    ..put(UNIT_NETHER_DRAGON              , asList(ITEM_COOKED_MEAT, ITEM_HAWK_EGG, ITEM_SPIRIT_DARKNESS))
 
-@compiletime function createAbilityFeedPet() returns AbilityDefinitionRaiseDead
-    return new AbilityDefinitionRaiseDead(ABILITY_FEED_PET)
-        ..setIconNormal(ICON)
+
+public let foodMapMana = new HashMap<int, int>()
+    ..put(ITEM_COOKED_MEAT     , 3)
+    ..put(ITEM_ACORN           , 4)
+    ..put(ITEM_HAWK_EGG        , 6)
+    ..put(ITEM_MAGIC_ACORN     , 8)
+    ..put(ITEM_POISON          , 10)
+    ..put(ITEM_ULTRA_POISON    , 20)
+    ..put(ITEM_FIRE_BOMB       , 10)
+    ..put(ITEM_FLINT           , 8)
+    ..put(ITEM_SPIRIT_WATER    , 20)
+    ..put(ITEM_SPIRIT_WIND     , 20)
+    ..put(ITEM_SPIRIT_DARKNESS , 20)
+
+public let FOODS_TT = map((food, _) -> food.color(HIGHLIGHT_COLOR), asList(
+                    "Cooked Meat " + foodMapMana.get(ITEM_COOKED_MEAT).toString(),
+                    "Acorn "       + foodMapMana.get(ITEM_ACORN      ).toString(),
+                    "Magic Acorn " + foodMapMana.get(ITEM_MAGIC_ACORN).toString()
+                    )).joinBy(", ")
+
+let TOOLTIP = "Snack"
+let TOOLTIP_EXT = "Gains mana by ingesting the nearest edible item."
+                  + "\nFollowing items are considered edible and give mana, format being " + "#Item #Mana".color(HIGHLIGHT_COLOR) + " gained :\n"
+                  + FOODS_TT + ".\n\n"
+                  + "Note: Elk do not eat Meat".color(COLOR_RED)
+
+
+@compiletime function createAbilitySnackItemPet() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_PET_SNACK, 1, true)
+        ..setManaCost(1, 0)
+        ..setCastRange(1, 9999)
+        ..presetTargetTypes(Targettype.NONE)
+        ..setIconNormal(Icons.bTNCannibalize)
         ..setButtonPositionNormalX(1)
         ..setButtonPositionNormalY(1)
-        ..setHotkeyNormal(HOTKEY)
-        ..setButtonPositionTurnOffX(1)
-        ..setButtonPositionTurnOffY(1)
-        ..setIconTurnOff(ICON)
-        ..setTooltipNormal(1, makeToolTipNorm(HOTKEY, TOOLTIP))
+        ..setCooldown(1, 1)
+        ..setName(TOOLTIP)
+        ..setTooltipNormal(1, makeToolTipNorm("S", TOOLTIP))
         ..setTooltipNormalExtended(1, TOOLTIP_EXT)
-        // The corpse is removed without an effect.
-        ..setArtEffect("")
-        ..setLevels(1)
-        ..presetUnitTypeOne(lvl -> "")
-        ..presetUnitsSummonedTypeOne(lvl -> 0)
-        ..presetUnitsSummonedTypeTwo(lvl -> 0)
-        ..presetManaCost(lvl -> 0)
-        ..presetCooldown(lvl -> 0)
-        // The radius from which the order can be issued.
-        ..presetAreaofEffect(lvl -> 800)
-        // The ability is cast at melee range.
-        ..presetCastRange(lvl -> 128)
-        ..setRequirements(UPGD_PET_EATING_ALLOWED.toRawCode())
-        ..setRequirementsLevels("1")
+        ..setEditorSuffix("(Wurst)")
+        ..presetOption(Option.VISIBLE, true)
 
+public function feedPet(unit pet, unit caster, int itemId, int _charges)
+    var charges = _charges
+    if charges == 0
+        charges = 1
 
-        
-function onCast(unit caster)
-    // Exit if the caster is not a pet.
-    if not caster.isPet() or caster.getMana() == caster.getMaxMana()
-        return
+    let manaFromStack = (charges * foodMapMana.get(itemId)).toReal()
+    let totalMana = pet.getMana() + manaFromStack
 
-    // Grant the pet mana for eating a corpse.
-    caster.setMana(caster.getMana() + MANA_GAINED)
+    let manaExcess = totalMana - pet.getMaxMana()
+    let correctAmount = manaExcess > 0
+                               ? manaFromStack - (manaExcess)
+                               : manaFromStack
 
-    // Update true value for pet's mana.
-    updatePetMana(caster, MANA_GAINED.toReal())
+    pet.addMana(correctAmount)
 
-    // Check if research needs to be swapped for pet.
-    setResearch(caster)
+    // Create a text tag to visualize the effect.
+    if correctAmount > 0
+        createTeamFadingTextTag(caster, pet.getPos3Real(), "+" + correctAmount.floor().toString(), COLOR_TURQUOISE)
+        flashEffect(Abilities.aImaTarget, pet, "origin")
 
-public function setResearch(unit caster)
-    // Wait for mana to actually be reduced after casting.
-    nullTimer() ->
-        // If the pet does not have full mana.
-        if not caster.getMana() == caster.getMaxMana()
-            // Enable the research to allow eating.
-            caster.getOwner().setTechResearched(UPGD_PET_EATING_ALLOWED, 1)
+    if manaExcess >= 0
 
-        // If the pet does have full mana.
-        else 
-            // Disable research so eating is not allowed.
-            caster.getOwner().setTechResearched(UPGD_PET_EATING_ALLOWED, 0)
+        // If the animal reach max mana and is neutral, add him as a pet
+        if pet.getOwner() == players[PLAYER_NEUTRAL_AGGRESSIVE] or pet.getOwner() == players[PLAYER_NEUTRAL_PASSIVE]
+            if caster.getOwner().getPet() == null
+            // Could allow pet stealing.... might be funny...
+            // or u.getOwner().isEnemyOf(caster.getOwner())
+                tamePet(caster.getOwner(), pet)
+            else
+                simError(caster.getOwner(), "Cannot tame more pet")
+        else
+            simError(caster.getOwner(), "This pet is full")
 
-function allowEating(player owner)
-    // Allow the pet to eat when first tamed.
-    owner.setTechResearched(UPGD_PET_EATING_ALLOWED, 1)
+        // In case there's too much food sent, we create an item stack with the remaining charges
+        // We could actually compute the remaning charges before and send the exact number needed, but I imagine funny
+        // situation will come out of this behavior
+        // Using floor to make sure atleast 1 charge is consumed
+        let leftover = ((manaExcess) / foodMapMana.get(itemId)).floor()
+        if leftover > 0
+            createItem(itemId, pet.getPos())..setCharges(leftover)
 
-init 
-    EventListener.add(EVENT_PLAYER_UNIT_SPELL_ENDCAST) -> 
-        if EventData.getSpellAbilityId() == ABILITY_FEED_PET
-            onCast(EventData.getTriggerUnit())
-        if EventData.getTriggerUnit().isPet()
-            setResearch(EventData.getTriggerUnit())
+function onSnack(unit caster)
+    let nearestFood = findNearestItem(caster.getPos(), 250, i -> petDietMap.get(caster.getTypeId()).has(i.getTypeId()))
 
-    EventListener.onCast(ABILITY_PET_TAME) (unit caster) ->
-        allowEating(caster.getOwner())
-    EventListener.onCast(ABILITY_PET_TAME_SHAPESHIFTER) (unit caster) ->
-        allowEating(caster.getOwner())
-    EventListener.add(EVENT_PLAYER_UNIT_DEATH) -> 
-        if EventData.getTriggerUnit().isPet()
-            allowEating(EventData.getTriggerPlayer())
+    if caster.getMissingMana() == 0
+        simError(caster.getOwner(), "This pet cannot eat anymore")
+    else if nearestFood != null
+        caster.setFacing(caster.getPos().angleTo(nearestFood.getPos()))
+        feedPet(caster, caster, nearestFood.getTypeId(), nearestFood.getCharges())
+        nearestFood.remove()
+    else
+        simError(caster.getOwner(), "There's nothing edible for this pet to eat")
+
+init
+    EventListener.onCast(ABILITY_PET_SNACK, (unit caster) -> onSnack(caster))

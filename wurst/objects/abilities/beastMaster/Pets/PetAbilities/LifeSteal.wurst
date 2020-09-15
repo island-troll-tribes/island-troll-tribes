@@ -1,0 +1,34 @@
+package LifeSteal
+
+// Standard Library Imports
+import Icons
+import ChannelAbilityPreset
+
+// Local imports:
+import LocalObjectIDs
+import ToolTipsUtils
+import ColorUtils
+import StringExtensions
+
+let LIFE_STEAL_INCREASE = 0.03
+let LIFE_STEAL_TOOLTIP = "Life Steal"
+let LIFE_STEAL_TOOLTIP_EXT = "This unit recover {0} of their attack damage when it hit enemy units."
+
+// TODO: This ability actually regen 2x the life steal (50% will regen 100% ingame, atleast I tested hitting elks)
+// Find out why or swap it with another ability
+@compiletime function createLifeStealAbility() returns AbilityDefinitionVampiricAuracreep
+    return new AbilityDefinitionVampiricAuracreep(ABILITY_PET_LIFE_STEAL)
+        ..setIconNormal(Icons.pASBTNVampiricAura)
+        ..setLevels(13)
+        ..presetButtonPosNormal(2, 1)
+        ..presetAttackDamageStolen(lvl -> 0.17 + lvl * LIFE_STEAL_INCREASE)
+        ..setName("Pet Life Steal")
+        ..presetTooltipNormal(lvl -> makeToolTipNormLevelAura(LIFE_STEAL_TOOLTIP, lvl))
+        ..presetTooltipNormalExtended(lvl -> LIFE_STEAL_TOOLTIP_EXT.format(
+            getAbilityDataFieldPercent(ABILITY_PET_LIFE_STEAL, "DataA" + lvl.toString()).color(COLOR_ORANGE)))
+        ..setEditorSuffix("(Wurst)")
+        ..setCheckDependencies(true)
+        ..presetAreaofEffect(lvl -> 100)
+        //..presetTargetsAllowed(lvl -> commaList(TargetsAllowed.self))
+        ..setArtTarget("")
+        ..setBuffs(1, "")

@@ -12,15 +12,22 @@ function real.formatForTooltip() returns string
     if this > 1 and this - this.toInt() != 0
         return this.toString()
     else if this < 1 and this > 0
-        return R2I(this * 100).toString()+"%"
+        return R2I(this * 100).toString().substring(0, 4) + "%"
     else
         return this.toInt().toString()
 
-public function makeToolTipNormHero(string hotkey, string tooltip, int level) returns string
+public function makeToolTipNormLevel(string hotkey, string tooltip, int level) returns string
     return asList(
         "[".color(GENERAL_COLOR),
         hotkey.color(SPECIAL_COLOR),
         ("] - " + tooltip + " - Level " + level.toString()).color(GENERAL_COLOR)
+    ).join()
+
+public function makeToolTipNormUpgradeLevel(string hotkey, string tooltip, int level) returns string
+    return asList(
+        "[".color(GENERAL_COLOR),
+        hotkey.color(SPECIAL_COLOR),
+        ("] - " + tooltip + " - Upgrade to Level " + level.toString()).color(GENERAL_COLOR)
     ).join()
 
 public function makeToolTipNorm(string hotkey, string tooltip) returns string
@@ -36,7 +43,7 @@ public function makeToolTipNormAura(string tooltip) returns string
 public function makeToolTipLearn(string tooltip) returns string
     return ("Learn " + tooltip + " Level %d").color(GENERAL_COLOR)
 
-public function makeToolTipNormHeroAura(string tooltip, int level) returns string
+public function makeToolTipNormLevelAura(string tooltip, int level) returns string
     return (tooltip + " - Level " + level.toString()).color(GENERAL_COLOR)
 
 public function makeToolTipCooldown(real COOLDOWN) returns string
@@ -117,3 +124,38 @@ public function getAbilityDataField(int abilId, string dataField) returns string
 **/
 public function getAbilityDataFieldPercent(int abilId, string dataField) returns string
     return "<{0},{1},%>%".format(abilId.toRawCode(), dataField)
+
+public function toolTipUpgradeData(string whichData, int data, int lvl, color color) returns string
+    return "{0} : ".format(whichData) + "{0}".format((data * (lvl - 1)).toString()).color(color)
+
+/**
+    A method to compute current upgrade bonus, set percent to true to return an percent value out of data
+**/
+public function toolTipUpgradeData(string whichData, real data, int lvl, color color, boolean percent) returns string
+    var computedData = data * (lvl - 1)
+
+    // Rouding the real value
+    computedData = (computedData * 1000).round().toReal() / 1000
+
+    return "{0} : ".format(whichData)
+            + "{0}".format((percent ? computedData.formatForTooltip().color(color)
+                                    : computedData.toString()).color(color)
+                            )
+
+public function toolTipAbilityEffectPerLevel(real value, real valueIncrease, int currentLevel, int totalLevel, color highlight, boolean isInt) returns string
+    var toReturn = ""
+    for i = 1 to totalLevel
+        let valToStr = value + valueIncrease * i
+        var newStr = ""
+        if isInt
+            newStr += valToStr.round().toString()
+        else
+            newStr += valToStr.toString(1)
+        if i == currentLevel
+            newStr = newStr.color(highlight)
+        else
+            newStr = newStr.color(GRAY_COLOR)
+        if i < totalLevel
+            newStr += "/"
+        toReturn += newStr
+    return toReturn

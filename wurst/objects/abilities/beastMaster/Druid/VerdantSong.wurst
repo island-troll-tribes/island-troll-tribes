@@ -130,7 +130,7 @@ let BEAR_ROAR_ICON = Icons.bTNHowlOfTerror
     return new BuffDefinition(ELK_ROAR_BUFF_ID, BuffIds.slow)
         ..setIcon(ELK_ROAR_ICON)
         ..setName(1, "Elk's Composure")
-        ..setTargetAttachmentPoint0(1, "overhead")
+        ..setTargetAttachmentPoint0(1, "origin")
         ..setArtTarget(1, Abilities.speedTarget)
         ..setTooltipNormal(1, "Elk's Composure")
         ..setTooltipNormalExtended(1, ELK_ROAR_TT)
@@ -166,7 +166,6 @@ let BEAR_ROAR_ICON = Icons.bTNHowlOfTerror
         ..setTooltipNormalExtended(1, WOLF_ROAR_TT)
         ..setEditorSuffix(1, "(Wurst)")
 
-
 @compiletime function createBearRoar() returns AbilityDefinitionPitLordHowlofTerror
     return new AbilityDefinitionPitLordHowlofTerror(ABILITY_BEAR_ROAR)
         ..setArtCaster("")
@@ -188,23 +187,41 @@ let BEAR_ROAR_ICON = Icons.bTNHowlOfTerror
         ..setTooltipNormalExtended(1, BEAR_ROAR_TT)
         ..setEditorSuffix(1, "(Wurst)")
 
+
 function onCast(unit pet)
-    switch pet.getPetGrowthChain().getFirst()
-        case UNIT_FAWN
+    switch pet.getTypeId()
+        case UNIT_TAMED_ELK
             flashEffect(LocalAbilities.elkRoarCaster, pet, "origin")
+            pet.setAnimation("Spell Slam")
             forUnitsInRange(pet.getPos(), RANGE) (unit u) ->
-                if u.isAllyOf(pet.getOwner())
+                if isValidTargetAlly(pet, u)
                     InstantDummyCaster.castTarget(pet.getOwner(), ABILITY_ELK_ROAR, 1, Orders.slow, u)
-        case UNIT_WOLF_PUP
+        case UNIT_TAMED_WOLF
             flashEffect(LocalAbilities.bearRoarCaster, pet, "origin")
+            pet.setAnimation("Spell Slam")
             forUnitsInRange(pet.getPos(), RANGE) (unit u) ->
-                if u.isEnemyOf(pet.getOwner())
+                if isValidTargetEnemy(pet, u)
                     InstantDummyCaster.castTarget(pet.getOwner(), ABILITY_WOLF_ROAR, 1, Orders.slow, u)
-        case UNIT_BEAR_CUB
+        case UNIT_TAMED_BEAR
             flashEffect(LocalAbilities.wolfRoarCaster, pet, "origin")
+            pet.setAnimation("Spell Slam")
             InstantDummyCaster.castImmediate(pet.getOwner(), ABILITY_BEAR_ROAR, 1, OrderIds.howlofterror, pet.getPos())
 
-init
+function isValidTargetAlly(unit caster, unit target) returns bool
+    return target.getOwner().isAllyOf(caster.getOwner())
+        and target.isAlive()
+        and not target.isHidden()
+        and not target.isType(UNIT_TYPE_STRUCTURE)
 
-    EventListener.onCast(ABILITY_DRUID_ROAR) (unit caster) ->
-        onCast(caster.getOwner().getPet())
+function isValidTargetEnemy(unit caster, unit target) returns bool
+    return target.getOwner().isEnemyOf(caster.getOwner())
+        and not target.isInvulnerable()
+        and not target.isType(UNIT_TYPE_FLYING)
+        and target.isAlive()
+        and not target.isHidden()
+        and not target.isType(UNIT_TYPE_STRUCTURE)
+        and target != caster
+
+
+init
+    EventListener.onCast(ABILITY_DRUID_ROAR, (unit caster) -> onCast(caster.getOwner().getPet()))

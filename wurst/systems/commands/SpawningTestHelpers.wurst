@@ -13,6 +13,7 @@ import Toolkit
 
 // Local imports:
 import ColorUtils
+import LocalObjectIDs
 import IdListConstant
 import PlayerExtensions
 import StringExtensions
@@ -33,6 +34,7 @@ let units = new OwnedIterableMap<string, LinkedList<int>>()
     ..put("animals"         , HOSTILE_ANIMALS_LIST)
     ..put("pets"            , PETS_LIST)
     ..put("dragons"         , DRAGON_LIST)
+    ..put("corpse"          , asList(UNIT_MEAT))
 
 let items = new OwnedIterableMap<string, LinkedList<int>>()
     ..put("herbs"           , HERB_LIST)
@@ -51,6 +53,7 @@ let items = new OwnedIterableMap<string, LinkedList<int>>()
     ..put("potions"         , POTION_LIST)
     ..put("hydrarecipe"     , HYDRA_RECIPE_LIST)
     ..put("kits"            , BUILDING_KIT_LIST)
+    ..put("foods"           , FOOD_LIST)
 
 let spawns = new OwnedIterableMap<string, LinkedList<int>>()
     ..addAll(units)
@@ -145,6 +148,7 @@ init
 
     registerToolkitCommand("research") (triggerPlayer, args) ->
         let idStr = args.get(1).toUpperCase()
+        let level = args.get(2) != null ? args.get(2).toInt() : 1
         let id = idStr.asObjectID()
 
         if id <= 0
@@ -152,7 +156,7 @@ init
         else
             if idStr.startsWith("UPGD_")
                 if GetPlayerTechResearched(triggerPlayer, id, true) == false
-                    SetPlayerTechResearched(triggerPlayer, id, 1)
+                    SetPlayerTechResearched(triggerPlayer, id, level)
                 else
                     SetPlayerTechResearched(triggerPlayer, id, 0)
             else

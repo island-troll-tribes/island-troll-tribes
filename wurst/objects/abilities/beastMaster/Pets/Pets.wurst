@@ -11,49 +11,49 @@ import LodashExtensions
 // Local imports:
 import LocalObjectIDs
 import Transformation
+import ChatCommands
+import StringExtensions
+import ColorUtils
+import PetUpgradeHandler
 
 let emptyChain = new LinkedList<int>()
 
 let growthChains = new OwnedLinkedList<OwnedLinkedList<int>>()
     ..push(asOwnedList(
-        UNIT_FAWN,
-        UNIT_ELK_ADOLESCENT,
-        UNIT_ADULT_ELK
+        UNIT_ELK,
+        UNIT_TAMED_ELK
     ))
     ..push(asOwnedList(
-        UNIT_WOLF_PUP,
-        UNIT_WOLF_ADOLESCENT,
-        UNIT_ADULT_JUNGLE_WOLF
+        UNIT_JUNGLE_WOLF,
+        UNIT_TAMED_WOLF
     ))
     ..push(asOwnedList(
-        UNIT_BEAR_CUB,
-        UNIT_BEAR_ADOLESCENT,
-        UNIT_ADULT_JUNGLE_BEAR
+        UNIT_JUNGLE_BEAR,
+        UNIT_TAMED_BEAR
     ))
     ..push(asOwnedList(
         UNIT_HAWK_HATCHLING,
-        UNIT_HAWK_ADOLESCENT,
-        UNIT_ALPHA_HAWK
+        UNIT_TAMED_HAWK
     ))
     ..push(asOwnedList(
-        UNIT_FOREST_DRAGON_HATCHLING,
-        UNIT_FOREST_DRAGON,
-        UNIT_GREATER_FOREST_DRAGON
+        UNIT_FIRE_DRAGON_HATCHLING,
+        UNIT_FIRE_DRAGON
     ))
     ..push(asOwnedList(
-        UNIT_RED_DRAGON_HATCHLING,
-        UNIT_RED_DRAGON,
-        UNIT_GREATER_RED_DRAGON
+        UNIT_CORROSIVE_DRAGON_HATCHLING,
+        UNIT_CORROSIVE_DRAGON
     ))
     ..push(asOwnedList(
-        UNIT_BRONZE_DRAGON_HATCHLING,
-        UNIT_BRONZE_DRAGON,
-        UNIT_GREATER_BRONZE_DRAGON
+        UNIT_FROST_DRAGON_HATCHLING,
+        UNIT_FROST_DRAGON
+    ))
+    ..push(asOwnedList(
+        UNIT_STORM_DRAGON_HATCHLING,
+        UNIT_STORM_DRAGON
     ))
     ..push(asOwnedList(
         UNIT_NETHER_DRAGON_HATCHLING,
-        UNIT_NETHER_DRAGON,
-        UNIT_GREATER_NETHER_DRAGON
+        UNIT_NETHER_DRAGON
     ))
 
 let transformations = zip(
@@ -98,6 +98,24 @@ public function group.enumPets()
         if value != null
             this.addUnit(value)
 
+public function player.addPetUpgrades(int value, boolean updateUpgradeAbilityLevel)
+    if this.getPet() != null
+        petUpgradeHandlerInstance.get(this.getPet()).incremenAllUpgrades(value, updateUpgradeAbilityLevel)
+
+
 init
     // Register the transformations at runtime.
     registerTransformations(transformations, transformationIDs, true)
+
+    registerCommandAll("cnp") (triggerPlayer, args) ->
+        // 25 characters Max
+        let name = args.get(1).substring(0, 25)
+
+        if triggerPlayer.getPet() != null
+            printTimedToPlayer("You have renamed your pet to ".color(GENERAL_COLOR) + name.color(HIGHLIGHT_COLOR), 5, triggerPlayer)
+            triggerPlayer.getPet().setName(name)
+        else
+            printTimedToPlayer("You do not own any pet".color(COLOR_RED), 5, triggerPlayer)
+    registerCommandAll("anim") (triggerPlayer, args) ->
+        let name = args.get(1).substring(0, 25)
+        triggerPlayer.getPet().setAnimation(name)

@@ -1,0 +1,205 @@
+package FoodThrow
+
+
+// Standard library imports:
+import ClosureEvents
+import Assets
+import TimerUtils
+import ClosureForGroups
+import ChannelAbilityPreset
+import ClosureTimers
+
+// Third party imports:
+import Lodash
+
+// Local imports:
+import ColorUtils
+import LocalAssets
+import LocalObjectIDs
+import StringExtensions
+import ToolTipsUtils
+import LinkedList
+import HashMap
+import SimError
+import UnitExtensions
+import PetFeeding
+
+
+let PETS_TT = map((animal, _) -> animal.color(COLOR_YELLOW), asList("Elk", "Wolf", "Bear", "Any hatchling from the hatchery")).joinBy(", ")
+
+let ABIL_TT_EXT = "Feed an animal by throwing the first edible item from the caster inventory, target will gain mana based on the item sent. "
+                  + "\nFollowing items are considered edible and give mana, format being " + "#Item #Mana".color(HIGHLIGHT_COLOR) + " gained :\n"
+                  + FOODS_TT + ".\n\n"
+                  + "A wild animal will be tamed when its mana reach the maximum amount, last player to feed him will get the pet. "
+                  + "\nFollowing animals can be fed and tamed :\n"
+                  + PETS_TT + ".\n\n"
+                  + "You can tame only 1 animal at once.".color(COLOR_RED) + "\n"
+                  + "You cannot steal other troll pet.".color(COLOR_RED)
+
+
+function createFeedAnimalSpell(int newAbilId) returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(newAbilId, 1, true)
+        ..setIconNormal(Icons.bTNTameHippogriff)
+        ..setCooldown(1, 1.0)
+        ..setManaCost(1, 0)
+        ..setHeroAbility(false)
+        ..setName("Food Throw")
+        ..setCastRange(1, 2000.0)
+        ..setFollowThroughTime(1, 1)
+        ..setTargetsAllowed(1, commaList(
+                TargetsAllowed.nonhero,
+                TargetsAllowed.organic
+            ))
+        ..setTooltipNormalExtended(1, ABIL_TT_EXT)
+        ..setEditorSuffix("(Wurst)")
+        ..setAnimationNames("Attack")
+        ..presetTargetTypes(Targettype.UNIT)
+
+@compiletime function createBaseFeedAnimalSpell() returns ChannelAbilityPreset
+    return createFeedAnimalSpell(ABILITY_FEED_ANIMAL)
+    ..setButtonPositionNormalX(0)
+    ..setButtonPositionNormalY(0)
+    ..setHotkeyNormal("Q")
+    ..setTooltipNormal(1, makeToolTipNorm("Q", "Food Throw"))
+
+let projectileFxMap = new HashMap<int, Pair<string, real>>()
+    ..put(ITEM_COOKED_MEAT     , new Pair(LocalItems    .ham              , 0.85))
+    ..put(ITEM_ACORN           , new Pair(Objects       .thunderLizardEgg1, 1.0))
+    ..put(ITEM_HAWK_EGG        , new Pair(LocalAbilities.eggProjectile    , 0.7))
+    ..put(ITEM_MAGIC_ACORN     , new Pair(Objects       .crystalShard     , 0.65))
+    ..put(ITEM_POISON          , new Pair(LocalItems    .poison           , 0.7))
+    ..put(ITEM_ULTRA_POISON    , new Pair(LocalItems    .ultraPoison      , 1.0))
+    ..put(ITEM_FIRE_BOMB       , new Pair(Abilities     .batRiderMissile  , 1.0))
+    ..put(ITEM_SPIRIT_WATER    , new Pair(LocalItems    .spiritOfWater    , 0.75))
+    ..put(ITEM_SPIRIT_WIND     , new Pair(LocalItems    .spiritOfWind     , 0.75))
+    ..put(ITEM_SPIRIT_DARKNESS , new Pair(LocalItems    .orbDarknessX     , 0.75))
+
+// This projectile is thrown following a parabola trajectory and land on the target position
+// It behave like an artillery missile and doesn't follow the target it
+// On landing, it will restore mana to the nearest "feedable" unit, be it enemy or ally
+// If no suitable unit is found, the item with its charges will be dropped on the landing position
+// TODO: Refactor code using CustomProjectile abstract class from CustomProjectile.wurst
+class FoodProjectile
+    use TimedLoop
+    unit caster
+    vec3 targetPos
+    effect efx
+    vec3 pos
+    real elapse_time = 0
+    real time_scale = 1.0
+    vec3 initPos
+    real duration
+    vec3 vel
+    vec3 acc
+    int charges
+    int itemId
+    boolean foundTarget = false
+
+    construct(unit caster, unit target, real speed, real arc, item food)
+        this.caster = caster
+        this.targetPos =  target.getPos().withTerrainZ().op_plus(vec3(0, 0, target.getPos3Fly().z))
+
+        this.pos = caster.getPos().polarOffset(caster.getPos().angleTo(target.getPos()), 50).withTerrainZ()
+        this.initPos = pos
+
+        // Cancelling last order issued so Elk do not run away
+        doAfter(0.1) ->
+            target.issueImmediateOrder("stop")
+            target.setFacing(target.getPos().angleTo(pos.toVec2()))
+
+        this.charges = food.getCharges()
+        this.itemId = food.getTypeId()
+
+        // Choosing project Art model based on item sent
+        // Standard Fx, just look up the item model
+        let fxPath = projectileFxMap.get(this.itemId).a
+        let fxScale = projectileFxMap.get(this.itemId).b
+
+        // This function should return the scale defined in the object definition
+        // but for some reason it only return 1
+        //print(BlzGetItemRealField(food, ITEM_RF_SCALING_VALUE))
+
+        this.efx = addEffect(fxPath, pos)
+                    ..setScale(fxScale)
+                    // ..setScale(BlzGetItemRealField(food, ITEM_RF_SCALING_VALUE))
+                    ..setColor(
+                                BlzGetItemIntegerField(food,ITEM_IF_TINTING_COLOR_RED),
+                                BlzGetItemIntegerField(food,ITEM_IF_TINTING_COLOR_GREEN),
+                                BlzGetItemIntegerField(food,ITEM_IF_TINTING_COLOR_BLUE)
+                                )
+                    // Making sure the stand animation is played and not the birth one
+                    ..playAnimation(ANIM_TYPE_STAND)
+
+        // Removing item from the inventory
+        food.remove()
+
+        // Following code regarding the projectile trajectory has been picked up from a JASS custom projectile library
+        this.duration = initPos.distanceTo2d(targetPos) / speed
+        let distance = initPos.distanceTo2d(targetPos)
+
+        let teta = Atan2(targetPos.y - initPos.y, targetPos.x - initPos.x)
+        this.acc.z = (-8*arc*speed*speed/distance)
+        this.vel = vec3(
+            speed * Cos(teta),
+            speed * Sin(teta),
+            (-acc.z * (distance / speed) / 2 + (targetPos.z - initPos.z) / (distance / speed))
+            )
+        this.acc.z = acc.z * ANIMATION_PERIOD * ANIMATION_PERIOD
+        this.vel = this.vel.op_mult(ANIMATION_PERIOD)
+
+        this.startTimedLoop()
+
+    override function onTimedLoop()
+        // This is not a homing projectile, so it land and stop after duration time
+        if duration < elapse_time
+            onLanding()
+            stopTimedLoopAndDestroy()
+
+        // Following code regarding the projectile trajectory has been picked up from a JASS custom projectile library
+        vel = vel.op_plus(acc.op_mult(time_scale * time_scale))
+        pos = pos.op_plus(vel.op_mult(time_scale))
+
+        // Adjusting orientation
+        efx.setYaw(pos.angleTo2d(targetPos))
+        efx.setPos(pos)
+        elapse_time += ANIMATION_PERIOD
+
+    function onLanding()
+        // Find nearest animals that can be fed near the landing zone
+        forNearestUnit(
+                        pos.toVec2(),
+                        100,
+                        Filter(->petDietMap.has(GetFilterUnit().getTypeId()))
+                        ) (unit u) ->
+            foundTarget = true
+            feedPet(u, caster, itemId, charges)
+
+    ondestroy
+        if not foundTarget
+            createItem(itemId, pos)..setCharges(charges)
+        this.efx.destr()
+
+
+function throwFood(unit caster, unit target)
+    caster.setFacing(caster.getPos().angleTo(target.getPos()))
+
+    let inventory = caster.getInventory()
+    let foodInventory = inventory.filter(
+        elem -> petDietMap.get(target.getTypeId()).has(elem.getTypeId())
+        )
+
+    // Sending the first edible item coming from the caster inventory
+    if foodInventory.size() > 0
+        new FoodProjectile(caster, target, 600, 0.300, foodInventory.getFirst())
+    else
+        simError(caster.getOwner(), "You need the appropriate food to feed this animal, guess its diet")
+
+function onCast(unit caster, unit target)
+    if petDietMap.has(target.getTypeId())
+        throwFood(caster, target)
+    else
+        simError(caster.getOwner(), "Cannot feed this target")
+
+
+init
+    EventListener.onTargetCast(ABILITY_FEED_ANIMAL , (unit caster, unit target) -> onCast(caster, target))

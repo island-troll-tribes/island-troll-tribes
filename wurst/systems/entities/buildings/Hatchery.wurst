@@ -1,0 +1,34 @@
+package Hatchery
+
+// Local imports:
+import Building
+import LocalObjectIDs
+import LocalAssets
+
+public class Hatchery extends Building
+    private static let unitTypeId = UNIT_HATCHERY
+    private effect eggFx
+
+    static function initialize()
+        register(unitTypeId, building -> new Hatchery(building))
+
+    construct(unit whichUnit)
+        super(whichUnit)
+
+    override function postCreate()
+        super.postCreate()
+
+        eggFx = addEffect(LocalItems.egg, getUnit(), "origin")
+        getUnit().addAbility(ABILITY_QM_HAWK_HATCHLING)
+        getUnit().addAbility(ABILITY_QM_CORROSIVE_DRAGON_HATCHLING)
+        getUnit().addAbility(ABILITY_QM_FIRE_DRAGON_HATCHLING)
+        getUnit().addAbility(ABILITY_QM_FROST_DRAGON_HATCHLING)
+        getUnit().addAbility(ABILITY_QM_STORM_DRAGON_HATCHLING)
+        getUnit().addAbility(ABILITY_QM_NETHER_DRAGON_HATCHLING)
+
+    override function postDeath()
+        eggFx.destr()
+
+
+init
+    Hatchery.initialize()

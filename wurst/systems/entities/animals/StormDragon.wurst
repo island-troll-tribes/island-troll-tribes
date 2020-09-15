@@ -1,0 +1,25 @@
+package StormDragon
+
+// Standard library imports:
+import HashMap
+
+// Local imports:
+import LocalObjectIDs
+import BonyAnimal
+
+// The number of corpses dropped per unit type.
+let typeIDs = new IterableMap<int, int>()
+    ..put(UNIT_STORM_DRAGON_HATCHLING,   0)
+    ..put(UNIT_STORM_DRAGON,       0)
+
+public class StormDragon extends BonyAnimal
+    construct(unit whichUnit)
+        super(whichUnit)
+
+    override function getNumCorpses() returns int
+        return typeIDs.get(getUnit().getTypeId())
+
+
+init
+    typeIDs.forEach() (integer typeID, integer value) ->
+        StormDragon.register(typeID, target -> new StormDragon(target))

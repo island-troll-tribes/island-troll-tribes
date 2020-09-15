@@ -16,199 +16,287 @@ constant HAWK_ABIL = commaList(
     AbilityIds.trueSight1
 )
 
-// The abilities for a tamed hawk, which may be incremented during growth.
-public let hawkAbilities = asList(
-    'A03T',  // Gathering Radius
-    'A03V',  // Health
-    'A03W',  // Inventory
-    'A03U',  // Movement Radius
-    'A03S'   // Movement Speed
+
+public let flyingPetBasicAbilities = asList(
+    ABILITY_PET_REVIVE_INFO,
+    ABILITY_PET_ARMOR_UPGD,
+    ABILITY_PET_MAGIC_RESIST_UPGD,
+    ABILITY_PET_HEALTH_UPGD,
+    ABILITY_PET_SNACK
 )
 
-// TODO: Use commaList for lists.
-constant TAMED_HAWK_ABIL = hawkAbilities.joinBy((int i) -> i.toRawCode(), ",")
+public let flyingPetBasicUpgrades = asList(
+        UPGD_PET_ARMOR,
+        UPGD_PET_MAGIC_RESISTANCE,
+        UPGD_PET_HEALTH
+)
 
-class HawkDefinition extends UnitDefinition
-    construct(int unitId)
-        super(unitId, UnitIds.wareagle1)
-        this.setNormalAbilities(HAWK_ABIL)
-        this.setUpgradesUsed("")
-        this.setScalingValue(1)
-        this.setMovementHeight(450)
-        this.setMovementHeightMinimum(50)
-        this.setSpeedBase(400)
-        this.setGoldBountyAwardedBase(0)
-        this.setGoldBountyAwardedNumberofDice(0)
-        this.setGoldBountyAwardedSidesperDie(0)
-        this.setHitPointsMaximumBase(135)
-        this.setSightRadiusDay(75)
-        this.setSightRadiusNight(75)
-        this.setLevel(4)
-        this.setHitPointsRegenerationType("")
-        this.setNameEditorSuffix("(Wurst)")
+constant FLYING_PET_BASIC_ABIL = flyingPetBasicAbilities.joinBy((int i) -> i.toRawCode(), ",")
+constant FLYING_PET_BASIC_UPGD = flyingPetBasicUpgrades.joinBy((int i) -> i.toRawCode(), ",")
 
-// Hatchling
-class HawkHatchlingDefinition extends TamedHawkDefinition
-    construct(int unitId)
-        super(unitId)
-        this.setNormalAbilities(TAMED_HAWK_ABIL)
-        this.setScalingValue(0.5)
-        this.setMovementHeightMinimum(400)
-        this.setSpeedBase(300)
-        this.setLevel(3)
-        this.setHitPointsMaximumBase(40)
-        this.setName("Hawk Hatchling")
+function createBaseHawk(int unitId) returns UnitDefinition
+    return new UnitDefinition(unitId, UnitIds.wareagle1)
+        ..setGoldBountyAwardedBase(0)
+        ..setGoldBountyAwardedNumberofDice(0)
+        ..setGoldBountyAwardedSidesperDie(0)
+        ..setSightRadiusDay(125)
+        ..setSightRadiusNight(125)
+        ..setHitPointsRegenerationType("")
+        ..setNameEditorSuffix("(Wurst)")
+        ..setUpgradesUsed("")
+        ..setDefenseUpgradeBonus(1)
 
-class ForestDragonHatchlingDefinition extends HawkHatchlingDefinition
-    construct(int unitId)
-        super(unitId)
-        this.setName("Forest Dragon Hatchling")
-        this.setModelFile(Units.greenDragon1)
-        this.setIconGameInterface(Icons.bTNGreenDragon)
-        this.setUnitSoundSet(Soundsets.azureDragon)
+@compiletime function createHawk() returns UnitDefinition
+    return createBaseHawk(UNIT_HAWK)
+        ..setNormalAbilities(HAWK_ABIL)
+        ..setScalingValue(1)
+        ..setSpeedBase(400)
+        ..setLevel(4)
+        ..setHitPointsMaximumBase(135)
+        ..setName("Hawk")
 
-class RedDragonHatchlingDefinition extends HawkHatchlingDefinition
-    construct(int unitId)
-        super(unitId)
-        this.setName("Red Dragon Hatchling")
-        this.setModelFile(Units.redDragon1)
-        this.setIconGameInterface(Icons.bTNRedDragon)
-        this.setUnitSoundSet(Soundsets.azureDragon)
-        this.setSpeedBase(360)
-        this.setHitPointsMaximumBase(80)
+@compiletime function createHawkHatchling() returns UnitDefinition
+    return createBaseHawk(UNIT_HAWK_HATCHLING)
+        ..setNormalAbilities(FLYING_PET_BASIC_ABIL
+                             + "," + ABILITY_GROW_PET.toRawCode()
+                             + "," + ABILITY_HAWK_SIGHT.toRawCode()
+                             + "," + ABILITY_PET_HAWK_SIGHT_UPGD.toRawCode()
+                             )
+        ..setUpgradesUsed(FLYING_PET_BASIC_UPGD
+                          + "," + UPGD_HAWK_SIGHT.toRawCode()
+                          )
+        ..setScalingValue(0.5)
+        ..setSpeedBase(300)
+        ..setLevel(0)
+        ..setHitPointsMaximumBase(45)
+        ..setName("Hawk Hatchling")
+        ..setManaMaximum(100)
+        ..setManaInitialAmount(0)
+        ..setAnimationCastBackswing(0.2)
+        ..setAnimationCastPoint(0.2)
 
-class BronzeDragonHatchlingDefinition extends HawkHatchlingDefinition
-    construct(int unitId)
-        super(unitId)
-        this.setName("Bronze Dragon Hatchling")
-        this.setModelFile(Units.redDragon1)
-        this.setIconGameInterface(Icons.bTNBronzeDragon)
-        this.setUnitSoundSet(Soundsets.azureDragon)
-        this.setSpeedBase(300)
-        this.setHitPointsMaximumBase(100)
+function createBaseDragonHatchlingDefinition(int unitId) returns UnitDefinition
+    return new UnitDefinition(unitId, UnitIds.greendragonwhelp)
+        ..setAttacksEnabled(0)
+        ..setGoldBountyAwardedBase(0)
+        ..setGoldBountyAwardedNumberofDice(0)
+        ..setGoldBountyAwardedSidesperDie(0)
+        ..setSightRadiusDay(125)
+        ..setSightRadiusNight(125)
+        ..setHitPointsRegenerationType("")
+        ..setNameEditorSuffix("(Wurst)")
+        ..setUpgradesUsed("")
+        ..setDefenseUpgradeBonus(1)
+        ..setTintingColorRed(255)
+        ..setTintingColorGreen(255)
+        ..setTintingColorBlue(255)
+        ..setAnimationCastBackswing(0.2)
+        ..setAnimationCastPoint(0.2)
+        ..setManaInitialAmount(0)
+        ..setManaMaximum(100)
+        ..setScalingValue(0.5)
+        ..setSelectionScale(1)
+        ..setSpeedBase(300)
+        ..setLevel(0)
+        ..setHitPointsMaximumBase(75)
+        ..setTurnRate(0.10)
+        ..setSelectionCircleHeight(200)
+        ..setDefenseBase(0)
+        ..setCategorizationSpecial(true)
+        ..setCollisionSize(16)
+        ..setElevationSampleRadius(20)
+        ..setCategorizationSpecial(true)
+        ..setGoldCost(0)
+        ..setLumberCost(0)
+        ..setBuildTime(20)
 
-class NetherDragonHatchlingDefinition extends HawkHatchlingDefinition
-    construct(int unitId)
-        super(unitId)
-        this.setNormalAbilities(TAMED_HAWK_ABIL)
-        this.setName("Nether Dragon Hatchling")
-        this.setModelFile(Units.netherDragon)
-        this.setIconGameInterface(Icons.bTNNetherDragon)
-        this.setUnitSoundSet(Soundsets.netherDragon)
-        this.setSpeedBase(522)
-        this.setHitPointsMaximumBase(300)
+@compiletime function fireDragonHatchling() returns UnitDefinition
+    return createBaseDragonHatchlingDefinition(UNIT_FIRE_DRAGON_HATCHLING)
+        ..setNormalAbilities(FLYING_PET_BASIC_ABIL
+                             + "," + ABILITY_GROW_PET.toRawCode()
+                             + "," + ABILITY_FIRE_BREATH.toRawCode()
+                             + "," + ABILITY_PET_FIRE_BREATH_UPGD.toRawCode()
+                             )
+        ..setUpgradesUsed(FLYING_PET_BASIC_UPGD
+                          + "," + UPGD_FIRE_BREATH.toRawCode()
+                          )
+        ..setName("Fire Dragon Hatchling")
+        ..setModelFile(Units.redDragonWelp)
+        ..setIconGameInterface(Icons.bTNRedDragon)
+        ..setHitPointsMaximumBase(75)
 
-// Adolescent
-class TamedHawkDefinition extends HawkDefinition
-    construct(int unitId)
-        super(unitId)
-        this.setNormalAbilities(TAMED_HAWK_ABIL)
-        this.setSpeedBase(260)
-        this.setSightRadiusDay(0)
-        this.setSightRadiusNight(0)
-        this.setName("Tamed Hawk")
+@compiletime function corrosiveDragonHatchling() returns UnitDefinition
+    return createBaseDragonHatchlingDefinition(UNIT_CORROSIVE_DRAGON_HATCHLING)
+        ..setNormalAbilities(FLYING_PET_BASIC_ABIL
+                             + "," + ABILITY_GROW_PET.toRawCode()
+                             + "," + ABILITY_CORROSIVE_BREATH.toRawCode()
+                             + "," + ABILITY_PET_CORROSIVE_BREATH_UPGD.toRawCode()
+                             )
+        ..setUpgradesUsed(FLYING_PET_BASIC_UPGD
+                          + "," + UPGD_CORROSIVE_BREATH.toRawCode()
+                          )
+        ..setName("Corrosive Dragon Hatchling")
+        ..setModelFile(Units.greenDragonWelp)
+        ..setIconGameInterface(Icons.bTNGreenDragon)
 
-class ForestDragonDefinition extends TamedHawkDefinition
-    construct(int unitId)
-        super(unitId)
-        this.setModelFile(Units.greenDragon1)
-        this.setIconGameInterface(Icons.bTNGreenDragon)
-        this.setName("Tamed Forest Dragon")
-        this.setUnitSoundSet(Soundsets.azureDragon)
+@compiletime function frostDragonHatchling() returns UnitDefinition
+    return createBaseDragonHatchlingDefinition(UNIT_FROST_DRAGON_HATCHLING)
+        ..setNormalAbilities(FLYING_PET_BASIC_ABIL
+                             + "," + ABILITY_GROW_PET.toRawCode()
+                             + "," + ABILITY_GLACIAL_BREATH.toRawCode()
+                             + "," + ABILITY_PET_GLACIAL_BREATH_UPGD.toRawCode()
+                             )
+        ..setUpgradesUsed(FLYING_PET_BASIC_UPGD
+                          + "," + UPGD_GLACIAL_BREATH.toRawCode()
+                          )
+        ..setName("Frost Dragon Hatchling")
+        ..setModelFile(Units.azureDragonWelp)
+        ..setIconGameInterface(Icons.bTNAzureDragon)
+        ..setHitPointsMaximumBase(75)
 
-class RedDragonDefinition extends TamedHawkDefinition
-    construct(int unitId)
-        super(unitId)
-        this.setModelFile(Units.redDragon1)
-        this.setIconGameInterface(Icons.bTNRedDragon)
-        this.setName("Tamed Red Dragon")
-        this.setUnitSoundSet(Soundsets.azureDragon)
-        this.setHitPointsMaximumBase(150)
+@compiletime function stormDragonHatchling() returns UnitDefinition
+    return createBaseDragonHatchlingDefinition(UNIT_STORM_DRAGON_HATCHLING)
+        ..setNormalAbilities(FLYING_PET_BASIC_ABIL
+                             + "," + ABILITY_GROW_PET.toRawCode()
+                             + "," + ABILITY_STORM_BREATH.toRawCode()
+                             + "," + ABILITY_PET_STORM_BREATH_UPGD.toRawCode()
+                             )
+        ..setUpgradesUsed(FLYING_PET_BASIC_UPGD
+                          + "," + UPGD_STORM_BREATH.toRawCode()
+                          )
+        ..setName("Storm Dragon Hatchling")
+        ..setModelFile(Units.bronzeDragonWelp)
+        ..setIconGameInterface(Icons.bTNBronzeDragon)
+        ..setHitPointsMaximumBase(75)
 
-class BronzeDragonDefinition extends TamedHawkDefinition
-    construct(int unitId)
-        super(unitId)
-        this.setModelFile(Units.redDragon1)
-        this.setIconGameInterface(Icons.bTNBronzeDragon)
-        this.setName("Tamed Bronze Dragon")
-        this.setUnitSoundSet(Soundsets.azureDragon)
-        this.setHitPointsMaximumBase(205)
+@compiletime function netherDragonHatchling() returns UnitDefinition
+    return createBaseDragonHatchlingDefinition(UNIT_NETHER_DRAGON_HATCHLING)
+        ..setNormalAbilities(FLYING_PET_BASIC_ABIL
+                             + "," + ABILITY_GROW_PET.toRawCode()
+                             + "," + ABILITY_NETHER_BREATH.toRawCode()
+                             + "," + ABILITY_PET_NETHER_BREATH_UPGD.toRawCode()
+                             )
+        ..setUpgradesUsed(FLYING_PET_BASIC_UPGD
+                          + "," + UPGD_NETHER_BREATH.toRawCode()
+                          )
+        ..setName("Nether Dragon Hatchling")
+        ..setModelFile(Units.netherDragon)
+        ..setIconGameInterface(Icons.bTNNetherDragon)
+        ..setHitPointsMaximumBase(75)
 
-class NetherDragonDefinition extends TamedHawkDefinition
-    construct(int unitId)
-        super(unitId)
-        this.setNormalAbilities(TAMED_HAWK_ABIL)
-        this.setModelFile(Units.netherDragon)
-        this.setIconGameInterface(Icons.bTNNetherDragon)
-        this.setName("Tamed Nether Dragon")
-        this.setUnitSoundSet(Soundsets.azureDragon)
-        this.setHitPointsMaximumBase(400)
-        this.setSpeedBase(522)
 
-// Greater
-class AlphaHawkDefinition extends TamedHawkDefinition
-    construct(int unitId)
-        super(unitId)
-        this.setNormalAbilities(TAMED_HAWK_ABIL)
-        this.setName("Alpha Hawk")
-        this.setLevel(15)
-        this.setSpeedBase(220)
-        this.setScalingValue(1.40)
-        this.setMovementHeight(550)
-        this.setMovementHeightMinimum(50)
-        this.setHitPointsMaximumBase(230)
+// Matured
+@compiletime function createTamedHawk() returns UnitDefinition
+    return createBaseHawk(UNIT_TAMED_HAWK)
+        ..setNormalAbilities(FLYING_PET_BASIC_ABIL
+                             + "," + ABILITY_HAWK_SIGHT.toRawCode()
+                             + "," + ABILITY_PET_HAWK_SIGHT_UPGD.toRawCode()
+                             )
+        ..setUpgradesUsed(FLYING_PET_BASIC_UPGD
+                          + "," + UPGD_HAWK_SIGHT.toRawCode()
+                          )
+        ..setScalingValue(1)
+        ..setSpeedBase(400)
+        ..setLevel(0)
+        ..setHitPointsMaximumBase(90)
+        ..setName("Tamed Hawk")
+        ..setManaMaximum(100)
+        ..setManaInitialAmount(0)
 
-class GreaterForestDragonDefinition extends AlphaHawkDefinition
-    construct(int unitId)
-        super(unitId)
-        this.setName("Greater Forest Dragon")
-        this.setModelFile(Units.greenDragon1)
-        this.setIconGameInterface(Icons.bTNGreenDragon)
-        this.setUnitSoundSet(Soundsets.azureDragon)
+function createDragonDefinition(int unitId) returns UnitDefinition
+    return new UnitDefinition(unitId, UnitIds.greendrake)
+        ..setAttacksEnabled(0)
+        ..setGoldBountyAwardedBase(0)
+        ..setGoldBountyAwardedNumberofDice(0)
+        ..setGoldBountyAwardedSidesperDie(0)
+        ..setSightRadiusDay(125)
+        ..setSightRadiusNight(125)
+        ..setHitPointsRegenerationType("")
+        ..setNameEditorSuffix("(Wurst)")
+        ..setUpgradesUsed("")
+        ..setDefenseUpgradeBonus(1)
+        ..setDefenseBase(0)
+        ..setHitPointsRegenerationRate(0)
+        ..setAnimationCastBackswing(0.2)
+        ..setAnimationCastPoint(0.2)
+        ..setManaInitialAmount(0)
+        ..setTurnRate(0.10)
+        ..setSelectionCircleHeight(200)
+        ..setHitPointsMaximumBase(165)
+        ..setManaMaximum(100)
+        ..setScalingValue(1)
+        ..setSpeedBase(400)
+        ..setLevel(0)
+        ..setCategorizationSpecial(true)
+        ..setGoldCost(0)
+        ..setLumberCost(0)
 
-class GreaterRedDragonDefinition extends GreaterForestDragonDefinition
-    construct(int unitId)
-        super(unitId)
-        this.setName("Greater Red Dragon")
-        this.setModelFile(Units.redDragon1)
-        this.setIconGameInterface(Icons.bTNRedDragon)
+@compiletime function fireDragonDefinition() returns UnitDefinition
+    return createDragonDefinition(UNIT_FIRE_DRAGON)
+        ..setNormalAbilities(FLYING_PET_BASIC_ABIL
+                             + "," + ABILITY_GROW_PET.toRawCode()
+                             + "," + ABILITY_FIRE_BREATH.toRawCode()
+                             + "," + ABILITY_PET_FIRE_BREATH_UPGD.toRawCode()
+                             )
+        ..setUpgradesUsed(FLYING_PET_BASIC_UPGD
+                          + "," + UPGD_FIRE_BREATH.toRawCode()
+                         )
+        ..setModelFile(Units.redDragon1)
+        ..setIconGameInterface(Icons.bTNRedDragon)
+        ..setName("Tamed Fire Dragon")
 
-class GreaterBronzeDragonDefinition extends GreaterForestDragonDefinition
-    construct(int unitId)
-        super(unitId)
-        this.setModelFile(Units.redDragon1)
-        this.setIconGameInterface(Icons.bTNBronzeDragon)
-        this.setName("Greater Bronze Dragon")
-        this.setHitPointsMaximumBase(320)
+@compiletime function corrosiveDragonDefinition() returns UnitDefinition
+    return createDragonDefinition(UNIT_CORROSIVE_DRAGON)
+        ..setNormalAbilities(FLYING_PET_BASIC_ABIL
+                             + "," + ABILITY_GROW_PET.toRawCode()
+                             + "," + ABILITY_CORROSIVE_BREATH.toRawCode()
+                             + "," + ABILITY_PET_CORROSIVE_BREATH_UPGD.toRawCode()
+                             )
+        ..setUpgradesUsed(FLYING_PET_BASIC_UPGD
+                          + "," + UPGD_CORROSIVE_BREATH.toRawCode()
+                          )
+        ..setModelFile(Units.greenDragon1)
+        ..setIconGameInterface(Icons.bTNGreenDragon)
+        ..setName("Tamed Corrosive Dragon")
 
-class GreaterNetherDragonDefinition extends GreaterForestDragonDefinition
-    construct(int unitId)
-        super(unitId)
-        this.setNormalAbilities(TAMED_HAWK_ABIL)
-        this.setModelFile(Units.netherDragon)
-        this.setIconGameInterface(Icons.bTNBronzeDragon)
-        this.setName("Greater Nether Dragon")
-        this.setSpeedBase(522)
-        this.setHitPointsMaximumBase(600)
+@compiletime function frostDragonDefinition() returns UnitDefinition
+    return createDragonDefinition(UNIT_FROST_DRAGON)
+        ..setNormalAbilities(FLYING_PET_BASIC_ABIL
+                             + "," + ABILITY_GROW_PET.toRawCode()
+                             + "," + ABILITY_GLACIAL_BREATH.toRawCode()
+                             + "," + ABILITY_PET_GLACIAL_BREATH_UPGD.toRawCode()
+                             )
+        ..setUpgradesUsed(FLYING_PET_BASIC_UPGD
+                          + "," + UPGD_GLACIAL_BREATH.toRawCode()
+                          )
+        ..setModelFile(Units.azureDragon1)
+        ..setIconGameInterface(Icons.bTNAzureDragon)
+        ..setName("Tamed Frost Dragon")
 
-@compiletime function createFylingAnimals()
-    new HawkDefinition                 (UNIT_HAWK                   )
-    new HawkHatchlingDefinition        (UNIT_HAWK_HATCHLING         )
-    new TamedHawkDefinition            (UNIT_HAWK_ADOLESCENT        )
-    new AlphaHawkDefinition            (UNIT_ALPHA_HAWK             )
+@compiletime function stormDragonDefinition() returns UnitDefinition
+    return createDragonDefinition(UNIT_STORM_DRAGON)
+        ..setNormalAbilities(FLYING_PET_BASIC_ABIL
+                             + "," + ABILITY_GROW_PET.toRawCode()
+                             + "," + ABILITY_STORM_BREATH.toRawCode()
+                             + "," + ABILITY_PET_STORM_BREATH_UPGD.toRawCode()
+                             )
+        ..setUpgradesUsed(FLYING_PET_BASIC_UPGD
+                          + "," + UPGD_STORM_BREATH.toRawCode()
+                          )
+        ..setModelFile(Units.bronzeDragon1)
+        ..setIconGameInterface(Icons.bTNBronzeDragon)
+        ..setName("Tamed Storm Dragon")
 
-    new ForestDragonHatchlingDefinition(UNIT_FOREST_DRAGON_HATCHLING)
-    new ForestDragonDefinition         (UNIT_FOREST_DRAGON          )
-    new GreaterForestDragonDefinition  (UNIT_GREATER_FOREST_DRAGON  )
-
-    new RedDragonHatchlingDefinition   (UNIT_RED_DRAGON_HATCHLING   )
-    new RedDragonDefinition            (UNIT_RED_DRAGON             )
-    new GreaterRedDragonDefinition     (UNIT_GREATER_RED_DRAGON     )
-
-    new BronzeDragonHatchlingDefinition(UNIT_BRONZE_DRAGON_HATCHLING)
-    new BronzeDragonDefinition         (UNIT_BRONZE_DRAGON          )
-    new GreaterBronzeDragonDefinition  (UNIT_GREATER_BRONZE_DRAGON  )
-
-    new NetherDragonHatchlingDefinition(UNIT_NETHER_DRAGON_HATCHLING)
-    new NetherDragonDefinition         (UNIT_NETHER_DRAGON)
-    new GreaterNetherDragonDefinition  (UNIT_GREATER_NETHER_DRAGON  )
+@compiletime function netherDragonDefinition() returns UnitDefinition
+    return createDragonDefinition(UNIT_NETHER_DRAGON)
+        ..setNormalAbilities(FLYING_PET_BASIC_ABIL
+                             + "," + ABILITY_GROW_PET.toRawCode()
+                             + "," + ABILITY_NETHER_BREATH.toRawCode()
+                             + "," + ABILITY_PET_NETHER_BREATH_UPGD.toRawCode()
+                             )
+        ..setUpgradesUsed(FLYING_PET_BASIC_UPGD
+                          + "," + UPGD_NETHER_BREATH.toRawCode()
+                          )
+        ..setModelFile(Units.netherDragon)
+        ..setIconGameInterface(Icons.bTNNetherDragon)
+        ..setName("Tamed Nether Dragon")

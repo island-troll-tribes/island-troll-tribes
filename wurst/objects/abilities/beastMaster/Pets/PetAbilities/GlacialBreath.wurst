@@ -1,0 +1,249 @@
+package GlacialBreath
+
+// Standard Library Imports
+import UpgradeObjEditing
+import ChannelAbilityPreset
+import ClosureEvents
+import ClosureForGroups
+import ClosureTimers
+import Assets
+import InstantDummyCaster
+import OrderIds
+import HashMap
+
+// Local imports:
+import LocalObjectIDs
+import ToolTipsUtils
+import ColorUtils
+import StringExtensions
+import CustomProjectile
+import SpiritualGuidance
+import HealingSystem
+
+
+let ABIL_SLOW = compiletime(ABIL_ID_GEN.next())
+
+let GLACIAL_BREATH_COOLDOWN = 30.
+let GLACIAL_BREATH_DURATION = 5.
+
+let DRAGON_BREATH_ANIM_CAST_TIME = 1.3
+
+let ICE_BLOCK_HP_HEALED = 20.
+let ICE_BLOCK_HP_HEALED_INCREASE = 5.
+
+let ICE_BLOCK_AOE = 100.
+let ICE_BLOCK_AOE_INCREASE = 10.
+
+
+let ICE_BLOCK_CAST_RANGE = 200.
+let ICE_BLOCK_CAST_RANGE_INCREASE = 50.
+
+let SLOW_FACTOR = 0.2
+let SLOW_DURATION = 2.5
+let SLOW_DURATION_INCREASE = 0.5
+
+let ADDITIONAL_EFFECT_STR = "\nGain an additional effect when the unit reach adulthood.".color(HIGHLIGHT_COLOR) + "\n\nAdditional Effect : ".color(GOLD_COLOR)
+
+let GLACIAL_BREATH_TOOLTIP = "Glacial Breath"
+let GLACIAL_BREATH_TOOLTIP_EXT = "Spit ice on the target location for 5 seconds, creating an ice block obstructing the way. Each additional frost missile heals the ice block."
+                                 + "\nThe ice block loose 1 health point per seconds and behave like a building, can be burned with camp fire."
+                                 + makeToolTipCooldown(GLACIAL_BREATH_COOLDOWN)
+                                 + ADDITIONAL_EFFECT_STR
+                                 + "Glacial slow down enemies standing in the area of effect by {0}.".format(SLOW_FACTOR.toToolTipOrange())
+
+// Druid Spiritual guidance allow max level to be reached
+let MAX_LEVEL = 7
+let MAX_UPGD_ABIL_LEVEL = MAX_LEVEL - PET_UPGRADE_BONUS
+
+let UPGD_MANA_COST = 3 // mana cost * abilLevel
+
+@compiletime function createGlacialBreathUpgrade() returns UpgradeDefinition
+    return new UpgradeDefinition(UPGD_GLACIAL_BREATH)
+        ..addEffectAbilityLevelBonus(1, 1, ABILITY_GLACIAL_BREATH.toRawCode())
+        ..setLevels(MAX_LEVEL)
+        ..setName(1, "Glacial Breath bonus")
+        ..setIcon(1, Icons.bTNBreathOfFrost)
+
+@compiletime function createUpgradeAbility() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_PET_GLACIAL_BREATH_UPGD, MAX_UPGD_ABIL_LEVEL, true)
+        ..setHeroAbility(false)
+        ..presetCastRange(lvl -> 99999)
+        ..presetCooldown(lvl -> 0)
+        ..presetFollowThroughTime(lvl -> 0)
+        ..presetArtDuration(lvl -> 0)
+        ..setAnimationNames("")
+        ..setName("Increase Glacial Breath")
+        ..setIconNormal(Icons.bTNSkillz)
+        ..presetButtonPosNormal(0, 2)
+        ..setHotkeyNormal("Z")
+        ..setArtCaster(Abilities.aIsmTarget)
+        ..presetManaCost(lvl -> UPGD_MANA_COST * lvl)
+        ..presetTooltipNormal(lvl -> makeToolTipNormUpgradeLevel("Z", GLACIAL_BREATH_TOOLTIP, lvl))
+        ..presetTooltipNormalExtended(lvl -> "Increase Glacial Breath ability level."  + "\n\n"
+            + "Ice block starting health : "  .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(ICE_BLOCK_HP_HEALED , ICE_BLOCK_HP_HEALED_INCREASE , lvl, MAX_LEVEL, COLOR_TURQUOISE, true)
+            + "\nIce block health increase : ".color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(ICE_BLOCK_HP_HEALED , ICE_BLOCK_HP_HEALED_INCREASE , lvl, MAX_LEVEL, COLOR_TURQUOISE, true)
+            + "\nCast range : "               .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(ICE_BLOCK_CAST_RANGE, ICE_BLOCK_CAST_RANGE_INCREASE, lvl, MAX_LEVEL, COLOR_TURQUOISE, true)
+            + "\nSlow duration : "            .color(GOLD_COLOR) + toolTipAbilityEffectPerLevel(SLOW_DURATION, SLOW_DURATION_INCREASE, lvl, MAX_LEVEL, COLOR_TURQUOISE, false) + " seconds.".color(GOLD_COLOR)
+            )
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createGlacialBreath() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_GLACIAL_BREATH, MAX_LEVEL, true)
+        ..presetManaCost(lvl -> 0)
+        ..presetCooldown(lvl -> GLACIAL_BREATH_COOLDOWN)
+        ..setHeroAbility(false)
+        ..setItemAbility(false)
+        ..presetTargetTypes(Targettype.POINT)
+        ..setName(GLACIAL_BREATH_TOOLTIP)
+        ..presetTooltipNormal(lvl -> makeToolTipNormLevel("A", GLACIAL_BREATH_TOOLTIP, lvl))
+        ..presetTooltipNormalExtended(lvl -> GLACIAL_BREATH_TOOLTIP_EXT  + "\n\n"
+            + "Ice block starting health : "  .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(ICE_BLOCK_HP_HEALED , ICE_BLOCK_HP_HEALED_INCREASE , lvl, MAX_LEVEL, COLOR_TURQUOISE, true)
+            + "\nIce block health increase : ".color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(ICE_BLOCK_HP_HEALED , ICE_BLOCK_HP_HEALED_INCREASE , lvl, MAX_LEVEL, COLOR_TURQUOISE, true)
+            + "\nCast range : "               .color(SPECIAL_COLOR) + toolTipAbilityEffectPerLevel(ICE_BLOCK_CAST_RANGE, ICE_BLOCK_CAST_RANGE_INCREASE, lvl, MAX_LEVEL, COLOR_TURQUOISE, true)
+            + "\nSlow duration : "            .color(GOLD_COLOR) + toolTipAbilityEffectPerLevel(SLOW_DURATION, SLOW_DURATION_INCREASE, lvl, MAX_LEVEL, COLOR_TURQUOISE, false) + " seconds.".color(GOLD_COLOR)
+            )
+        ..setIconNormal(Icons.bTNBreathOfFrost)
+        ..setIconResearch(Icons.bTNBreathOfFrost)
+        ..setIconTurnOff(Icons.bTNBreathOfFrost)
+        ..presetFollowThroughTime(lvl -> GLACIAL_BREATH_DURATION)
+        ..setAnimationNames("")
+        ..presetOption(Option.TARGETIMAGE, true)
+        ..presetAreaofEffect(lvl -> ICE_BLOCK_AOE + ICE_BLOCK_AOE_INCREASE)
+        ..presetButtonPosNormal(0, 1)
+        ..presetCastRange(lvl -> ICE_BLOCK_CAST_RANGE + ICE_BLOCK_CAST_RANGE_INCREASE * lvl)
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createIceBlockDefinition() returns BuildingDefinition
+    return new BuildingDefinition(UNIT_ICE_BLOCK, UnitIds.scouttower)
+        ..setModelFile(Abilities.freezingBreathTargetArt)
+        ..setHitPointsMaximumBase(250)
+        ..setGroundTexture("")
+        ..setIconGameInterface(Icons.bTNFreezingBreath)
+        ..setConstructionSound("FreezingBreath")
+        ..setSightRadiusDay(0)
+        ..setSightRadiusNight(0)
+        ..setUpgradesUsed("")
+        ..setName("Ice Block")
+        ..setHitPointsRegenerationRate(-1)
+        ..setHitPointsRegenerationType("always")
+        ..setFoodProduced(0)
+        ..setFoodCost(0)
+        ..setArmorType(ArmorType.Large)
+        ..setArmorSoundType(ArmorSoundType.Stone)
+        ..setArtSpecial(Objects.nagaDeath)
+        ..setUpgradesTo("")
+
+// Using frost arrow so slows can stack up
+@compiletime function createFrostNovaDummy() returns AbilityDefinitionFrostNovacreep
+    return new AbilityDefinitionFrostNovacreep(ABIL_SLOW)
+        ..setDummyAbility()
+        ..setArtEffect("")
+        ..setLevels(MAX_LEVEL)
+        ..setMissileArt("")
+        ..setMissileSpeed(1000)
+        ..presetDurationHero(lvl -> SLOW_DURATION + lvl * SLOW_DURATION_INCREASE)
+        ..presetDurationNormal(lvl -> SLOW_DURATION + lvl * SLOW_DURATION_INCREASE)
+        ..presetAreaofEffectDamage(lvl -> 0)
+        ..presetSpecificTargetDamage(lvl -> 0)
+        ..setEditorSuffix("(Wurst)")
+
+
+HashMap<unit, unit> iceBlockInstances = new HashMap<unit, unit>()
+
+// Spell projectile, manual adjust the numbers so it looks cool ingame
+class GlacialBreathProjectile extends CustomProjectile
+    int abilLevel
+    unit caster
+
+    construct(vec3 startPos, vec3 targetPos, real groundSpeed, string effectPath, int abilLevel, unit caster)
+        super(startPos, targetPos, groundSpeed, 200, effectPath)
+        this.abilLevel = abilLevel
+        this.caster = caster
+        this.missileFx.setScale(abilLevel * 0.2 + 0.4)
+
+    override function onImpact()
+        let owner = caster.getOwner()
+
+        forNearestUnit(this.targetPos.toVec2(), ICE_BLOCK_AOE + ICE_BLOCK_AOE_INCREASE * abilLevel, Filter(-> GetFilterUnit().getTypeId() == UNIT_ICE_BLOCK)) (unit u) ->
+            if u == null
+                let u = createUnit(owner, UNIT_ICE_BLOCK, targetPos, (270.).asAngleDegrees())
+                        ..setLife(ICE_BLOCK_HP_HEALED + ICE_BLOCK_HP_HEALED_INCREASE * abilLevel)
+                iceBlockInstances.put(caster, u)
+            else
+                new HealingInstance(u, ICE_BLOCK_HP_HEALED + ICE_BLOCK_HP_HEALED_INCREASE * abilLevel, HealingType.ABILITY)
+
+        if caster.getTypeId() == UNIT_FROST_DRAGON
+            forUnitsInRange(this.targetPos.toVec2(), ICE_BLOCK_AOE + ICE_BLOCK_AOE_INCREASE * abilLevel) (unit u) ->
+                if u.isAlive() and u.getOwner().isEnemyOf(owner)
+                    and not u.isType(UNIT_TYPE_FLYING)
+                    and not u.isInvulnerable()
+                    and not u.isHidden()
+                    and not u.isType(UNIT_TYPE_STRUCTURE)
+                    and not u.hasAbility('Bfro') // Slowed buff
+                    InstantDummyCaster.castTarget(owner, ABIL_SLOW, abilLevel, OrderIds.frostnova, u)
+
+
+
+HashMap<unit, GlacialBreath> channelingInstances = new HashMap<unit,GlacialBreath>()
+
+class GlacialBreath
+    bool isChanneling
+    vec2 targetPos
+    unit caster
+    int abilLevel
+    var dmgTrig = CreateTrigger()
+
+    construct(unit caster, vec2 targetPos)
+        this.isChanneling = true
+        this.caster = caster
+        this.targetPos = targetPos
+        this.abilLevel = caster.getAbilityLevel(ABILITY_GLACIAL_BREATH)
+
+        glacialBreathLoop()
+
+    function glacialBreathLoop()
+        let fxPath = caster.getTypeId() == UNIT_FROST_DRAGON ? Abilities.freezingBreathMissile : Abilities.lichMissile
+
+        let casterPos3D = caster.getPos().withTerrainZ().op_plus(vec3(0, 0, caster.getPos3Fly().z))
+
+        new GlacialBreathProjectile(
+           casterPos3D + vec3(0, 60, -10), // Trying to adjust starting pos with dragon mouth
+            targetPos.withTerrainZ(),
+            325,
+            fxPath,
+            abilLevel,
+            caster
+            )
+        doPeriodicallyCounted(DRAGON_BREATH_ANIM_CAST_TIME, 5) (CallbackCounted cb) ->
+            if isChanneling
+                new GlacialBreathProjectile(
+                    casterPos3D + vec3(0, 60, -10), // Trying to adjust starting pos with dragon mouth
+                    targetPos.withTerrainZ(),
+                    325,
+                    fxPath,
+                    abilLevel,
+                    caster
+                    )
+            else
+                cb.stop()
+
+
+init
+    EventListener.onPointCast(ABILITY_GLACIAL_BREATH) (unit caster, vec2 targetPos) ->
+        // We want to interrupt the breath casting when unit move
+        if channelingInstances.has(caster)
+            channelingInstances.getAndRemove(caster)
+        channelingInstances.put(caster, new GlacialBreath(caster, targetPos))
+
+    EventListener.add(EVENT_PLAYER_UNIT_SPELL_ENDCAST) ->
+        if GetSpellAbilityId() == ABILITY_GLACIAL_BREATH
+            let caster = GetSpellAbilityUnit()
+            if (channelingInstances.has(caster))
+                var instance = channelingInstances.get(caster)
+                instance.isChanneling = false
+            // Change owner to neutral so the player cannot get information out of ice block
+            // be it vision or damage alert notification
+            doAfter(DRAGON_BREATH_ANIM_CAST_TIME) ->
+                if iceBlockInstances.has(caster)
+                    iceBlockInstances.get(caster).setOwner(players[PLAYER_NEUTRAL_PASSIVE], true)
+                    iceBlockInstances.remove(caster)

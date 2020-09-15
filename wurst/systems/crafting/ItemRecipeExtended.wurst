@@ -13,7 +13,6 @@ import UnitExtensions
 import ClosuresForItems
 import Lodash
 import Mixing
-import Tannering
 
 
 public class ItemRecipeExt extends ItemRecipe
@@ -22,19 +21,14 @@ public class ItemRecipeExt extends ItemRecipe
     construct(int reward, int charges, boolean ordered, boolean permanent, boolean pickupable, int quickMakeAbilId)
         super(reward, charges, ordered, permanent, pickupable)
         if quickMakeAbilId != 0
-            this.setAbility(quickMakeAbilId)
+            // This causes issue with tannery, I don't want the items to be transmuted on the ItemRecipe onCast() function
+            // I want them to be transmuted through onQucikMakeCast
+            //this.setAbility(quickMakeAbilId)
             EventListener.onCast(quickMakeAbilId) (unit caster) ->
                 onQuickMakeCast(caster)
 
-    override function assemble(unit whichUnit, LinkedList<item> fromItems) returns boolean
-        return super.assemble(whichUnit, fromItems)
-
     override function assemble(unit whichUnit) returns boolean
-        // let inventoryItem = whichUnit.getInventory()
         return super.assemble(whichUnit)
-        //     lowerMaterialCount(inventoryItem)
-        //     return true
-        // return false
 
     function lowerMaterialCount(LinkedList<item> fromItems)
         let max = fromItems.size()
@@ -61,17 +55,16 @@ public class ItemRecipeExt extends ItemRecipe
 
         caster.dropItems()
 
-        var iter = this.getIngredients().iterator()
+        let iter = this.getIngredients().iterator()
 
         while iter.hasNext()
-            var ingredient = iter.next()
+            let ingredient = iter.next()
             print(ingredient.index)
             let found = findNearestItem(pos, pickUpRange, i -> i.getTypeId() == ingredient.itemTypeId)
 
             if found != null
                 while iter.hasNext() and iter.lookahead().index == ingredient.index
                     iter.next()
-                print(found.getName())
                 // if specialHerb.has(found.getTypeId())
                 //     specialHerb.put(found.getTypeId(), specialHerb.get(found.getTypeId()) + 1)
 
@@ -86,30 +79,39 @@ public class ItemRecipeExt extends ItemRecipe
                 items.add(found)
                 // We don't want to iterate over same item multiple time
                 found.setVisible(false)
-            else if found == null and iter.lookahead().index != ingredient.index
-                return
+            // else if found == null and iter.lookahead().index != ingredient.index
+            //     for elem in items
+            //         elem.setVisible(true)
+            //     return
 
         iter.close()
-
-
+        // Setting the items visible again so they aren't "lost" even if recipe assemble fails
         for elem in items
             elem.setVisible(true)
-            // Remove transmutable item from inventory list
-            inventory.remove(elem)
-            caster.addItemHandle(elem)
+
+        // Testing if the recipe can be assembled
+        if this.test(caster, items) != null
+            for elem in items
+                // Remove transmutable item from inventory list
+                print(elem.getName())
+                inventory.remove(elem)
+                caster.addItemHandle(elem)
 
         if caster.getTypeId() == UNIT_POT
             mix(caster)
-        else if caster.getTypeId() == UNIT_TANNERY or caster.getTypeId() == UNIT_OMINOUS_ALTAR
-            tan(caster, this.getAbility())
 
-        // Transmute items
-        this.assemble(caster)
+        if caster.getTypeId() == UNIT_TANNERY
+            this.assemble(caster)
+
+        this.requirement.removeUnit(caster.getTypeId())
+        this.requirement.addUnit(UNIT_DUMMY)
 
         for elem in inventory
             caster.addItemHandle(elem)
         caster.moveInventoryDown()
 
+        this.requirement.removeUnit(UNIT_DUMMY)
+        this.requirement.addUnit(caster.getTypeId())
         // if this.getAbility() == ABILITY_QM_ESSENCE_BEES
         //     herbThreshold = 2
         destroy items

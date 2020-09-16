@@ -77,6 +77,7 @@ let ingredientStrings = new HashMap<int, string>()
 // Artifact Materials
     ..put(ITEM_HYDRA_SCALE        , "Hydra Scale".color(ARTIFACT_COLOR))
 
+
 public class ItemRecipeExt extends ItemRecipe
     var pickUpRange = 700.
 
@@ -97,6 +98,8 @@ public class ItemRecipeExt extends ItemRecipe
             pickUpRange = 300
 
         caster.dropItems()
+
+        // Look for ingredients in pickUpRange radius around the caster
         findIngredient(items, pos)
 
         // Testing if the recipe can be assembled
@@ -105,6 +108,17 @@ public class ItemRecipeExt extends ItemRecipe
                 // Remove transmutable item from inventory list
                 inventory.remove(elem)
                 caster.addItemHandle(elem)
+        // This piece of code would display a message upon crafting failure
+        // indicating which ingredients are missing
+        // however, there is no way to display this message for the triggering player
+        // as the buildings are shared, we cannot retrieve the player who casted quickmake
+        // else
+        //     let missingIngredient = getRecipeString(this.getMissingIngredient(items), " ")
+        //     print(
+        //         "You are missing ".color(GENERAL_COLOR) +
+        //         missingIngredient +
+        //         " to craft this item".color(GENERAL_COLOR)
+        //         )
 
         if caster.getTypeId() == UNIT_POT
             mix(caster)
@@ -157,58 +171,89 @@ public class ItemRecipeExt extends ItemRecipe
         this.requirement.removeUnit(UNIT_DUMMY)
         this.requirement.addUnit(caster.getTypeId())
 
-    // function addQuickMakeAbil(int quickMakeAbilId, boolean generateRecipeString)
-
     function addRecipeString(int quickMakeAbilId)
         nullTimer() ->
             let quickMakeTooltip = BlzGetAbilityExtendedTooltip(quickMakeAbilId, 0)
-            let newToolTip = quickMakeTooltip + "\n\n"  + getRecipeString()
+            let newToolTip = quickMakeTooltip + "\n\n"  + getRecipeString(this.getIngredients(), "\n")
             setAbilityExtendedTooltip(quickMakeAbilId, newToolTip, 0)
 
-    function getRecipeString() returns string
-        var recipeStr = ""
+    function getMissingIngredient(LinkedList<item> items) returns LinkedList<RecipeIngredient>
         let iter = this.getIngredients().iterator()
+        var slot = 0
+        let missingIngredients = new LinkedList<RecipeIngredient>
 
         while iter.hasNext()
             var ingredient = iter.next()
-            var ingredientCounter = 1
+            let idx = ingredient.index
+            let itm = items.get(slot)
 
-            while iter.hasNext() and iter.lookahead().itemTypeId == ingredient.itemTypeId
-                ingredientCounter++
+            while ingredient.index == idx
+                if itm != null and ingredient.itemTypeId == itm.getTypeId()
+                    missingIngredients.removeIf(ingredient -> ingredient.index == idx)
+                    break
+                else
+                    missingIngredients.add(ingredient)
+                if not iter.hasNext() or iter.lookahead().index != idx
+                    break
                 ingredient = iter.next()
 
-            if ingredientCounter == 1 and ingredient.charges > 0
-                ingredientCounter = ingredient.charges
+            // Seek node which is not part of this batch
+            while iter.hasNext()
+                if iter.lookahead().index != idx
+                    break
+                iter.next()
+            slot++
+        iter.close()
+        return missingIngredients
 
-            recipeStr += "{0}x ".format(ingredientCounter.toString())
+
+function getRecipeString(LinkedList<RecipeIngredient> ingredients, string separator) returns string
+    var recipeStr = ""
+    let iter = ingredients.iterator()
+
+    while iter.hasNext()
+        var ingredient = iter.next()
+        var ingredientCounter = 1
+
+        while iter.hasNext() and iter.lookahead().itemTypeId == ingredient.itemTypeId
+            ingredientCounter++
+            ingredient = iter.next()
+
+        if ingredientCounter == 1 and ingredient.charges > 0
+            ingredientCounter = ingredient.charges
+
+        recipeStr += "{0}x ".format(ingredientCounter.toString())
+        recipeStr += getIngredientName(ingredient)
+
+        while iter.hasNext() and ingredient.index == iter.lookahead().index
+            recipeStr += "/"
+            ingredient = iter.next()
             recipeStr += getIngredientName(ingredient)
 
-            while iter.hasNext() and ingredient.index == iter.lookahead().index
-                recipeStr += "/"
-                ingredient = iter.next()
-                recipeStr += getIngredientName(ingredient)
+        if iter.hasNext()
+            recipeStr += separator
+    return recipeStr
 
-            if iter.hasNext()
-                recipeStr += "\n"
-        return recipeStr
-
-    function getIngredientName(RecipeIngredient ingredient) returns string
-        var toRet = ""
-        if not ingredientStrings.has(ingredient.itemTypeId)
-            error("Ingredient {0} is not registered for recipe string creation".format(ingredient.itemTypeId.asObjectName()))
-            // Maybe do not return anything, otherwise this will report only the first error encountered
-            // during this getRecipeString() call
-            return toRet
-        toRet += ingredientStrings.get(ingredient.itemTypeId)
-        if ingredient.perishable == false
-            toRet += " (Refunded after crafting)".color(GOLD_COLOR)
+function getIngredientName(RecipeIngredient ingredient) returns string
+    var toRet = ""
+    if not ingredientStrings.has(ingredient.itemTypeId)
+        error("Ingredient {0} is not registered for recipe string creation".format(ingredient.itemTypeId.asObjectName()))
+        // Maybe do not return anything, otherwise this will report only the first error encountered
+        // during this getRecipeString() call
         return toRet
+    toRet += ingredientStrings.get(ingredient.itemTypeId)
+    if ingredient.perishable == false
+        toRet += " (Refunded after crafting)".color(GOLD_COLOR)
+    return toRet
 
 
 init
     registerItemRecipeEvent() ->
         let ingredientUsed = getEventItemRecipeIngredients()
-        for ingredient in ingredientUsed
-            if (MATERIAL_COUNTER_LIST.has(ingredient.getTypeId()))
-                print("used " + ingredient.getName())
-                lowerItem(1)
+        let itemRecipeUnit = getEventItemRecipeUnit()
+
+        // Filter recipe island demo gatherer unit
+        if not itemRecipeUnit.getPos().isInRect(gg_rct_vision)
+            for ingredient in ingredientUsed
+                if (MATERIAL_COUNTER_LIST.has(ingredient.getTypeId()))
+                    lowerItem(1)

@@ -2,7 +2,10 @@ package ItemRecipeExtended
 
 // Standard library imports:
 import LinkedList
+import HashMap
 import ClosureEvents
+import ClosureTimers
+import ErrorHandling
 
 // Extension library imports:
 import LocalObjectIDs
@@ -13,7 +16,64 @@ import UnitExtensions
 import ClosuresForItems
 import Lodash
 import Mixing
+import StringExtensions
+import ColorUtils
 
+let ingredientStrings = new HashMap<int, string>()
+// Herbs
+    ..put(ITEM_BLUE_HERB           , "Blue Herb"   .color(COLOR_TURQUOISE))
+    ..put(ITEM_ORANGE_HERB         , "Orange Herb" .color(COLOR_ORANGE))
+    ..put(ITEM_PURPLE_HERB         , "Purple Herb" .color(COLOR_VIOLET))
+    ..put(ITEM_YELLOW_HERB         , "Yellow Herb" .color(COLOR_YELLOW))
+    ..put(ITEM_RIVER_ROOT          , "River Root"  .color(COLOR_TEAL))
+    ..put(ITEM_RIVER_STEM          , "River Stem"  .color(COLOR_GRAY))
+    ..put(ITEM_ATHELAS_SEED        , "Athelas Seed".color(COLOR_GREEN))
+
+// Basic Materials
+    ..put(ITEM_STONE               , "Stone"           .color(COLOR_GRAY))
+    ..put(ITEM_FLINT               , "Flint"           .color(COLOR_RED))
+    ..put(ITEM_TINDER              , "Tinder"          .color(COLOR_GREEN))
+    ..put(ITEM_BONE                , "Bone"            .color(GOLD_COLOR))
+    ..put(ITEM_STICK               , "Stick"           .color(COLOR_GREEN))
+    ..put(ITEM_MANA_CRYSTAL        , "Mana Crystal"    .color(COLOR_LIGHT_BLUE))
+    ..put(ITEM_ELK_HIDE            , "Elk Hide"        .color(COLOR_ORANGE))
+    ..put(ITEM_JUNGLE_WOLF_HIDE    , "Jungle Wolf Hide".color(COLOR_ORANGE))
+    ..put(ITEM_JUNGLE_BEAR_HIDE    , "Jungle Bear Hide".color(COLOR_ORANGE))
+    ..put(ITEM_CLAY_BALL           , "Clay Ball"       .color(COLOR_ORANGE))
+    ..put(ITEM_MUSHROOM            , "Mushroom"        .color(COLOR_GREEN))
+    ..put(ITEM_MAGIC               , "Magic"           .color(COLOR_TURQUOISE))
+    ..put(ITEM_ACORN               , "Acorn"           .color(COLOR_PEANUT))
+    ..put(ITEM_THISTLES            , "Thisle"          .color(COLOR_GREEN))
+
+// Crafted Materials
+    ..put(ITEM_SPIRIT_WIND        , "Spirit of Wind"    .color(COLOR_LAVENDER))
+    ..put(ITEM_SPIRIT_WATER       , "Spirit of Water"   .color(COLOR_TURQUOISE))
+    ..put(ITEM_SPIRIT_DARKNESS    , "Spirit of Darkness".color(COLOR_VIOLET))
+    ..put(ITEM_ANABOLIC_POTION    , "Anabolic Potion"   .color(COLOR_MAROON))
+    ..put(ITEM_IRON_INGOT         , "Iron Ingot"        .color(COLOR_RED))
+    ..put(ITEM_STEEL_INGOT        , "Steel Ingot"       .color(COLOR_RED))
+    ..put(ITEM_SPEAR              , "Spear"             .color(HIGHLIGHT_COLOR))
+    ..put(ITEM_POISON             , "Poison"            .color(COLOR_GREEN))
+    ..put(ITEM_ULTRA_POISON       , "Ultra Poison"      .color(COLOR_GREEN))
+    ..put(ITEM_SHIELD             , "Shield"            .color(COLOR_PEANUT))
+    ..put(ITEM_NETS               , "Nets"              .color(COLOR_LIGHT_BLUE))
+    ..put(ITEM_ELK_SKIN_GLOVES    , "Elk Skin Gloves"   .color(COLOR_PEANUT))
+    ..put(ITEM_ELK_SKIN_COAT      , "Elk Skin Coat"     .color(COLOR_PEANUT))
+    ..put(ITEM_ELK_SKIN_BOOTS     , "Elk Skin Boots"    .color(COLOR_PEANUT))
+    ..put(ITEM_WOLF_SKIN_GLOVES   , "Wolf Skin Gloves"  .color(COLOR_PEANUT))
+    ..put(ITEM_WOLF_SKIN_COAT     , "Wolf Skin Coat"    .color(COLOR_PEANUT))
+    ..put(ITEM_WOLF_SKIN_BOOTS    , "Wolf Skin Boots"   .color(COLOR_PEANUT))
+    ..put(ITEM_BEAR_SKIN_GLOVES   , "Bear Skin Gloves"  .color(COLOR_PEANUT))
+    ..put(ITEM_BEAR_SKIN_COAT     , "Bear Skin Coat"    .color(COLOR_PEANUT))
+    ..put(ITEM_BEAR_SKIN_BOOTS    , "Bear Skin Boots"   .color(COLOR_PEANUT))
+    ..put(ITEM_BONE_BOOTS         , "Bone Boots"        .color(COLOR_ORANGE))
+    ..put(ITEM_BONE_COAT          , "Bone Coat"         .color(COLOR_ORANGE))
+    ..put(ITEM_BONE_GLOVES        , "Bone Gloves"       .color(COLOR_ORANGE))
+    ..put(ITEM_BONE_SHIELD        , "Bone Shield"       .color(COLOR_ORANGE))
+    ..put(ITEM_SMOKE_BOMB         , "Smoke Bomb"        .color(COLOR_VIOLET))
+
+// Artifact Materials
+    ..put(ITEM_HYDRA_SCALE        , "Hydra Scale".color(ARTIFACT_COLOR))
 
 public class ItemRecipeExt extends ItemRecipe
     var pickUpRange = 700.
@@ -21,32 +81,13 @@ public class ItemRecipeExt extends ItemRecipe
     construct(int reward, int charges, boolean ordered, boolean permanent, boolean pickupable, int quickMakeAbilId)
         super(reward, charges, ordered, permanent, pickupable)
         if quickMakeAbilId != 0
-            // This causes issue with tannery, I don't want the items to be transmuted on the ItemRecipe onCast() function
-            // I want them to be transmuted through onQucikMakeCast
-            //this.setAbility(quickMakeAbilId)
             EventListener.onCast(quickMakeAbilId) (unit caster) ->
                 onQuickMakeCast(caster)
 
-    override function assemble(unit whichUnit) returns boolean
-        return super.assemble(whichUnit)
-
-    function lowerMaterialCount(LinkedList<item> fromItems)
-        let max = fromItems.size()
-        for i = 0 to max
-            // If item is a spawned material, lower
-            if(MATERIAL_COUNTER_LIST.has(fromItems.get(i).getTypeId()))
-                lowerItem(1)
-
     function onQuickMakeCast(unit caster)
-        print(caster.getName())
         let pos = caster.getPos()
         let items = new OwnedLinkedList<item>()
         let inventory = caster.getInventory()
-
-        // specialHerb.put(ITEM_BLUE_HERB, 0)
-        // specialHerb.put(ITEM_YELLOW_HERB, 0)
-        // specialHerb.put(ITEM_PURPLE_HERB, 0)
-        // specialHerb.put(ITEM_ORANGE_HERB, 0)
 
         if caster.isTroll()
             pickUpRange = 100
@@ -54,12 +95,31 @@ public class ItemRecipeExt extends ItemRecipe
             pickUpRange = 300
 
         caster.dropItems()
+        findIngredient(items, pos)
 
+        // Testing if the recipe can be assembled
+        if this.test(caster, items) != null
+            for elem in items
+                // Remove transmutable item from inventory list
+                inventory.remove(elem)
+                caster.addItemHandle(elem)
+
+        if caster.getTypeId() == UNIT_POT
+            mix(caster)
+
+        if caster.getTypeId() == UNIT_TANNERY
+            this.assemble(caster)
+
+        onQuickMakeEnd(caster, inventory)
+
+        destroy items
+        destroy inventory
+
+    function findIngredient(OwnedLinkedList<item> items, vec2 pos)
         let iter = this.getIngredients().iterator()
 
         while iter.hasNext()
             let ingredient = iter.next()
-            print(ingredient.index)
             let found = findNearestItem(pos, pickUpRange, i -> i.getTypeId() == ingredient.itemTypeId)
 
             if found != null
@@ -79,30 +139,12 @@ public class ItemRecipeExt extends ItemRecipe
                 items.add(found)
                 // We don't want to iterate over same item multiple time
                 found.setVisible(false)
-            // else if found == null and iter.lookahead().index != ingredient.index
-            //     for elem in items
-            //         elem.setVisible(true)
-            //     return
-
         iter.close()
         // Setting the items visible again so they aren't "lost" even if recipe assemble fails
         for elem in items
             elem.setVisible(true)
 
-        // Testing if the recipe can be assembled
-        if this.test(caster, items) != null
-            for elem in items
-                // Remove transmutable item from inventory list
-                print(elem.getName())
-                inventory.remove(elem)
-                caster.addItemHandle(elem)
-
-        if caster.getTypeId() == UNIT_POT
-            mix(caster)
-
-        if caster.getTypeId() == UNIT_TANNERY
-            this.assemble(caster)
-
+    function onQuickMakeEnd(unit caster, LinkedList<item> inventory)
         this.requirement.removeUnit(caster.getTypeId())
         this.requirement.addUnit(UNIT_DUMMY)
 
@@ -112,7 +154,58 @@ public class ItemRecipeExt extends ItemRecipe
 
         this.requirement.removeUnit(UNIT_DUMMY)
         this.requirement.addUnit(caster.getTypeId())
-        // if this.getAbility() == ABILITY_QM_ESSENCE_BEES
-        //     herbThreshold = 2
-        destroy items
-        destroy inventory
+
+    // function addQuickMakeAbil(int quickMakeAbilId, boolean generateRecipeString)
+
+    function addRecipeString(int quickMakeAbilId)
+        nullTimer() ->
+            let quickMakeTooltip = BlzGetAbilityExtendedTooltip(quickMakeAbilId, 0)
+            let newToolTip = quickMakeTooltip + "\n\n"  + getRecipeString()
+            setAbilityExtendedTooltip(quickMakeAbilId, newToolTip, 0)
+
+    function getRecipeString() returns string
+        var recipeStr = ""
+        let iter = this.getIngredients().iterator()
+
+        while iter.hasNext()
+            var ingredient = iter.next()
+            var ingredientCounter = 1
+
+            while iter.hasNext() and iter.lookahead().itemTypeId == ingredient.itemTypeId
+                ingredientCounter++
+                ingredient = iter.next()
+
+            if ingredientCounter == 1 and ingredient.charges > 0
+                ingredientCounter = ingredient.charges
+
+            recipeStr += "{0}x ".format(ingredientCounter.toString())
+            recipeStr += getIngredientName(ingredient)
+
+            while iter.hasNext() and ingredient.index == iter.lookahead().index
+                recipeStr += "/"
+                ingredient = iter.next()
+                recipeStr += getIngredientName(ingredient)
+
+            if iter.hasNext()
+                recipeStr += "\n"
+        return recipeStr
+
+    function getIngredientName(RecipeIngredient ingredient) returns string
+        var toRet = ""
+        if not ingredientStrings.has(ingredient.itemTypeId)
+            error("Ingredient {0} is not registered for recipe string creation".format(ingredient.itemTypeId.toString()))
+            // Maybe do not return anything, otherwise this will report only the first error encountered
+            // during this getRecipeString() call
+            return toRet
+        toRet += ingredientStrings.get(ingredient.itemTypeId)
+        if ingredient.perishable == false
+            toRet += " (Refunded after crafting)".color(GOLD_COLOR)
+        return toRet
+
+init
+    registerItemRecipeEvent() ->
+        let ingredientUsed = getEventItemRecipeIngredients()
+        for ingredient in ingredientUsed
+            if (MATERIAL_COUNTER_LIST.has(ingredient.getTypeId()))
+                print(ingredient.getName())
+                lowerItem(1)

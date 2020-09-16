@@ -41,15 +41,27 @@ public class ItemRecipeMixing extends ItemRecipeExt
             if found != null
                 if specialHerb.has(found.getTypeId())
                     specialHerb.put(found.getTypeId(), specialHerb.get(found.getTypeId()) + 1)
+
+                    // Essence of bees Threshold can be reached only once, otherwise
+                    // it can pick another 2 herb of the same color
+                    if this.getReward() == ITEM_ESSENCE_BEES and specialHerb.get(found.getTypeId()) >= 2
+                        herbThreshold = 1
+
                 while iter.hasNext() and iter.lookahead().index == ingredient.index
                     iter.next()
                 items.add(found)
+
                 // We don't want to iterate over same item multiple time
                 found.setVisible(false)
         iter.close()
+
         // Setting the items visible again so they aren't "lost" even if recipe assemble fails
         for elem in items
             elem.setVisible(true)
+
+        // Resetting the herbThreshold for next findIngredient call
+        if this.getReward() == ITEM_ESSENCE_BEES and herbThreshold == 1
+            herbThreshold = 2
 
     override function customAssemble(unit caster)
         mix(caster)

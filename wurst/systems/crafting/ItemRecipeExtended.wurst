@@ -16,11 +16,10 @@ import ResourceSpawns
 import UnitExtensions
 import ClosuresForItems
 import Lodash
-import Mixing
 import StringExtensions
 import ColorUtils
 
-let ingredientStrings = new HashMap<int, string>()
+public let ingredientStrings = new HashMap<int, string>()
 // Herbs
     ..put(ITEM_BLUE_HERB           , "Blue Herb"   .color(COLOR_TURQUOISE))
     ..put(ITEM_ORANGE_HERB         , "Orange Herb" .color(COLOR_ORANGE))
@@ -113,23 +112,20 @@ public class ItemRecipeExt extends ItemRecipe
         // however, there is no way to display this message for the triggering player
         // as the buildings are shared, we cannot retrieve the player who casted quickmake
         // else
-        //     let missingIngredient = getRecipeString(this.getMissingIngredient(items), " ")
-        //     print(
-        //         "You are missing ".color(GENERAL_COLOR) +
-        //         missingIngredient +
-        //         " to craft this item".color(GENERAL_COLOR)
-        //         )
+        //     printMissingIngredient(items, caster.getOwner())
 
-        if caster.getTypeId() == UNIT_POT
-            mix(caster)
-
-        if caster.getTypeId() == UNIT_TANNERY
-            this.assemble(caster)
-
+        customAssemble(caster)
         onQuickMakeEnd(caster, inventory)
 
         destroy items
         destroy inventory
+
+    // In some case, I don't want to rely on assemble behavior, I don't know if there's
+    // a proper way to "avoid" using it
+    function customAssemble(unit caster)
+        if caster.getTypeId() == UNIT_TANNERY
+            this.assemble(caster)
+
 
     function findIngredient(OwnedLinkedList<item> items, vec2 pos)
         let iter = this.getIngredients().iterator()
@@ -141,17 +137,6 @@ public class ItemRecipeExt extends ItemRecipe
             if found != null
                 while iter.hasNext() and iter.lookahead().index == ingredient.index
                     iter.next()
-                // if specialHerb.has(found.getTypeId())
-                //     specialHerb.put(found.getTypeId(), specialHerb.get(found.getTypeId()) + 1)
-
-                //In order to avoid picking up the same special herb too much time
-                // if specialHerb.get(found.getTypeId()) > herbThreshold
-                //     found = null
-
-                //Special case for eob, once you get 2 spec, you don't want to be able to pick up 2 spec of another type
-                //Not pretty but couldn't figure out something else
-                // if this.getAbility() == ABILITY_QM_ESSENCE_BEES and specialHerb.get(found.getTypeId()) == herbThreshold
-                //     herbThreshold = 1
                 items.add(found)
                 // We don't want to iterate over same item multiple time
                 found.setVisible(false)
@@ -172,8 +157,9 @@ public class ItemRecipeExt extends ItemRecipe
         this.requirement.addUnit(caster.getTypeId())
 
     function addRecipeString(int quickMakeAbilId)
+        // nullTimer used to let the ItemRecipe instance initialize itself
         nullTimer() ->
-            let quickMakeTooltip = BlzGetAbilityExtendedTooltip(quickMakeAbilId, 0)
+            let quickMakeTooltip = getAbilityExtendedTooltip(quickMakeAbilId, 0)
             let newToolTip = quickMakeTooltip + "\n\n"  + getRecipeString(this.getIngredients(), "\n")
             setAbilityExtendedTooltip(quickMakeAbilId, newToolTip, 0)
 
@@ -206,6 +192,10 @@ public class ItemRecipeExt extends ItemRecipe
         iter.close()
         return missingIngredients
 
+    function printMissingIngredient(LinkedList<item> items, player whichPlayer)
+        let missingIngredient = getRecipeString(this.getMissingIngredient(items), " ")
+        let msg = "You are missing ".color(GENERAL_COLOR) + missingIngredient + " to craft this item".color(GENERAL_COLOR)
+        printTimedToPlayer(msg, 5, whichPlayer)
 
 function getRecipeString(LinkedList<RecipeIngredient> ingredients, string separator) returns string
     var recipeStr = ""

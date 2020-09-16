@@ -1,0 +1,185 @@
+package ItemRecipeMixing
+
+// Standard library imports:
+import LinkedList
+import HashMap
+import ClosureEvents
+
+// Extension library imports:
+import LocalObjectIDs
+import ItemRecipe
+import UnitExtensions
+import ClosuresForItems
+import Lodash
+import ItemRecipeExtended
+
+public class ItemRecipeMixing extends ItemRecipeExt
+    let specialHerb = new HashMap<int, int>
+    var herbThreshold = 6
+
+    construct(int reward, int charges, boolean permanent, int quickMakeAbilId)
+        super(reward, charges, false, permanent, false, quickMakeAbilId)
+
+    construct(int reward, int charges, boolean permanent, int quickMakeAbilId, int herbThreshold)
+        super(reward, charges, false, permanent, false, quickMakeAbilId)
+        this.herbThreshold = herbThreshold
+
+    override function findIngredient(OwnedLinkedList<item> items, vec2 pos)
+        let iter = this.getIngredients().iterator()
+
+        specialHerb.put(ITEM_BLUE_HERB, 0)
+        specialHerb.put(ITEM_YELLOW_HERB, 0)
+        specialHerb.put(ITEM_PURPLE_HERB, 0)
+        specialHerb.put(ITEM_ORANGE_HERB, 0)
+
+        while iter.hasNext()
+            let ingredient = iter.next()
+            let found = findNearestItem(pos, pickUpRange) i ->
+                return (i.getTypeId() == ingredient.itemTypeId
+                        and specialHerb.get(i.getTypeId()) < herbThreshold)
+
+            if found != null
+                if specialHerb.has(found.getTypeId())
+                    specialHerb.put(found.getTypeId(), specialHerb.get(found.getTypeId()) + 1)
+                while iter.hasNext() and iter.lookahead().index == ingredient.index
+                    iter.next()
+                items.add(found)
+                // We don't want to iterate over same item multiple time
+                found.setVisible(false)
+        iter.close()
+        // Setting the items visible again so they aren't "lost" even if recipe assemble fails
+        for elem in items
+            elem.setVisible(true)
+
+    override function customAssemble(unit caster)
+        mix(caster)
+
+function mix(unit caster)
+    let count = caster.getInventoryItemCountMap()
+    int specTypes = 0
+
+    let blue = count.get(ITEM_BLUE_HERB)
+    let oran = count.get(ITEM_ORANGE_HERB)
+    let purp = count.get(ITEM_PURPLE_HERB)
+    let yell = count.get(ITEM_YELLOW_HERB)
+
+    let root = count.get(ITEM_RIVER_ROOT)
+    let stem = count.get(ITEM_RIVER_STEM)
+    let athelas = count.get(ITEM_ATHELAS_SEED)
+
+    let specCount = blue + oran + purp + yell
+
+    if count.get(ITEM_BLUE_HERB) > 0
+        specTypes += 1
+    if count.get(ITEM_ORANGE_HERB) > 0
+        specTypes += 1
+    if count.get(ITEM_PURPLE_HERB) > 0
+        specTypes += 1
+    if count.get(ITEM_YELLOW_HERB) > 0
+        specTypes += 1
+
+    // Essence of Bees
+    if specTypes > 2  and specCount > 3
+        caster.assembleItem(ITEM_ESSENCE_BEES)
+        return
+
+    // Twin Islands
+    if (yell > 2 and blue > 2) or (oran > 2 and purp > 2)
+        caster.assembleItem(ITEM_POTION_TWIN_ISLANDS)
+        return
+
+    // Nether
+    if specCount > 0 and stem > 1 and athelas > 1
+        caster.assembleItem(ITEM_NETHER_POTION)
+        return
+
+    // Drunk
+    if specCount > 0 and root > 1 and athelas > 1
+        caster.assembleItem(ITEM_DRUNKS_POTION)
+        return
+
+    // Fervor
+    if specCount > 2 and specTypes > 1 and athelas > 0
+        caster.assembleItem(ITEM_FERVOR_POTION)
+        return
+
+    // Disease Potion
+    if specTypes > 1 and specCount > 3 and root > 0
+        caster.assembleItem(ITEM_DISEASE_POTION)
+        return
+
+    // Acid Bomb
+    if specTypes > 1 and specCount > 3 and stem > 1
+        caster.assembleItem(ITEM_ACID_BOMB)
+        return
+
+    // Gem Of Knowledge
+    if specTypes >= 2 and specCount >= 4
+        caster.assembleItem(ITEM_GEM_OF_KNOWLEDGE)
+        return
+
+    // Bee Hive
+    if specCount > 0 and stem > 1
+        caster.assembleItem(ITEM_BEE_HIVE)
+        return
+
+    // Spirit Of Darkness
+    if stem > 0 and root > 0 and athelas == 2
+        caster.assembleItem(ITEM_SPIRIT_DARKNESS)
+        return
+
+    // Anabolic Potion
+    if stem > 3
+        caster.assembleItem(ITEM_ANABOLIC_POTION)
+        return
+
+    // Elemental Shield Potion
+    if stem > 0 and athelas > 0 and specCount > 0
+        caster.assembleItem(ITEM_ELEMENTAL_SHIELD_POTION)
+        return
+
+    // Omnicure
+    if athelas > 1 and specTypes > 1
+        caster.assembleItem(ITEM_OMNICURE)
+        return
+
+    // Oracle
+    if athelas > 1 and specCount > 0
+        caster.assembleItem(ITEM_ORACLE_POTION)
+        return
+
+    // Mana
+    if stem > 0 and athelas > 0
+        caster.assembleItem(ITEM_MANA_POTION)
+        return
+
+    // Healing
+    if root > 0 and athelas > 0
+        caster.assembleItem(ITEM_HEALING_POTION)
+        return
+
+    // Anti Magic Potion
+    if specCount > 0 and athelas > 0
+        caster.assembleItem(ITEM_ANTI_MAGIC_POTION)
+        return
+
+    // Spirit Of Wind
+    if stem > 1
+        caster.assembleItem(ITEM_SPIRIT_WIND)
+        return
+
+    // Spirit Of Water
+    if root > 1
+        caster.assembleItem(ITEM_SPIRIT_WATER)
+        return
+
+    // Cure All
+    if athelas > 2
+        caster.assembleItem(ITEM_CURE_ALL)
+        return
+
+
+init
+    EventListener.onCast(ABILITY_MIX_HERBS, (unit caster) -> mix(caster))
+    EventListener.onCast(ABILITY_POT_MIX_HERBS, (unit caster) -> mix(caster))
+    EventListener.onCast(ABILITY_OMNIGATHERER_MIX_HERBS, (unit caster) -> mix(caster))

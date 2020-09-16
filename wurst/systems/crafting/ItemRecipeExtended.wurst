@@ -8,6 +8,7 @@ import ClosureTimers
 import ErrorHandling
 
 // Extension library imports:
+import ObjectIDManager
 import LocalObjectIDs
 import ItemRecipe
 import IdListConstant
@@ -71,6 +72,7 @@ let ingredientStrings = new HashMap<int, string>()
     ..put(ITEM_BONE_GLOVES        , "Bone Gloves"       .color(COLOR_ORANGE))
     ..put(ITEM_BONE_SHIELD        , "Bone Shield"       .color(COLOR_ORANGE))
     ..put(ITEM_SMOKE_BOMB         , "Smoke Bomb"        .color(COLOR_VIOLET))
+    ..put(ITEM_TENT_KIT           , "Tent Kit"          .color(COLOR_PEANUT))
 
 // Artifact Materials
     ..put(ITEM_HYDRA_SCALE        , "Hydra Scale".color(ARTIFACT_COLOR))
@@ -193,7 +195,7 @@ public class ItemRecipeExt extends ItemRecipe
     function getIngredientName(RecipeIngredient ingredient) returns string
         var toRet = ""
         if not ingredientStrings.has(ingredient.itemTypeId)
-            error("Ingredient {0} is not registered for recipe string creation".format(ingredient.itemTypeId.toString()))
+            error("Ingredient {0} is not registered for recipe string creation".format(ingredient.itemTypeId.asObjectName()))
             // Maybe do not return anything, otherwise this will report only the first error encountered
             // during this getRecipeString() call
             return toRet
@@ -202,10 +204,11 @@ public class ItemRecipeExt extends ItemRecipe
             toRet += " (Refunded after crafting)".color(GOLD_COLOR)
         return toRet
 
+
 init
     registerItemRecipeEvent() ->
         let ingredientUsed = getEventItemRecipeIngredients()
         for ingredient in ingredientUsed
             if (MATERIAL_COUNTER_LIST.has(ingredient.getTypeId()))
-                print(ingredient.getName())
+                print("used " + ingredient.getName())
                 lowerItem(1)

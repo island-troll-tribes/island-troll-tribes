@@ -77,10 +77,39 @@ public let ingredientStrings = new HashMap<int, string>()
     ..put(ITEM_HYDRA_SCALE        , "Hydra Scale".color(ARTIFACT_COLOR))
 
 
+/**
+    This class is used to handle Island Troll Tribes quick making & item crafting
+    It was implemented in order to gain more feature related to item crafting
+    It extends the ItemRecipe class contained in https://github.com/crojewsk/wurstExtLibs
+    Previous crafting system relied on a list of Jass if statement triggered upon item pick up
 
+    The ItemRecipe class supports:
+    - unordered or ordered recipes types, unordered being, I believe, recipe triggered upon spell cast
+    - crafting triggered upon pickup, inventory movement or on cast event
+    - a dissassembling function which revert the crafted item and refund its ingredient
+    - batches, a feature to fill several items into same spot
+    - Unit requirement, which allows to create crafting restriction related to units
+    - assembly of recipes despite unit's inventory being full
+    - crafting event, fires an event upon item crafting
+    - recipe alteration at runtime (if statement were kinda static)
+
+   The ItemRecipeExt class adds:
+   - quick make ability logic, allowing the casting unit to pick up ingredient around and craft
+   - recipe string generation, which compute a string listing the ingredients of the recipe
+   - a function to retrieve missing ingredient upon quick make cast (not actually used)
+   - a function to print missing ingredient (not actually used)
+**/
 public class ItemRecipeExt extends ItemRecipe
     var pickUpRange = 700.
 
+    /**
+        Reward is the item crafted
+        Charges is the number of charges assigned to the crafted item
+        Ordered define if recipe shall respect the order in which the items are added to execute the crafting
+        Permanent define is crafted item can be disassembled, do not confuse with the Item classification field
+        pickupable define is item can be crafted upon EVENT_PLAYER_UNIT_PICKUP_ITEM
+        quickMakeAbilId is the quick make ability used to craft the recipe
+    */
     construct(int reward, int charges, boolean ordered, boolean permanent, boolean pickupable, int quickMakeAbilId)
         super(reward, charges, ordered, permanent, pickupable)
         if quickMakeAbilId != 0
@@ -123,11 +152,20 @@ public class ItemRecipeExt extends ItemRecipe
 
     // In some case, I don't want to rely on ItemRecipe assemble behavior, I don't know if there's
     // a proper way to "avoid" using it
-    function customAssemble(unit caster)
+    // In the case of the tannery, I cannot use quickmake if I rely on ItemRecipe onCast assemble
+    // because it occurs before the quickmake execution, if you have 2 elk hide in tannery, it
+    // will craft the item then quickmake will pick up 2 other elk hide, so I decided to not
+    // set the ItemRecipe ability
+    // set the function to protected because I don't want it used outside of the instance
+    // I believe that's ok?
+    protected function customAssemble(unit caster)
         if caster.getTypeId() == UNIT_TANNERY
             this.assemble(caster)
 
-
+    /**
+        Look for recipe ingredients in a pickUpRange radius around pos
+        and add them to the items list
+    **/
     function findIngredient(OwnedLinkedList<item> items, vec2 pos)
         let iter = this.getIngredients().iterator()
 
@@ -136,6 +174,7 @@ public class ItemRecipeExt extends ItemRecipe
             let found = findNearestItem(pos, pickUpRange, i -> i.getTypeId() == ingredient.itemTypeId)
 
             if found != null
+                // Skip the batch in case we already found the ingredient
                 while iter.hasNext() and iter.lookahead().index == ingredient.index
                     iter.next()
                 items.add(found)
@@ -146,7 +185,10 @@ public class ItemRecipeExt extends ItemRecipe
         for elem in items
             elem.setVisible(true)
 
-    function onQuickMakeEnd(unit caster, LinkedList<item> inventory)
+    private function onQuickMakeEnd(unit caster, LinkedList<item> inventory)
+        // Previous system used to disable transmutation to avoid unwanted crafting
+        // when moving items down the inventory
+        // I did this hacky thing, should reproduce same behavior
         this.requirement.removeUnit(caster.getTypeId())
         this.requirement.addUnit(UNIT_DUMMY)
 
@@ -157,6 +199,10 @@ public class ItemRecipeExt extends ItemRecipe
         this.requirement.removeUnit(UNIT_DUMMY)
         this.requirement.addUnit(caster.getTypeId())
 
+    /**
+        Call this function if you want to generate the recipe string and add it to the
+        quick make ability, append the recipe string at the end of the extended tooltip
+    **/
     function addRecipeString(int quickMakeAbilId)
         // nullTimer used to let the ItemRecipe instance initialize itself
         nullTimer() ->
@@ -164,6 +210,9 @@ public class ItemRecipeExt extends ItemRecipe
             let newToolTip = quickMakeTooltip + "\n\n"  + getRecipeString(this.getIngredients(), "\n")
             setAbilityExtendedTooltip(quickMakeAbilId, newToolTip, 0)
 
+    /**
+        Compare current recipe with an item list and returns the missing recipe ingredient
+    **/
     function getMissingIngredient(LinkedList<item> items) returns LinkedList<RecipeIngredient>
         let iter = this.getIngredients().iterator()
         var slot = 0
@@ -193,11 +242,34 @@ public class ItemRecipeExt extends ItemRecipe
         iter.close()
         return missingIngredients
 
+    /**
+        Compare this recipe with an item list, display the missing ingredients
+        to specified player
+    **/
+    // This is not implemented due to current tribe building ownership logic
+    // We cannot retrieve the player who orders a shared unit
+    // If you cast a quickmake spell on a building owned by the tribe,
+    // the spell cast event will return the tribe player as triggered unit owner
+    // Still, I wanted to code this, sounded cool quality of life improvement
     function printMissingIngredient(LinkedList<item> items, player whichPlayer)
-        let missingIngredient = getRecipeString(this.getMissingIngredient(items), " ")
-        let msg = "You are missing ".color(GENERAL_COLOR) + missingIngredient + " to craft this item".color(GENERAL_COLOR)
-        printTimedToPlayer(msg, 5, whichPlayer)
+        let missingIngredient = this.getMissingIngredient(items)
+        if missingIngredient.size() > 0
+            let missingIngredientStr = getRecipeString(missingIngredient, " ")
+            let msg = "You are missing ".color(GENERAL_COLOR) + missingIngredientStr +
+                      " to craft this item".color(GENERAL_COLOR)
+            printTimedToPlayer(msg, 5, whichPlayer)
 
+/**
+    Takes an ingredient list and return a formatted recipe string
+    e.g, a list containing a tinder, 2 flint, 1 stick or bone, 1 flint, 5 charged thistles
+    and a "\n" space as separator will return the following string
+
+    1x tinder
+    2x flint
+    1x stick/bone
+    1x flint
+    5x thistles
+**/
 function getRecipeString(LinkedList<RecipeIngredient> ingredients, string separator) returns string
     var recipeStr = ""
     let iter = ingredients.iterator()
@@ -225,8 +297,13 @@ function getRecipeString(LinkedList<RecipeIngredient> ingredients, string separa
             recipeStr += separator
     return recipeStr
 
+/**
+    Returns a colored string corresponding to the item name
+    it's just a string mapped with the ingredient itemTypeId
+**/
 function getIngredientName(RecipeIngredient ingredient) returns string
     var toRet = ""
+    // Check if the ingredient is initialized in our ingredientString Hashmap
     if not ingredientStrings.has(ingredient.itemTypeId)
         error("Ingredient {0} is not registered for recipe string creation".format(ingredient.itemTypeId.asObjectName()))
         // Maybe do not return anything, otherwise this will report only the first error encountered
@@ -246,5 +323,6 @@ init
         // Filter recipe island demo gatherer unit
         if not itemRecipeUnit.getPos().isInRect(gg_rct_vision)
             for ingredient in ingredientUsed
+                // Mephisto added this so I assume it was present in previous transmute system
                 if (MATERIAL_COUNTER_LIST.has(ingredient.getTypeId()))
                     lowerItem(1)

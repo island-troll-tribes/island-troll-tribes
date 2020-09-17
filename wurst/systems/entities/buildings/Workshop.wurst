@@ -3,6 +3,7 @@ package Workshop
 // Local imports:
 import Building
 import LocalObjectIDs
+import UnitExtensions
 
 public class Workshop extends Building
     private static let unitTypeId = UNIT_WORKSHOP
@@ -27,6 +28,12 @@ public class Workshop extends Building
         getUnit().addAbility(ABILITY_QM_NETS)
         getUnit().addAbility(ABILITY_QM_BLOW_GUN)
         getUnit().addAbility(ABILITY_WORKSHOP_SPELLBOOK_ID)
+
+        // I didn't know how to retrieve the recipe building on demo island
+        // after the mode selection
+        // so I decided to ignore them when disabling quick make ability
+        if udg_DisabledBoats and getUnit().getOwner() != players[PLAYER_NEUTRAL_PASSIVE]
+            getUnit().disableAbility(ABILITY_QM_TRANSPORT_SHIP, "-Enable Boat mode On")
 
 init
     Workshop.initialize()

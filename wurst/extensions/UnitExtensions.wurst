@@ -18,6 +18,8 @@ import HashMap
 import IdListConstant
 import LocalObjectIDs
 import ManaBurn
+import ColorUtils
+import StringExtensions
 
 public let BUFF_ENSNARE_GROUND = 'Beng'
 public let BUFF_ENSNARE_AIR = 'Bena'
@@ -251,3 +253,24 @@ public function unit.isBoss() returns bool
 // TODO: Use UnitEnterLeave so that this is called automatically.
 public function unit.correctColor()
     this.setColor(this.getOwner().getColor())
+
+// TODO: Handle multiple requirement string
+/** This was made solely to disable quick make ability */
+public function unit.disableAbility(int abilId, string requirement)
+    let abil = this.getAbility(abilId)
+    let tooltipNormExt = abil.getField(ABILITY_SLF_TOOLTIP_NORMAL_EXTENDED, 0)
+    let requirementString = (
+            "Requires :\n" +
+            "    " + requirement + "\n\n").color(COLOR_YELLOW)
+    abil.setField(ABILITY_SLF_TOOLTIP_NORMAL_EXTENDED, 0, requirementString + tooltipNormExt)
+    this.disableAbility(abilId, true, false)
+
+/** This was made solely to enable quick make ability */
+public function unit.enableAbility(int abilId)
+    let abil = this.getAbility(abilId)
+    // Fun fact, this method takes an abilId as parameter, it actually update all abilities with this id
+    let tooltipNormExt = getAbilityExtendedTooltip(abilId, 0)
+    // This method takes an ability handle to update the tooltip, it actually update the tooltip only for this
+    // precise ability and will not alter abilities with similar ID
+    abil.setField(ABILITY_SLF_TOOLTIP_NORMAL_EXTENDED, 0, tooltipNormExt)
+    this.disableAbility(abilId, false, false)

@@ -113,6 +113,8 @@ public class ItemRecipeExt extends ItemRecipe
     construct(int reward, int charges, boolean ordered, boolean permanent, boolean pickupable, int quickMakeAbilId)
         super(reward, charges, ordered, permanent, pickupable)
         if quickMakeAbilId != 0
+            // Maybe I should save the listener in a variable and destory it upon
+            // instances destruction? Is this even neccessary?
             EventListener.onCast(quickMakeAbilId) (unit caster) ->
                 onQuickMakeCast(caster)
 
@@ -174,7 +176,7 @@ public class ItemRecipeExt extends ItemRecipe
             let found = findNearestItem(pos, pickUpRange, i -> i.getTypeId() == ingredient.itemTypeId)
 
             if found != null
-                // Skip the batch in case we already found the ingredient
+                // If found item is part of a batch, skip the next batch ingredients
                 while iter.hasNext() and iter.lookahead().index == ingredient.index
                     iter.next()
                 items.add(found)

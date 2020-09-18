@@ -13,20 +13,48 @@ import ClosuresForItems
 import Lodash
 import ItemRecipeExtended
 
+
+/**
+    Island Troll Tribes herb mixing has many edge cases which cannot be handled properly by
+    the ItemRecipe class, for this reason I decided to keep old mixing logic which,
+    may not seem really "advanced" but atleast it's solid
+**/
 public class ItemRecipeMixing extends ItemRecipeExt
     let specialHerb = new HashMap<int, int>
     var herbThreshold = 6
 
+    /**
+        Reward is the item crafted
+        Charges is the number of charges assigned to the crafted item
+        Permanent define is crafted item can be disassembled, do not confuse with the Item classification field
+        quickMakeAbilId is the quick make ability used to craft the recipe
+    */
     construct(int reward, int charges, boolean permanent, int quickMakeAbilId)
         super(reward, charges, false, permanent, false, quickMakeAbilId)
 
+    /**
+        Reward is the item crafted
+        Charges is the number of charges assigned to the crafted item
+        Permanent define is crafted item can be disassembled, do not confuse with the Item classification field
+        quickMakeAbilId is the quick make ability used to craft the recipe
+
+        herbThreshold define the maximum count of same colored herb that can be used in the recipe
+        e.g, acid bomb can use a max of 3 herb of same color, this is used by the quick make logic
+        to pick up the accurate number of colored herbs
+    */
     construct(int reward, int charges, boolean permanent, int quickMakeAbilId, int herbThreshold)
         super(reward, charges, false, permanent, false, quickMakeAbilId)
         this.herbThreshold = herbThreshold
 
+    /**
+        Look for recipe ingredients in a pickUpRange radius around pos
+        and add them to the items list
+        This won't pick up more than <herbThreshold> colored herb of same color
+    **/
     override function findIngredient(OwnedLinkedList<item> items, vec2 pos)
         let iter = this.getIngredients().iterator()
 
+        // Increment those every time we find a corresponding colored herb
         specialHerb.put(ITEM_BLUE_HERB, 0)
         specialHerb.put(ITEM_YELLOW_HERB, 0)
         specialHerb.put(ITEM_PURPLE_HERB, 0)
@@ -35,8 +63,10 @@ public class ItemRecipeMixing extends ItemRecipeExt
         while iter.hasNext()
             let ingredient = iter.next()
             let found = findNearestItem(pos, pickUpRange) i ->
-                return (i.getTypeId() == ingredient.itemTypeId
-                        and specialHerb.get(i.getTypeId()) < herbThreshold)
+                return (
+                    i.getTypeId() == ingredient.itemTypeId
+                    and specialHerb.get(i.getTypeId()) < herbThreshold
+                    )
 
             if found != null
                 if specialHerb.has(found.getTypeId())
@@ -47,6 +77,7 @@ public class ItemRecipeMixing extends ItemRecipeExt
                     if this.getReward() == ITEM_ESSENCE_BEES and specialHerb.get(found.getTypeId()) >= 2
                         herbThreshold = 1
 
+                // If found item is part of a batch, skip the next batch ingredients
                 while iter.hasNext() and iter.lookahead().index == ingredient.index
                     iter.next()
                 items.add(found)
@@ -66,6 +97,7 @@ public class ItemRecipeMixing extends ItemRecipeExt
     override function customAssemble(unit caster)
         mix(caster)
 
+// Goold old reliable mix function
 function mix(unit caster)
     let count = caster.getInventoryItemCountMap()
     int specTypes = 0

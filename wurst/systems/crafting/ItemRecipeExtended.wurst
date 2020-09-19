@@ -86,7 +86,7 @@ public let ingredientStrings = new HashMap<int, string>()
     Previous crafting system relied on a list of Jass if statement triggered upon item pick up
 
     The ItemRecipe class supports:
-    - unordered or ordered recipes types, unordered being, I believe, recipe triggered upon spell cast
+    - unordered or ordered recipes types
     - crafting triggered upon pickup, inventory movement or on cast event
     - a dissassembling function which revert the crafted item and refund its ingredient
     - batches, a feature to fill several items into same spot
@@ -102,6 +102,10 @@ public let ingredientStrings = new HashMap<int, string>()
    - recipe string generation, which compute a string listing the ingredients of the recipe
    - a function to retrieve missing ingredient upon quick make cast (not actually used)
    - a function to print missing ingredient (not actually used)
+
+   Note : perishable attribute behavior differ depending on whether the ingredient has charges
+   - With charges : perishable on false will consume the exact count of charges, on true it will consume all charges
+   - Without charges : perishable on false won't consume the ingredient upon assemble
 **/
 public class ItemRecipeExt extends ItemRecipe
     var pickUpRange = 700.
@@ -143,6 +147,7 @@ public class ItemRecipeExt extends ItemRecipe
                 // Remove transmutable item from inventory list
                 inventory.remove(elem)
                 caster.addItemHandle(elem)
+            customAssemble(caster)
         // This piece of code would display a message upon crafting failure
         // indicating which ingredients are missing
         // however, there is no way to display this message for the triggering player
@@ -150,7 +155,6 @@ public class ItemRecipeExt extends ItemRecipe
         // else
         //     printMissingIngredient(items, caster.getOwner())
 
-        customAssemble(caster)
         onQuickMakeEnd(caster, inventory)
 
         destroy items
@@ -316,7 +320,7 @@ function getIngredientName(RecipeIngredient ingredient) returns string
         // during this getRecipeString() call
         return toRet
     toRet += ingredientStrings.get(ingredient.itemTypeId)
-    if ingredient.perishable == false
+    if ingredient.perishable == false and ingredient.charges  != 0
         toRet += " (Refunded after crafting)".color(GOLD_COLOR)
     return toRet
 

@@ -32,6 +32,7 @@ let unitCategories = new IterableMap<LinkedList<int>, string>()
  // A hashMap to link a player to its score
 public let playerScores = new IterableMap<player, Score>
 
+
 /**
     Store the player's units kill count, damage dealt to troll,
     healing done to ally and gold acquired from selling stuff
@@ -99,7 +100,7 @@ public class Score
         allyHealing += healingAmount
 
     function getHealing() returns string
-        return this.selfHealing.toString() + "/" + this.allyHealing.toString()
+        return getHealingStr(selfHealing, allyHealing)
 
     function addDamage(int damage)
         damageTroll += damage
@@ -126,8 +127,7 @@ public class Score
         for killCategory in playerKill
             let name = killCategory
             let killCount = playerKill.get(killCategory).toString()
-            msg += ("{0} kill count : ".color(GOLD_COLOR) + "{1}\n")
-            .format(name, killCount)
+            msg += ("{0} kill count : ".color(GOLD_COLOR) + "{1}\n").format(name, killCount)
         printTimedToPlayer(msg, 10, this._player)
 
 function getUnitCategory(int unitId) returns string
@@ -203,6 +203,7 @@ init
                         and instance.getHealingType() != HealingType.ITEM
                         playerScores.get(healerOwner).addSelfHealing(healingAmount.toInt())
 
+                    // Healing's kind of an edge case due to the string format "self/ally"
                     let healingStr = playerScores.get(healerOwner).getHealing()
                     scoreBoardEntries.get("Healing self/ally")
                         .updateEntry(healerOwner.getName(), healingStr, null)
@@ -232,7 +233,10 @@ init
 
                 // TODO: Find a way to handle case where tribe ownership is enabled,
                 // team gold is disabled and player buys from a building
-                playerScores.get(owner).removeGold()
+                // Issue : We cannot retrieve the player who bought from a shared building
+                // therefore we cannot update its gold acquired score
+                if playerScores.has(owner)
+                    playerScores.get(owner).removeGold()
 
 
             // Register gold acquired

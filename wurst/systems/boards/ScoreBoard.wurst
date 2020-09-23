@@ -39,6 +39,7 @@ class Category
         this.width = width
         this.color = color
 
+// ScoreBoard category listed
 let categories = asList(
     new Category("PlayerName"        , null                    , NAME_LABEL_WIDTH  , HIGHLIGHT_COLOR ),
     new Category("Level"             , null                    , LEVEL_LABEL_WIDTH , HIGHLIGHT_COLOR ),
@@ -181,8 +182,10 @@ init
                 if EventData.getDyingUnit().isTroll()
                     and owner.getTribe() != null
                     let playerName = owner.getName()
+
                     scoreBoardEntries.get("PlayerName")
                         .updateEntry(owner.getName(), playerName, iconPlayerDefeated)
+
                     if owner.getTribe().isDefeated()
                         let tribePlayer = owner.getTribePlayer()
                         let tribeName = tribePlayer.getName()
@@ -193,6 +196,7 @@ init
                 if EventData.getRevivingUnit().isTroll()
                     let owner = EventData.getRevivingUnit().getOwner()
                     let playerName = owner.getName()
+
                     scoreBoardEntries.get("PlayerName")
                         .updateEntry(owner.getName(), playerName, iconPlayerInGame)
 
@@ -206,12 +210,10 @@ init
             EventListener.add(EVENT_PLAYER_HERO_LEVEL) ->
                 if EventData.getTriggerUnit().isTroll()
                     let owner = GetTriggerUnit().getOwner()
+                    let level = owner.getTroll().getLevel().toString()
+
                     scoreBoardEntries.get("Level")
-                        .updateEntry(
-                            owner.getName(),
-                            owner.getTroll().getLevel().toString(),
-                            null
-                            )
+                        .updateEntry(owner.getName(), level, null)
 
             registerAfterEffect() (unit target, int unitID) ->
                 if target.isTroll()

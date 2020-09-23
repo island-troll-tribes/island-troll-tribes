@@ -20,23 +20,23 @@ import HealingPotion
 
 constant ABIL_MEAT   = compiletime(ABIL_ID_GEN.next())
 constant ABIL_ACORN  = compiletime(ABIL_ID_GEN.next())
-constant ABIL_MACORN = compiletime(ABIL_ID_GEN.next())
+constant ABIL_HONEY  = compiletime(ABIL_ID_GEN.next())
 
 constant MEAT_ICON   = Icons.bTNMonsterLure
 constant ACORN_ICON  = Icons.bTNAcorn1
-constant MACORN_ICON = Icons.bTNDizzy
+constant HONEY_ICON  = LocalIcons.bTNHoneyComb
 
 constant MEAT_MODEL   = LocalItems.ham
 constant ACORN_MODEL  = Objects.thunderLizardEgg1
-constant MACORN_MODEL = Objects.crystalShard
+constant HONEY_MODEL  = LocalItems.honeyComb
 
 public constant MEAT_HEAL   = 50.
 public constant ACORN_HEAL  = 38.
-public constant MACORN_HEAL = 90.
+public constant HONEY_HEAL  = 90.
 
-constant TT_MEAT   = "A well done steak. Instantly heals {0} health point on use.".format(MEAT_HEAL.toToolTipGreen())
-constant TT_ACORN  = "An acorn left by an animal. Restores {0} health point on use.".format(ACORN_HEAL.toToolTipGreen())
-constant TT_MACORN = "An acorn embedded by mana, left by an animal. Restores {0} health point on use.".format(MACORN_HEAL.toToolTipGreen())
+constant TT_MEAT  = "A well done steak. Instantly heals {0} health point on use.".format(MEAT_HEAL.toToolTipGreen())
+constant TT_ACORN = "An acorn left by an animal. Restores {0} health point on use.".format(ACORN_HEAL.toToolTipGreen())
+constant TT_HONEY = "A portion of honey, left by an animal. Restores {0} health point on use.".format(HONEY_HEAL.toToolTipGreen())
 
 @compiletime function createHealingItems()
     createItemBerserkCast(ABIL_MEAT)
@@ -49,8 +49,8 @@ constant TT_MACORN = "An acorn embedded by mana, left by an animal. Restores {0}
         ..setCooldown(1, 0)
         ..setArtCaster(Abilities.healTarget)
 
-    createItemBerserkCast(ABIL_MACORN)
-        ..setName("Magic Acorn Heal")
+    createItemBerserkCast(ABIL_HONEY)
+        ..setName("Honey Comb Heal")
         ..setCooldown(1, 0)
         ..setArtCaster(Abilities.healTarget)
 
@@ -87,19 +87,16 @@ constant TT_MACORN = "An acorn embedded by mana, left by an animal. Restores {0}
         ..setNumberofCharges(1)
 
 @compiletime function createMagicAcorn() returns ItemDefinition
-    return createPerishableItem(ITEM_MAGIC_ACORN)
-        ..setInterfaceIcon(MACORN_ICON)
-        ..setModelUsed(MACORN_MODEL)
-        ..setName("Magic Acorn")
-        ..setTooltipExtended(TT_MACORN)
-        ..setDescription(TT_MACORN)
+    return createPerishableItem(ITEM_HONEY_COMB)
+        ..setInterfaceIcon(HONEY_ICON)
+        ..setModelUsed(HONEY_MODEL)
+        ..setName("Honey Comb")
+        ..setTooltipExtended(TT_HONEY)
+        ..setDescription(TT_HONEY)
         ..setLumberCost(10)
-        ..setScalingValue(0.65)
-        ..setTintingColor1Red(128)
-        ..setTintingColor2Green(64)
-        ..setTintingColor3Blue(0)
-        ..setAbilities(ABIL_MACORN.toRawCode())
-        ..setCooldownGroup(ABIL_MACORN.toRawCode())
+        ..setScalingValue(0.8)
+        ..setAbilities(ABIL_HONEY.toRawCode())
+        ..setCooldownGroup(ABIL_HONEY.toRawCode())
         ..setNumberofCharges(1)
 
 HashMap<int, real> itemSelfHealAmount = null
@@ -111,7 +108,7 @@ function initHealItemTable()
     itemSelfHealAmount.put(ITEM_COOKED_MEAT, MEAT_HEAL)
     itemSelfHealAmount.put(ITEM_SMOKED_MEAT, 40.)
     itemSelfHealAmount.put(ITEM_ACORN, ACORN_HEAL)
-    itemSelfHealAmount.put(ITEM_MAGIC_ACORN, MACORN_HEAL)
+    itemSelfHealAmount.put(ITEM_HONEY_COMB, HONEY_HEAL)
 
 function initHealAbilityTable()
     itemTargetedHealAmount = new HashMap<int,real>()

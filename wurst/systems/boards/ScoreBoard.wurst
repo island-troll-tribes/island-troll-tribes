@@ -1,0 +1,230 @@
+package ScoreBoard
+
+// Standard-library imports:
+import HashMap
+import LinkedList
+import ClosureTimers
+import Assets
+import ClosureEvents
+
+// Local imports:
+import GameMode
+import Tribe
+import Boards
+import ColorUtils
+import GameConfig
+import LocalAssets
+import UnitExtensions
+import PlayerExtensions
+import Transformation
+import Game
+
+let KILL_COLUMN_WIDTH = 0.055
+let STAT_LABEL_WIDTH = 0.1
+let NAME_LABEL_WIDTH = 0.13
+let LEVEL_LABEL_WIDTH = 0.05
+
+let iconPlayerInGame = "UI\\widgets\\escmenu\\nightelf\\nightelf-checkbox-depressed.blp"
+let iconPlayerDefeated = "UI\\widgets\\escmenu\\orc\\orc-checkbox-depressed.blp"
+
+class Category
+    string text
+    string icon
+    real width
+    color color
+
+    construct(string text, string icon, real width, color color)
+        this.text = text
+        this.icon = icon
+        this.width = width
+        this.color = color
+
+let categories = asList(
+    new Category("PlayerName"        , null                    , NAME_LABEL_WIDTH  , HIGHLIGHT_COLOR ),
+    new Category("Level"             , null                    , LEVEL_LABEL_WIDTH , HIGHLIGHT_COLOR ),
+    new Category("Elk"               , Icons.bTNStag           , KILL_COLUMN_WIDTH , HIGHLIGHT_COLOR ),
+    new Category("Hawk"              , Icons.bTNWarEagle       , KILL_COLUMN_WIDTH , HIGHLIGHT_COLOR ),
+    new Category("Snake"             , Icons.bTNWindSerpent    , KILL_COLUMN_WIDTH , HIGHLIGHT_COLOR ),
+    new Category("Wolf"              , Icons.bTNTimberWolf     , KILL_COLUMN_WIDTH , HIGHLIGHT_COLOR ),
+    new Category("Bear"              , Icons.bTNFrostBear      , KILL_COLUMN_WIDTH , HIGHLIGHT_COLOR ),
+    new Category("Panther"           , LocalIcons.bTNPanther   , KILL_COLUMN_WIDTH , HIGHLIGHT_COLOR ),
+    new Category("Damage Dealt"      , Icons.bTNCriticalStrike , STAT_LABEL_WIDTH  , COLOR_RED       ),
+    new Category("Healing self/ally" , Icons.bTNHeal           , STAT_LABEL_WIDTH  , COLOR_GREEN     ),
+    new Category("Gold Acquired"     , Icons.bTNMGExchange     , STAT_LABEL_WIDTH  , COLOR_YELLOW    ),
+    new Category("Meat Eaten"        , Icons.bTNMonsterLure    , STAT_LABEL_WIDTH  , COLOR_ORANGE    )
+)
+
+public class ScoreBoardColumnEntries
+    static int column = 0
+    Category category
+    int entryColumn = 0
+
+    construct()
+        category = categories.get(column)
+        entryColumn = categories.indexOf(category)
+        initRow(0, category.text, category.icon)
+
+        var value = "0"
+        string icon = null
+        switch category.text
+            case "PlayerName"
+                value = "PlayerName"
+            case "Level"
+                value = "1"
+                icon = Icons.bTNSelectHeroOn
+            case "Healing self/ally"
+                value = "0/0"
+        initForPlayer(value, icon)
+        column++
+
+    function updateEntry(string name, string value, string icon)
+        let entryRow = scoreBoard.getPlayerPos(name)
+
+        scoreBoard.updateValue(entryRow, entryColumn, value)
+        if icon != null
+            scoreBoard.updateIcon(entryRow, entryColumn, icon)
+
+    function updateEntryIcon(string name, string icon)
+        let entryRow = scoreBoard.getPlayerPos(name)
+        scoreBoard.updateIcon(entryRow, entryColumn, icon)
+
+    function updateEntryColor(string name, color color)
+        let entryRow = scoreBoard.getPlayerPos(name)
+        scoreBoard.updateColor(entryRow, entryColumn, color)
+
+    function updateTribeEntry(player _player, int value)
+        let tribeName = _player.getTribePlayer().getName()
+        let tribeRow = scoreBoard.getPlayerPos(tribeName)
+        let currentValue = scoreBoard.getValue(tribeRow, entryColumn)
+        let newValue = (currentValue.toInt() + value)
+        updateEntry(tribeName, newValue.toString(), null)
+
+    function updateTribeEntry(player _player, string value)
+        let tribeName = _player.getTribePlayer().getName()
+        updateEntry(tribeName, value, null)
+
+    function addValue(player _player, int value)
+        let playerRow = scoreBoard.getPlayerPos(_player.getName())
+        let currentValue = scoreBoard.getValue(playerRow, entryColumn)
+        let newValue = (currentValue.toInt() + value)
+        updateEntry(_player.getName(), newValue.toString(), null)
+        updateTribeEntry(_player, value)
+
+
+    function initForPlayer(string value, string icon)
+        var row = 1
+
+        for tribe in Tribe.tribes
+            // Do not create an empty row prior to the first tribe row, I find the board clearer this way
+            if tribe.getId() > 0
+                initRow(row, "", null)
+                row++
+
+            if value == "PlayerName"
+                initRow(row, tribe.getName(), iconPlayerInGame)
+                scoreBoard.updateColor(row, entryColumn, SPECIAL_COLOR)
+            else if value == "1"
+                initRow(row, "", null)
+            else
+                initRow(row, value, null)
+            row++
+
+            for _player in tribe.getMembers()
+                if value == "PlayerName"
+                    initRow(row, _player.getName(), iconPlayerInGame)
+                    // In case player leave before board Init
+                    if _player.isIngame()
+                        scoreBoard.updateColor(row, entryColumn, GOLD_COLOR)
+                    else
+                        scoreBoard.updateColor(row, entryColumn, COLOR_GRAY)
+                else
+                    initRow(row, value, icon)
+                row++
+
+    function initRow(int row, string value, string icon)
+        scoreBoard.getItem(row, entryColumn)
+            ..setWidth(category.width)
+            ..setValueColor(category.color.withAlpha(0))
+        scoreBoard.setNewItem(row, entryColumn, value, icon)
+        scoreBoard.updateItem(row, entryColumn, value, icon)
+
+        if row != 0 and category.color == HIGHLIGHT_COLOR
+            scoreBoard.updateColor(row, entryColumn, COLOR_WHITE.withoutAlpha())
+
+
+public let scoreBoardEntries = new HashMap<string, ScoreBoardColumnEntries>
+
+public function initScoreBoard()
+    var rowCount = Tribe.playerToTribeMap.size() + 1
+    let emptyRowCount = Tribe.getTribes().size() - 1
+    rowCount += emptyRowCount
+
+    // Trying to display a multiboard with 0 row result in wc3 crashing
+    if rowCount == 0
+        rowCount = 1
+    scoreBoard = new Board(rowCount, categories.size())
+
+    let title = getGameTimersBoardTitle()
+    scoreBoard.board.setTitle(title)
+
+    for category in categories
+        scoreBoardEntries.put(category.text, new ScoreBoardColumnEntries)
+    scoreBoard.board.hide()
+
+
+init
+    GameMode.onModeSelectionFinish() ->
+        if gameConfig.isPlayerScoreEnabled()
+            initScoreBoard()
+            EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
+                let owner = EventData.getDyingUnit().getOwner()
+                if EventData.getDyingUnit().isTroll()
+                    and owner.getTribe() != null
+                    let playerName = owner.getName()
+                    scoreBoardEntries.get("PlayerName")
+                        .updateEntry(owner.getName(), playerName, iconPlayerDefeated)
+                    if owner.getTribe().isDefeated()
+                        let tribePlayer = owner.getTribePlayer()
+                        let tribeName = tribePlayer.getName()
+                        scoreBoardEntries.get("PlayerName")
+                            .updateEntry(tribePlayer.getName(), tribeName, iconPlayerDefeated)
+
+            EventListener.add(EVENT_PLAYER_HERO_REVIVE_FINISH) ->
+                if EventData.getRevivingUnit().isTroll()
+                    let owner = EventData.getRevivingUnit().getOwner()
+                    let playerName = owner.getName()
+                    scoreBoardEntries.get("PlayerName")
+                        .updateEntry(owner.getName(), playerName, iconPlayerInGame)
+
+            EventListener.add(EVENT_PLAYER_LEAVE) ->
+                let p = EventData.getTriggerPlayer()
+                if not p.isObserver()
+                    and not p.isObserverNew()
+                    scoreBoardEntries.get("PlayerName")
+                        .updateEntryColor(p.getName(), COLOR_GRAY)
+
+            EventListener.add(EVENT_PLAYER_HERO_LEVEL) ->
+                if EventData.getTriggerUnit().isTroll()
+                    let owner = GetTriggerUnit().getOwner()
+                    scoreBoardEntries.get("Level")
+                        .updateEntry(
+                            owner.getName(),
+                            owner.getTroll().getLevel().toString(),
+                            null
+                            )
+
+            registerAfterEffect() (unit target, int unitID) ->
+                if target.isTroll()
+                    let owner = target.getOwner()
+                    // For some reason, the troll level isn't updated in time with this event,
+                    // but the name is waiting a bit to get the correct level
+                    nullTimer() ->
+                        let lvl = owner.getTroll().getLevel().toString()
+                        scoreBoardEntries.get("Level")
+                            .updateEntry(owner.getName(), lvl, owner.getTrollIcon())
+
+            registerGameStartEvent() ->
+                for tribe in Tribe.getTribes()
+                    for member in tribe.getMembers()
+                        scoreBoardEntries.get("Level")
+                        .updateEntryIcon(member.getName(), member.getTrollIcon())

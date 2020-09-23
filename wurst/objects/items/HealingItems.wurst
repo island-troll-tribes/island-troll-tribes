@@ -19,24 +19,24 @@ import ToolTipsUtils
 import HealingPotion
 
 constant ABIL_MEAT   = compiletime(ABIL_ID_GEN.next())
-constant ABIL_ACORN  = compiletime(ABIL_ID_GEN.next())
+constant ABIL_BANANA = compiletime(ABIL_ID_GEN.next())
 constant ABIL_HONEY  = compiletime(ABIL_ID_GEN.next())
 
 constant MEAT_ICON   = Icons.bTNMonsterLure
-constant ACORN_ICON  = Icons.bTNAcorn1
+constant BANANA_ICON = LocalIcons.bTNBanana
 constant HONEY_ICON  = LocalIcons.bTNHoneyComb
 
 constant MEAT_MODEL   = LocalItems.ham
-constant ACORN_MODEL  = Objects.thunderLizardEgg1
+constant BANANA_MODEL = LocalItems.banana
 constant HONEY_MODEL  = LocalItems.honeyComb
 
 public constant MEAT_HEAL   = 50.
-public constant ACORN_HEAL  = 38.
+public constant BANANA_HEAL = 38.
 public constant HONEY_HEAL  = 90.
 
 constant TT_MEAT  = "A well done steak. Instantly heals {0} health point on use.".format(MEAT_HEAL.toToolTipGreen())
-constant TT_ACORN = "An acorn left by an animal. Restores {0} health point on use.".format(ACORN_HEAL.toToolTipGreen())
-constant TT_HONEY = "A portion of honey, left by an animal. Restores {0} health point on use.".format(HONEY_HEAL.toToolTipGreen())
+constant TT_BANANA = "A banana left by an animal. Restores {0} health point on use.".format(BANANA_HEAL.toToolTipGreen())
+constant TT_HONEY = "A portion of honey comb, left by an animal. Restores {0} health point on use.".format(HONEY_HEAL.toToolTipGreen())
 
 @compiletime function createHealingItems()
     createItemBerserkCast(ABIL_MEAT)
@@ -44,8 +44,8 @@ constant TT_HONEY = "A portion of honey, left by an animal. Restores {0} health 
         ..setCooldown(1, 0)
         ..setArtCaster(Abilities.healTarget)
 
-    createItemBerserkCast(ABIL_ACORN)
-        ..setName("Acorn Heal")
+    createItemBerserkCast(ABIL_BANANA)
+        ..setName("Banana Heal")
         ..setCooldown(1, 0)
         ..setArtCaster(Abilities.healTarget)
 
@@ -70,23 +70,20 @@ constant TT_HONEY = "A portion of honey, left by an animal. Restores {0} health 
         ..setCooldownGroup(ABIL_MEAT.toRawCode())
         ..setNumberofCharges(1)
 
-@compiletime function createAcorn() returns ItemDefinition
-    return createPerishableItem(ITEM_ACORN)
-        ..setInterfaceIcon(ACORN_ICON)
-        ..setModelUsed(ACORN_MODEL)
-        ..setName("Acorn")
-        ..setTooltipExtended(TT_ACORN)
-        ..setDescription(TT_ACORN)
+@compiletime function createBanana() returns ItemDefinition
+    return createPerishableItem(ITEM_BANANA)
+        ..setInterfaceIcon(BANANA_ICON)
+        ..setModelUsed(BANANA_MODEL)
+        ..setName("Banana")
+        ..setTooltipExtended(TT_BANANA)
+        ..setDescription(TT_BANANA)
         ..setLumberCost(2)
-        ..setScalingValue(1)
-        ..setTintingColor1Red(128)
-        ..setTintingColor2Green(64)
-        ..setTintingColor3Blue(0)
-        ..setAbilities(ABIL_ACORN.toRawCode())
-        ..setCooldownGroup(ABIL_ACORN.toRawCode())
+        ..setScalingValue(0.8)
+        ..setAbilities(ABIL_BANANA.toRawCode())
+        ..setCooldownGroup(ABIL_BANANA.toRawCode())
         ..setNumberofCharges(1)
 
-@compiletime function createMagicAcorn() returns ItemDefinition
+@compiletime function createMagicBanana() returns ItemDefinition
     return createPerishableItem(ITEM_HONEY_COMB)
         ..setInterfaceIcon(HONEY_ICON)
         ..setModelUsed(HONEY_MODEL)
@@ -107,7 +104,7 @@ function initHealItemTable()
     itemSelfHealAmount = new HashMap<int,real>()
     itemSelfHealAmount.put(ITEM_COOKED_MEAT, MEAT_HEAL)
     itemSelfHealAmount.put(ITEM_SMOKED_MEAT, 40.)
-    itemSelfHealAmount.put(ITEM_ACORN, ACORN_HEAL)
+    itemSelfHealAmount.put(ITEM_BANANA, BANANA_HEAL)
     itemSelfHealAmount.put(ITEM_HONEY_COMB, HONEY_HEAL)
 
 function initHealAbilityTable()

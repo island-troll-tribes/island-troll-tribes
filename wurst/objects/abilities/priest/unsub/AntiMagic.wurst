@@ -20,15 +20,26 @@ let SHIELD_AMOUNT = 100.
 let SINGLE_AM_MANACOST = 5
 let SINGLE_AM_COOLDOWN = 1.
 let SINGLE_AM_TOOLTIP_NORM = "Anti-Magic Shell"
-let SINGLE_AM_TOOLTIP_EXTENDED = ("Grants an anti-magic barrier to target ally that absorbs {0} magic damage and blocks them "+
-                                  "from being ensnared by hunters or ensnare traps. Lasts {1} seconds, has {2} seconds cooldown.")
-                                  .format(SHIELD_AMOUNT.toToolTipGreen(), DURATION.toToolTipLightBlue(), SINGLE_AM_COOLDOWN.toToolTipLightBlue())
+let SINGLE_AM_TOOLTIP_EXTENDED = (
+    "Grants an anti-magic barrier to target ally that absorbs {0} magic damage and blocks them "+
+    "from being ensnared by hunters or ensnare traps. Lasts {1} seconds, has {2} seconds cooldown.")
+    .format(
+        SHIELD_AMOUNT.toToolTipGreen(),
+        DURATION.toToolTipLightBlue(),
+        SINGLE_AM_COOLDOWN.toToolTipLightBlue()
+    )
 
 
 let TOOLTIP_NORM = "Anti-Magic Shell"
-let TOOLTIP_EXTENDED = ("Grants an anti-magic barrier to allies in a {0} radius around point cast that absorbs {1} magic damage and blocks them "+
-                       "from being ensnared by hunters or ensnare traps. Does block workshop ensnare. Lasts {2} seconds, has {3} seconds cooldown.")
-                       .format(AOE.toToolTipGray(), SHIELD_AMOUNT.toToolTipGreen(), DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
+let TOOLTIP_EXTENDED = (
+    "Grants an anti-magic barrier to allies in a {0} radius around point cast that absorbs {1} magic damage and blocks them "+
+    "from being ensnared by hunters or ensnare traps. Does block workshop ensnare. Lasts {2} seconds, has {3} seconds cooldown.")
+    .format(
+        AOE.toToolTipGray(),
+        SHIELD_AMOUNT.toToolTipGreen(),
+        DURATION.toToolTipLightBlue(),
+        COOLDOWN.toToolTipLightBlue()
+    )
 
 class AntiMagic extends AbilityDefinitionAntimagicShield
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
@@ -52,8 +63,6 @@ class AntiMagicAoEDummy extends ChannelAbilityPreset
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
         super(newAbilityId, 1, true)
         this.presetCastRange(lvl -> CAST_RANGE)
-        // this.presetDurationHero(lvl -> 0.01)
-        // this.presetDurationNormal(lvl -> 0.01)
         this.presetManaCost(lvl -> MANACOST)
         this.presetCooldown(lvl -> COOLDOWN)
         this.setHeroAbility(false)
@@ -77,10 +86,15 @@ class AntiMagicAoEDummy extends ChannelAbilityPreset
     new AntiMagic(ABILITY_ANTI_MAGIC, "Q", new Pair(0, 0))
     new AntiMagicAoEDummy(ABILITY_ANTI_MAGIC_AOE, "Q", new Pair(0, 0))
 
+
 init
     EventListener.onPointCast(ABILITY_ANTI_MAGIC_AOE) (unit caster, vec2 target) ->
         forUnitsInRange(target, AOE) u ->
-            if u.isAlive() and u.getOwner().isAllyOf(caster.getOwner())
+            if u.isAlive()
+                and u.getOwner().isAllyOf(caster.getOwner())
+                and u.getOwner() != players[PLAYER_NEUTRAL_PASSIVE]
+                and not u.isHidden()
+                and not u.isType(UNIT_TYPE_STRUCTURE)
                 new DummyCaster()
                     ..owner(caster.getOwner())
                     ..origin(target)

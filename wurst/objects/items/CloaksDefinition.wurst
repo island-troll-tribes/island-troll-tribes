@@ -238,7 +238,12 @@ function castRejuvHeal(unit target, real duration, real amount)
 
 function castRejuv(unit caster, int rejuvAbility)
     forUnitsInRange(caster.getPos(), RESTORE_RADIUS) (unit u) ->
-        if u.isAlive() and u.getOwner().isAllyOf(caster.getOwner())
+        if u.isAlive()
+            and u.getOwner().isAllyOf(caster.getOwner())
+            and u.getOwner() != players[PLAYER_NEUTRAL_PASSIVE]
+            and not u.isHidden()
+            and not u.isType(UNIT_TYPE_STRUCTURE)
+
             InstantDummyCaster.castTarget(caster.getOwner(), rejuvAbility, 1, Orders.rejuvination, u)
             if rejuvAbility == ABILITY_REJUV_HEALING
                 castRejuvHeal(u, RESTORE_DURATION, HEALTH_RESTORED)

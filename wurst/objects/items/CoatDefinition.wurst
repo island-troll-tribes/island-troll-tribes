@@ -21,6 +21,7 @@ import StringExtensions
 constant ABIL_STATS_BATTLE            = compiletime(ABIL_ID_GEN.next())
 constant ABIL_SPELL_RESISTANCE_BATTLE = compiletime(ABIL_ID_GEN.next())
 constant ABIL_CAST_BATTLE             = compiletime(ABIL_ID_GEN.next())
+constant ABIL_CAST_STEEL              = compiletime(ABIL_ID_GEN.next())
 constant ABIL_HARDENED_SCALE          = compiletime(ABIL_ID_GEN.next())
 
 constant IRON_ICON      = Icons.bTNImprovedMoonArmor
@@ -38,6 +39,7 @@ constant ARMOR_MODEL = LocalItems.armor
 constant SCALE_MODEL = LocalItems.hydraCoat
 
 constant BATTLE_COOLDOWN = 75.
+constant STEEL_COOLDOWN = 90.
 constant ABILITY_RADIUS = 800.
 
 constant BATTLE_ARMOR_SPELL_RESISTANCE_FACTOR = 0.30
@@ -53,7 +55,7 @@ constant ABIL_WOLF   = commaList(ABILITY_STR_BONUS_3, ABILITY_INT_BONUS_2, ABILI
 constant ABIL_BEAR   = commaList(ABILITY_STR_BONUS_4, ABILITY_INT_BONUS_3, ABILITY_ARMOR_BONUS_3)
 constant ABIL_BONE   = commaList(ABILITY_STR_BONUS_3, ABILITY_INT_BONUS_2, ABILITY_ARMOR_BONUS_2)
 constant ABIL_IRON   = commaList(ABILITY_STR_BONUS_4, ABILITY_INT_BONUS_3, ABILITY_ARMOR_BONUS_3)
-constant ABIL_STEEL  = commaList(ABILITY_STR_BONUS_8, ABILITY_INT_BONUS_6, ABILITY_ARMOR_BONUS_5, ABILITY_OMNICURE_ITEM)
+constant ABIL_STEEL  = commaList(ABIL_CAST_STEEL, ABILITY_STR_BONUS_8, ABILITY_INT_BONUS_6, ABILITY_ARMOR_BONUS_5)
 constant ABIL_BATTLE = commaList(ABIL_CAST_BATTLE, ABIL_STATS_BATTLE , ABILITY_ARMOR_BONUS_7, ABIL_SPELL_RESISTANCE_BATTLE)
 constant ABIL_SCALE  = commaList(ABIL_STATS_BATTLE , ABILITY_ARMOR_BONUS_10, ABIL_HARDENED_SCALE)
 
@@ -91,7 +93,7 @@ public constant TT_STEEL_COAT = TT_SKIN.format(
     getAbilityDataField(ABILITY_STR_BONUS_8   , "DataC1").color(COLOR_GREEN),
     getAbilityDataField(ABILITY_INT_BONUS_6   , "DataB1").color(COLOR_GREEN),
     getAbilityDataField(ABILITY_ARMOR_BONUS_5 , "DataA1").color(COLOR_GREEN)
-) + " Can cast omnicure, curing all allies on the map." + makeToolTipCooldown(50)
+) + " Can cast " + "Cure All".color(COLOR_GREEN) + " on wearer." + makeToolTipCooldown(90)
 
 public constant TT_BATTLE_ARMOR = ("A coat embedded with a protective mana layer. Increase all stats by {0}, Armor by {1} and provides {2} magic resistance. "
                                     +"Can cast Anti-Magic on nearby allied heroes.")
@@ -114,6 +116,10 @@ public constant TT_SCALE_COAT = ("A coat embedded with the scale of the Great Hy
     createItemBerserkCast(ABIL_CAST_BATTLE)
         ..setName("Battle Armor Cast")
         ..setCooldown(1, BATTLE_COOLDOWN)
+
+    createItemBerserkCast(ABIL_CAST_STEEL)
+        ..setName("Steel Coat Cast")
+        ..setCooldown(1, STEEL_COOLDOWN)
 
     new AbilityDefinitionCryptLordSpikedCarapace(ABIL_HARDENED_SCALE)
         ..setDefenseBonus(1, 0)
@@ -253,3 +259,7 @@ init
         forUnitsInRange(caster.getPos(), ABILITY_RADIUS) u ->
             if u.isTroll() and u.getOwner().isAllyOf(caster.getOwner())
                 InstantDummyCaster.castTarget(caster.getOwner(), ABILITY_ANTI_MAGIC, 1, Orders.antimagicshell, u)
+
+    EventListener.onCast(ABIL_CAST_STEEL) (unit caster) ->
+        InstantDummyCaster
+            .castTarget(caster.getOwner(), ABILITY_CURE_ALL, 1, Orders.autodispel, caster)

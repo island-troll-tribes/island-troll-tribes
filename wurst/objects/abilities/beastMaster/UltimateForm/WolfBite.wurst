@@ -1,0 +1,123 @@
+package WolfBite
+
+// Standard lib Imports:
+import ChannelAbilityPreset
+import ClosureEvents
+import Assets
+import TimerUtils
+import BuffObjEditing
+import UpgradeObjEditing
+
+// Local Imports:
+import LocalAssets
+import ToolTipsUtils
+import LocalObjectIDs
+
+let BUFF_ID = compiletime(BUFF_ID_GEN.next())
+let BUFF_ORIGINAL_ID = 'BNab' // Acid bomb
+
+let COOLDOWN = 60.
+let DURATION = 15.
+
+// Change this value if you to decrease/increase damage done, it's a bit messy down there
+let DAMAGE_FACTOR = 0.04
+let BLOOD_TRAIL_PERIOD = 2.4
+
+let TOOLTIP_NORM = "Wolf Bite"
+let TOOLTIP_EXTENDED = "" +
+    "Rendo uses the Wolf inner instinct to target a vital spot of the enemy and bite it off, " +
+    "causing it to bleed profusely. The more ground covered, the more damage taken. " +
+    "The target leaves traces of blood on the ground when moving." +
+    makeToolTipDuration(DURATION, COOLDOWN)
+
+
+@compiletime function createWolfBiteBuff()
+    new BuffDefinition(BUFF_ID, BUFF_ORIGINAL_ID)
+        ..setIcon(Icons.bTNRedDragonDevour)
+        ..setTooltipNormal(1, TOOLTIP_NORM)
+        ..setTooltipNormalExtended(1,
+            "This unit is bleeding¸ the faster it run¸ "+
+            "the more damage it takes; last {0} seconds"
+            .format(DURATION.toToolTipLightBlue())
+        )
+        ..setArtTarget(1, LocalAbilities.bloodDrop)
+
+@compiletime function createWolfBiteUpgrade()
+    new UpgradeDefinition(UPGD_RENDO_WOLF_BITE)
+        ..setName(1, "Devoured Wolf")
+        ..setLevels(1)
+        ..setIcon(1, Icons.bTNRedDragonDevour)
+        ..addEffectAbilityLevelBonus(0, 1, ABILITY_RENDO_WOLF_BITE.toRawCode())
+
+
+@compiletime function createWolfBite()
+    new AbilityDefinitionMindRot(ABILITY_RENDO_WOLF_BITE)
+        ..setName(TOOLTIP_NORM)
+        ..setIconNormal(Icons.bTNRedDragonDevour)
+        ..setHotkeyNormal("A")
+        ..setTooltipNormal(1, makeToolTipNorm("A", TOOLTIP_NORM))
+        ..setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        ..setCooldown(1, COOLDOWN)
+        ..setManaCost(1, 20)
+        ..setAnimationNames("attack")
+        ..setHeroAbility(false)
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.hero,
+            TargetsAllowed.enemies
+        ))
+        ..setManaDrainedperSecond(1, 0)
+        ..setBuffs(1, toRawCode(BUFF_ID))
+        ..setDurationHero(1, DURATION)
+        ..setDurationNormal(1, DURATION)
+        ..setArtTarget("")
+        ..setRequiredLevel(4)
+        ..setCastRange(1, 128)
+        ..setRequirements(UPGD_RENDO_WOLF_BITE.toRawCode())
+
+
+class WolfBite
+    use TimedLoop
+    vec2 pos
+    unit caster
+    unit target
+    real duration = DURATION
+    //Debug purpose
+    real damageCount
+
+    construct(unit caster, unit target)
+        this.pos = target.getPos()
+        this.caster = caster
+        this.target = target
+        this.damageCount = 0
+        startTimedLoop()
+
+    override function onTimedLoop()
+        let distanceCovered = pos.distanceTo(target.getPos())
+
+        // Check if target has moved
+        if distanceCovered > 0
+            // Set new pos value
+            pos = target.getPos()
+
+            // Not gonna lie, I've always been bad at math, I just tested some value until I was satisfied
+            UnitDamageTarget(caster, target, DAMAGE_FACTOR * distanceCovered, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
+            // Debug purpose
+            damageCount += DAMAGE_FACTOR * distanceCovered
+
+            // Sprout blood effect that leave a blood splat on the ground every
+            // The blood splat decay time is set in Splats/SplatData.slk file and decay over 120 seconds
+            if duration % BLOOD_TRAIL_PERIOD == BLOOD_TRAIL_PERIOD
+                flashEffect(Objects.orcSmallDeathExplode, pos)
+
+        duration -= ANIMATION_PERIOD
+        if duration <= 0 or not target.hasAbility(BUFF_ID)
+            stopTimedLoopAndDestroy()
+    ondestroy
+        // Debug
+        //print(damageCount)
+
+
+init
+    EventListener.onTargetCast(ABILITY_RENDO_WOLF_BITE) (unit caster, unit target) ->
+        new WolfBite(caster, target)
+        addEffect(Objects.orcSmallDeathExplode, target.getPos())

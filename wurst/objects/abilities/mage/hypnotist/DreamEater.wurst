@@ -50,15 +50,16 @@ class DreamEater extends ChannelAbilityPreset
 
 init
     EventListener.onTargetCast(ABILITY_DREAM_EATER) (unit caster, unit target) ->
-        if target.hasAbility(BUFF_ID)
-            flashEffect(Abilities.aIsoTarget, target, "overhead")
+        flashEffect(Abilities.aIsoTarget, target, "overhead")
 
-            // Deals pure damage
-            UnitDamageTarget(caster, target, DAMAGE, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
-            target.subMana(MANA_EATEN)
+        // Deals pure damage
+        UnitDamageTarget(caster, target, DAMAGE, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
+        target.subMana(MANA_EATEN)
 
-            caster.addHP(HP_RESTORED)
-            caster.addMana(MANA_RESTORED)
-        else
+        caster.addHP(HP_RESTORED)
+        caster.addMana(MANA_RESTORED)
+
+    EventListener.add(EVENT_PLAYER_UNIT_SPELL_CAST) ->
+        if GetSpellAbilityId() == ABILITY_DREAM_EATER and not GetSpellTargetUnit().hasAbility(BUFF_ID)
             GetSpellAbilityUnit().abortOrder()
             simError(GetTriggerPlayer(), "Target is not Hypnotized.")

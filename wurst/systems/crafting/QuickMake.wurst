@@ -10,15 +10,12 @@ import Lodash
 // Local imports:
 import ClosuresForItems
 import HashMap
-import LocalObjectIDs
 import Mixing
 import Tannering
 import Transmute
-import UnitExtensions
 
 public class QuickMake
     let itemLists = new OwnedLinkedList<LinkedList<int>>()
-    let specialHerb = new HashMap<int, int>
     real pickUpRange = 700
     int herbThreshold = 0
     int spellAbilityId = 0
@@ -38,10 +35,11 @@ public class QuickMake
         let items = new OwnedLinkedList<item>()
         let inventory = caster.getInventory()
 
-        specialHerb.put(ITEM_BLUE_HERB, 0)
-        specialHerb.put(ITEM_YELLOW_HERB, 0)
-        specialHerb.put(ITEM_PURPLE_HERB, 0)
-        specialHerb.put(ITEM_ORANGE_HERB, 0)
+        let specialHerb = new HashMap<int, int>()
+            ..put(ITEM_BLUE_HERB, 0)
+            ..put(ITEM_YELLOW_HERB, 0)
+            ..put(ITEM_PURPLE_HERB, 0)
+            ..put(ITEM_ORANGE_HERB, 0)
 
         if caster.isTroll()
             pickUpRange = 100
@@ -58,14 +56,14 @@ public class QuickMake
                 if specialHerb.has(found.getTypeId())
                     specialHerb.put(found.getTypeId(), specialHerb.get(found.getTypeId()) + 1)
 
-                //In order to avoid picking up the same special herb too much time
-                if specialHerb.get(found.getTypeId()) > herbThreshold
-                    found = null
+                    //In order to avoid picking up the same special herb too much time
+                    if specialHerb.get(found.getTypeId()) > herbThreshold
+                        found = null
 
-                //Special case for eob, once you get 2 spec, you don't want to be able to pick up 2 spec of another type
-                //Not pretty but couldn't figure out something else
-                if spellAbilityId == ABILITY_QM_ESSENCE_BEES and specialHerb.get(found.getTypeId()) == herbThreshold
-                    herbThreshold = 1
+                    //Special case for eob, once you get 2 spec, you don't want to be able to pick up 2 spec of another type
+                    //Not pretty but couldn't figure out something else
+                    if spellAbilityId == ABILITY_QM_ESSENCE_BEES and specialHerb.get(found.getTypeId()) == herbThreshold
+                        herbThreshold = 1
 
                 if found != null
                     items.add(found)

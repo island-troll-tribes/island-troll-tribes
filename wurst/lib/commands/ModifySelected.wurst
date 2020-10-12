@@ -9,17 +9,15 @@ import ClosureTimers
 import Toolkit
 
 init
-    // Set Health Point to argument (e.g -hp 100).
+    // Sets hit points per unit to a given amount.
     registerToolkitCommand("hp") (triggerPlayer, arguments) ->
         forUnitsSelected(triggerPlayer) (unit target) ->
-            let amount = arguments.get(1).toReal()
-            target.setHP(amount)
+            target.setHP(arguments.get(1).toReal())
 
-    // Set Mana Point to argument (e.g -mp 100).
+    // Sets mana points per unitto a given amount
     registerToolkitCommand("mp") (triggerPlayer, arguments) ->
         forUnitsSelected(triggerPlayer) (unit target) ->
-            let amount = arguments.get(1).toReal()
-            target.setMana(amount)
+            target.setMana(arguments.get(1).toReal())
 
     // Heals each unit fully.
     registerToolkitCommand("heal") (triggerPlayer, arguments) ->
@@ -67,11 +65,9 @@ init
         forUnitsSelected(triggerPlayer) (unit target) ->
             target.setInt(arguments.get(1).toInt())
 
-    // Reset cooldown and mana after casting.
+    // Removes cooldown for all abilities for the unit.
     registerToolkitCommand("nocd") (triggerPlayer, arguments) ->
         forUnitsSelected(triggerPlayer) (unit target) ->
             EventListener.add(EVENT_PLAYER_UNIT_SPELL_CAST) ->
                 nullTimer() ->
-                    target
-                        ..resetCooldown()
-                        ..setMana(target.getMaxMana())
+                    target.resetCooldown()

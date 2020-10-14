@@ -1,0 +1,328 @@
+package Blur
+
+// Standard-library imports:
+import Assets
+import BuffObjEditing
+import ClosureTimers
+import ClosureEvents
+import ClosureForGroups
+import ChannelAbilityPreset
+import GroupUtils
+import HashMap
+import HashSet
+import InstantDummyCaster
+import OnUnitEnterLeave
+import OrderIds
+
+// Third-party imports:
+import Lodash
+
+// Local imports:
+import LocalAssets
+import LocalObjectIDs
+import ToolTipsUtils
+
+let DAZZLE_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
+let DAZZLE_BUFF_ID    = compiletime(BUFF_ID_GEN.next())
+let BLUR_BUFF_ID = compiletime(BUFF_ID_GEN.next())
+
+let COOLDOWN = 40.
+let MANACOST = 30
+
+let CHANCE_TO_MISS = .3
+let DURATION = 11.
+let DURATION_DAZZLE = 3.
+let TOOLTIP_NORM = "Blur"
+let TOOLTIP_EXTENDED = "Makes the Escape Artist sprint as fast as he can, leaving blurs. If an enemy comes in contact "+
+                       "with blurs, its attack accuracy is temporarily decreased by {0}."
+                       .format(CHANCE_TO_MISS.toToolTipOrange())+makeToolTipDuration(DURATION, COOLDOWN)
+
+let EA_AFTER_IMAGE = compiletime(UNIT_ID_GEN.next())
+let AS_AFTER_IMAGE = compiletime(UNIT_ID_GEN.next())
+
+// The interval, in seconds, at which afterimages are created.
+let AFTERIMAGE_INTERVAL = 0.1
+
+// The maximum number of concurrent afterimages per casting.
+let AFTERIMAGE_COUNT = 10
+
+// The lifespan, in seconds, of each afterimage.
+let AFTERIMAGE_LIFESPAN = AFTERIMAGE_INTERVAL * AFTERIMAGE_COUNT
+
+// The total number of afterimages created per casting.
+let AFTERIMAGE_TOTAL = (DURATION / AFTERIMAGE_INTERVAL).toInt()
+
+// The total period, in seconds, during which there afterimages.
+let AFTERIMAGE_DURATION = AFTERIMAGE_TOTAL * AFTERIMAGE_INTERVAL + AFTERIMAGE_LIFESPAN
+
+// The interval, in seconds, at which the dazzle effect is inflicted.
+// This should be as short as performance allows.
+let DAZZLE_INTERVAL = ANIMATION_PERIOD
+
+// The total number of times the dazzle effect is inflicted per casting.
+let DAZZLE_COUNT = (AFTERIMAGE_DURATION / DAZZLE_INTERVAL).toInt()
+
+// The lifespan, in seconds, of the total state per casting.
+let STATE_DURATION = AFTERIMAGE_DURATION + DAZZLE_INTERVAL
+
+// The in-effect states per unit.
+let STATES = new HashMap<unit, HashSet<State>>()
+
+// AfterImage locust unit, for assassin and escape artist since they have different model
+class AfterImageUnit extends UnitDefinition
+    construct(int newUnitId, string model)
+        super(newUnitId, UnitIds.deer) // based off stag
+        this.setNormalAbilities(commaList(AbilityIds.locust)) // locust ability
+        this.setSelectionScale(1.60)
+        this.setShadowImageUnit("none")
+        this.setHasWaterShadow(false)
+        this.setMovementType(MovementType.None)
+        this.setHideMinimapDisplay(true)
+        this.setHitPointsMaximumBase(125)
+        this.setSightRadiusDay(0)
+        this.setSightRadiusNight(0)
+        this.setModelFile(model)
+        this.setScalingValue(0.95)
+        this.setName("Blur AfterImage")
+
+function createDazzleBuff()
+    new BuffDefinition(DAZZLE_BUFF_ID, BuffIds.thunderClap)
+        ..setIcon(Icons.bTNStarFall)
+        ..setTooltipNormal(1, "Dazzled")
+        ..setTooltipNormalExtended(1, "This unit has been dazzled. It has {0} chance to miss.".format(CHANCE_TO_MISS.toToolTipOrange()))
+
+function createBlurBuff()
+    new BuffDefinition(BLUR_BUFF_ID, BuffIds.speedBonus)
+        ..setIcon(Icons.bTNDarkTroll)
+        ..setTooltipNormal(1, TOOLTIP_NORM)
+        ..setTooltipNormalExtended(1, "This unit is running fast, decrease nearby enemy accuracy.")
+        ..setTargetAttachmentPoint0(1, "foot,left")
+        ..setTargetAttachmentPoint1(1, "foot,right")
+        ..setTargetAttachments(1, 2)
+        ..setArtTarget(1, Abilities.trollBeserkerTarget)
+
+class Dazzle extends AbilityDefinitionCurse
+    construct(int newAbilityId)
+        super(newAbilityId)
+        this.setDummyAbility()
+        this.setName("Dazzle")
+        this.setDurationHero(1, DURATION_DAZZLE)
+        this.setDurationNormal(1, DURATION_DAZZLE)
+        this.setBuffs(1, toRawCode(DAZZLE_BUFF_ID))
+        this.setChancetoMiss(1, CHANCE_TO_MISS)
+
+class Blur extends AbilityDefinitionItemSpeed
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setItemAbility(false)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setIconNormal(Icons.bTNBoots)
+        this.setIconResearch(Icons.bTNBoots)
+        this.setManaCost(1, MANACOST)
+        this.setCooldown(1, COOLDOWN)
+        this.setDurationHero(1, DURATION)
+        this.setDurationNormal(1, DURATION)
+        this.setBuffs(1, toRawCode(BLUR_BUFF_ID))
+        this.setMovementSpeedIncrease(1, 2.0)
+
+
+@compiletime function createBlur()
+    new Blur(ABILITY_BLUR, "W", new Pair(1, 0))
+    new Dazzle(DAZZLE_ABILITY_ID)
+    new AfterImageUnit(EA_AFTER_IMAGE, Units.darkTroll1)
+    new AfterImageUnit(AS_AFTER_IMAGE, Units.darkTrollTrapper1)
+    createDazzleBuff()
+    createBlurBuff()
+
+class State
+    // The group of in-effect afterimages for this casting.
+    private group afterimages
+
+    // The group of targets that dazzle was last inflicted upon.
+    private group lastTargets
+
+    // The type ID for the afterimage unit matching the caster.
+    private int afterimageType
+
+    // The unit responsible for the casting that this state tracks.
+    private unit caster
+
+    // The owner of the caster, stored separately in case deindexing occurs.
+    private player owner
+
+    // The callback responsible for creating afterimages, which can be cancelled.
+    private CallbackCounted callback
+
+    construct(unit caster)
+        // Decode the type of unit used for the afterimages.
+        afterimageType = EA_AFTER_IMAGE
+
+        // There are no afterimages to begin with.
+        afterimages = getGroup()
+
+        // There are no targets initially.
+        lastTargets = getGroup()
+
+        // Cache the caster for later use.
+        this.caster = caster
+
+        // Cache the owner.
+        owner = caster.getOwner()
+
+        // Create a set of states for the caster, as necessary.
+        if not STATES.has(caster)
+            STATES.put(caster, new HashSet<State>())
+
+        // Track this state globally.
+        STATES.get(caster).add(this)
+
+        // Delay the creation of the first afterimage.
+        callback = doPeriodicallyCounted(AFTERIMAGE_INTERVAL, AFTERIMAGE_TOTAL) cb ->
+            incrementAfterimageLoop()
+
+        // Inflict the dazzle effect periodically.
+        doPeriodicallyCounted(DAZZLE_INTERVAL, DAZZLE_COUNT) cb ->
+            incrementDazzleLoop()
+
+        // Destroy the state after its effects conclude.
+        doAfter(STATE_DURATION) ->
+            destroy this
+
+    ondestroy
+        // Release the groups.
+        afterimages.release()
+        lastTargets.release()
+
+        // Remove this from the global state.
+        if STATES.get(caster)..remove(this).size() == 0
+            // Remove the entry entirely if it is no longer in use.
+            destroy STATES.getAndRemove(caster)
+
+    // Cancels any on-going effects based directly on the caster.
+    static function cancel(unit caster)
+        // Exit if no work is required.
+        if not STATES.has(caster)
+            return
+
+        // Attempt to cancel afterimage creation.
+        for state in STATES.get(caster)
+            state.cancelAfterimageLoop()
+
+    // Advances the loop that creates afterimages.
+    function incrementAfterimageLoop()
+        // Halt the effect if the unit is no longer buffed.
+        if not caster.hasAbility(BLUR_BUFF_ID)
+            // TODO: This logic is not entirely sound. If a unit casts Blur, is
+            // purged, and then casts Blur immediately after, this check would
+            // not destroy the previous effect. Currently, this barely matters
+            // because the only result is additional afterimages, which will
+            // not significantly expand the area of effect. There is also no
+            // way to reset the cooldown for Blur, meaning it can't be cast
+            // while a prior Blur is in effect for the same unit. Nonetheless,
+            // this should be moved to a callback system for purging.
+            cancelAfterimageLoop()
+
+            // Exit with no further effect for this increment.
+            return
+
+        // Create new afterimage.
+        let afterimage = createUnit(
+            caster.getOwner(),
+            afterimageType,
+            caster.getPos3Real(),
+            caster.getFacingAngle()
+        )
+            ..setPathing(false)
+            ..setAnimation(8)
+
+        // Track the afterimage.
+        afterimages.addUnit(afterimage)
+
+        // Create a timer per afterimage to manage it.
+        doPeriodicallyCounted(AFTERIMAGE_INTERVAL, AFTERIMAGE_COUNT) cb ->
+            if cb.isLast()
+                // Remove the afterimage if it is at the end of its lifespan.
+                afterimage.remove()
+
+                // Cease tracking the afterimage.
+                afterimages.removeUnit(afterimage)
+            else
+                // Compute the remaining proportion of lifespan.
+                let proportion = (cb.getCount() - 1).toReal() / AFTERIMAGE_COUNT
+
+                // Compute the corresponding alpha.
+                let alpha = (proportion * 255).toInt()
+
+                // Decrease the alpha gradually, fading the afterimage.
+                afterimage.setVertexColor(
+                    // Keep the RGB values unadjusted.
+                    COLOR_WHITE.withoutAlpha().withAlpha(alpha)
+                )
+
+        // Null the reference prior to concluding this loop.
+        if callback.isLast()
+            callback = null
+
+    // Cancels the loop creating afterimages if it is still ongoing.
+    function cancelAfterimageLoop()
+        if callback != null
+            destroy callback
+
+    function incrementDazzleLoop()
+        // Track the next set of targets.
+        let nextTargets = getGroup()
+
+        // Compute those targets.
+        afterimages.forEachIn() afterimage ->
+            forUnitsInRange(afterimage.getPos(), 200) target ->
+                if isValidTarget(target)
+                    nextTargets.addUnit(target)
+
+        // Refresh the duration for any unit as it leaves the area of effect.
+        for target in lastTargets..removeGroup(nextTargets)
+            dazzle(target)
+
+        // Dazzle any targets that are not yet dazzled.
+        for target in nextTargets
+            if not target.hasAbility(DAZZLE_BUFF_ID)
+                dazzle(target)
+
+        // Destroy the outdated group.
+        lastTargets.release()
+
+        // Treat the current group as the last group for the next iteration.
+        lastTargets = nextTargets
+
+    function dazzle(unit target) returns bool
+        return InstantDummyCaster.castTarget(
+            owner,
+            DAZZLE_ABILITY_ID,
+            1,
+            Orders.curse,
+            target
+        )
+
+    function isValidTarget(unit target) returns bool
+        return (
+            // Ensure that the target is an enemy.
+                    target.getOwner().isEnemyOf(owner)
+            // Validate the type of the target.
+            and     target.isAlive()
+            and not target.isInvulnerable()
+            and not target.isType(UNIT_TYPE_FLYING)
+            and not target.isHidden()
+            and not target.isType(UNIT_TYPE_STRUCTURE)
+        )
+
+init
+    EventListener.onCast(ABILITY_BLUR) caster ->
+        // All work is managed by the state.
+        new State(caster)
+
+    onLeave() ->
+        State.cancel(getEnterLeaveUnit())

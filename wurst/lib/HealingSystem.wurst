@@ -1,6 +1,6 @@
 package HealingSystem
 
-import PlayerExtensions
+import TextTagUtils
 
 trigger eventTrigger = CreateTrigger()
 HealingInstance eventHealing = null
@@ -33,6 +33,7 @@ public class HealingInstance
     real amount
     real multiplier
     unit target
+    unit caster
 
     /** Creates a new HealingInstance, fires onUnitHealed events for it and applies the healing after possible event modifications */
     construct(unit target, real amount, HealingType healingType)
@@ -40,6 +41,15 @@ public class HealingInstance
         this.amount = amount
         this.multiplier = 1
         this.target = target
+        this.caster = target
+        execute()
+
+    construct(unit target, unit caster, real amount, HealingType healingType)
+        this.healingType = healingType
+        this.amount = amount
+        this.multiplier = 1
+        this.target = target
+        this.caster = caster
         execute()
 
     private function fireHealingEvent()
@@ -59,16 +69,7 @@ public class HealingInstance
         target.setHP(target.getHP() + modifiedHealAmount)
 
         // Create a text tag to visualize the effect.
-        if localPlayer.canSee(target)
-            CreateTextTag()
-                ..setText("+" + modifiedHealAmount.floor().toString(), 10)
-                ..setPos(target.getPos3Zero())
-                ..setColor(colorA(31, 191, 0, 255))
-                ..setVelocity(0., 0.04)
-                ..setVisibility(true)
-                ..setFadepoint(2.0)
-                ..setLifespan(5.0)
-                ..setPermanent(false)
+        createTeamFadingTextTag(target, "+" + modifiedHealAmount.floor().toString(), color(31, 191, 0))
 
         // Destroy upon completion.
         destroy this
@@ -93,5 +94,11 @@ public class HealingInstance
         this.multiplier = max(0, this.multiplier*factor)
         return this.multiplier
 
+    function getAmount() returns real
+        return this.amount
+
     function getTarget() returns unit
         return this.target
+
+    function getCaster() returns unit
+        return this.caster

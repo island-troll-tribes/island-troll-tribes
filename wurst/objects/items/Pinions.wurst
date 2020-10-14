@@ -1,0 +1,105 @@
+package Pinions
+
+import LocalObjectIDs
+import AbilityObjEditing
+import BuffObjEditing
+import Assets
+import ObjectIdGenerator
+import ObjectIds
+
+let BUFF_ID_PHOENIX_FIRE = compiletime(BUFF_ID_GEN.next())
+let BUFF_ID_IMMOLATION   = compiletime(BUFF_ID_GEN.next())
+let BUFF_ID_HP_DEGEN     = compiletime(BUFF_ID_GEN.next())
+let BUFF_ID_MP_DEGEN     = compiletime(BUFF_ID_GEN.next())
+
+
+@compiletime function createPinionBuffs()
+    new BuffDefinition(BUFF_ID_PHOENIX_FIRE, 'Bpxf')
+        ..setIconNormal(1, Icons.bTNIncinerate)
+        ..setTooltipNormal("Quackin` Flames!")
+        ..setTooltipNormalExtended("This unit is being attacked by fleas!")
+        ..setArtTarget(1, Abilities.fireBallMissile)
+
+    new BuffDefinition(BUFF_ID_IMMOLATION, 'BEim')
+        ..setName("Pinion of Fire")
+        ..setArtSpecial(1, Abilities.immolationRedDamage)
+        ..setArtTarget(1, Abilities.breathOfFireDamage)
+        ..setTargetAttachmentPoint0("chest")
+
+    new BuffDefinition(BUFF_ID_HP_DEGEN, 'BHab') // brillance aura Buff
+        ..setIconNormal(1, Icons.bTNImmolationOff)
+        ..setTooltipNormal("Skin Decay")
+        ..setTooltipNormalExtended("A powerful artifact nearby is causing this unit to rot.")
+        ..setArtTarget(1, Abilities.orbCorruption)
+        ..setTargetAttachmentPoint0("chest")
+        ..setTargetAttachments(1)
+
+    new BuffDefinition(BUFF_ID_MP_DEGEN, 'BHab') // brillance aura Buff
+        ..setIconNormal(1, Icons.bTNOrbOfCorruption)
+        ..setTooltipNormal("Disc0-Duck Mana Degen")
+        ..setTooltipNormalExtended("This unit is under the effects of Disc0-Duck Mana Degen")
+        ..setName("Disc0-Duck Mana Degen")
+        ..setArtTarget(1, "")
+        ..setTargetAttachmentPoint0("")
+
+@compiletime function createPinionAbilities()
+    new AbilityDefinitionPhoenixFire(ABILITY_EXTREME_HEAT)
+        ..setAreaofEffect(1, 500.0)
+        ..setBuffs(1, BUFF_ID_PHOENIX_FIRE.toRawCode())
+        ..setCooldown(1, 1.5)
+        ..setDamagePerSecond(1, 4.0)
+        ..setDurationNormal(1, 1.0)
+        ..setDurationHero(1, 1.0)
+        ..setMissileSpeed(800)
+        ..setName("Disco's PF")
+        ..setTooltipNormal(1, "Disc0-Duck's Extreme Heat")
+        ..setTooltipNormalExtended(1, "Throws Fire at nearby enemies")
+
+    new AbilityDefinitionPermanentImmolation(ABILITY_DD_IMMOLATION)
+        ..setAreaofEffect(1, 400.0)
+        ..setBuffs(1, BUFF_ID_IMMOLATION.toRawCode())
+        ..setDamageperInterval(1, 9.0)
+        ..setEditorSuffix("Pinion of Fire")
+        ..setItemAbility(false)
+        ..setName("Perm Immolation")
+
+    new AbilityDefinitionMoveSpeedBonus(ABILITY_DD_MOVE_SPEED)
+        ..setMovementSpeedBonus(1, 999)
+        ..setName("FirePinion Movespeed")
+
+    // Doesn't seems like a very entertaining ability
+    new AbilityDefinitionUnholyAuracreep(ABILITY_PAIN_AURA)
+        ..setAreaofEffect(1, 5000.0)
+        ..setBuffs(1, BUFF_ID_HP_DEGEN.toRawCode())
+        ..setMovementSpeedIncrease(1, 0.0)
+        ..setLifeRegenerationIncrease(1, -1.0)
+        ..setItemAbility(true)
+        ..setName("Disc0-Ducks Pain Aura")
+        ..setArtTarget(Abilities.vampiricAura)
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.enemies,
+            TargetsAllowed.ground,
+            TargetsAllowed.hero,
+            TargetsAllowed.invulnerable,
+            TargetsAllowed.vulnerable
+            )
+        )
+
+    new AbilityDefinitionArchMageBrillianceAura(ABILITY_DD_DEPRESS_AURA)
+        ..setAreaofEffect(1, 5000.0)
+        ..setBuffs(1, BUFF_ID_MP_DEGEN.toRawCode())
+        ..setManaRegenerationIncrease(1, -1.5)
+        ..setItemAbility(true)
+        ..setName("Disc0-Ducks degen Aura (Neutral Hostile)")
+        ..setArtTarget("")
+        ..setTargetAttachmentPoint("")
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.enemies,
+            TargetsAllowed.ground,
+            TargetsAllowed.hero,
+            TargetsAllowed.invulnerable,
+            TargetsAllowed.vulnerable
+            )
+        )

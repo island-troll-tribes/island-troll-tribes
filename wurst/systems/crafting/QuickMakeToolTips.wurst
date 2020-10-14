@@ -1,14 +1,27 @@
 package QuickMakeToolTips
 
 // Local imports:
-import ColorUtils
-import BattleArmor
 import BootsDefinition
 import CloaksDefinition
+import CoatDefinition
+import ColorUtils
+import GlovesDefinition
+import ScrollsDefinition
 import ShieldsDefinition
 import StringExtensions
 import ToolTipsUtils
-import ScrollsDefinition
+
+// TODO: Remove these once tooltips can be automatically generated.
+import AcidBomb
+import AnabolicPotion
+import DiseasePotion
+import DrunkPotion
+import HealingPotion
+import NetherPotion
+import TwinIslandPotion
+import AntiMagicPotion
+import BeeHives
+
 
 // Herbs
 let SPECIAL_HERB       = "Special Herb".color(SPECIAL_COLOR)
@@ -50,6 +63,9 @@ let BASICCOAT          = "Any Basic Coat".color(COLOR_PEANUT)
 let BASICBOOTS         = "Any Basic Boots".color(COLOR_PEANUT)
 let NETS               = "Nets".color(COLOR_LIGHT_BLUE)
 
+// Artifact Materials
+let HYDRA_SCALE = "Hydra Scale".color(ARTIFACT_COLOR)
+
 public let QM_TOOLIP        = "This Quick Make ability will find the nearest material and craft the said item, "+
                               "material have to be either on the ground or inside the building inventory. "+
                               "For more information about items, type " + "-recipes".color(GOLD_COLOR) + ", all the items are listed there."
@@ -63,7 +79,7 @@ public let MIX_TOOLTIP       = "Mix those Herb together to get "
 public let TRANSMUTE_TOOLTIP = "Put those materials in the correct order to get "
 
 public let TRANSMUTE_CRAFT_BUILDING_TOOLTIP = "Pick up the following materials in the correct order or click on this once they're in your inventory to get "
-public let TANNERY_PLACEHOLDER_STAT_TOOLTIP = "1 Strenght give +8 health point, 1 Intelligence give +8 Mana"
+public let TANNERY_PLACEHOLDER_STAT_TOOLTIP = "1 Strength give +8 health point, 1 Intelligence give +8 Mana"
 public let TANNERY_PLACEHOLDER_HIDE_USAGE_TOOLTIP = "It doesn't matter which hide you use to make superior gear, a battle armor made from an elk skin coat will give "+
                                                     "as much stat as a battle armor made from a jungle bear skin coat, wolf & bear hide sell for good money"
 
@@ -80,40 +96,37 @@ public let BUILDING_CRAFT_TOOLTIP         = "Look here to construct buildings, t
 
 // Mixing Pot
 
-public let HEALING_POTION_RECIPE          = "a Healing Potion, restore 65 hp to the target unit :\n\n1x " +ATHELAS_SEED+ " + 1x " +RIVER_ROOT
+public let HEALING_POTION_RECIPE          = "a " + "Healing Potion.".color(COLOR_GREEN) + TT_HEALING_POTION + "\n\n1x " +ATHELAS_SEED+ " + 1x " +RIVER_ROOT
 public let MANA_POTION_RECIPE             = "a Mana Potion, restore 65 mana to the consumer :\n\n1x " +ATHELAS_SEED+ " + 1x " +RIVER_STEM
 public let CURE_ALL_RECIPE                = "a Cure All, remove positive/negative buff & effect on the target ally :\n\n3x "+ATHELAS_SEED
-public let ESSENCE_BEES_RECIPE            = "an Essence of Bees, spawn multiple Bee Hive who attack your enemies :\n\n"+
+public let ESSENCE_BEES_RECIPE            = "an " + "Essence of Bees. ".color(COLOR_ORANGE) + TT_ESSENCE_BEES + "\n\n"+
                                             "2x "+SPECIAL_HERB+" 1 + 1x "+SPECIAL_HERB+ " 2 + 1x "+SPECIAL_HERB+" 3\nOr\n1x "+SPECIAL_HERB+" 1/2/3/4"+SPECIAL_MIX_WARNING
-public let TWIN_ISLANDS_POTION_RECIPE     = "a Twin Islands Potion, reveals the enemies Troll for 30 seconds " + "(Current Quick Make doesn't work with Blue/Yellow Herb)".color(COLOR_RED) +
-                                            " :\n\n3x "+ YELLOW_HERB + " + 3x " + BLUE_HERB + "\n"+
+public let TWIN_ISLANDS_POTION_RECIPE     = "a " + "Twin Islands Potion. ".color(COLOR_TURQUOISE) + TT_TWIN_ISLAND_POTION
+                                            + "(Current Quick Make doesn't work with Blue/Yellow Herb, you have to use Mix Herb ability).".color(COLOR_RED) +
+                                            "\n\n3x "+ YELLOW_HERB + " + 3x " + BLUE_HERB + "\n"+
                                             "Or\n3x " + PURPLE_HERB + " + 3x " + ORANGE_HERB + SPECIAL_MIX_WARNING
 
-public let NETHER_POTION_RECIPE           = "a Nether Potion, cause the target to become immune to physical damage but amplify magic damage done to it."+ makeToolTipDuration(15, 40, 20) + "\n\n1x "+SPECIAL_HERB+" + 2x "+RIVER_STEM+" + 2x "+ATHELAS_SEED
+public let NETHER_POTION_RECIPE           = "a " + "Nether Potion. ".color(COLOR_VIOLET) + TT_NETHER_POTION + "\n\n1x "+SPECIAL_HERB+" + 2x "+RIVER_STEM+" + 2x "+ATHELAS_SEED
 
-public let DRUNKS_POTION_RECIPE           = "a Drunk Potion, cause the target to become drunk, silencing it, giving it 50% chance to miss, reduce attack speed by 10% and "+
-                                            "movement speed by 25%. " + makeToolTipDuration(7, 13, 25) + "\n\n1x "+SPECIAL_HERB+" 1 + 2x "+ATHELAS_SEED+" + 2x "+RIVER_ROOT+SPECIAL_MIX_WARNING
+public let DRUNKS_POTION_RECIPE           = "a " + "Drunk Potion. ".color(COLOR_ORANGE) + TT_DRUNK_POTION + "\n\n1x "+SPECIAL_HERB+" 1 + 2x "+ATHELAS_SEED+" + 2x "+RIVER_ROOT+SPECIAL_MIX_WARNING
 
 public let FERVER_POTION_RECIPE           = "Increase the consumer attack speed by {0}, damage by {1} and armor by {2}. This potion put alot of stress on the consumer body, who takes {3} damage per seconds."
                                             .format(0.20.toToolTipOrange(), 8..toToolTipRed(), 6..toToolTipGreen(), 9..toToolTipRed()) + makeToolTipDuration(20, 5)+
                                             "\n\n2x "+SPECIAL_HERB+" 1 + 1x "+SPECIAL_HERB+" 2 + 1x "+ATHELAS_SEED+SPECIAL_MIX_WARNING
 
-public let DISEASE_POTION_RECIPE          = "a Disease Potion, Biological warfare! Throw at an enemy to give him and all units in a 200 radius of them a disease."+
-                                            "Last 25 seconds dealing 3 damage per second. Reduces healing received from items and potions by 30%:\n\n"+
+public let DISEASE_POTION_RECIPE          = "a " + "Disease Potion. " + TT_DISEASE_POTION + "\n\n"+
                                             "2x "+SPECIAL_HERB+" 1 + 2x "+SPECIAL_HERB+" 2 + 1x "+RIVER_ROOT+"\nOr\n3 "+SPECIAL_HERB+" 1 + 1x "+SPECIAL_HERB+" 2 + 1x "+RIVER_ROOT+SPECIAL_MIX_WARNING
 
-public let ANTI_MAGIC_POTION_RECIPE       = "an Anti-Magic Potion, cast anti-magic shield on target, blocking some spell cast & 100 magic damage."+
-                                            makeToolTipDuration(25, 25, 1) + "\n\n1x "+SPECIAL_HERB+" + 1x "+ATHELAS_SEED
+public let ANTI_MAGIC_POTION_RECIPE       = "an " + "Anti-Magic Potion. ".color(COLOR_GREEN) + TT_ANTI_MAGIC_POTION + "\n\n1x "+SPECIAL_HERB+" + 1x "+ATHELAS_SEED
 
-public let ANABOLIC_POTION_RECIPE         = "an Anabolic Potion, increase consumer movement speed."+makeToolTipDuration(10, 10, 60)+"\n\n4x "+RIVER_STEM
+public let ANABOLIC_POTION_RECIPE         = "an " + "Anabolic Potion. ".color(COLOR_ORANGE) + TT_ANABOLIC_POTION + "\n\n4x "+RIVER_STEM
 public let ORACLE_POTION_RECIPE           = "a Oracle Potion, grant true sight to the consumer."+makeToolTipDuration(20, 20, 20)+"\n\n1x "+SPECIAL_HERB+" + 2x "+ATHELAS_SEED
 public let ELEMENTAL_SHIELD_POTION_RECIPE = "an Elemental Shield Potion, grant lighting shield to the consumer, dealing 4 damage per second."+
                                             makeToolTipDuration(10, 10, 30)+ "\n\n1x "+SPECIAL_HERB+" + 1x "+ATHELAS_SEED+" + 1x "+RIVER_STEM
 
-public let ACID_BOMB_RECIPE               = "an Acid Bomb, reduce 8 armor in a 200 radius area on target"+
-                                            makeToolTipDuration(50, 50, 10)+ "\n\n2x "+SPECIAL_HERB+" 1 + 2x "+SPECIAL_HERB+" 2 + 2x "+RIVER_STEM+"\nOr\n"+
+public let ACID_BOMB_RECIPE               = "an " + "Acid Bomb. ".color(COLOR_VIOLET) + TT_ACID_BOMB + "\n\n2x "+SPECIAL_HERB+" 1 + 2x "+SPECIAL_HERB+" 2 + 2x "+RIVER_STEM+"\nOr\n"+
                                             "3x "+SPECIAL_HERB+" 1 + 1x "+SPECIAL_HERB+" 2 + 2x "+RIVER_STEM+SPECIAL_MIX_WARNING
-public let BEE_HIVE_RECIPE                = "a Bee Hive, spawn a Bee Hive who attack your enemies :\n\n1x "+SPECIAL_HERB+" + 2x "+RIVER_STEM
+public let BEE_HIVE_RECIPE                = "a " + "Bee Hive. ".color(COLOR_ORANGE) + TT_BEE_HIVE + "\n\n1x "+SPECIAL_HERB+" + 2x "+RIVER_STEM
 public let SPIRIT_DARKNESS_RECIPE         = "a Spirit Of Darkness, dark essence used to create ominous artefact :\n\n1x "+RIVER_ROOT+" + 1x "+RIVER_STEM+" + 2x "+ATHELAS_SEED
 public let OMNICURE_RECIPE                = "an Omicure, remove positive/negative buff & effect on all allied Trolls :\n\n2x "+ATHELAS_SEED+" + 1x "+SPECIAL_HERB+" 1 + 1x "+SPECIAL_HERB+" 2"
 public let GEM_OF_KNOWLEDGE_RECIPE        = "a Gem Of Knowledge, magical artifact increasing experience gained by 50%, doesn't work on hunter & beast master classes"+
@@ -138,13 +151,13 @@ public let BONE_SHIELD_RECIPE  = BONE_SHIELD_TOOLTIP  +"\n\n1x " +SHIELD   +" + 
 public let IRON_SHIELD_RECIPE  = IRON_SHIELD_TOOLTIP  +"\n\n1x " +SHIELD   +"+ 2x "  +IRON
 public let STEEL_SHIELD_RECIPE = STEEL_SHIELD_TOOLTIP +"\n\n1x " +SHIELD   +"+ 2x "  +STEEL
 
-public let BONE_GLOVES_RECIPE  = "a Bone Gloves. Gives +2 Armor, +1 Damage and + 20% Attack Speed :\n\n1x "                                         +BASICGLOVES+" + 5x "+BONE
-public let IRON_GLOVES_RECIPE  = "an Iron Gloves. Gives +3 Armor, +2 Damage and + 25% Attack Speed :\n\n1x "                                        +BASICGLOVES+" + 2x "+IRON
-public let STEEL_GLOVES_RECIPE = "a Steel Gloves. Gives +5 Armor, +4 Damage and + 35% Attack Speed :\n\n1x "                                        +BASICGLOVES+" + 2x "+STEEL
+public let BONE_GLOVES_RECIPE  = "a "  + "Bone Gloves. " .color(COLOR_ORANGE    ) + TT_BONE_GLOVES  +"\n\n1x " +BASICGLOVES+" + 5x "+BONE
+public let IRON_GLOVES_RECIPE  = "an " + "Iron Gloves. " .color(COLOR_GRAY      ) + TT_IRON_GLOVES  +"\n\n1x " +BASICGLOVES+" + 2x "+IRON
+public let STEEL_GLOVES_RECIPE = "a "  + "Steel Gloves. ".color(COLOR_TURQUOISE ) + TT_STEEL_GLOVES +"\n\n1x " +BASICGLOVES+" + 2x "+STEEL
 
-public let BONE_COAT_RECIPE    = "a Bone Coat. Gives +3 Armor, +2 Intelligence and + 3 Strenght :\n\n1x "                                           +BASICCOAT  +" + 5x "+BONE
-public let IRON_COAT_RECIPE    = "an Iron Coat. Gives +4 Armor, +3 Intelligence and + 4 Strenght :\n\n1x "                                          +BASICCOAT  +" + 2x "+IRON
-public let STEEL_COAT_RECIPE   = "a Steel Coat. Gives +8 Armor, +6 Intelligence and + 8 Strenght, can cast cure all :\n\n1x "                       +BASICCOAT  +" + 2x "+STEEL
+public let BONE_COAT_RECIPE  = "a "  + "Bone Coat. " .color(COLOR_ORANGE   ) + TT_BONE_COAT  + "\n\n1x " +BASICCOAT +" + 5x "+BONE
+public let IRON_COAT_RECIPE  = "an " + "Iron Coat. " .color(COLOR_GRAY     ) + TT_IRON_COAT  + "\n\n1x " +BASICCOAT +" + 2x "+IRON
+public let STEEL_COAT_RECIPE = "a "  + "Steel Coat. ".color(COLOR_TURQUOISE) + TT_STEEL_COAT + "\n\n1x " +BASICCOAT +" + 2x "+STEEL
 
 public let BONE_BOOTS_RECIPE  = "a pair of " + "Bone Boots. "  .color(COLOR_ORANGE   ) + TT_BONE_BOOTS  + " \n\n1x " + BASICBOOTS + " + 5x " + BONE
 public let IRON_BOOTS_RECIPE  = "a pair of " + "Iron Boots. "  .color(COLOR_GRAY     ) + TT_IRON_BOOTS  + " \n\n1x " + BASICBOOTS + " + 2x " + IRON
@@ -157,13 +170,11 @@ public let DARK_SPEAR_RECIPE  = "a Dark Spear. Deals 40 damage and will zap 30% 
 
 
 // Armory
-public let BATTLE_GLOVES_RECIPE         = "a Battle Gloves. Provides warmth, +5 armor, increase all stats by 4, grants 30% attack speed and a critical strike for 1.6x damage"+
-                                          " on a 6 second cooldown. Attacking enemies reduces the cooldown of the critical strike by 1 second :\n\n"
-                                          +"1x " + "Bone Gloves".color(COLOR_ORANGE) + " + 2x "+STEEL+" + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC
+public let BATTLE_GLOVES_RECIPE         = "a pair of " + "Battle Gloves. ".color(COLOR_VIOLET) + TT_BATTLE_GLOVES
+                                          +"\n\n1x " + "Bone Gloves".color(COLOR_ORANGE) + " + 2x "+STEEL+" + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC
 public let BATTLE_AXE_RECIPE            = "a Battle Axe. A two handed axe, increase damage by 14, can cast purge, removing all buffs from a target unit and slowing it."+makeToolTipDuration(5, 15, 60)+
                                           "\n\n1x "+STICK+" + 2x "+STEEL+" + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC
-public let BATTLE_ARMOR_RECIPE          = BATTLE_ARMOR_TOOLTIP_EXTENDED+makeToolTipDuration(10, 10, 75)+
-                                          "\n\n"+"1x " + "Bone Coat".color(COLOR_ORANGE) + " + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC
+public let BATTLE_ARMOR_RECIPE          = TT_BATTLE_ARMOR+"\n\n"+"1x " + "Bone Coat".color(COLOR_ORANGE) + " + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC
 public let BATTLE_SHIELD_RECIPE         = BATTLE_SHIELD_TOOLTIP+
                                            "\n\n"+"1x " + "Bone Shield".color(COLOR_ORANGE) + " + 1x " +ELK_HIDE+" + 1x "+STEEL+" + 1x "+WIND+" + 1x "+WATER+" + 1x "+MC
 public let ANABOLIC_BOOTS_RECIPE        = "a pair of " + "Anabolic Boots. ".color(COLOR_VIOLET) + TT_ANA_BOOTS + "\n\n1x " + "Bone Boots".color(COLOR_ORANGE) +
@@ -220,8 +231,8 @@ public let BLOW_GUN_RECIPE               = "a BlowGun. Used for shooting small t
 public let DARK_THISTLES_RECIPE         = "a Dark thistles. Creates a special type of blowgun ammo. Instead of poisoning, dark thistles depress enemies and zap mana from them over time :"+
                                           "\n\n1x "+"Thistles".color(COLOR_GREEN) + " 1x "+DARKNESS
 
-public let SMOKE_BOMB_RECIPE            = "a Smoke Bomb. The Shell of an acorn containing the spirit of wind. When activated, Acorn releases the wind creating a smoke screen, has 3 charges :"+
-                                          "\n\n1x "+"Acorn".color(GOLD_COLOR) + " 1x "+WIND
+public let SMOKE_BOMB_RECIPE            = "a Smoke Bomb. The skin of a banana containing the spirit of wind. When activated, the banana releases the wind and creates a smokescreen. Has 3 charges :"+
+                                          "\n\n1x "+"Banana".color(GOLD_COLOR) + " 1x "+WIND
 
 public let FIRE_BOMB_RECIPE             = "a Fire Bomb. A shell of destructible material that is highly flammable when thrown, deals 67 damage. Only damage ally/enemy buildings and trees, has 2 charges :"+
                                           "\n\n1x " + "Smoke Bomb".color(COLOR_PURPLE) +  " 1x "+FLINT+" + 1x "+MC
@@ -237,27 +248,20 @@ public let ELK_SKIN_BOOTS_RECIPE         = "a pair of" + " Elk Skin Boots. "    
 public let JUNGLE_WOLF_SKIN_BOOTS_RECIPE = "a pair of" + " Jungle Wolf Skin Boots. " .color(COLOR_ORANGE) + TT_WOLF_SKIN_BOOTS + " \n\n2x " + JUNGLE_WOLF_HIDE
 public let JUNGLE_BEAR_SKIN_BOOTS_RECIPE = "a pair of" + " Jungle Bear Skin Boots. " .color(COLOR_ORANGE) + TT_BEAR_SKIN_BOOTS + " \n\n2x " + JUNGLE_BEAR_HIDE
 
-public let ELK_SKIN_GLOVES_RECIPE           = "an Elk Skin Gloves. A pair of gloves which increases your attack speed by 10% :"+
-                                              "\n\n2x "+ELK_HIDE
-public let JUNGLE_WOLF_SKIN_GLOVES_RECIPE   = "a Jungle Wolf Skin Gloves. A pair of gloves which increases your attack speed by 15%, armor and damage by 2 :"+
-                                              "\n\n2x "+JUNGLE_WOLF_HIDE
-public let JUNGLE_BEAR_SKIN_GLOVES_RECIPE   = "a Jungle Bear Skin Gloves. A pair of gloves which increases your attack speed by 20%, armor and damage by 3 :"+
-                                              "\n\n2x "+JUNGLE_BEAR_HIDE
+public let ELK_SKIN_GLOVES_RECIPE         = "a pair of" + "  Elk Skin Gloves. "        .color(COLOR_ORANGE) + TT_ELK_SKIN_GLOVES  +"\n\n2x "+ELK_HIDE
+public let JUNGLE_WOLF_SKIN_GLOVES_RECIPE = "a pair of" + " Jungle Wolf Skin Gloves. " .color(COLOR_ORANGE) + TT_WOLF_SKIN_GLOVES +"\n\n2x "+JUNGLE_WOLF_HIDE
+public let JUNGLE_BEAR_SKIN_GLOVES_RECIPE = "a pair of" + " Jungle Bear Skin Gloves. " .color(COLOR_ORANGE) + TT_BEAR_SKIN_GLOVES +"\n\n2x "+JUNGLE_BEAR_HIDE
 
-public let ELK_SKIN_COAT_RECIPE         = "an Elk Skin Coat. A coat which increases your armor by 1, also give +2 strenght :"+
-                                          "\n\n3x "+ELK_HIDE
-public let JUNGLE_WOLF_SKIN_COAT_RECIPE = "a Jungle Wolf Skin Coat. A coat which increases your armor by 3, also give +3 strenght and +2 intelligence :"+
-                                          "\n\n3x "+JUNGLE_WOLF_HIDE
-public let JUNGLE_BEAR_SKIN_COAT_RECIPE = "a Jungle Bear Skin Coat. A coat which increases your armor by 4, also give +4 strenght and +3 intelligence :"+
-                                          "\n\n3x "+JUNGLE_BEAR_HIDE
-// Hydra
+public let ELK_SKIN_COAT_RECIPE         = "an " + "Elk Skin Coat. "         .color(COLOR_ORANGE) + TT_ELK_SKIN_COAT  + "\n\n3x "+ELK_HIDE
+public let JUNGLE_WOLF_SKIN_COAT_RECIPE = "a "  + "Jungle Wolf Skin Coat. " .color(COLOR_ORANGE) + TT_WOLF_SKIN_COAT + "\n\n3x "+JUNGLE_WOLF_HIDE
+public let JUNGLE_BEAR_SKIN_COAT_RECIPE = "a "  + "Jungle Bear Skin Coat. " .color(COLOR_ORANGE) + TT_BEAR_SKIN_COAT + "\n\n3x "+JUNGLE_BEAR_HIDE
 
-public let HYDRA_SCALE_BOOTS_RECIPE            = "Hydra Scale Boots:"+
-                                              "\n\n2x Hydra Scale"
-public let HYDRA_SCALE_GLOVES_RECIPE           = "Hydra Scale Gloves:"+
-                                              "\n\n2x Hydra Scale"
-public let HYDRA_SCALE_COAT_RECIPE         = "Hydra Scale Coat:"+
-                                          "\n\n3x Hydra Scale"
+
+// Hydra Altar
+
+public let HYDRA_SCALE_BOOTS_RECIPE  = "a pair of " + "Hydra Scale Boots. "  .color(ARTIFACT_COLOR) + TT_HYDRA_FINS  + "\n\n2x "+HYDRA_SCALE
+public let HYDRA_SCALE_GLOVES_RECIPE = "a pair of " + "Hydra Scale Gloves. " .color(ARTIFACT_COLOR) + TT_HYDRA_CLAWS + "\n\n2x "+HYDRA_SCALE
+public let HYDRA_SCALE_COAT_RECIPE   = "a "         + "Hydra Scale Coat. "   .color(ARTIFACT_COLOR) + TT_SCALE_COAT  + "\n\n3x "+HYDRA_SCALE
 
 // Buildings
 

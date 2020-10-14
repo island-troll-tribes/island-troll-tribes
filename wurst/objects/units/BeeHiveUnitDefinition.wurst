@@ -1,0 +1,64 @@
+package BeeHiveUnitDefinition
+
+// Standard lib Imports:
+import Assets
+import UnitObjEditing
+import ObjectIds
+
+// Local Imports:
+import LocalAssets
+import LocalObjectIDs
+
+
+function createBasicBeeHiveDefinition(int unitId) returns BuildingDefinition
+    return new BuildingDefinition(unitId, UnitIds.tent2)
+        ..setIconGameInterface(LocalIcons.bTNBeeHive)
+        ..setDescription("A bee hive seeping with honey")
+        ..setNameEditorSuffix("(Wurst)")
+        ..setModelFile(Doodads.crates0)
+        ..setHitPointsMaximumBase(50)
+        ..setTintingColorBlue(0)
+        ..setTintingColorGreen(200)
+        ..setName("Bee Hive")
+        ..setPathingMap(PathingTextures.simpleSolid4x4)
+        ..setSelectionScale(1.5)
+        ..setTooltipBasic("Cultivate Bee hive")
+        ..setGroundTexture("")
+        ..setOccluderHeight(0)
+
+@compiletime function createBeeHiveDefinition() returns BuildingDefinition
+    return createBasicBeeHiveDefinition(UNIT_BEE_HIVE)
+
+@compiletime function createUberBeeHiveDefinition() returns BuildingDefinition
+    return createBasicBeeHiveDefinition(UNIT_UBER_HIVE)
+        ..setScalingValue(1.25)
+        ..setName("Uber Hive")
+        ..setSelectionScale(1.5)
+
+@compiletime function createBeeDefinition() returns UnitDefinition
+    return new UnitDefinition(UNIT_BEE, UnitIds.wareagle1)
+        ..setNormalAbilities("Aloc")
+        ..setAcquisitionRange(1500.0)
+        ..setIconGameInterface(Icons.bTNLocustSwarm)
+        ..setAttack1AttackType(AttackType.Magic)
+        ..setAttack1CooldownTime(1.0)
+        ..setAttack1DamageNumberofDice(1)
+        ..setAttack1DamageBase(1)
+        ..setModelFile(Abilities.sorceressMissile)
+        ..setAttack1ProjectileArt(Abilities.sorceressMissile)
+        ..setName("Bee")
+        ..setSightRadiusNight(0)
+        ..setAttack1Range(150)
+        ..setAttack1DamageSidesperDie(2)
+        ..setSightRadiusDay(0)
+        ..setAttack1TargetsAllowed(commaList(
+            TargetsAllowed.debris,
+            TargetsAllowed.ground,
+            TargetsAllowed.item_t,
+            TargetsAllowed.structure,
+            TargetsAllowed.ward
+            )
+        )
+        ..setAttacksEnabled(1)
+        ..setAttack1WeaponType(WeaponType.Instant)
+        ..setAttack1WeaponSound(WeaponSound.AxeMediumChop)

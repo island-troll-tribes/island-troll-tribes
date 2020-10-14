@@ -1,0 +1,59 @@
+package AnabolicPotion
+
+// Standard lib Imports:
+import Assets
+import AbilityObjEditing
+import BuffObjEditing
+import ObjectIds
+import ObjectIdGenerator
+
+// Local lib Imports:
+import Items
+import LocalAssets
+import LocalItemObjEditing
+import LocalObjectIDs
+import ToolTipsUtils
+
+constant ABIL  = compiletime(ABIL_ID_GEN.next())
+public constant BUFF_SPEED  = compiletime(BUFF_ID_GEN.next())
+
+constant DURATION = 10.
+constant COOLDOWN = 35.
+public constant TT_ANABOLIC_POTION = "Boost the consumer movement speed to the max." + makeToolTipDuration(DURATION, COOLDOWN)
+
+@compiletime function createAbil()
+    new AbilityDefinitionItemSpeed(ABIL)
+    ..setName("Max Speed")
+    ..setMovementSpeedIncrease(1, 5)
+    ..setMissileSpeed(900)
+    ..setHeroAbility(false)
+    ..setItemAbility(true)
+    ..setDurationHero(1, DURATION)
+    ..setDurationNormal(1, DURATION)
+    ..setCooldown(1, COOLDOWN)
+    ..setBuffs(1, BUFF_SPEED.toRawCode())
+    ..setEditorSuffix("(Wurst)")
+
+    new BuffDefinition(BUFF_SPEED, 'Bspe') // Speed Bonus
+    ..setName(1, "Speed Boost")
+    ..setArtTarget(1, Abilities.speedTarget)
+    ..setTooltipNormal(1, "Speed Boost")
+    ..setTooltipNormalExtended(1, "This unit got a speed boost, moving faster.")
+    ..setTargetAttachments(1, 0)
+    ..setTargetAttachmentPoint0(1, "")
+    ..setTargetAttachmentPoint1(1, "")
+
+
+@compiletime function createAnabolicPotion() returns ItemDefinition
+    return createPerishableItem(ITEM_ANABOLIC_POTION)
+        ..setInterfaceIcon(Icons.bTNPotionRed)
+        ..setModelUsed(LocalItems.potionRed)
+        ..setNameEnhance("Anabolic Potion")
+        ..setTooltipExtended(TT_ANABOLIC_POTION)
+        ..setDescription(TT_ANABOLIC_POTION)
+        ..setLumberCost(18)
+        ..setAbilities(commaList(ABIL))
+        ..setScalingValue(0.70)
+        ..setCooldownGroup(commaList("AIsp"))
+        ..setStockReplenishInterval(120)
+        ..setClassification("Purchasable")

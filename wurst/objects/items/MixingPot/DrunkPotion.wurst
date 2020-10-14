@@ -1,0 +1,62 @@
+package DrunkPotion
+
+// Standard lib Imports:
+import Assets
+import AbilityObjEditing
+import ObjectIds
+import ObjectIdGenerator
+
+// Local lib Imports:
+import Items
+import LocalAssets
+import LocalItemObjEditing
+import LocalObjectIDs
+import ToolTipsUtils
+
+constant ABIL  = compiletime(ABIL_ID_GEN.next())
+
+constant AS_FACTOR = 0.10
+constant MS_FACTOR = 0.25
+constant MISS_CHANCE = 0.50
+constant DURATION_HERO = 7.
+constant DURATION_NORMAL = 13.
+constant COOLDOWN = 25.
+
+public constant TT_DRUNK_POTION = "Throw this at an enemy to get them drunk, target is silenced, movement speed slowed by {0}, "
+                                    +"attack speed by {1} and has {2} chance to miss."
+                                    .format(MS_FACTOR.toToolTipOrange(),
+                                    AS_FACTOR.toToolTipOrange(),
+                                    MISS_CHANCE.toToolTipOrange())
+                                    + makeToolTipDuration(DURATION_HERO, DURATION_NORMAL, COOLDOWN)
+
+@compiletime function createAbil()
+    new AbilityDefinitionBrewmasterDrunkenHaze(ABIL)
+    ..setName("Drunk Potion Cast")
+    ..setCheckDependencies(false)
+    ..setMissileSpeed(800)
+    ..setHeroAbility(false)
+    ..setItemAbility(true)
+    ..setManaCost(1, 0)
+    ..setCastRange(1, 550.)
+    ..setDurationHero(1, DURATION_HERO)
+    ..setDurationNormal(1, DURATION_NORMAL)
+    ..setCooldown(1, COOLDOWN)
+    ..setMovementSpeedModifier(1, MS_FACTOR)
+    ..setAttackSpeedModifier(1, AS_FACTOR)
+    ..setAttacksPrevented(1, 8)
+    ..setChanceToMiss(1, MISS_CHANCE)
+    ..setEditorSuffix("(Wurst)")
+
+@compiletime function createDrunkPotion() returns ItemDefinition
+    return createPerishableItem(ITEM_DRUNKS_POTION)
+        ..setInterfaceIcon(Icons.bTNLesserInvulneralbility)
+        ..setModelUsed(LocalItems.potionLesserInvulnerability)
+        ..setNameEnhance("Drunk's Potion")
+        ..setTooltipExtended(TT_DRUNK_POTION)
+        ..setDescription(TT_DRUNK_POTION)
+        ..setLumberCost(10)
+        ..setAbilities(commaList(ABIL))
+        ..setScalingValue(0.70)
+        ..setCooldownGroup(commaList(ABIL))
+        ..setStockReplenishInterval(90)
+        ..setNumberofCharges(2)

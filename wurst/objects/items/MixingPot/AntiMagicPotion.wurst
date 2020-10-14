@@ -1,0 +1,51 @@
+package AntiMagicPotion
+
+// Standard lib Imports:
+import Assets
+import AbilityObjEditing
+import ObjectIds
+import ObjectIdGenerator
+
+// Local lib Imports:
+import Items
+import LocalAssets
+import LocalItemObjEditing
+import LocalObjectIDs
+import ToolTipsUtils
+
+constant ABIL  = compiletime(ABIL_ID_GEN.next())
+
+constant SHIELD_LIFE = 100
+constant DURATION = 25.
+constant COOLDOWN = 1.
+public constant TT_ANTI_MAGIC_POTION = "Cast an Anti-Magic shield on target, blocking {0} magic damage."
+                .format(SHIELD_LIFE.toReal().toToolTipGreen())
+                + makeToolTipDuration(DURATION, COOLDOWN)
+
+@compiletime function createAbil()
+    new AbilityDefinitionAntimagicShield(ABIL)
+    ..setName("Anti-Magic Potion Cast")
+    ..setCheckDependencies(false)
+    ..setShieldLife(1, SHIELD_LIFE)
+    ..setHeroAbility(false)
+    ..setItemAbility(true)
+    ..setManaCost(1, 0)
+    ..setCastRange(1, 800.)
+    ..setDurationHero(1, DURATION)
+    ..setDurationNormal(1, DURATION)
+    ..setCooldown(1, COOLDOWN)
+    ..setEditorSuffix("(Wurst)")
+
+@compiletime function createAntiMagicPotion() returns ItemDefinition
+    return createPerishableItem(ITEM_ANTI_MAGIC_POTION)
+        ..setInterfaceIcon(Icons.bTNPotionOfClarity)
+        ..setModelUsed(LocalItems.potionAntiMagic)
+        ..setNameEnhance("Anti-Magic Potion")
+        ..setTooltipExtended(TT_ANTI_MAGIC_POTION)
+        ..setDescription(TT_ANTI_MAGIC_POTION)
+        ..setLumberCost(6)
+        ..setAbilities(commaList(ABIL))
+        ..setScalingValue(0.70)
+        ..setCooldownGroup(commaList(ABIL))
+        ..setStockReplenishInterval(120)
+        ..setNumberofCharges(2)

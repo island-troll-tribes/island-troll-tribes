@@ -10,15 +10,6 @@ Can be modified during the event to change the healing done via multiplier or am
 public function getHealingInstance() returns HealingInstance
     return eventHealing
 
-public function getHealingAmount() returns real
-    return eventHealing.amount
-
-public function getHealingMultiplier() returns real
-    return eventHealing.multiplier
-
-public function getHealingTarget() returns unit
-    return eventHealing.target
-
 /** Only supports healing done by HealingSystem package. So no support stock WC3 healing abilities. */
 public function onUnitHealed(code c) returns triggercondition
     return eventTrigger.addCondition(Condition(c))
@@ -30,14 +21,23 @@ public enum HealingType
 
 public class HealingInstance
     HealingType healingType
+
+    // The amount that the target will be healed.
     real amount
+
+    // The actual amount the target will heal based on its current health.
     real trueAmount
+
+    //
     real multiplier
+
+
     unit target
     unit caster
 
     /** Creates a new HealingInstance, fires onUnitHealed events for it and applies the healing after possible event modifications */
     construct(unit target, real amount, HealingType healingType)
+        this(target, target, amount, healingType)
         this.healingType = healingType
         this.amount = amount
         // Computing the actual amount of health point healed

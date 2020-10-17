@@ -1,6 +1,7 @@
 package HealingSystem
 
 import PlayerExtensions
+import HashSet
 
 trigger eventTrigger = CreateTrigger()
 HealingInstance eventHealing = null
@@ -28,19 +29,22 @@ public class HealingInstance
     // The actual amount the target will heal based on its current health.
     real trueAmount
 
-    //
+    // The factor that the healing will be scaled by.
     real multiplier
 
-
+    // The unit to be healed.
     unit target
+
+    // The unit responsible for the healing.
     unit caster
 
     /** Creates a new HealingInstance, fires onUnitHealed events for it and applies the healing after possible event modifications */
     construct(unit target, real amount, HealingType healingType)
         this.healingType = healingType
         this.amount = amount
-        // Computing the actual amount of health point healed
-        this.trueAmount = target.getMissingHP() - amount < 0 ? target.getMissingHP() : amount
+        // Compute the actual amount of health to be healed.
+        // TODO: Fire a separate event after healing with the true amount.
+        this.trueAmount = min(target.getMissingHP(), amount)
         this.multiplier = 1
         this.target = target
         this.caster = target
@@ -49,8 +53,9 @@ public class HealingInstance
     construct(unit target, unit caster, real amount, HealingType healingType)
         this.healingType = healingType
         this.amount = amount
-        // Computing the actual amount of health point healed
-        this.trueAmount = target.getMissingHP() - amount < 0 ? target.getMissingHP() : amount
+        // Compute the actual amount of health to be healed.
+        // TODO: Fire a separate event after healing with the true amount.
+        this.trueAmount = min(target.getMissingHP(), amount)
         this.multiplier = 1
         this.target = target
         this.caster = caster
@@ -104,7 +109,7 @@ public class HealingInstance
         return this.multiplier
 
     function scaleMultiplier(real factor) returns real
-        this.multiplier = max(0, this.multiplier*factor)
+        this.multiplier = max(0, this.multiplier * factor)
         return this.multiplier
 
     function getAmount() returns real
@@ -121,3 +126,35 @@ public class HealingInstance
 
     function getHealingType() returns HealingType
         return this.healingType
+
+class X
+    int a = 1
+    int b
+    HashSet<int> c = new HashSet<int>()
+
+    construct()
+        skip
+
+@compiletime function testX()
+    let x1 = new X()
+    let x2 = new X()
+    print("testing x")
+    print("a")
+    print(x1.a)
+    print(x2.a)
+    x1.a = 10
+    print(x1.a)
+    print(x2.a)
+    print("b")
+    print(x1.b)
+    print(x2.b)
+    print("c")
+    print(x1.c castTo int)
+    print(x2.c castTo int)
+    x2.c.add(1)
+    print(x1.c.size())
+    print(x2.c.size())
+    x2.c = new HashSet<int>()
+    x2.c.add(2)
+    print(x1.c.size())
+    print(x2.c.size())

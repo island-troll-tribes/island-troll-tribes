@@ -10,9 +10,6 @@ import StringUtils
 import UnitObjEditing
 import ShopObjects
 
-// Third-party imports:
-import Lodash
-
 // Local imports:
 import AbilityObjectCreationUtils
 import TrollUnitTextConstant
@@ -42,15 +39,12 @@ public function HeroDefinition.setAbilitiesEnhance(string normalAbilities, strin
         let subclassMenuID = ABIL_ID_GEN.next()
 
         // Create the spellbook
-        let spellbook = new SpellBookObject(
-            subclassMenuID,
-            "Subclass Menu",
-            "T",
-            "Choose a subclass.",
-            heroAbilitiesList.joinBy(","),
-            new Pair(3, 1),
-            "StatUp"
-        ).buildSpellBook()
+        let spellbook = createSpellBook(subclassMenuID)
+            ..setNameEnhance("T", "Subclass Menu")
+            ..setTooltipNormalExtended(1, "Choose a subclass.")
+            ..setSpellList(1, heroAbilitiesList.joinBy(","))
+            ..presetButtonPosNormal(3, 1)
+            ..setIconNormal(Icons.bTNStatUp)
 
         // Update the order ID of the spellbook to avoid conflicts.
         spellbook.presetBaseOrderID(lvl -> "absorb")

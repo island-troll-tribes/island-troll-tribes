@@ -29,6 +29,7 @@ function createBasicItem(int newId, int oldId) returns ItemDefinition
         ..setHitPoints(75)
         ..setClassification("Permanent")
         ..setMaxStack(0)
+        ..setAbilities("")
 
 function createUsableItem(int newId, int oldId) returns ItemDefinition
     return createBasicItem(newId, oldId)
@@ -38,6 +39,8 @@ function createPerishableItem(int newId, int oldId) returns ItemDefinition
     return createUsableItem(newId, oldId)
         ..setPerishable(true)
         ..setNumberofCharges(1)
+        // Used for omnitower cast
+        ..setClassification("Charged")
 
 //Item Abilities
 //Attack Bonus ability (Axes)
@@ -100,9 +103,17 @@ public function createItemBerserkCast(int newId) returns AbilityDefinitionBerser
         ..setDurationHero(1, 0.01)
         ..setDurationNormal(1, 0.01)
         ..setCastingTime(1, 0)
-        ..setDamageTakenIncrease(1, 0)
-        ..setAttackSpeedIncrease(1, 0)
-        ..setMovementSpeedIncrease(1, 0)
         ..setBuffs(1, "")
         ..setEffectSound("")
         ..setEditorSuffix("(Wurst)")
+        // Although basing item abilities on Berserk allows immediate orders,
+        // it has the deletorious effect of overriding Berserk abilities that
+        // are already in effect. Specifically, it does not override duration
+        // but it does override the following parameters. In order to avoid
+        // interfering with Panic, the values are duplicated so the override
+        // does not mechanically impact the unit.
+        // TODO: Address the case where multiple Berserk effects could apply.
+        // TODO: Base these values directly on Panic once they are available.
+        ..setDamageTakenIncrease(1, 0.1)
+        ..setAttackSpeedIncrease(1, 0.2)
+        ..setMovementSpeedIncrease(1, 0.3)

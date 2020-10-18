@@ -1,7 +1,11 @@
 package HealingSystem
 
+// Standard library imports:
+import StandardTextTags
+
+// Local imports:
 import PlayerExtensions
-import HashSet
+
 
 trigger eventTrigger = CreateTrigger()
 HealingInstance eventHealing = null
@@ -78,16 +82,12 @@ public class HealingInstance
         target.setHP(target.getHP() + modifiedHealAmount)
 
         // Create a text tag to visualize the effect.
-        if localPlayer.canSee(target)
-            CreateTextTag()
-                ..setText("+" + modifiedHealAmount.floor().toString(), 10)
-                ..setPos(target.getPos3Zero())
-                ..setColor(colorA(31, 191, 0, 255))
-                ..setVelocity(0., 0.04)
-                ..setVisibility(true)
-                ..setFadepoint(2.0)
-                ..setLifespan(5.0)
-                ..setPermanent(false)
+        standardTextTag(
+            target.getPos(),
+            "+{0}".format(modifiedHealAmount.floor().toString())
+        )
+            ..setColor(colorA(31, 191, 0, 255))
+            ..setVisibility(localPlayer.hasVisibility(this.target))
 
         // Destroy upon completion.
         destroy this

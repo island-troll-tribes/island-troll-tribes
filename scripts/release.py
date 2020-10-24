@@ -131,12 +131,14 @@ def get_changelog(repo, sha, marker="$changelog: "):
 
     # Iterate over the commit history until reaching the given SHA.
     for commit in takewhile(predicate, repo.get_commits()):
-        # Consider each line of the commit message separately.
-        for line in commit.commit.message.split("\n"):
-            # Verify that the line marks a changelog item.
-            if line.startswith(marker):
-                # Output the changelog message.
-                yield line.lstrip(marker).rstrip()
+        # Examine each PR associated with the commit.
+        for pull in commit.get_pulls():
+            # Consider each line of the PR message separately.
+            for line in pull.body.split("\n"):
+                # Verify that the line marks a changelog item.
+                if line.startswith(marker):
+                    # Output the changelog message and the associated PR.
+                    yield line.lstrip(marker).rstrip(), pull
 
 
 def write_changelog(major, minor, patch, changelog):
@@ -271,17 +273,23 @@ if __name__ == "__main__":
     version = f"v{major}.{minor}{patch}"
 
     # Compute the changelog.
-    changelog = sorted(get_changelog(repo, sha))
+    changes, pulls = zip(*sorted(get_changelog(repo, sha)))
 
     # Write the changelog package.
-    package = write_changelog(major, minor, patch, changelog)
+    package = write_changelog(major, minor, patch, changes)
 
     # Update the build file for the map.
     build, target = update_build(version)
 
+    # Construct the markdown used to link the changelog.
+    changelog = "\n".join(
+        f"[{change}]({pull.html_url})"
+        for change, pull in zip(changes, pulls)
+    )
+
     # Update the repository with the modified files.
     if args.dry_run:
-        print("Changelog:", *changelog, sep="\n")
+        print("Changelog:", changelog, sep="\n")
     else:
         # Verify that the map can be built.
         build_map(args.base, target)
@@ -293,6 +301,6 @@ if __name__ == "__main__":
         repo.create_git_release(
             tag=version,
             name=version,
-            message="\n".join(changelog),
+            message=changelog,
             target_commitish=repo.get_branch("master"),
         ).upload_asset(target)

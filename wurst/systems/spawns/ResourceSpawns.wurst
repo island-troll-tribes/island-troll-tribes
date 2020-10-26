@@ -127,9 +127,16 @@ function initIslandInfo() returns LinkedList<IslandInfo>
         )
 
 function initFishSpawner() returns Spawner
+    EmptyFunction<bool> condition = () -> currentFishes < gameConfig.getFishMax()
+
     let fishSpawners = new LinkedList<Composer>()
     for r in fishSpawnRects
-        fishSpawners.add(new FishSpawnComposer(fishSpawnInfoMap, r))
+        fishSpawners.add(
+            new ConditionalComposer(
+                condition,
+                new FishSpawnComposer(fishSpawnInfoMap, r)
+            )
+        )
     
     return new Spawner(
         new StaggeredComposer(

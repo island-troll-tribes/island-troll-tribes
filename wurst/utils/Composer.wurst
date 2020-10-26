@@ -1,0 +1,54 @@
+package Composer
+
+import Lodash
+import LinkedList
+import ClosureTimers
+
+public interface Composer
+    function execute()
+
+public class ConditionalComposer implements Composer
+    protected Composer Composer
+    protected EmptyFunction<bool> condition
+
+    construct(EmptyFunction<bool> condition, Composer Composer)
+        this.Composer = Composer
+        this.condition = condition
+
+    override function execute()
+        if this.condition.call()
+            this.Composer.execute()
+
+public class StaggeredComposer implements Composer
+    protected Composer Composer
+    protected int amount
+
+    construct(int amount, Composer Composer)
+        this.Composer = Composer
+        this.amount = amount
+
+    override function execute()
+        doPeriodicallyCounted(ANIMATION_PERIOD * 2, this.amount) fishHawkLoop ->
+            this.Composer.execute()
+
+public class RepeatComposer implements Composer
+    protected Composer Composer
+    protected int amount
+
+    construct(int amount, Composer Composer)
+        this.amount = amount
+        this.Composer = Composer
+
+    override function execute()
+        for i = 1 to this.amount
+            Composer.execute()
+
+public class MultipleComposer implements Composer
+    protected LinkedList<Composer> Composers
+
+    construct(LinkedList<Composer> Composers)
+        this.Composers = Composers
+
+    override function execute()
+        for Composer in Composers
+            Composer.execute()

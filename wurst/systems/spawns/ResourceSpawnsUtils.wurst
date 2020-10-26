@@ -1,0 +1,201 @@
+package ResourceSpawnsUtils
+
+import Composer
+
+// Standard library imports:
+import HashMap
+import Interpolation
+import TerrainUtils
+
+// Local imports:
+import Game
+import GameTimer
+import GameConfig
+import GeometryUtils
+import Pool
+
+function getRandomAllowedPoint(Pool<rect> allowedRegions, region restrainedSpawnRegion) returns vec2
+    let spawnRect = allowedRegions.random()
+
+    while true
+        let spawnPoint = spawnRect.randomPoint()
+        if spawnPoint.isTerrainLand() and spawnPoint.isTerrainWalkable() and not spawnPoint.isInRegion(restrainedSpawnRegion)
+            return spawnPoint
+    
+    return vec2(0,0)
+
+public class Spawner
+    Composer fn
+    
+    construct(Composer fn)
+        this.fn = fn
+    
+    function spawn()
+        this.fn.execute()
+
+public class ItemSpawnComposer implements Composer
+    protected ItemPool items
+    protected Pool<rect> allowedRegions
+    protected region disallowedRegions
+
+    construct(ItemPool items, Pool<rect> allowedRegions, region disallowedRegions)
+        this.items = items
+        this.allowedRegions = allowedRegions
+        this.disallowedRegions = disallowedRegions
+    
+    override function execute()
+        let spawnPoint = getRandomAllowedPoint(this.allowedRegions, this.disallowedRegions)
+        let spawnItemId = this.items.random()
+        createItem(spawnItemId, spawnPoint)
+
+        if not this.items.spawnsPerType.has(spawnItemId)
+            this.items.spawnsPerType.put(spawnItemId, 1)
+        else
+            this.items.spawnsPerType.put(spawnItemId, this.items.spawnsPerType.get(spawnItemId) + 1)
+
+public class FishSpawnComposer implements Composer
+    protected Pool<int> units
+    protected rect allowedRegion
+
+    construct(Pool<int> units, rect allowedRegion)
+        this.units = units
+        this.allowedRegion = allowedRegion
+    
+    override function execute()
+        // Exit if the spawn limit has been reached.
+        if udg_FISH_CURRENT >= gameConfig.getFishMax()
+            return
+        
+        let spawnPoint = this.allowedRegion.randomPoint()
+        let targetID = this.units.random()
+    
+        // Spawn a unit of the selected type.
+        createUnit(
+            players[PLAYER_NEUTRAL_AGGRESSIVE],
+            targetID,
+            spawnPoint,
+            randomAngle()
+        )
+
+public class AnimalSpawnComposer implements Composer
+    protected Pool<int> units
+    protected Pool<rect> allowedRegions
+    protected region disallowedRegions
+
+    construct(Pool<int> units, Pool<rect> allowedRegions, region disallowedRegions)
+        this.allowedRegions = allowedRegions
+        this.disallowedRegions = disallowedRegions
+        this.units = units
+    
+    override function execute()
+        let spawnPoint = getRandomAllowedPoint(this.allowedRegions, this.disallowedRegions)
+        let animal = this.units.random()
+        createUnit(players[PLAYER_NEUTRAL_AGGRESSIVE], animal, spawnPoint, randomAngle())
+
+public class IslandInfo
+    int itemsSpawnCount
+    int animalsSpawnCount
+    Pool<rect> spawnRegionsPool
+    
+    construct(int itemsSpawnCount, int animalsSpawnCount, Pool<rect> spawnRegionsPool)
+        this.itemsSpawnCount = itemsSpawnCount
+        this.animalsSpawnCount = animalsSpawnCount
+        this.spawnRegionsPool = spawnRegionsPool
+
+// From Marsunpaisti :
+// this class handles the spawning system trying to emulate the old code
+// so for example mana crystals at start of game can have like a 5% chance to spawn and it increases to 25% slowly
+public class WeightScaler
+    real initialSpawnWeight
+    real finalSpawnWeight
+    real weightChangeTime
+    construct(real initialSpawnWeight, real finalSpawnWeight, real weightChangeTime)
+        this.initialSpawnWeight = initialSpawnWeight
+        this.finalSpawnWeight = finalSpawnWeight
+        this.weightChangeTime = weightChangeTime
+
+    function getTimeAdjustedSpawnWeight() returns real
+        if this.weightChangeTime == 0
+            return finalSpawnWeight
+        //Clamp ratio between 0 - 1 with min & max
+        let ratio = min(1, max(0, (getElapsedGameTime() - GAME_TIMER.getElapsed()) / this.weightChangeTime))
+        let spawnWeightAdjusted = linear(initialSpawnWeight, finalSpawnWeight, ratio)
+        return spawnWeightAdjusted
+        
+public class WeightedPool<V> extends Pool<V>
+    protected IterableMap<V, WeightScaler> weightMap
+
+    construct(IterableMap<V, WeightScaler> weightMap)
+        this.weightMap = weightMap
+
+    function update()
+        this.totalWeight = 0
+        this.options.flush()
+        
+        for key in this.weightMap
+            let weightScaler = this.weightMap.get(key)
+            this.add((weightScaler.getTimeAdjustedSpawnWeight() * gameConfig.getHostileSpawnRate()).ceil(), key)
+
+public class ItemPool extends Pool<int>
+    protected IterableMap<int, WeightScaler> weightMap
+    let referenceItemCount = new HashMap<int,real>()
+    let spawnsPerType = new HashMap<int, int>()
+    int itemsSpawnCount
+
+    construct(IterableMap<int, WeightScaler> weightMap, int itemsSpawnCount)
+        this.weightMap = weightMap
+        this.itemsSpawnCount = itemsSpawnCount
+
+    function update()
+        this.totalWeight = 0
+        this.options.flush()
+        
+        var totalWeight = 0.
+        
+        for i in this.weightMap
+            totalWeight += this.weightMap.get(i).getTimeAdjustedSpawnWeight()
+
+        for id in this.weightMap
+            // From Marsunpaisti :
+            // this part is where I calculate how many items have actually spawned and how many "should" have spawned
+            // basically it means if difference from desired amount is 50% too much -> it will multiply spawn rate by 0.8 to reduce chance
+            // so if rocks have 20% rate to spawn, and you have 150 rocks when you should have 100, it adjusts it to 20% * 0.8 = 16% chance to spawn rocks
+            // to debug you can print for each islandSpawner the contents of
+            // private let spawnsPerType = new HashMap<int, int>()
+            // private let referenceItemCount = new HashMap<int,real>()
+            // spawnPerType contains how many items with ID have been spawned to the island
+            // referenceitemcount contains how many the system thinks "should" have been spawned
+            // and to see the current spawn rates you need to look at pool class
+            // in wurst/lib/Pool.wurst
+            // You gotta print the itemPool item weight / itemPool totalweight
+            // The pool is basically a weighted random selection pool class
+            // so if I put in A with weight 1 and B with weight 1 and C with weight 2
+            // I would have 25% chance to get A, 25% chance to get B and 50% chance to get C
+            // maybe you could add a function to Pool that returns the % chance of getting something
+
+            // Get adjusted spawn weights based on desired item counts from previous spawning round
+            let spawnInfo = this.weightMap.get(id)
+            let itemWeight = spawnInfo.getTimeAdjustedSpawnWeight()
+            var adjustmentRatio = 1.
+
+            if referenceItemCount.has(id) and spawnsPerType.has(id)
+                let desiredAmount = referenceItemCount.get(id)
+                let currentAmount = spawnsPerType.get(id)
+                if desiredAmount != 0 and currentAmount != 0
+                    let itemRatio = currentAmount / desiredAmount
+                    let difference = itemRatio - 1
+                    if difference > 0
+                        adjustmentRatio = linear(1, 1.2, min(1, (difference.abs() / 0.5)))
+                    else
+                        adjustmentRatio = linear(1, 0.8, min(1, (difference.abs() / 0.5)))
+
+            this.add((itemWeight * adjustmentRatio).round(), id)
+
+            //Update desired item counts for next spawning round
+            //Basically keeping count of the sum that the total items of that type should be at on average at the end of this spawn cycle
+            let weightRatio = itemWeight / totalWeight
+            let itemTotalThisRound = (itemsSpawnCount * gameConfig.getItemBase()).ceil()
+            if referenceItemCount.has(id)
+                referenceItemCount.put(id, referenceItemCount.get(id) + (itemTotalThisRound * weightRatio))
+            else
+                referenceItemCount.put(id, (itemTotalThisRound * weightRatio))

@@ -22,13 +22,15 @@ public class ConditionalComposer implements Composer
 public class StaggeredComposer implements Composer
     protected Composer Composer
     protected int amount
+    protected real period
 
-    construct(int amount, Composer Composer)
+    construct(int amount, real period, Composer Composer)
         this.Composer = Composer
         this.amount = amount
+        this.period = period
 
     override function execute()
-        doPeriodicallyCounted(ANIMATION_PERIOD * 2, this.amount) fishHawkLoop ->
+        doPeriodicallyCounted(this.period, this.amount) cb ->
             this.Composer.execute()
 
 public class RepeatComposer implements Composer

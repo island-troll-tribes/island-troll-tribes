@@ -22,6 +22,9 @@ import LocalAssets
 import StringExtensions
 import TerrainUtils
 
+// I think this is to reduce lag
+let delayPeriod = ANIMATION_PERIOD * 2
+
 let islandInfos = initIslandInfo()
 
 let itemSpawnInfoMap = new IterableMap<int, WeightScaler>()
@@ -141,6 +144,7 @@ function initFishSpawner() returns Spawner
     return new Spawner(
         new StaggeredComposer(
             FISH_PER_AREA,
+            delayPeriod,
             new MultipleComposer(fishSpawners)
         )
     )
@@ -161,6 +165,7 @@ function initItemSpawner() returns Spawner
         islandSpawners.add(
             new StaggeredComposer(
                 (island.itemsSpawnCount * udg_ITEM_BASE).ceil(),
+                delayPeriod,
                 new ConditionalComposer(
                     condition,
                     new ItemSpawnComposer(itemPool, island.spawnRegionsPool, restrainedSpawnRegion)
@@ -193,6 +198,7 @@ function initAnimalSpawner() returns Spawner
         islandSpawners.add(
             new StaggeredComposer(
                 (island.animalsSpawnCount * udg_FOOD_BASE).ceil(),
+                delayPeriod,
                 new ConditionalComposer(
                     condition,
                     new AnimalSpawnComposer(weightedPool, island.spawnRegionsPool, restrainedSpawnRegion)

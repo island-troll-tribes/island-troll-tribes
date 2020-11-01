@@ -61,13 +61,20 @@ init
 
         // Base the opening of the central gate on when the grace period ends.
         doAfter(
+            // Compute the time at which the gate will be opened. A negative
+            // value simply results in the timer executing immediately.
             (
                 gameConfig.getGracePeriodDuration() +
                 gameConfig.getMammothGateDuration()
             ).toReal()
         ) ->
+            // Open the gate.
             MAMMOTH_GATE.kill()
+
+            // Ensure that the gate is destroyed and not merely opened.
             MAMMOTH_GATE.setAnimation("death")
+
+            // Notify players of the event.
             printTimed("The gate to the Mammoth has been opened.", 15)
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->

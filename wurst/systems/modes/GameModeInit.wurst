@@ -318,3 +318,26 @@ init
             else
                 gameConfig.setStartingLevel(lvl)
                 mode.message("Troll Starting Level".color(ENERGY_COLOR) + " set to " + lvl.toString())
+
+    new GameMode("mammoth-gate", "mg", "Fun", "Change when the gate to the Mammoth is unlocked.", true) (mode, args) ->
+        // Default to opening the gate when grace period ends.
+        gameConfig.setMammothGateDuration(
+            (args.size() > 1)
+                ? args.get(1).toInt()
+                : 0
+        )
+
+        // Read the value back in case it needed to be modified.
+        let amount = gameConfig.getMammothGateDuration()
+
+        // Notify the user of the effect.
+        mode.message(
+            "The gate to the mammoth is set to unlock {0} grace period ends.".format(
+                amount == 0
+                    ? "when"
+                    : "{0} seconds {1}".format(
+                        amount.abs().toString(),
+                        amount < 0 ? "before" : "after"
+                    )
+            )
+        )

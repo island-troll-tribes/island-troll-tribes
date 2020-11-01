@@ -169,14 +169,14 @@ init
         mode.message("Old random enabled, you can now random any class")
         gameConfig.setOldRandomEnabled(true)
 
-    new GameMode("grace-period-duration", "gp", "General", "Change the duration of the grace period, eg: \"-gp 8\"") (mode, args) ->
-        var amount = 8.0
+    new GameMode("grace-period-duration", "gp", "General", "Change the duration of the grace period, eg: \"-gp 480\"") (mode, args) ->
+        var amount = 480
         if (args.size() > 1)
-            amount = args.get(1).toReal()
+            amount = args.get(1).toInt()
         if (not gameConfig.setGracePeriodDuration(amount))
             mode.error("Grace period must end before forced duel")
         else
-            mode.message("Grace period duration ".color(ENERGY_COLOR) + amount.toInt().toString() + " min")
+            mode.message("Grace period duration ".color(ENERGY_COLOR) + amount.toString() + " seconds")
 
     new GameMode("quick-pick", "qp", "General", "Reduce class selection time, defaults to 5, eg: \"-qp 15\"") (mode, args) ->
         var timeAllowed = 5
@@ -194,26 +194,26 @@ init
         mode.message("Respawn system".color(ENERGY_COLOR) + " enabled")
 
     new GameMode("forced-duel", "fd", "Pro", "Set a forced duel after a time limit, defaults to 1 h, eg: \"-fd 60\"") (mode, args) ->
-        var amount = 60.0
+        var amount = 3600
         if (args.size() > 1)
-            amount = args.get(1).toReal()
+            amount = args.get(1).toInt()
         if (not gameConfig.setForcedDuel(amount))
             mode.error("Force duel must be after end of the grace period")
         else
-            mode.message("Forced duel".color(ENERGY_COLOR) + " after " + amount.toInt().toString() + " min")
+            mode.message("Forced duel".color(ENERGY_COLOR) + " after " + amount.toString() + " seconds.")
 
     new GameMode("shrinking-map", "sm", "Fun", "Forest fire shrinks map after a default of 60 minutes to a default of 4000 units from center, eg: \"-sm 60 4000\"") (mode, args) ->
-        var amount = 60.0
+        var amount = 3600
         var distance = 4000.0
         if (args.size() > 1)
-            amount = args.get(1).toReal()
+            amount = args.get(1).toInt()
         if (args.size() > 2)
             distance = args.get(2).toReal()
         if (amount < 0)
             mode.error("Shrinking map timeout must be greater than 0!")
         else
             gameConfig.setForestFire(amount, distance)
-            mode.message("Forest fire".color(RED_COLOR) + " after " + amount.toInt().toString() + " min")
+            mode.message("Forest fire".color(RED_COLOR) + " after " + amount.toString() + " seconds.")
 
     new GameMode("test-mode", "tm", "Testing", "No one can lose, enables test commands") (mode, args) ->
         mode.message("Test mode enabled".color(SPECIAL_COLOR))

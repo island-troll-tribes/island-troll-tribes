@@ -3,6 +3,7 @@ package ResourceSpawnsUtils
 import Composer
 
 // Standard library imports:
+import ErrorHandling
 import HashMap
 import Interpolation
 import TerrainUtils
@@ -17,11 +18,14 @@ import Pool
 function getRandomAllowedPoint(Pool<rect> allowedRegions, region restrainedSpawnRegion) returns vec2
     let spawnRect = allowedRegions.random()
 
-    while true
+    var max = 1000 // Prevents infinite loop
+    while true and max >= 0
+        max--
         let spawnPoint = spawnRect.randomPoint()
         if spawnPoint.isTerrainLand() and spawnPoint.isTerrainWalkable() and not spawnPoint.isInRegion(restrainedSpawnRegion)
             return spawnPoint
     
+    error("Max iteration count reached in searching for an allowed spawn point")
     return vec2(0,0)
 
 public class Spawner

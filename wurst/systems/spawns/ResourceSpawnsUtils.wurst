@@ -40,15 +40,15 @@ public class Spawner
 public class ItemSpawnComposer implements Composer
     protected ItemPool items
     protected Pool<rect> allowedRegions
-    protected region disallowedRegions
+    protected region disallowedRegion
 
-    construct(ItemPool items, Pool<rect> allowedRegions, region disallowedRegions)
+    construct(ItemPool items, Pool<rect> allowedRegions, region disallowedRegion)
         this.items = items
         this.allowedRegions = allowedRegions
-        this.disallowedRegions = disallowedRegions
+        this.disallowedRegion = disallowedRegion
     
     override function execute()
-        let spawnPoint = getRandomAllowedPoint(this.allowedRegions, this.disallowedRegions)
+        let spawnPoint = getRandomAllowedPoint(this.allowedRegions, this.disallowedRegion)
         let spawnItemId = this.items.random()
         createItem(spawnItemId, spawnPoint)
 
@@ -77,18 +77,18 @@ public class FishSpawnComposer implements Composer
 public class AnimalSpawnComposer implements Composer
     protected Pool<int> units
     protected Pool<rect> allowedRegions
-    protected region disallowedRegions
+    protected region disallowedRegion
 
-    construct(Pool<int> units, Pool<rect> allowedRegions, region disallowedRegions)
+    construct(Pool<int> units, Pool<rect> allowedRegions, region disallowedRegion)
         this.allowedRegions = allowedRegions
-        this.disallowedRegions = disallowedRegions
+        this.disallowedRegion = disallowedRegion
         this.units = units
     
     override function execute()
         createUnit(
             players[PLAYER_NEUTRAL_AGGRESSIVE],
             this.units.random(),
-            getRandomAllowedPoint(this.allowedRegions, this.disallowedRegions),
+            getRandomAllowedPoint(this.allowedRegions, this.disallowedRegion),
             randomAngle()
         )
 

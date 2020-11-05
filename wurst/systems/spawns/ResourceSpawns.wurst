@@ -130,7 +130,7 @@ function initIslandInfo() returns LinkedList<IslandInfo>
         )
 
 function initFishSpawner() returns Spawner
-    EmptyFunction<bool> condition = () -> currentFishes < udg_FISH_MAX
+    EmptyFunction<bool> condition = () -> currentFishes < gameConfig.getFishMax()
 
     let fishSpawners = new LinkedList<Composer>()
     for r in fishSpawnRects
@@ -152,7 +152,7 @@ function initFishSpawner() returns Spawner
 function initItemSpawner() returns Spawner
     let itemPools = new LinkedList<ItemPool>()
     EmptyFunction<bool> condition = () ->
-        let b = currentItems < udg_ITEM_MAX
+        let b = currentItems < gameConfig.getItemMax()
         if b
             currentItems++ // Bookkeeping
         return b
@@ -164,7 +164,7 @@ function initItemSpawner() returns Spawner
         itemPools.add(itemPool)
         islandSpawners.add(
             new StaggeredComposer(
-                (island.itemsSpawnCount * udg_ITEM_BASE).ceil(),
+                (island.itemsSpawnCount * gameConfig.getItemBase()).ceil(),
                 delayPeriod,
                 new ConditionalComposer(
                     condition,
@@ -197,7 +197,7 @@ function initAnimalSpawner() returns Spawner
         weightedPools.add(weightedPool)
         islandSpawners.add(
             new StaggeredComposer(
-                (island.animalsSpawnCount * udg_FOOD_BASE).ceil(),
+                (island.animalsSpawnCount * gameConfig.getFoodBase()).ceil(),
                 delayPeriod,
                 new ConditionalComposer(
                     condition,
@@ -235,8 +235,8 @@ function bookkeep(bool born, unit u)
 function adjustBaseSpawnrates()
     //Replacement for modStats function of the legacy system.
     //Dynamically adjust overall item & animal amounts (and specific item type amounts but thats handles by spawnInfo classes now)
-    udg_ITEM_BASE = max(.15,udg_ITEM_BASE-0.2)
-    udg_FOOD_BASE = max(.15,udg_FOOD_BASE-0.3)
+    gameConfig.setItemBase(max(.15,gameConfig.getItemBase()-0.2))
+    gameConfig.setFoodBase(max(.15,gameConfig.getFoodBase()-0.3))
 
 function startSpawnCycle(Spawner animalSpawner, Spawner itemSpawner, Spawner fishSpawner)
     doPeriodically(120) spawnerCallback ->

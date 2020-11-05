@@ -1,11 +1,14 @@
 package ScoreBoard
 
-// Standard-library imports:
+// Standard library imports:
 import HashMap
 import LinkedList
 import ClosureTimers
 import Assets
 import ClosureEvents
+
+// Third-party imports:
+import Toolkit
 
 // Local imports:
 import GameMode
@@ -18,6 +21,7 @@ import UnitExtensions
 import PlayerExtensions
 import Transformation
 import Game
+import TribeBoard
 
 let KILL_COLUMN_WIDTH = 0.055
 let STAT_LABEL_WIDTH = 0.1
@@ -94,7 +98,11 @@ public class ScoreBoardColumnEntries
         scoreBoard.updateColor(entryRow, entryColumn, color)
 
     function updateTribeEntry(player _player, int value)
-        let tribeName = _player.getTribePlayer().getName()
+        let tribePlayer = _player.getTribePlayer()
+        // Avoid duplicate counts for tribe players.
+        if tribePlayer == _player
+            return
+        let tribeName = tribePlayer.getName()
         let tribeRow = scoreBoard.getPlayerPos(tribeName)
         let currentValue = scoreBoard.getValue(tribeRow, entryColumn)
         let newValue = (currentValue.toInt() + value)
@@ -230,3 +238,22 @@ init
                     for member in tribe.getMembers()
                         scoreBoardEntries.get("Level")
                         .updateEntryIcon(member.getName(), member.getTrollIcon())
+
+    // Block this command from being used prior to the tribe board creation.
+    registerGameStartEvent() ->
+        registerToolkitCommand("scoreboard") (triggerer, arguments) ->
+            // Check the current visibility.
+            let visibility = scoreBoard.board.isDisplayed()
+
+            // Look up the tribe board for the player, which can interfere.
+            let tribeBoard = TribeBoard.findForPlayer(triggerer)
+
+            // Compute which board is currently displayed.
+            let prev = visibility ? scoreBoard.board : tribeBoard.board
+            let next = visibility ? tribeBoard.board : scoreBoard.board
+
+            // Disable the current board.
+            prev.display(triggerer, false)
+
+            // Enable the next board.
+            next.display(triggerer, true)

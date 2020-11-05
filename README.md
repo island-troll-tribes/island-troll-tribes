@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/island-troll-tribes/island-troll-tribes/tree/master.svg?style=svg)](https://circleci.com/gh/island-troll-tribes/island-troll-tribes/tree/master)
+[![island-troll-tribes](https://circleci.com/gh/island-troll-tribes/island-troll-tribes/tree/master.svg?style=svg)](https://app.circleci.com/pipelines/github/island-troll-tribes/island-troll-tribes)
 
 # Island Troll Tribes
 

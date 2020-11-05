@@ -66,14 +66,11 @@ public class FishSpawnComposer implements Composer
         this.allowedRegion = allowedRegion
     
     override function execute()
-        let spawnPoint = this.allowedRegion.randomPoint()
-        let targetID = this.units.random()
-    
         // Spawn a unit of the selected type.
         createUnit(
             players[PLAYER_NEUTRAL_AGGRESSIVE],
-            targetID,
-            spawnPoint,
+            this.units.random(),
+            this.allowedRegion.randomPoint(),
             randomAngle()
         )
 
@@ -88,9 +85,12 @@ public class AnimalSpawnComposer implements Composer
         this.units = units
     
     override function execute()
-        let spawnPoint = getRandomAllowedPoint(this.allowedRegions, this.disallowedRegions)
-        let animal = this.units.random()
-        createUnit(players[PLAYER_NEUTRAL_AGGRESSIVE], animal, spawnPoint, randomAngle())
+        createUnit(
+            players[PLAYER_NEUTRAL_AGGRESSIVE],
+            this.units.random(),
+            getRandomAllowedPoint(this.allowedRegions, this.disallowedRegions),
+            randomAngle()
+        )
 
 public class IslandInfo
     int itemsSpawnCount

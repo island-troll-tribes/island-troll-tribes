@@ -8,54 +8,67 @@ import HashMap
 import Interpolation
 import TerrainUtils
 
+// Third-party imports:
+import Lodash
+import LodashExtensions
+
 // Local imports:
 import Game
-import GameTimer
 import GameConfig
 import GeometryUtils
 import Pool
 
-function getRandomAllowedPoint(Pool<rect> allowedRegions, region restrainedSpawnRegion) returns vec2
-    let spawnRect = allowedRegions.random()
+// The maximum number of tries when selecting a random point.
+@configurable let MAX_TRIES = 1000
 
-    var max = 1000 // Prevents infinite loop
-    while true and max >= 0
-        max--
+function getRandomAllowedPoint(Pool<rect> allowed, region blocked) returns vec2
+    // Pick a random region.
+    let spawnRect = allowed.random()
+
+    // Attempt to pick a random, valid point.
+    for index = 0 to MAX_TRIES
+        // Pick a point.
         let spawnPoint = spawnRect.randomPoint()
-        if spawnPoint.isTerrainLand() and spawnPoint.isTerrainWalkable() and not spawnPoint.isInRegion(restrainedSpawnRegion)
+
+        // Output the point if it is valid.
+        if (
+            spawnPoint.isTerrainLand()
+            and spawnPoint.isTerrainWalkable()
+            and not spawnPoint.isInRegion(blocked)
+        )
             return spawnPoint
-    
+
+    // Fail if no valid point was able to be found.
+    // TODO: Use logging once set up.
     error("Max iteration count reached in searching for an allowed spawn point")
+
+    // Output a dummy result.
     return vec2(0,0)
 
 public class Spawner
     Composer fn
-    
+
     construct(Composer fn)
         this.fn = fn
-    
+
     function spawn()
         this.fn.execute()
 
 public class ItemSpawnComposer implements Composer
     protected ItemPool items
-    protected Pool<rect> allowedRegions
-    protected region disallowedRegion
+    protected Pool<rect> allowed
+    protected region blocked
 
-    construct(ItemPool items, Pool<rect> allowedRegions, region disallowedRegion)
+    construct(ItemPool items, Pool<rect> allowed, region blocked)
         this.items = items
-        this.allowedRegions = allowedRegions
-        this.disallowedRegion = disallowedRegion
-    
+        this.allowed = allowed
+        this.blocked = blocked
+
     override function execute()
-        let spawnPoint = getRandomAllowedPoint(this.allowedRegions, this.disallowedRegion)
+        let spawnPoint = getRandomAllowedPoint(this.allowed, this.blocked)
         let spawnItemId = this.items.random()
         createItem(spawnItemId, spawnPoint)
-
-        if not this.items.spawnsPerType.has(spawnItemId)
-            this.items.spawnsPerType.put(spawnItemId, 1)
-        else
-            this.items.spawnsPerType.put(spawnItemId, this.items.spawnsPerType.get(spawnItemId) + 1)
+        items.register(spawnItemId)
 
 public class FishSpawnComposer implements Composer
     protected Pool<int> units
@@ -64,9 +77,9 @@ public class FishSpawnComposer implements Composer
     construct(Pool<int> units, rect allowedRegion)
         this.units = units
         this.allowedRegion = allowedRegion
-    
+
     override function execute()
-        // Spawn a unit of the selected type.
+        // Spawn a unit with a random type and location.
         createUnit(
             players[PLAYER_NEUTRAL_AGGRESSIVE],
             this.units.random(),
@@ -76,19 +89,20 @@ public class FishSpawnComposer implements Composer
 
 public class AnimalSpawnComposer implements Composer
     protected Pool<int> units
-    protected Pool<rect> allowedRegions
-    protected region disallowedRegion
+    protected Pool<rect> allowed
+    protected region blocked
 
-    construct(Pool<int> units, Pool<rect> allowedRegions, region disallowedRegion)
-        this.allowedRegions = allowedRegions
-        this.disallowedRegion = disallowedRegion
+    construct(Pool<int> units, Pool<rect> allowed, region blocked)
+        this.allowed = allowed
+        this.blocked = blocked
         this.units = units
-    
+
     override function execute()
+        // Spawn a unit with a random type and location.
         createUnit(
             players[PLAYER_NEUTRAL_AGGRESSIVE],
             this.units.random(),
-            getRandomAllowedPoint(this.allowedRegions, this.disallowedRegion),
+            getRandomAllowedPoint(this.allowed, this.blocked),
             randomAngle()
         )
 
@@ -96,106 +110,134 @@ public class IslandInfo
     int itemsSpawnCount
     int animalsSpawnCount
     Pool<rect> spawnRegionsPool
-    
+
     construct(int itemsSpawnCount, int animalsSpawnCount, Pool<rect> spawnRegionsPool)
         this.itemsSpawnCount = itemsSpawnCount
         this.animalsSpawnCount = animalsSpawnCount
         this.spawnRegionsPool = spawnRegionsPool
 
-// From Marsunpaisti :
-// this class handles the spawning system trying to emulate the old code
-// so for example mana crystals at start of game can have like a 5% chance to spawn and it increases to 25% slowly
+// This class computes how rates change over time, allowing for spawn rates to
+// increase or decrease as the game progresses.
 public class WeightScaler
-    real initialSpawnWeight
-    real finalSpawnWeight
-    real weightChangeTime
-    construct(real initialSpawnWeight, real finalSpawnWeight, real weightChangeTime)
-        this.initialSpawnWeight = initialSpawnWeight
-        this.finalSpawnWeight = finalSpawnWeight
-        this.weightChangeTime = weightChangeTime
+    // The initial value for the weight.
+    real first
+
+    // The final value for the weight.
+    real final
+
+    // The number of seconds it takes to move the weight between the two.
+    real delta
+
+    // Simply copy the parameters when constructing.
+    construct(real first, real final, real delta)
+        this.first = first
+        this.final = final
+        this.delta = delta
 
     function getTimeAdjustedSpawnWeight() returns real
-        if this.weightChangeTime == 0
-            return finalSpawnWeight
-        //Clamp ratio between 0 - 1 with min & max
-        let ratio = min(1, max(0, GAME_TIMER.getElapsed() / this.weightChangeTime))
-        let spawnWeightAdjusted = linear(initialSpawnWeight, finalSpawnWeight, ratio)
-        return spawnWeightAdjusted
-        
-public class WeightedPool<V> extends Pool<V>
-    protected IterableMap<V, WeightScaler> weightMap
+        // Compute how far along the line the current value is.
+        let ratio = this.delta == 0
+            // Avoid division by zero and simply move to the end.
+            ? 1
+            // Avoid extrapolation.
+            : (GAME_TIMER.getElapsed() / this.delta).clamp(0, 1)
 
-    construct(IterableMap<V, WeightScaler> weightMap)
-        this.weightMap = weightMap
+        // Interpolate between the initial and final values.
+        return linear(ratio, final, delta)
+
+public class WeightedPool<V> extends Pool<V>
+    protected IterableMap<V, WeightScaler> weights
+
+    construct(IterableMap<V, WeightScaler> weights)
+        this.weights = weights
 
     function update()
         this.totalWeight = 0
         this.options.flush()
-        
-        for key in this.weightMap
-            let weightScaler = this.weightMap.get(key)
+
+        for key in this.weights
+            let weightScaler = this.weights.get(key)
             this.add((weightScaler.getTimeAdjustedSpawnWeight() * gameConfig.getHostileSpawnRate()).ceil(), key)
 
+// This class acts as a pool that will automatically adjust weights to balance
+// spawn rates expected values against their actual values.
 public class ItemPool extends Pool<int>
-    protected IterableMap<int, WeightScaler> weightMap
-    let referenceItemCount = new HashMap<int,real>()
-    let spawnsPerType = new HashMap<int, int>()
+    // The weight scaler per item type in the pool.
+    private OwnedIterableMap<int, WeightScaler> weights
+
+    // The expected total amount of spawns per item.
+    private let expectedTotals = new HashMap<int, real>()
+
+    // The actual total amount of spawns per item.
+    private let actualTotals = new HashMap<int, int>()
+
+    // The number of items created per interval.
     int itemsSpawnCount
 
-    construct(IterableMap<int, WeightScaler> weightMap, int itemsSpawnCount)
-        this.weightMap = weightMap
+    construct(IterableMap<int, WeightScaler> weights, int itemsSpawnCount)
         this.itemsSpawnCount = itemsSpawnCount
 
-    function update()
-        this.totalWeight = 0
-        this.options.flush()
-        
-        var totalWeight = 0.
-        
-        for i in this.weightMap
-            totalWeight += this.weightMap.get(i).getTimeAdjustedSpawnWeight()
+        // Copy or reference the weights, as appropriate.
+        if weights instanceof OwnedIterableMap<int, WeightScaler>
+            this.weights= weights castTo OwnedIterableMap<int, WeightScaler>
+        else
+            this.weights = weights.own()
 
-        for id in this.weightMap
-            // From Marsunpaisti :
-            // this part is where I calculate how many items have actually spawned and how many "should" have spawned
-            // basically it means if difference from desired amount is 50% too much -> it will multiply spawn rate by 0.8 to reduce chance
-            // so if rocks have 20% rate to spawn, and you have 150 rocks when you should have 100, it adjusts it to 20% * 0.8 = 16% chance to spawn rocks
-            // to debug you can print for each islandSpawner the contents of
-            // private let spawnsPerType = new HashMap<int, int>()
-            // private let referenceItemCount = new HashMap<int,real>()
-            // spawnPerType contains how many items with ID have been spawned to the island
-            // referenceitemcount contains how many the system thinks "should" have been spawned
-            // and to see the current spawn rates you need to look at pool class
-            // in wurst/lib/Pool.wurst
-            // You gotta print the itemPool item weight / itemPool totalweight
-            // The pool is basically a weighted random selection pool class
-            // so if I put in A with weight 1 and B with weight 1 and C with weight 2
-            // I would have 25% chance to get A, 25% chance to get B and 50% chance to get C
-            // maybe you could add a function to Pool that returns the % chance of getting something
+    // Adjusts the weight for each item as follows:
+    // 1. Compute the ratio between the expected and actual totals.
+    // 2. Clamp the ratio within (0.5, 1.5) to avoid drastic adjustments.
+    // 3. Translate that interval to (0.2, -0.2), the proportional change.
+    // 4. Scale the current weight by that proportion.
+    // For example, consider the following:
+    // 1. Let weight = 20, expected = 15, actual = 25.
+    // 2. Therefore ratio = 1.66 -> 1.5 and so proportional change = -0.2.
+    // 3. The new weight is 16.
+    // A second is as follows:
+    // 1. Let weight = 20, expected = 15, actual = 12.
+    // 2. Therefore ratio = 0.8 and so proportional change = 0.08.
+    // 3. The new weight is 21.6.
+    function computeDelta(int id) returns real
+        // Look up the expected total, which defaults to zero initially.
+        let expected = expectedTotals.get(id)
 
-            // Get adjusted spawn weights based on desired item counts from previous spawning round
-            let spawnInfo = this.weightMap.get(id)
-            let itemWeight = spawnInfo.getTimeAdjustedSpawnWeight()
-            var adjustmentRatio = 1.
+        // Look up the current total, which defaults to zero initially.
+        let actual = actualTotals.get(id)
 
-            if referenceItemCount.has(id) and spawnsPerType.has(id)
-                let desiredAmount = referenceItemCount.get(id)
-                let currentAmount = spawnsPerType.get(id)
-                if desiredAmount != 0 and currentAmount != 0
-                    let itemRatio = currentAmount / desiredAmount
-                    let difference = itemRatio - 1
-                    if difference > 0
-                        adjustmentRatio = linear(1, 1.2, min(1, (difference.abs() / 0.5)))
-                    else
-                        adjustmentRatio = linear(1, 0.8, min(1, (difference.abs() / 0.5)))
+        // Avoid division by zero and make no adjustment initially.
+        let ratio = (expected != 0 ? actual / expected : 1.)
 
-            this.add((itemWeight * adjustmentRatio).round(), id)
+        // Compute the proportion by which the weight will be adjusted.
+        return 0.2 * (1 - ratio).clamp(-0.5, 0.5) / 0.5
 
-            //Update desired item counts for next spawning round
-            //Basically keeping count of the sum that the total items of that type should be at on average at the end of this spawn cycle
-            let weightRatio = itemWeight / totalWeight
-            let itemTotalThisRound = (itemsSpawnCount * gameConfig.getItemBase()).ceil()
-            if referenceItemCount.has(id)
-                referenceItemCount.put(id, referenceItemCount.get(id) + (itemTotalThisRound * weightRatio))
-            else
-                referenceItemCount.put(id, (itemTotalThisRound * weightRatio))
+    // Increments the state by adjusting the weight for all tracked items.
+    function increment()
+        // Compute the current weight for each item.
+        let currentWeights = weights
+            .map((id, weight) -> weight.getTimeAdjustedSpawnWeight())
+            .own()
+
+        // Compute the sum of all current weights.
+        let totalWeight = currentWeights.sum()
+
+        // Update the weight for each entry.
+        for id in weights
+            // TODO: Don't round once the pool can support decimal weights.
+            update(
+                (currentWeights.get(id) * (1 + computeDelta(id))).round(),
+                id
+            )
+
+        // Update the expected total for each entry.
+        for id in this.weights
+            // Compute the share of items that are of this type.
+            let share = currentWeights.get(id) / totalWeight
+
+            // Compute the expected amount of new spawns of this type.
+            let delta = share * (itemsSpawnCount * gameConfig.getItemBase())
+
+            // Increment the expected total.
+            expectedTotals.put(id, expectedTotals.get(id) + delta)
+
+    // Records that an item of the given type was spawned.
+    function register(int id)
+        actualTotals.put(id, actualTotals.get(id + 1))

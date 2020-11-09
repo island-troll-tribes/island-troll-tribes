@@ -8,49 +8,49 @@ public interface Composer
     function execute()
 
 public class ConditionalComposer implements Composer
-    protected Composer Composer
+    protected Composer composer
     protected EmptyFunction<bool> condition
 
-    construct(EmptyFunction<bool> condition, Composer Composer)
-        this.Composer = Composer
+    construct(EmptyFunction<bool> condition, Composer composer)
+        this.composer = composer
         this.condition = condition
 
     override function execute()
         if this.condition.call()
-            this.Composer.execute()
+            this.composer.execute()
 
 public class StaggeredComposer implements Composer
-    protected Composer Composer
+    protected Composer composer
     protected int amount
     protected real period
 
-    construct(int amount, real period, Composer Composer)
-        this.Composer = Composer
+    construct(int amount, real period, Composer composer)
+        this.composer = composer
         this.amount = amount
         this.period = period
 
     override function execute()
         doPeriodicallyCounted(this.period, this.amount) cb ->
-            this.Composer.execute()
+            this.composer.execute()
 
 public class RepeatComposer implements Composer
-    protected Composer Composer
+    protected Composer composer
     protected int amount
 
-    construct(int amount, Composer Composer)
+    construct(int amount, Composer composer)
         this.amount = amount
-        this.Composer = Composer
+        this.composer = composer
 
     override function execute()
         for i = 1 to this.amount
             Composer.execute()
 
 public class MultipleComposer implements Composer
-    protected LinkedList<Composer> Composers
+    protected LinkedList<Composer> composers
 
-    construct(LinkedList<Composer> Composers)
-        this.Composers = Composers
+    construct(LinkedList<Composer> composers)
+        this.composers = composers
 
     override function execute()
-        for Composer in Composers
-            Composer.execute()
+        for composer in composers
+            composer.execute()

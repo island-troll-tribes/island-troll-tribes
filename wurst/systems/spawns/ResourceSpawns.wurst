@@ -22,40 +22,66 @@ import LocalAssets
 import StringExtensions
 import TerrainUtils
 
-// I think this is to reduce lag
-let delayPeriod = ANIMATION_PERIOD * 2
+// The interval between sets of spawns in the same increment used to avoid lag.
+let INTERVAL = 5.
 
-let islandInfos = initIslandInfo()
+// The delay between individual spawns used to avoid lag.
+let DELAY = ANIMATION_PERIOD * 2
 
-let itemSpawnInfoMap = new IterableMap<int, WeightScaler>()
-    ..put(ITEM_TINDER, new WeightScaler(450, 90, 860))
-    ..put(ITEM_CLAY_BALL, new WeightScaler(100, 185, 3600))
-    ..put(ITEM_STICK, new WeightScaler(300, 450, 360))
-    ..put(ITEM_FLINT, new WeightScaler(300, 250, 300))
-    ..put(ITEM_MANA_CRYSTAL, new WeightScaler(0, 160, 420))
-    ..put(ITEM_MUSHROOM, new WeightScaler(0, 120, 360))
-    ..put(ITEM_MAGIC, new WeightScaler(25, 25, 1))
+// Create the parameters for the various spawn rates. Islands as a whole are
+// balanced against each other based on relative size and the same logic is
+// applied to balance the internal regions against each other.
+let islandInfos = new LinkedList<IslandInfo>
+    ..add(new IslandInfo(15, 4, new Pool<rect>()
+        ..add(65, gg_rct_spawn_area_1_1)
+        ..add(22, gg_rct_spawn_area_1_2)
+        ..add(13, gg_rct_spawn_area_1_3))
+    )
+    ..add(new IslandInfo(16, 4, new Pool<rect>()
+        ..add(66, gg_rct_spawn_area_2_1)
+        ..add(16, gg_rct_spawn_area_2_2)
+        ..add(18, gg_rct_spawn_area_2_3))
+    )
+    ..add(new IslandInfo(16, 4, new Pool<rect>()
+        ..add(54, gg_rct_spawn_area_3_1)
+        ..add(13, gg_rct_spawn_area_3_2)
+        ..add(33, gg_rct_spawn_area_3_3))
+    )
+    ..add(new IslandInfo(23, 6, new Pool<rect>()
+        ..add(88, gg_rct_spawn_area_4_1)
+        ..add(7, gg_rct_spawn_area_4_2)
+        ..add(8, gg_rct_spawn_area_4_3))
+    )
 
-let animalSpawnInfoMap = new IterableMap<int, WeightScaler>()
-    ..put(UNIT_ELK, new WeightScaler(1000, 1000, 0))
-    ..put(UNIT_SNAKE, new WeightScaler(0, 45, 240))
-    ..put(UNIT_JUNGLE_WOLF, new WeightScaler(0, 90, 240))
-    ..put(UNIT_JUNGLE_BEAR, new WeightScaler(0, 45, 240))
-    ..put(UNIT_PANTHER, new WeightScaler(0, 45, 240))
+let itemSpawnInfoMap = new OwnedIterableMap<int, WeightScaler>()
+    ..put(ITEM_TINDER,       new WeightScaler(450,  90,  860))
+    ..put(ITEM_CLAY_BALL,    new WeightScaler(100, 185, 3600))
+    ..put(ITEM_STICK,        new WeightScaler(300, 450,  360))
+    ..put(ITEM_FLINT,        new WeightScaler(300, 250,  300))
+    ..put(ITEM_MANA_CRYSTAL, new WeightScaler(  0, 160,  420))
+    ..put(ITEM_MUSHROOM,     new WeightScaler(  0, 120,  360))
+    ..put(ITEM_MAGIC,        new WeightScaler( 25,  25,    1))
+
+let animalSpawnInfoMap = new OwnedIterableMap<int, WeightScaler>()
+    ..put(UNIT_ELK,         new WeightScaler(1000, 1000,   0))
+    ..put(UNIT_SNAKE,       new WeightScaler(   0,   45, 240))
+    ..put(UNIT_JUNGLE_WOLF, new WeightScaler(   0,   90, 240))
+    ..put(UNIT_JUNGLE_BEAR, new WeightScaler(   0,   45, 240))
+    ..put(UNIT_PANTHER,     new WeightScaler(   0,   45, 240))
 
 let fishSpawnInfoMap = new Pool<int>()
     ..add(4, UNIT_HAWK)
     ..add(2, UNIT_GREEN_FISH)
     ..add(4, UNIT_FISH)
 
-// bookkeeper keys of spawninfos => current number of items spawned
+// The current number of spawns of each type.
 var currentFishes = 0
 var currentAnimals = 0
 var currentItems = 0
 
 let FISH_PER_AREA = 1
 
-let fishSpawnRects = new LinkedList<rect>()
+let fishSpawnRects = new OwnedLinkedList<rect>()
     ..add(gg_rct_out_1_1)
     ..add(gg_rct_out_3_2)
     ..add(gg_rct_out_1_2)
@@ -100,37 +126,8 @@ let animalSpawner = initAnimalSpawner()
 let itemSpawner = initItemSpawner()
 let fishSpawner = initFishSpawner()
 
-// From Marsunpaisti :
-// this is the part that handles the island balance
-// when I add those rects, the first number is the relative size of the region to all the other rects
-// so all areas get picked evenly
-// new IslandSpawner(23, 6, swSpawns) here the variables mean this island will get 23 items and 6 animals
-// because SW is bigger than the others
-function initIslandInfo() returns LinkedList<IslandInfo>
-    return new LinkedList<IslandInfo>
-        ..add(new IslandInfo(15, 4, new Pool<rect>()
-            ..add(65, gg_rct_spawn_area_1_1)
-            ..add(22, gg_rct_spawn_area_1_2)
-            ..add(13, gg_rct_spawn_area_1_3))
-        )
-        ..add(new IslandInfo(16, 4, new Pool<rect>()
-            ..add(66, gg_rct_spawn_area_2_1)
-            ..add(16, gg_rct_spawn_area_2_2)
-            ..add(18, gg_rct_spawn_area_2_3))
-        )
-        ..add(new IslandInfo(16, 4, new Pool<rect>()
-            ..add(54, gg_rct_spawn_area_3_1)
-            ..add(13, gg_rct_spawn_area_3_2)
-            ..add(33, gg_rct_spawn_area_3_3))
-        )
-        ..add(new IslandInfo(23, 6, new Pool<rect>()
-            ..add(88, gg_rct_spawn_area_4_1)
-            ..add(7, gg_rct_spawn_area_4_2)
-            ..add(8, gg_rct_spawn_area_4_3))
-        )
-
 function initFishSpawner() returns Spawner
-    EmptyFunction<bool> condition = () -> currentFishes < gameConfig.getFishMax()
+    EmptyFunction<bool> condition = -> currentFishes < gameConfig.getFishMax()
 
     let fishSpawners = new LinkedList<Composer>()
     for r in fishSpawnRects
@@ -140,23 +137,18 @@ function initFishSpawner() returns Spawner
                 new FishSpawnComposer(fishSpawnInfoMap, r)
             )
         )
-    
+
     return new Spawner(
         new StaggeredComposer(
             FISH_PER_AREA,
-            delayPeriod,
+            DELAY,
             new MultipleComposer(fishSpawners)
         )
     )
 
 function initItemSpawner() returns Spawner
     let itemPools = new LinkedList<ItemPool>()
-    EmptyFunction<bool> condition = () ->
-        let b = currentItems < gameConfig.getItemMax()
-        if b
-            currentItems++ // Bookkeeping
-        return b
-    
+
     // Make one spawner per island and combine at the end
     let islandSpawners = new LinkedList<Composer>()
     for island in islandInfos
@@ -165,10 +157,21 @@ function initItemSpawner() returns Spawner
         islandSpawners.add(
             new StaggeredComposer(
                 (island.itemsSpawnCount * gameConfig.getItemBase()).ceil(),
-                delayPeriod,
+                DELAY,
                 new ConditionalComposer(
-                    condition,
-                    new ItemSpawnComposer(itemPool, island.spawnRegionsPool, restrainedSpawnRegion)
+                    () -> currentItems < gameConfig.getItemMax(),
+                    new MultipleComposer(
+                        new LinkedList<Composer>()
+                            // Adjust the item count
+                            ..add(-> modifyItemCount(1))
+                            ..add(
+                                new ItemSpawnComposer(
+                                    itemPool,
+                                    island.spawnRegionsPool,
+                                    restrainedSpawnRegion
+                                )
+                            )
+                    )
                 )
             )
         )
@@ -176,9 +179,9 @@ function initItemSpawner() returns Spawner
     // Update the pools before each execution
     EmptyFunction<bool> preAction = () ->
         for itemPool in itemPools
-            itemPool.update()
+            itemPool.increment()
         return true
-    
+
     return new Spawner(
         new ConditionalComposer(
             preAction,
@@ -198,7 +201,7 @@ function initAnimalSpawner() returns Spawner
         islandSpawners.add(
             new StaggeredComposer(
                 (island.animalsSpawnCount * gameConfig.getFoodBase()).ceil(),
-                delayPeriod,
+                DELAY,
                 new ConditionalComposer(
                     condition,
                     new AnimalSpawnComposer(weightedPool, island.spawnRegionsPool, restrainedSpawnRegion)
@@ -211,7 +214,7 @@ function initAnimalSpawner() returns Spawner
         for weightedPool in weightedPools
             weightedPool.update()
         return true
-        
+
     return new Spawner(
         new ConditionalComposer(
             preAction,
@@ -219,24 +222,31 @@ function initAnimalSpawner() returns Spawner
         )
     )
 
-// Bookkeeping
-public function lowerItem(int count)
-    currentItems -= count
+// Handles adjusting the total amount for items, which is done manually because
+// there is no event able to intercept an item being created or removed.
+public function modifyItemCount(int delta)
+    currentItems += delta
 
+
+
+// Handles adjusting the total amount for units.
 function bookkeep(bool born, unit u)
-    if u.getOwner() == players[PLAYER_NEUTRAL_AGGRESSIVE]
-        if animalSpawnInfoMap.has(u.getTypeId())
-            currentAnimals = born ? (currentAnimals + 1) : (currentAnimals - 1)
-        
-        if fishSpawnInfoMap.options.has(u.getTypeId())
-            currentFishes = born ? (currentFishes + 1) : (currentFishes - 1)
+    // Ignore units for players.
+    if u.getOwner() != players[PLAYER_NEUTRAL_AGGRESSIVE]
+        return
 
-// Spawn cycles
+    // Increment the state if it is an animal.
+    if animalSpawnInfoMap.has(u.getTypeId())
+        currentAnimals += born ? 1 : -1
+
+    // Increment the state if it is a fish.
+    if fishSpawnInfoMap.options.has(u.getTypeId())
+        currentFishes += born ? 1 : -1
+
+// Decreases the total spawn rates as the game progresses.
 function adjustBaseSpawnrates()
-    //Replacement for modStats function of the legacy system.
-    //Dynamically adjust overall item & animal amounts (and specific item type amounts but thats handles by spawnInfo classes now)
-    gameConfig.setItemBase(max(.15,gameConfig.getItemBase()-0.2))
-    gameConfig.setFoodBase(max(.15,gameConfig.getFoodBase()-0.3))
+    gameConfig.setItemBase(max(.15, gameConfig.getItemBase() - 0.2))
+    gameConfig.setFoodBase(max(.15, gameConfig.getFoodBase() - 0.3))
 
 function startSpawnCycle(Spawner animalSpawner, Spawner itemSpawner, Spawner fishSpawner)
     doPeriodically(120) spawnerCallback ->
@@ -255,8 +265,8 @@ bool array debug_status
 
 init
     registerGameStartEvent() ->
-        //First spawns. Do twice to retain original amounts after halving the items per spawn and doubling cycle frequency.
-        animalSpawner.spawn()
+        // Execute the first spawns, which vary in amount.
+        doAfter(0, -> animalSpawner.spawn())
         doAfter(5, -> animalSpawner.spawn())
         doAfter(10, -> animalSpawner.spawn())
         doAfter(15, -> itemSpawner.spawn())
@@ -275,7 +285,7 @@ init
             currentFishes.toString(),
             currentItems.toString()
         ).color(GENERAL_COLOR), 10, triggerPlayer)
-    
+
     // SP for spawning point, Debugging which spot can spawn items
     registerToolkitCommand("sp") (triggerPlayer, arguments) ->
         // Look up the index for the triggering player.

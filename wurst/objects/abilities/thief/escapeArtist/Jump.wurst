@@ -16,10 +16,7 @@ let MANACOST = 5
 let TOOLTIP_NORM = "Jump"
 let TOOLTIP_EXTENDED = "Allows the thief to jump a short distance. Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
 
-let JUMP_ID = ABILITY_JUMP
-let TARGET_SEARCH_MAX_RANGE = 900.
-let TARGET_SEARCH_MIN_RANGE = 200.
-let TARGET_SEARCH_INCREMENT = 25
+@configurable let JUMP_MAX_RANGE = 900.
 
 class Jump extends ChannelAbilityPreset
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
@@ -47,47 +44,16 @@ class Jump extends ChannelAbilityPreset
 @compiletime function createJump()
     new Jump(ABILITY_JUMP, "R", new Pair(3, 0))
 
-init
-    registerSpellEffectEvent(JUMP_ID, () -> onCast())
-    EventListener.add(EVENT_PLAYER_UNIT_SPELL_CAST) ->
-        onStartCast()
-
-function canJumpToTarget(vec2 targetPos) returns bool
-    return targetPos.isTerrainWalkable()
-
 function onCast()
     let caster = GetSpellAbilityUnit()
     let targetPos = vec2(GetSpellTargetX(), GetSpellTargetY())
     let casterPos = caster.getPos()
-    var jumpPos = getJumpPos(casterPos, targetPos)
-    performJump(caster, jumpPos)
+    let jumpPos = getJumpPos(casterPos, targetPos, JUMP_MAX_RANGE)
+    performJump(caster, jumpPos, 2, 8, 0.85)
 
-function onStartCast()
-    if GetSpellAbilityId() != JUMP_ID
-        return
-    let caster = GetSpellAbilityUnit()
-    let targetPos = vec2(GetSpellTargetX(), GetSpellTargetY())
-    let casterPos = caster.getPos()
-    var jumpPos = getJumpPos(casterPos, targetPos)
+init
+    registerSpellEffectEvent(ABILITY_JUMP, () -> onCast())
 
-    //Stop casting if non-jumpable target or we are immobilized
-    if not canJumpToTarget(jumpPos) or caster.isImmobilized()
-        caster.issueImmediateOrderById(Orders.stop)
-        //Set stand animation to prevent looping the cast-animation
-        caster.setAnimation(0)
-
-function getJumpPos(vec2 casterPos, vec2 targetPos) returns vec2
-    var jumpPos = targetPos
-    angle ang = casterPos.angleTo(jumpPos)
-
-    //Limit range if ability used beyond jump range
-    if (casterPos.distanceTo(jumpPos) >= TARGET_SEARCH_MAX_RANGE)
-        var distance = TARGET_SEARCH_MAX_RANGE
-        jumpPos = casterPos.polarOffset(ang, distance)
-
-        //Find furthest point towards cast point where we can jump
-        while distance >= TARGET_SEARCH_MIN_RANGE and not canJumpToTarget(jumpPos)
-            distance = distance - TARGET_SEARCH_INCREMENT
-            jumpPos = casterPos.polarOffset(ang, distance)
-
-    return jumpPos
+    EventListener.add(EVENT_PLAYER_UNIT_SPELL_CAST) ->
+        if GetSpellAbilityId() == ABILITY_JUMP
+            onStartCast(JUMP_MAX_RANGE)

@@ -10,8 +10,9 @@ class GameConfig
     var allTrollUnitId = 0
     var startingLevel = 0
     var forcedDuelEnabled = false
-    var forcedDuelAfter = 0.0
-    var gracePeriodDuration = 8.0
+    var forcedDuelAfter = 0
+    var mammothGateDuration = 0
+    var gracePeriodDuration = 480
     var respawnSystemEnabled = false
     var randomizeSpawns = 0
     var startWithFire = false
@@ -24,7 +25,7 @@ class GameConfig
     var tradeEnabled = true
     var forestFireEnabled = false
     var forestFireDistance = 0.0
-    var forestFireAfter = 0.0
+    var forestFireAfter = 0
     var testMode = false
     var useOldMage = false
     var inventoryLimits = true
@@ -32,7 +33,101 @@ class GameConfig
     var teamGoldEnabled = true
     var MAX_ANIMALS = 60
     var tribeOwnsBuildingsEnabled = true
-    var playerScoreEnabled = false
+    var playerScoreEnabled = true
+
+    var baddieBase = 1.00
+    var statDegradeAmount = 1
+    var statLowerInterval = 3.00
+    var clothsHeatupInterval = 35.00
+
+    var maxItems = 350
+    var maxFishes = 100
+
+    var itemBase = 1.00
+    var fastMode = false
+
+    var foodBase = 1.00
+    var foodForKillProportion = 1.00
+    var lavish = false
+    var famine = false
+
+    var disabledBoats = false
+    var petChance = 0.17
+
+    var fishMax = 100
+    var itemMax = 350
+
+    function getFishMax() returns integer
+        return fishMax
+
+    function setFishMax(integer amount)
+        fishMax = amount
+
+    function getItemMax() returns integer
+        return itemMax
+
+    function setItemMax(integer amount)
+        itemMax = amount
+
+    function getDisabledBoats() returns boolean
+        return disabledBoats
+
+    function setDisabledBoats(boolean value)
+        disabledBoats = value
+
+    function getPetChance() returns real
+        return petChance
+
+    function setPetChance(real amount)
+        petChance = amount
+
+    function getFoodForKillProportion() returns real
+        return foodForKillProportion
+
+    function setFoodForKillProportion(real amount)
+        foodForKillProportion = amount
+
+    function getLavish() returns boolean
+        return lavish
+
+    function setLavish(boolean value)
+        lavish = value
+
+    function getFamine() returns boolean
+        return famine
+
+    function setFamine(boolean value)
+        famine = value
+
+    function getFoodBase() returns real
+        return foodBase
+
+    function setFoodBase(real amount)
+        foodBase = amount
+
+    function getItemBase() returns real
+        return itemBase
+
+    function setItemBase(real amount)
+        itemBase = amount
+
+    function getFastMode() returns boolean
+        return fastMode
+
+    function setFastMode(boolean value)
+        fastMode = value
+
+    function getMaxFishes() returns int
+        return maxFishes
+
+    function setMaxFishes(int amount)
+        maxFishes = amount
+
+    function getMaxItems() returns int
+        return maxItems
+
+    function setMaxItems(int amount)
+        maxItems = amount
 
     function setHeatPerCast(int amount)
         heatPerCast = amount
@@ -66,17 +161,17 @@ class GameConfig
     function getNumPlayersPerTribe() returns integer
         return playersPerTribe
 
-    function setForcedDuel(real numMinutes) returns boolean
-        if numMinutes < gracePeriodDuration
+    function setForcedDuel(int numSeconds) returns boolean
+        if numSeconds < gracePeriodDuration
             return false
         forcedDuelEnabled = true
-        forcedDuelAfter = numMinutes
+        forcedDuelAfter = numSeconds
         return true
 
     function isForcedDuelEnabled() returns boolean
         return forcedDuelEnabled
 
-    function getForcedDuelAfter() returns real
+    function getForcedDuelAfter() returns int
         return forcedDuelAfter
 
     function isRespawnSystemEnabled() returns boolean
@@ -85,13 +180,13 @@ class GameConfig
     function setRespawnSystemEnabled(boolean value)
         respawnSystemEnabled = value
 
-    function setGracePeriodDuration(real numMinutes) returns boolean
-        if forcedDuelEnabled and numMinutes > forcedDuelAfter
+    function setGracePeriodDuration(int numSeconds) returns boolean
+        if forcedDuelEnabled and numSeconds > forcedDuelAfter
             return false
-        gracePeriodDuration = numMinutes
+        gracePeriodDuration = numSeconds
         return true
 
-    function getGracePeriodDurationMinutes() returns real
+    function getGracePeriodDuration() returns int
         return gracePeriodDuration
 
     function isGracePeriodEnabled() returns boolean
@@ -122,10 +217,10 @@ class GameConfig
         return startWithSpiritWard
 
     function getHostileSpawnRate() returns real
-        return udg_BADDIE_BASE
+        return baddieBase
 
     function setHostileSpawnRate(real value)
-        udg_BADDIE_BASE = value
+        baddieBase = value
 
     function setOldRandomEnabled(boolean value)
         oldRandomEnabled = value
@@ -141,14 +236,12 @@ class GameConfig
 
     function setEliminationEnabled(boolean value)
         eliminationMode = value
-        udg_ELIMINATION = value
 
     function getEliminationEnabled() returns boolean
         return eliminationMode
 
     function setHeatMaximum(integer amount)
         heatMaximum = amount
-        udg_MAX_HEAT = amount
 
     function getHeatMaximum() returns integer
         return heatMaximum
@@ -159,15 +252,15 @@ class GameConfig
     function getTradeEnabled() returns boolean
         return tradeEnabled
 
-    function setForestFire(real numMinutes, real distance)
+    function setForestFire(int numSeconds, real distance)
         forestFireEnabled = true
-        forestFireAfter = numMinutes
+        forestFireAfter = numSeconds
         forestFireDistance = distance
 
     function isForestFireEnabled() returns boolean
         return forestFireEnabled
 
-    function getForestFireAfter() returns real
+    function getForestFireAfter() returns int
         return forestFireAfter
 
     function getForestFireDistance() returns real
@@ -180,16 +273,22 @@ class GameConfig
         return testMode
 
     function getStatLossAmount() returns int
-        return udg_STAT_DEGRADE_AMOUNT
+        return statDegradeAmount
+
+    function setStatLossAmount(int amount)
+        statDegradeAmount = amount
 
     function getStatLossInterval() returns real
-        return udg_STAT_LOWER_INTERVAL
+        return statLowerInterval
+
+    function setStatLossInterval(real amount)
+        statLowerInterval = amount
 
     function getStatGainInterval() returns real
-        return udg_CLOTHS_HEATUP_INTERVAL
+        return clothsHeatupInterval
 
     function getMaxHeat() returns int
-        return udg_MAX_HEAT
+        return heatMaximum
 
     function setInventoryLimits(bool value)
         inventoryLimits = value
@@ -231,6 +330,17 @@ class GameConfig
         // setLevel(1) on a level 1 hero will set him to level 2
         if value > 1
             startingLevel = value
+
+    function setMammothGateDuration(int numSeconds) returns boolean
+        // The input is not restricted in any way. The user is allowed to set
+        // it arbitrarily high, including after the duel has been started. The
+        // only consideration is that an excessively negative value simply
+        // results in the gate opening immediately.
+        mammothGateDuration = numSeconds
+        return true
+
+    function getMammothGateDuration() returns int
+        return mammothGateDuration
 
 
 public constant gameConfig = new GameConfig()

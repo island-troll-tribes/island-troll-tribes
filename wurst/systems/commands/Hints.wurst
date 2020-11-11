@@ -27,6 +27,10 @@ let HINTS_MESSAGE = compiletime(
 )
 let HINT_SOUND = compiletime(new SoundDefinition(Sounds.hint, false))
 
+// The global variable used for reference when enumerating over the force.
+// TODO: Remove the need for this by using LinkedList<player> instead of force.
+Hint enumHint = null
+
 
 class Hint
 
@@ -60,11 +64,13 @@ class Hint
             Hint.addPlayer(p)
 
     function display()
-        if playersF.containsPlayer(localPlayer)
-            printTimed(this.toString(), 10)
-            if ping != vec2(0, 0)
-                pingMinimap(ping)
-            HINT_SOUND.playForPlayer(localPlayer)
+        enumHint = this
+        playersF.forEach() ->
+            let target = GetEnumPlayer()
+            target.print(enumHint.toString(), 10)
+            if enumHint.ping != vec2(0, 0)
+                pingMinimapForPlayer(target, enumHint.ping)
+            HINT_SOUND.playForPlayer(target)
 
     static function initialize()
         for i = 0 to bj_MAX_PLAYERS - 1

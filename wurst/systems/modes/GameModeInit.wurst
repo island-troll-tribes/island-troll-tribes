@@ -62,8 +62,6 @@ init
         GameMode.find("sf").enable()
         GameMode.find("fd").enable()
         GameMode.find("el").enable()
-        GameMode.find("tg").enable()
-        GameMode.find("tb").enable()
         GameMode.find("rs").enable()
 
     new GameMode("team-gold", "tg", "General", "Players on a team share gold in the same pool", false) (mode, args) ->
@@ -113,13 +111,13 @@ init
         mode.message("Heat Max".color(ENERGY_COLOR) + " has been increased. Heat capacity is " + amount.toString().color(GOLD_COLOR))
 
     new GameMode("fast", "fs", "Fun", "More items spawn at once", true) (mode, args) ->
-        udg_ITEM_BASE = 1.50
-        udg_FAST_MODE = true
+        gameConfig.setItemBase(1.50)
+        gameConfig.setFastMode(true)
         mode.message("Fast mode".color(ENERGY_COLOR) + " has been enabled. More items spawn at once.")
 
     // TODO: Should rework mode toggle system at some point, once -eb been set, it cannot be reverted
     new GameMode("enable-boats", "eb", "General", "Enables construction of transport boats") (mode, args) ->
-        udg_DisabledBoats = false
+        gameConfig.setDisabledBoats(false)
         GameMode.find("eb").deregister()
         mode.message("Transport ships".color(ENERGY_COLOR) + " enabled")
 
@@ -171,14 +169,14 @@ init
         mode.message("Old random enabled, you can now random any class")
         gameConfig.setOldRandomEnabled(true)
 
-    new GameMode("grace-period-duration", "gp", "General", "Change the duration of the grace period, eg: \"-gp 8\"") (mode, args) ->
-        var amount = 8.0
+    new GameMode("grace-period-duration", "gp", "General", "Change the duration of the grace period, eg: \"-gp 480\"") (mode, args) ->
+        var amount = 480
         if (args.size() > 1)
-            amount = args.get(1).toReal()
+            amount = args.get(1).toInt()
         if (not gameConfig.setGracePeriodDuration(amount))
             mode.error("Grace period must end before forced duel")
         else
-            mode.message("Grace period duration ".color(ENERGY_COLOR) + amount.toInt().toString() + " min")
+            mode.message("Grace period duration ".color(ENERGY_COLOR) + amount.toString() + " seconds")
 
     new GameMode("quick-pick", "qp", "General", "Reduce class selection time, defaults to 5, eg: \"-qp 15\"") (mode, args) ->
         var timeAllowed = 5
@@ -196,26 +194,26 @@ init
         mode.message("Respawn system".color(ENERGY_COLOR) + " enabled")
 
     new GameMode("forced-duel", "fd", "Pro", "Set a forced duel after a time limit, defaults to 1 h, eg: \"-fd 60\"") (mode, args) ->
-        var amount = 60.0
+        var amount = 3600
         if (args.size() > 1)
-            amount = args.get(1).toReal()
+            amount = args.get(1).toInt()
         if (not gameConfig.setForcedDuel(amount))
             mode.error("Force duel must be after end of the grace period")
         else
-            mode.message("Forced duel".color(ENERGY_COLOR) + " after " + amount.toInt().toString() + " min")
+            mode.message("Forced duel".color(ENERGY_COLOR) + " after " + amount.toString() + " seconds.")
 
     new GameMode("shrinking-map", "sm", "Fun", "Forest fire shrinks map after a default of 60 minutes to a default of 4000 units from center, eg: \"-sm 60 4000\"") (mode, args) ->
-        var amount = 60.0
+        var amount = 3600
         var distance = 4000.0
         if (args.size() > 1)
-            amount = args.get(1).toReal()
+            amount = args.get(1).toInt()
         if (args.size() > 2)
             distance = args.get(2).toReal()
         if (amount < 0)
             mode.error("Shrinking map timeout must be greater than 0!")
         else
             gameConfig.setForestFire(amount, distance)
-            mode.message("Forest fire".color(RED_COLOR) + " after " + amount.toInt().toString() + " min")
+            mode.message("Forest fire".color(RED_COLOR) + " after " + amount.toString() + " seconds.")
 
     new GameMode("test-mode", "tm", "Testing", "No one can lose, enables test commands") (mode, args) ->
         mode.message("Test mode enabled".color(SPECIAL_COLOR))
@@ -225,26 +223,26 @@ init
 
     // legacy modes
     new GameMode("safe", "sa", "Casual", "Stats degrade slower every 4.5 s instead of 3 s", false) (mode, args) ->
-        udg_STAT_LOWER_INTERVAL = 4.50 //normal 3
+        gameConfig.setStatLossInterval(4.50) //normal 3
         mode.message("Safe mode".color(ENERGY_COLOR) + " has been enabled. Stats degrade slower. 4.5 sec/decay.")
 
     new GameMode("increase pets", "ip", "Casual", "Pets spawn 23% of the time instead of 17%", false) (mode, args) ->
-        udg_PET_CHANCE = 0.23 //.17
+        gameConfig.setPetChance(0.23) //.17
         mode.message("Increased Pet".color(ENERGY_COLOR) + " mode has been enabled. Pets now appear way more frequently. 23%.")
 
     new GameMode("lavish", "lv", "Casual", "More animals spawn and they give more food", false) (mode, args) ->
-        udg_FOOD_BASE = 1.80
-        udg_FOOD_FOR_KILL_PROPORTION = 1.30
-        udg_Lavish = true
+        gameConfig.setFoodBase(1.80)
+        gameConfig.setFoodForKillProportion(1.30)
+        gameConfig.setLavish(true)
         mode.message("Reverse Famine".color(ENERGY_COLOR) + " has been enabled. More animals spawn and they give more food.")
 
     new GameMode("raise-food-limit", "rfl", "Casual", "More animals and fish can be on the map at the same time", false) (mode, args) ->
         gameConfig.setMaxAnimals(90)
-        udg_FISH_MAX = 320
+        gameConfig.setMaxFishes(320)
         mode.message("Food limits".color(ENERGY_COLOR) + " have been increased. More animals and fish can be on the map at the same time.")
 
     new GameMode("raise-item-limit", "ril", "Fun", "Increase item spawn limits", false) (mode, args) ->
-        udg_ITEM_MAX = 700
+        gameConfig.setMaxItems(700)
         mode.message("Item spawn limits".color(ENERGY_COLOR) + " have been increased")
 
     new GameMode("no-inventory-limit", "nil", "Fun", "Remove inventory limits on axes/spells/armor", false) (mode, args) ->
@@ -252,45 +250,45 @@ init
         mode.message("Inventory Limits".color(ENERGY_COLOR) + " have been taken off. Trolls can now carry any number of axes/spells/armor.")
 
     new GameMode("survival", "sv", "Hard", "This mode combines famine, cold, and slow mode") (mode, args) ->
-        udg_FOOD_BASE = 0.40
-        udg_FOOD_FOR_KILL_PROPORTION = 0.80
-        udg_ITEM_BASE = 0.80
-        udg_FAST_MODE = false
-        udg_HEAT_PER_CAST = 4
+        gameConfig.setFoodBase(0.40)
+        gameConfig.setFoodForKillProportion(0.80)
+        gameConfig.setItemBase(0.80)
+        gameConfig.setFastMode(false)
+        gameConfig.setHeatPerCast(4)
         mode.message("Survival of the fittest has been activated. This mode combines famine, cold, and slow mode.")
 
     new GameMode("panic", "pn", "Hard", "Stats degrade faster at 2.3 s vs 3 s", false) (mode, args) ->
-        udg_STAT_LOWER_INTERVAL = 2.30
+        gameConfig.setStatLossInterval(2.30)
         mode.message("Panic mode".color(COLOR_COAL) + " has been enabled. Stats degrade faster now.")
 
     new GameMode("double", "db", "Hard", "Stats degrade twice as fast", false) (mode, args) ->
-        udg_STAT_DEGRADE_AMOUNT = 2
+        gameConfig.setStatLossAmount(2)
         mode.message("Double Degrade".color(COLOR_COAL) + " has been enabled. Stats lower by twice as much.")
 
     new GameMode("famine", "fm", "Hard", "Animals spawn less", false) (mode, args) ->
-        udg_FOOD_BASE = 0.40
-        udg_FOOD_FOR_KILL_PROPORTION = 0.80
-        udg_Famine = true
+        gameConfig.setFoodBase(0.40)
+        gameConfig.setFoodForKillProportion(0.80)
+        gameConfig.setFamine(true)
         mode.message("Famine mode".color(COLOR_COAL) + " has been enabled. Animals spawn less.")
 
     new GameMode("famine-x2", "fm2", "Hard", "More intense famine", false) (mode, args) ->
-        udg_FOOD_BASE = 0.20
-        udg_FOOD_FOR_KILL_PROPORTION = 0.60
+        gameConfig.setFoodBase(0.20)
+        gameConfig.setFoodForKillProportion(0.60)
         mode.message("Ultra Famine".color(COLOR_COAL) + " mode has been enabled. Animals spawn less.")
 
     new GameMode("slow", "sl", "Hard", "Spawn less items", false) (mode, args) ->
-        udg_ITEM_BASE = 0.80
-        udg_FAST_MODE = false
+        gameConfig.setItemBase(0.80)
+        gameConfig.setFastMode(false)
         mode.message("Slow mode".color(COLOR_COAL) + " has been enabled. Less items spawn at once.")
 
     new GameMode("lower-food-limit", "lfl", "Hard", "Lower spawn rate for animals on the map") (mode, args) ->
         gameConfig.setMaxAnimals(40)
-        udg_FOOD_BASE = 0.8
-        udg_FISH_MAX = 50
+        gameConfig.setFoodBase(0.80)
+        gameConfig.setFishMax(50)
         mode.message("Lower Food Limit".color(COLOR_COAL) + " has been enabled.")
 
     new GameMode("lower-item-limit", "lil", "Hard", "Lower item spawn rate on the map") (mode, args) ->
-        udg_ITEM_MAX = 250
+        gameConfig.setItemMax(250)
         mode.message("Lower Item Limit".color(COLOR_COAL) + " has been enabled.")
 
     new GameMode("old-elementalist", "oe", "Testing", "Replaces new elementalist with the old elementalist.", false) (mode, args) ->
@@ -320,3 +318,26 @@ init
             else
                 gameConfig.setStartingLevel(lvl)
                 mode.message("Troll Starting Level".color(ENERGY_COLOR) + " set to " + lvl.toString())
+
+    new GameMode("mammoth-gate", "mg", "Fun", "Change when the gate to the Mammoth is unlocked.", true) (mode, args) ->
+        // Default to opening the gate when grace period ends.
+        gameConfig.setMammothGateDuration(
+            (args.size() > 1)
+                ? args.get(1).toInt()
+                : 0
+        )
+
+        // Read the value back in case it needed to be modified.
+        let amount = gameConfig.getMammothGateDuration()
+
+        // Notify the user of the effect.
+        mode.message(
+            "The gate to the mammoth is set to unlock {0} grace period ends.".format(
+                amount == 0
+                    ? "when"
+                    : "{0} seconds {1}".format(
+                        amount.abs().toString(),
+                        amount < 0 ? "before" : "after"
+                    )
+            )
+        )

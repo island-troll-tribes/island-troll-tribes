@@ -1,0 +1,95 @@
+package PantherInstinct
+
+// Standard lib Imports:
+import ChannelAbilityPreset
+import ClosureEvents
+import Assets
+import UpgradeObjEditing
+import BuffObjEditing
+import DamageEvent
+import ClosureTimers
+import InstantDummyCaster
+import OrderIds
+
+// Local Imports:
+import ToolTipsUtils
+import LocalObjectIDs
+import TextTagUtils
+import ColorUtils
+
+let BUFF_ID = compiletime(BUFF_ID_GEN.next())
+
+let DUMMY_ABIL_ID = compiletime(ABIL_ID_GEN.next())
+
+let COOLDOWN = 60.
+let DURATION = 4.
+let TOOLTIP_NORM = "Panther Instinct"
+let TOOLTIP_EXTENDED = "" +
+    "Rendo uses the Panther inner instinct to predict incoming attack and dodge their damage." +
+    makeToolTipDuration(DURATION, COOLDOWN)
+
+
+@compiletime function createPantherInstinctUpgrade()
+    new UpgradeDefinition(UPGD_RENDO_PANTHER_INSTINCT)
+        ..setName(1, "Devoured Panther")
+        ..setLevels(1)
+        ..setIcon(1, Icons.bTNEvasion)
+        ..addEffectAbilityLevelBonus(0, 1, ABILITY_RENDO_PANTHER_INSTINCT.toRawCode())
+
+@compiletime function createPantherInstinctBuff()
+    new BuffDefinition(BUFF_ID, 'Bpsh') // PhaseShift
+        ..setIcon(Icons.bTNEvasion)
+        ..setArtSpecial(1,"")
+        ..setTooltipNormal(1, TOOLTIP_NORM)
+        ..setTooltipNormalExtended(1, "This unit uses panther inner instinct to dodge incoming damage")
+
+// I want the dodge buff to be dispellable
+@compiletime function createDummyInnerFire()
+    new AbilityDefinitionInnerFire(DUMMY_ABIL_ID)
+        ..setDummyAbility()
+        ..setDamageIncrease(1, 0)
+        ..setDefenseIncrease(1, 0)
+        ..setBuffs(1, BUFF_ID.toRawCode())
+        ..setDurationHero(1, DURATION)
+        ..setDurationNormal(1, DURATION)
+        ..setIconNormal(Icons.bTNEvasion)
+        ..setName(TOOLTIP_NORM + " Dummy Cast")
+
+@compiletime function createPantherInstinctAbility()
+    new ChannelAbilityPreset(ABILITY_RENDO_PANTHER_INSTINCT, 1, true)
+        ..presetManaCost(lvl -> 20)
+        ..setLevelSkipRequirement(0)
+        ..setRequiredLevel(1)
+        ..setCheckDependencies(true)
+        ..setCooldown(1, 1)
+        ..setIconNormal(Icons.bTNEvasion)
+        ..setName(TOOLTIP_NORM)
+        ..setTooltipNormal(1, makeToolTipNorm("E", TOOLTIP_NORM))
+        ..setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        ..setFollowThroughTime(1, 0)
+        // Should we note down somewhere which orderId are used by channel abilities?
+        ..setBaseOrderID(1, "immolation")
+        ..setRequirements(UPGD_RENDO_PANTHER_INSTINCT.toRawCode())
+
+
+init
+    EventListener.onCast(ABILITY_RENDO_PANTHER_INSTINCT) (unit caster) ->
+        InstantDummyCaster.castTarget(caster.getOwner(), DUMMY_ABIL_ID, 1, OrderIds.innerfire, caster)
+        let dmgListener = DamageEvent.addListener()  ->
+            let damaged = DamageEvent.getTarget()
+            if damaged.hasAbility(BUFF_ID)
+                let text = "Dodged " + DamageEvent.getAmount().round().toString()
+                // Create a small fading text to indicate how much damage has been dodged
+                // Think player would like to know what they have dodged
+                createFadingTextTag(caster, text, COLOR_RED)
+                    ..setText(text, 8)
+                    ..setVelocity(0, 0.06)
+                    ..setLifespan(3)
+                DamageEvent.setAmount(0)
+
+        doPeriodically(0.3) cb ->
+            if caster.isAlive() and caster.hasAbility(BUFF_ID)
+                flashEffect(Abilities.mirrorImageCaster, caster.getPos())
+            else
+                destroy dmgListener
+                destroy cb

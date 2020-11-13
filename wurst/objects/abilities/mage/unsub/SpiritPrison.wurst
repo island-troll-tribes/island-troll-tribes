@@ -79,8 +79,8 @@ function createCageBuffAir(int newId) returns BuffDefinition
         ..setEditorSuffix("(Wurst)")
         ..setBuffs(1, commaList(BUFF_ID, BUFF_ID_AIR))
 
-@compiletime function createSpiritPrison() returns ChannelAbilityPreset
-    return new ChannelAbilityPreset(ABILITY_SPIRIT_PRISON, 1, true)
+function createSpiritPrison(int newId) returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(newId, 1, true)
         ..setIconNormal(Icons.bTNWitchDoctorMaster)
         ..setIconResearch(Icons.bTNWitchDoctorMaster)
         ..setIconTurnOff(Icons.bTNWitchDoctorMaster)
@@ -89,7 +89,7 @@ function createCageBuffAir(int newId) returns BuffDefinition
         ..setName("Spirit Prison")
         ..setDisableOtherAbilities(1, false)
         ..setCastingTime(1, 0)
-        ..setTooltipNormal(1,"Spirit Prison".color(GENERAL_COLOR))
+        ..setTooltipNormal(1, makeToolTipNorm("Q", "Spirit Prison"))
         ..setTooltipNormalExtended(1, TOOLTIP_EXT)
         ..setCooldown(1, COOLDOWN)
         ..setManaCost(1, MANACOST)
@@ -99,6 +99,14 @@ function createCageBuffAir(int newId) returns BuffDefinition
         ..setCastRange(1, MISSILE_SPEED * MISSILE_LIFETIME)
         ..setFollowThroughTime(1, 0.5)
         ..setBaseOrderID(1, "blink")
+
+@compiletime function createSpiritPrisonCurrent()
+    createSpiritPrison(ABILITY_SPIRIT_PRISON)
+
+@compiletime function createSpiritPrisonLegacy()
+    createSpiritPrison(ABILITY_LEGACY_SPIRIT_PRISON)
+        ..setHotkeyNormal("R")
+        ..setTooltipNormal(1, makeToolTipNorm("R", "Spirit Prison"))
 
 class SpiritPrisonProjectile
     use TimedLoop
@@ -168,4 +176,6 @@ function isValidTarget(unit caster, unit target) returns bool
 
 init
     EventListener.onPointCast(ABILITY_SPIRIT_PRISON) (unit caster, vec2 target) ->
+        new SpiritPrisonProjectile(caster, caster.getPos(), caster.getPos().angleTo(target))
+    EventListener.onPointCast(ABILITY_LEGACY_SPIRIT_PRISON) (unit caster, vec2 target) ->
         new SpiritPrisonProjectile(caster, caster.getPos(), caster.getPos().angleTo(target))

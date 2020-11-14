@@ -16,6 +16,7 @@ import Items
 import LocalItemObjEditing
 import LocalObjectIDs
 import LocalAssets
+import UnitExtensions
 
 constant ABIL      = compiletime(ABIL_ID_GEN.next())
 constant CAST_ABIL = compiletime(ABIL_ID_GEN.next())
@@ -70,13 +71,12 @@ public constant TT_TWIN_ISLAND_POTION = "" +
         ..setStockReplenishInterval(120)
 
 
-
 init
     EventListener.onCast(CAST_ABIL) (unit caster) ->
         let owner = caster.getOwner()
         forUnitsAll() u ->
             if u.getOwner().isEnemyOf(owner) and u.isAlive()
-                if udg_trolls.contains(u)
+                if u.isTroll()
                     PingMinimapForForceEx(GetPlayersAllies(owner), u.getPos().x, u.getPos().y, 8, bj_MINIMAPPINGSTYLE_ATTACK, 255, 0, 0)
                     //Temporary vision required by dummy
                     let vis = createVision(owner, u.getPos(), 200, true)

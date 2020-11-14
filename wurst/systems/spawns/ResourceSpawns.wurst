@@ -32,6 +32,7 @@ let islandSpawnList = new LinkedList<IslandSpawner>()
 let FISH_PER_AREA = 1
 var gameStartTime = 0.
 
+var itemCurrent = 0
 
 let spawnRegion = CreateRegion()
     ..addRect(gg_rct_spawn_area_1_1)
@@ -200,7 +201,7 @@ class IslandSpawner
             //Update desired item counts for next spawning round
             //Basically keeping count of the sum that the total items of that type should be at on average at the end of this spawn cycle
             let weightRatio = itemWeight / totalWeight
-            let itemTotalThisRound = (this.itemsSpawnCount * udg_ITEM_BASE).ceil()
+            let itemTotalThisRound = (this.itemsSpawnCount * gameConfig.getItemBase()).ceil()
             if referenceItemCount.has(spawnInfo.id)
                 referenceItemCount.put(spawnInfo.id, referenceItemCount.get(spawnInfo.id) + (itemTotalThisRound * weightRatio))
             else
@@ -215,7 +216,7 @@ class IslandSpawner
         destroy this.itemPool
 
 public function lowerItem(int count)
-    udg_ITEM_CURRENT -= count
+    itemCurrent -= count
 
 public function handleItemSpawning()
     for island in islandSpawnList
@@ -229,14 +230,14 @@ public function handleItemSpawning()
         bool loopDidSpawn = false
         for island in islandSpawnList
             //Abruptly stop loop if item limit reached
-            if udg_ITEM_CURRENT >= udg_ITEM_MAX
+            if itemCurrent >= gameConfig.getItemMax()
                 loopDidSpawn = false
                 break
 
             //Spawn item if island-specific spawn count is not yet achieved
-            if not spawnedCount.has(island) or (spawnedCount.get(island) < (island.itemsSpawnCount * udg_ITEM_BASE).ceil())
+            if not spawnedCount.has(island) or (spawnedCount.get(island) < (island.itemsSpawnCount * gameConfig.getItemBase()).ceil())
                 island.spawnItemFromPool()
-                udg_ITEM_CURRENT += 1
+                itemCurrent += 1
                 spawnedCount.put(island, spawnedCount.get(island) + 1)
                 loopDidSpawn = true
 
@@ -263,7 +264,7 @@ public function handleAnimalSpawning()
                 break
 
             //Spawn item if island-specific spawn count is not yet achieved
-            if not spawnedCount.has(island) or (spawnedCount.get(island) < (island.animalsSpawnCount * udg_FOOD_BASE).ceil())
+            if not spawnedCount.has(island) or (spawnedCount.get(island) < (island.animalsSpawnCount * gameConfig.getFoodBase()).ceil())
                 island.spawnAnimalFromPool()
                 udg_ANIMAL_CURRENT += 1
                 spawnedCount.put(island, spawnedCount.get(island) + 1)
@@ -349,12 +350,12 @@ function startSpawnCycle()
 function adjustBaseSpawnrates()
     //Replacement for modStats function of the legacy system.
     //Dynamically adjust overall item & animal amounts (and specific item type amounts but thats handles by spawnInfo classes now)
-    udg_ITEM_BASE = max(.15,udg_ITEM_BASE-0.2)
-    udg_FOOD_BASE = max(.15,udg_FOOD_BASE-0.3)
+    gameConfig.setItemBase(max(.15,gameConfig.getItemBase()-0.2))
+    gameConfig.setFoodBase(max(.15,gameConfig.getFoodBase()-0.3))
 
 function spawnFishOrHawk(rect spawnRect)
     // Exit if the spawn limit has been reached.
-    if udg_ITEM_LIMIT_MODE and udg_FISH_CURRENT >= udg_FISH_MAX
+    if udg_FISH_CURRENT >= gameConfig.getFishMax()
         return
 
     // Randomly choose the location to spawn the new unit.

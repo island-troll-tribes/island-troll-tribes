@@ -1,118 +1,182 @@
 package Meditate
 
-import HashMap
+// Standard library imports:
+import Assets
+import ChannelAbilityPreset
 import ClosureEvents
 import ClosureTimers
+import HashMap
 import Orders
+
+// Third-party imports:
+import Lodash
+
+// Local imports:
+import LocalObjectIDs
 import OverCharge
 import ToolTipsUtils
-import ChannelAbilityPreset
-import Lodash
-import Assets
-import LocalObjectIDs
+
+// The visual effect used to represent meditation.
+let FX_PATH = Abilities.darkRitualTarget
+
+// The lifespan of the animation.
+// TODO: Automate this somehow instead of knowing and hard-coding it.
+let FX_DURATION = 2.
+
+// The time scale used for the visual effect.
+let FX_TIME_SCALE = 2.
+
+// The interval at which the periodic effects are applied.
+let PERIOD_INTERVAL = 0.2
+
+// The interval at which the visual effect needs to be refreshed.
+let FX_INTERVAL = FX_DURATION / FX_TIME_SCALE
+
+// The number of ticks between replaying the visual effect. Rounding up is used
+// to prevent multiple animations playing simultaneously for an instance.
+let TICKS_PER_FX = (FX_INTERVAL / PERIOD_INTERVAL).ceil()
 
 let COOLDOWN = 72.
 let MANACOST = 0
 let DURATION = 7.
-let PERIOD_INTERVAL = 0.2
 let MANA_PER_SECOND = 18.
 let ABILITY_ICON = "ReplaceableTextures\\CommandButtons\\BTNMedidate.blp"
-let EFFECT_PATH = Abilities.darkRitualTarget
 let TOOLTIP_NORM = "Meditate"
 let TOOLTIP_EXTENDED = "Channels to recover {0} mana over {1} seconds. Cancels on damage. Has {2} seconds cooldown."
-                                .format((MANA_PER_SECOND * DURATION).toToolTipTeal(), DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
+    .format((MANA_PER_SECOND * DURATION).toToolTipTeal(), DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
 
-class Medidate extends ChannelAbilityPreset
-    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
-        super(newAbilityId, 1, true)
-        this.setTargetType(1, 0)
-        this.setButtonPositionNormalX(buttonPos.a)
-        this.setButtonPositionNormalY(buttonPos.b)
-        this.setIconNormal(ABILITY_ICON)
-        this.setIconResearch(ABILITY_ICON)
-        this.setIconTurnOff(ABILITY_ICON)
-        this.setHeroAbility(false)
-        this.setHotkeyNormal(hotkey)
-        this.setName(TOOLTIP_NORM)
-        this.setDisableOtherAbilities(1, false)
-        this.setFollowThroughTime(1, DURATION)
-        this.setCastingTime(1, 0)
-        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
-        this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
-        this.setOptions(1, 1)
-        this.setCooldown(1, COOLDOWN)
-        this.setManaCost(1, MANACOST)
+@compiletime function createMeditate() returns AbilityDefinition
+    return constructMeditate(ABILITY_MEDITATE, "D", new Pair(2, 1))
 
-@compiletime function createMeditate()
-    new Medidate(ABILITY_MEDITATE, "D", new Pair(2, 1))
-
-HashMap<unit, MeditateInstance> instances = new HashMap<unit,MeditateInstance>()
+function constructMeditate(int newAbilityId, string hotkey, Pair<int, int> buttonPos) returns AbilityDefinition
+    return new ChannelAbilityPreset(newAbilityId, 1, true)
+        ..setTargetType(1, 0)
+        ..setButtonPositionNormalX(buttonPos.a)
+        ..setButtonPositionNormalY(buttonPos.b)
+        ..setIconNormal(ABILITY_ICON)
+        ..setIconResearch(ABILITY_ICON)
+        ..setIconTurnOff(ABILITY_ICON)
+        ..setHeroAbility(false)
+        ..setHotkeyNormal(hotkey)
+        ..setName(TOOLTIP_NORM)
+        ..setDisableOtherAbilities(1, false)
+        ..setFollowThroughTime(1, DURATION)
+        ..setCastingTime(1, 0)
+        ..setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        ..setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
+        ..setOptions(1, 1)
+        ..setCooldown(1, COOLDOWN)
+        ..setManaCost(1, MANACOST)
 
 class MeditateInstance
-    bool isChanneling
-    bool isOvercharged
+    // The collection of all units currently under the effects of Meditate.
+    static HashMap<unit, thistype> instances = new HashMap<unit, thistype>()
+
+    // The unit that cast Meditate.
     unit caster
-    var dmgTrig = CreateTrigger()
 
-    function manaLoop()
-        //Special effects loop
-        doPeriodicallyTimed(1, DURATION) fxloop ->
-            if (isChanneling or isOvercharged)
-                var efx = AddSpecialEffectTargetUnitBJ("origin", caster, EFFECT_PATH)
-                efx.setTimeScale(2)
-                doAfter(1) ->
-                    efx.destr()
-            else
-                fxloop.stop()
+    // Whether the casting of Meditate is still being channeled.
+    bool isChanneling
 
-        //Actual mana loop
-        doPeriodicallyTimed(PERIOD_INTERVAL, DURATION) managiverloop ->
-            if (isChanneling or isOvercharged)
-                var newmana = caster.getMana() + PERIOD_INTERVAL * MANA_PER_SECOND
-                caster.setMana(newmana)
-            else
-                managiverloop.stop()
+    // Whether the casting of Meditate is affected by Overcharge.
+    bool isOvercharged
 
-            if (managiverloop.isLast())
-                destroy this
+    construct(unit caster)
+        // Store the caster responsible for this instance.
+        this.caster = caster
 
-    construct(unit casterUnit, bool overCharged)
+        // The effect is always started by channeling.
         isChanneling = true
-        isOvercharged = overCharged
-        caster = casterUnit
-        manaLoop()
+
+        // Consume Overcharge, if applicable.
+        isOvercharged = consumeOvercharge(caster)
+
+        // Begin the effects of Meditate.
+        apply()
+
+        // Remove references to prior castings still in effect.
+        // TODO: This would allow multiple instances for a single caster, which
+        // would increase mana regeneration. Furthermore, the first instance is
+        // removed from the global state and can't be cancelled, so damage will
+        // not halt an existing overcharged instance.
+        if instances.has(caster)
+            instances.getAndRemove(caster)
+
+        // Store the reference globally.
+        instances.put(caster, this)
 
     ondestroy
-        if (instances.has(caster))
-            if (instances.get(caster) == this)
-                instances.remove(caster)
+        // Remove the reference to this instance from the global state.
+        if instances.get(caster) == this
+            instances.remove(caster)
 
+    // Applies the timed effects of Meditate.
+    function apply()
+        // Create a loop to orchestrate the mechanical effects.
+        doPeriodicallyTimed(PERIOD_INTERVAL, DURATION) cb ->
+            // Check that the instance is still in effect.
+            if isActive()
+                // Regenerate mana at the appropriate rate.
+                caster.addMana(PERIOD_INTERVAL * MANA_PER_SECOND)
 
-function onCast()
-    var caster = GetSpellAbilityUnit()
+                // Sync the refresh of visual effect to its duration.
+                if cb.getCount() % TICKS_PER_FX == 0
+                    // Create a visual effect indicating that the unit is meditating.
+                    let efx = caster.addEffect(FX_PATH, "origin")
+                        ..setTimeScale(2)
 
-    if instances.has(caster)
-        instances.getAndRemove(caster)
+                    // Remove the effect shortly after.
+                    doAfter(1) ->
+                        efx.destr()
+            // End the effect if it is no longer active.
+            else
+                cb.stop()
 
-    instances.put(caster, new MeditateInstance(caster, consumeOvercharge(caster)))
+            // End the effect if this loop is closing.
+            if cb.getCount() <= 1
+                destroy this
 
-function onDamage(unit target, real amount)
-    if instances.has(target) and amount >= 0.5
-        var instance = instances.get(target)
-        if not instance.isOvercharged
-            target.issueImmediateOrderById(Orders.stop)
+    function isActive() returns bool
+        return isChanneling or isOvercharged
+
+    static function onEndCast(unit caster)
+        // Look up the instance for the caster
+        let instance = instances.get(caster)
+
+        // Exit if the target is not under the effect of Meditate, which may
+        // happen if the periodic loop and casting end simultaneosuly.
+        if instance == null
+            return
+
+        // Cancel the channeling effect.
         instance.isChanneling = false
+
+    static function onDamage(unit target, real amount)
+        // Ignore inconsequential damage.
+        if amount < 0.5
+            return
+
+        // Look up the instance for the caster
+        let instance = instances.get(target)
+
+        // Exit if the target is not under the effect of Meditate.
+        if instance == null
+            return
+
+        // Halt the channeling, as necessary.
+        if instance.isChanneling
+            target.issueImmediateOrderById(Orders.stop)
+
+        // Cancel the Overcharge effect.
         instance.isOvercharged = false
 
-function onEndCast()
-    if GetSpellAbilityId() == ABILITY_MEDITATE
-        var caster = GetSpellAbilityUnit()
-        if (instances.has(caster))
-            var instance = instances.get(caster)
-            instance.isChanneling = false
 init
-    registerSpellEffectEvent(ABILITY_MEDITATE, () -> onCast())
-    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST, () -> onEndCast())
+    registerSpellEffectEvent(ABILITY_MEDITATE) ->
+        new MeditateInstance(GetSpellAbilityUnit())
 
-    EventListener.add(EVENT_UNIT_DAMAGED) ->
-        onDamage(GetTriggerUnit(), GetEventDamage().abs())
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST) ->
+        if GetSpellAbilityId() == ABILITY_MEDITATE
+            MeditateInstance.onEndCast(GetSpellAbilityUnit())
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DAMAGED) ->
+        MeditateInstance.onDamage(GetTriggerUnit(), GetEventDamage().abs())

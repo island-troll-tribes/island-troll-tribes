@@ -18,6 +18,9 @@ let trolls = new HashMap<player, unit>()
 public function player.getTribe() returns Tribe
     return Tribe.ofPlayer(this)
 
+public function player.getTribePlayer() returns player
+    return Tribe.ofPlayer(this).getNonMember()
+
 public function player.isPlaying() returns boolean
     return this.getController() == MAP_CONTROL_USER and this.getSlotState() == PLAYER_SLOT_STATE_PLAYING
 
@@ -97,3 +100,9 @@ public function player.getTechCount(integer techid, boolean specificonly) return
 
 public function player.getTrollIcon() returns string
     return trollIcons.get(this.getTroll().getTypeId())
+
+public function player.hasVisibility(unit target) returns bool
+    return IsUnitVisible(target, this)
+
+public function player.hasVisibility(vec2 pos) returns bool
+    return IsVisibleToPlayer(pos.x, pos.y, this)

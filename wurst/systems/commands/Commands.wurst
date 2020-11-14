@@ -16,6 +16,7 @@ import StringExtensions
 import TribeBoard
 import Tribe
 import UnitExtensions
+import LocalObjectIDs
 
 class PlayerAllianceSetting
     string name
@@ -164,3 +165,23 @@ init
                 "Type -clear to clear off those hints."
             )
             printTimedToPlayer(msg, 30, triggerPlayer)
+
+        registerCommandAll("lh") (triggerPlayer, args) ->
+            let u = triggerPlayer.getTroll()
+
+            var msg = "You shouldn't be seeing this message, report this."
+            if u.getTypeId() == UNIT_MAGE
+                let lvl = u.getAbilityLevel(ABILITY_MAGE_SPELLBOOK)
+                u.getOwner().getConfig().toggleLegacyHotkey()
+
+                u.disableAbility(ABILITY_NEGATIVE_BLAST, false, true)
+                u.disableAbility(ABILITY_MAGE_SPELLBOOK, false, true)
+
+                u.addAbility(ABILITY_LEGACY_NEGATIVE_BLAST)
+                if lvl > 0
+                    u.addAbility(ABILITY_MAGE_LEGACY_SPELLBOOK, lvl)
+                msg = "Enabled Legacy Hotkeys, mapped to version 3.2".color(COLOR_YELLOW)
+
+            else
+                msg = "This feature only work for mage and hypnotist class".color(COLOR_RED)
+            printTimedToPlayer(msg, 5, triggerPlayer)

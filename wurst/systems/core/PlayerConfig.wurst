@@ -1,0 +1,35 @@
+package PlayerConfig
+
+import HashMap
+import GameMode
+
+public class PlayerConfig
+    static let playerToConfigMap = new HashMap<player, PlayerConfig>()
+
+    static function initialize()
+        GameMode.onModeSelectionFinish(function onModesFinish)
+
+    static function onModesFinish()
+        for i = 0 to bj_MAX_PLAYERS - 1
+            if players[i].isIngame()
+                new PlayerConfig(players[i])
+
+    static function ofPlayer(player query) returns PlayerConfig
+        return playerToConfigMap.get(query)
+
+    bool legacyHotkey = false
+    player _player
+
+    construct(player _player)
+        this._player = _player
+        playerToConfigMap.put(_player, this)
+
+    function isLegacyHotkeyEnabled() returns bool
+        return legacyHotkey
+
+    function toggleLegacyHotkey()
+        legacyHotkey = legacyHotkey ? false : true
+
+
+init
+    PlayerConfig.initialize()

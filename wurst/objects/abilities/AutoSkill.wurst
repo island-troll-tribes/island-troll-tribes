@@ -9,6 +9,11 @@ import Classes
 import LocalObjectIDs
 import Transformation
 import UnitExtensions
+import PlayerExtensions
+import ObjectIDManager
+
+let legacySkillMap = new HashMap<int, int>()
+    ..put(ABILITY_MAGE_SPELLBOOK, ABILITY_MAGE_LEGACY_SPELLBOOK)
 
 let skillMap = new HashMap<int, int>()
     // Hunter
@@ -68,12 +73,16 @@ public function autoSkill(unit target)
         return
 
     // Look up the corresponding ability for the unit.
-    let abilityID = skillMap.get(target.getTypeId())
+    var abilityID = skillMap.get(target.getTypeId())
 
     // Exit if the unit does not have a configured skill.
     if abilityID == 0
         return
 
+    if target.getOwner().getConfig().isLegacyHotkeyEnabled()
+        abilityID = legacySkillMap.get(abilityID)
+
+    print(abilityID.asObjectName())
     // Ensure that the unit has the ability.
     target.addAbility(abilityID)
 

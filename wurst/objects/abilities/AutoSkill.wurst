@@ -10,10 +10,10 @@ import LocalObjectIDs
 import Transformation
 import UnitExtensions
 import PlayerExtensions
-import ObjectIDManager
 
 let legacySkillMap = new HashMap<int, int>()
     ..put(ABILITY_MAGE_SPELLBOOK, ABILITY_MAGE_LEGACY_SPELLBOOK)
+    ..put(ABILITY_HYPNOTIST_SPELLBOOK, ABILITY_HYPNOTIST_LEGACY_SPELLBOOK)
 
 let skillMap = new HashMap<int, int>()
     // Hunter
@@ -79,10 +79,11 @@ public function autoSkill(unit target)
     if abilityID == 0
         return
 
+    // Special case to switch abilities with legacy ones who got different
+    // hotkeys
     if target.getOwner().getConfig().isLegacyHotkeyEnabled()
         abilityID = legacySkillMap.get(abilityID)
 
-    print(abilityID.asObjectName())
     // Ensure that the unit has the ability.
     target.addAbility(abilityID)
 

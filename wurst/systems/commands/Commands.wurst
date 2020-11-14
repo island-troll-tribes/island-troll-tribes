@@ -3,6 +3,7 @@ package Commands
 // Standard library imports:
 import HashMap
 import LinkedList
+import ClosureTimers
 
 // Local imports:
 import ChatCommands
@@ -155,7 +156,8 @@ init
 
         registerCommandAll("crafting") (triggerPlayer, args) ->
             let msg = (
-                "Pick up the materials in the right order on the first go, they will be transmuted into the item you want to craft.\n"+
+
+            "Pick up the materials in the right order on the first go, they will be transmuted into the item you want to craft.\n"+
                 "Crafting recipes are displayed on the ward bottom side of the map, you have to select the ward, type -recipes if you can't find them.\n"+
                 "Building are crafted by your troll or the master crafter, gears & weapons are crafted by the building.\n"+
                 "Example 1".color(HIGHLIGHT_COLOR) + ": recipe for camp fire kit is tinder flint stick, which you have to put a tinder in your first inventory slot, flint in the second & stick in the third\n"+
@@ -166,22 +168,38 @@ init
             )
             printTimedToPlayer(msg, 30, triggerPlayer)
 
+        // This is a command added just to accomodate old mage player who aren't
+        // satisfied with new hotkeys, they have 10 seconds to type it after game start
+        // as this is an edge case, I don't want to spend more time on it
+        // There are several issues which I hoped to ignore by setting a 10
+        // seconds window to enable it.
+        // e.g, mage spellbook & the legacy spellbook share the same orderId
+        // If the unit already has the ABILITY_MAGE_SPELLBOOK, which is unlocked
+        // at lvl 2, the ABILITY_MAGE_LEGACY_SPELLBOOK will also contains the
+        // original spellbook spells, this can be avoided by setting a different
+        // orderId for the legacy spellbook but we already have enough issue
+        // with conflicting orderId so I didn't choose this solution.
+        // This currently only work for mage & hypnotist spellbook as those
+        // are the only class that were requested for legacy hotkeys
         registerCommandAll("lh") (triggerPlayer, args) ->
             let u = triggerPlayer.getTroll()
 
             var msg = "You shouldn't be seeing this message, report this."
             if u.getTypeId() == UNIT_MAGE
+                and not triggerPlayer.getConfig().isLegacyHotkeyEnabled()
                 let lvl = u.getAbilityLevel(ABILITY_MAGE_SPELLBOOK)
-                u.getOwner().getConfig().toggleLegacyHotkey()
+                triggerPlayer.getConfig().toggleLegacyHotkey()
 
-                u.disableAbility(ABILITY_NEGATIVE_BLAST, false, true)
+                u.removeAbility(ABILITY_NEGATIVE_BLAST)
                 u.disableAbility(ABILITY_MAGE_SPELLBOOK, false, true)
 
                 u.addAbility(ABILITY_LEGACY_NEGATIVE_BLAST)
                 if lvl > 0
                     u.addAbility(ABILITY_MAGE_LEGACY_SPELLBOOK, lvl)
                 msg = "Enabled Legacy Hotkeys, mapped to version 3.2".color(COLOR_YELLOW)
-
             else
                 msg = "This feature only work for mage and hypnotist class".color(COLOR_RED)
             printTimedToPlayer(msg, 5, triggerPlayer)
+        doAfter(10) ->
+            // Prevent the user from using the transformation during gameplay.
+            deregisterCommandAll("lh")

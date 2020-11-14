@@ -90,16 +90,16 @@ function createAngerAbility(int abilId, string hotkey) returns AbilityDefinition
         ..setAttackSpeedBonus(1, AS_BONUS)
         ..setDamageperSecond(1, DAMAGE)
         ..setBuffs(1, toRawCode(BUFF_ANGER))
+        ..presetButtonPosNormal(2, 0)
 
-@compiletime function createHypnoAngerAbility() returns AbilityDefinitionUnholyFrenzy
-    return createAngerAbility(ABILITY_ANGER, "E")
-        ..setButtonPositionNormalX(2)
-        ..setButtonPositionNormalY(0)
+@compiletime function createHypnoAngerAbility()
+    createAngerAbility(ABILITY_ANGER, "E")
 
-@compiletime function createDementiaMasterAngerAbility() returns AbilityDefinitionUnholyFrenzy
-    return createAngerAbility(ABILITY_DEMENTIA_MASTER_ANGER, "F")
-        ..setButtonPositionNormalX(2)
-        ..setButtonPositionNormalY(0)
+@compiletime function createHypnoLegacyAngerAbility()
+    createAngerAbility(ABILITY_LEGACY_ANGER, "A")
+
+@compiletime function createDementiaMasterAngerAbility()
+    createAngerAbility(ABILITY_DEMENTIA_MASTER_ANGER, "F")
 
 
 function onCast(unit caster, unit target)
@@ -112,4 +112,5 @@ function onCast(unit caster, unit target)
 
 init
     EventListener.onTargetCast(ABILITY_ANGER, (unit caster, unit target) -> onCast(caster, target))
+    EventListener.onTargetCast(ABILITY_LEGACY_ANGER, (unit caster, unit target) -> onCast(caster, target))
     EventListener.onTargetCast(ABILITY_DEMENTIA_MASTER_ANGER, (unit caster, unit target) -> onCast(caster, target))

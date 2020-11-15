@@ -1,8 +1,4 @@
 globals
-    // User-defined
-integer udg_FISH_CURRENT= 0
-integer udg_ANIMAL_CURRENT= 0
-
     // Generated
 rect gg_rct_discoduck= null
 rect gg_rct_Dualing_Area= null
@@ -127,8 +123,6 @@ endglobals
 
 
 function InitGlobals takes nothing returns nothing
-    set udg_FISH_CURRENT=0
-    set udg_ANIMAL_CURRENT=0
 endfunction
 
 //***************************************************************************

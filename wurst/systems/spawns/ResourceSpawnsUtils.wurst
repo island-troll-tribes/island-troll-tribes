@@ -45,18 +45,14 @@ function getRandomAllowedPoint(Pool<rect> allowed, region blocked) returns vec2
     // Output a dummy result.
     return vec2(0,0)
 
-public class Spawner
-    Composer fn
-
-    construct(Composer fn)
-        this.fn = fn
-
-    function spawn()
-        this.fn.execute()
-
-public class ItemSpawnComposer implements Composer
+public class ItemSpawner extends EmptyVoidFunction
+    // The pool used to pick an item type.
     protected ItemPool items
+
+    // The pool used to pick a region for spawning.
     protected Pool<rect> allowed
+
+    // The region in which spawns are blocked.
     protected region blocked
 
     construct(ItemPool items, Pool<rect> allowed, region blocked)
@@ -64,21 +60,24 @@ public class ItemSpawnComposer implements Composer
         this.allowed = allowed
         this.blocked = blocked
 
-    override function execute()
-        let spawnPoint = getRandomAllowedPoint(this.allowed, this.blocked)
-        let spawnItemId = this.items.random()
-        createItem(spawnItemId, spawnPoint)
-        items.register(spawnItemId)
+    override function call()
+        createItem(
+            this.items.random(),
+            getRandomAllowedPoint(this.allowed, this.blocked)
+        ).register(items)
 
-public class FishSpawnComposer implements Composer
+public class FishSpawner extends EmptyVoidFunction
+    // The pool used to pick a unit type.
     protected Pool<int> units
+
+    // The region used to pick a
     protected rect allowedRegion
 
     construct(Pool<int> units, rect allowedRegion)
         this.units = units
         this.allowedRegion = allowedRegion
 
-    override function execute()
+    override function call()
         // Spawn a unit with a random type and location.
         createUnit(
             players[PLAYER_NEUTRAL_AGGRESSIVE],
@@ -87,9 +86,14 @@ public class FishSpawnComposer implements Composer
             randomAngle()
         )
 
-public class AnimalSpawnComposer implements Composer
+public class AnimalSpawner extends EmptyVoidFunction
+    // The pool used to pick a unit type.
     protected Pool<int> units
+
+    // The pool used to pick a region for spawning.
     protected Pool<rect> allowed
+
+    // The region in which spawns are blocked.
     protected region blocked
 
     construct(Pool<int> units, Pool<rect> allowed, region blocked)
@@ -97,7 +101,7 @@ public class AnimalSpawnComposer implements Composer
         this.blocked = blocked
         this.units = units
 
-    override function execute()
+    override function call()
         // Spawn a unit with a random type and location.
         createUnit(
             players[PLAYER_NEUTRAL_AGGRESSIVE],
@@ -107,14 +111,19 @@ public class AnimalSpawnComposer implements Composer
         )
 
 public class IslandInfo
-    int itemsSpawnCount
-    int animalsSpawnCount
-    Pool<rect> spawnRegionsPool
+    // The number of items to spawn per increment.
+    int numItems
 
-    construct(int itemsSpawnCount, int animalsSpawnCount, Pool<rect> spawnRegionsPool)
-        this.itemsSpawnCount = itemsSpawnCount
-        this.animalsSpawnCount = animalsSpawnCount
-        this.spawnRegionsPool = spawnRegionsPool
+    // The number of units to spawn per increment.
+    int numUnits
+
+    // The pool used to pick a region for spawning
+    Pool<rect> regions
+
+    construct(int numItems, int numUnits, Pool<rect> regions)
+        this.numItems = numItems
+        this.numUnits = numUnits
+        this.regions = regions
 
 // This class computes how rates change over time, allowing for spawn rates to
 // increase or decrease as the game progresses.
@@ -172,10 +181,10 @@ public class ItemPool extends Pool<int>
     private let actualTotals = new HashMap<int, int>()
 
     // The number of items created per interval.
-    int itemsSpawnCount
+    int numItems
 
-    construct(IterableMap<int, WeightScaler> weights, int itemsSpawnCount)
-        this.itemsSpawnCount = itemsSpawnCount
+    construct(IterableMap<int, WeightScaler> weights, int numItems)
+        this.numItems = numItems
 
         // Copy or reference the weights, as appropriate.
         if weights instanceof OwnedIterableMap<int, WeightScaler>
@@ -233,7 +242,7 @@ public class ItemPool extends Pool<int>
             let share = currentWeights.get(id) / totalWeight
 
             // Compute the expected amount of new spawns of this type.
-            let delta = share * (itemsSpawnCount * gameConfig.getItemBase())
+            let delta = share * (numItems * gameConfig.getItemBase())
 
             // Increment the expected total.
             expectedTotals.put(id, expectedTotals.get(id) + delta)
@@ -241,3 +250,7 @@ public class ItemPool extends Pool<int>
     // Records that an item of the given type was spawned.
     function register(int id)
         actualTotals.put(id, actualTotals.get(id + 1))
+
+// A method used to register an item to a pool.
+public function item.register(ItemPool pool)
+    pool.register(this.getTypeId())

@@ -4,7 +4,6 @@ package Magic
 import Assets
 import ClosureTimers
 import DummyCaster
-import EventHelper
 import InstantDummyCaster
 import Orders
 import RegisterEvents
@@ -19,12 +18,12 @@ import TheOne
 
 /**
     This function is called when the item "Magic" is used, it has random chance of triggering following effect :
-    -Set HP/MP to 30%, 10% chance to happen
+    -Pack all fires on the map, 10% chance to happen
     -Set HP/MP respectively to 6 and 2 %, 10% chance to happen
     -Set daytime to midnight, 10% chance to happen
     -Reduce the user level by 1, 10% chance to happen
     -Summon a meteor on user, 20% chance to happen
-    -Add 500 xp to user, 10% chance to happen
+    -Add 300 xp to user, 10% chance to happen
     -Fully restore HP/MP, 20% chance to happen
     -Spawn 2 manas crystal on user position, 10% chance to happen
 
@@ -55,11 +54,12 @@ function useMagic(unit user)
                 gg_rct_discoduck.getCenter(),
                 (225.0).asAngleDegrees()
             )
-        // Mildly damage the unit.
+        // Pack all fires on the map
         else if chance < 0.1
             flashEffect(Abilities.deathCoilSpecialArt, user, "origin")
-            user.setHP(user.getMaxHP() * 0.3)
-            user.setMana(user.getMaxMana() * 0.3)
+            let fires = CreateGroup()..enumUnitsOfType(UNIT_FIRE, null)
+            for fire from fires
+                fire.issueImmediateOrderById(ABILITY_PACK_BUILDING)
         // Severely damage the unit.
         else if chance < 0.2
             flashEffect(Objects.orcLargeDeathExplode, user, "origin")
@@ -85,7 +85,7 @@ function useMagic(unit user)
         // Add experience to the unit.
         else if chance < 0.7
             flashEffect(Abilities.aIemTarget,  user, "origin")
-            user.addXp(500, true)
+            user.addXp(300, true)
         // Fully heal the unit.
         else if chance < 0.9
             flashEffect(Abilities.aIreTarget,  user, "origin")

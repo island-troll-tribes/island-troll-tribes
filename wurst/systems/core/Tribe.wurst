@@ -17,6 +17,7 @@ import PlayerExtensions
 import StringExtensions
 import initlater TribeBoard
 import initlater Boards
+import initlater ScoreBoard
 
 let listeners = CreateTrigger()
 
@@ -125,7 +126,7 @@ public class Tribe
             TribeBoard.findForPlayer(member).board.display(member, false)
 
             // Enabling the score board, maximizing it so the player doesn't miss it
-            scoreBoard.board..display(true)..maximize(member)
+            scoreBoard.board..display(member, true)..maximize(member)
 
     function displayDefeated()
         // Displaying which tribe has been defeated to every player & observer
@@ -135,6 +136,9 @@ public class Tribe
     function wasDefeated()
         makePlayersObservers()
         defeated = true
+        scoreBoardEntries.get("PlayerName")
+            .updateEntry(this.name, this.name, iconPlayerDefeated)
+
         if tribe.containsPlayer(GetLocalPlayer())
             print("You have been defeated.".color(HIGHLIGHT_COLOR))
         // TODO: Remove this once tribes mode is merged into default game.

@@ -46,25 +46,34 @@ function constructDreamEater(
         ..setAnimationNames(ANIMATION_NAME)
         ..setTargetsAllowed(1, TARGET_ALLOWED)
 
-@compiletime function createDreamEater() returns AbilityDefinition
-    return constructDreamEater(ABILITY_DREAM_EATER, "W", new Pair(1, 0))
+@compiletime function createDreamEater()
+    constructDreamEater(ABILITY_DREAM_EATER, "W", new Pair(1, 0))
+    constructDreamEater(ABILITY_LEGACY_DREAM_EATER, "D", new Pair(1, 0))
+
+
+function onTargetCast(unit caster, unit target)
+    // Apply the Soul Theft visual effect.
+    flashEffect(Abilities.aIsoTarget, target, "overhead")
+
+    // Damage the target.
+    UnitDamageTarget(caster, target, DAMAGE, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
+    target.subMana(MANA_EATEN)
+
+    // Heal the caster.
+    caster.addHP(HP_RESTORED)
+    caster.addMana(MANA_RESTORED)
 
 
 init
     EventListener.onTargetCast(ABILITY_DREAM_EATER) (unit caster, unit target) ->
-        // Apply the Soul Theft visual effect.
-        flashEffect(Abilities.aIsoTarget, target, "overhead")
-
-        // Damage the target.
-        UnitDamageTarget(caster, target, DAMAGE, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
-        target.subMana(MANA_EATEN)
-
-        // Heal the caster.
-        caster.addHP(HP_RESTORED)
-        caster.addMana(MANA_RESTORED)
+        onTargetCast(caster, target)
+    EventListener.onTargetCast(ABILITY_LEGACY_DREAM_EATER) (unit caster, unit target) ->
+        onTargetCast(caster, target)
 
     // Cancel the casting if the target is not under the effect of Hypnosis.
     EventListener.add(EVENT_PLAYER_UNIT_SPELL_CAST) ->
-        if GetSpellAbilityId() == ABILITY_DREAM_EATER and not GetSpellTargetUnit().hasAbility(BUFF_ID)
+        if GetSpellAbilityId() == ABILITY_DREAM_EATER
+            or GetSpellAbilityId() == ABILITY_LEGACY_DREAM_EATER
+            and not GetSpellTargetUnit().hasAbility(BUFF_ID)
             GetSpellAbilityUnit().abortOrder()
             simError(GetTriggerPlayer(), "Target is not Hypnotized.")

@@ -3,7 +3,6 @@ package Commands
 // Standard library imports:
 import HashMap
 import LinkedList
-import ClosureTimers
 
 // Local imports:
 import ChatCommands
@@ -17,7 +16,6 @@ import StringExtensions
 import TribeBoard
 import Tribe
 import UnitExtensions
-import LocalObjectIDs
 
 class PlayerAllianceSetting
     string name
@@ -166,44 +164,3 @@ init
                 "Type -clear to clear off those hints."
             )
             printTimedToPlayer(msg, 30, triggerPlayer)
-
-        // This is a command added just to accomodate old mage player who aren't
-        // satisfied with new hotkeys, they have 10 seconds to type it after game start
-        // as this is an edge case, I don't want to spend more time on it,
-        // consider this a band aid.
-        // There are several issues which I hoped to ignore by setting a 10
-        // seconds window to enable it.
-        // e.g, mage spellbook & the legacy spellbook share the same orderId,
-        // If the unit already has the ABILITY_MAGE_SPELLBOOK, which is unlocked
-        // at lvl 2, the ABILITY_MAGE_LEGACY_SPELLBOOK will also contains the
-        // original spellbook spells, this can be avoided by setting a different
-        // orderId for the legacy spellbook but we already have enough issue
-        // with conflicting orderId so I didn't choose this solution.
-        // This currently only work for mage & hypnotist spellbook as those
-        // are the only class that were requested for legacy hotkeys
-        registerCommandAll("lh") (triggerPlayer, args) ->
-            let u = triggerPlayer.getTroll()
-
-            var msg = "You shouldn't be seeing this message, report this."
-            if u.getTypeId() == UNIT_MAGE
-                and not triggerPlayer.getConfig().isLegacyHotkeyEnabled()
-                let lvl = u.getAbilityLevel(ABILITY_MAGE_SPELLBOOK)
-                triggerPlayer.getConfig().toggleLegacyHotkey()
-
-                u.removeAbility(ABILITY_NEGATIVE_BLAST)
-                u.disableAbility(ABILITY_MAGE_SPELLBOOK, false, true)
-
-                u.addAbility(ABILITY_LEGACY_NEGATIVE_BLAST)
-                if lvl > 0
-                    u.addAbility(ABILITY_MAGE_LEGACY_SPELLBOOK, lvl)
-                msg = "Enabled Legacy Hotkeys, mapped to version 3.2".color(COLOR_YELLOW)
-            else
-                msg = "This feature only work for mage and hypnotist class".color(COLOR_RED)
-            printTimedToPlayer(msg, 5, triggerPlayer)
-        doAfter(10) ->
-            // Prevent the user from enabling legacy hotkeys after 10 seconds.
-            // When spellbooks are swapped, the abilities cooldown are reset
-            // It also cause an issue with spellbooks sharing orderId & stacking
-            // duplicate spell which is more or less explained in the previous
-            // comment
-            deregisterCommandAll("lh")

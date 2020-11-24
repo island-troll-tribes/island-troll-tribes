@@ -1,35 +1,39 @@
 package PlayerConfig
 
-import HashMap
+// TODO: Although this import is not used, it is needed to avoid breaking the
+//       underlying hashtables used elsewhere. It's not clear if this is due to
+//       the initialization order of objects or just an odd behavior of the
+//       compiler. This should be reinvestigated once #593 is complete.
 import GameMode
 
 public class PlayerConfig
-    static let playerToConfigMap = new HashMap<player, thistype>()
+    static thistype array configs
 
     static function initialize()
-        GameMode.onModeSelectionFinish(function onModesFinish)
+        for i = 0 to bj_MAX_PLAYER_SLOTS - 1
+            new PlayerConfig(players[i])
 
-    static function onModesFinish()
-        for i = 0 to bj_MAX_PLAYERS - 1
-            if players[i].isIngame()
-                new PlayerConfig(players[i])
+    static function ofPlayer(player target) returns PlayerConfig
+        return configs[target.getId()]
 
-    static function ofPlayer(player query) returns PlayerConfig
-        return playerToConfigMap.get(query)
+    // The player this configuration is for.
+    player target
 
+    // Whether the player has enabled legacy hotkeys.
     bool legacyHotkey = false
-    player _player
 
-    construct(player _player)
-        this._player = _player
-        playerToConfigMap.put(_player, this)
+    construct(player target)
+        // Update the global mapping.
+        configs[target.getId()] = this
+
+        // Store the target for reverse lookups.
+        this.target = target
 
     function isLegacyHotkeyEnabled() returns bool
         return legacyHotkey
 
     function toggleLegacyHotkey()
-        legacyHotkey = legacyHotkey ? false : true
-
+        legacyHotkey = not legacyHotkey
 
 init
     PlayerConfig.initialize()

@@ -352,13 +352,9 @@ init
             target.addAbility(ABILITY_PET_SPELLS)
 
     registerAfterEffect() (unit target, int unitID) ->
-        // Switch with legacy spellbooks to alter hotkeys for player who
-        // wish to play with hypnotist hotkeys from version 3.2
-        if target.getTypeId() == UNIT_HYPNOTIST
-            and target.hasAbility(ABILITY_SUB_MAGE_INHERITED_SPELLBOOK)
-            and target.getOwner().getConfig().isLegacyHotkeyEnabled()
-            target.disableAbility(ABILITY_HYPNOTIST_SPELLBOOK, false, true)
-            target.removeAbility(ABILITY_SUB_MAGE_INHERITED_SPELLBOOK)
-
-            target.addAbility(ABILITY_HYPNOTIST_LEGACY_SPELLBOOK, 1)
-            target.addAbility(ABILITY_SUB_MAGE_LEGACY_INHERITED_SPELLBOOK)
+        // Switch the base abilities to provide legacy hotkeys, if applicable.
+        if target.getOwner().getConfig().isLegacyHotkeyEnabled()
+            if target.hasAbility(ABILITY_SUB_MAGE_INHERITED_SPELLBOOK)
+                target
+                    ..removeAbility(ABILITY_SUB_MAGE_INHERITED_SPELLBOOK)
+                    ..addAbility(ABILITY_SUB_MAGE_LEGACY_INHERITED_SPELLBOOK)

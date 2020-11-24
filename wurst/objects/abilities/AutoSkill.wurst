@@ -79,8 +79,7 @@ public function autoSkill(unit target)
     if abilityID == 0
         return
 
-    // Special case to switch abilities with legacy ones who got different
-    // hotkeys
+    // Override the ability to provide legacy hotkeys, if applicable.
     if target.getOwner().getConfig().isLegacyHotkeyEnabled()
         and legacySkillMap.has(abilityID)
         abilityID = legacySkillMap.get(abilityID)
@@ -115,6 +114,6 @@ init
     registerPlayerUnitEvent(EVENT_PLAYER_HERO_LEVEL) ->
         autoSkill(GetTriggerUnit())
 
-    // Replace abilities that are discarded during transformation.
+    // Enable abilities that subclasses start with immediately.
     registerAfterEffect() (unit target, int unitID) ->
         autoSkill(target)

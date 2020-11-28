@@ -27,6 +27,16 @@ import LocalAssets
 // The sight radius of the ward, required to be the same throughout the day.
 @configurable public let SIGHT_RADIUS = 700
 
+// The targets that can be affected by the abilities of the ward.
+@configurable public let TARGETS = commaList(
+    TargetsAllowed.air,
+    TargetsAllowed.ground,
+    TargetsAllowed.enemies,
+    TargetsAllowed.vulnerable,
+    TargetsAllowed.invulnerable,
+    TargetsAllowed.hero
+)
+
 // The ID for the dummy unit that has the aura.
 let DUMMY_UNIT_ID = compiletime(UNIT_ID_GEN.next())
 
@@ -66,13 +76,6 @@ let dummies = new HashMap<unit, unit>()
             )
         )
 
-@compiletime function createLivingClayDamageAbility()
-    new AbilityDefinitionDeathDamageAOEmine(ABILITY_WARD_DESTROY)
-        ..presetFullDamageRadius(lvl -> 200.)
-        ..presetFullDamageAmount(lvl -> 10.)
-        ..presetPartialDamageRadius(lvl -> 400)
-        ..presetPartialDamageAmount(lvl -> 5.)
-
 @compiletime function createLivingClayAuraBuff()
     new BuffDefinition(AURA_BUFF_ID, BuffIds.thornsAura)
         ..setIcon(LocalIcons.bTNGreenSentryWard)
@@ -95,24 +98,21 @@ let dummies = new HashMap<unit, unit>()
         ..presetDamageisPercentReceived(lvl -> false)
         // Match the sight radius for the ward.
         ..presetAreaofEffect(lvl -> SIGHT_RADIUS.toReal())
-        // Target enemies and exclude structures.
-        ..presetTargetsAllowed(lvl -> commaList(
-            TargetsAllowed.air,
-            TargetsAllowed.ground,
-            TargetsAllowed.enemies,
-            TargetsAllowed.vulnerable,
-            TargetsAllowed.invulnerable,
-            TargetsAllowed.hero
-        ))
+        // Restrict the targets to those that can destroy the ward.
+        ..presetTargetsAllowed(lvl -> TARGETS)
+
+@compiletime function createLivingClayDamageAbility()
+    new AbilityDefinitionDeathDamageAOEmine(ABILITY_WARD_DESTROY)
+        ..presetFullDamageRadius(lvl -> 200.)
+        ..presetFullDamageAmount(lvl -> 10.)
+        ..presetPartialDamageRadius(lvl -> 400)
+        ..presetPartialDamageAmount(lvl -> 5.)
+        ..presetTargetsAllowed(lvl -> TARGETS)
+
 
 @compiletime function createExplosionAbility()
     new AbilityDefinition(EXPLOSION_ABIL_ID, AbilityIds.mineexploding)
-        ..presetTargetsAllowed(lvl -> commaList(
-            TargetsAllowed.ground,
-            TargetsAllowed.enemies,
-            TargetsAllowed.vulnerable,
-            TargetsAllowed.hero
-        ))
+        ..presetTargetsAllowed(lvl -> TARGETS)
 
 @compiletime function createLivingClayUnit()
     new UnitDefinition(UNIT_LIVING_CLAY, UnitIds.goblinlandmine)

@@ -9,6 +9,11 @@ import Classes
 import LocalObjectIDs
 import Transformation
 import UnitExtensions
+import PlayerExtensions
+
+let legacySkillMap = new HashMap<int, int>()
+    ..put(ABILITY_MAGE_SPELLBOOK, ABILITY_MAGE_LEGACY_SPELLBOOK)
+    ..put(ABILITY_HYPNOTIST_SPELLBOOK, ABILITY_HYPNOTIST_LEGACY_SPELLBOOK)
 
 let skillMap = new HashMap<int, int>()
     // Hunter
@@ -68,11 +73,16 @@ public function autoSkill(unit target)
         return
 
     // Look up the corresponding ability for the unit.
-    let abilityID = skillMap.get(target.getTypeId())
+    var abilityID = skillMap.get(target.getTypeId())
 
     // Exit if the unit does not have a configured skill.
     if abilityID == 0
         return
+
+    // Override the ability to provide legacy hotkeys, if applicable.
+    if target.getOwner().getConfig().isLegacyHotkeyEnabled()
+        and legacySkillMap.has(abilityID)
+        abilityID = legacySkillMap.get(abilityID)
 
     // Ensure that the unit has the ability.
     target.addAbility(abilityID)
@@ -104,6 +114,6 @@ init
     registerPlayerUnitEvent(EVENT_PLAYER_HERO_LEVEL) ->
         autoSkill(GetTriggerUnit())
 
-    // Replace abilities that are discarded during transformation.
+    // Enable abilities that subclasses start with immediately.
     registerAfterEffect() (unit target, int unitID) ->
         autoSkill(target)

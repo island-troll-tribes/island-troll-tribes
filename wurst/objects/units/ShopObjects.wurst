@@ -2,8 +2,16 @@ package ShopObjects
 
 import Assets
 import UnitObjEditing
+import AbilityObjEditing
+import ObjEditingUtils
+import ObjectIdGenerator
+
+import LinkedList
 
 import LocalObjectIDs
+import LocalAssets
+
+let ABILITY_SELECT_UNITS_TOTEM = compiletime(UNIT_ID_GEN.next())
 
 public function HeroDefinition.setTotemShopInterface()
     this
@@ -34,3 +42,38 @@ public function HeroDefinition.setTotemShopInterface()
     ..setStockReplenishInterval(0)
     ..setIconGameInterface(Icons.bTNCancel)
     ..setUnitSoundSet("")
+
+@compiletime function createSelectSpell()
+    new AbilityDefinitionNeutralBuildinganyunit(ABILITY_SELECT_UNITS_TOTEM) // Asud is sell units ability - not in stdlib?
+    ..setActivationRadius(1, 100) // Small activation radius so it doesn't deselect picker for unit
+
+@compiletime function createTotem()
+    new BuildingDefinition(UNIT_TROLL_TOTEM, UnitIds.cantina)
+    ..setName("Troll Totem")
+    ..setDescription("Troll picker")
+    ..setModelFile(Buildings.taurenTotem1)
+    ..setTooltipBasic("Build Troll Totem")
+    ..setScalingValue(1.5)
+    ..setNormalAbilities(commaList(asList(
+        AbilityIds.invulnerable,
+        'Asud', // Needed for AddUnitToStock
+        ABILITY_SELECT_UNITS_TOTEM
+    )))
+    ..setPlacementRequires("")
+    ..setGroundTexture("")
+    ..setPathingMap(PathingTextures.simpleSolid12x12) // Make bought heroes not be too close units away
+    ..setUnitsSold("")
+
+@compiletime function createPicker()
+    new UnitDefinition(UNIT_HERO_PICKER, UnitIds.footman)
+    ..setName("Hero Picker")
+    ..setCollisionSize(0)
+    ..setModelFile(LocalUnits.dummy)
+    ..setFoodCost(0)
+    ..setMovementType(MovementType.Fly)
+    ..setSightRadiusDay(900)
+    ..setSightRadiusNight(900)
+    ..setHasWaterShadow(false)
+    ..setSpeedBase(0)
+    ..setArtSpecial("")
+    ..setShadowImageUnit("")

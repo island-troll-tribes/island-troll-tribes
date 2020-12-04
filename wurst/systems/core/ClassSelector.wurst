@@ -19,8 +19,6 @@ import UnitExtensions
 import TimerUtils
 import Tribe
 
-let UNIT_TROLL_TOTEM = 'o00H'
-
 let spawnList = asList(
     gg_rct_revive_1,
     gg_rct_revive_2,
@@ -108,8 +106,7 @@ public class ClassSelector
 
     private function initializeTotem()
         let pos = spawn.getCenter()
-        let owner = tribe.getMembers().getFirst()
-        totem = createUnit(owner, UNIT_TROLL_TOTEM, pos, angle(0))
+        totem = createUnit(players[PLAYER_NEUTRAL_PASSIVE], UNIT_TROLL_TOTEM, pos, angle(0))
         ..addUnitToStock(UNIT_HUNTER, 1, 1)
         ..addUnitToStock(UNIT_BEAST_MASTER, 1, 1)
         ..addUnitToStock(UNIT_MAGE, 1, 1)
@@ -137,7 +134,7 @@ public class ClassSelector
     private function initializePickers()
         let pos = spawn.getCenter()
         for member in tribe.getMembers()
-            pickers.push(createUnit(member, UNIT_HERO_PICKER, pos.polarOffset(angle(PI), 1200), angle(0)))
+            pickers.push(createUnit(member, UNIT_HERO_PICKER, pos.polarOffset(angle(PI), 0), angle(0)))
             member.panCamToTimed(totem, 0)
             doAfter(0.3) ->
                 member.selectSingle(totem)

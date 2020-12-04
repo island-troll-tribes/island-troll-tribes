@@ -11,8 +11,6 @@ import LinkedList
 import LocalObjectIDs
 import LocalAssets
 
-let ABILITY_SELECT_UNITS_TOTEM = compiletime(UNIT_ID_GEN.next())
-
 public function HeroDefinition.setTotemShopInterface()
     this
     ..setLumberCost(0)
@@ -43,11 +41,13 @@ public function HeroDefinition.setTotemShopInterface()
     ..setIconGameInterface(Icons.bTNCancel)
     ..setUnitSoundSet("")
 
-@compiletime function createSelectSpell()
-    new AbilityDefinitionNeutralBuildinganyunit(ABILITY_SELECT_UNITS_TOTEM) // Asud is sell units ability - not in stdlib?
-    ..setActivationRadius(1, 100) // Small activation radius so it doesn't deselect picker for unit
-
 @compiletime function createTotem()
+    let ABILITY_SELECT_UNITS_TOTEM = compiletime(UNIT_ID_GEN.next())
+
+    new AbilityDefinitionAlliedBuilding(ABILITY_SELECT_UNITS_TOTEM)
+    ..setActivationRadius(1, 1) // Small activation radius so it doesn't try selecting trolls
+    ..setShowSelectUnitButton(1, false)
+
     new BuildingDefinition(UNIT_TROLL_TOTEM, UnitIds.cantina)
     ..setName("Troll Totem")
     ..setDescription("Troll picker")
@@ -56,24 +56,10 @@ public function HeroDefinition.setTotemShopInterface()
     ..setScalingValue(1.5)
     ..setNormalAbilities(commaList(asList(
         AbilityIds.invulnerable,
-        'Asud', // Needed for AddUnitToStock
+        'Asud', // Needed for AddUnitToStock  (Asud is sell units ability - not in stdlib?)
         ABILITY_SELECT_UNITS_TOTEM
     )))
     ..setPlacementRequires("")
     ..setGroundTexture("")
     ..setPathingMap(PathingTextures.simpleSolid12x12) // Make bought heroes not be too close units away
     ..setUnitsSold("")
-
-@compiletime function createPicker()
-    new UnitDefinition(UNIT_HERO_PICKER, UnitIds.footman)
-    ..setName("Hero Picker")
-    ..setCollisionSize(0)
-    ..setModelFile(LocalUnits.dummy)
-    ..setFoodCost(0)
-    ..setMovementType(MovementType.Fly)
-    ..setSightRadiusDay(900)
-    ..setSightRadiusNight(900)
-    ..setHasWaterShadow(false)
-    ..setSpeedBase(0)
-    ..setArtSpecial("")
-    ..setShadowImageUnit("")

@@ -87,7 +87,6 @@ public class ClassSelector
         registerTribeInitializationFinishEvent(function startClassSelection)
 
     Tribe tribe
-    let pickers = new LinkedList<unit>()
     let pool = new LinkedList<int>()
     rect spawn
     unit totem
@@ -100,13 +99,13 @@ public class ClassSelector
 
             initializeTotem()
             initializePool()
-            initializePickers()
 
             spawners.put(totem, this)
 
     private function initializeTotem()
         let pos = spawn.getCenter()
-        totem = createUnit(players[PLAYER_NEUTRAL_PASSIVE], UNIT_TROLL_TOTEM, pos, angle(0))
+        let owner = tribe.getMembers().getFirst()
+        totem = createUnit(owner, UNIT_TROLL_TOTEM, pos, angle(0))
         ..addUnitToStock(UNIT_HUNTER, 1, 1)
         ..addUnitToStock(UNIT_BEAST_MASTER, 1, 1)
         ..addUnitToStock(UNIT_MAGE, 1, 1)
@@ -116,6 +115,8 @@ public class ClassSelector
         ..addUnitToStock(UNIT_GATHERER, 1, 1)
         ..addUnitToStock(UNIT_REPICK_TROLL, 1, 1)
         ..addUnitToStock(UNIT_RANDOM_TROLL, 1, 1)
+        for member in tribe.getMembers()
+            member.panCamToTimed(totem, 0)
 
     private function initializePool()
         let allTrollUnitId = gameConfig.getAllTrollUnitId()
@@ -131,20 +132,10 @@ public class ClassSelector
             ..add(UNIT_SCOUT)
             ..add(UNIT_GATHERER)
 
-    private function initializePickers()
-        let pos = spawn.getCenter()
-        for member in tribe.getMembers()
-            pickers.push(createUnit(member, UNIT_HERO_PICKER, pos.polarOffset(angle(PI), 0), angle(0)))
-            member.panCamToTimed(totem, 0)
-            doAfter(0.3) ->
-                member.selectSingle(totem)
-
     function endSelection()
         if gameConfig.isStartWithOneFire()
             let owner = tribe.getMembers().getFirst()
             createUnit(owner, UNIT_FIRE, spawn.getCenter(), angle(0))
-
-        pickers.each(picker -> picker.remove())
 
         for member in tribe.getMembers()
             var troll = member.getTroll()

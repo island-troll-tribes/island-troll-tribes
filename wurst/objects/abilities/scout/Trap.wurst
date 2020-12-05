@@ -8,7 +8,7 @@ import ClosureEvents
 import ClosureForGroups
 import ErrorHandling
 import HashMap
-import DummyCaster
+import InstantDummyCaster
 import Orders
 
 // Third-party imports:
@@ -306,7 +306,7 @@ function onTrapDeath(unit trap)
         let targetOwner = u.getOwner()
         let trapData = trapList.get(trap.getTypeId())
         if u.isTroll() and targetOwner.isEnemyOf(casterOwner) and not (u.hasAbility('Bams') or u.hasAbility('Bam2'))
-            if new DummyCaster()..owner(casterOwner)..delay(30)..castTarget(trapData.a, 1, trapData.b, u) == null // TODO: This is hacky but it's better than not working
+            if InstantDummyCaster.castTarget(casterOwner, trapData.a, 1, trapData.b, u) == false
                 error("Trap failed, this isn't supposed to happen, report this please.")
 
 init

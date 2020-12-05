@@ -8,7 +8,7 @@ import ClosureEvents
 import ClosureForGroups
 import ErrorHandling
 import HashMap
-import InstantDummyCaster
+import DummyCaster
 import Orders
 
 // Third-party imports:
@@ -18,6 +18,8 @@ import Lodash
 import UnitExtensions
 import LocalObjectIDs
 import ToolTipsUtils
+
+import Track
 
 constant TRAP_CAST_RANGE = 100.
 constant TRAP_ACTIVATION_DELAY = 5.
@@ -42,6 +44,8 @@ constant MANACOST = 10
 constant TOOLTIP_NORM_TRACK_TRAP  = "Tracking Trap"
 constant TOOLTIP_NORM_SPIKED_TRAP = "Spiked Trap"
 constant TOOLTIP_NORM_BEAR_TRAP = "Bear Trap"
+
+constant ABILITY_TRAP_TRACKING = compiletime(ABIL_ID_GEN.next())
 
 constant ABILITY_TRAP_EXPLOSION   = compiletime(ABIL_ID_GEN.next())
 constant ABILITY_BEAR_TRAP_LOCK   = compiletime(ABIL_ID_GEN.next())
@@ -131,6 +135,11 @@ function createTrapExplosionSpell()
         ..setCastRange(1, TRAP_EFFECT_RADIUS)
         ..setActivationDelay(1, TRAP_ACTIVATION_DELAY)
         ..setTargetsAllowed(1, "hero")
+
+class TrackingTrapDummy extends GreaterTrack
+    construct(int newAbility)
+        super(newAbility, "E", new Pair(2, 0))
+        this.setDummyAbility()
 
 //Spell Slow
 class SpikedTrapSlowDummy extends AbilityDefinitionCripple
@@ -270,6 +279,7 @@ class PlaceBearTrapSpell extends PlaceTrapSpell
     new SpikedTrapUnit(UNIT_SPIKED_TRAP, "Spiked Trap")
     new BearTrapUnit  (UNIT_BEAR_TRAP, "Bear Trap")
 
+    new TrackingTrapDummy(ABILITY_TRAP_TRACKING)
     new SpikedTrapSlowDummy(ABILITY_SPIKED_TRAP_SLOW)
     new BearTrapLockDummy(ABILITY_BEAR_TRAP_LOCK)
 
@@ -286,15 +296,17 @@ class PlaceBearTrapSpell extends PlaceTrapSpell
 
 
 let trapList = new HashMap<int, Pair<int, int>>()
-    ..put(UNIT_TRAP       , new Pair(ABILITY_TRACKER_TRACK     , Orders.faeriefire))
+    ..put(UNIT_TRAP       , new Pair(ABILITY_TRAP_TRACKING   , Orders.faeriefire))
     ..put(UNIT_SPIKED_TRAP, new Pair(ABILITY_SPIKED_TRAP_SLOW, Orders.cripple   ))
     ..put(UNIT_BEAR_TRAP  , new Pair(ABILITY_BEAR_TRAP_LOCK  , Orders.ensnare   ))
 
 function onTrapDeath(unit trap)
     forUnitsInRange(trap.getPos(), TRAP_EFFECT_RADIUS + 25) u ->
-        let trapId = trap.getTypeId()
-        if u.isTroll() and u.getOwner().isEnemyOf(trap.getOwner()) and not (u.hasAbility('Bams') or u.hasAbility('Bam2'))
-            if InstantDummyCaster.castTarget(trap.getOwner(), trapList.get(trapId).a, 1, trapList.get(trapId).b, u) == false
+        let casterOwner = trap.getOwner()
+        let targetOwner = u.getOwner()
+        let trapData = trapList.get(trap.getTypeId())
+        if u.isTroll() and targetOwner.isEnemyOf(casterOwner) and not (u.hasAbility('Bams') or u.hasAbility('Bam2'))
+            if new DummyCaster()..owner(casterOwner)..delay(0.5)..castTarget(trapData.a, 1, trapData.b, u) == null
                 error("Trap failed, this isn't supposed to happen, report this please.")
 
 init

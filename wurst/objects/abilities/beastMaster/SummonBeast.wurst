@@ -1,0 +1,90 @@
+package SummonBeast
+
+// Standard Library Imports:
+import AbilityObjEditing
+import ObjectIds
+import Assets
+
+// Local Imports:
+import LocalObjectIDs
+import ElkDefinition
+import JungleWolfDefinition
+import JungleBearDefinition
+
+let ICON = Icons.bTNStag
+let TOOLTIP = "Summon a beast to fight along side you"
+let TOOLTIP_EXT = "Each level will increase the ferocity of the animal fighting along your side"
+
+let DAMAGE_BASE = 7
+let DAMAGE_RANGE = 3
+let DAMAGE_PER_LEVEL = 3
+let COOLDOWN = 60.
+let DURATION = 30.
+
+class ElkLocust extends AdultElkAttackerDefinition
+    construct(int unitId)
+        super(unitId)
+        this
+            ..setName("Elk")
+            ..setNormalAbilities("Aloc")
+            ..setAttack1DamageSidesperDie(DAMAGE_RANGE)
+            ..setAttack1DamageBase(DAMAGE_BASE)
+            ..setSpeedBase(522)
+            ..setTurnRate(0.3)
+
+class WolfLocust extends AdultJungleWolfDefinition
+    construct(int unitId)
+        super(unitId)
+        this
+            ..setName("Wolf")
+            ..setNormalAbilities("Aloc")
+            ..setAttack1DamageSidesperDie(DAMAGE_RANGE)
+            ..setAttack1DamageBase(DAMAGE_BASE + DAMAGE_PER_LEVEL)
+            ..setSpeedBase(522)
+            ..setTurnRate(0.3)
+
+class BearLocust extends AdultJungleBearDefinition
+    construct(int unitId)
+        super(unitId)
+        this
+            ..setName("Bear")
+            ..setNormalAbilities("Aloc")
+            ..setAttack1DamageSidesperDie(DAMAGE_RANGE)
+            ..setAttack1DamageBase(DAMAGE_BASE + 2 * DAMAGE_PER_LEVEL)
+            ..setSpeedBase(522)
+            ..setTurnRate(0.3)
+
+function createSummonElkSpell(int abilId) returns AbilityDefinitionCryptLordLocustSwarm
+    return new AbilityDefinitionCryptLordLocustSwarm(abilId)
+        ..setName("Summon Beast")
+        ..setLevels(3)
+        ..setRequiredLevel(2)
+        ..setLevelSkipRequirement(1)
+        ..setIconNormal(Icons.bTNStag)
+        ..setButtonPositionNormalX(2)
+        ..setButtonPositionNormalY(1)
+        ..setHotkeyNormal("R")
+        ..setSwarmUnitType(1, UNIT_LOCUST_BEAST_ELK.toRawCode())
+        ..setSwarmUnitType(2, UNIT_LOCUST_BEAST_WOLF.toRawCode())
+        ..setSwarmUnitType(3, UNIT_LOCUST_BEAST_BEAR.toRawCode())
+        ..presetManaCost(_ -> 0)
+        ..presetMaxSwarmUnitsPerTarget(_ -> 1)
+        ..presetAreaofEffect(_ -> 100)
+        ..presetNumberofSwarmUnits(_ -> 1)
+        ..presetDamageReturnFactor(_ -> 0)
+        ..presetDamageReturnThreshold(_ -> 600)
+        ..presetDurationNormal(_ -> DURATION)
+        ..presetDurationHero(_ -> DURATION)
+        ..presetCooldown(_ -> 5 /* COOLDOWN */)
+        ..setEffectSoundLooping("")
+        ..setRace(Race.Nightelf)
+        ..setCheckDependencies(false)
+        ..setTooltipNormal(1, TOOLTIP)
+        ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+        ..setHeroAbility(true)
+
+@compiletime function createSummonBeastSpellBase()
+    createSummonElkSpell(ABILITY_SUMMON_BEAST)
+    new ElkLocust(UNIT_LOCUST_BEAST_ELK)
+    new WolfLocust(UNIT_LOCUST_BEAST_WOLF)
+    new BearLocust(UNIT_LOCUST_BEAST_BEAR)

@@ -11,18 +11,18 @@ import Assets
 import ToolTipsUtils
 
 let CAST_RANGE = 99999.
-let COOLDOWN = 40.
+public let JUMP_COOLDOWN = 40.
 let MANACOST = 5
 let TOOLTIP_NORM = "Jump"
-let TOOLTIP_EXTENDED = "Allows the thief to jump a short distance. Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
+let TOOLTIP_EXTENDED = "Allows the thief to jump a short distance. Has {0} seconds cooldown.".format(JUMP_COOLDOWN.toToolTipLightBlue())
 
-@configurable let JUMP_MAX_RANGE = 900.
+@configurable public let JUMP_MAX_RANGE = 925.
 
 class Jump extends ChannelAbilityPreset
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
         super(newAbilityId, 1, true)
         this.presetManaCost(lvl -> MANACOST)
-        this.presetCooldown(lvl -> COOLDOWN)
+        this.presetCooldown(lvl -> JUMP_COOLDOWN)
         this.setHeroAbility(false)
         this.setItemAbility(false)
         this.presetTargetTypes(Targettype.POINT)
@@ -49,7 +49,10 @@ function onCast()
     let targetPos = vec2(GetSpellTargetX(), GetSpellTargetY())
     let casterPos = caster.getPos()
     let jumpPos = getJumpPos(casterPos, targetPos, JUMP_MAX_RANGE)
-    performJump(caster, jumpPos, 2, 8, 0.85)
+    if caster.getTypeId() == UNIT_ONE
+        performJump(caster, jumpPos, 3, 6, 0.85)
+    else
+        performJump(caster, jumpPos, 2, 8, 0.85)
 
 init
     registerSpellEffectEvent(ABILITY_JUMP, () -> onCast())

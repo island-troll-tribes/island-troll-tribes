@@ -21,11 +21,11 @@ constant ABIL_BANANA = compiletime(ABIL_ID_GEN.next())
 constant ABIL_HONEY  = compiletime(ABIL_ID_GEN.next())
 
 constant MEAT_ICON   = Icons.bTNMonsterLure
-constant BANANA_ICON = Icons.bTNAcorn
+constant BANANA_ICON = LocalIcons.bTNBanana
 constant HONEY_ICON  = LocalIcons.bTNHoneycomb
 
 constant MEAT_MODEL   = LocalItems.ham
-constant BANANA_MODEL = Objects.thunderLizardEgg1
+constant BANANA_MODEL = LocalItems.candy
 constant HONEY_MODEL  = LocalItems.honeycomb
 
 public constant MEAT_HEAL   = 50.
@@ -33,8 +33,8 @@ public constant BANANA_HEAL = 38.
 public constant HONEY_HEAL  = 90.
 
 constant TT_MEAT  = "A well done steak. Instantly heals {0} health point on use.".format(MEAT_HEAL.toToolTipGreen())
-constant TT_BANANA = "A acorn left by an animal. Restores {0} health point on use.".format(BANANA_HEAL.toToolTipGreen())
-constant TT_HONEY = "A portion of honeycomb left by an animal. Restores {0} health point on use.".format(HONEY_HEAL.toToolTipGreen())
+constant TT_BANANA = "A candy left by an animal. Restores {0} health point on use.".format(BANANA_HEAL.toToolTipGreen())
+constant TT_HONEY = "A candy cane left by an animal. Restores {0} health point on use.".format(HONEY_HEAL.toToolTipGreen())
 
 @compiletime function createHealingItems()
     createItemBerserkCast(ABIL_MEAT)
@@ -73,14 +73,14 @@ constant TT_HONEY = "A portion of honeycomb left by an animal. Restores {0} heal
     return createPerishableItem(ITEM_BANANA)
         ..setInterfaceIcon(BANANA_ICON)
         ..setModelUsed(BANANA_MODEL)
-        ..setName("Acorn")
+        ..setName("Candy")
         ..setTooltipExtended(TT_BANANA)
         ..setDescription(TT_BANANA)
         ..setLumberCost(2)
-        ..setScalingValue(1)
-        ..setTintingColor1Red(128)
-        ..setTintingColor2Green(64)
-        ..setTintingColor3Blue(0)
+        ..setScalingValue(0.75)
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(255)
         ..setAbilities(ABIL_BANANA.toRawCode())
         ..setCooldownGroup(ABIL_BANANA.toRawCode())
         ..setNumberofCharges(1)
@@ -90,11 +90,11 @@ constant TT_HONEY = "A portion of honeycomb left by an animal. Restores {0} heal
     return createPerishableItem(ITEM_HONEYCOMB)
         ..setInterfaceIcon(HONEY_ICON)
         ..setModelUsed(HONEY_MODEL)
-        ..setName("Honeycomb")
+        ..setName("Candy Cane")
         ..setTooltipExtended(TT_HONEY)
         ..setDescription(TT_HONEY)
         ..setLumberCost(10)
-        ..setScalingValue(0.8)
+        ..setScalingValue(1)
         ..setAbilities(ABIL_HONEY.toRawCode())
         ..setCooldownGroup(ABIL_HONEY.toRawCode())
         ..setNumberofCharges(1)
@@ -137,3 +137,8 @@ init
         onSelfHealItem()
     EventListener.add(EVENT_PLAYER_UNIT_SPELL_EFFECT) ->
         onSpellEffect()
+
+    EventListener.add(EVENT_PLAYER_UNIT_DROP_ITEM) ->
+        let itm = EventData.getManipulatedItem()
+        if itm.getTypeId() == ITEM_BANANA
+            itm.setPlayer(EventData.getTriggerPlayer(), true)

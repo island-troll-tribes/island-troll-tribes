@@ -2,15 +2,18 @@ package TheOne
 
 // Standard library imports:
 import ClosureTimers
-import RegisterEvents
+import ClosureEvents
 import LinkedList
+import ClosureForGroups
+import Assets
+import Orders
 
 // Local imports:
 import LocalObjectIDs
-import JumpSystem
 import BonyAnimal
 import UnitEntity
 import BossUtilities
+import Jump
 
 public let THE_ONE_REGION = CreateRegion()
     ..addRect(gg_rct_TheOne)
@@ -27,16 +30,53 @@ public class TheOne extends BonyAnimal
         register(unitTypeId, target -> new TheOne(target))
 
     // The callback responsible for periodically incrementing the level.
-    static CallbackPeriodic cb
+    static CallbackPeriodic cbLvl
+    CallbackPeriodic cbJump
+    bool jumpReady = false
+    effect jumpReadyFxFootL
+    effect jumpReadyFxFootR
 
     construct(unit whichUnit)
         super(whichUnit)
 
     override function postCreate()
         super.postCreate()
+        doAfter(JUMP_COOLDOWN) ->
+            jumpReady = true
+            addEffectFeet(Abilities.bloodLustTarget)
+            cbJump = doPeriodically(5, cb -> jumpOnEnemy())
+        EventListener.add(this.getUnit(), EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER) ->
+            if EventData.getIssuedOrderId() == Orders.move
+                // The One being a neutral unit, its guarding position is reset
+                // evertyime it cast a channel to the point position
+                // swapping the owner reset the guarding position to its
+                // current one, allowing us to reset it to the gg_rct_TheOne center
+                if this.getUnit().getPos().inRange(gg_rct_TheOne.getCenter(), 150)
+                    this.getUnit().setOwner(players[23], false)
+                    this.getUnit().setOwner(players[24], false)
+                if not EventData.getOrderPos().inRange(gg_rct_TheOne.getCenter(), 150)
+                    this.getUnit().issuePointOrderById(Orders.move, gg_rct_TheOne.getCenter())
+
+    function jumpOnEnemy()
+        let theOne = getUnit()
+
+        if jumpReady
+            forNearestUnit(getPos(), JUMP_MAX_RANGE, Filter(-> begin
+                return GetFilterUnit().getOwner().isEnemyOf(players[PLAYER_NEUTRAL_AGGRESSIVE])
+            end), closest -> begin
+                if closest != null
+                    theOne.issuePointOrder("breathoffrost", closest.getPos())
+                    jumpReady = false
+                    jumpReadyFxFootR.destr()
+                    jumpReadyFxFootL.destr()
+                    doAfter(JUMP_COOLDOWN, -> begin
+                        jumpReady = true
+                        addEffectFeet(Abilities.bloodLustTarget)
+                    end)
+            end)
 
     static function beginLevelling()
-        cb = doPeriodically(60) cb ->
+        cbLvl = doPeriodically(60) cb ->
             if theOne != null and theOne.getUnit().isAlive()
                 theOne.getUnit().addLevels(1, true)
 
@@ -52,7 +92,13 @@ public class TheOne extends BonyAnimal
     // Avoid removing unit by not propagating the call upwards.
     override function postDeath()
         // Disable levelling while dead.
-        destroy cb
+        destroy cbLvl
+        destroy this.cbJump
+
+    function addEffectFeet(string effectPath)
+        jumpReadyFxFootR = addEffect(effectPath, this.getUnit(), "foot, right")
+        jumpReadyFxFootL = addEffect(effectPath, this.getUnit(), "foot, left")
+
 
 public function spawnTheOne()
     // Delay to effect slightly.
@@ -73,7 +119,7 @@ public function spawnTheOne()
             theOne.getUnit().revive(spawnSpot, true)
 
         // Order the unit to jump into the arena.
-        performJump(theOne.getUnit(), gg_rct_TheOne.getCenter(), 2, 8, 0.85)
+        theOne.getUnit().issuePointOrder("breathoffrost", gg_rct_TheOne.getCenter())
 
         // Begin the callback to periodically increment the level.
         TheOne.beginLevelling()
@@ -84,13 +130,13 @@ public function canSpawnTheOne() returns boolean
 init
     TheOne.initialize()
 
-    CreateTrigger()
-        ..registerEnterRegion(THE_ONE_REGION, null)
-        ..addAction() ->
-            toggleInvulnerability(theOne, THE_ONE_REGION)
-    CreateTrigger()
-        ..registerLeaveRegion(THE_ONE_REGION, null)
-        ..addAction() ->
-            toggleInvulnerability(theOne, THE_ONE_REGION)
-    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
-        toggleInvulnerability(theOne, THE_ONE_REGION)
+    // CreateTrigger()
+    //     ..registerEnterRegion(THE_ONE_REGION, null)
+    //     ..addAction() ->
+    //         toggleInvulnerability(theOne, THE_ONE_REGION)
+    // CreateTrigger()
+    //     ..registerLeaveRegion(THE_ONE_REGION, null)
+    //     ..addAction() ->
+    //         toggleInvulnerability(theOne, THE_ONE_REGION)
+    // registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
+    //     toggleInvulnerability(theOne, THE_ONE_REGION)

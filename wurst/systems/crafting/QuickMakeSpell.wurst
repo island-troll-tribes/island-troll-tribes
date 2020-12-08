@@ -5,15 +5,12 @@ import ChannelAbilityPreset
 import LinkedList
 
 // Local imports:
-import AbilityObjectCreationUtils
 import LocalObjectIDs
 import QuickMakeToolTips
 import ToolTipsUtils
 import Transformation
 
 constant COOLDOWN = 1.
-
-let placeHolder = compiletime(createPlaceHolder())
 
 // Additional pages for Quick Make
 constant MIXING_POT_SPELLBOOK = commaList(
@@ -34,11 +31,11 @@ constant ARMOR_SPELLBOOK = commaList(
     ABILITY_QM_BONE_BOOTS,
     ABILITY_QM_IRON_BOOTS,
     ABILITY_QM_STEEL_BOOTS,
-    placeHolder,
+    ABILITY_SPELLBOOK_PLACEHOLDER,
     ABILITY_QM_BONE_GLOVES,
     ABILITY_QM_IRON_GLOVES,
     ABILITY_QM_STEEL_GLOVES,
-    placeHolder,
+    ABILITY_SPELLBOOK_PLACEHOLDER,
     ABILITY_QM_BONE_COAT,
     ABILITY_QM_IRON_COAT,
     ABILITY_QM_STEEL_COAT
@@ -48,11 +45,11 @@ constant FORGE_SPELLBOOK = commaList(
     ABILITY_QM_BONE_BOOTS,
     ABILITY_QM_IRON_BOOTS,
     ABILITY_QM_STEEL_BOOTS,
-    placeHolder,
+    ABILITY_SPELLBOOK_PLACEHOLDER,
     ABILITY_QM_BONE_GLOVES,
     ABILITY_QM_IRON_GLOVES,
     ABILITY_QM_STEEL_GLOVES,
-    placeHolder,
+    ABILITY_SPELLBOOK_PLACEHOLDER,
     ABILITY_QM_BONE_COAT,
     ABILITY_QM_IRON_COAT,
     ABILITY_QM_STEEL_COAT
@@ -98,7 +95,7 @@ public constant BUILDING_CRAFT_SPELLBOOK = commaList(
     ABILITY_QM_WITCH_DOCTORS_HUT_KIT,
     ABILITY_QM_TANNERY_KIT,
     ABILITY_QM_OMNI_TOWER_KIT,
-    ABILITY_BUILDING_CRAFT_SECOND_SPELLBOOK_ID
+    ABILITY_QM_TELEPORT_BEACON_KIT
 )
 
 constant BUILDING_CRAFT_SECOND_SPELLBOOK = commaList(
@@ -330,9 +327,9 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
         new QuickMakeSpell("Iron Coat"    , TRANSMUTE_TOOLTIP+IRON_COAT_RECIPE    , "ImprovedMoonArmor"          , ABILITY_QM_IRON_COAT    , 1, 2, "X", QM_TOOLIP, "defend"),
         new QuickMakeSpell("Steel Coat"   , TRANSMUTE_TOOLTIP+STEEL_COAT_RECIPE   , "AdvancedMoonArmor"          , ABILITY_QM_STEEL_COAT   , 2, 2, "C", QM_TOOLIP, "divineshield"),
 
-        // Those are placeholder for tannery, just to fill the interface and make it look cleaner
-        // new QuickMakeSpell("Tips on Stat" , "" , "SelectHeroOn" , PLACEHOLDER_STAT_TOOLTIP_SPELL , 3, 0, "", TANNERY_PLACEHOLDER_STAT_TOOLTIP, "manashieldoff"),
-        // new QuickMakeSpell("Tips on Hide" , "" , "SelectHeroOn" , PLACEHOLDER_HIDE_TOOLTIP_SPELL , 3, 1, "", TANNERY_PLACEHOLDER_HIDE_USAGE_TOOLTIP, "manashieldon"),
+        // Those are ABILITY_SPELLBOOK_PLACEHOLDER for tannery, just to fill the interface and make it look cleaner
+        // new QuickMakeSpell("Tips on Stat" , "" , "SelectHeroOn" , ABILITY_SPELLBOOK_PLACEHOLDER_STAT_TOOLTIP_SPELL , 3, 0, "", TANNERY_ABILITY_SPELLBOOK_PLACEHOLDER_STAT_TOOLTIP, "manashieldoff"),
+        // new QuickMakeSpell("Tips on Hide" , "" , "SelectHeroOn" , ABILITY_SPELLBOOK_PLACEHOLDER_HIDE_TOOLTIP_SPELL , 3, 1, "", TANNERY_ABILITY_SPELLBOOK_PLACEHOLDER_HIDE_USAGE_TOOLTIP, "manashieldon"),
 
 
         // Buildings
@@ -349,11 +346,8 @@ function getQuickMakeSpells() returns LinkedList<QuickMakeSpell>
         new QuickMakeSpell("Witch Doctors Hut Kit" , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+WITCH_DOCTORS_HUT_KIT_RECIPE , "VoodooLounge"         , ABILITY_QM_WITCH_DOCTORS_HUT_KIT , 3, 1, "F", QM_BUILD_TOOLIP, "creepanimatedead"),
         new QuickMakeSpell("Tannery Kit"           , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+TANNERY_KIT_RECIPE           , "PigFarm"              , ABILITY_QM_TANNERY_KIT           , 0, 2, "Z", QM_BUILD_TOOLIP, "thunderclap"),
         new QuickMakeSpell("Omnitower Kit"         , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+OMNI_TOWER_KIT_RECIPE        , "OrcTower"             , ABILITY_QM_OMNI_TOWER_KIT        , 1, 2, "X", QM_BUILD_TOOLIP, "manashieldon"),
-        new QuickMakeSpell("Armory Kit"            , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+ARMORY_KIT_RECIPE            , "Armory"               , ABILITY_QM_ARMORY_KIT            , 2, 2, "A", QM_BUILD_TOOLIP, "locustswarm")
-
-        // Second Buildings Page
-        // new QuickMakeSpell("Teleport Beacon Kit"   , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+TELEPORT_BEACON_KIT_RECIPE   , "EnergyTower"          , ABILITY_QM_TELEPORT_BEACON_KIT   , 0, 0, "E", QM_BUILD_TOOLIP, "defend"),
-        // new QuickMakeSpell("Hatchery Kit"          , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+HATCHERY_KIT_RECIPE          , "SnowOwl"              , ABILITY_QM_HATCHERY_KIT          , 1, 0, "R", QM_BUILD_TOOLIP, "summonwareagle")
+        new QuickMakeSpell("Armory Kit"            , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+ARMORY_KIT_RECIPE            , "Armory"               , ABILITY_QM_ARMORY_KIT            , 2, 2, "A", QM_BUILD_TOOLIP, "locustswarm"),
+        new QuickMakeSpell("Teleport Beacon Kit"   , TRANSMUTE_CRAFT_BUILDING_TOOLTIP+TELEPORT_BEACON_KIT_RECIPE   , "EnergyTower"          , ABILITY_QM_TELEPORT_BEACON_KIT   , 0, 0, "E", QM_BUILD_TOOLIP, "summonwareagle")
     )
 
 // Additional pages created here
@@ -366,7 +360,6 @@ function getQuickMakeSpellBookSpells() returns LinkedList<QuickMakeSpellBook>
         new QuickMakeSpellBook(ABILITY_WORKSHOP_SPELLBOOK_ID  , "More Workshop Quick Make Page"         , "C", WORKSHOP_SPELLBOOK_TOOLTIP, WORKSHOP_SPELLBOOK  , 2, 2 , "spellbook"),
 
         new QuickMakeSpellBook(ABILITY_BUILDING_CRAFT_SPELLBOOK_ID       , "Buildings Craft Recipe"  , "B", BUILDING_CRAFT_TOOLTIP, BUILDING_CRAFT_SPELLBOOK       , 0, 1 , "charm", "BasicStruct")
-        // new QuickMakeSpellBook(ABILITY_BUILDING_CRAFT_SECOND_SPELLBOOK_ID, "More Buildings Recipe"   , "C", BUILDING_CRAFT_TOOLTIP, BUILDING_CRAFT_SECOND_SPELLBOOK, 2, 2 , "blight")
     )
 
 @compiletime

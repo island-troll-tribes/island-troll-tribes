@@ -179,19 +179,22 @@ class PlaceTrapSpell extends ChannelAbilityPreset
         this.presetOption(Option.TARGETIMAGE, true)
         this.setCastRange(1, TRAP_CAST_RANGE)
         this.setAnimationNames(animationName)
-        this.setBaseOrderID(1, "devourmagic")
 
 class PlaceTrackTrapSpell extends PlaceTrapSpell
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
         super(newAbilityId, hotkey, buttonPos, "spell,throw", Icons.bTNStasisTrap, TOOLTIP_NORM_TRACK_TRAP, TOOLTIP_EXTENDED_TRACK_TRAP, TRACK_TRAP_COOLDOWN)
+        presetBaseOrderID(lvl -> "devourmagic")
+
 
 class PlaceSpikedTrapSpell extends PlaceTrapSpell
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
         super(newAbilityId, hotkey, buttonPos, "spell,slam", Icons.bTNMeatapult, TOOLTIP_NORM_SPIKED_TRAP, TOOLTIP_EXTENDED_SPIKED_TRAP, SPIKED_TRAP_COOLDOWN)
+        presetBaseOrderID(lvl -> "dispel")
 
 class PlaceBearTrapSpell extends PlaceTrapSpell
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
         super(newAbilityId, hotkey, buttonPos, "spell,slam", BEAR_TRAP_ICON, TOOLTIP_NORM_BEAR_TRAP, TOOLTIP_EXTENDED_BEAR_TRAP, BEAR_TRAP_COOLDOWN)
+        presetBaseOrderID(lvl -> "flamestrike")
 
 
 //Place trap spell definition
@@ -295,8 +298,19 @@ function onTrapDeath(unit trap)
     forUnitsInRange(trap.getPos(), TRAP_EFFECT_RADIUS + 25) u ->
         let trapId = trap.getTypeId()
         if u.isTroll() and u.getOwner().isEnemyOf(trap.getOwner()) and not (u.hasAbility('Bams') or u.hasAbility('Bam2'))
+            // Grant temporary vision for the dummy caster.
+            let vision = createVision(
+                trap.getOwner(),
+                u.getPos(),
+                300,
+                true
+            )
+
             if InstantDummyCaster.castTarget(trap.getOwner(), trapList.get(trapId).a, 1, trapList.get(trapId).b, u) == false
                 error("Trap failed, this isn't supposed to happen, report this please.")
+
+            // Remove the vision.
+            vision.destr()
 
 init
     EventListener.onPointCast(ABILITY_TRACK_TRAP) (unit caster, vec2 target) ->

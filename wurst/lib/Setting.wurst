@@ -1,0 +1,233 @@
+package Setting
+
+// Standard library imports:
+import HashMap
+import LinkedList
+import SaveLoadData
+
+// Third-party imports:
+import ChatCommands
+import Lodash
+
+// REMOVE THESE
+import StringExtensions
+import ColorUtils
+
+// This should be configured per map with a unique value to avoid filename
+// conflicts with other maps.
+@configurable let FILE_PREFIX = "SETTING_"
+
+// A setting is a player-specific option that consists of a single typed value
+// and which can be changed at will during gameplay. Settings are automatically
+// saved and loaded from disc, meaning that the user can modify them directly
+// and therefore settings should not have any access restrictions. Settings can
+// still validate their values in order to prevent user modification from
+// corrupting the game and prevent invalid chat inputs.
+
+// Although a setting is constructed piecemeal via various components, these
+// must all be supplied prior to initialization. Settings read from a fil are
+// processed asynchronously, so it is imperative to prevent modification to the
+// handlers that could take place inbetween reads for different players.
+
+// Settings can optionally be disabled from being read from a file entirely, but
+// still keep the initialization restrictions for sake of simplicity. This may
+// be desired for settings that a user would typically not want to persist.
+
+public class Setting
+    // The human-readable name used to refer to the setting.
+    string name
+
+    // The filename used to store the setting.
+    string filename
+
+    // The initial value for the setting used as a default.
+    string initial
+
+    // The string-encoded value per player.
+    HashMap<player, string> values
+
+    // The callback used to perform actions based upon the setting.
+    VoidBiFunction<player, string> action
+
+    // The callback used to validate new values for the setting.
+    Function<string, bool> check
+
+    // Whether the setting is initialized.
+    bool initialized
+
+    // Whether the setting is persistent via file storage.
+    bool writable
+
+    construct(string name)
+        // Store the inputs.
+        this.name = name
+
+        // The instance is not initialized immediately.
+        initialized = false
+
+        // Assume that most settings are persistent.
+        writable = true
+
+        // Construct the filename.
+        filename = FILE_PREFIX + name + ".pld"
+
+    function initialize()
+        // Avoid in-process modification.
+        if checkInit()
+            return
+
+        // Block in-process modification.
+        initialized = true
+
+        // Initialize the mapping holding the values.
+        values = new HashMap<player, string>()
+
+        // Register a command to handle modification via chat.
+        registerCommandAll(name) (triggerer, arguments) ->
+            handleChat(triggerer, arguments)
+
+        // Construct an initial value per player.
+        for index = 0 to bj_MAX_PLAYER_SLOTS - 1
+            // Provide a value for the player immediately.
+            values.put(players[index], initial)
+
+            // Ignore players not in the game.
+            if players[index].isIngame()
+                // Load from file for valid players.
+                load(players[index])
+
+    function load(player target)
+        target.loadData(filename) (status, data) ->
+            // Read the stored value, if possible.
+            print("reading" + filename)
+            print(target.getName())
+            print(status.toString())
+            let input = status == SUCCESS
+                ? data.getUnsafeString()
+                : null
+
+            // Default to the initial value if there was no stored value or if
+            // the stored value is invalid, which can happen if the check is
+            // further restricted in newer versions of the map. This failure is
+            // is not logged automatically, as it is likely to be noisy and the
+            // check is able to do that if so desired.
+            let value = input != null and check.call(input)
+                ? input
+                : initial
+            print(value)
+
+            // Update the setting with appropriate value.
+            update(target, value)
+
+    function update(player target, string value)
+        // Fetch the previous value to determine if an overwrite is needed.
+        let previous = values.getAndRemove(target)
+
+        // Update the value for the player.
+        values.put(target, value)
+
+        // Save the value for the player, if needed.
+        if previous != value and target.isIngame() and writable
+            print("writing" + filename)
+            print(target.getName())
+            target.saveData(filename, value)
+
+        // Forward the value to action handler, if needed.
+        if action != null
+            action.call(target, value)
+
+    // Accesses the in-memory cache of the value for the given player.
+    function get(player target) returns string
+        return values.get(target)
+
+    // Acesses the in-memory cache of the value for the local player.
+    function get() returns string
+        return values.get(localPlayer)
+
+    // Updates the setting for the given player.
+    function put(player target, string value)
+        // Block premature access.
+        if not initialized
+            log(
+                target,
+                Loglevel.ERROR,
+                "Not yet initialized."
+            )
+
+        // Validate the input.
+        if not check.call(value)
+            log(
+                target,
+                Loglevel.ERROR,
+                "Invalid input: '{0}'".format(
+                    value
+                )
+            )
+
+        // Handle the update.
+        update(target, value)
+
+
+    function handleChat(player target, LinkedList<string> arguments)
+        // Ensure that only a single value is used.
+        if arguments.size() != 2
+            log(target, Loglevel.ERROR, "Only one value should be given.")
+            return
+
+        // Handle the update.
+        put(target, arguments.pop())
+
+    function checkInit() returns bool
+        // Avoid in-process modification.
+        if initialized
+            log(null, Loglevel.ERROR, "Cannot reinitialize.")
+
+        // Forward the value upwards
+        return initialized
+
+    function make(string initial, Function<string, bool> check)
+        // Avoid in-process modification.
+        if checkInit()
+            return
+
+        // Check the given default.
+        if not check.call(initial)
+            log(
+                null,
+                Loglevel.ERROR,
+                "Invalid default: '{0}'".format(
+                    initial
+                )
+            )
+            return
+
+        // Update the instance.
+        this.initial = initial
+        this.check = check
+
+    function action(VoidBiFunction<player, string> action)
+        // Avoid in-process modification.
+        if checkInit()
+            return
+
+        // Update the instance.
+        this.action = action
+
+    function writable(bool writable)
+        // Avoid in-process modification.
+        if checkInit()
+            return
+
+        // Update the instance.
+        this.writable = writable
+
+    function log(player target, Loglevel level, string message)
+        if localPlayer == target or target == null
+            printLog(
+                localPlayer,
+                level,
+                "Setting '{0}' - {1}".format(
+                    this.name.color(GENERAL_COLOR),
+                    message
+                )
+            )

@@ -1,0 +1,39 @@
+package CameraSetting
+
+// Standard library imports:
+import ClosureTimers
+
+// Third-party imports:
+import Setting
+
+let zooms = new Setting("zoom")
+
+public function player.setZoom(real zoom)
+    // Update the setting.
+    zooms.put(this, zoom.toString())
+
+public function player.getZoom() returns real
+    return zooms.get(this).toReal()
+
+function updateZoom(real zoom)
+    CAMERA_FIELD_ZOFFSET.set(zoom, 1.)
+    CAMERA_FIELD_FARZ.set(5000., 0.)
+
+function validateZoom(string input) returns bool
+    return true
+
+init
+    // Use the default zoom for the engine.
+    zooms.make("0", s -> true)
+
+    // Update the zoom immediately after setting it.
+    zooms.action() (player s, string t) ->
+        if localPlayer == s
+            updateZoom(t.toReal())
+
+    // Initialize the setting immediately.
+    zooms.initialize()
+
+    // Update the zoom periodically, as it can be accidentally reset via scroll.
+    doPeriodically(1.) (CallbackPeriodic cb) ->
+        updateZoom(zooms.get(localPlayer).toReal())

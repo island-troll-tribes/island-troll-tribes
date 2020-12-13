@@ -21,9 +21,13 @@ import Lodash
 // corrupting the game and prevent invalid chat inputs.
 
 // Although a setting is constructed piecemeal via various components, these
-// must all be supplied prior to initialization. Settings read from a fil are
+// must all be supplied prior to initialization. Settings read from a file are
 // processed asynchronously, so it is imperative to prevent modification to the
 // handlers that could take place inbetween reads for different players.
+
+// The delay initialization is primarily intended to be used for the piecemeal
+// construction. It rarely makes sense to create a setting without immediately
+// initializing it.
 
 // Settings can optionally be disabled from being read from a file entirely, but
 // still keep the initialization restrictions for sake of simplicity. This may
@@ -87,8 +91,13 @@ public class Setting
             // Provide a value for the player immediately.
             values.put(players[index], initial)
 
-            // Ignore players not in the game.
-            if players[index].isIngame()
+            // Avoid loading for players not in the game, which will fail, and
+            // if the setting is not writable. Technically a file could still be
+            // present for a non-writeable setting if a previous version of the
+            // setting was writeable, but is unlikely that the previous version
+            // would still be relevant. This also prevents players of previous
+            // versions from having an advantage.
+            if players[index].isIngame() and writable
                 // Load from file for valid players.
                 load(players[index])
 
@@ -159,13 +168,26 @@ public class Setting
 
 
     function handleChat(player target, LinkedList<string> arguments)
-        // Ensure that only a single value is used.
-        if arguments.size() != 2
+        // Ensure that no extra parameters are given.
+        if arguments.size() > 2
             log(target, Loglevel.ERROR, "Only one value should be given.")
             return
 
-        // Handle the update.
-        put(target, arguments.pop())
+        // Pass through the supplied value, if possible.
+        if arguments.size() == 2
+            put(target, arguments.pop())
+            return
+
+        // Allow boolean settings to be toggled when no argument is given.
+        let previous = get(target)
+        if previous.toBool().toString() == previous
+            put(target, (not previous.toBool()).toString())
+            return
+
+        // Fail if insufficient arguments were given.
+        log(target, Loglevel.ERROR, "No value given.")
+        return
+
 
     function checkInit() returns bool
         // Avoid in-process modification.

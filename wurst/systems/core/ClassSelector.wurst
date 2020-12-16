@@ -5,6 +5,7 @@ import ClosureTimers
 import HashMap
 import LinkedList
 import RegisterEvents
+import HashSet
 
 // Third-party imports:
 import LodashExtensions
@@ -18,6 +19,7 @@ import StringExtensions
 import UnitExtensions
 import TimerUtils
 import Tribe
+import PerkUtils
 
 let UNIT_TROLL_TOTEM = 'o00H'
 
@@ -37,6 +39,10 @@ let spawnList = asList(
 )
 
 let listeners = CreateTrigger()
+
+// true = has randomed
+// false = has repicked
+let repickers = new HashSet<player>()
 
 public function registerClassSelectionEndEvent(code listener)
     listeners.addAction(listener)
@@ -158,6 +164,7 @@ public class ClassSelector
                 // This means the stocking/restocking will not work, but this doesn't
                 // matter as players will have already picked by this point
                 troll = placeRandomTroll(member)
+                randomPerkEnable(member)
                 handleSelection(member, troll)
 
             troll
@@ -191,14 +198,26 @@ public class ClassSelector
             else
                 handleSelection(owner, sold)
 
+    function randomPerkEnable(player p)
+        if(repickers.has(p) == false)
+            p.addPerk("HAS_RANDOMED")
+    
+    function hasRepicked(player p)
+        repickers.add(p)
+        p.removePerk("HAS_RANDOMED")
+    
     function handleSelection(player owner, unit troll)
         let trollId = troll.getTypeId()
 
         // Prevent having 2 trolls at the same time
-        handleTrollRemoval(owner)
+        let repicked = handleTrollRemoval(owner)
 
         setClassUnavailable(trollId)
         owner.setTroll(troll)
+
+        // Disable random perk - needs to be after setTroll()
+        if(repicked)
+            hasRepicked(owner)
 
         troll
             ..pause()
@@ -210,9 +229,11 @@ public class ClassSelector
         if gameConfig.isStartWithSpiritWard()
             troll.addItemById(ITEM_SPIRIT_WARD_KIT)
 
-    function handleTrollRemoval(player p)
+    function handleTrollRemoval(player p) returns boolean
         let troll = p.getTroll()
-        if troll != null
+        if troll == null
+            return false
+        else
             let trollId = troll.getTypeId()
 
             setClassAvailable(trollId)
@@ -220,7 +241,11 @@ public class ClassSelector
             p.removeTroll()
             troll.remove()
 
+            return true
+
     function handleRandom(player p)
+        randomPerkEnable(p)
+        
         let trollId = getRandomTrollId()
         IssueNeutralImmediateOrderById(p, totem, trollId)
 

@@ -1,0 +1,42 @@
+package RandomPerk
+
+import PerkUtils
+import LocalAssets
+import Classes
+
+import HashMap
+
+import PlayerExtensions
+import OnUnitEnterLeave
+
+let effects = new HashMap<unit,effect>()
+
+function removeFrom(unit u)
+    let e = effects.getAndRemove(u)
+    if(e != null)
+        e.destr() // This might not work because of death animation
+
+function attachTo(unit u)
+    removeFrom(u)
+    effects.put(u, addEffect(LocalAttachments.strawHat, u, "head"))
+
+init
+    addPerk(
+        "HAS_RANDOMED",
+        new Perk()
+        ..onActivate(p -> begin
+            let troll = p.getTroll()
+            if(troll != null)
+                attachTo(troll)
+        end)
+        ..onDeactivate(p -> begin
+            let troll = p.getTroll()
+            if(troll != null)
+                removeFrom(troll)
+        end)
+    )
+    
+    onEnter() ->
+        let u  = getEnterLeaveUnit()
+        if(isTroll(u) and u.getOwner().hasPerk("HAS_RANDOMED"))
+            attachTo(u)

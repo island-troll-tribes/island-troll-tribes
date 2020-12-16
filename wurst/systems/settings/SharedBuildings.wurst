@@ -1,0 +1,100 @@
+package SharedBuildings
+
+// Standard library imports:
+import HashMap
+import HashList
+import OnUnitEnterLeave
+import RegisterEvents
+
+// Third-party imports:
+import Setting
+
+// Local imports:
+import PlayerExtensions
+import Tribe
+
+// Whether a player is currently sharing buildings.
+let sharing = new Setting("share-buildings")
+
+// The buildings constructed per player.
+let buildings = new HashMap<player, HashList<unit>>
+
+// The reverse mapping of the above.
+let owners = new HashMap<unit, player>
+
+// Handles initialization.
+function initialize()
+    // Prevent sharing initially.
+    sharing.make("false", input -> input.toBool().toString() == input)
+
+    // Transition all buildings for the player upon toggling.
+    sharing.action() (target, value) ->
+        // Compute the new owner for the buildings.
+        let owner = value.toBool() ? target.getTribePlayer() : target
+
+        // Avoid processing any players without a tribe.
+        if owner != null
+            // Switch the owner for all buildings belonging to the target.
+            for building in buildings.get(target)
+                building.setOwner(owner, true)
+
+    // Forward the call upon completion.
+    sharing.finish() ->
+        finish()
+
+    // Initialize the setting.
+    sharing.initialize()
+
+// Share units upon leaving.
+function onLeaver(player target)
+    sharing.put(target, "true")
+
+// Handles delayed initialization logic.
+function finish()
+    registerPlayerEvent(EVENT_PLAYER_LEAVE) ->
+        onLeaver(EventData.getTriggerPlayer())
+
+    // Check for players that left during synchronization.
+    for index = 0 to bj_MAX_PLAYER_SLOTS - 1
+        if not players[index].isIngame()
+            onLeaver(players[index])
+
+function onEnter(unit target)
+    // Support only units that are structures when entering.
+    if not target.isType(UNIT_TYPE_STRUCTURE)
+        return
+
+    // Begin tracking the unit.
+    buildings.get(target.getOwner()).add(target)
+    owners.put(target, target.getOwner())
+
+    // Update the owner, if necessary.
+    if sharing.synchronized and sharing.get(target.getOwner()).toBool()
+        target.setOwner(target.getOwner().getTribePlayer(), true)
+
+function onLeave(unit target)
+    // Look up the original owner.
+    let owner = owners.get(target)
+
+    // Ignore units not being tracked.
+    if owner == null
+        return
+
+    // Remove the state for the unit.
+    buildings.get(owner).remove(target)
+    owners.remove(target)
+
+init
+    // Initialize the set of buildings per player.
+    for index = 0 to bj_MAX_PLAYER_SLOTS - 1
+        buildings.put(players[index], new HashList<unit>())
+
+    // Register handlers for maintaining the set of buildings.
+    onEnter() ->
+        onEnter(getEnterLeaveUnit())
+    onLeave() ->
+        onLeave(getEnterLeaveUnit())
+
+    // Delay initialization until tribes are set.
+    registerTribeInitializationFinishEvent() ->
+        initialize()

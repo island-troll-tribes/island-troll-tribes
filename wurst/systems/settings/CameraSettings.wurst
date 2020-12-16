@@ -28,9 +28,10 @@ init
         if localPlayer == target
             updateZoom(zoom.toReal())
 
+    // Update the zoom periodically, as it can be accidentally reset via scroll.
+    zooms.finish() ->
+        doPeriodically(1.) (CallbackPeriodic cb) ->
+            updateZoom(zooms.get(localPlayer).toReal())
+
     // Initialize the setting immediately.
     zooms.initialize()
-
-    // Update the zoom periodically, as it can be accidentally reset via scroll.
-    doPeriodically(1.) (CallbackPeriodic cb) ->
-        updateZoom(zooms.get(localPlayer).toReal())

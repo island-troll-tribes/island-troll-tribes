@@ -1,0 +1,28 @@
+package Logging
+
+// Standard library imports:
+import HashMap
+
+// Third-party imports:
+import Toolkit
+
+// The default log level when the toolkit is enabled.
+@configurable let DEFAULT = Loglevel.DEBUG
+
+let levels = new IterableMap<string, Loglevel>()
+    ..put("TRACE",   Loglevel.TRACE)
+    ..put("DEBUG",   Loglevel.DEBUG)
+    ..put("INFO",    Loglevel.INFO)
+    ..put("WARNING", Loglevel.WARNING)
+    ..put("ERROR",   Loglevel.ERROR)
+
+init
+    // Register each command with a shared callback that branches.
+    levels.forEach() (string name, Loglevel level) ->
+        registerToolkitCommand(name) (triggerer, arguments) ->
+            Log.setLevel(level)
+
+    // Update the default level on initialization.
+    registerToolkitEvent() ->
+        print("Setting log level: " + DEFAULT.getTag())
+        Log.setLevel(DEFAULT)

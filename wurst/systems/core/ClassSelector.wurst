@@ -94,6 +94,7 @@ public class ClassSelector
     construct(Tribe _tribe)
         tribe = _tribe
 
+        // Ignore tribes that are not in use.
         if not tribe.isDefeated()
             spawn = tribe.getSpawn()
 
@@ -103,18 +104,21 @@ public class ClassSelector
             spawners.put(totem, this)
 
     private function initializeTotem()
-        let pos = spawn.getCenter()
-        let owner = tribe.getMembers().getFirst()
-        totem = createUnit(owner, UNIT_TROLL_TOTEM, pos, angle(0))
-        ..addUnitToStock(UNIT_HUNTER, 1, 1)
-        ..addUnitToStock(UNIT_BEAST_MASTER, 1, 1)
-        ..addUnitToStock(UNIT_MAGE, 1, 1)
-        ..addUnitToStock(UNIT_PRIEST, 1, 1)
-        ..addUnitToStock(UNIT_THIEF, 1, 1)
-        ..addUnitToStock(UNIT_SCOUT, 1, 1)
-        ..addUnitToStock(UNIT_GATHERER, 1, 1)
-        ..addUnitToStock(UNIT_REPICK_TROLL, 1, 1)
-        ..addUnitToStock(UNIT_RANDOM_TROLL, 1, 1)
+        totem = createUnit(
+            tribe.getNonMember(),
+            UNIT_TROLL_TOTEM,
+            spawn.getCenter(),
+            angle(0)
+        )
+            ..addUnitToStock(UNIT_HUNTER, 1, 1)
+            ..addUnitToStock(UNIT_BEAST_MASTER, 1, 1)
+            ..addUnitToStock(UNIT_MAGE, 1, 1)
+            ..addUnitToStock(UNIT_PRIEST, 1, 1)
+            ..addUnitToStock(UNIT_THIEF, 1, 1)
+            ..addUnitToStock(UNIT_SCOUT, 1, 1)
+            ..addUnitToStock(UNIT_GATHERER, 1, 1)
+            ..addUnitToStock(UNIT_REPICK_TROLL, 1, 1)
+            ..addUnitToStock(UNIT_RANDOM_TROLL, 1, 1)
         for member in tribe.getMembers()
             member.panCamToTimed(totem, 0)
             member.selectSingle(totem)

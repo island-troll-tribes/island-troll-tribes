@@ -1,0 +1,337 @@
+package Setting
+
+// Standard library imports:
+import ClosureTimers
+import HashMap
+import LinkedList
+import SaveLoadData
+
+// Third-party imports:
+import ChatCommands
+import Lodash
+
+// This should be configured per map with a unique value to avoid filename
+// conflicts with other maps. This can include directories if so desired.
+@configurable let FILE_PREFIX = "SETTING_"
+
+// The frequency at which sychroniziation is checked.
+@configurable let POLL_TIME = ANIMATION_PERIOD + 1
+
+// A setting is a player-specific option that consists of a single typed value
+// and which can be changed at will during gameplay. Settings are automatically
+// saved and loaded from disc, meaning that the user can modify them directly
+// and therefore settings should not have any access restrictions. Settings can
+// still validate their values in order to prevent user modification from
+// corrupting the game and prevent invalid chat inputs.
+
+// Although a setting is constructed piecemeal via various components, these
+// must all be supplied prior to initialization. Settings read from a file are
+// processed asynchronously, so it is imperative to prevent modification to the
+// handlers that could take place inbetween reads for different players.
+
+// The delay initialization is primarily intended to be used for the piecemeal
+// construction. It rarely makes sense to create a setting without immediately
+// initializing it.
+
+// Settings can optionally be disabled from being read from a file entirely, but
+// still keep the initialization restrictions for sake of simplicity. This may
+// be desired for settings that a user would typically not want to persist.
+
+public class Setting
+    // The human-readable name used to refer to the setting.
+    string name
+
+    // The filename used to store the setting.
+    string filename
+
+    // The initial value for the setting used as a default.
+    string initial
+
+    // The string-encoded value per player.
+    IterableMap<player, string> values
+
+    // The callback used to perform actions based upon modifications.
+    VoidBiFunction<player, string> action
+
+    // The callback used to perform actions based upon synchronization.
+    EmptyVoidFunction finish
+
+    // The callback used to validate new values for the setting.
+    Function<string, bool> check
+
+    // Whether the setting is initialized.
+    bool initialized
+
+    // Whether the setting has finished sychronization.
+    bool synchronized
+
+    // Whether the setting is persistent via file storage.
+    bool writable
+
+    // The number of players that are pending synchronization.
+    int pending
+
+    construct(string name)
+        // Store the inputs.
+        this.name = name
+
+        // The instance is not initialized immediately.
+        initialized = false
+
+        // Assume that most settings are persistent.
+        writable = true
+
+        // There are no players pending initially.
+        pending = 0
+
+        // Construct the filename.
+        filename = FILE_PREFIX + name + ".pld"
+
+    function initialize()
+        // Avoid in-process modification.
+        if checkInit()
+            return
+
+        // Block in-process modification.
+        initialized = true
+
+        // Initialize the mapping holding the values.
+        values = new IterableMap<player, string>()
+
+        // Initialize the setting for each player.
+        for index = 0 to bj_MAX_PLAYER_SLOTS - 1
+            // Avoid loading for players not in the game, which will fail, and
+            // if the setting is not writable. Technically a file could still be
+            // present for a non-writeable setting if a previous version of the
+            // setting was writeable, but is unlikely that the previous version
+            // would still be relevant. This also prevents players of previous
+            // versions from having an advantage.
+            if players[index].isIngame() and writable
+                log(players[index], Loglevel.DEBUG, "Loading data.")
+                // Began tracking the pending.
+                pending += 1
+
+                // Load from file for valid players.
+                load(players[index])
+            // Use the default value when loading is avoided.
+            else
+                log(players[index], Loglevel.DEBUG, "Defaulting: " + initial)
+                values.put(players[index], initial)
+
+        // Check periodically for synchronization completion.
+        log(null, Loglevel.DEBUG, "Beginning polling.")
+        doPeriodically(POLL_TIME) cb ->
+            // Use a method to avoid capturing fields by value.
+            if isReadyToFinish()
+                // Finish initializing the setting.
+                complete()
+
+                // Cease polling once complete.
+                destroy cb
+
+    private function isReadyToFinish() returns bool
+        return pending == 0
+
+    private function complete()
+        log(null, Loglevel.DEBUG, "Completing synchronization.")
+        // Register a command to handle modification via chat.
+        registerCommandAll(name) (triggerer, arguments) ->
+            handleChat(triggerer, arguments)
+
+        // Mark the completion.
+        synchronized = true
+        log(null, Loglevel.DEBUG, "Finished synchronization.")
+
+        // Execute the action on the initial value, as necessary.
+        if action != null
+            log(null, Loglevel.DEBUG, "Executing action.")
+            values.forEach() (target, value) ->
+                log(target, Loglevel.DEBUG, "Executing action on: " + value)
+                action.call(target, value)
+
+        // Execute the handler, as necessary.
+        if finish != null
+            log(null, Loglevel.DEBUG, "Executing finish.")
+            finish.call()
+
+    private function load(player target)
+        target.loadData(filename) (status, data) ->
+            // Read the stored value, if possible.
+            let input = status == SUCCESS
+                ? data.getUnsafeString()
+                : null
+            log(target, Loglevel.DEBUG, "Loaded: " + input)
+
+            // Default to the initial value if there was no stored value or if
+            // the stored value is invalid, which can happen if the check is
+            // further restricted in newer versions of the map. This failure is
+            // is not logged automatically, as it is likely to be noisy and the
+            // check is able to do that if so desired.
+            let value = input != null and check.call(input)
+                ? input
+                : initial
+            log(target, Loglevel.DEBUG, "Using: " + value)
+
+            // Update the value for the player.
+            values.put(target, value)
+
+            // Mark the loading as complete.
+            pending -= 1
+
+    private function update(player target, string value)
+        log(target, Loglevel.DEBUG, "Updating value: " + value)
+        // Fetch the previous value to determine if a modification was made.
+        let previous = values.get(target)
+
+        // Exit if no change was performed.
+        if previous == value
+            return
+
+        // Update the value for the player.
+        values.put(target, value)
+
+        // Save the value for the player, as necessary.
+        if target.isIngame() and writable
+            target.saveData(filename, value)
+
+        // Forward the value to action handler, as necessary.
+        if action != null
+            action.call(target, value)
+
+    private function handleChat(player target, LinkedList<string> arguments)
+        // Ensure that no extra parameters are given.
+        if arguments.size() > 2
+            log(target, Loglevel.ERROR, "Only one value should be given.")
+            return
+
+        // Compute the value to use.
+        string value = null
+
+        // Use the supplied value, if possible.
+        if arguments.size() == 2
+            value = arguments.pop()
+        // Allow boolean settings to be toggled when no argument is given.
+        else
+            let previous = get(target)
+            // TODO: Use string.isBool once available in the standard library.
+            if previous.toBool().toString() == previous
+                value = (not previous.toBool()).toString()
+
+        // Fail if insufficient arguments were given.
+        if value == null
+            log(target, Loglevel.ERROR, "No value given.")
+            return
+
+        // Update the setting.
+        put(target, value)
+
+        // Notify the user of success.
+        log(target, Loglevel.INFO, "Set to: " + get(target))
+
+    private function log(player target, Loglevel level, string message)
+        if localPlayer == target or target == null
+            printLog(
+                localPlayer,
+                level,
+                "Setting '{0}' - {1}".format(
+                    name,
+                    message
+                )
+            )
+
+    private function checkInit() returns bool
+        // Avoid in-process modification.
+        if initialized
+            log(null, Loglevel.ERROR, "Cannot reinitialize.")
+
+        // Forward the value upwards
+        return initialized
+
+    private function checkSync() returns bool
+        // Avoid in-process modification.
+        if not synchronized
+            log(null, Loglevel.ERROR, "Not yet synchronized.")
+
+        // Forward the value upwards
+        return synchronized
+
+    // BUILDERS:
+
+    function make(string initial, Function<string, bool> check)
+        // Avoid in-process modification.
+        if checkInit()
+            return
+
+        // Check the given default.
+        if not check.call(initial)
+            log(
+                null,
+                Loglevel.ERROR,
+                "Invalid default: '{0}'".format(
+                    initial
+                )
+            )
+            return
+
+        // Update the instance.
+        this.initial = initial
+        this.check = check
+
+    function action(VoidBiFunction<player, string> action)
+        // Avoid in-process modification.
+        if checkInit()
+            return
+
+        // Update the instance.
+        this.action = action
+
+    function finish(EmptyVoidFunction finish)
+        // Avoid in-process modification.
+        if checkInit()
+            return
+
+        // Update the instance.
+        this.finish = finish
+
+    function writable(bool writable)
+        // Avoid in-process modification.
+        if checkInit()
+            return
+
+        // Update the instance.
+        this.writable = writable
+
+    // ACCESSORS AND SETTERS:
+
+    // Accesses the in-memory cache of the value for the given player.
+    function get(player target) returns string
+        // Block premature access.
+        if not checkSync()
+            return null
+
+        return values.get(target)
+
+    // Acesses the in-memory cache of the value for the local player.
+    function get() returns string
+        return get(localPlayer)
+
+    // Updates the setting for the given player.
+    function put(player target, string value)
+        log(target, Loglevel.DEBUG, "Putting value: " + value)
+        // Block premature access.
+        if not checkSync()
+            return
+
+        // Validate the input.
+        if not check.call(value)
+            log(
+                target,
+                Loglevel.ERROR,
+                "Invalid input: '{0}'".format(
+                    value
+                )
+            )
+            return
+
+        // Handle the update.
+        update(target, value)

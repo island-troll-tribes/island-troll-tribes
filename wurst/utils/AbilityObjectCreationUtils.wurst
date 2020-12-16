@@ -6,6 +6,7 @@ import HashMap
 import ObjectIdGenerator
 
 // Local imports:
+import LocalObjectIDs
 import ToolTipsUtils
 
 /**
@@ -77,15 +78,11 @@ public function createHeroSpellBook(int spellBookId, int levels) returns Ability
         ..presetBaseOrderID(lvl -> "unsummon")
 
 
-public function createPlaceHolder() returns int
-    let abilId = ABIL_ID_GEN.next()
-
-    if compiletime
-        new AbilityDefinitionAuraSlow(abilId)
-            ..setName("PlaceHolder Ability")
-            ..setTargetsAllowed(1, "bridge")
-            ..setMovementSpeedFactor(1, 0)
-            ..setCastRange(1, 0.01)
-            ..setBuffs(1, "")
-            ..setEditorSuffix("(Wurst)")
-    return abilId
+@compiletime function createPlaceHolder()
+    new AbilityDefinitionAuraSlow(ABILITY_SPELLBOOK_PLACEHOLDER)
+        ..setName("PlaceHolder Ability")
+        ..setTargetsAllowed(1, "bridge")
+        ..setMovementSpeedFactor(1, 0)
+        ..setCastRange(1, 0.01)
+        ..setBuffs(1, "")
+        ..setEditorSuffix("(Wurst)")

@@ -50,10 +50,10 @@ public class Setting
     // The string-encoded value per player.
     IterableMap<player, string> values
 
-    // The callback used to perform actions based upon the setting.
+    // The callback used to perform actions based upon modifications.
     VoidBiFunction<player, string> action
 
-    // The callback used to perform actions based upon the setting.
+    // The callback used to perform actions based upon synchronization.
     EmptyVoidFunction finish
 
     // The callback used to validate new values for the setting.
@@ -180,14 +180,18 @@ public class Setting
 
     private function update(player target, string value)
         log(target, Loglevel.DEBUG, "Updating value: " + value)
-        // Fetch the previous value to determine if an overwrite is needed.
-        let previous = values.getAndRemove(target)
+        // Fetch the previous value to determine if a modification was made.
+        let previous = values.get(target)
+
+        // Exit if no change was performed.
+        if previous == value
+            return
 
         // Update the value for the player.
         values.put(target, value)
 
         // Save the value for the player, as necessary.
-        if previous != value and target.isIngame() and writable
+        if target.isIngame() and writable
             target.saveData(filename, value)
 
         // Forward the value to action handler, as necessary.
@@ -209,6 +213,7 @@ public class Setting
         // Allow boolean settings to be toggled when no argument is given.
         else
             let previous = get(target)
+            // TODO: Use string.isBool once available in the standard library.
             if previous.toBool().toString() == previous
                 value = (not previous.toBool()).toString()
 

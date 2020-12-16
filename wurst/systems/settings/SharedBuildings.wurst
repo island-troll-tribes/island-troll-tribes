@@ -11,6 +11,7 @@ import Setting
 
 // Local imports:
 import PlayerExtensions
+import StringExtensions
 import Tribe
 
 // Whether a player is currently sharing buildings.
@@ -25,7 +26,7 @@ let owners = new HashMap<unit, player>
 // Handles initialization.
 function initialize()
     // Prevent sharing initially.
-    sharing.make("false", input -> input.toBool().toString() == input)
+    sharing.make("false", input -> input.isBool())
 
     // Transition all buildings for the player upon toggling.
     sharing.action() (target, value) ->
@@ -56,7 +57,7 @@ function finish()
 
     // Check for players that left during synchronization.
     for index = 0 to bj_MAX_PLAYER_SLOTS - 1
-        if not players[index].isIngame()
+        if players[index].getSlotState() == PLAYER_SLOT_STATE_LEFT
             onLeaver(players[index])
 
 function onEnter(unit target)

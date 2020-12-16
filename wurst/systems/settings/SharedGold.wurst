@@ -1,0 +1,254 @@
+package SharedGold
+
+// Standard library imports:
+import ClosureTimers
+import LinkedList
+import RegisterEvents
+import SimError
+
+// Third-party imports:
+import ChatCommands
+import LodashExtensions
+import Setting
+
+// Local imports:
+import ColorUtils
+import LocalObjectIDs
+import PlayerExtensions
+import PlayerUtils
+import StringExtensions
+import Tribe
+
+// Whether a player is currently sharing gold.
+let sharing = new Setting("share-gold")
+
+// The duration for notifications.
+let MESSAGE_DURATION = 10.
+
+// The base message used for notifying users of manual trades.
+let TRADE_MESSAGE = compiletime(
+    asList(
+        "{0}".color(GENERAL_COLOR),  // The action: Sent | Received.
+        "{1}",                       // The amount, an integer.
+        "gold".color(GOLD_COLOR),    // A constant.
+        "{2}".color(GENERAL_COLOR),  // The preposition: to | from.
+        "{3}"                        // The name of the counterparty.
+    ).joinBy(" ")
+)
+
+// The base message used for notifying users of inheritance from leavers.
+let LEAVE_MESSAGE = compiletime(
+    asList(
+        "They left you".color(GENERAL_COLOR),
+        "{0}".color(GOLD_COLOR),
+        "gold.".color(GENERAL_COLOR)
+    ).joinBy(" ")
+)
+
+// The help message for the manual trade command.
+let HELP_MESSAGE = "Command should be used as: -g [player] [amount]"
+
+function handleChatTrade(player origin, LinkedList<string> arguments)
+    // Verify the arguments.
+    if arguments.size() != 2 and arguments.size() != 3
+        simError(origin, HELP_MESSAGE)
+        return
+
+    // Compute the parameters for the trade.
+    let target = findPlayerByString(arguments.get(1))
+    let tribe = origin.getTribe()
+    let currentGold = origin.getLumber()
+    let amount = arguments.size() > 2 ? arguments.get(2).toInt() : currentGold
+
+    // Verify the target.
+    if target == null
+        simError(origin, "No matching player found.")
+        return
+
+    // Verify the parameters.
+    if tribe == null
+        // This is an unexpected error not due to the player.
+        Log.error("You are not in a tribe.")
+    else if amount > currentGold
+        simError(origin, "Not enough gold.")
+    else if amount <= 0
+        simError(origin, "Amount must be positive.")
+    else if target == origin
+        simError(origin, "You cannot trade with yourself.")
+    else if target.getTribe() != origin.getTribe()
+        simError(origin, "That player is not in your tribe.")
+    else if not target.isIngame()
+        simError(origin, "That player has left the game.")
+    else if sharing.get(origin).toBool() and sharing.get(target).toBool()
+        simError(origin, "You are already sharing gold with that player.")
+    else
+        // Perform the transaction.
+        origin.subLumber(amount)
+        target.addLumber(amount)
+
+        // Notify the target.
+        target.print(
+            TRADE_MESSAGE.format(
+                "Received",
+                amount.toString(),
+                "from",
+                origin.getNameColored()
+            ),
+            MESSAGE_DURATION
+        )
+
+        // Notify the giver.
+        origin.print(
+            TRADE_MESSAGE.format(
+                "Sent",
+                amount.toString(),
+                "to",
+                target.getNameColored()
+            ),
+            MESSAGE_DURATION
+        )
+
+        // Attempt to sync the gold for those involved.
+        target.syncGold()
+        origin.syncGold()
+
+
+// Syncs gold for the tribe to that of the given player.
+function player.syncGold()
+    Log.debug("Syncing gold based on: " + this.getName())
+    // Ignore players that are not sharing.
+    if not sharing.get(this).toBool()
+        return
+
+    // Look up the tribe for the player.
+    let tribe = this.getTribe()
+
+    // Ignore players without a tribe.
+    if tribe == null
+        return
+
+    // Cache the value used for syncing.
+    let value = this.getLumber()
+
+    // Update the shared pool.
+    tribe.getNonMember().setLumber(value)
+
+    // Sync each player in the pool.
+    for member in tribe.getMembers()
+        if sharing.get(member).toBool()
+            member.setLumber(value)
+
+function initialize()
+    // Prevent sharing initially.
+    sharing.make("false", input -> input.isBool())
+
+    sharing.action() (target, value) ->
+        // Add gold to pool upon sharing.
+        if value.toBool()
+            // Look up the tribe for the player.
+            let tribe = target.getTribe()
+
+            // Ignore players without a tribe.
+            if tribe != null
+                // Add their gold into the pool and sync.
+                target
+                    ..addLumber(tribe.getNonMember().getLumber())
+                    .syncGold()
+        else
+            // Reset gold upon disabling sharing.
+            target.setLumber(0)
+
+    // Allow manual trading in addition to automatic pooling.
+    sharing.finish() ->
+        // Allow for both the full command and abbreviation.
+        for command in asList("g", "gold")
+            registerCommandAll(command) (triggerer, arguments) ->
+                handleChatTrade(triggerer, arguments)
+
+        // Handle the setting for any leavers.
+        registerPlayerEvent(EVENT_PLAYER_LEAVE) ->
+            onLeaver(EventData.getTriggerPlayer())
+
+        // Check for players that left during synchronization.
+        for index = 0 to bj_MAX_PLAYER_SLOTS - 1
+            if players[index].getSlotState() == PLAYER_SLOT_STATE_LEFT
+                onLeaver(players[index])
+
+    // Initialize the setting.
+    sharing.initialize()
+
+// Share gold upon leaving.
+function onLeaver(player target)
+    sharing.put(target, "true")
+
+    // Look up the tribe for the player.
+    let tribe = target.getTribe()
+
+    // Ignore players without a tribe.
+    if tribe == null
+        return
+
+    // Notify their allies, as necessary.
+    for member in tribe.getMembers()
+        if not sharing.get(member).toBool()
+            member.print("Use -share-gold to access their gold.")
+
+function handleTransaction(unit origin)
+    // Delay to ensure that the triggering transaction has been executed.
+    nullTimer() ->
+        processTransaction(origin.getOwner())
+
+function processTransaction(player origin)
+    Log.debug("Handling transaction involving: " + origin.getName())
+    // Look up the tribe for the transactor.
+    let tribe = origin.getTribe()
+
+    // Ignore and alarm for transactors without a tribe, an unexpected event.
+    if tribe == null
+        Log.error("Transactor does not have a tribe: " + origin.getName())
+        return
+
+    // Compute the set of tribemates whose gold delta affects the tribe.
+    let targets = tribe.getMembers()
+        .lodashFilter(
+            member -> (
+                // Ignore members that are not sharing gold.
+                sharing.get(member).toBool() and
+                // Filter out members whose gold did not change.
+                member.getLumber() != tribe.getNonMember().getLumber()
+            )
+        )
+
+    // Alarm on multiple matches, an unexpected condition.
+    if targets.size() > 1
+        Log.error("Failed to identify true transactor among: {0}".format(
+            targets.joinBy(target -> target.getName(), ", ")
+        ))
+    // Handle the player whose gold changed due to the transaction.
+    else if targets.size() == 1
+        targets.dequeue().syncGold()
+    // Log the case that the true transaction was not sharing gold.
+    else
+        Log.debug("Ignoring transaction.")
+
+    // Clean up the local state.
+    destroy targets
+
+init
+    // Delay initialization until tribes are set.
+    registerTribeInitializationFinishEvent() ->
+        initialize()
+
+    // Sync when a unit buys an item from a shop.
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SELL_ITEM) ->
+        handleTransaction(GetBuyingUnit())
+
+    // Sync when a unit sells an item to a shop.
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PAWN_ITEM) ->
+        handleTransaction(GetTriggerUnit())
+
+    // Sync when a unit picks up gold.
+    // TODO: Support the possible items this via a registry.
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
+        if GetManipulatedItem().getTypeId() == ITEM_ALIGATOR_GOLD
+            handleTransaction(GetTriggerUnit())

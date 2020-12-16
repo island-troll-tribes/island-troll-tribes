@@ -2,12 +2,28 @@ package RandomPerk
 
 import PerkUtils
 import LocalAssets
+import LocalObjectIDs
 import Classes
 
+import ClosureForGroups
+import Toolkit
+
 import HashMap
+import HashSet
 
 import PlayerExtensions
 import OnUnitEnterLeave
+
+// might wanna whitelist only baseclasses instead
+// Priest has weird head position, bm subclasses are more beast than troll so no hat
+let banlist = new HashSet<int>()
+..add(UNIT_PRIEST)
+..add(UNIT_SHAPESHIFTER_BEAR)
+..add(UNIT_SHAPESHIFTER_PANTHER)
+..add(UNIT_SHAPESHIFTER_TIGER)
+..add(UNIT_SHAPESHIFTER_WOLF)
+..add(UNIT_DRUID)
+..add(UNIT_JUNGLE_TYRANT)
 
 let effects = new HashMap<unit,effect>()
 
@@ -17,26 +33,31 @@ function removeFrom(unit u)
         e.destr() // This might not work because of death animation
 
 function attachTo(unit u)
-    removeFrom(u)
-    effects.put(u, addEffect(LocalAttachments.strawHat, u, "head"))
+    if(not banlist.has(u.getTypeId()))
+        removeFrom(u)
+        effects.put(u, addEffect(LocalAttachments.strawHat, u, "head"))
 
 init
     addPerk(
         "HAS_RANDOMED",
         new Perk()
-        ..onActivate(p -> begin
-            let troll = p.getTroll()
-            if(troll != null)
-                attachTo(troll)
-        end)
-        ..onDeactivate(p -> begin
-            let troll = p.getTroll()
-            if(troll != null)
-                removeFrom(troll)
-        end)
+            ..onActivate(p -> begin
+                let troll = p.getTroll()
+                if(troll != null)
+                    attachTo(troll)
+            end)
+            ..onDeactivate(p -> begin
+                let troll = p.getTroll()
+                if(troll != null)
+                    removeFrom(troll)
+            end)
     )
     
     onEnter() ->
         let u  = getEnterLeaveUnit()
         if(isTroll(u) and u.getOwner().hasPerk("HAS_RANDOMED"))
+            attachTo(u)
+    
+    registerToolkitCommand("randomPerkTest") (triggerPlayer, arguments) ->
+        forUnitsSelected(triggerPlayer) (unit u) ->
             attachTo(u)

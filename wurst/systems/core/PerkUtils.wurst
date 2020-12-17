@@ -23,10 +23,10 @@ public class Perk
 
     function onActivate(VoidFunction<player> fn)
         this.onRegisterFn = fn
-    
+
     function activate(player p)
         this.onRegisterFn.call(p)
-    
+
     function deactivate(player p)
         this.onUnregisterFn.call(p)
 
@@ -48,29 +48,29 @@ public function player.addPerk(string perkName)
 
     if(playerPerks.has(perkName))
         return
-    
+
     playerPerks.add(perkName)
-    
+
     // Execute handlers<
     let perk = perksDefinitions.get(perkName)
     if(perk == null)
         error("Perk {0} does not exist".format(perkName))
-    
+
     perk.activate(this)
 
 public function player.removePerk(string perkName)
     let playerPerks = perksPlayers.get(this)
-    
+
     if(playerPerks == null or not playerPerks.has(perkName))
         return
-    
+
     playerPerks.remove(perkName)
-    
+
     // Execute handler
     let perk = perksDefinitions.get(perkName)
     if(perk == null)
         error("Perk {0} does not exist".format(perkName))
-    
+
     perk.deactivate(this)
 
 public function player.hasPerk(string perkName) returns boolean
@@ -83,7 +83,7 @@ init
             printTimedToPlayer("Perk is on".color(GENERAL_COLOR), 10, triggerPlayer)
         else
             printTimedToPlayer("Perk is off".color(GENERAL_COLOR), 10, triggerPlayer)
-    
+
     registerToolkitCommand("toggle-perk") (triggerPlayer, args) ->
         let perkName = args.get(1)
         if(triggerPlayer.hasPerk(perkName))

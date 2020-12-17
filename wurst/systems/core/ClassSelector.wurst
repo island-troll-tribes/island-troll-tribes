@@ -40,8 +40,6 @@ let spawnList = asList(
 
 let listeners = CreateTrigger()
 
-let repickers = new HashSet<player>()
-
 public function registerClassSelectionEndEvent(code listener)
     listeners.addAction(listener)
 
@@ -197,25 +195,16 @@ public class ClassSelector
                 handleSelection(owner, sold)
 
     function randomPerkEnable(player p)
-        if(repickers.has(p) == false)
-            p.addPerk("HAS_RANDOMED")
-
-    function hasRepicked(player p)
-        repickers.add(p)
-        p.removePerk("HAS_RANDOMED")
+        p.addPerk("HAS_RANDOMED")
 
     function handleSelection(player owner, unit troll)
         let trollId = troll.getTypeId()
 
         // Prevent having 2 trolls at the same time
-        let repicked = handleTrollRemoval(owner)
+        handleTrollRemoval(owner)
 
         setClassUnavailable(trollId)
         owner.setTroll(troll)
-
-        // Disable random perk - needs to be after setTroll()
-        if(repicked)
-            hasRepicked(owner)
 
         troll
             ..pause()
@@ -242,8 +231,6 @@ public class ClassSelector
             return true
 
     function handleRandom(player p)
-        randomPerkEnable(p)
-
         let trollId = getRandomTrollId()
         IssueNeutralImmediateOrderById(p, totem, trollId)
 

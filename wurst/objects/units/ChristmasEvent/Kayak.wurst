@@ -1,0 +1,175 @@
+package Kayak
+
+import Assets
+import ClosureEvents
+import ChannelAbilityPreset
+import ClosureTimers
+import OrderIds
+import HashMap
+
+import LocalAssets
+import LocalObjectIDs
+import Items
+import LocalItemObjEditing
+import SimError
+
+let ABILITY_CARGO_1_SLOT  = compiletime(ABIL_ID_GEN.next())
+let ABIL_KAYAK            = compiletime(ABIL_ID_GEN.next())
+public let ITEM_KAYAK_KIT = compiletime(ABIL_ID_GEN.next())
+
+let UNIT_KAYAK_DARK_SPEAR_TROLL         = compiletime(UNIT_ID_GEN.next())
+let UNIT_KAYAK_DARK_TROLL               = compiletime(UNIT_ID_GEN.next())
+let UNIT_KAYAK_DARK_TROLL_SHADOW_PRIEST = compiletime(UNIT_ID_GEN.next())
+let UNIT_KAYAK_DARK_TROLL_TRAPPER       = compiletime(UNIT_ID_GEN.next())
+let UNIT_KAYAK_FOREST_TROLL_TRAPPER     = compiletime(UNIT_ID_GEN.next())
+let UNIT_KAYAK_ICE_GATHERER             = compiletime(UNIT_ID_GEN.next())
+let UNIT_KAYAK_ICE_TROLL_PRIEST         = compiletime(UNIT_ID_GEN.next())
+let UNIT_KAYAK_ICE_TROLL_TRAPPER        = compiletime(UNIT_ID_GEN.next())
+let UNIT_KAYAK_SCOUT_UNSUB              = compiletime(UNIT_ID_GEN.next())
+let UNIT_KAYAK_SHADOW_HUNTER_TROLL      = compiletime(UNIT_ID_GEN.next())
+let UNIT_KAYAK_SHAMAN                   = compiletime(UNIT_ID_GEN.next())
+let UNIT_KAYAK_WITCH_DOCTOR_TROLL       = compiletime(UNIT_ID_GEN.next())
+let UNIT_KAYAK_TERROR_TROLL             = compiletime(UNIT_ID_GEN.next())
+
+
+let kayakMap = new IterableMap<int, string>
+    ..put(UNIT_KAYAK_DARK_SPEAR_TROLL        , LocalUnits.darkSpearTrollKayaking)
+    ..put(UNIT_KAYAK_DARK_TROLL              , LocalUnits.darkTrollKayaking)
+    ..put(UNIT_KAYAK_DARK_TROLL_SHADOW_PRIEST, LocalUnits.darkTrollShadowPriestKayaking)
+    ..put(UNIT_KAYAK_DARK_TROLL_TRAPPER      , LocalUnits.darkTrollTrapperKayaking)
+    ..put(UNIT_KAYAK_FOREST_TROLL_TRAPPER    , LocalUnits.forestTrollTrapperKayaking)
+    ..put(UNIT_KAYAK_ICE_GATHERER            , LocalUnits.iceGathererKayaking)
+    ..put(UNIT_KAYAK_ICE_TROLL_PRIEST        , LocalUnits.iceTrollPriestKayaking)
+    ..put(UNIT_KAYAK_ICE_TROLL_TRAPPER       , LocalUnits.iceTrollTrapperKayaking)
+    ..put(UNIT_KAYAK_SCOUT_UNSUB             , LocalUnits.scoutUnsublKayaking)
+    ..put(UNIT_KAYAK_SHADOW_HUNTER_TROLL     , LocalUnits.shadowHunterTrollKayaking)
+    ..put(UNIT_KAYAK_SHAMAN                  , LocalUnits.shamanKayaking)
+    ..put(UNIT_KAYAK_WITCH_DOCTOR_TROLL      , LocalUnits.witchDoctorTrollKayaking)
+    ..put(UNIT_KAYAK_TERROR_TROLL            , LocalUnits.terrorTrollKayaking)
+
+let trollToKayakMap = new HashMap<int, int>
+    ..put(UNIT_HUNTER         , UNIT_KAYAK_FOREST_TROLL_TRAPPER)
+    ..put(UNIT_TRAPPER        , UNIT_KAYAK_FOREST_TROLL_TRAPPER)
+    ..put(UNIT_OBSERVER       , UNIT_KAYAK_FOREST_TROLL_TRAPPER)
+    ..put(UNIT_SPY            , UNIT_KAYAK_FOREST_TROLL_TRAPPER)
+    ..put(UNIT_WARRIOR        , UNIT_KAYAK_DARK_SPEAR_TROLL)
+    ..put(UNIT_ELEMENTALIST   , UNIT_KAYAK_DARK_SPEAR_TROLL)
+    ..put(UNIT_ESCAPE_ARTIST  , UNIT_KAYAK_DARK_TROLL)
+    ..put(UNIT_CONTORTIONIST  , UNIT_KAYAK_DARK_TROLL)
+    ..put(UNIT_DEMENTIA_MASTER, UNIT_KAYAK_DARK_TROLL_SHADOW_PRIEST)
+    ..put(UNIT_THIEF          , UNIT_KAYAK_DARK_TROLL_TRAPPER)
+    ..put(UNIT_ASSASSIN       , UNIT_KAYAK_DARK_TROLL_TRAPPER)
+    ..put(UNIT_GATHERER       , UNIT_KAYAK_ICE_GATHERER)
+    ..put(UNIT_HERB_MASTER    , UNIT_KAYAK_ICE_TROLL_PRIEST)
+    ..put(UNIT_TRACKER        , UNIT_KAYAK_ICE_TROLL_TRAPPER)
+    ..put(UNIT_SCOUT          , UNIT_KAYAK_SCOUT_UNSUB)
+    ..put(UNIT_PRIEST         , UNIT_KAYAK_SHADOW_HUNTER_TROLL)
+    ..put(UNIT_BOOSTER        , UNIT_KAYAK_SHADOW_HUNTER_TROLL)
+    ..put(UNIT_MASTER_HEALER  , UNIT_KAYAK_SHADOW_HUNTER_TROLL)
+    ..put(UNIT_SAGE           , UNIT_KAYAK_SHADOW_HUNTER_TROLL)
+    ..put(UNIT_BEAST_MASTER   , UNIT_KAYAK_SHAMAN)
+    ..put(UNIT_MAGE           , UNIT_KAYAK_WITCH_DOCTOR_TROLL)
+    ..put(UNIT_HYPNOTIST      , UNIT_KAYAK_WITCH_DOCTOR_TROLL)
+    ..put(UNIT_RADAR_GATHERER , UNIT_KAYAK_TERROR_TROLL)
+    ..put(UNIT_OMNIGATHERER   , UNIT_KAYAK_TERROR_TROLL)
+
+let ABILITIES = commaList(
+    AbilityIds.loadNavies,
+    'Sdro',
+    ABILITY_CARGO_1_SLOT
+)
+
+let TT_KAYAK = "Creates a kayak somewhere in the water."
+
+function createKayakingTrollUnit(int newId, string model) returns UnitDefinition
+    return new UnitDefinition(newId, UnitIds.nightelftransportship)
+        ..setArmorType(ArmorType.Large)
+        ..setAttacksEnabled(0)
+        ..setHitPointsMaximumBase(50)
+        ..setName("Kayak")
+        ..setSightRadiusDay(350)
+        ..setSightRadiusNight(350)
+        ..setSpeedBase(280)
+        ..setTargetedAs("ground,structure")
+        ..setNormalAbilities(ABILITIES)
+        ..setModelFile(model)
+        ..setScalingValue(1.35)
+
+@compiletime function createTransportShip()
+    new AbilityDefinitionCargoHoldShip(ABILITY_CARGO_1_SLOT)
+        ..setCargoCapacity(1, 1)
+
+@compiletime function createKayakAbility()
+    new AbilityDefinitionBuildTinyCastle(ABIL_KAYAK)
+        ..setIconNormal(Icons.bTNOrcDestroyer)
+        ..setName("Build Kayak")
+        ..setDurationNormal(1, 10.0)
+        ..setUnitCreatedperplayerrace(1,  commaList(UNIT_KAYAK_DARK_SPEAR_TROLL))
+        ..setCastRange(1, 100)
+        ..setHeroAbility(false)
+        ..setItemAbility(true)
+
+@compiletime function createKayakKit()
+    createPerishableItem(ITEM_KAYAK_KIT)
+        ..setNumberofCharges(1)
+        ..setRequirements("")
+        ..setLevel(1)
+        ..setClassification("Charged")
+        ..setDroppedWhenCarrierDies(true)
+        ..setGoldCost(0)
+        ..setHotkey("")
+        ..setInterfaceIcon(Icons.bTNOrcDestroyer)
+        ..setModelUsed(Doodads.barricade0)
+        ..setNameEnhance("Kayak Kit")
+        ..setDescription("Build a Kayak")
+        ..setTooltipExtended(TT_KAYAK)
+        ..setLumberCost(1)
+        ..setAbilities(commaList(ABIL_KAYAK))
+        ..setScalingValue(1)
+        ..setStockReplenishInterval(30)
+
+@compiletime function createKayakUnits()
+    for unitId in kayakMap
+        createKayakingTrollUnit(unitId, kayakMap.get(unitId))
+
+
+init
+    EventListener.add(EVENT_PLAYER_UNIT_SPELL_ENDCAST) ->
+        if EventData.getSpellAbilityId() == 'Sdro'
+            EventData.getTriggerUnit()
+                ..setAnimation("victory")
+                ..pause()
+
+    EventListener.add(EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER) ->
+        if EventData.getIssuedOrderId() == OrderIds.smart
+            let troll = EventData.getOrderedUnit()
+            let kayak = EventData.getOrderTargetUnit()
+            if kayakMap.has(kayak.getTypeId())
+                if trollToKayakMap.has(troll.getTypeId())
+                    if troll.getPos().distanceTo(kayak.getPos()) < 180
+                        kayak.unpause()
+                        BlzSetUnitSkin(kayak, trollToKayakMap.get(troll.getTypeId()))
+                    else
+                        simError(EventData.getTriggerPlayer(), "Kayak's too far")
+                else
+                    simError(EventData.getTriggerPlayer(), "This unit doesn't fit in a kayak.")
+
+    EventListener.add(EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER) ->
+        if EventData.getIssuedOrderId() == OrderIds.unload
+            let kayak = EventData.getOrderedUnit()
+            doAfter(0.1) ->
+                kayak
+                ..setAnimation("victory")
+                ..pause()
+
+    EventListener.add(EVENT_PLAYER_UNIT_CONSTRUCT_FINISH) ->
+        let u = GetConstructedStructure()
+        if u.getTypeId() == UNIT_KAYAK_DARK_SPEAR_TROLL
+            u
+            ..setAnimation("victory")
+            ..pause()
+
+    EventListener.add(EVENT_PLAYER_UNIT_CONSTRUCT_START) ->
+        let u = GetConstructingStructure()
+        if u.getTypeId() == UNIT_KAYAK_DARK_SPEAR_TROLL
+            u..setAnimation("victory")

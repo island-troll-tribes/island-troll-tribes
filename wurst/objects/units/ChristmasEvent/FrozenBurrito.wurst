@@ -1,0 +1,34 @@
+package FrozenBurrito
+
+import Items
+import ObjectIds
+import ObjectIdGenerator
+import AbilityObjEditing
+
+import LocalAssets
+import LocalItemObjEditing
+import ToolTipsUtils
+import LocalObjectIDs
+
+let ABILITY_BURRITO_MANA = compiletime(ABIL_ID_GEN.next())
+
+let MANA_RESTORED = 10.
+
+let TT_BURRITO = ("" +
+    "A sandwich from unknow origin, "+
+    "highly prized by Troll intellectual, served at breakfast."+
+    "Restore {0} mana on use.".format(MANA_RESTORED.toToolTipBlue())
+)
+
+@compiletime function createFrozenBurrito()
+    new AbilityDefinitionItemManaRestoreGreater(ABILITY_BURRITO_MANA)
+        ..setManaPointsGained(1, 90)
+
+    createPerishableItem(ITEM_FROZEN_BURRITO)
+        ..setScalingValue(0.8)
+        ..setInterfaceIcon(LocalIcons.bTNBurrito)
+        ..setModelUsed(LocalItems.burrito)
+        ..setAbilities(commaList(ABILITY_BURRITO_MANA))
+        ..setNameEnhance("Frozen Burrito")
+        ..setTooltipExtended(TT_BURRITO)
+        ..setDescription(TT_BURRITO)

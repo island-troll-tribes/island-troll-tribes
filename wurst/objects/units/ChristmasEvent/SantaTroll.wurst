@@ -10,6 +10,7 @@ import LocalObjectIDs
 import LocalAssets
 import Items
 import LocalItemObjEditing
+import GiftOpening
 
 let ABILITY_GIFT_THROW = compiletime(ABIL_ID_GEN.next())
 let ABILITY_GIFT_POWER_UP = compiletime(ABIL_ID_GEN.next())
@@ -153,3 +154,9 @@ init
         if EventData.getSpellAbilityId() == ABILITY_GIFT_THROW
             and u.getTypeId() == UNIT_SANTA_TROLL
             santaLeaves(u)
+
+    EventListener.add(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
+        let itm = EventData.getManipulatedItem()
+        if itm.getTypeId() == ITEM_GIFT
+            let u = EventData.getTriggerUnit()
+            openGift(u, itm.getPos())

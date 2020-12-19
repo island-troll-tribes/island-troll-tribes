@@ -13,6 +13,7 @@ import HashSet
 
 import PlayerExtensions
 import OnUnitEnterLeave
+import Transformation
 
 // might wanna whitelist only baseclasses instead
 // Priest has weird head position, bm subclasses are more beast than troll so no hat
@@ -37,6 +38,10 @@ function attachTo(unit u)
         removeFrom(u)
         effects.put(u, addEffect(LocalAttachments.strawHat, u, "head"))
 
+function onNewTroll(unit u)
+    if(isTroll(u) and u.getOwner().hasPerk("HAS_RANDOMED"))
+        attachTo(u)
+
 init
     addPerk(
         "HAS_RANDOMED",
@@ -54,9 +59,10 @@ init
     )
 
     onEnter() ->
-        let u  = getEnterLeaveUnit()
-        if(isTroll(u) and u.getOwner().hasPerk("HAS_RANDOMED"))
-            attachTo(u)
+        onNewTroll(getEnterLeaveUnit())
+
+    registerAfterEffect() (unit u, int unitID) ->
+        onNewTroll(u)
 
     registerToolkitCommand("randomPerkTest") (triggerPlayer, arguments) ->
         forUnitsSelected(triggerPlayer) (unit u) ->

@@ -1,0 +1,155 @@
+package SantaTroll
+
+import ChannelAbilityPreset
+import Assets
+import CustomProjectile
+import ClosureEvents
+import Orders
+import ClosureTimers
+import LocalObjectIDs
+import LocalAssets
+import Items
+import LocalItemObjEditing
+
+let ABILITY_GIFT_THROW = compiletime(ABIL_ID_GEN.next())
+let ABILITY_GIFT_POWER_UP = compiletime(ABIL_ID_GEN.next())
+let ABILITY_SEND_LETTER = compiletime(ABIL_ID_GEN.next())
+let ITEM_GIFT = compiletime(ITEM_ID_GEN.next())
+
+
+//hardened skin, resistant skin, true sight, web, crit, pulverise
+let ABILITIES = commaList(
+    AbilityIds.invulnerable,
+    ABILITY_GIFT_THROW
+)
+
+let TT_LETTER = "A card destined at Santa, filled with hopes and dreams of the sender."
+let TT_GIFT = "A presnet from Santa!"
+
+
+@compiletime function createSantaTroll()
+    new UnitDefinition(UNIT_SANTA_TROLL, UnitIds.trollbatrider)
+        ..setSpeedBase(500)
+        ..setNormalAbilities(ABILITIES)
+        ..setModelFile(LocalUnits.santaTroll)
+        ..setAttacksEnabled(0)
+        ..setScalingValue(1.2)
+        ..setAnimationCastBackswing(0.54)
+        ..setAnimationCastPoint(0.600)
+        ..setUpgradesUsed("")
+
+    new ChannelAbilityPreset(ABILITY_GIFT_THROW, 1, true)
+        ..setDummyAbility()
+        ..presetButtonPosNormal(0, 2)
+        ..setIconNormal(Icons.bTNWandOfCyclone)
+        ..presetTargetTypes(Targettype.POINT)
+        ..setAnimationNames("spell")
+        ..presetFollowThroughTime(_ -> 0.75)
+        ..setCastRange(1, 500)
+        ..setBaseOrderID(1, "shockwave")
+
+    new AbilityDefinitionPermanentAllPlus1(ABILITY_GIFT_POWER_UP)
+        ..setAgilityBonus(1, 0)
+        ..setIntelligenceBonus(1, 0)
+        ..setStrengthBonus(1, 0)
+
+    new ItemDefinition(ITEM_GIFT, 'tdex') // agi tome
+        ..setModelUsed(LocalItems.gift)
+        ..setLumberCost(3)
+        ..setGoldCost(0)
+        ..setHitPoints(75)
+        ..setAbilities(commaList(ABILITY_GIFT_POWER_UP))
+        ..setNameEnhance("Christmas Gift")
+        ..setDescription(TT_GIFT)
+        ..setTooltipExtended(TT_GIFT)
+
+    new ChannelAbilityPreset(ABILITY_SEND_LETTER, 1, true)
+        ..setDummyAbility()
+
+    createPerishableItem(ITEM_LETTER)
+        ..setInterfaceIcon(LocalIcons.bTNLetter)
+        ..setModelUsed(LocalItems.letter)
+        ..setNameEnhance("Christmas Card")
+        ..setTooltipExtended(TT_LETTER)
+        ..setDescription(TT_LETTER)
+        ..setLumberCost(5)
+        ..setTintingColor1Red(255)
+        ..setTintingColor2Green(255)
+        ..setTintingColor3Blue(255)
+        ..setCooldownGroup("")
+        ..setScalingValue(0.75)
+        ..setCooldownGroup("Asp6")
+        ..setAbilities(ABILITY_SEND_LETTER.toRawCode())
+        ..setNumberofCharges(1)
+        ..setClassification("Purchasable")
+
+class GiftProjectile extends CustomProjectile
+
+    construct(vec3 startPos, vec3 targetPos, real groundSpeed, string effectPath)
+        super(startPos, targetPos, groundSpeed, 750, effectPath)
+        this.missileFx.setScale(0.5)
+
+    override function onImpact()
+        createItem(ITEM_GIFT, targetPos)
+
+
+function createChristmasTextag(string msg, vec3 pos) returns texttag
+    return CreateTextTag()
+        ..setText(msg, 10)
+        ..setPos(pos)
+        ..setColor(color(30, 144, 255).withAlpha(255))
+        ..setVelocity(0., 0.04)
+        ..setVisibility(true)
+        ..setFadepoint(2.0)
+        ..setLifespan(3.0)
+        ..setPermanent(false)
+
+let TRANSPARENCY_NUM_LOOPS = 51
+let TRANSPARENCY_PER_LOOP = 5
+let LOOP_FREQUENCY = .1
+let SANTA_SPAWN_RANGE = 2000.
+
+function santaLeaves(unit santa)
+    santa.issuePointOrderById(OrderIds.move, santa.getPos().polarOffset(angle(GetRandomReal(0, PI2)), SANTA_SPAWN_RANGE))
+    doPeriodicallyCounted(LOOP_FREQUENCY, TRANSPARENCY_NUM_LOOPS) (CallbackCounted cb) ->
+        santa.setVertexColor(255, 255, 255, 255 - ((TRANSPARENCY_NUM_LOOPS - cb.getCount()) * TRANSPARENCY_PER_LOOP))
+        if cb.isLast()
+            santa.remove()
+
+function summonSanta(unit caster)
+    var angle = angle(GetRandomReal(0, PI2))
+    let spawnPos = caster.getPos().polarOffset(angle, SANTA_SPAWN_RANGE / 2)
+    angle = spawnPos.angleTo(caster.getPos())
+    let santa = createUnit(players[PLAYER_NEUTRAL_PASSIVE], UNIT_SANTA_TROLL,
+         spawnPos, angle)
+        ..setVertexColor(255, 255, 255, 0)
+
+    santa.issuePointOrderById(OrderIds.shockwave, caster.getPos())
+    doPeriodicallyTimed(0.40, 1.2) (CallbackCounted cb) ->
+        createChristmasTextag("OH!", santa.getPos3Real())
+        santa.setVertexColor(255, 255, 255, 255 - cb.getCount() * 75)
+
+
+init
+    // Santa coming in and dropping the gift
+    EventListener.onPointCast(ABILITY_GIFT_THROW) (unit caster, vec2 target) ->
+        let casterPos3D = caster.getPos().withTerrainZ().op_plus(vec3(0, 0, caster.getPos3Fly().z))
+        new GiftProjectile(
+            casterPos3D + vec3(-35, 30, 50), // Value from batrider unit definition
+            target.withTerrainZ(),
+            500,
+            LocalAbilities.presentMissile
+            )
+
+    // Use the christmas card
+    EventListener.onCast(ABILITY_SEND_LETTER) (unit caster) ->
+        createChristmasTextag("Dear Santa, I wish for...", caster.getPos3Real())
+        doAfter(4) ->
+            summonSanta(caster)
+
+    // Santa finished his delivery and has to go
+    EventListener.add(EVENT_PLAYER_UNIT_SPELL_ENDCAST) ->
+        let u = EventData.getTriggerUnit()
+        if EventData.getSpellAbilityId() == ABILITY_GIFT_THROW
+            and u.getTypeId() == UNIT_SANTA_TROLL
+            santaLeaves(u)

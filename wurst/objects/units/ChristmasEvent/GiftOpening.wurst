@@ -1,14 +1,52 @@
 package GiftOpening
 
+import Assets
 import LocalObjectIDs
 import Kayak
+import Pets
+import LinkedList
+import ClosureTimers
+import UnitEntity
+import BeastMaster
+import Elk
+import LocalAssets
+
 
 public function openGift(unit opener, vec2 giftPos)
     // Pick an event randomly, as necessary.
     let chance = GetRandomReal(0, 1)
 
-    if chance < 0.5
+    if chance < 0.1
+        let unitEntity = UnitEntity.findForUnit(opener)
+        if unitEntity instanceof BeastMaster
+            let petEntity = UnitEntity.findForUnit(opener.getOwner().getPet())
+            if petEntity instanceof Elk or petEntity == null
+                createUnit(
+                    players[PLAYER_NEUTRAL_PASSIVE],
+                    UNIT_WOLF_PUP, giftPos, 270..asAngleDegrees()
+                )
+        else
+            openGift(opener, giftPos)
+    else if chance < 0.2
+        createUnit(
+            players[PLAYER_NEUTRAL_AGGRESSIVE],
+            UNIT_SNAKE_LVL1, giftPos, 270..asAngleDegrees()
+            )
+    else if chance < 0.3
+        createItem(ITEM_TELEPORT_BEACON_KIT, giftPos)
+        createItem(ITEM_MAGIC, giftPos)
+        createItem(ITEM_MAGIC, giftPos)
+    else if chance < 0.4
+        for i = 0 to GetRandomInt(1, 5)
+            createItem(ITEM_BANANA, giftPos)
+    else if chance < 0.5
+        let saltFx = addEffect(LocalAbilities.saltBuff, opener, "overhead")
+        doAfter(8) ->
+            saltFx.destr()
+    else if chance < 0.6
         createItem(ITEM_KAYAK_KIT, giftPos)
-    if chance < 1
+    else if chance < 0.7
+        createItem(ITEM_TENT_KIT_FORT, giftPos)
+    else if chance < 0.9
         let charges = GetRandomInt(1, 10)
         createItem(ITEM_FROZEN_BURRITO, giftPos).setCharges(charges)

@@ -19,6 +19,7 @@ constant ABIL_ENSNARE_TRAP = compiletime(ABIL_ID_GEN.next())
 constant ABIL_FIRE         = compiletime(ABIL_ID_GEN.next())
 constant ABIL_MAGE_FIRE    = compiletime(ABIL_ID_GEN.next())
 constant ABIL_TENT         = compiletime(ABIL_ID_GEN.next())
+constant ABIL_TENT_FORTIFIED = compiletime(ABIL_ID_GEN.next())
 constant ABIL_TROLL_HUT    = compiletime(ABIL_ID_GEN.next())
 constant ABIL_SMOKEHOUSE   = compiletime(ABIL_ID_GEN.next())
 constant ABIL_STORAGE_HUT  = compiletime(ABIL_ID_GEN.next())
@@ -40,6 +41,7 @@ constant TT_ENSNARE_TRAP = "Creates a defensive Ensnare Trap at target location.
 constant TT_FIRE         = "Creates a Camp Fire at a target location."
 constant TT_MAGE_FIRE    = "Creates a Mage Fire at a target location."
 constant TT_TENT         = "Creates a Tent at target location. Can use it to sleep."
+constant TT_TENT_FORTIFIED = "Creates a Fortified Tent at target location. Made of unknow materials, this tent is hard as a rock."
 constant TT_TROLL_HUT    = "Creates a Troll Hut at target location. Can use it to sleep."
 constant TT_SMOKEHOUSE   = "Creates a Smoke House at target location. Can use it to sleep."
 constant TT_STORAGE_HUT  = "Creates a Storage Hut at target location. Can use it to sleep."
@@ -91,6 +93,12 @@ function createKitAbility(int abilId) returns AbilityDefinitionBuildTinyCastle
         ..setUnitCreatedperplayerrace(1, commaList(UNIT_MAGE_FIRE))
 
 @compiletime function createTentAbility() returns AbilityDefinitionBuildTinyCastle
+    createKitAbility(ABIL_TENT_FORTIFIED)
+        ..setIconNormal(LocalIcons.bTNTent)
+        ..setName("Build Fortified Tent")
+        ..setDurationNormal(1, 7.0)
+        ..setUnitCreatedperplayerrace(1,  commaList(UNIT_TENT_FORTIFIED))
+
     return createKitAbility(ABIL_TENT)
         ..setIconNormal(LocalIcons.bTNTent)
         ..setName("Build Tent")
@@ -263,16 +271,26 @@ function createKit(int itemId) returns ItemDefinition
     ..setTintingColor2Green(100)
 
 @compiletime function createTentKit() returns ItemDefinition
+    createKit(ITEM_TENT_KIT_FORT)
+        ..setInterfaceIcon(LocalIcons.bTNTent)
+        ..setModelUsed(Doodads.emptyCrates0)
+        ..setNameEnhance("Fortified Tent Kit")
+        ..setDescription("Build a Fortified Tent Kit")
+        ..setTooltipExtended(TT_TENT_FORTIFIED)
+        ..setLumberCost(1)
+        ..setAbilities(commaList(ABIL_TENT_FORTIFIED))
+        ..setScalingValue(1.0)
+        ..setStockReplenishInterval(120)
     return createKit(ITEM_TENT_KIT)
-    ..setInterfaceIcon(LocalIcons.bTNTent)
-    ..setModelUsed(Doodads.emptyCrates0)
-    ..setNameEnhance("Tent Kit")
-    ..setDescription("Build a Tent Kit")
-    ..setTooltipExtended(TT_TENT)
-    ..setLumberCost(13)
-    ..setAbilities(commaList(ABIL_TENT))
-    ..setScalingValue(1.0)
-    ..setStockReplenishInterval(120)
+        ..setInterfaceIcon(LocalIcons.bTNTent)
+        ..setModelUsed(Doodads.emptyCrates0)
+        ..setNameEnhance("Tent Kit")
+        ..setDescription("Build a Tent Kit")
+        ..setTooltipExtended(TT_TENT)
+        ..setLumberCost(13)
+        ..setAbilities(commaList(ABIL_TENT))
+        ..setScalingValue(1.0)
+        ..setStockReplenishInterval(120)
 
 @compiletime function createTrollHutKit() returns ItemDefinition
     return createKit(ITEM_TROLL_HUT_KIT)

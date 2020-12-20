@@ -14,8 +14,8 @@ import LocalObjectIDs
 public constant ABILITY_MUD_HUT_AURA = compiletime(ABIL_ID_GEN.next())
 
 
-@compiletime function createTentDefinition() returns BuildingDefinition
-    return new BuildingDefinition(UNIT_TENT, UnitIds.tent2)
+function createTentDefinition(int newId) returns BuildingDefinition
+    return new BuildingDefinition(newId, UnitIds.tent2)
         ..setNormalAbilities(commaList(
             ABILITY_PACK_BUILDING,
             ABILITY_SHOP_SHARING,
@@ -30,6 +30,13 @@ public constant ABILITY_MUD_HUT_AURA = compiletime(ABIL_ID_GEN.next())
         ..setSightRadiusDay(900)
         ..setTooltipBasic("Set up Tent")
         ..setGroundTexture("")
+
+@compiletime function createTent()
+    createTentDefinition(UNIT_TENT)
+    createTentDefinition(UNIT_TENT_FORTIFIED)
+        ..setArmorType(ArmorType.Fortified)
+        ..setHitPointsMaximumBase(160)
+        ..setLumberCost(1)
 
 
 function createHut(int unitId) returns BuildingDefinition

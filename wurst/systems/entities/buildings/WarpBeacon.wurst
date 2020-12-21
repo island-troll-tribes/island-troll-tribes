@@ -1,0 +1,270 @@
+package WarpBeacon
+
+import Assets
+import ChannelAbilityPreset
+import ClosureEvents
+import ClosuresForItems
+import ClosureTimers
+import HashMap
+import LinkedList
+import OrderIds
+
+import Building
+import CustomProjectile
+import ItemExtensions
+import LocalObjectIDs
+import Radars
+import TeleGathering
+import TerrainUtils
+import ToolTipsUtils
+import TextTagUtils
+import ColorUtils
+import StringExtensions
+import LocalAssets
+
+let ABILITY_WARP_BEACON = compiletime(ABIL_ID_GEN.next())
+let DUMMY_UNIT_ID = compiletime(ABIL_ID_GEN.next())
+
+let RANGE = [0.0, 1200, 2400, 3600]
+let rangeCheckModFirst = Doodads.glowingRunes2
+let mirrorEfx = Abilities.blinkTarget
+let MAX_ITEM_PULLED = 10
+
+let SORT_DISTANCE_INCREMENT = 150
+let SORT_DISTANCE_BASE = 45
+let SORT_ANGLE_INCREMENT = 45
+let MAX_SORTING_SEARCH_LOOPS = 2
+let COOLDOWN = 30.
+
+let TOOLTIP_EXT = "Warp Items around the beacon. "+
+    "Can be upgraded up to 2 time by putting a Mana Crystal into the warp beacon."+
+    makeToolTipCooldown(COOLDOWN)
+
+
+@compiletime function createWarpBeacon() returns BuildingDefinition
+    return new BuildingDefinition(UNIT_WARP_BEACON, UnitIds.farm)
+        ..setNormalAbilities(commaList(
+            ABILITY_SHOP_SHARING,
+            ABILITY_INVENTORY_BUILDING_2_SLOT,
+            ABILITY_WARP_BEACON
+            )
+        )
+        ..setIconGameInterface(Icons.bTNElvenGuardTower)
+        ..setModelFile(Buildings.elvenGuardMagicTower)
+        ..setBuildTime(10)
+        ..setFoodProduced(0)
+        ..setHitPointsMaximumBase(100)
+        ..setUnitSoundSet(Soundsets.voodooLounge)
+        ..setTooltipBasic("Periodically Warp Items around it")
+        ..setTooltipExtended("Periodically Warp Items around it")
+        ..setName("Warp Beacon")
+        ..setPathingMap(PathingTextures.simpleSolid4x4)
+        ..setGroundTexture("")
+        ..setUpgradesUsed("")
+        ..setDefaultActiveAbility(commaList(ABILITY_WARP_BEACON))
+
+@compiletime function createWarpAbility()
+    new AbilityDefinitionReplenishLifeMana(ABILITY_WARP_BEACON)
+        ..setLevels(3)
+        ..presetManaCost(lvl -> 0)
+        ..presetCooldown(lvl -> COOLDOWN)
+        ..setHeroAbility(false)
+        ..setItemAbility(false)
+        ..presetTargetsAllowed(_ -> commaList(
+            TargetsAllowed.self
+            )
+        )
+        ..setHotkeyNormal("Q")
+        ..setName("Warp Items")
+        ..presetTooltipNormal(lvl -> makeToolTipNormHero("Q", "Warp Items", lvl))
+        ..presetTooltipNormalExtended(lvl -> TOOLTIP_EXT +
+            "\n\nRadius : ".color(GOLD_COLOR) +
+            toolTipAbilityEffectPerLevel(
+                RANGE[0],
+                RANGE[1] - RANGE[0],
+                lvl,3,
+                COLOR_TURQUOISE,
+                true
+            )
+        )
+        ..setIconNormal(Icons.bTNWispHealOff)
+        ..setIconResearch(Icons.bTNWispHealOff)
+        ..setIconTurnOff(Icons.bTNWispHealOff)
+        ..presetButtonPosNormal(0, 0)
+        ..setArtTarget(Abilities.disenchantSpecialArt)
+        ..setCasterAttachmentPoint("overhead")
+        ..setDurationNormal(1, 0)
+        ..setButtonPositionTurnOffX(0)
+        ..setButtonPositionTurnOffY(0)
+        ..setArtTarget("")
+        ..presetHitPointsGained(lvl -> 0)
+        ..setArtCaster(Abilities.replenishManaCasterOverhead)
+
+
+public class WarpBeacon extends Building
+    private static let unitTypeId = UNIT_WARP_BEACON
+    IterableMap<int, SortingPosition> sortingPositions
+    int sortDistanceOffset = SORT_DISTANCE_INCREMENT
+    int nextSortAngle = 0
+    bool isAutocast = true
+    CallbackPeriodic cb = null
+
+    static function initialize()
+        register(unitTypeId, building -> new WarpBeacon(building))
+
+    private let effects = new IterableMap<player, LinkedList<effect>>()
+
+    construct(unit whichUnit)
+        super(whichUnit)
+        EventListener.add(whichUnit, EVENT_PLAYER_UNIT_SELECTED, -> onSelected())
+        EventListener.add(whichUnit, EVENT_PLAYER_UNIT_DESELECTED, -> onDeselected())
+        EventListener.add(whichUnit, EVENT_PLAYER_UNIT_PICKUP_ITEM, -> onPickupItem())
+        EventListener.add(whichUnit, EVENT_PLAYER_UNIT_SPELL_CAST, -> onCast())
+
+        EventListener.add(whichUnit, EVENT_PLAYER_UNIT_ISSUED_ORDER) ->
+            if EventData.getIssuedOrderId() == OrderIds.replenishon
+                this.isAutocast = true
+            else if EventData.getIssuedOrderId() == OrderIds.replenishoff
+                this.isAutocast = false
+        this.sortingPositions = new IterableMap<int, SortingPosition>()
+
+    private function getSortingPos(int itemType) returns SortingPosition
+
+        //If a cached pos exists, return it
+        if this.sortingPositions.has(itemType)
+            return this.sortingPositions.get(itemType)
+
+        //Otherwise find and create a new pos for item type
+        let newPos = new SortingPosition(findPosForItem(itemType))
+        sortingPositions.put(itemType, newPos)
+        return newPos
+
+    private function findPosForItem(int itemType) returns vec2
+        let defaultPos = getUnit().getPos()
+
+        //Look for similar nearby item, multiply range by 1.1 to account for items grouping and spilling over
+        let nearest = findNearestItem(defaultPos, (SORT_DISTANCE_BASE + sortDistanceOffset * MAX_SORTING_SEARCH_LOOPS * 1.1), i -> i.getTypeId() == itemType)
+        if nearest != null
+            return nearest.getPos()
+
+        //Look for a new position around the fire
+        for distanceOffset = this.sortDistanceOffset to MAX_SORTING_SEARCH_LOOPS * SORT_DISTANCE_INCREMENT step SORT_DISTANCE_INCREMENT
+            for angleOffset = this.nextSortAngle to 360-SORT_ANGLE_INCREMENT step SORT_ANGLE_INCREMENT
+                this.sortDistanceOffset = distanceOffset
+                this.nextSortAngle = angleOffset
+                let maybeTargetPos = defaultPos.polarOffset(angleOffset.toReal().fromDeg(), SORT_DISTANCE_BASE + distanceOffset.toReal())
+
+                if maybeTargetPos.isTerrainWalkable()
+                    this.nextSortAngle += SORT_ANGLE_INCREMENT
+                    return maybeTargetPos
+
+            this.nextSortAngle = 0
+
+        return defaultPos
+
+    private function onPickupItem()
+        let pickedUp = GetManipulatedItem()
+        if pickedUp.getTypeId() != ITEM_MANA_CRYSTAL
+            return
+
+        let beacon = getUnit()
+        if beacon.getAbilityLevel(ABILITY_WARP_BEACON) > 2
+            return
+
+        pickedUp.remove()
+        beacon.incAbilityLevel(ABILITY_WARP_BEACON)
+        createTeamFadingTextTag(beacon, "Improved Warp Range", COLOR_TURQUOISE)
+        flashEffect(Abilities.tomeOfRetrainingCaster, beacon, "origin")
+
+    private function onSelected()
+        let whichPlayer = GetTriggerPlayer()
+
+        if effects.has(whichPlayer)
+            return
+
+        let beacon = getUnit()
+        let level = beacon.getAbilityLevel(ABILITY_WARP_BEACON)
+        let range = RANGE[level]
+        let beaconPos = beacon.getPos()
+        let list = new LinkedList<effect>()
+        let path = localPlayer == whichPlayer ? rangeCheckModFirst : ""
+
+        for degs = 0 to 360 step 40
+            let angle = degs.toReal().fromDeg()
+            let pos = beaconPos.polarOffset(angle, range)
+            list.add(addEffect(path, pos))
+
+        effects.put(whichPlayer, list)
+
+    private function onDeselected()
+        let whichPlayer = GetTriggerPlayer()
+        if effects.has(whichPlayer)
+            removeList(whichPlayer)
+
+    private function removeList(player whichPlayer)
+        let list = effects.get(whichPlayer)
+        for elem in list
+            elem.destr()
+        destroy list
+        effects.remove(whichPlayer)
+
+    private function onCast()
+        if GetSpellAbilityId() != ABILITY_WARP_BEACON
+            return
+
+        let beacon = getUnit()
+        let beaconPos = beacon.getPos()
+        let range = RANGE[beacon.getAbilityLevel(ABILITY_WARP_BEACON)]
+        var _itemPulledCount = 0
+
+        forItemsInMap() itm ->
+            if itm.getPos().distanceTo(beaconPos) < range
+                and itm.getPos().distanceTo(beaconPos) > 300
+                and itm.isPickupable() and _itemPulledCount < MAX_ITEM_PULLED
+                and not itm.isAllyFireAround(600, beacon) // Doesn't pull item near an ally camp fire, I don't want to mess up my base
+                removeRadarDummy(itm)
+                let sortingPos = this.getSortingPos(itm.getTypeId())
+                let finalPos = sortingPos.pos
+                new WarpItemPulled(finalPos, this, itm)
+                _itemPulledCount++
+
+    override function postCreate()
+        super.postCreate()
+        cb = doPeriodically(1) (CallbackPeriodic cb) ->
+            print(getUnit().getAbilityCooldownRemaining(ABILITY_WARP_BEACON))
+            if this.isAutocast
+                and getUnit().getAbilityCooldownRemaining(ABILITY_WARP_BEACON) == 0
+                print("should cast")
+                getUnit().issueImmediateOrderById(OrderIds.replenish)
+
+    ondestroy
+        for whichPlayer in effects
+            removeList(whichPlayer)
+        destroy effects
+        destroy cb
+        destroy sortingPositions
+
+let MISSILE_FLY_HEIGHT = 150.
+
+class WarpItemPulled extends CustomProjectile
+    WarpBeacon warpBeacon
+    item itm
+
+    construct(vec2 targetPos, WarpBeacon warpBeacon, item itm)
+        super(itm.getPos().withTerrainZ(MISSILE_FLY_HEIGHT),
+            targetPos.withTerrainZ(MISSILE_FLY_HEIGHT),
+            400,
+            0,
+            Abilities.devourMagicBirthMissile
+        )
+        this.warpBeacon = warpBeacon
+        this.itm = itm
+        itm.setVisible(false)
+
+    override function onImpact()
+        itm.setPos(targetPos.toVec2())
+        itm.setVisible(true)
+
+
+init
+    WarpBeacon.initialize()

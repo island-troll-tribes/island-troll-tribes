@@ -117,3 +117,21 @@ public function getAbilityDataField(int abilId, string dataField) returns string
 **/
 public function getAbilityDataFieldPercent(int abilId, string dataField) returns string
     return "<{0},{1},%>%".format(abilId.toRawCode(), dataField)
+
+public function toolTipAbilityEffectPerLevel(real value, real valueIncrease, int currentLevel, int totalLevel, color highlight, boolean isInt) returns string
+    var toReturn = ""
+    for i = 1 to totalLevel
+        let valToStr = value + valueIncrease * i
+        var newStr = ""
+        if isInt
+            newStr += valToStr.round().toString()
+        else
+            newStr += valToStr.toString(1)
+        if i == currentLevel
+            newStr = newStr.color(highlight)
+        else
+            newStr = newStr.color(GRAY_COLOR)
+        if i < totalLevel
+            newStr += "/"
+        toReturn += newStr
+    return toReturn

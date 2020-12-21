@@ -83,17 +83,6 @@ public class Score
             goldAmount += goldAdded
             scoreBoardEntries.get("Gold Acquired").addValue(_player, goldAdded)
 
-    /**
-        This function update the previousGoldAmount attribute when an item is bought
-    **/
-    function removeGold()
-        if gameConfig.isTeamGoldEnabled()
-            // Since every player share gold, update gold amount for every one
-            for member in this._player.getTribe().getMembers()
-                playerScores.get(member).previousGoldAmount = member.getLumber()
-        else
-            playerScores.get(this._player).previousGoldAmount = this._player.getLumber()
-
     function addSelfHealing(int healingAmount)
         selfHealing += healingAmount
 
@@ -151,6 +140,7 @@ function getTribeHealing(player _player) returns string
 
 
 init
+
     Score.initialize()
     GameMode.onModeSelectionFinish() ->
         if gameConfig.isPlayerScoreEnabled()
@@ -224,19 +214,6 @@ init
                     and playerScores.has(owner)
                     playerScores.get(owner).addMeatEaten()
                     scoreBoardEntries.get("Meat Eaten").addValue(owner, 1)
-
-
-            // This event is triggered when a player BUY an item
-            EventListener.add(EVENT_PLAYER_UNIT_SELL_ITEM) ->
-                let owner = GetBuyingUnit().getOwner()
-
-                // TODO: Find a way to handle case where tribe ownership is enabled,
-                // team gold is disabled and player buys from a building
-                // Issue : We cannot retrieve the player who bought from a shared building
-                // therefore we cannot update its gold acquired score
-                if playerScores.has(owner)
-                    playerScores.get(owner).removeGold()
-
 
             // Register gold acquired
             EventListener.add(EVENT_PLAYER_UNIT_PAWN_ITEM) ->

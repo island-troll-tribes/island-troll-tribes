@@ -38,7 +38,7 @@ let BURN_EFFECT_PATH = Abilities.flameStrikeEmbers
 let GROUND_BURN_EFFECT_PATH = Abilities.breathOfFireDamage
 let ICON_PATH = Icons.bTNFireRocks
 let TOOLTIP_NORMAL = "Meteor"
-let TOOLTIP_NORMAL_EXT = ("Calls down a meteor to impact on target point after 1 second. On impact, stuns and deals {0} damage and applies a burning effect "+
+let TOOLTIP_NORMAL_EXT = ("Calls down a meteor to impact on target point after 1 second. On impact, deals {0} damage and applies a burning effect "+
                          "on targets hit for another {1} damage over time. Has {2} seconds cooldown.").format(IMPACT_DAMAGE.toToolTipRed(),
                           (IMPACT_BURN_DPS*IMPACT_BURN_DURATION).toToolTipRed(), COOLDOWN.toToolTipLightBlue())
 
@@ -189,12 +189,6 @@ function handleImpactUnitEffect(vec2 hitPosition, unit target, unit caster)
     else
         let reducedDamage = IMPACT_DAMAGE * (1 - ((distance - IMPACT_RADIUS_DAMAGEFALLOFF) / (IMPACT_RADIUS_MAX - IMPACT_RADIUS_DAMAGEFALLOFF)))
         UnitDamageTarget(caster, target, reducedDamage, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
-
-    //Apply stun
-    new DummyCaster()
-        ..owner(owner)
-        ..origin(caster.getPos())
-        ..castTarget(DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, target)
 
     //Apply burn on units
     let burnfx = addEffect(BURN_EFFECT_PATH, target, "chest")

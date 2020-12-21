@@ -5,19 +5,8 @@ import LinkedList
 import RegisterEvents
 
 // Local imports:
-import ColorUtils
 import Game
-import GameConfig
 import PlayerExtensions
-import StringExtensions
-
-let GOLD_MSG = compiletime(
-    asList(
-        "They left you".color(GENERAL_COLOR),
-        "{0}".color(GOLD_COLOR),
-        "gold.".color(GENERAL_COLOR)
-    ).joinBy(" ")
-)
 
 function handlePlayerLeave()
     let leaver = GetTriggerPlayer()
@@ -42,22 +31,6 @@ function handlePlayerLeave()
             ..setPlayerAlliance(member, ALLIANCE_SHARED_VISION, true)
             ..setPlayerAlliance(member, ALLIANCE_SHARED_CONTROL, true)
             ..setPlayerAlliance(member, ALLIANCE_SHARED_ADVANCED_CONTROL, true)
-
-    if gameConfig.isTeamGoldEnabled()
-        return
-
-    let gold = leaver.getLumber()
-    let goldPerPlayer = gold div alliesInGameCount
-    var goldLeftover = gold mod alliesInGameCount
-
-    for member in alliesInGame
-        var goldGiven = goldPerPlayer
-        if goldLeftover > 0
-            goldGiven += 1
-            goldLeftover -= 1
-        if goldGiven > 0
-            member.print(GOLD_MSG.format(goldGiven.toString()), 10)
-            member.addLumber(goldPerPlayer)
 
 init
     registerPlayerEvent(EVENT_PLAYER_LEAVE) ->

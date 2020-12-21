@@ -5,10 +5,6 @@ import ClosureTimers
 import HashMap
 import LinkedList
 import RegisterEvents
-import AbilityObjEditing
-import ObjectIdGenerator
-import ObjectIds
-import Assets
 
 // Third-party imports:
 import LodashExtensions
@@ -22,34 +18,6 @@ import StringExtensions
 import UnitExtensions
 import TimerUtils
 import Tribe
-import LocalAssets
-
-let UNIT_TROLL_TOTEM = compiletime(UNIT_ID_GEN.next())
-
-@compiletime function createTrollTotem()
-    let ABIL_SELECT_TROLL = ABIL_ID_GEN.next()
-    new AbilityDefinitionNeutralBuildinganyunit(ABIL_SELECT_TROLL)
-        ..setActivationRadius(1, 2000.0)
-        ..setName("Select Unit From Troll Totem")
-        ..setCastRange(1, 99999.0)
-
-    new BuildingDefinition(UNIT_TROLL_TOTEM, UnitIds.taurentotem)
-        ..setNormalAbilities(commaList(
-            AbilityIds.invulnerable,
-            ABIL_SELECT_TROLL,
-            'Asud'
-            )
-        )
-        ..setButtonPositionY(0)
-        ..setScalingValue(1.5)
-        ..setName("Troll Totem")
-        ..setPlacementRequires("")
-        ..setRequirements("")
-        ..setResearchesAvailable("")
-        ..setUnitsTrained("")
-        ..setGroundTexture("")
-        ..setUpgradesUsed("")
-        ..setModelFile(LocalBuildings.totem)
 
 let spawnList = asList(
     gg_rct_revive_1,
@@ -119,7 +87,6 @@ public class ClassSelector
         registerTribeInitializationFinishEvent(function startClassSelection)
 
     Tribe tribe
-    let pickers = new LinkedList<unit>()
     let pool = new LinkedList<int>()
     rect spawn
     unit totem
@@ -127,28 +94,34 @@ public class ClassSelector
     construct(Tribe _tribe)
         tribe = _tribe
 
+        // Ignore tribes that are not in use.
         if not tribe.isDefeated()
             spawn = tribe.getSpawn()
 
             initializeTotem()
             initializePool()
-            initializePickers()
 
             spawners.put(totem, this)
 
     private function initializeTotem()
-        let pos = spawn.getCenter()
-        let owner = tribe.getMembers().getFirst()
-        totem = createUnit(owner, UNIT_TROLL_TOTEM, pos, angle(0))
-        ..addUnitToStock(UNIT_HUNTER, 1, 1)
-        ..addUnitToStock(UNIT_BEAST_MASTER, 1, 1)
-        ..addUnitToStock(UNIT_MAGE, 1, 1)
-        ..addUnitToStock(UNIT_PRIEST, 1, 1)
-        ..addUnitToStock(UNIT_THIEF, 1, 1)
-        ..addUnitToStock(UNIT_SCOUT, 1, 1)
-        ..addUnitToStock(UNIT_GATHERER, 1, 1)
-        ..addUnitToStock(UNIT_REPICK_TROLL, 1, 1)
-        ..addUnitToStock(UNIT_RANDOM_TROLL, 1, 1)
+        totem = createUnit(
+            tribe.getNonMember(),
+            UNIT_TROLL_TOTEM,
+            spawn.getCenter(),
+            angle(0)
+        )
+            ..addUnitToStock(UNIT_HUNTER, 1, 1)
+            ..addUnitToStock(UNIT_BEAST_MASTER, 1, 1)
+            ..addUnitToStock(UNIT_MAGE, 1, 1)
+            ..addUnitToStock(UNIT_PRIEST, 1, 1)
+            ..addUnitToStock(UNIT_THIEF, 1, 1)
+            ..addUnitToStock(UNIT_SCOUT, 1, 1)
+            ..addUnitToStock(UNIT_GATHERER, 1, 1)
+            ..addUnitToStock(UNIT_REPICK_TROLL, 1, 1)
+            ..addUnitToStock(UNIT_RANDOM_TROLL, 1, 1)
+        for member in tribe.getMembers()
+            member.panCamToTimed(totem, 0)
+            member.selectSingle(totem)
 
     private function initializePool()
         let allTrollUnitId = gameConfig.getAllTrollUnitId()
@@ -164,20 +137,10 @@ public class ClassSelector
             ..add(UNIT_SCOUT)
             ..add(UNIT_GATHERER)
 
-    private function initializePickers()
-        let pos = spawn.getCenter()
-        for member in tribe.getMembers()
-            pickers.push(createUnit(member, UNIT_HERO_PICKER, pos.polarOffset(angle(PI), 1200), angle(0)))
-            member.panCamToTimed(totem, 0)
-            doAfter(0.3) ->
-                member.selectSingle(totem)
-
     function endSelection()
         if gameConfig.isStartWithOneFire()
             let owner = tribe.getMembers().getFirst()
             createUnit(owner, UNIT_FIRE, spawn.getCenter(), angle(0))
-
-        pickers.each(picker -> picker.remove())
 
         for member in tribe.getMembers()
             var troll = member.getTroll()

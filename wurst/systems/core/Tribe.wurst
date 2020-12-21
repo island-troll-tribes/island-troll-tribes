@@ -90,15 +90,21 @@ public class Tribe
                 addMember(member)
                 defeated = false
 
+        if this.getMembers().size() > 0
+            let tribePlayer = getNonMember()
+            tribePlayer.setName(name)
+            this.addNonMemberPlayer(tribePlayer)
+
         for a in tribePlayers
+            // Automatically share vision and control with the non-member player.
+            // TODO: Maybe remove this when privating.
+            SetPlayerAllianceStateBJ(a, getNonMember(), bj_ALLIANCE_ALLIED_VISION)
+            SetPlayerAllianceStateBJ(getNonMember(), a, bj_ALLIANCE_ALLIED_ADVUNITS)
+            SetPlayerAllianceStateBJ(a, getNonMember(), bj_ALLIANCE_ALLIED_ADVUNITS)
             for b in tribePlayers
                 if a != b
                     SetPlayerAllianceStateBJ(a, b, bj_ALLIANCE_ALLIED_VISION)
-
-        if this.getMembers().size() > 0
-            let tribePlayer = players[12 + id]
-            tribePlayer.setName(name)
-            this.addNonMemberPlayer(tribePlayer)
+                    a.setPlayerAlliance(b, ALLIANCE_SHARED_ADVANCED_CONTROL, true)
 
         if not defeated
             tribes.push(this)
@@ -141,9 +147,7 @@ public class Tribe
 
         if tribe.containsPlayer(GetLocalPlayer())
             print("You have been defeated.".color(HIGHLIGHT_COLOR))
-        // TODO: Remove this once tribes mode is merged into default game.
-        if gameConfig.isTribeOwnsBuildingsEnabled()
-            displayDefeated()
+        displayDefeated()
 
     function wasVictorious()
         makePlayersObservers()

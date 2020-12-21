@@ -1,0 +1,31 @@
+package GoblinCleaner
+
+import Assets
+import ChannelAbilityPreset
+import LocalItemObjEditing
+import ToolTipsUtils
+import AbilityObjectCreationUtils
+
+public let UNIT_GOBLIN_CLEANER = compiletime(UNIT_ID_GEN.next())
+let ABIL_START_CLEAN = compiletime(ABIL_ID_GEN.next())
+let TARGET_ALLOWED = commaList(TargetsAllowed.sapper, TargetsAllowed.friend)
+
+@compiletime function createGoblinCleaner()
+    new UnitDefinition('xxx', UnitIds.clockwerkgoblin1)
+        ..setNormalAbilities("")
+        ..setAttacksEnabled(0)
+        ..setSightRadiusDay(100)
+        ..setSightRadiusNight(100)
+        ..setHitPointsMaximumBase(40)
+
+
+    new ChannelAbilityPreset(ABIL_START_CLEAN, 1, true)
+        ..setDummyAbility()
+        ..setCastRange(1, 300)
+        ..presetButtonPosNormal(0, 0)
+        ..setNameEnhance("Q", "Execute cleaning protocole")
+        ..setIconNormal(Icons.bTNLoad)
+        ..presetTargetsAllowed(lvl -> TARGET_ALLOWED)
+        ..presetTargetTypes(Targettype.UNIT)
+
+class CleaningInstance

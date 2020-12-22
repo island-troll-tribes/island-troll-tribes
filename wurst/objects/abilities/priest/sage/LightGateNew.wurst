@@ -99,8 +99,8 @@ class PortalOrb
         orbFX.setRoll(facing)
 
     function castRandomSpell(unit target) returns bool
-        var owner = instance.ownerUnit.getOwner()
-        OrbSpell randomSpell = spellPool.random()
+        let owner = instance.ownerUnit.getOwner()
+        let randomSpell = spellPool.random()
         if randomSpell.checkBuff != 0 //If target already has the buff of a buff spell, dont cast it
             if target.hasAbility(randomSpell.checkBuff)
                 return false
@@ -160,7 +160,7 @@ public class LightGateInstance
     function portalGrowLoopUpdate()
         //Avoid creating vision on every loop cycle with mod check
         if (portalCreationLoop.getCount() mod 30 == 0)
-            var vis = createVision(ownerUnit.getOwner(), centerPos.toVec2(), portalRadius+256, true)
+            let vis = createVision(ownerUnit.getOwner(), centerPos.toVec2(), portalRadius+256, true)
             vis.start()
             //Should be the full duration of portal calculated below for vision mods destruction
             doAfter(durationBuildup + GROW_DURATION - elapsedLifetime) ->
@@ -178,8 +178,8 @@ public class LightGateInstance
         updateOrbAngles()
 
     function randomOrbCastSpell()
-        var orb = this.orbs.get( GetRandomInt(0, orbs.size() - 1))
-        var centerPosVec2 = centerPos.toVec2()
+        let orb = this.orbs.get( GetRandomInt(0, orbs.size() - 1))
+        let centerPosVec2 = centerPos.toVec2()
 
         //Find random target and cast + spawn effect on orb
         let targets = CreateGroup()..enumUnitsInRange(centerPosVec2, portalRadius)
@@ -195,10 +195,10 @@ public class LightGateInstance
 
     function updateOrbAngles()
         //Calculate orb angles and set it
-        angle orbOffset = angle((360 / orbs.size())*DEGTORAD)
+        let orbOffset = angle((360 / orbs.size())*DEGTORAD)
         int i = 0
         for o in orbs
-            angle indexOrbAngle = orbAngle + orbOffset * i.toReal()
+            let indexOrbAngle = orbAngle + orbOffset * i.toReal()
             o.setPos(centerPos.offset2d(indexOrbAngle, portalRadius))
             o.setFacing(o.pos.angleTo2d(centerPos))
             i = i + 1
@@ -234,23 +234,23 @@ public class LightGateInstance
                 lightGateInstances.remove(ownerUnit)
 
 function onCast()
-    var caster = GetSpellAbilityUnit()
+    let caster = GetSpellAbilityUnit()
 
     //Destroy previous instance
     if lightGateInstances.has(caster)
-        var prev_instance = lightGateInstances.get(caster)
-        if prev_instance.portalActiveLoop != null
-            prev_instance.portalActiveLoop.stop()
-        if prev_instance.portalActiveLoop != null
-            prev_instance.portalActiveLoop.stop()
+        let previous = lightGateInstances.get(caster)
+        if previous.portalActiveLoop != null
+            previous.portalActiveLoop.stop()
+        if previous.portalActiveLoop != null
+            previous.portalActiveLoop.stop()
 
     //Spawn the portal, a bit higher than the caster on Z axis
     lightGateInstances.put(caster, new LightGateInstance(caster, caster.getPos3Real() + vec3(0, 0, 50)))
 
 function onEndCast()
     if GetSpellAbilityId() == ABILITY_LIGHT_GATE
-        var caster = GetSpellAbilityUnit()
-        var instance = lightGateInstances.get(caster)
+        let caster = GetSpellAbilityUnit()
+        let instance = lightGateInstances.get(caster)
         instance.isChanneling = false
 
 function initSpellPool()

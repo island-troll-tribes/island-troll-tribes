@@ -3,7 +3,6 @@ import RegisterEvents
 import Orders
 import ClosureTimers
 import ClosureForGroups
-import EventHelper
 import LocalObjectIDs
 import DummyCaster
 import Icons
@@ -60,17 +59,17 @@ class DepressionOrb extends ChannelAbilityPreset
     new DepressionOrb(ABILITY_DEPRESSION_ORB, "R", new Pair(3, 0))
 
 function onCast()
-    var caster = GetSpellAbilityUnit()
-    var owner = caster.getOwner()
+    let caster = GetSpellAbilityUnit()
+    let owner = caster.getOwner()
     var pos = caster.getPos()
-    var angle = pos.angleTo(EventData.getSpellTargetPos())
+    let angle = pos.angleTo(EventData.getSpellTargetPos())
     var dummyAngle = angle(0)
-    var dummy = createUnit(owner, DUMMY_ID, pos.polarOffset(angle, START_DISTANCE), dummyAngle)
+    let dummy = createUnit(owner, DUMMY_ID, pos.polarOffset(angle, START_DISTANCE), dummyAngle)
 
     doPeriodicallyTimed(INTERVAL, DURATION) cb ->
         dummyAngle += (INTERVAL_TURN_SPEED).fromDeg()
         pos = pos.polarOffset(angle, INTERVAL_MOVE_SPEED)
-        var dpos = pos.polarOffset(dummyAngle, TURN_DISTANCE)
+        let dpos = pos.polarOffset(dummyAngle, TURN_DISTANCE)
         dummy.setXY(dpos)
 
         //Avoid spamming darts at too high interval before buff gets applied resulting in multiple darts

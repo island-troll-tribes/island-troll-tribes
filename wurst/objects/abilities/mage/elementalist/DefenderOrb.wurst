@@ -3,7 +3,6 @@ import RegisterEvents
 import Orders
 import ClosureTimers
 import ClosureForGroups
-import EventHelper
 import LocalObjectIDs
 import DummyCaster
 
@@ -20,14 +19,14 @@ import DummyCaster
 constant INTERVAL_SPEED = INTERVAL * SPEED
 
 function onCast()
-    var owner = GetSpellAbilityUnit().getOwner()
-    var pos = EventData.getSpellTargetPos()
+    let owner = GetSpellAbilityUnit().getOwner()
+    let pos = EventData.getSpellTargetPos()
     var angle = angle(0)
-    var dummy = createUnit(owner, DUMMY_ID, pos.polarOffset(angle, DISTANCE), angle)
+    let dummy = createUnit(owner, DUMMY_ID, pos.polarOffset(angle, DISTANCE), angle)
 
     doPeriodicallyTimed(INTERVAL, DURATION) cb ->
         angle += (INTERVAL_SPEED).fromDeg()
-        var dpos = pos.polarOffset(angle, DISTANCE)
+        let dpos = pos.polarOffset(angle, DISTANCE)
         dummy.setXY(dpos)
 
         forUnitsInRange(dummy.getPos(), RADIUS) u ->

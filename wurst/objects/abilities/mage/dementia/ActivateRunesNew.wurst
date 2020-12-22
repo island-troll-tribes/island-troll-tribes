@@ -103,9 +103,9 @@ public class SummonData
         this.summonUnitID = summonUnitID
 
 function onCast()
-    var caster = GetSpellAbilityUnit()
-    DementiaRunesInstance runesInstance = getRunesInstance(caster)
-    DarkPortalInstance portalInstance = getDementiaGate(caster)
+    let caster = GetSpellAbilityUnit()
+    let runesInstance = getRunesInstance(caster)
+    let portalInstance = getDementiaGate(caster)
 
     if runesInstance == null
         return
@@ -114,13 +114,13 @@ function onCast()
         runesCastSpells(caster, runesInstance)
 
 function isValidTarget(unit caster, unit target) returns boolean
-    var owner = caster.getOwner()
+    let owner = caster.getOwner()
     return target.getOwner().isEnemyOf(owner) and not target.isInvulnerable() and not target.isType(UNIT_TYPE_STRUCTURE) and target.isAlive() and IsUnitVisible(target, owner)
 
 function runesCastSpells(unit caster, DementiaRunesInstance runesInstance)
     unit target = null
-    var owner = caster.getOwner()
-    var casterPos = caster.getPos()
+    let owner = caster.getOwner()
+    let casterPos = caster.getPos()
     forUnitsInRange(caster.getPos(), RUNE_CAST_RADIUS) t ->
         if isValidTarget(caster, t)
             if (target == null)
@@ -129,7 +129,7 @@ function runesCastSpells(unit caster, DementiaRunesInstance runesInstance)
                 target = t
 
             for r in runesInstance.runes
-                DementiaRuneSpell spell = r.getRandomRuneSpellID()
+                let spell = r.getRandomRuneSpellID()
                 new DummyCaster()
                     ..delay(1)
                     ..owner(owner)
@@ -159,12 +159,12 @@ function trySummonDemon(unit caster, DementiaRunesInstance runesInstance, DarkPo
     if runesInstance != null and portalInstance != null and runesInstance.runes.size() > 0 and caster.hasAbility(ABILITY_DEMENTIA_SUMMONING)
         if portalInstance.isUnitInsidePortal(caster)
             //Have portal, and standing inside portal
-            var runeSequence = new OwnedLinkedList<Runes>()
+            let runeSequence = new OwnedLinkedList<Runes>()
             for r in runesInstance.runes
                 runeSequence.push(r.runeType)
 
             //Find matching summon for rune sequence and summon if found
-            var summonData = findMatchingSummonData(runeSequence)
+            let summonData = findMatchingSummonData(runeSequence)
             destroy runeSequence
             if summonData != null
                 doSummon(summonData, portalInstance, caster.getOwner())
@@ -175,7 +175,7 @@ function trySummonDemon(unit caster, DementiaRunesInstance runesInstance, DarkPo
 
 function doSummon(SummonData summon, DarkPortalInstance portalInstance, player owner)
     //Spawn-effect
-    var efx = addEffect(SUMMON_EFFECT_PATH, portalInstance.centerPos + vec3(0, 0, 300))
+    let efx = addEffect(SUMMON_EFFECT_PATH, portalInstance.centerPos + vec3(0, 0, 300))
     efx.setScale(2)
 
     //On the right timing after spawned effect, do actions

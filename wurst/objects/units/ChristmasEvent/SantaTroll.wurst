@@ -30,7 +30,7 @@ let TT_GIFT = "A presnet from Santa!"
 
 @compiletime function createSantaTroll()
     new UnitDefinition(UNIT_SANTA_TROLL, UnitIds.trollbatrider)
-        ..setSpeedBase(500)
+        ..setSpeedBase(350)
         ..setNormalAbilities(ABILITIES)
         ..setModelFile(LocalUnits.santaTroll)
         ..setAttacksEnabled(0)
@@ -38,6 +38,7 @@ let TT_GIFT = "A presnet from Santa!"
         ..setAnimationCastBackswing(0.54)
         ..setAnimationCastPoint(0.600)
         ..setUpgradesUsed("")
+        ..setName("Santa Troll")
 
     new ChannelAbilityPreset(ABILITY_GIFT_THROW, 1, true)
         ..setDummyAbility()
@@ -86,13 +87,22 @@ let TT_GIFT = "A presnet from Santa!"
         ..setClassification("Purchasable")
 
 class GiftProjectile extends CustomProjectile
+    CallbackSingle cb
 
     construct(vec3 startPos, vec3 targetPos, real groundSpeed, string effectPath)
         super(startPos, targetPos, groundSpeed, 750, effectPath)
         this.missileFx.setScale(0.5)
+        // Sometime the projectile isn't destroyed properly, idk why
+        // this will destroy the fx that remain in the air
+        cb = doAfter(10) ->
+            if this != null
+                createItem(ITEM_GIFT, targetPos)
+                this.postImpact()
 
     override function onImpact()
         createItem(ITEM_GIFT, targetPos)
+        if this.cb != null
+            destroy cb
 
 
 function createChristmasTextag(string msg, vec3 pos) returns texttag

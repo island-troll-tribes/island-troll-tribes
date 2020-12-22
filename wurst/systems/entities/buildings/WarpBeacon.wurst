@@ -36,7 +36,8 @@ let SORT_ANGLE_INCREMENT = 45
 let MAX_SORTING_SEARCH_LOOPS = 2
 let COOLDOWN = 30.
 
-let TOOLTIP_EXT = "Warp Items around the beacon. "+
+let TOOLTIP_EXT = "Warp up to {0} Items around the beacon. "
+    .format(MAX_ITEM_PULLED.toString().color(COLOR_GREEN))+
     "Can be upgraded up to 2 time by putting a Mana Crystal into the warp beacon."+
     makeToolTipCooldown(COOLDOWN)
 
@@ -93,7 +94,7 @@ let TOOLTIP_EXT = "Warp Items around the beacon. "+
         ..presetButtonPosNormal(0, 0)
         ..setArtTarget(Abilities.disenchantSpecialArt)
         ..setCasterAttachmentPoint("overhead")
-        ..setDurationNormal(1, 0)
+        ..presetDurationNormal(lvl -> 0)
         ..setButtonPositionTurnOffX(0)
         ..setButtonPositionTurnOffY(0)
         ..setArtTarget("")
@@ -127,6 +128,11 @@ public class WarpBeacon extends Building
             else if EventData.getIssuedOrderId() == OrderIds.replenishoff
                 this.isAutocast = false
         this.sortingPositions = new IterableMap<int, SortingPosition>()
+
+        cb = doPeriodically(1) (CallbackPeriodic cb) ->
+            if this.isAutocast
+                and getUnit().getAbilityCooldownRemaining(ABILITY_WARP_BEACON) == 0
+                getUnit().issueImmediateOrderById(OrderIds.replenish)
 
     private function getSortingPos(int itemType) returns SortingPosition
 
@@ -230,12 +236,7 @@ public class WarpBeacon extends Building
 
     override function postCreate()
         super.postCreate()
-        cb = doPeriodically(1) (CallbackPeriodic cb) ->
-            print(getUnit().getAbilityCooldownRemaining(ABILITY_WARP_BEACON))
-            if this.isAutocast
-                and getUnit().getAbilityCooldownRemaining(ABILITY_WARP_BEACON) == 0
-                print("should cast")
-                getUnit().issueImmediateOrderById(OrderIds.replenish)
+
 
     ondestroy
         for whichPlayer in effects
@@ -249,6 +250,7 @@ let MISSILE_FLY_HEIGHT = 150.
 class WarpItemPulled extends CustomProjectile
     WarpBeacon warpBeacon
     item itm
+    CallbackSingle cb
 
     construct(vec2 targetPos, WarpBeacon warpBeacon, item itm)
         super(itm.getPos().withTerrainZ(MISSILE_FLY_HEIGHT),
@@ -260,10 +262,19 @@ class WarpItemPulled extends CustomProjectile
         this.warpBeacon = warpBeacon
         this.itm = itm
         itm.setVisible(false)
+        // Sometime the projectile isn't destroyed properly, idk why
+        // this will destroy the fx that remain in the air
+        cb = doAfter(10) ->
+            if this != null
+                itm.setPos(this.targetPos.toVec2())
+                itm.setVisible(true)
+                this.postImpact()
 
     override function onImpact()
         itm.setPos(targetPos.toVec2())
         itm.setVisible(true)
+        if this.cb != null
+            destroy cb
 
 
 init

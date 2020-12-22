@@ -1,0 +1,95 @@
+package Composer
+
+// Standard library imports:
+import ClosureTimers
+import LinkedList
+
+// Third-party imports:
+import Lodash
+
+public class Composer extends EmptyVoidFunction
+    // The actions to execute when called.
+    let actions = new LinkedList<EmptyVoidFunction>()
+
+    // The conditions to check when called.
+    let conditions = new LinkedList<EmptyFunction<bool>>()
+
+    // The
+
+    // The amount of times to repeat the call, checked when called.
+    EmptyFunction<int> repeat = null
+
+    // The interval, in seconds, between repetitions, checked when called.
+    // A negative value result represents the lack of a period, as opposed to
+    // zero, which repeats immediately but asynchronously.
+    EmptyFunction<real> period = null
+
+    // Applies the built call.
+    override function call()
+        // Compute the current value of the parameters for iteration.
+        let currentRepeat = this.repeat != null ? this.repeat.call() :  1
+        let currentPeriod = this.period != null ? this.period.call() : -1
+
+        // Use a synchronous loop when no period is specified.
+        if currentPeriod < 0
+            for _ = 1 to currentRepeat
+                callOnce()
+
+        else
+            doPeriodicallyCounted(currentPeriod, currentRepeat) cb ->
+                callOnce()
+
+    // Applies the inner functionality without repetition.
+    function callOnce()
+        // Apply the conditions.
+        for condition in conditions
+            if not condition.call()
+                return
+
+        // Execute each function.
+        for action in actions
+            action.call()
+
+    // Converts the composer to a basic function.
+    function asFunction() returns EmptyVoidFunction
+        return -> this.call()
+
+    // Adds a condition to the execution.
+    function condition(EmptyFunction<bool> condition)
+        this.conditions.add(condition)
+
+    // Adds multiple conditions to the execution.
+    function conditions(LinkedList<EmptyFunction<bool>> conditions)
+        this.conditions.addAll(conditions)
+
+    // Adds a action to the execution.
+    function action(EmptyVoidFunction action)
+        this.actions.add(action)
+
+    // Adds multiple actions to the execution.
+    function actions(LinkedList<EmptyVoidFunction> actions)
+        this.actions.addAll(actions)
+
+    // Adds a action to the execution.
+    function finally(EmptyVoidFunction action)
+        this.actions.add(action)
+
+    // Adds multiple actions to the execution.
+    function finally(LinkedList<EmptyVoidFunction> actions)
+        this.actions.addAll(actions)
+
+    // Updates the count statically.
+    function repeat(int repeat)
+        this.repeat(-> repeat)
+
+    // Updates the count dynamically.
+    function repeat(EmptyFunction<int> repeat)
+        this.repeat = repeat
+
+    // Updates the inverval statically.
+    function period(real period)
+        this.period(-> period)
+
+    // Updates the interval dynamically.
+    function period(EmptyFunction<real> period)
+        this.period = period

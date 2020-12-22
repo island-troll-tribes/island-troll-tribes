@@ -1,0 +1,29 @@
+package SyncComplex
+
+// Standard library imports:
+import SyncSimple
+
+// Third-party imports:
+import Lodash
+
+// Syncs arbitrary data given convertions to and from string.
+public function T.sync<T>(
+    player p,
+    Function<T, string> toString,
+    Function<string, T> fromString,
+    VoidFunction<T> listener
+)
+    toString.call(this).sync(p) data ->
+        listener.call(fromString.call(data))
+        destroy toString
+        destroy fromString
+        destroy listener
+
+// Create an interface directly for vec2, which can't be used in a generic.
+public interface Vec2SyncListener
+    function onDataSynced(vec2 data)
+
+public function vec2.sync(player p, Vec2SyncListener listener)
+    this.x.sync(p) x ->
+        this.y.sync(p) y ->
+            listener.onDataSynced(vec2(x, y))

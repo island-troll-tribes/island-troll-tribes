@@ -1,0 +1,121 @@
+package Chicken
+
+// Standard library imports:
+import LinkedList
+import Assets
+import AbilityObjEditing
+import BuffObjEditing
+import ObjectIds
+import ObjectIdGenerator
+import ClosureTimers
+import DamageEvent
+
+// Local imports:
+import LocalObjectIDs
+import Hostile
+import Game
+
+
+let ITEM_ARMOR = [
+    asList(ITEM_SHIELD,ITEM_ELK_SKIN_BOOTS),
+    asList(ITEM_IRON_SHIELD, ITEM_IRON_COAT, ITEM_IRON_BOOTS),
+    asList(ITEM_BATTLE_SHIELD, ITEM_BATTLE_ARMOR, ITEM_CLOAK_OF_FLAMES, ITEM_ANABOLIC_BOOTS)
+]
+
+
+let ITEM_CHARGED_POOL = [
+    asList(ITEM_STONE, ITEM_SPEAR, ITEM_POISON_SPEAR),
+    asList(ITEM_IRON_SPEAR, ITEM_DARK_SPEAR, ITEM_REFINED_POISON_SPEAR),
+    asList(ITEM_ULTRA_POISON_SPEAR, ITEM_STEEL_SPEAR, ITEM_ESSENCE_BEES)
+]
+
+let ABIL_CHICKEN_FLEA = compiletime(ABIL_ID_GEN.next())
+let BUFF_CHICKEN_FLEA = compiletime(BUFF_ID_GEN.next())
+
+let CHICKEN_WANDER_RANGE = 1000.
+
+@compiletime function createChickenFlea()
+    new BuffDefinition(BUFF_CHICKEN_FLEA, 'Bpxf')
+        ..setIconNormal(1, Icons.bTNLocustSwarm)
+        ..setTooltipNormal("Fleas!")
+        ..setTooltipNormalExtended("This unit is being attacked by fleas!")
+        ..setArtTarget(1, Abilities.deathCoilSpecialArt)
+
+    new AbilityDefinitionPhoenixFire(ABIL_CHICKEN_FLEA)
+        ..setLevels(3)
+        ..presetAreaofEffect(lvl -> 200)
+        ..setIconNormal(Icons.bTNLocustSwarm)
+        ..presetBuffs(lvl ->  BUFF_CHICKEN_FLEA.toRawCode())
+        ..presetCooldown(lvl -> 1.15 - lvl * 0.15)
+        ..presetInitialDamage(lvl -> lvl * 12.)
+        ..presetDamagePerSecond(lvl -> lvl * 3.)
+        ..presetDurationNormal(lvl -> 2)
+        ..presetDurationHero(lvl -> 2)
+        ..setMissileArt(Abilities.cryptFiendMissile)
+        ..setMissileSpeed(600)
+        ..setName("Chicken Flea Aura")
+        ..presetTargetsAllowed(lvl -> commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.enemies,
+            TargetsAllowed.ground,
+            TargetsAllowed.structure,
+            TargetsAllowed.ward
+            )
+        )
+        ..presetTooltipNormal(lvl -> "Fleas")
+        ..presetTooltipNormalExtended(lvl -> "Shoots fleas at nearby enemies")
+
+public class Chicken extends Hostile
+    private static let unitTypeId = UNIT_NEUTRAL_CHICKEN
+    construct(unit whichUnit)
+        super(whichUnit)
+
+    static function initialize()
+        register(unitTypeId, CHICKEN -> new Chicken(CHICKEN))
+
+    override function getNumCorpses() returns int
+        return 1
+
+    override function postCreate()
+        super.postCreate()
+        getUnit().addAbility(AbilityIds.wander)
+        getUnit().addAbility(AbilityIds.runedBracers)
+
+        let time = GAME_TIMER.getElapsed().toInt()
+        var itmPoolIdx = 0
+        if time > 900
+            itmPoolIdx = 1
+        if time > 2100
+            itmPoolIdx = 2
+
+        let itemChargedToSpawn = ITEM_CHARGED_POOL[itmPoolIdx].copy()
+        itemChargedToSpawn.shuffle()
+        getUnit().addItemById(itemChargedToSpawn.pop()).setCharges(2)
+        getUnit().addItemById(itemChargedToSpawn.pop()).setCharges(2)
+
+        let itemArmorToSpawn = ITEM_ARMOR[itmPoolIdx].copy()
+        itemArmorToSpawn.shuffle()
+        getUnit().addItemById(itemArmorToSpawn.pop())
+
+        getUnit().addItemById(ITEM_COOKED_MEAT).setCharges(3 + 3 * itmPoolIdx)
+
+        getUnit().addAbility(ABIL_CHICKEN_FLEA)
+        getUnit().setAbilityLevel(ABIL_CHICKEN_FLEA, itmPoolIdx + 1)
+
+        destroy itemArmorToSpawn
+        destroy itemChargedToSpawn
+
+        DamageEvent.addListener() ->
+            let target = DamageEvent.getTarget()
+            if target == getUnit()
+                and target.hasItemById(ITEM_COOKED_MEAT)
+                and target.getMissingHP() > 50
+                target.useItem(target.getItemById(ITEM_COOKED_MEAT))
+
+        doPeriodically(10) (CallbackPeriodic cb) ->
+            let x = getUnit().getX() + GetRandomReal(-CHICKEN_WANDER_RANGE, CHICKEN_WANDER_RANGE)
+            let y = getUnit().getY() + GetRandomReal(-CHICKEN_WANDER_RANGE, CHICKEN_WANDER_RANGE)
+            getUnit().issuePointOrder("move", vec2(x, y))
+
+init
+    Chicken.initialize()

@@ -1,10 +1,7 @@
 package GiftOpening
 
-import Assets
 import LocalObjectIDs
-import Kayak
 import Pets
-import LinkedList
 import ClosureTimers
 import UnitEntity
 import BeastMaster
@@ -16,8 +13,11 @@ public function openGift(unit opener, vec2 giftPos)
     // Pick an event randomly, as necessary.
     let chance = GetRandomReal(0, 1)
 
-    print(chance)
-    if chance < 0.1
+    if chance < 0.05
+        let unitNbr = GetRandomInt(0, 2)
+        for i = 0 to unitNbr
+            createUnit(players[PLAYER_NEUTRAL_AGGRESSIVE], UNIT_NEUTRAL_CHICKEN, giftPos, 270..asAngleDegrees())
+    else if chance < 0.1
         let unitEntity = UnitEntity.findForUnit(opener)
         if unitEntity instanceof BeastMaster
             let petEntity = UnitEntity.findForUnit(opener.getOwner().getPet())
@@ -51,7 +51,7 @@ public function openGift(unit opener, vec2 giftPos)
     else if chance < 0.8
         createItem(ITEM_WARP_BEACON_KIT, giftPos)
     else if chance < 0.9
-        let charges = GetRandomInt(1, 10)
+        let charges = GetRandomInt(1, 5)
         createItem(ITEM_FROZEN_BURRITO, giftPos).setCharges(charges)
     else if chance < 1
         createUnit(opener.getOwner(), UNIT_GOBLIN_CLEANER, giftPos, 270..asAngleDegrees())

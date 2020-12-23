@@ -1,0 +1,66 @@
+package SantaHat
+
+// Standard library imports:
+import OnUnitEnterLeave
+import AbilityObjEditing
+import ObjectIdGenerator
+
+// Third-party imports:
+import Setting
+
+// Local imports:
+import StringExtensions
+import LocalAssets
+import PlayerExtensions
+import Transformation
+import Classes
+
+let enabled = new Setting("merry-christmas")
+let DUMMY_ABIL_ID = compiletime(ABIL_ID_GEN.next())
+
+@compiletime function createSantaHatAbility()
+    new AbilityDefinitionAuraRegenerationHealingWard(DUMMY_ABIL_ID)
+    ..setName("Santa Hat")
+    ..setArtTarget(LocalAbilities.santaHat)
+    ..setEditorSuffix("(wurst)")
+    ..setAmountofHitPointsRegenerated(1, 0)
+    ..setBuffs(1, "")
+    ..setAreaofEffect(1, 1)
+    ..setTargetAttachmentPoint("head")
+
+function onEnterHandler(unit target)
+    // Exit if the santa hat is not enabled for this player.
+    if not enabled.get(target.getOwner()).toBool()
+        return
+
+    target.addAbility(DUMMY_ABIL_ID)
+
+
+init
+    // Disable this feature by default.
+    enabled.make("false", input -> input.isBool())
+
+    enabled.action() (player target, string t) ->
+        if localPlayer == target
+            let troll = target.getTroll()
+            if enabled.get(target).toBool()
+                troll.addAbility(DUMMY_ABIL_ID)
+            else
+                troll.removeAbility(DUMMY_ABIL_ID)
+
+    // Begin supporting new units once ready.
+    enabled.finish() ->
+        onEnter() ->
+            onEnterHandler(getEnterLeaveUnit())
+
+    // Initialize the setting immediately.
+    enabled.initialize()
+
+    // Register the callback used to handle skins for sub-classes.
+    registerAfterEffect() (unit target, int unitID) ->
+        // Verify that the unit changed classes.
+        if getTrollClassType(target) != getTrollClassType(unitID)
+            if enabled.get(target.getOwner()).toBool()
+                target.addAbility(DUMMY_ABIL_ID)
+            else
+                target.removeAbility(DUMMY_ABIL_ID)

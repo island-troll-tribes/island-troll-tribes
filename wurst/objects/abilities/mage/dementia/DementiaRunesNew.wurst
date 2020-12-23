@@ -9,9 +9,6 @@ import Orders
 import RegisterEvents
 import TimerUtils
 
-// Third-party imports:
-import Lodash
-
 // Local imports:
 import ColorUtils
 import LocalObjectIDs
@@ -24,6 +21,12 @@ let COOLDOWN  = 20.
 
 let COOLDOWN_TOOLTIP = "Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
 let RUNE_TOOLTIP = "They circle the caster until activated and when activated they seek a nearby enemy and blast it with their element. 5 runes at a time max. "
+
+let RUNE_NAME_BASE = "Summon {0} Rune"
+
+let TOOLTIP_NEL = RUNE_NAME_BASE.format("Nel".color(COLOR_GREEN))
+let TOOLTIP_KA  = RUNE_NAME_BASE.format("Ka".color(COLOR_RED))
+let TOOLTIP_LEZ = RUNE_NAME_BASE.format("Lez".color(COLOR_TURQUOISE))
 
 let TOOLTIP_EXT_NEL = "Summons a {0}Nel|r rune from dementia space. {0}Nel|r runes are commonly used in crippling spells. ".format(COLOR_GREEN.toColorString())+RUNE_TOOLTIP+COOLDOWN_TOOLTIP
 let TOOLTIP_EXT_KA  = "Summons a {0}Ka|r rune from dementia space. {0}Ka|r runes are commonly used in fire spells. ".format(COLOR_RED.toColorString())+RUNE_TOOLTIP+COOLDOWN_TOOLTIP
@@ -133,27 +136,45 @@ function createLocustRune(int unitId) returns UnitDefinition
         ..setModelFile(Doodads.glowingRunes0)
         ..setNameEditorSuffix("(Wurst)")
 
-class InvokeRune extends ChannelAbilityPreset
-    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos, string toolTipNorm, string toolTipExt, string icon)
-        super(newAbilityId, 1, true)
-        this.setFollowThroughTime(1, 1)
-        this.setIconNormal(icon)
-        this.setCasterAttachmentPoint1("")
-        this.setTargetAttachmentPoint1("")
-        this.setButtonPositionNormalX(buttonPos.a)
-        this.setButtonPositionNormalY(buttonPos.b)
-        this.setHeroAbility(false)
-        this.setManaCost(1, MANACOST)
-        this.setCooldown(1, COOLDOWN)
-        this.setTooltipNormal(1, makeToolTipNorm(hotkey, toolTipNorm))
-        this.setTooltipNormalExtended(1, toolTipExt)
-        this.setHotkeyNormal(hotkey)
-        this.setName(toolTipNorm)
+function createInvokeRune(int newId) returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(newId, 1, true)
+        ..setFollowThroughTime(1, 1)
+        ..setCasterAttachmentPoint1("")
+        ..setTargetAttachmentPoint1("")
+        ..setHeroAbility(false)
+        ..setManaCost(1, MANACOST)
+        ..setCooldown(1, COOLDOWN)
 
-@compiletime function createRuneSpells()
-    new InvokeRune(ABILITY_INVOKE_RUNE_1, "W", new Pair(1, 0), "Summon " + "Nel".color(COLOR_GREEN    ) + " Rune" , TOOLTIP_EXT_NEL , LocalIcons.bTNNelRune)
-    new InvokeRune(ABILITY_INVOKE_RUNE_2, "E", new Pair(2, 0), "Summon " + "Ka" .color(COLOR_RED      ) + " Rune" , TOOLTIP_EXT_KA  , LocalIcons.bTNKaRune )
-    new InvokeRune(ABILITY_INVOKE_RUNE_3, "R", new Pair(3, 0), "Summon " + "Lez".color(COLOR_TURQUOISE) + " Rune" , TOOLTIP_EXT_LEZ , LocalIcons.bTNLezRune)
+@compiletime function createNelRune()
+    createInvokeRune(ABILITY_INVOKE_RUNE_1)
+        ..presetButtonPosNormal(1, 0)
+        ..setTooltipNormal(1, makeToolTipNorm("W", TOOLTIP_NEL))
+        ..setTooltipNormalExtended(1, TOOLTIP_EXT_NEL)
+        ..setHotkeyNormal("W")
+        ..setName(TOOLTIP_NEL)
+        ..setIconNormal(LocalIcons.bTNNelRune)
+        ..setBaseOrderID(1, "ambush")
+
+@compiletime function createKaRune()
+    createInvokeRune(ABILITY_INVOKE_RUNE_2)
+        ..presetButtonPosNormal(2, 0)
+        ..setTooltipNormal(1, makeToolTipNorm("E", TOOLTIP_KA))
+        ..setTooltipNormalExtended(1, TOOLTIP_EXT_KA)
+        ..setHotkeyNormal("E")
+        ..setName(TOOLTIP_KA)
+        ..setIconNormal(LocalIcons.bTNKaRune)
+        ..setBaseOrderID(1, "ancestralspirit")
+
+@compiletime function createLezRune()
+    createInvokeRune(ABILITY_INVOKE_RUNE_3)
+        ..presetButtonPosNormal(3, 0)
+        ..setTooltipNormal(1, makeToolTipNorm("R", TOOLTIP_LEZ))
+        ..setTooltipNormalExtended(1, TOOLTIP_EXT_LEZ)
+        ..setHotkeyNormal("R")
+        ..setName(TOOLTIP_LEZ)
+        ..setIconNormal(LocalIcons.bTNLezRune)
+        ..setBaseOrderID(1, "ancestralspirittarget")
+
 
 class DementiaRune
     DementiaRunesInstance instance
@@ -219,7 +240,7 @@ public class DementiaRunesInstance
     function updateRunePositions()
         //Calculate orb angles and set it
         let offset = angle((360 / runes.size())*DEGTORAD)
-        int i = 0
+        var i = 0
         let ownerpos = ownerUnit.getPos3Real()
         for r in runes
             let indexRuneAngle = runeAngleBase + offset * i.toReal()
@@ -244,25 +265,25 @@ public class DementiaRunesInstance
 
 
 function onCast()
-    var caster = GetSpellAbilityUnit()
-    var ID = GetSpellAbilityId()
+    let caster = GetSpellAbilityUnit()
+    let abilityID = GetSpellAbilityId()
     Runes runeType = Runes.None
 
-    if ID == ABILITY_INVOKE_RUNE_1
+    if abilityID == ABILITY_INVOKE_RUNE_1
         runeType = Runes.Nel
-    else if ID == ABILITY_INVOKE_RUNE_3
+    else if abilityID == ABILITY_INVOKE_RUNE_3
         runeType = Runes.Lez
-    else if ID == ABILITY_INVOKE_RUNE_2
+    else if abilityID == ABILITY_INVOKE_RUNE_2
         runeType = Runes.Ka
 
 
     if dementiaRunesInstances.has(caster)
         //If caster has instance, add rune
-        var instance = dementiaRunesInstances.get(caster)
+        let instance = dementiaRunesInstances.get(caster)
         instance.addRune(new DementiaRune(instance, runeType))
     else
         //If caster has no instance, create one
-        var instance = new DementiaRunesInstance(caster)
+        let instance = new DementiaRunesInstance(caster)
         dementiaRunesInstances.put(caster, instance)
         instance.addRune(new DementiaRune(instance, runeType))
 

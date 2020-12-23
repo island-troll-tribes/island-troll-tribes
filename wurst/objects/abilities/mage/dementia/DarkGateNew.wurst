@@ -61,6 +61,7 @@ class DarkGate extends ChannelAbilityPreset
         this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
         this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
         this.setHotkeyNormal(hotkey)
+        this.setBaseOrderID(1, "immolation")
 
 function createDummyChainlightning()
     new AbilityDefinitionChainLightningcreep(TMP_CHAIN_LIGHTNING_ID)
@@ -299,7 +300,7 @@ public class DarkPortalInstance
     function portalGrowLoopUpdate()
         //Avoid creating vision on every loop cycle with mod check
         if (portalCreationLoop.getCount() mod 30 == 0)
-            var vis = createVision(ownerUnit.getOwner(), centerPos.toVec2(), portalRadius+100, true)
+            let vis = createVision(ownerUnit.getOwner(), centerPos.toVec2(), portalRadius+100, true)
             vis.start()
             //Should be the full duration of portal calculated below for vision mods destruction
             doAfter(durationBuildup + GROW_DURATION - elapsedLifetime) ->
@@ -336,10 +337,10 @@ public class DarkPortalInstance
 
     function updateOrbAngles()
         //Calculate orb angles and set it
-        angle orbOffset = angle((360 / orbs.size())*DEGTORAD)
+        let orbOffset = angle((360 / orbs.size())*DEGTORAD)
         int i = 0
         for o in orbs
-            angle indexOrbAngle = orbAngle + orbOffset * i.toReal()
+            let indexOrbAngle = orbAngle + orbOffset * i.toReal()
             o.setPos(centerPos.offset2d(indexOrbAngle, portalRadius))
             o.setFacing(o.pos.angleTo2d(centerPos))
             i = i + 1
@@ -396,7 +397,7 @@ public class DarkPortalInstance
         if (s.elapsedLifetime - s.lastAttack >= s.cooldown)
 
             //Create group and filter valid targets
-            var targets = CreateGroup()..enumUnitsInRange(centerPos.toVec2(), portalRadius)
+            let targets = CreateGroup()..enumUnitsInRange(centerPos.toVec2(), portalRadius)
             targets.forEachIn(u -> begin
                 if not (isValidAllyTarget(u) or isValidEnemyTarget(u))
                     targets.removeUnit(u)
@@ -459,11 +460,11 @@ function onCast()
 
     //Destroy previous instance
     if darkPortalInstances.has(caster)
-        let prev_instance = darkPortalInstances.get(caster)
-        if prev_instance.portalActiveLoop != null
-            prev_instance.portalActiveLoop.stop()
-        if prev_instance.portalActiveLoop != null
-            prev_instance.portalActiveLoop.stop()
+        let previous = darkPortalInstances.get(caster)
+        if previous.portalActiveLoop != null
+            previous.portalActiveLoop.stop()
+        if previous.portalActiveLoop != null
+            previous.portalActiveLoop.stop()
 
     //Spawn the portal, a bit higher than the caster on Z axis
     darkPortalInstances.put(caster, new DarkPortalInstance(caster, caster.getPos3Real() + vec3(0, 0, 50)))

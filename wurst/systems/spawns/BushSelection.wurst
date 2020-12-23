@@ -13,15 +13,19 @@ let map = new HashMap<int, int>()
     ..put(UNIT_SCOUTS_BUSH, UNIT_SCOUT)
 
 function transferItems(unit u, player p)
-    let id = map.get(u.getTypeId())
+    // Look up the type ID for the units that can use the bush.
+    let targetID = map.get(u.getTypeId())
 
     // Exit if the selection unit is not a bush.
-    if id == 0
+    if targetID == 0
         return
 
     // Retrieve the nearest unit able to be transfered to.
     let match = findNearestUnit(u.getPos(), MAX_DIST.toReal()) target ->
-        return target.getOwner().isAllyOf(p) and id == getTrollBaseClass(target)
+        return (
+                target.getOwner().isAllyOf(p)
+            and targetID == target.getTrollBaseClass()
+        )
 
     // Deliver the items
     if match != null

@@ -95,7 +95,7 @@ class FrostBlast extends ChannelAbilityPreset
         this.setManaCost(1, MANACOST)
         this.setTargetType(1, 3)
         this.setCastRange(1, MISSILE_SPEED * MISSILE_LIFETIME)
-        this.setBaseOrderID(1, "blink")
+        this.setBaseOrderID(1, "freezingbreath")
 
 @compiletime function createFrostBlast()
     new FrostBlast(ABILITY_FROST_BLAST, "E", new Pair(2, 0))
@@ -137,7 +137,7 @@ class FrostBlastProjectile
         if this.exploded
             return
         this.lifeTime += LOOP_INTERVAL
-        vec3 newPos = this.pos.offset2d(this.ang, MISSILE_SPEED * LOOP_INTERVAL)
+        var newPos = this.pos.offset2d(this.ang, MISSILE_SPEED * LOOP_INTERVAL)
         let terrainZ = newPos.getTerrainZ()
         newPos.z = terrainZ + MISSILE_FLY_HEIGHT
         this.efx.setPos(newPos)
@@ -165,8 +165,8 @@ class FrostBlastProjectile
         if effectScalingValue > 1
             effectScalingValue = 1
 
-        int slowTier = 1 + (9*effectScalingValue).round()
-        real damage = IMPACT_EFFECT_MIN_DAMAGE + (IMPACT_EFFECT_MAX_DAMAGE-IMPACT_EFFECT_MIN_DAMAGE)*effectScalingValue
+        let slowTier = 1 + (9*effectScalingValue).round()
+        var damage = IMPACT_EFFECT_MIN_DAMAGE + (IMPACT_EFFECT_MAX_DAMAGE-IMPACT_EFFECT_MIN_DAMAGE)*effectScalingValue
         if (isOvercharged)
             damage = damage * OVERCHARGE_DAMAGE_MULTIPLIER
 
@@ -202,7 +202,7 @@ function sprayOverchargedProjectiles(unit caster, vec2 targetPos)
             let casterPos = caster.getPos()
             let ang = casterPos.angleTo(targetPos)
             let spawnPos = casterPos.polarOffset(ang, SPAWN_OFFSET_DISTANCE).withTerrainZ(MISSILE_FLY_HEIGHT)
-            var projectile = new FrostBlastProjectile(caster, spawnPos, ang, true)
+            let projectile = new FrostBlastProjectile(caster, spawnPos, ang, true)
 
             doPeriodicallyTimed(LOOP_INTERVAL, MISSILE_LIFETIME) updateLoop ->
                 if (updateLoop.isLast())
@@ -217,7 +217,7 @@ function sprayOverchargedProjectiles(unit caster, vec2 targetPos)
 function spawnProjectile(unit caster, angle ang)
     let casterPos = caster.getPos()
     let spawnPos = casterPos.polarOffset(ang, SPAWN_OFFSET_DISTANCE).withTerrainZ(MISSILE_FLY_HEIGHT)
-    var projectile = new FrostBlastProjectile(caster, spawnPos, ang, false)
+    let projectile = new FrostBlastProjectile(caster, spawnPos, ang, false)
 
     doPeriodicallyTimed(LOOP_INTERVAL, MISSILE_LIFETIME) updateLoop ->
         if (updateLoop.isLast())

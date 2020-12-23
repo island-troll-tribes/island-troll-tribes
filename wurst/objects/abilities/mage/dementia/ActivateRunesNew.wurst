@@ -9,7 +9,7 @@ import ClosureTimers
 import LinkedList
 import Orders
 import BuffObjEditing
-import InstantDummyCaster
+import DummyCaster
 
 // Third-party imports:
 import Lodash
@@ -243,6 +243,7 @@ class ActivateRunes extends ChannelAbilityPreset
         this.setTooltipNormalExtended(1, ACTIVATE_RUNES_TOOLTIP_EXTENDED)
         this.setName(ACTIVATE_RUNES_TOOLTIP_NORM)
         this.setHotkeyNormal(hotkey)
+        this.setBaseOrderID(1, "barkskinon")
 
 @compiletime function createSpells()
     new ActivateRunes(ABILITY_ACTIVATE_RUNE, "A", new Pair(0, 0))
@@ -270,8 +271,8 @@ public class SummonData
 
 function onCast()
     let caster = GetSpellAbilityUnit()
-    DementiaRunesInstance runesInstance = getRunesInstance(caster)
-    DarkPortalInstance portalInstance = getDementiaGate(caster)
+    let runesInstance = getRunesInstance(caster)
+    let portalInstance = getDementiaGate(caster)
 
     if runesInstance == null
         return
@@ -295,14 +296,12 @@ function runesCastSpells(unit caster, DementiaRunesInstance runesInstance)
                 target = t
 
             for r in runesInstance.runes
-                DementiaRuneSpell spell = r.getRandomRuneSpellID()
-                InstantDummyCaster.castTarget(
-                    owner,
-                    spell.spellId,
-                    1,
-                    spell.orderId,
-                    target
-                )
+                let spell = r.getRandomRuneSpellID()
+                new DummyCaster()
+                    ..delay(1)
+                    ..owner(owner)
+                    ..origin(r.pos.toVec2())
+                    ..castTarget(spell.spellId, 1, spell.orderId, target)
                 destroy r
 
 function Runes.toString() returns string

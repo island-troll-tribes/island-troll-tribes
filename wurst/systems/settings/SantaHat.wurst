@@ -13,7 +13,7 @@ import StringExtensions
 import LocalAssets
 import PlayerExtensions
 import Transformation
-import Classes
+import UnitExtensions
 
 let enabled = new Setting("merry-christmas")
 let DUMMY_ABIL_ID = compiletime(ABIL_ID_GEN.next())
@@ -31,6 +31,7 @@ let DUMMY_ABIL_ID = compiletime(ABIL_ID_GEN.next())
 function onEnterHandler(unit target)
     // Exit if the santa hat is not enabled for this player.
     if not enabled.get(target.getOwner()).toBool()
+        and not target.isTroll()
         return
 
     target.addAbility(DUMMY_ABIL_ID)
@@ -57,9 +58,8 @@ init
 
     // Register the callback used to handle skins for sub-classes.
     registerAfterEffect() (unit target, int unitID) ->
-        // Verify that the unit changed classes.
-        if getTrollClassType(target) != getTrollClassType(unitID)
-            if enabled.get(target.getOwner()).toBool()
-                target.addAbility(DUMMY_ABIL_ID)
-            else
-                target.removeAbility(DUMMY_ABIL_ID)
+        if enabled.get(target.getOwner()).toBool()
+            and target.isTroll()
+            target.addAbility(DUMMY_ABIL_ID)
+        else
+            target.removeAbility(DUMMY_ABIL_ID)

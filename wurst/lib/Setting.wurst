@@ -115,7 +115,7 @@ public class Setting
             if (
                 players[index].isIngame()
                 // Synchronization events do not fire for observers.
-                // and not IsPlayerObserver(players[index])
+                and not IsPlayerObserver(players[index])
                 and writable
             )
                 log(players[index], Loglevel.DEBUG, "Loading data.")
@@ -247,11 +247,10 @@ public class Setting
             log(target, Loglevel.ERROR, "No value given.")
             return
 
-        // Update the setting.
-        put(target, value)
-
-        // Notify the user of success.
-        log(target, Loglevel.INFO, "Set to: " + get(target))
+        // Attempt to update the setting.
+        if put(target, value)
+            // Notify the user of success.
+            log(target, Loglevel.INFO, "Set to: " + get(target))
 
     private function log(Loglevel level, string message)
         log(null, level, message)
@@ -344,11 +343,11 @@ public class Setting
         return get(localPlayer)
 
     // Updates the setting for the given player.
-    function put(player target, string value)
+    function put(player target, string value) returns bool
         log(target, Loglevel.DEBUG, "Putting value: " + value)
         // Block premature access.
         if not checkSync()
-            return
+            return false
 
         // Validate the input.
         if not check.call(value)
@@ -359,7 +358,8 @@ public class Setting
                     value
                 )
             )
-            return
+            return false
 
         // Handle the update.
         update(target, value)
+        return true

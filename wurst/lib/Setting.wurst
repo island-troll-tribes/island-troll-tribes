@@ -112,7 +112,12 @@ public class Setting
             // setting was writeable, but is unlikely that the previous version
             // would still be relevant. This also prevents players of previous
             // versions from having an advantage.
-            if players[index].isIngame() and writable
+            if (
+                players[index].isIngame()
+                // Synchronization events do not fire for observers.
+                // and not IsPlayerObserver(players[index])
+                and writable
+            )
                 log(players[index], Loglevel.DEBUG, "Loading data.")
                 // Began tracking the pending.
                 pending += 1
@@ -126,10 +131,10 @@ public class Setting
 
         // Check periodically for synchronization completion.
         log(Loglevel.DEBUG, "Beginning polling.")
-        doPeriodically(POLL_TIME) cb ->
-            // Use a method to avoid capturing fields by value.
-            if isReadyToFinish()
-                // Finish initializing the setting.
+        doPeriodicallyTimed(POLL_TIME, SYNC_TIMEOUT) cb ->
+            // Engage the timeout mechanism if synchronization fails.
+            if isReadyToFinish() or cb.isLast()
+                // Use a method to avoid capturing fields by value.
                 complete()
 
                 // Cease polling once complete.

@@ -297,7 +297,8 @@ function CreateNeutralPassive takes nothing returns nothing
     set u=BlzCreateUnitWithSkin(p, 'd113', - 12392.6, 11233.4, 317.760, 'd113')
     set u=BlzCreateUnitWithSkin(p, 'd113', 11091.5, 11214.6, 225.980, 'd113')
     set u=BlzCreateUnitWithSkin(p, 'd113', 11170.4, - 12327.9, 134.340, 'd113')
-    set u=BlzCreateUnitWithSkin(p, 'd111', - 64.0, 0.0, 329.320, 'd111')
+    set u=BlzCreateUnitWithSkin(p, 'd111', - 64.0, 0.0, 264.320, 'd111')
+    set u=BlzCreateUnitWithSkin(p, 'd123', - 6649.4, - 5502.7, 163.396, 'd123')
 endfunction
 
 //===========================================================================
@@ -399,7 +400,7 @@ function CreateRegions takes nothing returns nothing
     set gg_rct_spawn_area_3_1=Rect(4928.0, - 9344.0, 9088.0, - 928.0)
     set gg_rct_spawn_area_3_2=Rect(736.0, - 9408.0, 2272.0, - 5248.0)
     set gg_rct_spawn_area_3_3=Rect(2240.0, - 9248.0, 4928.0, - 2944.0)
-    set gg_rct_spawn_area_4_1=Rect(- 9472.0, - 9728.0, - 352.0, 704.0)
+    set gg_rct_spawn_area_4_1=Rect(- 9824.0, - 10048.0, - 704.0, 384.0)
     set gg_rct_spawn_area_4_2=Rect(- 160.0, 704.0, 2880.0, 2688.0)
     set gg_rct_spawn_area_4_3=Rect(1632.0, - 1888.0, 3200.0, 704.0)
     set gg_rct_Thief_Bush_NE_A_In=Rect(1504.0, 7392.0, 1632.0, 7552.0)
@@ -416,7 +417,7 @@ function CreateRegions takes nothing returns nothing
     set gg_rct_TheOne=Rect(- 7552.0, - 4736.0, - 6912.0, - 4096.0)
     set gg_rct_Thief_Bush_NE_B_In=Rect(5056.0, 7104.0, 5280.0, 7232.0)
     set gg_rct_Thief_Bush_NE_B_Out=Rect(5024.0, 6656.0, 5312.0, 6784.0)
-    set gg_rct_TheOneCliff=Rect(- 6912.0, - 5696.0, - 6368.0, - 5152.0)
+    set gg_rct_TheOneCliff=Rect(- 6784.0, - 5536.0, - 6496.0, - 5248.0)
     set gg_rct_NW_Alligator=Rect(- 12640.0, 10592.0, - 11712.0, 11520.0)
     set gg_rct_SW_Alligator=Rect(- 12352.0, - 12320.0, - 11456.0, - 11392.0)
     set gg_rct_SE_Alligator=Rect(10560.0, - 12544.0, 11456.0, - 11616.0)
@@ -535,7 +536,7 @@ function InitCustomPlayerSlots takes nothing returns nothing
 endfunction
 
 function InitCustomTeams takes nothing returns nothing
-    // Force: TRIGSTR_063
+    // Force: TRIGSTR_016
     call SetPlayerTeam(Player(0), 0)
     call SetPlayerState(Player(0), PLAYER_STATE_ALLIED_VICTORY, 1)
     call SetPlayerTeam(Player(1), 0)
@@ -581,7 +582,7 @@ function InitCustomTeams takes nothing returns nothing
     call SetPlayerAllianceStateAllyBJ(Player(5), Player(3), true)
     call SetPlayerAllianceStateAllyBJ(Player(5), Player(4), true)
 
-    // Force: TRIGSTR_064
+    // Force: TRIGSTR_017
     call SetPlayerTeam(Player(6), 1)
     call SetPlayerState(Player(6), PLAYER_STATE_ALLIED_VICTORY, 1)
     call SetPlayerTeam(Player(7), 1)
@@ -796,13 +797,16 @@ endfunction
 
 //===========================================================================
 function main takes nothing returns nothing
+    local weathereffect we
     call SetCameraBounds(- 12672.0 + GetCameraMargin(CAMERA_MARGIN_LEFT), - 12672.0 + GetCameraMargin(CAMERA_MARGIN_BOTTOM), 11648.0 - GetCameraMargin(CAMERA_MARGIN_RIGHT), 11648.0 - GetCameraMargin(CAMERA_MARGIN_TOP), - 12672.0 + GetCameraMargin(CAMERA_MARGIN_LEFT), 11648.0 - GetCameraMargin(CAMERA_MARGIN_TOP), 11648.0 - GetCameraMargin(CAMERA_MARGIN_RIGHT), - 12672.0 + GetCameraMargin(CAMERA_MARGIN_BOTTOM))
     call SetDayNightModels("Environment\\DNC\\DNCLordaeron\\DNCLordaeronTerrain\\DNCLordaeronTerrain.mdl", "Environment\\DNC\\DNCLordaeron\\DNCLordaeronUnit\\DNCLordaeronUnit.mdl")
-    call SetTerrainFogEx(0, 5000.0, 5000.0, 0.000, 0.000, 1.000, 1.000)
-    call SetWaterBaseColor(100, 255, 255, 255)
+    call SetTerrainFogEx(0, 1500.0, 5000.0, 10.000, 0.000, 1.000, 1.000)
+    call SetWaterBaseColor(0, 206, 209, 255)
+    set we=AddWeatherEffect(Rect(- 14848.0, - 14848.0, 13824.0, 13824.0), 'SNls')
+    call EnableWeatherEffect(we, true)
     call NewSoundEnvironment("lake")
-    call SetAmbientDaySound("SunkenRuinsDay")
-    call SetAmbientNightSound("SunkenRuinsNight")
+    call SetAmbientDaySound("IceCrownDay")
+    call SetAmbientNightSound("IceCrownNight")
     call SetMapMusic("Music", true, 0)
     call CreateRegions()
     call CreateAllUnits()
@@ -820,8 +824,8 @@ endfunction
 //***************************************************************************
 
 function config takes nothing returns nothing
-    call SetMapName("TRIGSTR_065")
-    call SetMapDescription("TRIGSTR_067")
+    call SetMapName("TRIGSTR_001")
+    call SetMapDescription("TRIGSTR_000")
     call SetPlayers(12)
     call SetTeams(12)
     call SetGamePlacement(MAP_PLACEMENT_TEAMS_TOGETHER)

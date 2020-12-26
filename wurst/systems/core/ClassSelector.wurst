@@ -14,10 +14,11 @@ import ColorUtils
 import GameConfig
 import LocalObjectIDs
 import PlayerExtensions
+import RandomPerk
 import StringExtensions
-import UnitExtensions
 import TimerUtils
 import Tribe
+import UnitExtensions
 
 let spawnList = asList(
     gg_rct_revive_1,
@@ -145,6 +146,9 @@ public class ClassSelector
         for member in tribe.getMembers()
             var troll = member.getTroll()
             if troll == null
+                // Enable the perk prior to assigning a random troll.
+                randomPerk.register(member)
+
                 // Here we are not using handleRandom, because we remove the totem
                 // later and the code relies on the totem existing on sell events
                 // and the sell event is fired after the removal of the totem

@@ -1,20 +1,32 @@
 package ChatCommands
-import LinkedList
+
+// Standard library imports:
 import HashMap
+import LinkedList
 import StringUtils
 
-let MAX_PLAYERS = PLAYER_NEUTRAL_AGGRESSIVE - 1
+// Third-party imports:
+import Lodash
+import LodashExtensions
 
 public interface CommandHandler
     function run(player triggerPlayer, LinkedList<string> arguments)
 
-let commands = new HashMap<player, HashMap<string, CommandHandler>>()
+let commands = range(bj_MAX_PLAYER_SLOTS)
+    .toList()
+    .map(
+        (_, index) -> new Pair(
+            players[index],
+            new HashMap<string, CommandHandler>()
+        )
+    )
+    .fromPairs()
 
 public function registerCommand(player thePlayer, string command, CommandHandler handler)
     commands.get(thePlayer).put(command, handler)
 
 public function registerCommandAll(string command, CommandHandler handler)
-    for i = 0 to MAX_PLAYERS
+    for i = 0 to bj_MAX_PLAYER_SLOTS - 1
         registerCommand(players[i], command, handler)
 
 public function deregisterCommand(player thePlayer, string command)
@@ -22,14 +34,13 @@ public function deregisterCommand(player thePlayer, string command)
         commands.get(thePlayer).remove(command)
 
 public function deregisterCommandAll(string command)
-    for i = 0 to MAX_PLAYERS
+    for i = 0 to bj_MAX_PLAYER_SLOTS - 1
         deregisterCommand(players[i], command)
 
 init
     let t = CreateTrigger()
 
-    for i = 0 to MAX_PLAYERS
-        commands.put(players[i], new HashMap<string, CommandHandler>())
+    for i = 0 to bj_MAX_PLAYER_SLOTS - 1
         t.registerPlayerChatEvent(players[i], "-", false)
 
     t.addAction() ->

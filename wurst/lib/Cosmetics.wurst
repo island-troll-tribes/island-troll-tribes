@@ -60,7 +60,7 @@ public abstract class Cosmetic
 
     construct(string name)
         // Use a condensed name for the registry.
-        this.name = name.toLowerCase().replace(" ", "-")
+        this.name = condense(name)
 
         // Update the global registry.
         cosmetics.put(this.name, this)
@@ -71,6 +71,12 @@ public abstract class Cosmetic
 
         // Enable skins for local testing automatically.
         register("Local Player")
+
+    static function condense(string name) returns string
+        return name.toLowerCase().replace(" ", "-")
+
+    static function lookup(string name) returns thistype
+        return cosmetics.get(condense(name))
 
     function register(vararg string names)
         for name in names
@@ -272,6 +278,9 @@ init
         Cosmetic.onEnter(getEnterLeaveUnit())
 
     // Register the callback used to handle skins for sub-classes.
+    // TODO: Avoid depending on class types for ITT directly. Instead
+    //       track which form IDs have already been checked for that unit
+    //       and block those from being used again.
     registerAfterEffect() (unit target, int unitID) ->
         if target.getTrollClassType() != unitID.getTrollClassType()
             Cosmetic.onEnter(target)

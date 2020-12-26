@@ -1,10 +1,11 @@
 package SpearsDefinition
 
 // Standard library imports:
-import Assets
-import ObjectIds
-import BuffObjEditing
 import AbilityObjEditing
+import Assets
+import BuffObjEditing
+import ObjectIds
+import ObjectIdGenerator
 
 // Local imports:
 // TODO: Although this import is not used, it is needed to avoid breaking the
@@ -14,9 +15,12 @@ import AbilityObjEditing
 import Spears
 import Items
 import LocalAssets
-import ToolTipsUtils
-import LocalObjectIDs
 import LocalItemObjEditing
+import LocalObjectIDs
+import ToolTipsUtils
+
+let BUFF_DARK = compiletime(BUFF_ID_GEN.next())
+let BUFF_POISON = compiletime(BUFF_ID_GEN.next())
 
 let SPEAR_DMG = 40.
 let IRON_DMG  = 70.
@@ -51,32 +55,46 @@ let POISON_DURATION = 40.
 let CAST_RANGE = 1000.
 
 
-let SPEAR_ICON   = Icons.bTNSteelRanged
-let IRON_ICON    = Icons.bTNStrengthOfTheMoon
-let STEEL_ICON   = Icons.bTNThoriumRanged
-let DARK_ICON    = Icons.bTNArcaniteRanged
-let POISON_ICON  = LocalIcons.bTNPoisonSpear
-let RPOISON_ICON = Icons.bTNEnvenomedSpear
-let UPOISON_ICON = LocalIcons.bTNUltraPoisonSpear
+let TT_COMMON   = "" +
+    "A spear with one use. Deals {0} damage on striking a target. "+
+    "Has {1} chance of being recoverable."
 
-let TT_COMMON   = "A spear with one use. Deals {0} damage on striking a target. Has {1} chance of being recoverable."
+let TT_DARK_PRE_FORMAT = "" +
+    "A spear with one use. Deals {0} damage and zaps {1}% of current energy on hit. "+
+    "Not recoverable"
 
-let TT_DARK_PRE_FORMAT   = "A spear with one use. Deals {0} damage and zaps {1}% of current energy on hit. Not recoverable"
-
-let TT_PS   = "Hurls a poisoned spear at a target enemy unit, dealing {0} initial damage and {1} damage every " + "{0} seconds. ".format(3..toToolTipLightBlue())+
-                   "{2} attack speed and {3} movement decrease. " + "Has {0} chance of being recoverable. ".format(0.50.toToolTipLightBlue())
+let TT_PS   = "" + "Hurls a poisoned spear at a target enemy unit, "+
+    "dealing {0} initial damage and {1} damage every " + "{0} seconds. "
+    .format(3..toToolTipLightBlue())+
+    "{2} attack speed and {3} movement decrease. " +
+    "Has {0} chance of being recoverable. "
+    .format(0.50.toToolTipLightBlue())
 
 let TT_SPEAR = TT_COMMON.format(SPEAR_DMG.toToolTipRed(), 0.60.toToolTipLightBlue()) + makeToolTipCooldown(SPEAR_COOLDOWN)
 let TT_IRON  = TT_COMMON.format(IRON_DMG .toToolTipRed(), 0.60.toToolTipLightBlue()) + makeToolTipCooldown(IRON_COOLDOWN)
 let TT_STEEL = TT_COMMON.format(STEEL_DMG.toToolTipRed(), 0.60.toToolTipLightBlue()) + makeToolTipCooldown(STEEL_COOLDOWN)
 let TT_DARK  = TT_DARK_PRE_FORMAT.format(DARK_DMG .toToolTipRed(), DARK_MANA_BURN.toToolTipLightBlue())
 
-let TT_POISON  = TT_PS.format(POISON_DMG[0].toToolTipRed(), POISON_DMG[1].toToolTipRed(), POISON_DEBUFF[0].toToolTipOrange(),
-                      POISON_DEBUFF[1].toToolTipOrange()) + makeToolTipDuration(POISON_DURATION, POISON_COOLDOWN)
-let TT_RPOISON = TT_PS.format(RPOISON_DMG[0].toToolTipRed(), RPOISON_DMG[1].toToolTipRed(), RPOISON_DEBUFF[0].toToolTipOrange(),
-                      RPOISON_DEBUFF[1].toToolTipOrange()) + makeToolTipDuration(POISON_DURATION, RPOISON_COOLDOWN)
-let TT_UPOISON = TT_PS.format(UPOISON_DMG[0].toToolTipRed(), UPOISON_DMG[1].toToolTipRed(), UPOISON_DEBUFF[0].toToolTipOrange(),
-                      UPOISON_DEBUFF[1].toToolTipOrange()) + makeToolTipDuration(POISON_DURATION, UPOISON_COOLDOWN)
+let TT_POISON  = TT_PS.format(
+    POISON_DMG[0].toToolTipRed(),
+    POISON_DMG[1].toToolTipRed(),
+    POISON_DEBUFF[0].toToolTipOrange(),
+    POISON_DEBUFF[1].toToolTipOrange()) +
+    makeToolTipDuration(POISON_DURATION, POISON_COOLDOWN)
+
+let TT_RPOISON = TT_PS.format(
+    RPOISON_DMG[0].toToolTipRed(),
+    RPOISON_DMG[1].toToolTipRed(),
+    RPOISON_DEBUFF[0].toToolTipOrange(),
+    RPOISON_DEBUFF[1].toToolTipOrange()) +
+    makeToolTipDuration(POISON_DURATION, RPOISON_COOLDOWN)
+
+let TT_UPOISON = TT_PS.format(
+    UPOISON_DMG[0].toToolTipRed(),
+    UPOISON_DMG[1].toToolTipRed(),
+    UPOISON_DEBUFF[0].toToolTipOrange(),
+    UPOISON_DEBUFF[1].toToolTipOrange()) +
+    makeToolTipDuration(POISON_DURATION, UPOISON_COOLDOWN)
 
 function createSpear(int spearId) returns ItemDefinition
     return createPerishableItem(spearId)
@@ -88,7 +106,7 @@ function createSpear(int spearId) returns ItemDefinition
 @compiletime function createBasicSpear() returns ItemDefinition
     return createSpear(ITEM_SPEAR)
         ..setNameEnhance("Spear")
-        ..setInterfaceIcon(SPEAR_ICON)
+        ..setInterfaceIcon(Icons.bTNSteelRanged)
         ..setHotkey("Q")
         ..setTooltipExtended(TT_SPEAR)
         ..setLumberCost(5)
@@ -98,7 +116,7 @@ function createSpear(int spearId) returns ItemDefinition
 @compiletime function createIronSpear() returns ItemDefinition
     return createSpear(ITEM_IRON_SPEAR)
         ..setNameEnhance("Iron Spear")
-        ..setInterfaceIcon(IRON_ICON)
+        ..setInterfaceIcon(Icons.bTNStrengthOfTheMoon)
         ..setHotkey("Q")
         ..setTooltipExtended(TT_IRON)
         ..setLumberCost(11)
@@ -111,7 +129,7 @@ function createSpear(int spearId) returns ItemDefinition
 @compiletime function createSteelSpear() returns ItemDefinition
     return createSpear(ITEM_STEEL_SPEAR)
         ..setNameEnhance("Steel Spear")
-        ..setInterfaceIcon(STEEL_ICON)
+        ..setInterfaceIcon(Icons.bTNThoriumRanged)
         ..setHotkey("Q")
         ..setTooltipExtended(TT_STEEL)
         ..setLumberCost(23)
@@ -124,7 +142,7 @@ function createSpear(int spearId) returns ItemDefinition
 @compiletime function createDarkSpear() returns ItemDefinition
     return createSpear(ITEM_DARK_SPEAR)
         ..setNameEnhance("Dark Spear")
-        ..setInterfaceIcon(DARK_ICON)
+        ..setInterfaceIcon(Icons.bTNArcaniteRanged)
         ..setHotkey("Q")
         ..setTooltipExtended(TT_DARK)
         ..setLumberCost(20)
@@ -137,7 +155,7 @@ function createSpear(int spearId) returns ItemDefinition
 @compiletime function createPoisonSpear() returns ItemDefinition
     return createSpear(ITEM_POISON_SPEAR)
         ..setNameEnhance("Poison Spear")
-        ..setInterfaceIcon(POISON_ICON)
+        ..setInterfaceIcon(LocalIcons.bTNPoisonSpear)
         ..setHotkey("Q")
         ..setTooltipExtended(TT_POISON)
         ..setLumberCost(10)
@@ -150,7 +168,7 @@ function createSpear(int spearId) returns ItemDefinition
 @compiletime function createRefinedPoisonSpear() returns ItemDefinition
     return createSpear(ITEM_REFINED_POISON_SPEAR)
         ..setNameEnhance("Refined Poison Spear")
-        ..setInterfaceIcon(RPOISON_ICON)
+        ..setInterfaceIcon(Icons.bTNEnvenomedSpear)
         ..setHotkey("Q")
         ..setTooltipExtended(TT_RPOISON)
         ..setLumberCost(14)
@@ -163,7 +181,7 @@ function createSpear(int spearId) returns ItemDefinition
 @compiletime function createUltraPoisonSpear() returns ItemDefinition
     return createSpear(ITEM_ULTRA_POISON_SPEAR)
         ..setNameEnhance("Ultra Poison Spear")
-        ..setInterfaceIcon(UPOISON_ICON)
+        ..setInterfaceIcon(LocalIcons.bTNUltraPoisonSpear)
         ..setHotkey("Q")
         ..setTooltipExtended(TT_UPOISON)
         ..setLumberCost(19)
@@ -182,7 +200,15 @@ public function createSpearAbility(int newId) returns AbilityDefinitionThunderBo
         ..setMissileHomingEnabled(true)
         ..setMissileSpeed(700)
         ..setMissileArt(Abilities.banditmissile)
-        ..setTargetsAllowed(1, "air,enemies,ground,neutral,organic,terrain")
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.enemies,
+            TargetsAllowed.ground,
+            TargetsAllowed.neutral,
+            TargetsAllowed.organic,
+            TargetsAllowed.terrain
+            )
+        )
         ..setEditorSuffix("(Wurst)")
 
 @compiletime function createBasicSpearAbility() returns AbilityDefinitionThunderBoltCreep
@@ -229,6 +255,7 @@ function createPoisonSpearAbility(int newId) returns AbilityDefinitionShadowStri
         ..setMissileSpeed(700)
         ..setItemAbility(true)
         ..setManaCost(1, 0)
+        ..setBuffs(1, BUFF_POISON.toRawCode())
         ..setEditorSuffix("(Wurst)")
 
 @compiletime function createBasicPoisonSpearAbility() returns AbilityDefinitionShadowStrikeCreep
@@ -273,4 +300,13 @@ function createPoisonSpearAbility(int newId) returns AbilityDefinitionShadowStri
     ..setArtTarget(1, Abilities.deathandDecayTarget)
     ..setName(1, "Dark Spear Buff")
     ..setTargetAttachmentPoint0(1, "origin")
+    ..setEditorSuffix(1, "(Wurst)")
+
+@compiletime function createPoisonSpearBuff()
+    // I believe this buff was made just so we can see the effect when dark spear hit?
+    new BuffDefinition(BUFF_POISON, 'BEsh')
+    ..setIcon(Icons.bTNEnvenomedSpear)
+    ..setName(1, "Poison Slow")
+    ..setTooltipNormal("Poison Slow")
+    ..setTooltipNormalExtended(1, "This unit has been hit by a poison spear; it takes damage over time and its movement and attack speed are slowed")
     ..setEditorSuffix(1, "(Wurst)")

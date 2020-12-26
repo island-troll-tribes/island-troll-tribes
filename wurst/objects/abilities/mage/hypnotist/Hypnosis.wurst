@@ -2,10 +2,13 @@ package Hypnosis
 import ClosureEvents
 
 import AbilityObjEditing
+import BuffObjEditing
 import ObjectIds
 import LocalObjectIDs
 import Lodash
 import ToolTipsUtils
+import Assets
+import LocalAssets
 
 constant MANA_RESTORED = 75.
 constant DAMAGE = 20.
@@ -14,30 +17,41 @@ constant COOLDOWN = 20.
 constant CAST_RANGE = 300.
 constant DURATION = 5.
 
-constant ANIMATION_NAME = "channel"
-constant TOOLTIP_NORM = "Hypnosis"
-constant TOOLTIP_EXTENDED = "Puts an enemy into a dream-like state for {0} seconds and restores its energy by {2}. Has {3} seconds cooldown."
-                       .format(DURATION.toToolTipOrange(), DAMAGE.toToolTipRed(), MANA_RESTORED.toToolTipTeal(), COOLDOWN.toToolTipLightBlue())
+constant TOOLTIP_EXTENDED = "" +
+    ("Puts an enemy into a dream-like state for {0} seconds. Deals {1} damage, "+
+    "but also restores enemy energy by {2}. Has {3} seconds cooldown.")
+    .format(
+        DURATION.toToolTipOrange(),
+        DAMAGE.toToolTipRed(),
+        MANA_RESTORED.toToolTipTeal(),
+        COOLDOWN.toToolTipLightBlue()
+    )
 
-constant ICON = "ReplaceableTextures\\CommandButtons\\BTNHypnosis.blp"
 constant TARGET_ALLOWED = "enemies,ground"
-constant BUFFS = toRawCode(BUFF_HYPNOTIZED) + ",BUsp,Bust" // Hypnotized, Sleep,
+constant BUFFS = toRawCode(BUFF_HYPNOTIZED) + ",BUsp,Bust" // Hypnotized, Sleep, Sleep Stun
+
+@compiletime function createHypnosisBuff()
+    new BuffDefinition(BUFF_HYPNOTIZED, 'BOvd') // Big Bad Voodoo buff
+        ..setIconNormal(1, Icons.bTNSleep)
+        ..setTooltipNormal("Hypnotized")
+        ..setTooltipNormalExtended("This unit has been put to sleep by a Hypnotist. It is dreaming")
+        ..setArtTarget(Abilities.aIsoTarget)
 
 class Hypnosis extends AbilityDefinitionSleepcreep
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
         super(newAbilityId)
-        this.setName(TOOLTIP_NORM)
+        this.setName("Hypnosis")
         this.setHotkeyNormal(hotkey)
         this.setCooldown(1, COOLDOWN)
         this.setManaCost(1, MANACOST)
-        this.setIconNormal(ICON)
+        this.setIconNormal(LocalIcons.bTNHypnosis)
         this.setButtonPositionNormalX(buttonPos.a)
         this.setButtonPositionNormalY(buttonPos.b)
         this.setDurationHero(1, DURATION)
         this.setDurationNormal(1, DURATION)
         this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
-        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
-        this.setAnimationNames(ANIMATION_NAME)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, "Hypnosis"))
+        this.setAnimationNames("channel")
         this.setCheckDependencies(false)
         this.setStunDuration(1, 1)
         this.setBuffs(1, BUFFS)
@@ -47,6 +61,12 @@ class Hypnosis extends AbilityDefinitionSleepcreep
 @compiletime function createHypnosis()
     new Hypnosis(ABILITY_HYPNOSIS, "Q", new Pair(0, 0))
     new Hypnosis(ABILITY_LEGACY_HYPNOSIS, "H", new Pair(0, 0))
+
+function onCast()
+    let target = GetSpellTargetUnit()
+    let caster = GetSpellAbilityUnit()
+    caster.damageTarget(target, DAMAGE, ATTACK_TYPE_NORMAL)
+    target.addMana(MANA_RESTORED)
 
 init
     EventListener.onTargetCast(ABILITY_HYPNOSIS) (unit caster, unit target) ->

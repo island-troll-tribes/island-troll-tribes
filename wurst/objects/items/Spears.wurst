@@ -6,12 +6,15 @@ import ClosureTimers
 import DummyCaster
 import HashMap
 import Orders
+import AbilityObjEditing
+import ObjectIds
+import ObjectIdGenerator
 
 // Local imports:
 import LocalObjectIDs
 import UnitExtensions
 
-let ABILITY_SPEAR_HIT_DETECTION = 'A0EH'
+let ABILITY_SPEAR_HIT_DETECTION = compiletime(ABIL_ID_GEN.next())
 
 // If you change the following, update tooltip manually in SpearsDefinition
 public let SPEAR_RESPAWN_CHANCE   = 0.666
@@ -23,6 +26,26 @@ public let RPOISON_RESPAWN_CHANCE = 0.5
 public let UPOISON_RESPAWN_CHANCE = 0.5
 
 let DARK_SPEAR_MANA_BURN_PERCENTAGE = .30
+
+@compiletime function createAbilSpearHitDetection()
+    new AbilityDefinitionThunderBoltCreep(ABILITY_SPEAR_HIT_DETECTION)
+        ..setDummyAbility()
+        ..setMissileArt("")
+        ..setMissileHomingEnabled(true)
+        ..setMissileSpeed(700)
+        ..setDamage(1, 0)
+        ..setDurationHero(1, 0.01)
+        ..setDurationNormal(1, 0.01)
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.enemies,
+            TargetsAllowed.ground,
+            TargetsAllowed.neutral,
+            TargetsAllowed.organic,
+            TargetsAllowed.terrain
+        ))
+        ..setName("SPEAR HIT")
+        ..setEditorSuffix("(Wurst)")
 
 enum SpearType
     Spear
@@ -66,7 +89,7 @@ function onSpearImpact(unit target, SpearType spearType)
             spawnItemChance(POISON_RESPAWN_CHANCE, ITEM_POISON_SPEAR, target.getPos())
         case DarkSpear
             spawnItemChance(DARK_RESPAWN_CHANCE, ITEM_DARK_SPEAR, target.getPos())
-            real burnAmount = target.getMana() * DARK_SPEAR_MANA_BURN_PERCENTAGE
+            let burnAmount = target.getMana() * DARK_SPEAR_MANA_BURN_PERCENTAGE
 
             // Perform the mana reduction.
             target.burnMana(burnAmount)

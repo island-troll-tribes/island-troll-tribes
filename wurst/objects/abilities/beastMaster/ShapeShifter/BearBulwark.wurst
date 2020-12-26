@@ -1,0 +1,58 @@
+package BearBulwark
+
+// Standard lib Imports:
+import AbilityObjEditing
+import BuffObjEditing
+import ObjectIdGenerator
+import ObjectIds
+
+// Local Imports:
+import LocalObjectIDs
+import ToolTipsUtils
+import StringExtensions
+import ColorUtils
+
+
+let BUFF_ID = compiletime(BUFF_ID_GEN.next())
+
+let COOLDOWN = 45.
+let DURATION = 10.
+let DEFENSE_INCREASE = 4
+let LIFE_REGENERATION_RATE = 5.0
+
+let TT = "" +
+    "Gives friendly nearby units {0} armor as well a {1} extra life regeneration per second."
+    .format(
+        DEFENSE_INCREASE.toString().color(COLOR_GREEN),
+        LIFE_REGENERATION_RATE.toToolTipGreen()
+    )
+    +makeToolTipDuration(DURATION, COOLDOWN)
+
+
+@compiletime function createBearBulwark() returns AbilityDefinitionRoar
+    new BuffDefinition(BUFF_ID, 'Broa') // Druid Roar buff
+        ..setTooltipNormal("Bear's Bulwark")
+        ..setTooltipNormalExtended(
+            "This unit is being boosted by bear's "+
+            "bulwark; gaining armor and life regeneration."
+        )
+        ..setName("Bear's Bulwark")
+        ..setTargetAttachments(1)
+
+    return new AbilityDefinitionRoar(ABILITY_BEAR_BULWARK)
+        ..setAreaofEffect(1, 600.0)
+        ..setBuffs(1, BUFF_ID.toRawCode())
+        ..setButtonPositionNormalX(1)
+        ..setButtonPositionNormalY(1)
+        ..setCooldown(1, COOLDOWN)
+        ..setManaCost(1, 20)
+        ..setDamageIncrease(1, 0.0)
+        ..setDefenseIncrease(1, DEFENSE_INCREASE)
+        ..setLifeRegenerationRate(1, LIFE_REGENERATION_RATE)
+        ..setDurationNormal(1, DURATION)
+        ..setDurationHero(1, DURATION)
+        ..setHotkeyNormal("E")
+        ..setName("Bear's Bulwark")
+        ..setTooltipNormal(1, makeToolTipNorm("E", "Bear's Bulwark"))
+        ..setTooltipNormalExtended(1, TT)
+        ..setButtonPositionTurnOffY(1)

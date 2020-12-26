@@ -82,7 +82,6 @@ class TeleGatherInstance
     int teleAbilityToCast = DUMMY_TELE_GATHER_ID
 
     construct(unit caster, unit teleTarget, real duration, bool allowHerbs)
-        var teleAbilityCastLevel = 1
 
         this.caster = caster
         this.casterEntity = UnitEntity.findForUnit(this.caster)
@@ -96,7 +95,7 @@ class TeleGatherInstance
         //     teleAbilityCastLevel = caster.getAbilityLevel(ABILITY_TELE_GATHER)
         if this.casterEntity instanceof Thief
             teleAbilityToCast = DUMMY_TELE_THIEF_ID
-        InstantDummyCaster.castTarget(caster.getOwner(), teleAbilityToCast, teleAbilityCastLevel, "curse", caster, caster.getPos() + vec2(100,0))
+        InstantDummyCaster.castTarget(caster.getOwner(), teleAbilityToCast, 1, "curse", caster, caster.getPos() + vec2(100,0))
 
         this.duration = duration
         this.teleTarget = teleTarget
@@ -121,8 +120,6 @@ class TeleGatherInstance
                 destroy this
 
     function canGatherItem(int itemType) returns bool
-        if itemType == ITEM_RAW_MEAT
-            return false
 
         // Skip herbs if not herb-gatherer
         if not this.allowHerbs and HERBS.indexOf(itemType) != -1

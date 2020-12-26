@@ -1,5 +1,6 @@
 package TeleportBeacon
 import Building
+import ChannelAbilityPreset
 import LinkedList
 import HashMap
 import ClosureEvents
@@ -7,12 +8,45 @@ import UnitExtensions
 import TerrainUtils
 import SimError
 import LocalObjectIDs
+import Assets
+import ToolTipsUtils
 
 
-constant let ABILITY_TELEPORT_BEACON = 'A042'
-constant let RANGE = [0.0, 700, 1100]
-constant let rangeCheckModFirst = "Doodads\\Cinematic\\GlowingRunes\\GlowingRunes2.mdl"
-constant let mirrorEfx = "Abilities\\Spells\\NightElf\\Blink\\BlinkTarget.mdl"
+constant ABILITY_TELEPORT_BEACON = compiletime(ABIL_ID_GEN.next())
+constant RANGE = [0.0, 700, 1100]
+constant rangeCheckModFirst = Doodads.glowingRunes2
+constant mirrorEfx = Abilities.blinkTarget
+
+constant TOOLTIP_EXT = "Teleports a friendly unit around the Teleportation Beacon 180°."
+
+@compiletime function createTeleportAbility() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_TELEPORT_BEACON, 2, true)
+        ..presetManaCost(lvl -> 0)
+        ..presetCooldown(lvl -> 2.5)
+        ..setHeroAbility(false)
+        ..setItemAbility(false)
+        ..presetTargetTypes(Targettype.UNIT)
+        ..presetTargetsAllowed(lvl -> commaList(
+            TargetsAllowed.friend,
+            TargetsAllowed.organic,
+            TargetsAllowed.ground
+            )
+        )
+        ..setHotkeyNormal("Q")
+        ..setName("Teleport Mirror")
+        ..presetTooltipNormal(lvl -> makeToolTipNormHero("Q", "Teleport Mirror", lvl))
+        ..setTooltipNormalExtended(1, TOOLTIP_EXT + " Can be upgraded by putting a Magic into the teleport beacon.")
+        ..setTooltipNormalExtended(2, TOOLTIP_EXT)
+        ..setIconNormal(Icons.bTNWispSplode)
+        ..setIconResearch(Icons.bTNWispSplode)
+        ..setIconTurnOff(Icons.bTNWispSplode)
+        ..presetButtonPosNormal(0, 0)
+        ..setFollowThroughTime(1, 1.0)
+        ..setArtEffect(Abilities.disenchantSpecialArt)
+        ..setCasterAttachmentPoint("overhead")
+        ..presetOption(Option.VISIBLE, true)
+        ..setCastRange(1, RANGE[1])
+        ..setCastRange(2, RANGE[2])
 
 
 public class TeleportBeacon extends Building
@@ -41,6 +75,7 @@ public class TeleportBeacon extends Building
 
         pickedUp.remove()
         beacon.incAbilityLevel(ABILITY_TELEPORT_BEACON)
+        flashEffect(Abilities.tomeOfRetrainingCaster, beacon, "origin")
 
     private function onSelected()
         let whichPlayer = GetTriggerPlayer()
@@ -88,13 +123,20 @@ public class TeleportBeacon extends Building
         let pos = 2 * beaconPos - targetPos
 
         if GetWorldBounds().contains(pos) and pos.isTerrainWalkable()
+            flashEffect(Abilities.deathPactTarget, beacon, "overhead")
+            flashEffect(Abilities.blinkCaster, target.getPos())
             target
             ..setPos(pos)
             ..setFacing(targetPos.angleTo(beaconPos))
-            flashEffect(mirrorEfx, target, "chest")
+            flashEffect(mirrorEfx, target.getPos())
         else
             beacon.issueImmediateOrder("stop")
             simError(target.getOwner(), "Can't teleport there")
+
+    override function postCreate()
+        super.postCreate()
+
+        getUnit().addAbility(ABILITY_TELEPORT_BEACON)
 
     ondestroy
         for whichPlayer in effects

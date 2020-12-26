@@ -1,0 +1,60 @@
+package PantherProwl
+
+// Standard lib Imports:
+import AbilityObjEditing
+import BuffObjEditing
+import ObjectIdGenerator
+import ObjectIds
+
+// Local Imports:
+import LocalObjectIDs
+import LocalAssets
+import ToolTipsUtils
+
+
+let BUFF_ID = compiletime(BUFF_ID_GEN.next())
+
+let COOLDOWN = 60.
+let DURATION = 20.
+let MS_FACTOR = 0.5
+let TRANSITION_TIME = 2.0
+
+let TT = "" +
+    ("The panther become invisible for {0} seconds but has its movement speed reduced by {1} "+
+    "while being invisible. Has a {2} second fade time.")
+    .format(
+        DURATION.toToolTipLightBlue(),
+        MS_FACTOR.toToolTipOrange(),
+        TRANSITION_TIME.toToolTipLightBlue()
+    )
+    +makeToolTipCooldown(COOLDOWN)
+
+
+@compiletime function createPantherProwl() returns AbilityDefinitionWindWalk
+    new BuffDefinition(BUFF_ID, 'BOwk') // windwalk
+        ..setIconNormal(1, LocalIcons.bTNPantherProwl)
+        ..setTooltipNormal("Prowl")
+        ..setTooltipNormalExtended("This unit is on the Prowl")
+        ..setName("Prowl")
+
+    return new AbilityDefinitionWindWalk(ABILITY_PANTHER_PROWL)
+        ..setIconNormal(LocalIcons.bTNPantherProwl)
+        ..setBuffs(1, BUFF_ID.toRawCode())
+        ..setButtonPositionNormalX(1)
+        ..setButtonPositionNormalY(1)
+        ..setCooldown(1, COOLDOWN)
+        ..setManaCost(1, 20)
+        ..setTransitionTime(1, TRANSITION_TIME)
+        ..setMovementSpeedIncrease(1, -MS_FACTOR)
+        ..setBackstabDamage(1, 0.0)
+        ..setBackstabDamage(1, 0)
+        ..setDurationNormal(1, DURATION)
+        ..setHeroAbility(false)
+        ..setDurationHero(1, DURATION)
+        ..setHotkeyNormal("E")
+        ..setLevels(1)
+        ..setName("Prowl")
+        ..setTooltipNormal(1, makeToolTipNorm("E", "Panther Prowl"))
+        ..setTooltipNormalExtended(1, TT)
+        ..setButtonPositionTurnOffY(1)
+        ..setButtonPositionTurnOffX(1)

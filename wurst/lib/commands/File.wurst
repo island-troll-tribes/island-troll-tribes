@@ -1,0 +1,31 @@
+package File
+
+// Standard library imports:
+import ErrorHandling
+import SaveLoadData
+
+// Third-party imports:
+import Toolkit
+
+init
+    registerToolkitCommand("save") (triggerer, arguments) ->
+        // Arguments should contain filename and contents.
+        if arguments.size() != 3
+            error("Expected two arguments.")
+
+        // Save the data.
+        triggerer.saveData(arguments.get(1), arguments.get(2))
+
+    registerToolkitCommand("load") (triggerer, arguments) ->
+        // Arguments should contain filename and contents.
+        if arguments.size() != 2
+            error("Expected one argument.")
+
+        // Save the data.
+        triggerer.loadData(arguments.get(1)) (status, data) ->
+            switch status
+                case SUCCESS
+                    while data.hasChunk()
+                        triggerer.print("Loaded data: " + data.readChunk())
+                default
+                    triggerer.print("Error occurred: " + status.toString())

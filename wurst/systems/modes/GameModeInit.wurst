@@ -65,29 +65,12 @@ init
         GameMode.find("el").enable()
         GameMode.find("rs").enable()
 
-    new GameMode("team-gold", "tg", "General", "Players on a team share gold in the same pool", false) (mode, args) ->
-        if not gameConfig.isTeamGoldEnabled()
-            gameConfig.setTeamGoldEnabled(true)
-            mode.message("Team gold ".color(COLOR_GOLD) +"enabled")
-        else
-            gameConfig.setTeamGoldEnabled(false)
-            mode.message("Team gold ".color(COLOR_GOLD) + "disabled")
-
-    new GameMode("tribe-owns-buildings", "tb", "General", "Building ownership is transferred to the tribe", false) (mode, args) ->
-        if not gameConfig.isTribeOwnsBuildingsEnabled()
-            gameConfig.setTribeOwnsBuildingsEnabled(true)
-            mode.message("Tribe building ownership".color(ENERGY_COLOR) + " enabled")
-        else
-            gameConfig.setTribeOwnsBuildingsEnabled(false)
-            mode.message("Tribe building ownership".color(ENERGY_COLOR) + " disabled")
-
-
     new GameMode("all", "ar", "General", "Each player is given the same or a random troll, eg: \"-all random\" or \"-all mage\"") (mode, args) ->
         let classArgs = drop(1, args)
         if classArgs.size() > 0 and classArgs.get(0) != "random"
             let trollClass = "UNIT_" + classArgs.joinBy("_").toUpperCase()
             let uid = trollClass.asObjectID()
-            if not trollClass.isRegisteredObjectName() or getTrollClassType(uid) != ClassType.BASE_CLASS
+            if not trollClass.isRegisteredObjectName() or uid.getTrollClassType() != ClassType.BASE_CLASS
                 mode.error("Invalid class selection")
             else
                 gameConfig.setAllTrollEnabled(uid)
@@ -218,8 +201,9 @@ init
     new GameMode("test-mode", "tm", "Testing", "No one can lose, enables test commands") (mode, args) ->
         mode.message("Test mode enabled".color(SPECIAL_COLOR))
         gameConfig.setTestMode(true)
-        registerGameStartEvent() ->
-            enableToolkit()
+        GameMode.onModeSelectionFinish() ->
+            if gameConfig.isTestModeEnabled()
+                enableToolkit()
 
     // legacy modes
     new GameMode("safe", "sa", "Casual", "Stats degrade slower every 4.5 s instead of 3 s", false) (mode, args) ->

@@ -1,0 +1,92 @@
+package SelectDefenses
+
+// Standard library imports:
+import ClosureForGroups
+import HashMap
+import LinkedList
+
+// Third-party imports:
+import ParseKeyboard
+import Setting
+
+// Local imports:
+import LocalObjectIDs
+import PlayerExtensions
+
+let hotkey = new Setting("hotkey-defenses")
+
+// The sentinel value used to disable the hotkey.
+let sentinel = "none"
+
+// The trigger handling the key event per player.
+let triggers = new HashMap<player, trigger>()
+
+// The list of type IDs that qualify as defenses.
+// TODO: Use a tagging system for this.
+let TARGET_IDS = asList(
+    UNIT_ENSNARE_TRAP,
+    UNIT_OMNITOWER
+)
+
+function selectDefenses(player triggerer)
+    Log.debug("Selecting defenses for: " + triggerer.getName())
+
+    // Precompute the set of players the target player can control.
+    let targets = asList(triggerer, triggerer.getTribePlayer())
+
+    // Check every player, which will automatically include the target player.
+    for index = 0 to bj_MAX_PLAYER_SLOTS - 1
+        if players[index].getPlayerAlliance(triggerer, ALLIANCE_SHARED_CONTROL)
+            targets.add(players[index])
+
+    // Collect matches outside of locally restricted execution.
+    let matches = new LinkedList<unit>()
+
+    // Enumerate all matching units
+    for typeID in TARGET_IDS
+        forUnitsOfType(UnitId2String(typeID)) (unit target) ->
+            if targets.has(target.getOwner())
+                matches.add(target)
+
+    // Remove previously selected units.
+    if localPlayer == triggerer
+        ClearSelection()
+
+    // Perform the selection.
+    for target in matches
+        if localPlayer == triggerer
+            SelectUnit(target, true)
+
+    // Clean up the local resources.
+    destroy targets
+    destroy matches
+
+init
+    // Disable this by default.
+    hotkey.make(sentinel, input -> input == sentinel or input.isOSKey())
+
+    // Replace any previous trigger when updating.
+    hotkey.action() (target, hotkey) ->
+        // Look up the previous trigger for the player.
+        let previous = triggers.get(target)
+
+        // Destroy the previous trigger, as necessary.
+        if previous != null
+            previous.destr()
+
+        // Register the new trigger, as necessary.
+        if hotkey != sentinel
+            triggers.put(
+                target,
+                CreateTrigger()
+                    ..registerPlayerKeyPress(
+                        target,
+                        hotkey.toOSKey(),
+                        OSKEY_META.NONE,
+                        true
+                    )
+                    ..addAction(-> selectDefenses(GetTriggerPlayer()))
+            )
+
+    // Initialize the setting immediately.
+    hotkey.initialize()

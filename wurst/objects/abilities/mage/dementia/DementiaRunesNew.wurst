@@ -9,9 +9,6 @@ import LinkedList
 import Orders
 import RegisterEvents
 
-// Third-party imports:
-import Lodash
-
 // Local imports:
 import ColorUtils
 import LocalObjectIDs
@@ -181,11 +178,11 @@ public class DementiaRunesInstance
 
     function updateRunePositions()
         //Calculate orb angles and set it
-        angle offset = angle((360 / runes.size())*DEGTORAD)
-        int i = 0
-        vec3 ownerpos = ownerUnit.getPos3Real()
+        let offset = angle((360 / runes.size())*DEGTORAD)
+        var i = 0
+        let ownerpos = ownerUnit.getPos3Real()
         for r in runes
-            angle indexRuneAngle = runeAngleBase + offset * i.toReal()
+            let indexRuneAngle = runeAngleBase + offset * i.toReal()
             r.setPos(ownerpos.offset2d(indexRuneAngle, ORBIT_DISTANCE))
             r.setFacing(r.pos.angleTo2d(ownerUnit.getPos()))
             i = i + 1
@@ -210,25 +207,25 @@ public class DementiaRunesInstance
 
 
 function onCast()
-    var caster = GetSpellAbilityUnit()
-    var ID = GetSpellAbilityId()
+    let caster = GetSpellAbilityUnit()
+    let abilityID = GetSpellAbilityId()
     Runes runeType = Runes.None
 
-    if ID == ABILITY_INVOKE_RUNE_1
+    if abilityID == ABILITY_INVOKE_RUNE_1
         runeType = Runes.Nel
-    else if ID == ABILITY_INVOKE_RUNE_3
+    else if abilityID == ABILITY_INVOKE_RUNE_3
         runeType = Runes.Lez
-    else if ID == ABILITY_INVOKE_RUNE_2
+    else if abilityID == ABILITY_INVOKE_RUNE_2
         runeType = Runes.Ka
 
 
     if dementiaRunesInstances.has(caster)
         //If caster has instance, add rune
-        var instance = dementiaRunesInstances.get(caster)
+        let instance = dementiaRunesInstances.get(caster)
         instance.addRune(new DementiaRune(instance, runeType))
     else
         //If caster has no instance, create one
-        var instance = new DementiaRunesInstance(caster)
+        let instance = new DementiaRunesInstance(caster)
         dementiaRunesInstances.put(caster, instance)
         instance.addRune(new DementiaRune(instance, runeType))
 

@@ -36,8 +36,7 @@ let ORB_ORBIT_RADIUS = 150.
 let ORB_ORBIT_HEIGHT = 140.
 let ABILITY_ICON = Icons.bTNGolemStormBolt
 let TOOLTIP_NORM = "Earth Guardians"
-let TOOLTIP_EXT = ("Channels to conjure 7 orbs that circle around you, striking enemies that come close for {0} damage and stunning them very "+
-                  "briefly. Subsequent impacts on the same target do {1} damage. Has {2} seconds cooldown.").format(ORB_IMPACT_DAMAGE.toToolTipRed(),
+let TOOLTIP_EXT = ("Channels to conjure 7 orbs that circle around you, striking enemies that come close for {0} damage. Subsequent impacts on the same target do {1} damage. Has {2} seconds cooldown.").format(ORB_IMPACT_DAMAGE.toToolTipRed(),
                   ORB_IMPACT_DAMAGE_SAMETARGET.toToolTipRed(), COOLDOWN.toToolTipLightBlue())
 
 let ORB_EFFECT_PATH = Abilities.ancientProtectorMissile
@@ -145,7 +144,7 @@ class EarthGuardianOrb
                 targetPos = targetUnit.getPos3Real()
 
         //Limit movement by speed
-        var oldpos = projectile.getPos3()
+        let oldpos = projectile.getPos3()
         vec3 newpos
         if (oldpos.distanceTo(targetPos) <= ORB_SPEED * ORB_PERIODICINTERVAL_SPAWN)
             newpos = targetPos
@@ -168,7 +167,7 @@ class EarthGuardianOrb
                 targetUnit = null
 
     function tryToFindTarget()
-        var curPos = this.projectile.getPos()
+        let curPos = this.projectile.getPos()
         targetUnit = null
         forUnitsInRange(curPos, ORB_ATTACK_RADIUS) u ->
             if isValidTarget(u)
@@ -206,15 +205,11 @@ class EarthGuardianOrb
                 UnitDamageTarget(ownerUnit, targetUnit, ORB_IMPACT_DAMAGE_SAMETARGET, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
             else
                 UnitDamageTarget(ownerUnit, targetUnit, ORB_IMPACT_DAMAGE, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
-            new DummyCaster()
-                ..owner(ownerUnit.getOwner())
-                ..origin(ownerUnit.getPos())
-                ..castTarget(DUMMY_STUN_ABILITY_ID, 1, Orders.firebolt, targetUnit)
             new DummyCaster()                 ..owner(ownerUnit.getOwner())
                 ..origin(ownerUnit.getPos())
                 ..castTarget(DUMMY_BUFF_ABILITY_ID, 1, Orders.acidbomb, targetUnit)
 
-        var efx = addEffect(ORB_IMPACT_EFFECT, projectile.getPos3())
+        let efx = addEffect(ORB_IMPACT_EFFECT, projectile.getPos3())
         efx.setScale(1)
         doAfter(3) ->
             efx.destr()
@@ -243,7 +238,7 @@ class EarthGuardianInstance
         real channeledTime = 0
         real _lastOrbCreatedTimestamp = 0
         orbLoopDuration = 0
-        real orb_interval = ORB_SPAWN_INTERVAL
+        let orb_interval = ORB_SPAWN_INTERVAL
         isChanneling = true
 
         if not overcharged
@@ -259,7 +254,7 @@ class EarthGuardianInstance
                     orbCreationLoopPeriodic.stop()
         else
             //Create orbs instantly if overcharged
-            int count = (CHANNEL_DURATION/ORB_SPAWN_INTERVAL).round()
+            let count = (CHANNEL_DURATION/ORB_SPAWN_INTERVAL).round()
             for i = 1 to count
                 orbs.push(new EarthGuardianOrb(ownerUnit, this, caster.getPos().withTerrainZ(ORB_ORBIT_HEIGHT)))
 
@@ -294,7 +289,7 @@ class EarthGuardianInstance
         //When we have angle offset amount per orb, apply it to orbs
         int i = 0
         for o in orbs
-            angle indexOrbAngle = orbAngle + orbOffset * i.toReal()
+            let indexOrbAngle = orbAngle + orbOffset * i.toReal()
             if (o.targetUnit == null)
                 o.targetPos = ownerUnit.getPos().withTerrainZ(ORB_ORBIT_HEIGHT).offset2d(indexOrbAngle, ORB_ORBIT_RADIUS)
             o.updateLoop()
@@ -311,20 +306,20 @@ class EarthGuardianInstance
                 instances.remove(ownerUnit)
 
 function onCast()
-    var caster = GetSpellAbilityUnit()
+    let caster = GetSpellAbilityUnit()
 
     //Destroy previous instance
     if instances.has(caster)
-        var prev_instance = instances.get(caster)
+        let prev_instance = instances.get(caster)
         prev_instance.orbLoopPeriodic.stop()
 
 
-    var earthGuardian = new EarthGuardianInstance(caster, consumeOvercharge(caster))
+    let earthGuardian = new EarthGuardianInstance(caster, consumeOvercharge(caster))
     instances.put(caster, earthGuardian)
 
 function onEndCast()
     if GetSpellAbilityId() == ABILITY_ID
-        var caster = GetSpellAbilityUnit()
+        let caster = GetSpellAbilityUnit()
         var instance = instances.get(caster)
         instance.isChanneling = false
 

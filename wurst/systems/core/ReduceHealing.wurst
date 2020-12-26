@@ -4,7 +4,6 @@ package ReduceHealing
 import Assets
 import ClosureTimers
 import HashSet
-import EventHelper
 import LinkedList
 import MapBounds
 import OnUnitEnterLeave
@@ -23,7 +22,7 @@ import Hints
 
 // The description of this system, accessible from the quest log.
 let DESCRIPTION = "" +
-    "Healing is a vital apsect of combat for trolls. Their bodes have "        +
+    "Healing is a vital apsect of combat for trolls. Their bodies have "       +
     "adapted to support rapid regeneration, allowing them to continue "        +
     "fighting even after sustaining grievous wounds. However, a troll must "   +
     "fuel this metabolic process by consuming copious amounts of food. "       +
@@ -68,9 +67,10 @@ bool array hinted
 State array states
 
 // Displays a hint to a player the first their unit is affected.
+// TODO: Use a centralized system for displaying contextual hints.
 function player.displayHint()
     // Exit if the player has hints disabled.
-    if not Hint.playersF.containsPlayer(this)
+    if not Hint.isEnabled(this)
         return
 
     // Exit if the player has already seen this hint.

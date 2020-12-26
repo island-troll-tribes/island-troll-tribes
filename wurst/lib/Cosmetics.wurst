@@ -1,0 +1,277 @@
+package Cosmetics
+
+// Standard library imports:
+import BuffObjEditing
+import ClosureTimers
+import HashMap
+import HashSet
+import LinkedList
+import OnUnitEnterLeave
+
+// Third-party imports:
+import ChatCommands
+import Lodash
+import LodashExtensions
+import Transformation
+
+// Local imports:
+import Classes
+import ColorUtils
+import LocalObjectIDs
+import StringExtensions
+
+// The interval, in seconds, that a unit may have cosmetics applied to it after
+// entering or transforming. This is limited so that cosmetic changes can not be
+// used to confuse the enemy by changing appearance during a battle.
+@configurable let TIMEOUT = 10.
+
+// The base message used for notifying users of the cosmetic.
+let MSG = compiletime(
+    asList(
+        "Congratulations on unlocking a skin for this class! Type".color(GENERAL_COLOR),
+        "-{0}".color(ENERGY_COLOR),
+        "within the next".color(GENERAL_COLOR),
+        TIMEOUT.toInt().toString().color(HIGHLIGHT_COLOR),
+        "seconds to use.".color(GENERAL_COLOR)
+    ).joinBy(" ")
+)
+
+public abstract class Cosmetic
+    // The name of the cosmetic, used to reference it via command.
+    string name
+
+    // The global registry of all cosmetics.
+    static let cosmetics = new OwnedIterableMap<string, thistype>()
+
+    // The set of new units per player that can still be modified.
+    // TODO: Use a utility for directly iterating over players.
+    static let recent = range(bj_MAX_PLAYER_SLOTS)
+        .toList()
+        .map(
+            (_, index) -> new Pair(players[index], new OwnedLinkedList<unit>())
+        )
+        .fromPairs()
+
+    // The pending callback per unit.
+    static let callbacks = new HashMap<unit, CallbackSingle>()
+
+    // The names of players this feature is enabled for.
+    HashSet<string> enabled
+
+    construct(string name)
+        // Use a condensed name for the registry.
+        this.name = name.toLowerCase().replace(" ", "-")
+
+        // Update the global registry.
+        cosmetics.put(this.name, this)
+
+        // Register a command used to apply the cosmetic to new units.
+        registerCommandAll(this.name) (triggerer, arguments) ->
+            onCommand(triggerer, arguments)
+
+        // Enable skins for local testing automatically.
+        register("Local Player")
+
+    function register(vararg string names)
+        for name in names
+            enabled.add(name.toLowerCase())
+
+    // Checks if a player is enabled for the cosmetic, by name.
+    function isEnabled(string name) returns bool
+        return enabled.has(name.toLowerCase())
+
+    // Checks if a player is enabled for the cosmetic.
+    function isEnabled(player target) returns bool
+        return isEnabled(target.getName())
+
+    // Applies the cosmetic change for the target.
+    abstract function apply(unit target)
+
+    // Undoes the cosmetic change for the target.
+    abstract function remove(unit target)
+
+    // Checks whether the cosmetic can be applied to the given target.
+    abstract function isEnabled(unit target) returns boolean
+
+    // Handles the logic of enabling cosmetics for a new unit.
+    static function onEnter(unit target)
+        // Ignore units for non-players.
+        if not target.getOwner().isIngame()
+            return
+
+        // Begin tracking the new unit.
+        recent.get(target.getOwner()).add(target)
+
+        // Schedule undoing the above operation.
+        doAfter(TIMEOUT) ->
+            // Cease allowing the unit as a targeet
+            recent.get(target.getOwner()).remove(target)
+
+            // Stop tracking this callback.
+            callbacks.remove(target)
+
+        // Compute the set of applicable skins.
+        let usable = cosmetics
+            .values()
+            .lodashFilter(cosmetic -> cosmetic.isEnabled(target))
+
+        // Notify the user of each applicable cosmetic.
+        for cosmetic in usable
+            target.getOwner().print(MSG.format(cosmetic.name), TIMEOUT)
+
+        // Clean up the local state.
+        destroy usable
+
+    // Cancels any pending callback for a unit.
+    static function onExit(unit target)
+        // Look up the pending callback for the target.
+        let callback = callbacks.get(target)
+
+        // Ignore a unit not being tracked as recent.
+        if callback == null
+            return
+
+        // Execute the pending operation.
+        callback.call()
+
+        // Destroy the callback as it is no longer scheduled.
+        destroy callback
+
+    // Handles the command used to apply a cosmetic to new units.
+    static function onCommand(player triggerer, LinkedList<string> arguments)
+        // Look up the cosmetic being targeted.
+        let cosmetic = cosmetics.get(arguments.dequeue())
+
+        // Exit if the user is not enabled for the cosmetic.
+        if not cosmetic.isEnabled(triggerer)
+            return
+
+        // Compute the set of units that can be modified.
+        let targets = recent
+            .get(triggerer)
+            .lodashFilter(target -> cosmetic.isEnabled(target))
+
+        // Apply the cosmetic to each match.
+        for target in targets
+            cosmetic.apply(target)
+
+public class Attachment extends Cosmetic
+    // The model used for the attachment.
+    string model
+
+    // The attachment point used for the model.
+    string point
+
+    // The IDs for the dummy ability and buff.
+    buffTuple ids
+
+    // TODO: Allow this to be built incrementally instead of passing all
+    //       parameters at once.
+    construct(
+        string name,
+        string tooltip,
+        string icon,
+        string model,
+        string point
+    )
+        // Forward the call upwards.
+        super(name)
+
+        // Cache the attachment-specific parameters.
+        this.model = model
+        this.point = point
+
+        if compiletime
+            // Create the dummy ability and buff.
+            ids = createDummyBuffObject(
+                name,
+                tooltip,
+                icon,
+                model,
+                point
+            )
+        else
+            // Use a sentinel value to represent the need to fill this in.
+            ids = buffTuple(0, 0)
+
+    function setIDs(buffTuple ids)
+        this.ids = ids
+
+    function getIDs() returns buffTuple
+        return ids
+
+    override function apply(unit target)
+        target.addAbility(ids.abilId)
+
+    override function remove(unit target)
+        target.removeAbility(ids.abilId)
+
+    // An attachment can be added to any unit.
+    override function isEnabled(unit target) returns boolean
+        return true
+
+// This handler is responsible for allowing players to transform new units
+// using the BlzSetUnitSkin native. This function does not change the type ID
+// of the unit, which facilitates operations that depend on that. However, it
+// removes any art effects currently on the target and those are not refreshed
+// unless the source of those effects is refreshed. For example, the visual aura
+// associated with Immolation will disappear, only reappearing if Immolation is
+// toggled. The system could instead use the transformation library, which does
+// not have this problems, if the various systems that check exact type IDs are
+// corrected to treat original units and their skins the same. This would also
+// require that object definitions for the skins be based directly on the origin
+// unit definition in order to guarantee that all fields other than appearance
+// remain synced.
+// TODO: Use the transformation library instead of BlzSetUnitSkin.
+public class Skin extends Cosmetic
+    // The skins applied per unit. Each unit is assigned a mapping of original
+    // unit type ID to the type ID for the skin selected for that form.
+    static let skins = new HashMap<unit, HashMap<int, int>>()
+
+    // The type ID for the unit that this skin applies to.
+    integer originID
+
+    // The type ID for the unit that holds the new skin.
+    integer targetID
+
+    construct(integer originID, integer targetID, string name)
+        // Forward the call upwards.
+        super(name)
+
+        // Initialize the state.
+        this.originID = originID
+        this.targetID = targetID
+        this.enabled = new HashSet<string>()
+
+    override function isEnabled(unit target) returns bool
+        return originID == target.getTypeId()
+
+    override function apply(unit target)
+        // Transform the unit to impart the custom skin.
+        BlzSetUnitSkin(target, targetID)
+
+        // Refresh the ability responsible for hero glow, which is not
+        // attached properly automatically following a skin change.
+        if target.hasAbility(ABILITY_HERO_GLOW)
+            target.removeAbility(ABILITY_HERO_GLOW)
+            target.addAbility(ABILITY_HERO_GLOW)
+
+    override function remove(unit target)
+        // Transform the unit to impart the custom skin.
+        BlzSetUnitSkin(target, originID)
+
+        // Refresh the ability responsible for hero glow, which is not
+        // attached properly automatically following a skin change.
+        if target.hasAbility(ABILITY_HERO_GLOW)
+            target.removeAbility(ABILITY_HERO_GLOW)
+            target.addAbility(ABILITY_HERO_GLOW)
+
+init
+    // Register the callback used to handle cosmetics for new units.
+    onEnter() ->
+        Cosmetic.onEnter(getEnterLeaveUnit())
+
+    // Register the callback used to handle skins for sub-classes.
+    registerAfterEffect() (unit target, int unitID) ->
+        if target.getTrollClassType() != unitID.getTrollClassType()
+            Cosmetic.onEnter(target)

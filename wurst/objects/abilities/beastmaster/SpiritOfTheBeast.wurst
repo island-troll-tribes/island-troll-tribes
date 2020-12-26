@@ -2,6 +2,7 @@ package SpiritOfTheBeast
 
 // Standard Library Imports:
 import AbilityObjEditing
+import BuffObjEditing
 import ObjectIds
 import Assets
 
@@ -10,23 +11,32 @@ import LocalObjectIDs
 
 let ICON = Icons.bTNEnchantedBears
 let TOOLTIP = "Spirit of the Beast"
-let TOOLTIP_EXT = "Animals are more at ease around the Beastmaster and move slowly. This makes them easier to hunt."
+let TOOLTIP_EXT = ""+
+    "Animals are more at ease around the Beastmaster and move slowly. "+
+    "This makes them easier to hunt."
+
+@compiletime function createSpiritBeastBuff()
+    new BuffDefinition(BUFF_ATTRACTION, 'Basl') // Tornado Slow Aura
+        ..setIconNormal(1, Icons.bTNBerserk)
+        ..setTooltipNormal("Attraction")
+        ..setTooltipNormalExtended("This unit is attracted to the beastmaster")
+        ..setArtTarget(Abilities.generalAuraTarget)
 
 function createSpiritBeastSpell(int abilId) returns AbilityDefinitionUnholyAuracreep
     return new AbilityDefinitionUnholyAuracreep(abilId)
-        ..setAreaofEffect(1, 400)
+        ..presetAreaofEffect(lvl -> 400)
         ..setIconNormal(ICON)
-        ..setBuffs(1, BUFF_ATTRACTION.toRawCode())
+        ..presetBuffs(lvl -> BUFF_ATTRACTION.toRawCode())
         ..setCheckDependencies(false)
-        ..setMovementSpeedIncrease(1, -0.4)
-        ..setLifeRegenerationIncrease(1, 0)
+        ..presetMovementSpeedIncrease(lvl -> -0.4)
+        ..presetLifeRegenerationIncrease(lvl -> 0)
         ..setHeroAbility(true)
         ..setLevels(1)
         ..setName("Spirit of the Beast")
         ..setRace(Race.Nightelf)
         ..setArtTarget("")
         ..setTargetAttachmentPoint("")
-        ..setTargetsAllowed(1, commaList(
+        ..presetTargetsAllowed(lvl -> commaList(
                 TargetsAllowed.enemies,
                 TargetsAllowed.ground,
                 TargetsAllowed.nonhero,
@@ -34,8 +44,9 @@ function createSpiritBeastSpell(int abilId) returns AbilityDefinitionUnholyAurac
                 TargetsAllowed.vulnerable
             )
         )
-        ..setTooltipNormal(1, TOOLTIP)
-        ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+        ..presetTooltipNormal(lvl -> TOOLTIP)
+        ..presetTooltipNormalExtended(lvl -> TOOLTIP_EXT)
+
 @compiletime function createSpiritBeastBase() returns AbilityDefinitionUnholyAuracreep
     return createSpiritBeastSpell(ABILITY_SPIRIT_BEAST)
         ..setButtonPositionNormalX(1)

@@ -4,52 +4,93 @@ package DementiaRunesNew
 import Assets
 import ChannelAbilityPreset
 import HashMap
-import ClosureTimers
 import LinkedList
 import Orders
 import RegisterEvents
+import TimerUtils
 
 // Local imports:
 import ColorUtils
 import LocalObjectIDs
 import ToolTipsUtils
+import LocalAssets
+import StringExtensions
 
 let MANACOST = 15
 let COOLDOWN  = 20.
 
-let TOOLTIP_NORM_NEL = "Summon Nel Rune"
-let TOOLTIP_NORM_KA  = "Summon Ka Rune"
-let TOOLTIP_NORM_LEZ = "Summon Lez Rune"
-
 let COOLDOWN_TOOLTIP = "Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
 let RUNE_TOOLTIP = "They circle the caster until activated and when activated they seek a nearby enemy and blast it with their element. 5 runes at a time max. "
+
+let RUNE_NAME_BASE = "Summon {0} Rune"
+
+let TOOLTIP_NEL = RUNE_NAME_BASE.format("Nel".color(COLOR_GREEN))
+let TOOLTIP_KA  = RUNE_NAME_BASE.format("Ka".color(COLOR_RED))
+let TOOLTIP_LEZ = RUNE_NAME_BASE.format("Lez".color(COLOR_TURQUOISE))
 
 let TOOLTIP_EXT_NEL = "Summons a {0}Nel|r rune from dementia space. {0}Nel|r runes are commonly used in crippling spells. ".format(COLOR_GREEN.toColorString())+RUNE_TOOLTIP+COOLDOWN_TOOLTIP
 let TOOLTIP_EXT_KA  = "Summons a {0}Ka|r rune from dementia space. {0}Ka|r runes are commonly used in fire spells. ".format(COLOR_RED.toColorString())+RUNE_TOOLTIP+COOLDOWN_TOOLTIP
 let TOOLTIP_EXT_LEZ = "Summons a {0}Lez|r rune from dementia space. {0}Lez|r runes are commonly used in frost spells. ".format(COLOR_TEAL.toColorString())+RUNE_TOOLTIP+COOLDOWN_TOOLTIP
 
-let ICON_NEL = "ReplaceableTextures\\CommandButtons\\BTNNelRune.blp"
-let ICON_KA  = "ReplaceableTextures\\CommandButtons\\BTNKaRune.blp"
-let ICON_LEZ = "ReplaceableTextures\\CommandButtons\\BTNLezRune.blp"
-
-let LOOP_INTERVAL      = 0.03125
 let ORBIT_ANGULARSPEED = 80.
 let ORBIT_DISTANCE     = 170.
 let MAX_RUNE_COUNT     = 5
 
 // Spells Casted by Runes
-let RUNE_ABILITY_FIRE_BOLT    = 'A07C'
-let RUNE_ABILITY_BURN         = 'A064'
-let RUNE_ABILITY_NULL_DAMAGE  = 'A01Y'
-let RUNE_ABILITY_DRUNKEN_HAZE = 'A03E'
-let RUNE_ABILITY_FROST_NOVA   = 'A02A'
+let RUNE_ABILITY_BURN         = compiletime(ABIL_ID_GEN.next())
+let RUNE_ABILITY_FIRE_BOLT    = compiletime(ABIL_ID_GEN.next())
+let RUNE_ABILITY_NULL_DAMAGE  = compiletime(ABIL_ID_GEN.next())
+let RUNE_ABILITY_DRUNKEN_HAZE = ABILITY_DRUNK_POTION
+let RUNE_ABILITY_FROST_NOVA   = ABILITY_METRONOME_FROSTNOVA
 
-let RUNE_LEZ_EFFECT_PATH = Doodads.glowingRunes4
-let RUNE_NEL_EFFECT_PATH = Doodads.glowingRunes6
-let RUNE_KA_EFFECT_PATH  = Doodads.glowingRunes0
+let UNIT_LOCUST_LEZ = compiletime(UNIT_ID_GEN.next())
+let UNIT_LOCUST_NEL = compiletime(UNIT_ID_GEN.next())
+let UNIT_LOCUST_KA = compiletime(UNIT_ID_GEN.next())
 
 let dementiaRunesInstances = new HashMap<unit, DementiaRunesInstance>()
 let runeSpellsList = new LinkedList<DementiaRuneSpell>()
+
+@compiletime function createRuneAbilities()
+
+    new AbilityDefinitionFirelordSoulBurn(RUNE_ABILITY_BURN)
+        ..setBuffs(1, "BNso")
+        ..setManaCost(1, 0)
+        ..setDamageAmount(1, 2.0)
+        ..setDamagePenalty(1, 0.0)
+        ..setDurationNormal(1, 5.0)
+        ..setEditorSuffix("Ka Rune Spell Soul Burn")
+        ..setHeroAbility(false)
+        ..setDurationHero(1, 5.0)
+        ..setLevels(1)
+        ..setName("Burn")
+        ..setTargetsAllowed(1, "air,enemies,ground,neutral,organic")
+
+
+    new AbilityDefinitionThunderBoltCreep(RUNE_ABILITY_FIRE_BOLT)
+        ..setManaCost(1, 0)
+        ..setDamage(1, 25.0)
+        ..setDurationNormal(1, 7.0)
+        ..setEditorSuffix("Ka Rune Spell Thunder Bolt")
+        ..setDurationHero(1, 1.0)
+        ..setMissileArc(0.05)
+        ..setMissileArt(Abilities.phoenix_Missile)
+        ..setName("Firebolt")
+        ..setCastRange(1, 1000.0)
+
+    new AbilityDefinitionCripplecreep(RUNE_ABILITY_NULL_DAMAGE)
+        ..setButtonPositionNormalY(1)
+        ..setCheckDependencies(false)
+        ..setCooldown(1, 45.0)
+        ..setManaCost(1, 20)
+        ..setMovementSpeedReduction(1, 0.1)
+        ..setAttackSpeedReduction(1, 0.25)
+        ..setDurationNormal(1, 30.0)
+        ..setHotkeyNormal("R")
+        ..setName("Null Damage")
+        ..setRequirements("")
+        ..setRequirementsLevels("")
+        ..setTooltipNormal(1, "Nel Rune Spell")
+
 
 public enum Runes
     Nel
@@ -67,6 +108,34 @@ public class DementiaRuneSpell
         this.spellId = spellId
         this.orderId = orderId
 
+function createLocustRune(int unitId) returns UnitDefinition
+    return new UnitDefinition(unitId, UnitIds.locust)
+        ..setManaInitialAmount(3000)
+        ..setManaMaximum(3000)
+        ..setScalingValue(1.5)
+        ..setMovementHeightMinimum(0.0)
+        ..setMovementHeight(0.0)
+        ..setSightRadiusNight(500)
+        ..setSightRadiusDay(500)
+        ..setShadowImageUnit("")
+        ..setAttacksEnabled(0)
+
+@compiletime function createLocustRunesDefinition()
+    createLocustRune(UNIT_LOCUST_LEZ)
+        ..setName("Lez Rune")
+        ..setModelFile(Doodads.glowingRunes4)
+        ..setNameEditorSuffix("(Wurst)")
+
+    createLocustRune(UNIT_LOCUST_NEL)
+        ..setName("Ka Rune")
+        ..setModelFile(Doodads.glowingRunes6)
+        ..setNameEditorSuffix("(Wurst)")
+
+    createLocustRune(UNIT_LOCUST_KA)
+        ..setName("Nel Rune")
+        ..setModelFile(Doodads.glowingRunes0)
+        ..setNameEditorSuffix("(Wurst)")
+
 function createInvokeRune(int newId) returns ChannelAbilityPreset
     return new ChannelAbilityPreset(newId, 1, true)
         ..setFollowThroughTime(1, 1)
@@ -79,38 +148,37 @@ function createInvokeRune(int newId) returns ChannelAbilityPreset
 @compiletime function createNelRune()
     createInvokeRune(ABILITY_INVOKE_RUNE_1)
         ..presetButtonPosNormal(1, 0)
-        ..setTooltipNormal(1, makeToolTipNorm("W", TOOLTIP_NORM_NEL))
+        ..setTooltipNormal(1, makeToolTipNorm("W", TOOLTIP_NEL))
         ..setTooltipNormalExtended(1, TOOLTIP_EXT_NEL)
         ..setHotkeyNormal("W")
-        ..setName(TOOLTIP_NORM_NEL)
-        ..setIconNormal(ICON_NEL)
+        ..setName(TOOLTIP_NEL)
+        ..setIconNormal(LocalIcons.bTNNelRune)
         ..setBaseOrderID(1, "ambush")
 
 @compiletime function createKaRune()
     createInvokeRune(ABILITY_INVOKE_RUNE_2)
         ..presetButtonPosNormal(2, 0)
-        ..setTooltipNormal(1, makeToolTipNorm("E", TOOLTIP_NORM_KA))
+        ..setTooltipNormal(1, makeToolTipNorm("E", TOOLTIP_KA))
         ..setTooltipNormalExtended(1, TOOLTIP_EXT_KA)
         ..setHotkeyNormal("E")
-        ..setName(TOOLTIP_NORM_KA)
-        ..setIconNormal(ICON_KA)
+        ..setName(TOOLTIP_KA)
+        ..setIconNormal(LocalIcons.bTNKaRune)
         ..setBaseOrderID(1, "ancestralspirit")
 
 @compiletime function createLezRune()
     createInvokeRune(ABILITY_INVOKE_RUNE_3)
         ..presetButtonPosNormal(3, 0)
-        ..setTooltipNormal(1, makeToolTipNorm("R", TOOLTIP_NORM_LEZ))
+        ..setTooltipNormal(1, makeToolTipNorm("R", TOOLTIP_LEZ))
         ..setTooltipNormalExtended(1, TOOLTIP_EXT_LEZ)
         ..setHotkeyNormal("R")
-        ..setName(TOOLTIP_NORM_LEZ)
-        ..setIconNormal(ICON_LEZ)
+        ..setName(TOOLTIP_LEZ)
+        ..setIconNormal(LocalIcons.bTNLezRune)
         ..setBaseOrderID(1, "ancestralspirittarget")
 
 
 class DementiaRune
     DementiaRunesInstance instance
     Runes runeType
-    //effect FX = null
     unit dummy
     vec3 pos
 
@@ -124,13 +192,9 @@ class DementiaRune
             dummy = createUnit(instance.ownerUnit.getOwner(), UNIT_LOCUST_NEL, pos, angle(0))
         else if this.runeType == Runes.Ka
             dummy = createUnit(instance.ownerUnit.getOwner(), UNIT_LOCUST_KA, pos, angle(0))
-        //FX.setScale(1.5)
-        //FX.setTimeScale(0.1)
 
     function setPos(vec3 newpos)
         pos = newpos
-        //Adjust orbs a little lower since the SFX looks like its higher
-        //FX.setPos(pos - vec3(0,0,75))
         dummy.setPos(pos.toVec2())
         dummy.setFlyHeight(50, 600)
 
@@ -145,18 +209,16 @@ class DementiaRune
         else
             return runeSpellsList.get(4)
 
-
     ondestroy
         if instance.runes.has(this)
             instance.runes.remove(this)
         dummy.remove()
-        //FX.destr()
 
 public class DementiaRunesInstance
+    use TimedLoop
     angle runeAngleBase
     unit ownerUnit
     real elapsedLifetime
-    CallbackPeriodic runeLoop = null
 
     LinkedList<DementiaRune> runes
 
@@ -165,16 +227,15 @@ public class DementiaRunesInstance
         elapsedLifetime = 0
         runeAngleBase = angle(0)
         runes = new LinkedList<DementiaRune>()
-        startRuneLoop()
+        startTimedLoop()
 
-    function startRuneLoop()
-        runeLoop = doPeriodically(LOOP_INTERVAL) runeUpdateLoop ->
-            if ownerUnit.isAlive()
-                elapsedLifetime += LOOP_INTERVAL
-                runeAngleBase = angle(runeAngleBase.radians() + LOOP_INTERVAL * ORBIT_ANGULARSPEED * DEGTORAD)
-                updateRunePositions()
-            else
-                destroy this
+    override function onTimedLoop()
+        if ownerUnit.isAlive()
+            elapsedLifetime += ANIMATION_PERIOD
+            runeAngleBase = angle(runeAngleBase.radians() + ANIMATION_PERIOD * ORBIT_ANGULARSPEED * DEGTORAD)
+            updateRunePositions()
+        else
+            stopTimedLoopAndDestroy()
 
     function updateRunePositions()
         //Calculate orb angles and set it
@@ -194,10 +255,7 @@ public class DementiaRunesInstance
             destroy runes.get(0)
             runes.add(rune)
 
-
     ondestroy
-        destroy runeLoop
-
         runes.forEach(r -> destroy r)
         destroy runes
 

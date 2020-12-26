@@ -1,0 +1,57 @@
+package WolfHunger
+
+// Standard lib Imports:
+import AbilityObjEditing
+import BuffObjEditing
+import ObjectIdGenerator
+import ObjectIds
+import Assets
+
+// Local Imports:
+import LocalObjectIDs
+import ToolTipsUtils
+
+
+let BUFF_ID = compiletime(BUFF_ID_GEN.next())
+
+let COOLDOWN = 30.
+let DURATION = 5.
+let LIFE_STEAL_AMOUNT = 0.75
+
+let TT = "" +
+    "The Wolf's hunger allows him to lifesteal for {0} of his damage dealt for {1} seconds."
+    .format(
+        LIFE_STEAL_AMOUNT.toToolTipRed(),
+        DURATION.toToolTipLightBlue()
+    )
+    +makeToolTipCooldown(COOLDOWN)
+
+
+@compiletime function createWolfHunger() returns AbilityDefinitionItemPotionVampirism
+    new BuffDefinition(BUFF_ID, 'BIpv') // Potion vampiric buff
+        ..setIconNormal(1, Icons.bTNVampiricAura)
+        ..setTooltipNormal("Wolf's Hunger")
+        ..setTooltipNormalExtended("The wolf's hunger allows him to life steal")
+        ..setName("Wolf's Hunger")
+        ..setArtTarget(Abilities.vampPotionCaster)
+        ..setTargetAttachmentPoint0("origin")
+
+    return new AbilityDefinitionItemPotionVampirism(ABILITY_WOLF_HUNGER)
+        ..setIconNormal(Icons.bTNVampiricAura)
+        ..setBuffs(1, BUFF_ID.toRawCode())
+        ..setButtonPositionNormalX(1)
+        ..setButtonPositionNormalY(1)
+        ..setArtCaster("")
+        ..setCasterAttachmentPoint("")
+        ..setCooldown(1, COOLDOWN)
+        ..setManaCost(1, 20)
+        ..setDamageBonus(1, 0.0)
+        ..setLifeStealAmount(1, LIFE_STEAL_AMOUNT)
+        ..setDurationNormal(1, DURATION)
+        ..setDurationHero(1, DURATION)
+        ..setHotkeyNormal("E")
+        ..setItemAbility(false)
+        ..setName("Wolf's Hunger")
+        ..setTooltipNormal(1, makeToolTipNorm("E", "Wolf's Hunger"))
+        ..setTooltipNormalExtended(1, TT)
+        ..setButtonPositionTurnOffY(1)

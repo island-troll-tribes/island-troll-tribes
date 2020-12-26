@@ -1,19 +1,21 @@
 package DepressionOrb
+
+// Standard lib Imports:
+import Assets
 import RegisterEvents
 import Orders
 import ClosureTimers
 import ClosureForGroups
-import LocalObjectIDs
 import DummyCaster
-import Icons
-import Lodash
-import ToolTipsUtils
 import ChannelAbilityPreset
 
-// @configurable constant int ABILITY_ID = 'A04R' // Old GUI Depression Orb
-// @configurable constant int DUMMY_ABILITY_ID = 'A025' // Old GUI Depress Spell
-@configurable constant int DUMMY_ID = UNIT_LOCUST
-@configurable constant int BUFF_ID = 'B099'
+// Third party Imports:
+import Lodash
+
+// Local Imports:
+import ToolTipsUtils
+import LocalObjectIDs
+
 @configurable constant real INTERVAL = 0.05
 @configurable constant real DURATION = 3
 @configurable constant real TURN_SPEED = 360
@@ -34,6 +36,20 @@ let TOOLTIP_EXTENDED = ("The Hypnotist uses powerful magic to create an wisp of 
                        "and it depresses all who get near it. Depressed opponents have slightly reduced speed and experience severe energy shortages. "+
                        "Has {0} seconds cooldown.").format(COOLDOWN.toToolTipLightBlue())
 
+let DUMMY_ID = compiletime(ABIL_ID_GEN.next())
+
+@compiletime function createDummyUnitProjectile()
+    new UnitDefinition(DUMMY_ID, UnitIds.locust)
+        ..setTintingColorBlue(0)
+        ..setModelFile(Units.wisp1)
+        ..setTintingColorGreen(0)
+        ..setManaInitialAmount(3000)
+        ..setManaMaximum(3000)
+        ..setScalingValue(3.0)
+        ..setMovementHeight(45.0)
+        ..setTintingColorRed(0)
+        ..setShadowImageUnit("")
+        ..setAttacksEnabled(0)
 
 class DepressionOrb extends ChannelAbilityPreset
     construct(int newAbility, string hotkey, Pair<int , int> buttonPos)

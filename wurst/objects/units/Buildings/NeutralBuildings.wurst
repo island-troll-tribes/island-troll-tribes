@@ -1,0 +1,135 @@
+package NeutralBuildings
+
+// Standard lib Imports:
+import Assets
+import ChannelAbilityPreset
+import LinkedList
+
+// Local Imports:
+import LocalObjectIDs
+import LocalAssets
+import ObjEditingUtils
+
+
+// The list of abilities that all buildings have.
+let abilities = asList(
+    LocalAbilityIds.inventoryBuilding,
+    LocalAbilityIds.selectUnit,
+    ABILITY_UNLOAD_ITEMS,
+    AbilityIds.invulnerable
+)
+
+
+// Add the given abilities to the standard list, rather than overwriting.
+function BuildingDefinition.addAbilities(LinkedList<int> additional)
+    this.setNormalAbilities(commaList(abilities, additional))
+
+function createNeutralBuildings(int unitId) returns BuildingDefinition
+    return new BuildingDefinition(unitId, UnitIds.goblinammodump)
+        ..setNormalAbilities(commaList(abilities))
+        ..setCollisionSize(72.0)
+        ..setHitPointsMaximumBase(500000)
+        ..setPathingMap(PathingTextures.simpleSolid8x8)
+        ..setRace(Race.Undead)
+        ..setHitPointsRegenerationRate(1000.0)
+        ..setHitPointsRegenerationType("always")
+        ..setSelectionScale(3.0)
+        ..setTargetedAs("structure,ward")
+        ..setUnitClassification("mechanical,neutral,townhall")
+        ..setGroundTexture("")
+        ..setHideMinimapDisplay(true)
+        ..setNeutralBuildingShowsMinimapIcon(true)
+
+@compiletime function createCraftMaster() returns BuildingDefinition
+    return createNeutralBuildings(UNIT_CRAFT_MASTER)
+        ..addAbilities(asList('Asid'))
+        ..setModelFile(Buildings.nerubianZiggurat)
+        ..setName("CraftMaster 5000")
+        ..setScalingValue(1.2)
+        ..setUnitsSold("")
+
+@compiletime function createOminousAltar() returns BuildingDefinition
+    return createNeutralBuildings(UNIT_OMINOUS_ALTAR)
+        ..addAbilities(asList('Asid'))
+        ..setDescription("")
+        ..setModelFile(Buildings.altarOfDepths1)
+        ..setMaximumRollAngledegrees(180.0)
+        ..setScalingValue(0.85)
+        ..setName("Ominous Altar")
+        ..setNeutralBuildingShowsMinimapIcon(false)
+        ..setUnitsSold("")
+        ..setIconGameInterface(Icons.bTNAltarOfDepths)
+
+function createBushNeutralBuilding(int unitId) returns BuildingDefinition
+    return new BuildingDefinition(unitId, UnitIds.scouttower)
+        ..setNormalAbilities(commaList(abilities))
+        ..setIconGameInterface(Icons.bTNAcorn1)
+        ..setDeathType(0)
+        ..setHitPointsMaximumBase(100)
+        ..setPlacementRequires("")
+        ..setRace(Race.Creeps)
+        ..setUnitClassification("ancient,mechanical")
+        ..setGroundTexture("")
+        ..setUpgradesTo("")
+        ..setUpgradesUsed("")
+
+@compiletime function createBushNeutralBuildings()
+    createBushNeutralBuilding(UNIT_HIDDEN_STASH)
+        ..setModelFile(Doodads.geyser2)
+        ..setName("Hidden Stash")
+
+    createBushNeutralBuilding(UNIT_THISTLE_SHRUB)
+        ..setModelFile(Doodads.felwood_Thorns6)
+        ..setName("Thistle Shrub")
+
+    createBushNeutralBuilding(UNIT_WATER_HERB_BUSH)
+        ..setModelFile(Doodads.seaweed00)
+        ..setScalingValue(3.7)
+        ..setMovementHeight(250.0)
+        ..setName("Water Herb")
+
+    createBushNeutralBuilding(UNIT_BLUE_HERB_BUSH)
+        ..setModelFile(Doodads.ruins_Flower2)
+        ..setScalingValue(1.5)
+        ..setName("Blue Herb")
+
+    createBushNeutralBuilding(UNIT_ORANGE_HERB_BUSH)
+        ..setModelFile(Doodads.ruins_Flower4)
+        ..setScalingValue(1.5)
+        ..setName("Orange Herb")
+
+    createBushNeutralBuilding(UNIT_YELLOW_HERB_BUSH)
+        ..setModelFile(Doodads.ruins_Flower0)
+        ..setName("Yellow Herb")
+
+    createBushNeutralBuilding(UNIT_MUSHROOM_COLONY)
+        ..setModelFile(Doodads.ruins_Shroom3)
+        ..setScalingValue(1.75)
+        ..setName("Mushroom Colony")
+
+    createBushNeutralBuilding(UNIT_ATHELAS_BUSH)
+        ..setModelFile(Doodads.vinyPlant3)
+        ..setName("Athelas Bush")
+
+    createBushNeutralBuilding(UNIT_PURPLE_HERB_BUSH)
+        ..setModelFile(Doodads.outland_Plant5)
+        ..setTintingColorGreen(0)
+        ..setName("Purple Herb")
+
+    createBushNeutralBuilding(UNIT_THIEFS_BUSH)
+        ..setNormalAbilities(commaList(
+            LocalAbilityIds.inventoryBuilding,
+            AbilityIds.invulnerable
+        ))
+        ..setModelFile(Doodads.outland_Plant6)
+        ..setName("Thief's Bush")
+
+    createBushNeutralBuilding(UNIT_SCOUTS_BUSH)
+        ..setNormalAbilities(commaList(
+            AbilityIds.ghost,
+            LocalAbilityIds.inventoryBuilding,
+            AbilityIds.invulnerable
+            )
+        )
+        ..setModelFile(Doodads.felwoodCatTail)
+        ..setName("Scout's Bush")

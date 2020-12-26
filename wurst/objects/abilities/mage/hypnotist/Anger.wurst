@@ -2,7 +2,7 @@ package Anger
 
 // Standard library imports:
 import ChannelAbilityPreset
-import Icons
+import Assets
 import BuffObjEditing
 import ClosureEvents
 import ClosureTimers
@@ -18,7 +18,7 @@ import ColorUtils
 
 
 let BUFF_EXHAUST = compiletime(BUFF_ID_GEN.next())
-let BUFF_ORIGINAL_ID = 'BHtc' // Thunderclap
+let BUFF_ANGER = compiletime(BUFF_ID_GEN.next())
 
 let AS_BONUS = 0.75
 let DAMAGE = 10.
@@ -53,11 +53,19 @@ let TARGET_ALLOWED = commaList(TargetsAllowed.air,
 
 
 @compiletime function createExhaustBuff() returns BuffDefinition
-    return new BuffDefinition(BUFF_EXHAUST, BUFF_ORIGINAL_ID)
+    return new BuffDefinition(BUFF_EXHAUST,  'BHtc') // Thunderclap
         ..setTooltipNormal(1, "Exhausted")
         ..setTooltipNormalExtended("This unit is exhausted; its movement speed and attack rate are reduced.")
         ..setIcon(Icons.bTNDizzy)
         ..setEditorSuffix("(Wurst)")
+
+@compiletime function createAngerBuff() returns BuffDefinition
+    return new BuffDefinition(BUFF_ANGER, 'Buhf') // buff unholy frenzy
+        ..setIconNormal(1, Icons.bTNUnholyFrenzy)
+        ..setTooltipNormal("Anger")
+        ..setTooltipNormalExtended("This unit is really mad")
+        ..setArtTarget(Abilities.bloodLustTarget)
+        ..setTargetAttachmentPoint0("head")
 
 
 @compiletime function createExhaustAbility() returns AbilityDefinitionCripple

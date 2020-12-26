@@ -1,0 +1,93 @@
+package ViciousStrike
+
+// Standard lib Imports:
+import AbilityObjEditing
+import BuffObjEditing
+import ObjectIdGenerator
+import ObjectIds
+import Assets
+
+// Local Imports:
+import LocalObjectIDs
+import LocalAssets
+import ToolTipsUtils
+
+
+let BUFF_ID = compiletime(BUFF_ID_GEN.next())
+
+let COOLDOWN = 15.
+let DURATION_NORMAL = 9.
+let DURATION_HERO = 6.
+let MS_FACTOR = 0.35
+let AS_FACTOR = 0.1
+
+let TT = "" +
+    "Apply a on-hit effect which reduce the target movement speed "+
+    "by {0} and attack speed by {1} for {2} seconds"
+    .format(
+        MS_FACTOR.toToolTipOrange(),
+        AS_FACTOR.toToolTipOrange(),
+        DURATION_HERO.toToolTipLightBlue()
+    )
+    +makeToolTipCooldown(COOLDOWN)
+
+
+@compiletime function createTigerViciousStrike() returns AbilityDefinitionCripple
+    new BuffDefinition(BUFF_ID, 'Bcri') // Cripple buff
+        ..setIconNormal(1, LocalIcons.pASBTNViciousStrike)
+        ..setTooltipNormal("Vicious Strikes")
+        ..setTooltipNormalExtended(
+            "This unit has been hit by Vicious Strikes; "+
+            "its movement and attack speed have been reduced.")
+        ..setName("Vicious Strikes")
+        ..setArtTarget(Objects.humanBloodCinematicEffect)
+        ..setTargetAttachmentPoint0("chest")
+
+    new AbilityDefinitionOrbofLightning(ABILITY_TIGER_VICIOUS_STRIKE)
+        ..setIconNormal(LocalIcons.pASBTNViciousStrike)
+        ..setButtonPositionNormalX(1)
+        ..setButtonPositionNormalY(1)
+        ..setDamageBonus(1, 0.0)
+        ..setChanceToHitUnits(1, 100.0)
+        ..setChanceToHitHeros(1, 100.0)
+        ..setChanceToHitSummons(1, 100.0)
+        ..setEnabledAttackIndex(1, 0)
+        ..setItemAbility(false)
+        ..setHotkeyNormal("")
+        ..setMissileArt("")
+        ..setName("Vicious Strike Attack trigger")
+        ..setArtSpecial("")
+        ..setSpecialAttachmentPoint("")
+        ..setArtTarget("")
+        ..setTargetAttachmentPoint("")
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.enemies,
+            TargetsAllowed.ground,
+            TargetsAllowed.ward
+            )
+        )
+        ..setButtonPositionTurnOffY(1)
+        ..setEffectAbility(1, ABILITY_TIGER_VICIOUS_STRIKE_CRIPPLE.toRawCode())
+
+    return new AbilityDefinitionCripple(ABILITY_TIGER_VICIOUS_STRIKE_CRIPPLE)
+        ..setIconNormal(LocalIcons.pASBTNViciousStrike)
+        ..setBuffs(1, BUFF_ID.toRawCode())
+        ..setButtonPositionNormalX(1)
+        ..setButtonPositionNormalY(1)
+        ..setCooldown(1, COOLDOWN)
+        ..setManaCost(1, 0)
+        ..setMovementSpeedReduction(1, MS_FACTOR)
+        ..setAttackSpeedReduction(1, AS_FACTOR)
+        ..setDamageReduction(1, 0.0)
+        ..setDurationNormal(1, DURATION_NORMAL)
+        ..setDurationHero(1, DURATION_HERO)
+        ..setHotkeyNormal("")
+        ..setName("Vicious Strikes True spell")
+        ..setRequirements("")
+        ..setRequirementsLevels("")
+        ..setCastRange(1, 99999.0)
+        ..setTooltipNormal(1, makeToolTipNormAura("Vicous Strikes"))
+        ..setTooltipNormalExtended(1, TT)
+        ..setButtonPositionTurnOffX(1)
+        ..setButtonPositionTurnOffY(1)

@@ -6,9 +6,10 @@ import ChannelAbilityPreset
 import ClosureEvents
 import ClosureForGroups
 import ClosureTimers
-import DummyCaster
 import LinkedList
 import Orders
+import BuffObjEditing
+import DummyCaster
 
 // Third-party imports:
 import Lodash
@@ -44,9 +45,175 @@ let DEMENTIA_SUMMON_TOOLTIP_EXTENDED = ("Passively gives the Dementia Master the
                                        "to be summoned for no reason!|r").color(COLOR_RED)
 
 let ACTIVATE_RUNES_TOOLTIP_NORM     = "Activates Runes"
-let ACTIVATE_RUNES_TOOLTIP_EXTENDED = "Casting this spell causes nearby runes to become active and seek targets. Runes will seek any enemies inside "+
-                                      "a dark gate if the caster casts this inside the gate as well. This skill can also be used in a gate to perform "+
-                                      "a dementia summoning. Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
+let ACTIVATE_RUNES_TOOLTIP_EXTENDED = "" +
+    "Casting this spell causes nearby runes to become active and seek targets in a very close range around the caster. "+
+    "Runes will seek any enemies inside a dark gate if the caster casts this inside the gate as well. "+
+    "This skill can also be used in a gate to perform "+
+    "a dementia summoning. Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
+
+let UNIT_LOCUST_FIRE_LORD  = compiletime(UNIT_ID_GEN.next())
+let UNIT_LOCUST_WATER_LORD = compiletime(UNIT_ID_GEN.next())
+let UNIT_LOCUST_GHOST      = compiletime(UNIT_ID_GEN.next())
+
+let ABIL_FIRE_DEMON_HAND_FX = compiletime(ABIL_ID_GEN.next())
+let ABIL_FIRE_DEMON_BURNING = compiletime(ABIL_ID_GEN.next())
+
+let ABIL_ICE_DEMON_HAND_FX = compiletime(ABIL_ID_GEN.next())
+let ABIL_ICE_DEMON_FROST_BOLT = compiletime(ABIL_ID_GEN.next())
+
+let ABIL_GHOST_DEMON_SOUL_BURN = compiletime(ABIL_ID_GEN.next())
+
+
+@compiletime function createDemonAbilityBuff()
+    new BuffDefinition(BUFF_GHOST_DEMON_SOUL_BURN, 'Bclf') // Cloud buff
+        ..setIconNormal(1, Icons.bTNCorrosiveBreath)
+        ..setTooltipNormal("Bad Breath")
+        ..setTooltipNormalExtended("This unit has been hit by bad breath. It has reduced movement")
+        ..setName("Bad Breath")
+        ..setArtTarget(1, "Environment\\UndeadBuildingFire\\UndeadLargeBuildingFire1.mdl")
+        ..setTargetAttachmentPoint0("head")
+        ..setTargetAttachmentPoint1("weapon,left")
+        ..setTargetAttachmentPoint2("weapon,right")
+
+    new BuffDefinition(BUFF_UNHOLY_FIRE, 'Bmlt')
+        ..setIconNormal(1, Icons.bTNWallOfFire)
+        ..setTooltipNormal("Unholy Flames")
+        ..setTooltipNormalExtended("This unit is encased in fire. It takes damage over time.")
+        ..setArtTarget(1, Abilities.doomTarget)
+        ..setTargetAttachmentPoint0("origin")
+
+@compiletime function createDemonAbilities()
+    new AbilityDefinition(ABIL_FIRE_DEMON_HAND_FX, 'Asph')
+        ..setMissileArt(Abilities.phoenix_Missile)
+        ..setName("Fire Sphere")
+        ..setArtTarget(Abilities.phoenix_Missile)
+        ..setTargetAttachmentPoint("hand,left")
+        ..setTargetAttachmentPoint1("hand,right")
+        ..setTargetAttachmentPoint2("")
+
+    new AbilityDefinitionAlchemistAcidBomb(ABIL_FIRE_DEMON_BURNING)
+        ..setAreaofEffect(1, 1.0)
+        ..setBuffs(1, toRawCode(BUFF_UNHOLY_FIRE))
+        ..setCooldown(1, 0.0)
+        ..setManaCost(1, 0)
+        ..setArmorPenalty(1, 0)
+        ..setPrimaryDamage(1, 10.0)
+        ..setSecondaryDamage(1, 0.0)
+        ..setDurationNormal(1, 25.0)
+        ..setHeroAbility(false)
+        ..setDurationHero(1, 25.0)
+        ..setLevels(1)
+        ..setMissileArt(Abilities.redDragonMissile)
+        ..setName("Unholy Flame")
+        ..setCastRange(1, 5000.0)
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.enemies,
+            TargetsAllowed.friend,
+            TargetsAllowed.ground,
+            TargetsAllowed.neutral,
+            TargetsAllowed.nonancient,
+            TargetsAllowed.organic
+            )
+        )
+
+    new AbilityDefinition(ABIL_ICE_DEMON_HAND_FX, 'Asph')
+        ..setMissileArt(Abilities.zigguratMissile)
+        ..setName("Ice Sphere")
+        ..setArtTarget(Abilities.zigguratMissile)
+        ..setTargetAttachmentPoint("head")
+        ..setTargetAttachmentPoint1("hand,left")
+        ..setTargetAttachmentPoint2("hand,right")
+
+    new AbilityDefinitionFrostBolt(ABIL_ICE_DEMON_FROST_BOLT)
+        ..setCooldown(1, 0.0)
+        ..setDamage(1, 22.0)
+        ..setDurationHero(1, 0.4)
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.enemies,
+            TargetsAllowed.friend,
+            TargetsAllowed.air,
+            TargetsAllowed.ground,
+            TargetsAllowed.neutral,
+            TargetsAllowed.nonancient,
+            TargetsAllowed.structure
+            )
+        )
+
+    new AbilityDefinitionFirelordSoulBurn(ABIL_GHOST_DEMON_SOUL_BURN)
+        ..setBuffs(1, BUFF_GHOST_DEMON_SOUL_BURN.toRawCode())
+        ..setCooldown(1, 0.0)
+        ..setManaCost(1, 0)
+        ..setDamageAmount(1, 6.0)
+        ..setMovementSpeedReduction(1, 0.35)
+        ..setAttackSpeedReduction(1, 0.1)
+        ..setDurationNormal(1, 10.0)
+        ..setDurationHero(1, 10.0)
+        ..setHeroAbility(false)
+        ..setLevels(1)
+        ..setName("Summon Silence")
+        ..setCastRange(1, 3500.0)
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.enemies,
+            TargetsAllowed.friend,
+            TargetsAllowed.hero,
+            TargetsAllowed.ground,
+            TargetsAllowed.neutral,
+            TargetsAllowed.nonancient,
+            TargetsAllowed.organic
+            )
+        )
+
+function createLocustDemonSummoned(int unitId) returns UnitDefinition
+    return new UnitDefinition(unitId, UnitIds.locust)
+        ..setManaInitialAmount(3000)
+        ..setManaMaximum(3000)
+        ..setMovementHeightMinimum(300.0)
+        ..setMovementHeight(300.0)
+        ..setSightRadiusNight(500)
+        ..setSightRadiusDay(500)
+        ..setShadowImageUnit("")
+        ..setAttacksEnabled(0)
+
+@compiletime function createDemons()
+    createLocustDemonSummoned(UNIT_LOCUST_FIRE_LORD)
+        ..setNormalAbilities(commaList(
+            AbilityIds.locust,
+            ABIL_FIRE_DEMON_BURNING,
+            ABIL_FIRE_DEMON_HAND_FX
+            )
+        )
+        ..setTintingColorBlue(0)
+        ..setNameEditorSuffix("Fire Demon")
+        ..setModelFile(Units.heroFlameLord)
+        ..setTintingColorGreen(100)
+        ..setScalingValue(1.5)
+
+    createLocustDemonSummoned(UNIT_LOCUST_WATER_LORD)
+        ..setNormalAbilities(commaList(
+            AbilityIds.locust,
+            ABIL_ICE_DEMON_HAND_FX,
+            ABIL_ICE_DEMON_FROST_BOLT
+            )
+        )
+        ..setNameEditorSuffix("Water Demon")
+        ..setModelFile(Units.revenantOfTheWaves1)
+        ..setTintingColorGreen(150)
+        ..setTintingColorRed(0)
+        ..setScalingValue(2.0)
+
+    createLocustDemonSummoned(UNIT_LOCUST_GHOST)
+        ..setNormalAbilities(commaList(
+            AbilityIds.locust,
+            ABIL_GHOST_DEMON_SOUL_BURN
+            )
+        )
+        ..setTintingColorBlue(100)
+        ..setNameEditorSuffix("Ghost Demon")
+        ..setModelFile(Units.kelthuzadGhost)
+        ..setTintingColorGreen(200)
+        ..setTintingColorRed(100)
+        ..setScalingValue(1.6)
 
 class DementiaSummoning extends AbilityDefinitionEvasioncreep
     construct(int newAbilityId, Pair<int, int> buttonPos)

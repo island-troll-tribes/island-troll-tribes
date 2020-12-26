@@ -12,8 +12,8 @@ import ChannelAbilityPreset
 import Assets
 import ToolTipsUtils
 import Lodash
+import LocalObjectIDs
 
-let ABILITY_ID = 'ESEF'
 let DUMMY_STUN_ABILITY_ID = 'ESES'
 let DUMMY_BUFF_ABILITY_ID = 'XSSB'
 let IMPACT_STUN_DURATION_HERO = 0.10
@@ -115,7 +115,7 @@ class EarthGuardian extends ChannelAbilityPreset
         this.setBaseOrderID(1, "auravampiric")
 
 @compiletime function createEarthGuardian()
-    new EarthGuardian(ABILITY_ID, "W", new Pair(1, 0))
+    new EarthGuardian(ABILITY_EARTH_GUARDIAN, "W", new Pair(1, 0))
     createDummySpell()
     createDummyBuff()
     createBuffSpell()
@@ -318,11 +318,11 @@ function onCast()
     instances.put(caster, earthGuardian)
 
 function onEndCast()
-    if GetSpellAbilityId() == ABILITY_ID
+    if GetSpellAbilityId() == ABILITY_EARTH_GUARDIAN
         let caster = GetSpellAbilityUnit()
         var instance = instances.get(caster)
         instance.isChanneling = false
 
 init
-    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerSpellEffectEvent(ABILITY_EARTH_GUARDIAN, () -> onCast())
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST, () -> onEndCast())

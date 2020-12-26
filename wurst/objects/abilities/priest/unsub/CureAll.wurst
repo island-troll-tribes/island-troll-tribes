@@ -15,6 +15,8 @@ import Lodash
 import LocalObjectIDs
 import ToolTipsUtils
 
+let ABIL_BANISH_ID = compiletime(ABIL_ID_GEN.next())
+
 let COOLDOWN = 15.
 let MANACOST = 10
 let CAST_RANGE = 400.
@@ -24,6 +26,8 @@ let TOOLTIP_EXTENDED = ("Dispels buffs and effects from friendly units. Can be u
                         "Has {0} seconds cooldown.").format(COOLDOWN.toToolTipLightBlue())
 
 let TARGET_ALLOWED = "air,allies,friend,ground,invulnerable,self,vulnerable"
+
+
 
 class Cureall extends AbilityDefinitionAbolishMagic
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
@@ -48,6 +52,21 @@ class Cureall extends AbilityDefinitionAbolishMagic
 @compiletime function createCureAll()
     new Cureall(ABILITY_CURE_ALL, "W", new Pair(1, 0))
 
+    // I guess this is used to remove even more debuff?
+    new AbilityDefinitionBloodMageBanish(ABIL_BANISH_ID)
+        ..setManaCost(1, 0)
+        ..setMovementSpeedReduction(1, 0.0)
+        ..setDurationNormal(1, 0.01)
+        ..setHeroAbility(false)
+        ..setDurationHero(1, 0.01)
+        ..setLevels(1)
+        ..setMissileArc(0.15)
+        ..setMissileArt("")
+        ..setMissileSpeed(800)
+        ..setName("Windless Small Debuff")
+        ..setCastRange(1, 9000.0)
+        ..setTargetsAllowed(1, "hero")
+
 init
     EventListener.onTargetCast(ABILITY_CURE_ALL) (unit caster, unit target) ->
         UnitRemoveBuffsExBJ( bj_BUFF_POLARITY_NEGATIVE, bj_BUFF_RESIST_BOTH, GetSpellTargetUnit(), false, false )
@@ -60,4 +79,4 @@ init
 
         // Delay the dummy unit is guaranteed to be available.
         nullTimer() ->
-            InstantDummyCaster.castTarget(caster.getOwner(), 'A07M', 1, OrderIds.banish, target, target.getPos())
+            InstantDummyCaster.castTarget(caster.getOwner(), ABIL_BANISH_ID, 1, OrderIds.banish, target, target.getPos())

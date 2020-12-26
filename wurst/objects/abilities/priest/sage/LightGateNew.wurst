@@ -10,8 +10,10 @@ import DummyCaster
 import Assets
 import Pool
 import ChannelAbilityPreset
+import BuffObjEditing
 import Lodash
 import ToolTipsUtils
+import LocalAssets
 
 let GROW_DURATION = 10.
 let MINIMUM_GROW_DURATION = 1.5
@@ -37,8 +39,28 @@ let TOOLTIP_EXTENDED = "The Sage summons an extraordinary amount of white magic 
                         "within as they do. The longer this spell is channeled, the longer the gate remains open and "+
                         "the more spells the energy balls cast. "
 
+let ABILITY_INNER_FIRE = compiletime(ABIL_ID_GEN.next())
+let BUFF_INNER_POWER = compiletime(BUFF_ID_GEN.next())
 
-let TARGET_ALLOWED = "targetAllowed"
+@compiletime function createInnerPowerBuff()
+    new BuffDefinition(BUFF_INNER_POWER, 'BHds') // innerfire
+        ..setTooltipNormal("Inner Power")
+        ..setTooltipNormalExtended(1, "This unit has had its inner power released. Temporarily")
+        ..setArtTarget(Abilities.staff_Sanctuary_Target)
+
+
+@compiletime function createInnerFireAbility() returns AbilityDefinitionInnerFire
+    return new AbilityDefinitionInnerFire(ABILITY_INNER_FIRE)
+        ..setBuffs(1, BUFF_INNER_POWER.toRawCode())
+        ..setCheckDependencies(false)
+        ..setCooldown(1, 0.0)
+        ..setManaCost(1, 0)
+        ..setDamageIncrease(1, 0.25)
+        ..setDefenseIncrease(1, 3)
+        ..setAutocastRange(1, 0.0)
+        ..setDurationNormal(1, 20.0)
+        ..setDurationHero(1, 20.0)
+        ..setCastRange(1, 1600.0)
 
 class OpenLightGate extends ChannelAbilityPreset
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
@@ -255,9 +277,9 @@ function onEndCast()
 
 function initSpellPool()
     spellPool.add(1, new OrbSpell("Healing wave", ABILITY_HEALING_WAVE, Orders.healingwave, 0     ))
-    spellPool.add(1, new OrbSpell("Spirit link" , ABILITY_SPIRIT_LINK , Orders.spiritlink , 'Bspl'))
+    spellPool.add(1, new OrbSpell("Spirit link" , ABILITY_SPIRIT_LINK , Orders.spiritlink , BuffIds.spiritLink))
     spellPool.add(2, new OrbSpell("Ranged heal" , ABILITY_RANGED_HEAL , Orders.heal       , 0     ))
-    spellPool.add(2, new OrbSpell("Pump up"     , ABILITY_PUMP_UP     , Orders.bloodlust  , 'B00O'))
+    spellPool.add(2, new OrbSpell("Pump up"     , ABILITY_PUMP_UP     , Orders.bloodlust  , BuffIds.bloodLust))
     spellPool.add(2, new OrbSpell("Inner fire"  , ABILITY_INNER_FIRE, Orders.innerfire  , BUFF_INNER_POWER))
 
 init

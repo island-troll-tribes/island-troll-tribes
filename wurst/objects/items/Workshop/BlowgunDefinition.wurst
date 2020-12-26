@@ -6,6 +6,7 @@ import Assets
 import ItemObjEditing
 import ObjectIds
 import ObjectIdGenerator
+import BuffObjEditing
 
 // Local imports:
 import Items
@@ -60,42 +61,72 @@ let COOLDOWN = 9.
 let ITEM_TOOLTIP = "Purchase |cffffcc00B|rlow Gun"
 
 // I used substring to get rid of the decimal since those value are of type real, didn't know how to do otherwise
-let BONE_TOOLTIP    = "Bone :".color(SPECIAL_COLOR) + " Deals {0} damage and stun for {1} seconds."
-                      .format(BONE_THISTLE_DMG.toToolTipRed(),
-                              BONE_THISTLE_STUN_HERO.toString().substring(0, 4).color(COLOR_TURQUOISE) + "/" + BONE_THISTLE_STUN_NORMAL.toString().substring(0, 1).color(COLOR_TURQUOISE)
-                              ) + makeToolTipCooldown(COOLDOWN)
+let BONE_TOOLTIP    = "" +
+    "Bone :".color(SPECIAL_COLOR) + " Deals {0} damage and stun for {1} seconds."
+    .format(
+        BONE_THISTLE_DMG.toToolTipRed(),
+        BONE_THISTLE_STUN_HERO.toString().substring(0, 4).color(COLOR_TURQUOISE) +
+        "/" + BONE_THISTLE_STUN_NORMAL.toString().substring(0, 1).color(COLOR_TURQUOISE)
+    )
+    +makeToolTipCooldown(COOLDOWN)
 
-let THISTLE_TOOLTIP = "Thistle :".color(GREEN_COLOR) + " Deals {0} initial damage and {1} damage every {2} seconds."
-                      .format(THISTLE_DMG.toToolTipRed(),
-                              THISTLE_DECAYING_DMG.toToolTipRed(),
-                              3..toToolTipLightBlue()) +
-                      " Also decrease attack speed by {0} and movement speed by {1}.".format(
-                          THISTLE_HERO_AS_FACTOR.toToolTipOrange() + "/" + THISTLE_AS_FACTOR.toToolTipOrange(),
-                          THISTLE_HERO_MS_FACTOR.toToolTipOrange() + "/" + THISTLE_MS_FACTOR.toToolTipOrange()
-                          ) + makeToolTipDuration(THISTLE_DURATION_HERO, COOLDOWN)
-
-
-let DARK_THISTLE_TOOLTIP = "Dark Thistle :".color(COLOR_VIOLET) + " Deals {0} initial damage and {1} damage every {2} seconds, burn {3} mana over {4} seconds."
-                           .format(DARK_THISTLE_DMG.toToolTipRed(),
-                                   DARK_THISTLE_DECAYING_DMG.toToolTipRed(),
-                                   3..toToolTipLightBlue(),
-                                   (DARK_THISTLE_MANA_BURN * NUM_TICK).toToolTipPurple(),
-                                   (NUM_TICK * LEN_TICK).toToolTipLightBlue()
-                                   )+
-                           " Also decrease attack speed by {0} and movement speed by {1}.".format(
-                               DARK_THISTLE_AS_FACTOR.toToolTipOrange(),
-                               DARK_THISTLE_MS_FACTOR.toToolTipOrange()
-                               ) + makeToolTipDuration(DARK_THISTLE_DURATION_HERO, COOLDOWN)
-
-public let ITEM_TOOLTIP_EXT = "Used for shooting small things. Can be loaded with thistles or bones. Drag and drop items on the blowgun to load, click and use on your own troll to unload."+
-                             " If your inventory is full, clicking on ammo type item close to your troll will load them into the blowgun."+
-                             "\n\nAmmo Effect :".color(GOLD_COLOR) +
-                             "\n" + BONE_TOOLTIP +
-                             "\n" + THISTLE_TOOLTIP +
-                             "\n" + DARK_THISTLE_TOOLTIP
+let THISTLE_TOOLTIP = "" +
+    "Thistle : ".color(GREEN_COLOR) +
+    "Deals {0} initial damage and {1} damage every {2} seconds. "
+    .format(
+        THISTLE_DMG.toToolTipRed(),
+        THISTLE_DECAYING_DMG.toToolTipRed(),
+        3..toToolTipLightBlue()
+    ) +
+    "Also decrease attack speed by {0} and movement speed by {1}."
+    .format(
+        THISTLE_HERO_AS_FACTOR.toToolTipOrange() + "/" + THISTLE_AS_FACTOR.toToolTipOrange(),
+        THISTLE_HERO_MS_FACTOR.toToolTipOrange() + "/" + THISTLE_MS_FACTOR.toToolTipOrange()
+    )
+    +makeToolTipDuration(THISTLE_DURATION_HERO, COOLDOWN)
 
 
-let ITEM_DESCRIPTION = "A hollowed out piece of wood. If blown through, could be used to fire small projectiles such as thistles."
+let DARK_THISTLE_TOOLTIP = "" +
+    "Dark Thistle : ".color(COLOR_VIOLET) +
+    "Deals {0} initial damage and {1} damage every {2} seconds, burn {3} mana over {4} seconds. "
+    .format(
+        DARK_THISTLE_DMG.toToolTipRed(),
+        DARK_THISTLE_DECAYING_DMG.toToolTipRed(),
+        3..toToolTipLightBlue(),
+        (DARK_THISTLE_MANA_BURN * NUM_TICK).toToolTipPurple(),
+        (NUM_TICK * LEN_TICK).toToolTipLightBlue()
+    )+
+    "Also decrease attack speed by {0} and movement speed by {1}."
+    .format(
+        DARK_THISTLE_AS_FACTOR.toToolTipOrange(),
+        DARK_THISTLE_MS_FACTOR.toToolTipOrange()
+    )
+    +makeToolTipDuration(DARK_THISTLE_DURATION_HERO, COOLDOWN)
+
+public let ITEM_TOOLTIP_EXT = "" +
+    "Used for shooting small things. Can be loaded with thistles or bones. " +
+    "Drag and drop items on the blowgun to load, click and use on your own troll to unload."+
+    " If your inventory is full, clicking on ammo type item close to your troll will load them into the blowgun."+
+    "\n\nAmmo Effect :".color(GOLD_COLOR) +
+    "\n" + BONE_TOOLTIP +
+    "\n" + THISTLE_TOOLTIP +
+    "\n" + DARK_THISTLE_TOOLTIP
+
+
+let ITEM_DESCRIPTION = "" +
+    "A hollowed out piece of wood. If blown through, could be used to fire "+
+    "small projectiles such as thistles."
+
+let BUFF_ID = compiletime(BUFF_ID_GEN.next())
+
+@compiletime function createThistleBuff() returns BuffDefinition
+    return new BuffDefinition(BUFF_ID, 'BEsh')
+        ..setIconNormal(1, Icons.bTNEnvenomedSpear)
+        ..setTooltipNormal("Poisoned Thistle")
+        ..setTooltipNormalExtended("This unit was hit by a slightly poisoned projectile. Although it wont take much damage from the poison")
+        ..setArtTarget(Abilities.poisonStingTarget)
+        ..setTargetAttachmentPoint0("")
+
 
 @compiletime function createBoneAmmoAbility()
     new AbilityDefinitionThunderBoltCreep(ABILITY_BONE_THISTLE)
@@ -117,7 +148,7 @@ let ITEM_DESCRIPTION = "A hollowed out piece of wood. If blown through, could be
 function createThistleAbility(int newId) returns AbilityDefinitionWardenShadowStrike
     return new AbilityDefinitionWardenShadowStrike(newId)
         ..setDummyAbility()
-        ..presetBuffs(lvl -> "B099")
+        ..presetBuffs(lvl -> BUFF_ID.toRawCode())
         ..presetTargetsAllowed(lvl -> "air,enemies,ground,neutral,organic,terrain")
         ..setMissileArt(Abilities.bristleBackMissile)
         ..setMissileSpeed(2100)
@@ -147,7 +178,7 @@ function createThistleAbility(int newId) returns AbilityDefinitionWardenShadowSt
 
 @compiletime function createDarkThistleAbility()
     createThistleAbility(ABILITY_DARK_THISTLE)
-        ..setBuffs(1, "B00E")
+        ..setBuffs(1, BUFF_DEPRESSED_THISTLE.toRawCode())
         ..presetInitialDamage(lvl -> DARK_THISTLE_DMG)
         ..presetDecayingDamage(lvl -> DARK_THISTLE_DECAYING_DMG)
         ..presetAttackSpeedFactor(lvl -> DARK_THISTLE_AS_FACTOR)

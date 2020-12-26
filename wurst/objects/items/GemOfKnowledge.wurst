@@ -2,23 +2,28 @@ package GemOfKnowledge
 
 // Standard lib Imports:
 import Assets
+import ObjectIds
 
 // Local Imports:
+import ColorUtils
 import LocalObjectIDs
 import ItemObjEditing
 import ToolTipsUtils
 import Experience
 import LocalAssets
+import StringExtensions
 
-constant TT = "" +
-    ("Increases experience gain of the bearer by {0}."+
-    "\n{1}Note : Does not work for Beast Master or Hunter.|r")
-    .format((GOK_MULTIPLIER - 1).toToolTipOrange(), "|cffff0000")
+constant TT = (
+    "Increases experience gain of the bearer by {0}.\n" +
+    "Note : Does not work for Beastmaster or Hunter.".color(COLOR_RED)
+).format(
+    (GOK_MULTIPLIER - 1).toToolTipOrange()
+)
 
 @compiletime function createGemOfKnowledge()
     new ItemDefinition(ITEM_GEM_OF_KNOWLEDGE, 'bspd')
     ..setName("Gem of Knowledge")
-    ..setAbilities("AIx1")  // +1 Str, +1 Agi, +1 Int
+    ..setAbilities(commaList(AbilityIds.allPlus1))
     ..setTooltipBasic("Trade for Gem of Knowledge")
     ..setHotkey("")
     ..setTooltipExtended(TT)
@@ -28,6 +33,6 @@ constant TT = "" +
     ..setModelUsed(LocalItems.gemOfKnowledge)
     ..setScalingValue(0.7)
     ..setInterfaceIcon(Icons.bTNEnchantedGemstone)
-    ..setDescription("Increases experience gained")
+    ..setDescription("Increases experience gained.")
     ..setLevel(0)
     ..setCanBeSoldToMerchants(false)

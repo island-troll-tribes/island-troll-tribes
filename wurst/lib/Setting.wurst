@@ -15,7 +15,10 @@ import Lodash
 @configurable let FILE_PREFIX = "SETTING_"
 
 // The frequency at which sychroniziation is checked.
-@configurable let POLL_TIME = ANIMATION_PERIOD + 1
+@configurable let POLL_TIME = ANIMATION_PERIOD
+
+// The timeout for synchronization.
+@configurable let SYNC_TIMEOUT = 10.
 
 // A setting is a player-specific option that consists of a single typed value
 // and which can be changed at will during gameplay. Settings are automatically
@@ -78,6 +81,9 @@ public class Setting
         // The instance is not initialized immediately.
         initialized = false
 
+        // The instance is not synchronized immediately.
+        synchronized = false
+
         // Assume that most settings are persistent.
         writable = true
 
@@ -106,7 +112,12 @@ public class Setting
             // setting was writeable, but is unlikely that the previous version
             // would still be relevant. This also prevents players of previous
             // versions from having an advantage.
-            if players[index].isIngame() and writable
+            if (
+                players[index].isIngame()
+                // Synchronization events do not fire for observers.
+                and not IsPlayerObserver(players[index])
+                and writable
+            )
                 log(players[index], Loglevel.DEBUG, "Loading data.")
                 // Began tracking the pending.
                 pending += 1
@@ -119,11 +130,11 @@ public class Setting
                 values.put(players[index], initial)
 
         // Check periodically for synchronization completion.
-        log(null, Loglevel.DEBUG, "Beginning polling.")
-        doPeriodically(POLL_TIME) cb ->
-            // Use a method to avoid capturing fields by value.
-            if isReadyToFinish()
-                // Finish initializing the setting.
+        log(Loglevel.DEBUG, "Beginning polling.")
+        doPeriodicallyTimed(POLL_TIME, SYNC_TIMEOUT) cb ->
+            // Engage the timeout mechanism if synchronization fails.
+            if isReadyToFinish() or cb.isLast()
+                // Use a method to avoid capturing fields by value.
                 complete()
 
                 // Cease polling once complete.
@@ -133,50 +144,64 @@ public class Setting
         return pending == 0
 
     private function complete()
-        log(null, Loglevel.DEBUG, "Completing synchronization.")
+        log(Loglevel.DEBUG, "Completing synchronization.")
         // Register a command to handle modification via chat.
         registerCommandAll(name) (triggerer, arguments) ->
             handleChat(triggerer, arguments)
 
         // Mark the completion.
         synchronized = true
-        log(null, Loglevel.DEBUG, "Finished synchronization.")
+        log(Loglevel.DEBUG, "Finished synchronization.")
+
+        // Fill in the value for those who timed out.
+        for index = 0 to bj_MAX_PLAYER_SLOTS - 1
+            if not values.has(players[index])
+                log(Loglevel.DEBUG, "Timeout for: " + players[index].getName())
+                values.put(players[index], initial)
 
         // Execute the action on the initial value, as necessary.
         if action != null
-            log(null, Loglevel.DEBUG, "Executing action.")
+            log(Loglevel.DEBUG, "Executing action.")
             values.forEach() (target, value) ->
                 log(target, Loglevel.DEBUG, "Executing action on: " + value)
                 action.call(target, value)
 
         // Execute the handler, as necessary.
         if finish != null
-            log(null, Loglevel.DEBUG, "Executing finish.")
+            log(Loglevel.DEBUG, "Executing finish.")
             finish.call()
 
     private function load(player target)
         target.loadData(filename) (status, data) ->
-            // Read the stored value, if possible.
-            let input = status == SUCCESS
-                ? data.getUnsafeString()
-                : null
-            log(target, Loglevel.DEBUG, "Loaded: " + input)
+            onLoad(target, status, data)
 
-            // Default to the initial value if there was no stored value or if
-            // the stored value is invalid, which can happen if the check is
-            // further restricted in newer versions of the map. This failure is
-            // is not logged automatically, as it is likely to be noisy and the
-            // check is able to do that if so desired.
-            let value = input != null and check.call(input)
-                ? input
-                : initial
-            log(target, Loglevel.DEBUG, "Using: " + value)
+    private function onLoad(player target, LoadStatus status, ChunkedString data)
+        // Ignore loading if it occurs after timeout.
+        if synchronized
+            log(Loglevel.DEBUG, "Ignoring load for: " + target.getName())
+            return
 
-            // Update the value for the player.
-            values.put(target, value)
+        // Read the stored value, if possible.
+        let input = status == SUCCESS
+            ? data.getUnsafeString()
+            : null
+        log(target, Loglevel.DEBUG, "Loaded: " + input)
 
-            // Mark the loading as complete.
-            pending -= 1
+        // Default to the initial value if there was no stored value or if the
+        // stored value is invalid, which can happen if the check is further
+        // restricted in newer versions of the map. This failure is not logged
+        // automatically, as it is likely to be noisy and the check is able to
+        // do that if so desired.
+        let value = input != null and check.call(input)
+            ? input
+            : initial
+        log(target, Loglevel.DEBUG, "Using: " + value)
+
+        // Update the value for the player.
+        values.put(target, value)
+
+        // Mark the loading as complete.
+        pending -= 1
 
     private function update(player target, string value)
         log(target, Loglevel.DEBUG, "Updating value: " + value)
@@ -222,11 +247,13 @@ public class Setting
             log(target, Loglevel.ERROR, "No value given.")
             return
 
-        // Update the setting.
-        put(target, value)
+        // Attempt to update the setting.
+        if put(target, value)
+            // Notify the user of success.
+            log(target, Loglevel.INFO, "Set to: " + get(target))
 
-        // Notify the user of success.
-        log(target, Loglevel.INFO, "Set to: " + get(target))
+    private function log(Loglevel level, string message)
+        log(null, level, message)
 
     private function log(player target, Loglevel level, string message)
         if localPlayer == target or target == null
@@ -242,7 +269,7 @@ public class Setting
     private function checkInit() returns bool
         // Avoid in-process modification.
         if initialized
-            log(null, Loglevel.ERROR, "Cannot reinitialize.")
+            log(Loglevel.ERROR, "Cannot reinitialize.")
 
         // Forward the value upwards
         return initialized
@@ -250,7 +277,7 @@ public class Setting
     private function checkSync() returns bool
         // Avoid in-process modification.
         if not synchronized
-            log(null, Loglevel.ERROR, "Not yet synchronized.")
+            log(Loglevel.ERROR, "Not yet synchronized.")
 
         // Forward the value upwards
         return synchronized
@@ -316,11 +343,11 @@ public class Setting
         return get(localPlayer)
 
     // Updates the setting for the given player.
-    function put(player target, string value)
+    function put(player target, string value) returns bool
         log(target, Loglevel.DEBUG, "Putting value: " + value)
         // Block premature access.
         if not checkSync()
-            return
+            return false
 
         // Validate the input.
         if not check.call(value)
@@ -331,7 +358,8 @@ public class Setting
                     value
                 )
             )
-            return
+            return false
 
         // Handle the update.
         update(target, value)
+        return true

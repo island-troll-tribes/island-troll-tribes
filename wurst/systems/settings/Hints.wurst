@@ -20,7 +20,7 @@ import UnitExtensions
 import IdListConstant
 
 // The interval, in seconds, at which periodic hints are displayed.
-let TIME_BETWEEN_HINTS = 60.
+let TIME_BETWEEN_HINTS = 50.
 
 // The duration for notifications.
 let MESSAGE_DURATION = 10.
@@ -78,7 +78,7 @@ class Hint
     function display()
         // Check all players.
         // TODO: Facilitate this for boolean settings.
-        for index = 0 to bj_MAX_PLAYER_SLOTS
+        for index = 0 to bj_MAX_PLAYER_SLOTS - 1
             // Ignore players that have disabled hints.
             if enabled.get(players[index]).toBool()
                 // Display the message for the hint.
@@ -118,7 +118,7 @@ function checkStat(unit troll)
     // Do not check invalid trolls.
     if troll == null or not troll.isAlive()
         return
-    Log.debug("Checking stats for: " + troll.getName())
+    Log.trace("Checking stats for: " + troll.getName())
 
     // Check for an alarm per stat.
     alarm(troll.getHP(),   "Your health is low, eat some meat!", troll.getOwner())

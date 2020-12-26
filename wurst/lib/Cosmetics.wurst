@@ -56,21 +56,23 @@ public abstract class Cosmetic
     static let callbacks = new HashMap<unit, CallbackSingle>()
 
     // The names of players this feature is enabled for.
-    HashSet<string> enabled
+    HashSet<string> enabled = new HashSet<string>()
 
     construct(string name)
         // Use a condensed name for the registry.
         this.name = condense(name)
 
-        // Update the global registry.
-        cosmetics.put(this.name, this)
+        if not compiletime
 
-        // Register a command used to apply the cosmetic to new units.
-        registerCommandAll(this.name) (triggerer, arguments) ->
-            onCommand(triggerer, arguments)
+            // Update the global registry.
+            cosmetics.put(this.name, this)
 
-        // Enable skins for local testing automatically.
-        register("Local Player")
+            // Register a command used to apply the cosmetic to new units.
+            registerCommandAll(this.name) (triggerer, arguments) ->
+                onCommand(triggerer, arguments)
+
+            // Enable skins for local testing automatically.
+            register("Local Player")
 
     static function condense(string name) returns string
         return name.toLowerCase().replace(" ", "-")
@@ -81,6 +83,10 @@ public abstract class Cosmetic
     function register(vararg string names)
         for name in names
             enabled.add(name.toLowerCase())
+
+    function register(vararg player targets)
+        for target in targets
+            register(target.getName())
 
     // Checks if a player is enabled for the cosmetic, by name.
     function isEnabled(string name) returns bool
@@ -119,6 +125,7 @@ public abstract class Cosmetic
         // Compute the set of applicable skins.
         let usable = cosmetics
             .values()
+            .lodashFilter(cosmetic -> cosmetic.isEnabled(target.getOwner()))
             .lodashFilter(cosmetic -> cosmetic.isEnabled(target))
 
         // Notify the user of each applicable cosmetic.
@@ -247,7 +254,6 @@ public class Skin extends Cosmetic
         // Initialize the state.
         this.originID = originID
         this.targetID = targetID
-        this.enabled = new HashSet<string>()
 
     override function isEnabled(unit target) returns bool
         return originID == target.getTypeId()

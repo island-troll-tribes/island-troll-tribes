@@ -5,7 +5,6 @@ import ClosureTimers
 import HashMap
 import LinkedList
 import RegisterEvents
-import HashSet
 
 // Third-party imports:
 import LodashExtensions
@@ -15,11 +14,11 @@ import ColorUtils
 import GameConfig
 import LocalObjectIDs
 import PlayerExtensions
+import RandomPerk
 import StringExtensions
-import UnitExtensions
 import TimerUtils
 import Tribe
-import PerkUtils
+import UnitExtensions
 
 let spawnList = asList(
     gg_rct_revive_1,
@@ -147,6 +146,9 @@ public class ClassSelector
         for member in tribe.getMembers()
             var troll = member.getTroll()
             if troll == null
+                // Enable the perk prior to assigning a random troll.
+                randomPerk.register(member)
+
                 // Here we are not using handleRandom, because we remove the totem
                 // later and the code relies on the totem existing on sell events
                 // and the sell event is fired after the removal of the totem
@@ -154,7 +156,6 @@ public class ClassSelector
                 // matter as players will have already picked by this point
                 troll = placeRandomTroll(member)
                 handleSelection(member, troll)
-                randomPerkEnable(member)
 
             troll
             ..unpause()
@@ -187,9 +188,6 @@ public class ClassSelector
             else
                 handleSelection(owner, sold)
 
-    function randomPerkEnable(player p)
-        p.addPerk("HAS_RANDOMED")
-
     function handleSelection(player owner, unit troll)
         let trollId = troll.getTypeId()
 
@@ -209,19 +207,15 @@ public class ClassSelector
         if gameConfig.isStartWithSpiritWard()
             troll.addItemById(ITEM_SPIRIT_WARD_KIT)
 
-    function handleTrollRemoval(player p) returns boolean
+    function handleTrollRemoval(player p)
         let troll = p.getTroll()
-        if troll == null
-            return false
-        else
+        if troll != null
             let trollId = troll.getTypeId()
 
             setClassAvailable(trollId)
             totem.addUnitToStock(trollId, 1, 1)
             p.removeTroll()
             troll.remove()
-
-            return true
 
     function handleRandom(player p)
         let trollId = getRandomTrollId()

@@ -1,12 +1,19 @@
 package MixSpells
 
+// Standard lib imports:
+import Assets
 import ClosureEvents
 import ChannelAbilityPreset
-import LocalObjectIDs
+
+// Third party imports:
 import Lodash
+
+// Local imports:
+import LocalObjectIDs
 import ToolTipsUtils
 import EffectUtils
-import Assets
+import TextTagUtils
+import ColorUtils
 
 let COOLDOWN = 50.
 let ENERGY_MANACOST = 0
@@ -14,11 +21,15 @@ let HEAT_MANACOST = 10
 let CAST_RANGE = 500.
 
 let TOOLTIP_NORM = "Mix "
-let TOOLTIP_EXTENDED = ("The Priest psychically links up with a target. Both unit's energies are drained, pooled, and redistributed equally between the 2 units."+
-                       "Lasts {2} seconds, has {3}.")
-                       .format(COOLDOWN.toToolTipLightBlue())
 
-let TARGET_ALLOWED = "air,enemies,friend,ground,hero,notself"
+let TARGET_ALLOWED = commaList(
+    TargetsAllowed.air,
+    TargetsAllowed.enemies,
+    TargetsAllowed.friend,
+    TargetsAllowed.ground,
+    TargetsAllowed.hero,
+    TargetsAllowed.notself
+)
 
 class MixHeat extends ChannelAbilityPreset
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
@@ -77,12 +88,16 @@ class MixEnergy extends ChannelAbilityPreset
     new MixEnergy(ABILITY_SAGE_MIX_ENERGY , "Z", new Pair(0, 2))
     new MixHeat  (ABILITY_SAGE_MIX_HEAT   , "X", new Pair(1, 2))
 
+function getMixDiffStr(int mixDiff) returns string
+    return "{0}{1}".format(mixDiff < 0 ? "" : "+", mixDiff.toString())
 
 function mixHeat(unit caster, unit target)
     let targetHeat = target.getOwner().getGold()
     let casterHeat = caster.getOwner().getGold()
     let newHeat = (targetHeat + casterHeat) / 2.00
 
+    createFadingTextTag(target, getMixDiffStr((targetHeat - newHeat).toInt()), COLOR_ORANGE)
+    createFadingTextTag(caster, getMixDiffStr((casterHeat - newHeat).toInt()), COLOR_ORANGE)
     target.getOwner().setGold(newHeat.toInt())
     caster.getOwner().setGold(newHeat.toInt())
 
@@ -91,6 +106,8 @@ function mixMana(unit caster, unit target)
     let casterMana = caster.getMana()
     let newMana = (targetMana + casterMana) / 2.00
 
+    createFadingTextTag(target, getMixDiffStr((targetMana - newMana).toInt()), COLOR_TURQUOISE)
+    createFadingTextTag(caster, getMixDiffStr((casterMana - newMana).toInt()), COLOR_TURQUOISE)
     target.setMana(newMana)
     caster.setMana(newMana)
 

@@ -1,0 +1,65 @@
+package GameState
+
+// Standard library imports:
+import LinkedList
+import LinkedListModule
+import ErrorHandling
+
+// Third-party imports:
+
+public interface GameStateCallback
+    function call(GameState state)
+
+public class GameState
+    // The list of callbacks to be executed prior to entering the state.
+    let prior = new LinkedList<GameStateCallback>()
+
+    // The list of callbacks to be executed after exiting the state.
+    let after = new LinkedList<GameStateCallback>()
+
+    // Whether the state is currently active.
+    var active = false
+
+    function enter()
+        // Check for improper usage.
+        if active
+            error("Attempted to enter active state.")
+
+        // Mark the state as active.
+        active = true
+
+        // Execute each callback.
+        for cb in prior
+            cb.call(this)
+
+    function exit()
+        // Check for improper usage.
+        if not active
+            error("Attempted to exit inactive state.")
+
+        // Mark the state as inactive.
+        active = false
+
+        // Execute each callback.
+        for cb in after
+            cb.call(this)
+
+    function onEnter(GameStateCallback cb)
+        prior.add(cb)
+
+    function onExit(GameStateCallback cb)
+        after.add(cb)
+
+public class LinearGameState extends GameState
+    use LinkedListModule
+
+    construct()
+        print(size)
+
+    override function exit()
+        // Execute the standard functionality.
+        super.exit()
+
+        // Proceed to the next state, as necessary.
+        if next != null
+            next.enter()

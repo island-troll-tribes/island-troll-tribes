@@ -1,0 +1,38 @@
+package LegacyHotkeys
+
+// Standard library imports:
+import OnUnitEnterLeave
+
+// Third-party imports:
+import Setting
+
+// Local imports:
+import LocalObjectIDs
+
+let enabled = new Setting("legacy-hotkeys")
+
+public function player.usesLegacyHotkeys() returns bool
+    return enabled.synchronized and enabled.get(this).toBool()
+
+function onEnterHandler(unit target)
+    // Exit if the legacy hotkeys are not enabled for this player.
+    if not enabled.get(target.getOwner()).toBool()
+        return
+
+    // Switch the base abilities to provide legacy hotkeys.
+    if target.hasAbility(ABILITY_NEGATIVE_BLAST)
+        target
+            ..removeAbility(ABILITY_NEGATIVE_BLAST)
+            ..addAbility(ABILITY_LEGACY_NEGATIVE_BLAST)
+
+init
+    // Disable this feature by default.
+    enabled.make("false", input -> input.isBool())
+
+    // Begin supporting new units once ready.
+    enabled.finish() ->
+        onEnter() ->
+            onEnterHandler(getEnterLeaveUnit())
+
+    // Initialize the setting immediately.
+    enabled.initialize()

@@ -35,10 +35,9 @@ let TOOLTIP_EXTENDED = ("The Hypnotist generates a magic field. Anyone, includin
 
 let REAL_AURA_STUPEFY = 'RAST'
 let BUFF = compiletime(BUFF_ID_GEN.next())
-let ORIGINAL_BUFF_ID = BUFF_STUPEFIED // Barkskin
 
 function createBuff()
-    new BuffDefinition(BUFF, ORIGINAL_BUFF_ID)
+    new BuffDefinition(BUFF, 'Bbar') // BarkSkin
     ..setTargetAttachmentPoint0(1, "overhead")
     ..setIcon(Icons.bTNPolymorph)
     ..setTooltipNormal(1, "Stupefied")
@@ -75,27 +74,28 @@ class StupefyField extends ChannelAbilityPreset
         this.setArtTarget(Abilities.flameStrikeTarget)
         this.setEffects(1, Abilities.flameStrikeTarget)
         this.setArtCaster(commaList(Abilities.voodooAuraTarget, Abilities.flameStrikeTarget))
+        this.setBaseOrderID(1, "taunt")
 
 @compiletime function createStupefyField()
     new StupefyField(ABILITY_STUPEFY, "F", new Pair(3, 1))
+    new StupefyField(ABILITY_STUPEFY_LEGACY, "C", new Pair(3, 1))
     new StupefyField(ABILITY_DEMENTIA_MASTER_STUPEFY, "X", new Pair(3, 1))
     createStupefyAura()
     createBuff()
 
 function onCast()
-    var caster = GetSpellAbilityUnit()
+    let caster = GetSpellAbilityUnit()
     if not caster.hasAbility(REAL_AURA_STUPEFY)
         caster.addAbility(REAL_AURA_STUPEFY)
 
 function onEndcast()
-    var caster = GetSpellAbilityUnit()
-    var spell = GetSpellAbilityId()
+    let caster = GetSpellAbilityUnit()
+    let spell = GetSpellAbilityId()
     if spell == ABILITY_STUPEFY or spell == ABILITY_DEMENTIA_MASTER_STUPEFY and caster.hasAbility(REAL_AURA_STUPEFY)
         caster.removeAbility(REAL_AURA_STUPEFY)
-        caster.removeAbility('B00L') // Bams
-        caster.removeAbility('B00M') // Bam2
 
 init
     registerSpellEffectEvent(ABILITY_STUPEFY, () -> onCast())
+    registerSpellEffectEvent(ABILITY_STUPEFY_LEGACY, () -> onCast())
     registerSpellEffectEvent(ABILITY_DEMENTIA_MASTER_STUPEFY, () -> onCast())
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_ENDCAST, () -> onEndcast())

@@ -1,8 +1,39 @@
 package UnloadItems
-import RegisterEvents
-import InventoryUtils
 
-public constant ABILITY_UNLOAD_ITEMS = 'A06O'
+// Standard lib Imports:
+import RegisterEvents
+import ChannelAbilityPreset
+import Assets
+
+// local Imports:
+import InventoryUtils
+import ToolTipsUtils
+import LocalObjectIDs
+
+@compiletime function createUnloadItem() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_UNLOAD_ITEMS, 1, true)
+        ..presetManaCost(lvl -> 0)
+        ..presetCooldown(lvl -> 2.0)
+        ..setHeroAbility(false)
+        ..setItemAbility(false)
+        ..presetTargetTypes(Targettype.UNIT)
+        ..presetTargetsAllowed(lvl -> commaList(
+            TargetsAllowed.hero,
+            TargetsAllowed.nonhero
+        ))
+        ..setHotkeyNormal("D")
+        ..setName("Unload Items")
+        ..presetTooltipNormal(lvl -> makeToolTipNorm("D", "Unload Items"))
+        ..presetTooltipNormalExtended(lvl -> "Unloads each spot in the bush to the corresponding slot of the target. (Example: Slot 1 unloads to slot 1, ect)")
+        ..setIconNormal(Icons.bTNUndeadUnLoad)
+        ..setIconResearch(Icons.bTNUndeadUnLoad)
+        ..setIconTurnOff(Icons.bTNUndeadUnLoad)
+        ..setButtonPositionNormalX(2)
+        ..setButtonPositionNormalY(1)
+        ..setFollowThroughTime(1, 0)
+        ..presetOption(Option.VISIBLE, true)
+        ..setCastRange(1, 300)
+
 
 init
     registerSpellEffectEvent(ABILITY_UNLOAD_ITEMS) ->

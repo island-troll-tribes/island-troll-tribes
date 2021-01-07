@@ -1,0 +1,101 @@
+package EnsnareTrapDefinition
+
+// Standard library imports:
+import Assets
+import ObjectIds
+import AbilityObjEditing
+
+// Local imports:
+import LocalAssets
+import LocalObjectIDs
+import ToolTipsUtils
+import ColorUtils
+
+constant DURATION_HERO = 1.5
+constant DURATION_NORMAL = 8.
+constant TT_ENSNARE_ABILITY = "Binds an enemy target for {0}/{1} seconds on heroes/normal units."
+                                .format(
+                                    DURATION_HERO.toString().color(COLOR_LIGHT_BLUE),
+                                    DURATION_NORMAL.toString().color(COLOR_LIGHT_BLUE)
+                                    )
+
+let BUFF_ENSNARE_AIR    = "Bena"
+let BUFF_ENSNARE_GROUND = "Beng"
+
+@compiletime function createWebAbility() returns AbilityDefinitionWeb
+    return new AbilityDefinitionWeb(ABILITY_ENSNARE_TRAP)
+        ..presetButtonPosNormal(2, 1)
+        ..presetButtonPosTurnOff(2, 1)
+        ..setIconNormal(LocalIcons.aTCEnsnare)
+        ..setIconTurnOff(LocalIcons.aTCEnsnare)
+        ..setMissileArt(Abilities.ensnaremissile)
+        ..setCastRange(1, 700)
+        ..setCooldown(1, 10)
+        ..setDurationHero(1, 1.5)
+        ..setDurationNormal(1, 8)
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.enemies,
+            TargetsAllowed.ground,
+            TargetsAllowed.neutral,
+            TargetsAllowed.nonancient,
+            TargetsAllowed.organic
+            )
+        )
+        ..setCheckDependencies(false)
+        ..setEditorSuffix("(Wurst)")
+        ..setHotkeyNormal("R")
+        ..setHotkeyTurnOff("R")
+        ..setTooltipNormal(1, makeToolTipNorm("R", "Ensnare (Ensnare Trap)"))
+        ..setTooltipNormalExtended(1, TT_ENSNARE_ABILITY)
+        ..setTooltipTurnOff(1, "Right-click to activate auto-casting.".color(GENERAL_COLOR))
+        ..setTooltipTurnOffExtended(1, "Right-click to deactivate auto-casting.".color(GENERAL_COLOR))
+        ..setBuffs(1, commaList(BUFF_ENSNARE_AIR, BUFF_ENSNARE_GROUND))
+
+@compiletime function createTentDefinition() returns BuildingDefinition
+    return new BuildingDefinition(UNIT_ENSNARE_TRAP, UnitIds.watchtower)
+        ..setNormalAbilities(commaList(ABILITY_ENSNARE_TRAP, ABILITY_SHOP_SHARING, LocalAbilityIds.corpseGrab0))
+        ..setIconGameInterface(Icons.bTNCOP)
+        ..setDefaultActiveAbility(ABILITY_ENSNARE_TRAP.toRawCode())
+        ..setRequiredAnimationNamesAttachments("")
+        ..setAttack1DamageBase(1)
+        ..setAttack1ProjectileArt(Abilities.bristleBackMissile)
+        ..setAttack1ProjectileSpeed(1200)
+        ..setAttack1Range(700)
+        ..setAttack1TargetsAllowed(commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.debris,
+            TargetsAllowed.ground,
+            TargetsAllowed.item_t,
+            TargetsAllowed.nonhero,
+            TargetsAllowed.structure,
+            TargetsAllowed.ward
+            )
+        )
+        ..setAttack1WeaponType(WeaponType.MissileLine)
+        ..setAttack2AttackType(AttackType.Pierce)
+        ..setAttack2CooldownTime(0.8)
+        ..setAttack2DamageNumberofDice(1)
+        ..setAttack2DamageSidesperDie(3)
+        ..setAttack2ProjectileArt(Abilities.bristleBackMissile)
+        ..setAttack2ProjectileHomingEnabled(true)
+        ..setAttack2ProjectileSpeed(1200)
+        ..setAttack2Range(700)
+        ..setAttack2RangeMotionBuffer(250.0)
+        ..setAttack2TargetsAllowed(TargetsAllowed.hero)
+        ..setAttack2WeaponType(WeaponType.MissileLine)
+        ..setAttacksEnabled(3)
+        ..setCollisionSize(1.0)
+        ..setGroundTexture("")
+        ..setHitPointsMaximumBase(80)
+        ..setModelFile(Buildings.circleOfPower1)
+        ..setName("Ensnare Trap")
+        ..setPathingMap(PathingTextures.simpleSolid2x2)
+        ..setRepairTime(30)
+        ..setRequirements("")
+        ..setScalingValue(0.2)
+        ..setSelectionScale(0.2)
+        ..setTooltipBasic("Build Ensnare Trap")
+        ..setTooltipExtended("A trap good for trapping and killing animals")
+        ..setUnitSoundSet("InfernalMachine")
+        ..setUpgradesUsed("")

@@ -4,7 +4,6 @@ package DrunkPotion
 import Assets
 import AbilityObjEditing
 import ObjectIds
-import ObjectIdGenerator
 
 // Local lib Imports:
 import Items
@@ -13,7 +12,6 @@ import LocalItemObjEditing
 import LocalObjectIDs
 import ToolTipsUtils
 
-constant ABIL  = compiletime(ABIL_ID_GEN.next())
 
 constant AS_FACTOR = 0.10
 constant MS_FACTOR = 0.25
@@ -22,15 +20,18 @@ constant DURATION_HERO = 7.
 constant DURATION_NORMAL = 13.
 constant COOLDOWN = 25.
 
-public constant TT_DRUNK_POTION = "Throw this at an enemy to get them drunk, target is silenced, movement speed slowed by {0}, "
-                                    +"attack speed by {1} and has {2} chance to miss."
-                                    .format(MS_FACTOR.toToolTipOrange(),
-                                    AS_FACTOR.toToolTipOrange(),
-                                    MISS_CHANCE.toToolTipOrange())
-                                    + makeToolTipDuration(DURATION_HERO, DURATION_NORMAL, COOLDOWN)
+public constant TT_DRUNK_POTION = "" +
+    "Throw this at an enemy to get them drunk, target is silenced, "+
+    "movement speed slowed by {0}, attack speed by {1} and has {2} chance to miss."
+    .format(
+        MS_FACTOR.toToolTipOrange(),
+        AS_FACTOR.toToolTipOrange(),
+        MISS_CHANCE.toToolTipOrange()
+    )+
+    makeToolTipDuration(DURATION_HERO, DURATION_NORMAL, COOLDOWN)
 
 @compiletime function createAbil()
-    new AbilityDefinitionBrewmasterDrunkenHaze(ABIL)
+    new AbilityDefinitionBrewmasterDrunkenHaze(ABILITY_DRUNK_POTION)
     ..setName("Drunk Potion Cast")
     ..setCheckDependencies(false)
     ..setMissileSpeed(800)
@@ -55,8 +56,8 @@ public constant TT_DRUNK_POTION = "Throw this at an enemy to get them drunk, tar
         ..setTooltipExtended(TT_DRUNK_POTION)
         ..setDescription(TT_DRUNK_POTION)
         ..setLumberCost(10)
-        ..setAbilities(commaList(ABIL))
+        ..setAbilities(commaList(ABILITY_DRUNK_POTION))
         ..setScalingValue(0.70)
-        ..setCooldownGroup(commaList(ABIL))
+        ..setCooldownGroup(commaList(ABILITY_DRUNK_POTION))
         ..setStockReplenishInterval(90)
         ..setNumberofCharges(2)

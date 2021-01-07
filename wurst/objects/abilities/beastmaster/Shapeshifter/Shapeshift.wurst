@@ -1,0 +1,134 @@
+package Shapeshift
+
+// Standard library imports:
+import Assets
+import ClosureEvents
+import ClosureTimers
+import HashMap
+import LastOrder
+import LinkedList
+import OrderIds
+
+// Third-party imports:
+import Lodash
+import LodashExtensions
+
+// Local imports:
+import LocalObjectIDs
+import Transformation
+
+// The list of abilities used to transform.
+let TRANSFORMATIONS = new OwnedIterableMap<int, int>()
+    ..put(ABILITY_TRANSFORM_WOLF,    UNIT_SHAPESHIFTER_WOLF)
+    ..put(ABILITY_TRANSFORM_BEAR,    UNIT_SHAPESHIFTER_BEAR)
+    ..put(ABILITY_TRANSFORM_PANTHER, UNIT_SHAPESHIFTER_PANTHER)
+    ..put(ABILITY_TRANSFORM_TIGER,   UNIT_SHAPESHIFTER_TIGER)
+
+// The unique abilities per form.
+// TODO: Automate permanency tracking for all transformations.
+let ABILITIES = new IterableMap<int, LinkedList<int>>()
+    ..put(UNIT_SHAPESHIFTER_WOLF,    asList(ABILITY_WOLF_HUNGER))
+    ..put(UNIT_SHAPESHIFTER_BEAR,    asList(ABILITY_BEAR_BULWARK))
+    ..put(UNIT_SHAPESHIFTER_PANTHER, asList(ABILITY_PANTHER_PROWL))
+    ..put(UNIT_SHAPESHIFTER_TIGER,   asList(ABILITY_TIGER_VICIOUS_STRIKE, ABILITY_TIGER_VICIOUS_STRIKE_CRIPPLE))
+
+let FORMS = TRANSFORMATIONS.values().own()
+
+let transformations = product(FORMS, FORMS)
+    .filter(t -> t.a != t.b)
+    // TODO: Figure out why the map won't compile unless this listed is owned.
+    .own()
+
+let transformationIDs = compiletime(registerTransformations(transformations))
+
+// The unit currently being transformed.
+// TODO: Remove this if forces support closures.
+unit originGlobal
+
+// TODO: Remove logic regarding orders once a non-interrupting ability is used.
+function onCast(unit origin, int targetID)
+    // Save the previous order for later use.
+    let previousOrder = origin.getLastOrder().prev
+
+    // Stop the unit in order to prevent it from using the channel ability, as
+    // transforming while channeling will lock the unit from further use.
+    origin.issueImmediateOrderById(OrderIds.stop)
+
+    // Reissue the previous order afterwards.
+    nullTimer() ->
+        // Compute the type of the previous order.
+        let orderType = previousOrder == null
+            ? OrderType.IMMEDIATE
+            : previousOrder.orderType
+
+        // Issue the previous order if it is still applicable.
+        if orderType == OrderType.POINT or orderType == OrderType.TARGET
+            previousOrder.issue()
+
+    // Transform the unit.
+    transformUnit(origin, targetID)
+
+    // Mask the transformation with an effect.
+    flashEffect(Abilities.polyMorphDoneGround, origin.getPos(), 2)
+
+    // Capture the current unit.
+    // TODO: Remove this if forces support closures.
+    originGlobal = origin
+
+    // Enumerate over allies of the unit in case shared control was used.
+    let allies = GetPlayersAllies(origin.getOwner())
+
+    // Exit the spellbook that contains the ability for the appropriate player.
+    allies..forEach() ->
+        // Fetch the enumerated ally.
+        let ally = GetEnumPlayer()
+
+        // Verify that the ally has the unit selected.
+        if ENUM_GROUP..enumUnitsSelected(ally, null).contains(originGlobal)
+            // Exit the spellbook for that player.
+            ForceUICancelBJ(ally)
+
+    // Deallocate the force once it is no longer needed.
+    allies.destr()
+
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_FINISH) ->
+        // Look up the transformation indicated by the ability.
+        let formID = TRANSFORMATIONS.get(EventData.getSpellAbilityId())
+
+        // Execute the appropriate transformation, as necessary
+        if formID != 0
+            onCast(EventData.getSpellAbilityUnit(), formID)
+
+    // Register the transformations at runtime.
+    registerTransformations(transformations, transformationIDs, false)
+
+    // Undo the shapeshifting prior to other transformations.
+    registerPriorEffect() (unit target, int unitID) ->
+        if FORMS.has(target.getTypeId()) and not FORMS.has(unitID)
+            transformUnit(target, UNIT_SHAPESHIFTER_WOLF)
+
+    // Make each unique ability permanent to preserve cooldown.
+    // TODO: Automate permanency tracking for all transformations.
+    registerPriorEffect() (unit target, int unitID) ->
+        if FORMS.has(target.getTypeId())
+            ABILITIES.forEach() (integer formID, LinkedList<integer> abilIDs) ->
+                abilIDs.forEach() (integer abilID) ->
+                    // Add permanency, as necessary.
+                    if FORMS.has(unitID)
+                        target.makeAbilityPermanent(abilID, true)
+                    // Manually remove abilities in case permanency is ignored.
+                    else
+                        target.removeAbility(abilID)
+
+    // Enable the correct ability for the unit.
+    // TODO: Automate permanency tracking for all transformations.
+    // TODO: Use BlzUnitDisableAbility per unit.
+    registerAfterEffect() (unit target, int unitID) ->
+        if FORMS.has(target.getTypeId())
+            ABILITIES.forEach() (integer formID, LinkedList<integer> abilIDs) ->
+                abilIDs.forEach() (integer abilID) ->
+                    target.getOwner().setAbilityAvailable(
+                        abilID,
+                        target.getTypeId() == formID
+                    )

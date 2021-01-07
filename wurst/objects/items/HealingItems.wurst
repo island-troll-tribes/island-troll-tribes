@@ -14,8 +14,6 @@ import HealingSystem
 import LocalObjectIDs
 import LocalAssets
 import ToolTipsUtils
-
-// TODO: Remove this and register the healing in the package directly.
 import HealingPotion
 
 constant ABIL_MEAT   = compiletime(ABIL_ID_GEN.next())
@@ -56,8 +54,8 @@ constant TT_HONEY = "A portion of honeycomb left by an animal. Restores {0} heal
 
 @compiletime function createCookedMeat() returns ItemDefinition
     return createPerishableItem(ITEM_COOKED_MEAT)
-        ..setInterfaceIcon(MEAT_ICON)
-        ..setModelUsed(MEAT_MODEL)
+        ..setInterfaceIcon(Icons.bTNMonsterLure)
+        ..setModelUsed(LocalItems.ham)
         ..setName("Cooked Meat")
         ..setTooltipExtended(TT_MEAT)
         ..setDescription(TT_MEAT)
@@ -85,7 +83,7 @@ constant TT_HONEY = "A portion of honeycomb left by an animal. Restores {0} heal
         ..setNumberofCharges(1)
         ..setClassification("Purchasable")
 
-@compiletime function createMagicBanana() returns ItemDefinition
+@compiletime function createHoneycomb() returns ItemDefinition
     return createPerishableItem(ITEM_HONEYCOMB)
         ..setInterfaceIcon(HONEY_ICON)
         ..setModelUsed(HONEY_MODEL)
@@ -99,7 +97,6 @@ constant TT_HONEY = "A portion of honeycomb left by an animal. Restores {0} heal
         ..setNumberofCharges(1)
         ..setClassification("Purchasable")
 
-
 HashMap<int, real> itemSelfHealAmount = null
 HashMap<int, real> itemTargetedHealAmount = null
 
@@ -107,7 +104,6 @@ HashMap<int, real> itemTargetedHealAmount = null
 function initHealItemTable()
     itemSelfHealAmount = new HashMap<int,real>()
     itemSelfHealAmount.put(ITEM_COOKED_MEAT, MEAT_HEAL)
-    itemSelfHealAmount.put(ITEM_SMOKED_MEAT, 40.)
     itemSelfHealAmount.put(ITEM_BANANA, BANANA_HEAL)
     itemSelfHealAmount.put(ITEM_HONEYCOMB, HONEY_HEAL)
 

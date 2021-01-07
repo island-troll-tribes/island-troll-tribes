@@ -4,19 +4,18 @@ package MedallionOfCourage
 import Assets
 import ChannelAbilityPreset
 import ItemObjEditing
-import EventHelper
-import LinkedList
 import RegisterEvents
-import SimError
 import UpgradeObjEditing
 
+// Third Party imports:
+import SimError
+
 // Local imports:
+import Classes
 import ColorUtils
-import IdListConstant
 import Items
 import LocalObjectIDs
 import PlayerExtensions
-import StringExtensions
 
 // The description for the item.
 let DESCRIPTION = "" +
@@ -56,13 +55,13 @@ function onUse(unit caster, item target)
     let unitId = caster.getTypeId()
 
     // Block certain classes from using the medallion.
-    if unitId == UNIT_HUNTER or unitId == UNIT_BEAST_MASTER
-        simError(owner, "This unit cannot use this item.")
+    if unitId == UNIT_HUNTER or unitId == UNIT_BEASTMASTER
+        simError(owner, "Your class cannot use this item.")
         return
 
     // Block unnecessary usage of the medallion.
-    if SUB_TROLL_UNIT_LIST.has(unitId) or SUPERSUB_TROLL_UNIT_LIST.has(unitId)
-        simError(owner, "This unit does not benefit from this item.")
+    if unitId.getTrollClassType() != ClassType.BASE_CLASS
+        simError(owner, "Only base trolls can use item.")
         return
 
     // Block redundant usage of the medallion.

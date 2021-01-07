@@ -1,0 +1,37 @@
+package Endurance
+
+// Standard lib Imports:
+import AbilityObjEditing
+import Assets
+
+// Local Imports:
+import LocalObjectIDs
+import ToolTipsUtils
+
+let CHANCE_IGNORE_DAMAGE = 0.35
+let IGNORED_DAMAGE = 10.
+let MINIMUM_DAMAGE = 3.
+
+let TT = "" +
+    "Increases the warriors health efficiency by reducing damage. "+
+    "He has {0} chance to reduce incoming damage. Damage is reduced by {1} but cannot go below {2}"
+    .format(
+        CHANCE_IGNORE_DAMAGE.toToolTipOrange(),
+        IGNORED_DAMAGE.toToolTipRed(),
+        MINIMUM_DAMAGE.toToolTipRed()
+    )
+
+@compiletime function createPanic() returns AbilityDefinitionHardenedSkin
+    return new AbilityDefinitionHardenedSkin(ABILITY_ENDURANCE)
+        ..setIconNormal(Icons.bTNHeadHunterBerserker)
+        ..setButtonPositionNormalY(1)
+        ..setCheckDependencies(false)
+        ..setChancetoReduceDamage(1, CHANCE_IGNORE_DAMAGE)
+        ..setIgnoredDamage(1, IGNORED_DAMAGE)
+        ..setMinimumDamage(1, MINIMUM_DAMAGE)
+        ..setEditorSuffix("(Wurst)")
+        ..setHotkeyNormal("")
+        ..setName("Endurance")
+        ..setRequirements("")
+        ..setTooltipNormal(1, makeToolTipNormAura("Endurance"))
+        ..setTooltipNormalExtended(1, TT)

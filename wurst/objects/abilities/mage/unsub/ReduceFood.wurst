@@ -42,23 +42,25 @@ class ReduceFood extends ChannelAbilityPreset
         this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
         this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP))
         this.setHotkeyNormal(hotkey)
-        this.setBaseOrderID(1, "shockwave")
+        this.setBaseOrderID(1, "curse")
         this.setButtonPositionNormalX(buttonPos.a)
         this.setButtonPositionNormalX(buttonPos.b)
 
 @compiletime function createReduceFood()
     new ReduceFood(ABILITY_REDUCE_FOOD, "R", new Pair(3,0))
+    new ReduceFood(ABILITY_LEGACY_REDUCE_FOOD, "Q", new Pair(3,0))
 
 function onCast()
-    var target = GetSpellTargetUnit()
-    var size = target.inventorySize()
+    let target = GetSpellTargetUnit()
+    let size = target.inventorySize()
 
     for slot = 0 to size - 1
-        var itm = target.itemInSlot(slot)
-        var charges = itm.getCharges()
+        let itm = target.itemInSlot(slot)
+        let charges = itm.getCharges()
         if itm.getTypeId() == ITEM_COOKED_MEAT and charges > 2
             itm.setCharges(charges - 1)
             break
 
 init
     registerSpellEffectEvent(ABILITY_REDUCE_FOOD, () -> onCast())
+    registerSpellEffectEvent(ABILITY_LEGACY_REDUCE_FOOD, () -> onCast())

@@ -12,7 +12,6 @@ import Game
 import GameMode
 import PingMinimap
 import PlayerExtensions
-import StringExtensions
 import TribeBoard
 import Tribe
 import UnitExtensions
@@ -70,12 +69,6 @@ init
         if localPlayer == triggerPlayer
             ClearTextMessages()
 
-    registerCommandAll("c") (triggerPlayer, args) ->
-        let zoom = args.get(1).toReal()
-        let msg = "Current zoom is {0} (default 0)".format(zoom.toInt().toString().color(ENERGY_COLOR))
-        triggerPlayer.setZoom(zoom)
-        printTimedToPlayer(msg, 5, triggerPlayer)
-
     registerCommandAll("rn") (triggerPlayer, args) ->
         for tribe in Tribe.getTribes()
             let names = tribe
@@ -114,6 +107,8 @@ init
             triggerPlayer
         )
         triggerPlayer.makeObserver()
+        if triggerPlayer == players[0]
+            GameMode.endModeSelection(true)
 
     registerCommandAll("obs-new") (triggerPlayer, args) ->
         printTimedToPlayer(

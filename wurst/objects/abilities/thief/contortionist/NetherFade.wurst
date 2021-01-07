@@ -1,0 +1,69 @@
+package NetherFade
+
+import ChannelAbilityPreset
+import LocalObjectIDs
+import Lodash
+import Assets
+import RegisterEvents
+import ToolTipsUtils
+import OrderIds
+import DummyCaster
+
+let WINDLESS_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
+
+let COOLDOWN = 50.
+let MANACOST = 30
+let DURATION = 15.
+let TOOLTIP_NORM = "Nether Fade"
+let TOOLTIP_EXTENDED = "The Thief fades into the astral plane for several seconds. While there, he cannot be "+
+                       "attacked but takes increased spell damage."+makeToolTipDuration(DURATION, COOLDOWN)
+
+
+class Windless extends AbilityDefinitionBloodMageBanish
+    construct(int newAbilityId)
+        super(newAbilityId)
+        this.setLevels(1)
+        this.setHeroAbility(false)
+        this.setItemAbility(false)
+        this.setName("Windless")
+        this.setManaCost(1, MANACOST)
+        this.setCastRange(1, 99999.)
+        this.setDurationHero(1, DURATION)
+        this.setDurationNormal(1, DURATION)
+        this.setMovementSpeedReduction(1, 0)
+        this.setBuffs(1, BUFF_NETHER.toRawCode())
+
+class NetherFade extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 1, true)
+        this.presetManaCost(lvl -> MANACOST)
+        this.presetCooldown(lvl -> COOLDOWN)
+        this.setHeroAbility(false)
+        this.setItemAbility(false)
+        this.presetTargetTypes(Targettype.NONE)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+        this.setIconNormal(Icons.bTNBanish)
+        this.setIconResearch(Icons.bTNBanish)
+        this.setIconTurnOff(Icons.bTNBanish)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+
+
+@compiletime function createNetherFade()
+    new NetherFade(ABILITY_NETHER_FADE, "Q", new Pair(0, 0))
+    new Windless(WINDLESS_ABILITY_ID)
+
+
+function onCast()
+    let caster = GetSpellAbilityUnit()
+
+    new DummyCaster()
+        ..owner(caster.getOwner())
+        ..origin(caster.getPos() + vec2(100,0))
+        ..castTarget(WINDLESS_ABILITY_ID,1, Orders.banish, caster)
+
+init
+    registerSpellEffectEvent(ABILITY_NETHER_FADE, () -> onCast())

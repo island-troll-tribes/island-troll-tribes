@@ -1,16 +1,89 @@
 package Pinions
 
-import LocalObjectIDs
+// Standard lib Imports:
 import AbilityObjEditing
-import BuffObjEditing
 import Assets
 import ObjectIdGenerator
 import ObjectIds
+import BuffObjEditing
+import ClosureEvents
+import ClosureTimers
+
+// Third party Imports:
+import HashMap
+import Lodash
+
+// Local Imports:
+import Items
+import LocalObjectIDs
+import ToolTipsUtils
+import LocalItemObjEditing
 
 let BUFF_ID_PHOENIX_FIRE = compiletime(BUFF_ID_GEN.next())
 let BUFF_ID_IMMOLATION   = compiletime(BUFF_ID_GEN.next())
 let BUFF_ID_HP_DEGEN     = compiletime(BUFF_ID_GEN.next())
 let BUFF_ID_MP_DEGEN     = compiletime(BUFF_ID_GEN.next())
+
+let ABIL_SHADOW_PINION_INVIS = compiletime(ABIL_ID_GEN.next())
+
+let PINION_FIRE_IMMOLATION_DMG = 9.0
+// Phoenix fire ability missile damage
+let PINION_FIRE_PHOENIX_MISSILE_DMG = 4.0
+// Phoenix fire ability cooldown
+let PINION_FIRE_COOLDOWN = 1.5
+
+let PINION_PAIN_HEALTH_DEGEN = 1.0
+let PINION_PAIN_MANA_DEGEN = 1.5
+
+// The frequency in seconds at which the state is advanced.
+let PINION_SHADOW_TICK_FREQUENCY = 5.
+
+// The percentage towards the completion the state is advanced per tick.
+let PINION_SHADOW_TICK_PERCENTAGE = 1
+
+// The maximum percentange movement speed increase obtainable.
+let PINION_SHADOW_MAX_SPEED = 100
+
+let PINION_SHADOW_COOLDOWN = 45.
+let PINION_SHADOW_DURATION = 6.
+
+let TT_PINION_FIRE = ""+
+    ("One of Disc0-Duck's legendary quills. This one provides the user with Disc0-Ducks " +
+    "extreme heat, increasing the owners speed to maximum and giving him a damaging " +
+    "heat aura dealing {0} damage per seconds. Additionally cast phoenix fire every " +
+    "{1} seconds on nearest enemy, dealing {2} damage.")
+    .format(
+        PINION_FIRE_IMMOLATION_DMG.toToolTipRed(),
+        PINION_FIRE_COOLDOWN.toToolTipLightBlue(),
+        PINION_FIRE_PHOENIX_MISSILE_DMG.toToolTipRed()
+    )
+
+let TT_PINION_PAIN = "" +
+     ("One of Disc0-Duck's legendary quills. A corruptive aura seeps from this item " +
+     "corrupting the flesh of nearby enemies causing health and mana degeneration " +
+     "in a very large range around the holder. Enemies loose {0} health and " +
+     "{1} mana per seconds.")
+    .format(
+        PINION_PAIN_HEALTH_DEGEN.toToolTipRed(),
+        PINION_PAIN_MANA_DEGEN.toToolTipPurple()
+    )
+
+let TT_PINION_SHADOW = "" +
+    "One of Disc0-Duck's legendary quills. This quill binds with its owner, " +
+    "slowly turning it into shadows.|n" +
+    "Provides +5 to stats, +3 armor, and 15% evasion.|n" +
+    "As shadow fusion increases, movement speed increases." +
+    "The bearer can also temporarily blend into the shadows to become " +
+    "completely invisible for {0} seconds."
+    .format(
+        PINION_SHADOW_DURATION.toToolTipLightBlue()
+        )
+    +makeToolTipCooldown(PINION_SHADOW_COOLDOWN)
+
+// The tooltip used for the pinion shadow buff.
+let TT_PINION_SHADOW_BUFF = "" +
+    "This unit is melding with its shadow; it has increased movement and " +
+    "eventually only its shadow will be visible."
 
 
 @compiletime function createPinionBuffs()
@@ -46,8 +119,8 @@ let BUFF_ID_MP_DEGEN     = compiletime(BUFF_ID_GEN.next())
     new AbilityDefinitionPhoenixFire(ABILITY_EXTREME_HEAT)
         ..setAreaofEffect(1, 500.0)
         ..setBuffs(1, BUFF_ID_PHOENIX_FIRE.toRawCode())
-        ..setCooldown(1, 1.5)
-        ..setDamagePerSecond(1, 4.0)
+        ..setCooldown(1, PINION_FIRE_COOLDOWN)
+        ..setDamagePerSecond(1, PINION_FIRE_PHOENIX_MISSILE_DMG)
         ..setDurationNormal(1, 1.0)
         ..setDurationHero(1, 1.0)
         ..setMissileSpeed(800)
@@ -58,7 +131,7 @@ let BUFF_ID_MP_DEGEN     = compiletime(BUFF_ID_GEN.next())
     new AbilityDefinitionPermanentImmolation(ABILITY_DD_IMMOLATION)
         ..setAreaofEffect(1, 400.0)
         ..setBuffs(1, BUFF_ID_IMMOLATION.toRawCode())
-        ..setDamageperInterval(1, 9.0)
+        ..setDamageperInterval(1, PINION_FIRE_IMMOLATION_DMG)
         ..setEditorSuffix("Pinion of Fire")
         ..setItemAbility(false)
         ..setName("Perm Immolation")
@@ -72,7 +145,7 @@ let BUFF_ID_MP_DEGEN     = compiletime(BUFF_ID_GEN.next())
         ..setAreaofEffect(1, 5000.0)
         ..setBuffs(1, BUFF_ID_HP_DEGEN.toRawCode())
         ..setMovementSpeedIncrease(1, 0.0)
-        ..setLifeRegenerationIncrease(1, -1.0)
+        ..setLifeRegenerationIncrease(1, -PINION_PAIN_HEALTH_DEGEN)
         ..setItemAbility(true)
         ..setName("Disc0-Ducks Pain Aura")
         ..setArtTarget(Abilities.vampiricAura)
@@ -89,7 +162,7 @@ let BUFF_ID_MP_DEGEN     = compiletime(BUFF_ID_GEN.next())
     new AbilityDefinitionArchMageBrillianceAura(ABILITY_DD_DEPRESS_AURA)
         ..setAreaofEffect(1, 5000.0)
         ..setBuffs(1, BUFF_ID_MP_DEGEN.toRawCode())
-        ..setManaRegenerationIncrease(1, -1.5)
+        ..setManaRegenerationIncrease(1, -PINION_PAIN_MANA_DEGEN)
         ..setItemAbility(true)
         ..setName("Disc0-Ducks degen Aura (Neutral Hostile)")
         ..setArtTarget("")
@@ -103,3 +176,126 @@ let BUFF_ID_MP_DEGEN     = compiletime(BUFF_ID_GEN.next())
             TargetsAllowed.vulnerable
             )
         )
+
+    new AbilityDefinitionWindWalk(ABIL_SHADOW_PINION_INVIS)
+        ..setCooldown(1, PINION_SHADOW_COOLDOWN)
+        ..setManaCost(1, 0)
+        ..setMovementSpeedIncrease(1, 1.0)
+        ..setBackstabDamage(1, 0.0)
+        ..setBackstabDamage(1, 0)
+        ..setDurationNormal(1, PINION_SHADOW_DURATION)
+        ..setDurationHero(1, PINION_SHADOW_DURATION)
+        ..setHeroAbility(false)
+        ..setItemAbility(true)
+        ..setLevels(1)
+        ..setName("ShadowPinion Invisibility")
+
+
+function createPinion(int itemId) returns ItemDefinition
+    return createBasicItem(itemId)
+        ..setInterfaceIcon(Icons.bTNHeartOfAszune)
+        ..setDescription("A very rare legendary item.")
+        ..setModelUsed(Units.phoenixEgg)
+        ..setIgnoreCooldown(false)
+        ..setLumberCost(300)
+        ..setCanBeSoldToMerchants(false)
+        ..setCanBeSoldByMerchants(false)
+        ..setScalingValue(0.8)
+
+@compiletime function createPinionsItemDefinition()
+    createPinion(ITEM_DD_PINION_FIRE)
+        ..setAbilities(commaList(
+            ABILITY_DD_IMMOLATION,
+            ABILITY_DD_MOVE_SPEED,
+            ABILITY_EXTREME_HEAT
+        ))
+        ..setNameEnhance("Disc0-Duck's Pinion of Fire")
+        ..setTooltipExtended(UNIQUE_PREFIX + TT_PINION_FIRE)
+
+    createPinion(ITEM_DD_PINION_PAIN)
+        ..setAbilities(commaList(
+            ABILITY_PAIN_AURA,
+            ABILITY_DD_DEPRESS_AURA
+        ))
+        ..setNameEnhance("Disc0-Duck's Pinion of Pain")
+        ..setTooltipExtended(UNIQUE_PREFIX + TT_PINION_PAIN)
+
+    createPinion(ITEM_DD_PINION_SHADOW)
+        ..setAbilities(commaList(
+            ABIL_SHADOW_PINION_INVIS,
+            AbilityIds.evasion,
+            ABILITY_STATS_BONUS_5,
+            ABILITY_ARMOR_BONUS_3
+        ))
+        ..setNameEnhance("Disc0-Duck's Pinion of Shadow")
+        ..setTooltipExtended(UNIQUE_PREFIX + TT_PINION_SHADOW)
+        ..setTintingColor1Red(0)
+        ..setTintingColor2Green(0)
+        ..setTintingColor3Blue(0)
+        ..setActivelyUsed(true)
+
+// A mapping from a unit to its current state and the timer for it.
+let states = new HashMap<unit, Pair<int, CallbackPeriodic>>()
+
+function onGrab(unit owner)// Each unit is only allowed to hold a single state.
+    // Ignore the event if the unit already has the item.
+    if states.has(owner)
+        // The item will be dropped due to inventory limits.
+        return
+
+    // Periodically advance the state.
+    let cb = doPeriodically(PINION_SHADOW_TICK_FREQUENCY) (CallbackPeriodic cb) ->
+        advanceState(owner)
+
+    // Store the state.
+    states.put(owner, new Pair(100, cb))
+
+public function onDrop(unit owner)
+    // Remove the state for the individual and destroy the update timer.
+    destroy states.getAndRemove(owner).b
+
+    // Reset the transparance of the unit.
+    owner.setVertexColor(COLOR_WHITE)
+
+    // Flash an effect to obscure the vertex color change.
+    flashEffect(Abilities.animateDeadTarget, owner, AttachmentPoints.origin)
+
+    // Reset the movement speed.
+    owner.setMoveSpeed(owner.getDefaultMovespeed())
+
+public function advanceState(unit owner)
+    // Retrieve the state for the owner.
+    let state = states.get(owner)
+
+    // Exit if the state is already maximal.
+    if state.a == 0
+        return
+
+    // Mark the advancement.
+    state.a -= PINION_SHADOW_TICK_PERCENTAGE
+
+    // Update the coloring of the unit.
+    owner.setVertexColor(
+        // The tint advances towards black.
+        PercentTo255(state.a.toReal()),
+        PercentTo255(state.a.toReal()),
+        PercentTo255(state.a.toReal()),
+        // The alpha channel advances towards transparency.
+        PercentTo255(state.a.toReal())
+    )
+
+    // Increase the movement speed of the unit.
+    owner.setMoveSpeed(
+        owner.getDefaultMovespeed() + PercentToInt(100. - state.a, PINION_SHADOW_MAX_SPEED)
+    )
+
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
+        // Only track owners of the correct item.
+        if EventData.getManipulatedItem().getTypeId() == ITEM_DD_PINION_SHADOW
+            onGrab(EventData.getManipulatingUnit())
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DROP_ITEM) ->
+        // Only track owners of the correct item.
+        if EventData.getManipulatedItem().getTypeId() == ITEM_DD_PINION_SHADOW
+            onDrop(EventData.getManipulatingUnit())

@@ -97,8 +97,8 @@ class Zap extends AbilityDefinitionChainLightningcreep
 let timerMap = new HashMap<unit, timer>()
 
 function onCast()
-    var caster = GetSpellAbilityUnit()
-    var target = GetSpellTargetUnit()
+    let caster = GetSpellAbilityUnit()
+    let target = GetSpellTargetUnit()
     onCastEffects(caster, target, consumeOvercharge(caster))
 
 function handleOverchargeFork(unit caster, unit target)
@@ -110,8 +110,8 @@ function handleOverchargeFork(unit caster, unit target)
             if targetsHit.value < OVERCHARGE_FORK_AMOUNT
                 targetsHit.value = targetsHit.value + 1
                 onCastEffects(caster, u, false)
-                var targetFX = AddSpecialEffectTargetUnitBJ("origin", u, BOUNCE_IMPACT_EFFECT_PATH)
-                var lightningFX = addLightning(LIGHTNING_CHAIN_LIGHTNING_SEECONDARY, true, caster.getPos3Real(), u.getPos3Real())
+                let targetFX = AddSpecialEffectTargetUnitBJ("origin", u, BOUNCE_IMPACT_EFFECT_PATH)
+                let lightningFX = addLightning(LIGHTNING_CHAIN_LIGHTNING_SEECONDARY, true, caster.getPos3Real(), u.getPos3Real())
                 doPeriodicallyTimed(0.05, 0.5) ofxUpdater ->
                     lightningFX.move(true, caster.getPos3Real(), u.getPos3Real())
                     if ofxUpdater.isLast()
@@ -167,7 +167,7 @@ function zapChargeExplosion(unit caster, unit target)
         UnitDamageTarget(caster, target, CHARGE_DAMAGE, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
 
     //Charge explosion SFX
-    var efx = AddSpecialEffectTargetUnitBJ("chest", target, EFFECT_PATH)..setScale(0.8)
+    let efx = AddSpecialEffectTargetUnitBJ("chest", target, EFFECT_PATH)..setScale(0.8)
     doAfter(3)->
         efx.destr()
 
@@ -175,18 +175,22 @@ function zapChargeExplosion(unit caster, unit target)
     zapTargetsInRadius(caster, target, CHARGE_BOUNCE_RADIUS, EXPLOSION_FORK_AMOUNT)
 
 function isValidTarget(unit target, unit caster) returns bool
-    unit u = target
-    return u.isAlive() and u.getOwner().isEnemyOf(caster.getOwner()) and not u.isType(UNIT_TYPE_STRUCTURE) and not u.isInvulnerable()
+    return (
+        target.isAlive()
+        and target.getOwner().isEnemyOf(caster.getOwner())
+        and not target.isType(UNIT_TYPE_STRUCTURE)
+        and not target.isInvulnerable()
+    )
 
 function zapTargetsInRadius(unit caster, unit originalTarget, real radius, int maxTargets)
-    vec3 targetPos = originalTarget.getPos3Real()
+    let targetPos = originalTarget.getPos3Real()
     let targetsHit = new IntObject(0)
     forUnitsInRange(targetPos.toVec2(), radius) u ->
         if (isValidTarget(u, caster) and not u == originalTarget and targetsHit.value < maxTargets)
             targetsHit.value += 1
             onCastEffects(caster, u, false)
-            var targetFX = AddSpecialEffectTargetUnitBJ("origin", u, BOUNCE_IMPACT_EFFECT_PATH)
-            var lightningFX = addLightning(LIGHTNING_CHAIN_LIGHTNING_SEECONDARY, true, originalTarget.getPos3Real(), u.getPos3Real())
+            let targetFX = AddSpecialEffectTargetUnitBJ("origin", u, BOUNCE_IMPACT_EFFECT_PATH)
+            let lightningFX = addLightning(LIGHTNING_CHAIN_LIGHTNING_SEECONDARY, true, originalTarget.getPos3Real(), u.getPos3Real())
             doPeriodicallyTimed(0.05, 0.5) fxUpdater ->
                 lightningFX.move(true, originalTarget.getPos3Real(), u.getPos3Real())
                 if fxUpdater.isLast()

@@ -16,8 +16,8 @@ function LinkedList<rect>.getTotalArea() returns real
 function LinkedList<rect>.selectRandomRectWeighted() returns rect
     //Takes into account the portion that the rect has of the total area
     //Used for picking random point from multiple rects evenly
-    real total_area = this.getTotalArea()
-    real random = GetRandomReal(0, total_area)
+    let total_area = this.getTotalArea()
+    let random = GetRandomReal(0, total_area)
 
     real randomPickTemporary = 0
     for r in this
@@ -37,8 +37,8 @@ function approximateRectsLandmassRandomPoints(LinkedList<rect> rects, int testPo
         if (i mod 750 == 0) //Break up execution to avoid op limit
             TriggerSleepAction(0.1)
 
-        rect randomPointRect = rects.selectRandomRectWeighted()
-        vec2 randomPoint = randomPointRect.randomPoint()
+        let randomPointRect = rects.selectRandomRectWeighted()
+        let randomPoint = randomPointRect.randomPoint()
         if randomPoint.isTerrainShallowWater() or randomPoint.isTerrainDeepWater()
             waterPoints += 1
         else if randomPoint.isTerrainLand()
@@ -47,15 +47,15 @@ function approximateRectsLandmassRandomPoints(LinkedList<rect> rects, int testPo
             else
                 nonWalkableLandPoints += 1
 
-    int totalPoints = waterPoints + walkableLandPoints + nonWalkableLandPoints
-    real walkableLandRatio = walkableLandPoints / totalPoints
-    real totalLandRatio = (walkableLandPoints + nonWalkableLandPoints) / totalPoints
-    real waterRatio = waterPoints / totalPoints
-    real totalArea = rects.getTotalArea()
+    let totalPoints = waterPoints + walkableLandPoints + nonWalkableLandPoints
+    let walkableLandRatio = walkableLandPoints / totalPoints
+    let totalLandRatio = (walkableLandPoints + nonWalkableLandPoints) / totalPoints
+    let waterRatio = waterPoints / totalPoints
+    let totalArea = rects.getTotalArea()
 
-    real walkableArea = (totalArea*walkableLandRatio)
-    real totalLandArea = (totalArea*totalLandRatio)
-    real waterArea = (totalArea*waterRatio)
+    let walkableArea = (totalArea*walkableLandRatio)
+    let totalLandArea = (totalArea*totalLandRatio)
+    let waterArea = (totalArea*waterRatio)
     if printOutput
         print("Sample points analyzed: " + testPoints.toString())
         print("Rects had total area of " + totalArea.toString(0) + " units.")

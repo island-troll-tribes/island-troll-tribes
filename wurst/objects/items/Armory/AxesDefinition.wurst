@@ -1,16 +1,18 @@
 package AxesDefinition
 
-import Items
+// Standard lib Imports:
 import AbilityObjEditing
-import LocalItemObjEditing
 import Assets
-import LocalObjectIDs
+import ColorUtils
 import ObjectIdGenerator
 import ObjectIds
-import ToolTipsUtils
+
+// Local Imports:
+import Items
 import LocalAssets
-import ColorUtils
-import StringExtensions
+import LocalItemObjEditing
+import LocalObjectIDs
+import ToolTipsUtils
 
 let ABIL_DMG_STONE  = compiletime(ABIL_ID_GEN.next())
 let ABIL_DMG_IRON   = compiletime(ABIL_ID_GEN.next())
@@ -46,19 +48,38 @@ let PURGE_COOLDOWN   = 60.
 
 let SILENCE_AOE = 225.
 
-let TT_COMMON = "Increases the attack damage of the unit by " + "{0}".color(RED_COLOR) + " when worn. Wielder can cut trees."
+let TT_COMMON = ""+
+    "Increases the attack damage of the unit by " + "{0}".color(RED_COLOR) + " when worn. "+
+    "Wielder can cut trees."
 
-let TT_MM = TT_COMMON + " Can cast silence which has a {0} area of effect, lasting {1} seconds with a {2} second cooldown. "
-                            .format(SILENCE_AOE.toToolTipLightBlue(), SILENCE_DURATION_HERO.toToolTipLightBlue(), SILENCE_COOLDOWN.toToolTipLightBlue())+
-                             "Every hit burns {0} mana against mages, priests, and their subclasses.".format(6..toToolTipBlue())
+let TT_MM = (TT_COMMON +
+    " Can cast silence which has a {0} area of effect, lasting {1} seconds "+
+    "with a {2} second cooldown. ")
+    .format(
+        SILENCE_AOE.toToolTipLightBlue(),
+        SILENCE_DURATION_HERO.toToolTipLightBlue(),
+        SILENCE_COOLDOWN.toToolTipLightBlue()
+    )+
+    "Every hit burns {0} mana against mages, priests, and their subclasses."
+    .format(6..toToolTipBlue())
 
-let TT_BA = "A two handed axe. " + TT_COMMON + " Can cast purge, removes all buffs from a target unit, and slows its movement speed." + formatCooldown(ABIL_PURGE) + formatDuration(ABIL_PURGE)
+let TT_BA = "A two handed axe. " + TT_COMMON +
+    " Can cast purge, removes all buffs from a target unit, and slows its movement speed." +
+    formatCooldown(ABIL_PURGE) + formatDuration(ABIL_PURGE)
 
 
 @compiletime function createCutTreeAbility() returns AbilityDefinitionFireDamageBonus
     return new AbilityDefinitionFireDamageBonus(ABILITY_ATTACK_TREE)
         ..setHeroAbility(true)
-        ..setTargetsAllowed(1, "debris,ground,item,structure,tree,ward")
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.debris,
+            TargetsAllowed.ground,
+            TargetsAllowed.item_t,
+            TargetsAllowed.structure,
+            TargetsAllowed.tree,
+            TargetsAllowed.ward
+            )
+        )
         ..setName("Attack Trees")
         ..setEditorSuffix("(Wurst)")
         ..setSpecialAttachmentPoint("")
@@ -80,7 +101,6 @@ function createAxe(int axeId) returns ItemDefinition
     return createAxe(ITEM_STONE_AXE)
         ..setInterfaceIcon(Icons.bTNOrcMeleeUpOne)
         ..setModelUsed(LocalItems.stoneAxe)
-        ..setTooltipBasic("Trade for Stone Axe")
         ..setHotkey("A")
         ..setTooltipExtended(TT_COMMON.format(DMG_STONE.toString()))
         ..setScalingValue(0.7)
@@ -93,7 +113,6 @@ function createAxe(int axeId) returns ItemDefinition
         ..setInterfaceIcon(Icons.bTNOrcMeleeUpTwo)
         ..setModelUsed(LocalItems.ironAxe)
         ..setNameEnhance("Iron Axe")
-        ..setTooltipBasic("Trade for Iron Axe")
         ..setHotkey("S")
         ..setTooltipExtended(TT_COMMON.format(DMG_IRON.toString()))
         ..setScalingValue(0.7)
@@ -105,7 +124,6 @@ function createAxe(int axeId) returns ItemDefinition
         ..setInterfaceIcon(Icons.bTNSpiritWalkerAdeptTraining)
         ..setModelUsed(LocalItems.steelAxe)
         ..setNameEnhance("Steel Axe")
-        ..setTooltipBasic("Trade for Steel Axe")
         ..setHotkey("W")
         ..setTooltipExtended(TT_COMMON.format(DMG_STEEL.toString()))
         ..setScalingValue(0.7)
@@ -120,7 +138,6 @@ function createAxe(int axeId) returns ItemDefinition
         ..setInterfaceIcon(Icons.bTNOrcMeleeUpThree)
         ..setModelUsed(LocalItems.battleAxe)
         ..setNameEnhance("Battle Axe")
-        ..setTooltipBasic("Trade for Battle Axe")
         ..setHotkey("A")
         ..setTooltipExtended(TT_BA.format(DMG_BATTLE.toString()))
         ..setScalingValue(0.7)
@@ -133,7 +150,6 @@ function createAxe(int axeId) returns ItemDefinition
         ..setInterfaceIcon(Icons.bTNSpiritWalkerMasterTraining)
         ..setModelUsed(LocalItems.mageMasher)
         ..setNameEnhance("Mage Masher ")
-        ..setTooltipBasic("Trade for MageMasher")
         ..setHotkey("A")
         ..setTooltipExtended(TT_MM.format(DMG_MASHER.toString()))
         ..setScalingValue(0.7)

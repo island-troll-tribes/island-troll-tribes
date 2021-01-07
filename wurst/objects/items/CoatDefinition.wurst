@@ -1,42 +1,30 @@
 package CoatDefinition
 
 
-import Items
-import LocalItemObjEditing
+// Standard lib Imports:
 import AbilityObjEditing
-import ObjectIds
-import LocalObjectIDs
-import Orders
-import ObjectIdGenerator
-import ColorUtils
-import ToolTipsUtils
 import Assets
-import LocalAssets
 import ClosureEvents
-import InstantDummyCaster
 import ClosureForGroups
+import ColorUtils
+import InstantDummyCaster
+import ObjectIdGenerator
+import ObjectIds
+import Orders
+
+// Local Imports:
+import Items
+import LocalAssets
+import LocalItemObjEditing
+import LocalObjectIDs
+import ToolTipsUtils
 import UnitExtensions
-import StringExtensions
 
 constant ABIL_STATS_BATTLE            = compiletime(ABIL_ID_GEN.next())
 constant ABIL_SPELL_RESISTANCE_BATTLE = compiletime(ABIL_ID_GEN.next())
 constant ABIL_CAST_BATTLE             = compiletime(ABIL_ID_GEN.next())
 constant ABIL_CAST_STEEL              = compiletime(ABIL_ID_GEN.next())
 constant ABIL_HARDENED_SCALE          = compiletime(ABIL_ID_GEN.next())
-
-constant IRON_ICON      = Icons.bTNImprovedMoonArmor
-constant BONE_ICON      = LocalIcons.bTNBoneCoat
-constant STEEL_ICON     = Icons.bTNAdvancedMoonArmor
-constant BATTLE_ICON    = Icons.bTNRobeOfTheMagi
-constant SCALE_ICON     = Icons.bTNNagaArmorUp3
-constant ELK_SKIN_ICON  = LocalIcons.bTNElkHideCoat
-constant WOLF_SKIN_ICON = LocalIcons.bTNWolfHideCoat
-constant BEAR_SKIN_ICON = LocalIcons.bTNBearHideCoat
-
-constant SKIN_MODEL  = LocalItems.skinCoat
-constant BONE_MODEL  = LocalItems.boneCoat
-constant ARMOR_MODEL = LocalItems.armor
-constant SCALE_MODEL = LocalItems.hydraCoat
 
 constant BATTLE_COOLDOWN = 75.
 constant STEEL_COOLDOWN = 90.
@@ -95,22 +83,25 @@ public constant TT_STEEL_COAT = TT_SKIN.format(
     getAbilityDataField(ABILITY_ARMOR_BONUS_5 , "DataA1").color(COLOR_GREEN)
 ) + " Can cast " + "Cure All".color(COLOR_GREEN) + " on wearer." + makeToolTipCooldown(90)
 
-public constant TT_BATTLE_ARMOR = ("A coat embedded with a protective mana layer. Increase all stats by {0}, Armor by {1} and provides {2} magic resistance. "
-                                    +"Can cast Anti-Magic on nearby allied heroes.")
-                                    .format(
-                                        4..toToolTipGreen(),
-                                        getAbilityDataField(ABILITY_ARMOR_BONUS_7 , "DataA1").color(COLOR_GREEN),
-                                        BATTLE_ARMOR_SPELL_RESISTANCE_FACTOR.toToolTipBlue()
-                                        )
-                                    + makeToolTipCooldown(BATTLE_COOLDOWN)
+public constant TT_BATTLE_ARMOR = "" +
+    ("A coat embedded with a protective mana layer. Increase all stats by {0}, "+
+    "Armor by {1} and provides {2} magic resistance. "+
+    "Can cast Anti-Magic on nearby allied heroes.")
+    .format(
+        4..toToolTipGreen(),
+        getAbilityDataField(ABILITY_ARMOR_BONUS_7 , "DataA1").color(COLOR_GREEN),
+        BATTLE_ARMOR_SPELL_RESISTANCE_FACTOR.toToolTipBlue()
+    )+
+    makeToolTipCooldown(BATTLE_COOLDOWN)
 
-public constant TT_SCALE_COAT = ("A coat embedded with the scale of the Great Hydra. Increase all stats by {0}, Armor by {1} and "
-                                    +"returns {2} melee damage received.")
-                                    .format(
-                                        2..toToolTipGreen(),
-                                        getAbilityDataField(ABILITY_ARMOR_BONUS_10 , "DataA1").color(COLOR_GREEN),
-                                        SCALE_COAT_RETURN_DAMAGE_FACTOR.toToolTipPurple()
-                                        )
+public constant TT_SCALE_COAT = "" +
+    ("A coat embedded with the scale of the Great Hydra. "+
+    "Increase all stats by {0}, Armor by {1} and returns {2} melee damage received.")
+    .format(
+        2..toToolTipGreen(),
+        getAbilityDataField(ABILITY_ARMOR_BONUS_10 , "DataA1").color(COLOR_GREEN),
+        SCALE_COAT_RETURN_DAMAGE_FACTOR.toToolTipPurple()
+    )
 
 @compiletime function createCoatAbilities()
     createItemBerserkCast(ABIL_CAST_BATTLE)
@@ -127,7 +118,7 @@ public constant TT_SCALE_COAT = ("A coat embedded with the scale of the Great Hy
         ..setReceivedDamageFactor(1, SCALE_COAT_RETURN_DAMAGE_FACTOR)
         ..setHeroAbility(false)
         ..setItemAbility(true)
-        ..setName("Hydra HARDENED Scale")
+        ..setName("Hydra Hardened Scale")
         ..setEditorSuffix("(Wurst)")
 
     new AbilityDefinitionRunedBracers(ABIL_SPELL_RESISTANCE_BATTLE)
@@ -140,8 +131,8 @@ public constant TT_SCALE_COAT = ("A coat embedded with the scale of the Great Hy
 
 @compiletime function createElkSkinCoat() returns ItemDefinition
     return createBasicItem(ITEM_ELK_SKIN_COAT)
-        ..setInterfaceIcon(ELK_SKIN_ICON)
-        ..setModelUsed(SKIN_MODEL)
+        ..setInterfaceIcon(LocalIcons.bTNElkHideCoat)
+        ..setModelUsed(LocalItems.skinCoat)
         ..setNameEnhance("Elk Skin Coat")
         ..setTooltipExtended(TT_ELK_SKIN_COAT)
         ..setDescription(TT_ELK_SKIN_COAT)
@@ -154,8 +145,8 @@ public constant TT_SCALE_COAT = ("A coat embedded with the scale of the Great Hy
 
 @compiletime function createWolfSkinCoat() returns ItemDefinition
     return createBasicItem(ITEM_WOLF_SKIN_COAT)
-        ..setInterfaceIcon(WOLF_SKIN_ICON)
-        ..setModelUsed(SKIN_MODEL)
+        ..setInterfaceIcon(LocalIcons.bTNWolfHideCoat)
+        ..setModelUsed(LocalItems.skinCoat)
         ..setNameEnhance("Wolf Skin Coat")
         ..setTooltipExtended(TT_WOLF_SKIN_COAT)
         ..setDescription(TT_WOLF_SKIN_COAT)
@@ -168,8 +159,8 @@ public constant TT_SCALE_COAT = ("A coat embedded with the scale of the Great Hy
 
 @compiletime function createBearSkinCoat() returns ItemDefinition
     return createBasicItem(ITEM_BEAR_SKIN_COAT)
-        ..setInterfaceIcon(BEAR_SKIN_ICON)
-        ..setModelUsed(SKIN_MODEL)
+        ..setInterfaceIcon(LocalIcons.bTNBearHideCoat)
+        ..setModelUsed(LocalItems.skinCoat)
         ..setNameEnhance("Bear Skin Coat")
         ..setTooltipExtended(TT_BEAR_SKIN_COAT)
         ..setDescription(TT_BEAR_SKIN_COAT)
@@ -182,8 +173,8 @@ public constant TT_SCALE_COAT = ("A coat embedded with the scale of the Great Hy
 
 @compiletime function createBoneCoat() returns ItemDefinition
     return createBasicItem(ITEM_BONE_COAT)
-        ..setInterfaceIcon(BONE_ICON)
-        ..setModelUsed(BONE_MODEL)
+        ..setInterfaceIcon(LocalIcons.bTNBoneCoat)
+        ..setModelUsed(LocalItems.boneCoat)
         ..setNameEnhance("Bone Coat")
         ..setTooltipExtended(TT_BONE_COAT)
         ..setDescription(TT_BONE_COAT)
@@ -196,8 +187,8 @@ public constant TT_SCALE_COAT = ("A coat embedded with the scale of the Great Hy
 
 @compiletime function createIronCoat() returns ItemDefinition
     return createBasicItem(ITEM_IRON_COAT)
-        ..setInterfaceIcon(IRON_ICON)
-        ..setModelUsed(ARMOR_MODEL)
+        ..setInterfaceIcon(Icons.bTNImprovedMoonArmor)
+        ..setModelUsed(LocalItems.armor)
         ..setNameEnhance("Iron Coat")
         ..setTooltipExtended(TT_IRON_COAT)
         ..setDescription(TT_IRON_COAT)
@@ -210,8 +201,8 @@ public constant TT_SCALE_COAT = ("A coat embedded with the scale of the Great Hy
 
 @compiletime function createSteelCoat() returns ItemDefinition
     return createUsableItem(ITEM_STEEL_COAT)
-        ..setInterfaceIcon(STEEL_ICON)
-        ..setModelUsed(ARMOR_MODEL)
+        ..setInterfaceIcon(Icons.bTNAdvancedMoonArmor)
+        ..setModelUsed(LocalItems.armor)
         ..setNameEnhance("Steel Coat")
         ..setTooltipExtended(TT_STEEL_COAT)
         ..setDescription(TT_STEEL_COAT)
@@ -225,8 +216,8 @@ public constant TT_SCALE_COAT = ("A coat embedded with the scale of the Great Hy
 
 @compiletime function createBattleArmor() returns ItemDefinition
     return createUsableItem(ITEM_BATTLE_ARMOR)
-        ..setInterfaceIcon(BATTLE_ICON)
-        ..setModelUsed(ARMOR_MODEL)
+        ..setInterfaceIcon(Icons.bTNRobeOfTheMagi)
+        ..setModelUsed(LocalItems.armor)
         ..setNameEnhance("Battle Armor")
         ..setTooltipExtended(TT_BATTLE_ARMOR)
         ..setDescription(TT_BATTLE_ARMOR)
@@ -240,8 +231,8 @@ public constant TT_SCALE_COAT = ("A coat embedded with the scale of the Great Hy
 
 @compiletime function createScaleCoat() returns ItemDefinition
     return createBasicItem(ITEM_HARDEN_SCALES)
-        ..setInterfaceIcon(SCALE_ICON)
-        ..setModelUsed(SCALE_MODEL)
+        ..setInterfaceIcon(Icons.bTNNagaArmorUp3)
+        ..setModelUsed(LocalItems.hydraCoat)
         ..setNameEnhance("Hydra Scale Coat")
         ..setTooltipExtended(ARTIFACT_PREFIX + TT_SCALE_COAT)
         ..setDescription(ARTIFACT_PREFIX + TT_SCALE_COAT)

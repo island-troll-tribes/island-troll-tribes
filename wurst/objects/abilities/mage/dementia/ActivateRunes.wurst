@@ -1,0 +1,362 @@
+package ActivateRunes
+
+// Standard library imports:
+import Assets
+import ChannelAbilityPreset
+import ClosureEvents
+import ClosureForGroups
+import ClosureTimers
+import LinkedList
+import Orders
+import BuffObjEditing
+import DummyCaster
+
+// Third-party imports:
+import Lodash
+import LodashExtensions
+
+// Local imports:
+import ColorUtils
+import DarkGate
+import DementiaRunes
+import LocalObjectIDs
+import ToolTipsUtils
+
+let PORTAL_OFFSET = 350.
+let RUNE_CAST_RADIUS = 350.
+let SUMMON_EFFECT_PATH = Abilities.ancestralSpiritCaster
+
+let KA  = "Ka".color(COLOR_RED)
+let NEL = "Nel".color(COLOR_GREEN)
+let LEZ = "Lez".color(COLOR_LIGHT_BLUE)
+
+let KA_RECIPE = KA+" "+LEZ+" "+KA+" "+NEL+" "+KA
+let NEL_RECIPE = NEL+" "+NEL+" "+KA+" "+NEL+" "+LEZ
+let LEZ_RECIPE = LEZ+" "+NEL+" "+LEZ+" "+LEZ+" "+KA
+let SUMMONS_RECIPE = KA_RECIPE+"\n"+NEL_RECIPE+"\n"+LEZ_RECIPE+"\n"
+
+let COOLDOWN = 10.
+let DEMENTIA_SUMMON_TOOLTIP_NORM     = "Dementia Summoning"
+let DEMENTIA_SUMMON_TOOLTIP_EXTENDED = ("Passively gives the Dementia Master the ability to summon a monster from dementia space using Dementia Runes. "+
+                                       "Summoning must be performed close to the center of an open dark gate and you must have a correct rune order. "+
+                                       "The Dementia Master managed to decipher the following rune order from the ancient dark book.\n"+
+                                       SUMMONS_RECIPE)+("Warning! Dementia Summonings can be unpredictable and dangerous. No creature wants "+
+                                       "to be summoned for no reason!|r").color(COLOR_RED)
+
+let ACTIVATE_RUNES_TOOLTIP_NORM     = "Activates Runes"
+let ACTIVATE_RUNES_TOOLTIP_EXTENDED = "" +
+    "Casting this spell causes nearby runes to become active and seek targets in a very close range around the caster. "+
+    "Runes will seek any enemies inside a dark gate if the caster casts this inside the gate as well. "+
+    "This skill can also be used in a gate to perform "+
+    "a dementia summoning. Has {0} seconds cooldown.".format(COOLDOWN.toToolTipLightBlue())
+
+let UNIT_LOCUST_FIRE_LORD  = compiletime(UNIT_ID_GEN.next())
+let UNIT_LOCUST_WATER_LORD = compiletime(UNIT_ID_GEN.next())
+let UNIT_LOCUST_GHOST      = compiletime(UNIT_ID_GEN.next())
+
+let ABIL_FIRE_DEMON_HAND_FX = compiletime(ABIL_ID_GEN.next())
+let ABIL_FIRE_DEMON_BURNING = compiletime(ABIL_ID_GEN.next())
+
+let ABIL_ICE_DEMON_HAND_FX = compiletime(ABIL_ID_GEN.next())
+let ABIL_ICE_DEMON_FROST_BOLT = compiletime(ABIL_ID_GEN.next())
+
+let ABIL_GHOST_DEMON_SOUL_BURN = compiletime(ABIL_ID_GEN.next())
+
+
+@compiletime function createDemonAbilityBuff()
+    new BuffDefinition(BUFF_GHOST_DEMON_SOUL_BURN, 'Bclf') // Cloud buff
+        ..setIconNormal(1, Icons.bTNCorrosiveBreath)
+        ..setTooltipNormal("Bad Breath")
+        ..setTooltipNormalExtended("This unit has been hit by bad breath. It has reduced movement")
+        ..setName("Bad Breath")
+        ..setArtTarget(1, "Environment\\UndeadBuildingFire\\UndeadLargeBuildingFire1.mdl")
+        ..setTargetAttachmentPoint0("head")
+        ..setTargetAttachmentPoint1("weapon,left")
+        ..setTargetAttachmentPoint2("weapon,right")
+
+    new BuffDefinition(BUFF_UNHOLY_FIRE, 'Bmlt')
+        ..setIconNormal(1, Icons.bTNWallOfFire)
+        ..setTooltipNormal("Unholy Flames")
+        ..setTooltipNormalExtended("This unit is encased in fire. It takes damage over time.")
+        ..setArtTarget(1, Abilities.doomTarget)
+        ..setTargetAttachmentPoint0("origin")
+
+@compiletime function createDemonAbilities()
+    new AbilityDefinition(ABIL_FIRE_DEMON_HAND_FX, 'Asph')
+        ..setMissileArt(Abilities.phoenix_Missile)
+        ..setName("Fire Sphere")
+        ..setArtTarget(Abilities.phoenix_Missile)
+        ..setTargetAttachmentPoint("hand,left")
+        ..setTargetAttachmentPoint1("hand,right")
+        ..setTargetAttachmentPoint2("")
+
+    new AbilityDefinitionAlchemistAcidBomb(ABIL_FIRE_DEMON_BURNING)
+        ..setAreaofEffect(1, 1.0)
+        ..setBuffs(1, toRawCode(BUFF_UNHOLY_FIRE))
+        ..setCooldown(1, 0.0)
+        ..setManaCost(1, 0)
+        ..setArmorPenalty(1, 0)
+        ..setPrimaryDamage(1, 10.0)
+        ..setSecondaryDamage(1, 0.0)
+        ..setDurationNormal(1, 25.0)
+        ..setHeroAbility(false)
+        ..setDurationHero(1, 25.0)
+        ..setLevels(1)
+        ..setMissileArt(Abilities.redDragonMissile)
+        ..setName("Unholy Flame")
+        ..setCastRange(1, 5000.0)
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.enemies,
+            TargetsAllowed.friend,
+            TargetsAllowed.ground,
+            TargetsAllowed.neutral,
+            TargetsAllowed.nonancient,
+            TargetsAllowed.organic
+            )
+        )
+
+    new AbilityDefinition(ABIL_ICE_DEMON_HAND_FX, 'Asph')
+        ..setMissileArt(Abilities.zigguratMissile)
+        ..setName("Ice Sphere")
+        ..setArtTarget(Abilities.zigguratMissile)
+        ..setTargetAttachmentPoint("head")
+        ..setTargetAttachmentPoint1("hand,left")
+        ..setTargetAttachmentPoint2("hand,right")
+
+    new AbilityDefinitionFrostBolt(ABIL_ICE_DEMON_FROST_BOLT)
+        ..setCooldown(1, 0.0)
+        ..setDamage(1, 22.0)
+        ..setDurationHero(1, 0.4)
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.enemies,
+            TargetsAllowed.friend,
+            TargetsAllowed.air,
+            TargetsAllowed.ground,
+            TargetsAllowed.neutral,
+            TargetsAllowed.nonancient,
+            TargetsAllowed.structure
+            )
+        )
+
+    new AbilityDefinitionFirelordSoulBurn(ABIL_GHOST_DEMON_SOUL_BURN)
+        ..setBuffs(1, BUFF_GHOST_DEMON_SOUL_BURN.toRawCode())
+        ..setCooldown(1, 0.0)
+        ..setManaCost(1, 0)
+        ..setDamageAmount(1, 6.0)
+        ..setMovementSpeedReduction(1, 0.35)
+        ..setAttackSpeedReduction(1, 0.1)
+        ..setDurationNormal(1, 10.0)
+        ..setDurationHero(1, 10.0)
+        ..setHeroAbility(false)
+        ..setLevels(1)
+        ..setName("Summon Silence")
+        ..setCastRange(1, 3500.0)
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.enemies,
+            TargetsAllowed.friend,
+            TargetsAllowed.hero,
+            TargetsAllowed.ground,
+            TargetsAllowed.neutral,
+            TargetsAllowed.nonancient,
+            TargetsAllowed.organic
+            )
+        )
+
+function createLocustDemonSummoned(int unitId) returns UnitDefinition
+    return new UnitDefinition(unitId, UnitIds.locust)
+        ..setManaInitialAmount(3000)
+        ..setManaMaximum(3000)
+        ..setMovementHeightMinimum(300.0)
+        ..setMovementHeight(300.0)
+        ..setSightRadiusNight(500)
+        ..setSightRadiusDay(500)
+        ..setShadowImageUnit("")
+        ..setAttacksEnabled(0)
+
+@compiletime function createDemons()
+    createLocustDemonSummoned(UNIT_LOCUST_FIRE_LORD)
+        ..setNormalAbilities(commaList(
+            AbilityIds.locust,
+            ABIL_FIRE_DEMON_BURNING,
+            ABIL_FIRE_DEMON_HAND_FX
+            )
+        )
+        ..setTintingColorBlue(0)
+        ..setNameEditorSuffix("Fire Demon")
+        ..setModelFile(Units.heroFlameLord)
+        ..setTintingColorGreen(100)
+        ..setScalingValue(1.5)
+
+    createLocustDemonSummoned(UNIT_LOCUST_WATER_LORD)
+        ..setNormalAbilities(commaList(
+            AbilityIds.locust,
+            ABIL_ICE_DEMON_HAND_FX,
+            ABIL_ICE_DEMON_FROST_BOLT
+            )
+        )
+        ..setNameEditorSuffix("Water Demon")
+        ..setModelFile(Units.revenantOfTheWaves1)
+        ..setTintingColorGreen(150)
+        ..setTintingColorRed(0)
+        ..setScalingValue(2.0)
+
+    createLocustDemonSummoned(UNIT_LOCUST_GHOST)
+        ..setNormalAbilities(commaList(
+            AbilityIds.locust,
+            ABIL_GHOST_DEMON_SOUL_BURN
+            )
+        )
+        ..setTintingColorBlue(100)
+        ..setNameEditorSuffix("Ghost Demon")
+        ..setModelFile(Units.kelthuzadGhost)
+        ..setTintingColorGreen(200)
+        ..setTintingColorRed(100)
+        ..setScalingValue(1.6)
+
+class DementiaSummoning extends AbilityDefinitionEvasioncreep
+    construct(int newAbilityId, Pair<int, int> buttonPos)
+        super(newAbilityId)
+        this.setChancetoEvade(1, 0)
+        this.setIconNormal(Icons.pASBTNGenericSpellImmunity)
+        this.setName(DEMENTIA_SUMMON_TOOLTIP_NORM)
+        this.setTooltipNormal(1, makeToolTipNormAura(DEMENTIA_SUMMON_TOOLTIP_NORM))
+        this.setTooltipNormalExtended(1, DEMENTIA_SUMMON_TOOLTIP_EXTENDED)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+
+class ActivateRunes extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 1, true)
+        this.setArtTarget("")
+        this.setArtEffect("")
+        this.setIconNormal(Icons.bTNFaerieFire)
+        this.setArtCaster("")
+        this.setTargetAttachmentPoint1("")
+        this.setCasterAttachmentPoint1("")
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setHeroAbility(false)
+        this.setCooldown(1, COOLDOWN)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, ACTIVATE_RUNES_TOOLTIP_NORM))
+        this.setTooltipNormalExtended(1, ACTIVATE_RUNES_TOOLTIP_EXTENDED)
+        this.setName(ACTIVATE_RUNES_TOOLTIP_NORM)
+        this.setHotkeyNormal(hotkey)
+        this.setBaseOrderID(1, "barkskinon")
+
+@compiletime function createSpells()
+    new ActivateRunes(ABILITY_ACTIVATE_RUNE, "A", new Pair(0, 0))
+    new DementiaSummoning(ABILITY_DEMENTIA_SUMMONING, new Pair(1, 0))
+
+LinkedList<SummonData> summonsList = new LinkedList<SummonData>()
+
+public class SummonData
+    OwnedLinkedList<Runes> runeOrder
+    string name
+    int orderId
+    real cooldown
+    int summonUnitID
+    construct(Runes r1, Runes r2, Runes r3, Runes r4, Runes r5, string name, int orderId, real cooldown, int summonUnitID)
+        runeOrder = new OwnedLinkedList<Runes>()
+        runeOrder.push(r1)
+        runeOrder.push(r2)
+        runeOrder.push(r3)
+        runeOrder.push(r4)
+        runeOrder.push(r5)
+        this.name = name
+        this.orderId = orderId
+        this.cooldown = cooldown
+        this.summonUnitID = summonUnitID
+
+function onCast()
+    let caster = GetSpellAbilityUnit()
+    let runesInstance = getRunesInstance(caster)
+    let portalInstance = getDementiaGate(caster)
+
+    if runesInstance == null
+        return
+
+    if not trySummonDemon(caster, runesInstance, portalInstance)
+        runesCastSpells(caster, runesInstance)
+
+function isValidTarget(unit caster, unit target) returns boolean
+    let owner = caster.getOwner()
+    return target.getOwner().isEnemyOf(owner) and not target.isInvulnerable() and not target.isType(UNIT_TYPE_STRUCTURE) and target.isAlive() and IsUnitVisible(target, owner)
+
+function runesCastSpells(unit caster, DementiaRunesInstance runesInstance)
+    unit target = null
+    let owner = caster.getOwner()
+    let casterPos = caster.getPos()
+    forUnitsInRange(caster.getPos(), RUNE_CAST_RADIUS) t ->
+        if isValidTarget(caster, t)
+            if (target == null)
+                target = t
+            else if (target.getPos().distanceToSq(casterPos) > t.getPos().distanceToSq(casterPos))
+                target = t
+
+            for r in runesInstance.runes
+                let spell = r.getRandomRuneSpellID()
+                new DummyCaster()
+                    ..delay(1)
+                    ..owner(owner)
+                    ..origin(r.pos.toVec2())
+                    ..castTarget(spell.spellId, 1, spell.orderId, target)
+                destroy r
+
+function Runes.toString() returns string
+    switch this
+        case Ka
+            return "Ka"
+        case Nel
+            return "Nel"
+        case Lez
+            return "Lez"
+        default
+            print("ERROR: Unsupported rune type")
+            return ""
+
+function findMatchingSummonData(OwnedLinkedList<Runes> runes) returns SummonData
+    for summonInfo in summonsList
+        if summonInfo.runeOrder.equals(runes)
+            return summonInfo
+    return null
+
+function trySummonDemon(unit caster, DementiaRunesInstance runesInstance, DarkPortalInstance portalInstance) returns bool
+    if runesInstance != null and portalInstance != null and runesInstance.runes.size() > 0 and caster.hasAbility(ABILITY_DEMENTIA_SUMMONING)
+        if portalInstance.isUnitInsidePortal(caster)
+            //Have portal, and standing inside portal
+            let runeSequence = new OwnedLinkedList<Runes>()
+            for r in runesInstance.runes
+                runeSequence.push(r.runeType)
+
+            //Find matching summon for rune sequence and summon if found
+            let summonData = findMatchingSummonData(runeSequence)
+            destroy runeSequence
+            if summonData != null
+                doSummon(summonData, portalInstance, caster.getOwner())
+                for r in runesInstance.runes
+                    destroy r
+                return true
+    return false
+
+function doSummon(SummonData summon, DarkPortalInstance portalInstance, player owner)
+    //Spawn-effect
+    let efx = addEffect(SUMMON_EFFECT_PATH, portalInstance.centerPos + vec3(0, 0, 300))
+    efx.setScale(2)
+
+    //On the right timing after spawned effect, do actions
+    doAfter(1.25) ->
+        efx.destr()
+        PlaySound(Sounds.shadowHunterReady1)
+        printTimedToPlayer("You have summoned ".color(GENERAL_COLOR) + summon.name + "!".color(GENERAL_COLOR), 5, owner)
+        portalInstance.summons.push(new Summon(createUnit(owner, summon.summonUnitID, portalInstance.centerPos, angle(-90 * DEGTORAD)), summon.cooldown, summon.orderId))
+
+
+function initSummonsData()
+    summonsList.push(new SummonData(Runes.Ka , Runes.Lez, Runes.Ka , Runes.Nel, Runes.Ka , "Kalezka Nelka".color(COLOR_RED)    , Orders.acidbomb   , 1  , UNIT_LOCUST_FIRE_LORD))
+    summonsList.push(new SummonData(Runes.Lez, Runes.Nel, Runes.Lez, Runes.Lez, Runes.Ka , "Leznel Lezlezka".color(COLOR_TEAL) , Orders.thunderbolt, 1  , UNIT_LOCUST_WATER_LORD))
+    summonsList.push(new SummonData(Runes.Nel, Runes.Nel, Runes.Ka , Runes.Nel, Runes.Lez, "Nelnelka Nellez".color(COLOR_GREEN), Orders.soulburn   , 1.5, UNIT_LOCUST_GHOST))
+
+init
+    initSummonsData()
+    registerSpellEffectEvent(ABILITY_ACTIVATE_RUNE, () -> onCast())

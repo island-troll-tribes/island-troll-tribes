@@ -1,0 +1,200 @@
+package HornOfMammoth
+
+// Standard lib Imports:
+import AbilityObjEditing
+import Assets
+import ItemObjEditing
+import ObjectIdGenerator
+import ObjectIds
+import RegisterEvents
+import BuffObjEditing
+
+// Local Imports:
+import GameConfig
+import Items
+import LocalAssets
+import LocalObjectIDs
+import ToolTipsUtils
+import UnitExtensions
+import ColorUtils
+
+let ABIL_HORN_SPELLBOOK = compiletime(ABIL_ID_GEN.next())
+let ABIL_HORN_HEALTH    = compiletime(ABIL_ID_GEN.next())
+let ABIL_HORN_MANA      = compiletime(ABIL_ID_GEN.next())
+let ABIL_HORN_HEAT      = compiletime(ABIL_ID_GEN.next())
+
+let BUFF_MAMMOTH_HORN = compiletime(BUFF_ID_GEN.next())
+
+let AS_SLOW_FACTOR = 0.5
+let MS_SLOW_FACTOR = 0.5
+let HEALTH_ABIL_DURATION_HERO = 2.0
+let HEALTH_ABIL_DURATION_NORMAL = 6.0
+
+let STUN_DURATION_HERO = 1.0
+let STUN_DURATION_NORMAL = 4.0
+
+let HEAT_DEFENSE_REDUCED = 10.
+let HEAT_ABIL_DURATION_HERO = 5.0
+let HEAT_ABIL_DURATION_NORMAL = 5.0
+
+let COOLDOWN = 80.
+let DAMAGE = 10.
+
+let TT_HORN_ITEM = "" +
+    "This magic horn gives the holder the ability to restore his own strength."
+
+let TT_HORN_HEALTH = "" +
+    ("Fully restore the user Health and slows nearby enemies movement speed by {0}"
+    +" and attack speed by {1} for {2}/{3} seconds, additionally deals {4} damage.")
+    .format(
+        MS_SLOW_FACTOR.toToolTipOrange(),
+        AS_SLOW_FACTOR.toToolTipOrange(),
+        HEALTH_ABIL_DURATION_HERO.toToolTipLightBlue(),
+        HEALTH_ABIL_DURATION_NORMAL.toToolTipLightBlue(),
+        DAMAGE.toToolTipRed()
+    )
+    +makeToolTipCooldown(COOLDOWN)
+
+let TT_HORN_MANA = "" +
+    ("Fully restore the user Mana and stun nearby enemies for {0}/{1} seconds, "
+    +" additionally deals {2} damage.")
+    .format(
+        STUN_DURATION_HERO.toToolTipLightBlue(),
+        STUN_DURATION_NORMAL.toToolTipLightBlue(),
+        DAMAGE.toToolTipRed()
+    )
+    +makeToolTipCooldown(COOLDOWN)
+
+let TT_HORN_HEAT = "" +
+    ("Fully restore the user Heat and decrease nearby enemies armor by {0} "
+    +" and damage by {1} for {2}/{3} seconds.")
+    .format(
+        HEAT_DEFENSE_REDUCED.toToolTipRed(),
+        "100%".color(COLOR_RED),
+        HEAT_ABIL_DURATION_HERO.toToolTipLightBlue(),
+        HEAT_ABIL_DURATION_NORMAL.toToolTipLightBlue()
+    )
+    +makeToolTipCooldown(COOLDOWN)
+
+@compiletime function createMammothHornBuff()
+    new BuffDefinition(BUFF_MAMMOTH_HORN, 'BCtc')
+        ..setIconNormal(1, Icons.bTNHornOfFog)
+        ..setTooltipNormal("Mammoth Horn")
+        ..setTooltipNormalExtended("This unit was affected by mammoth horn.")
+
+
+@compiletime function createMammothAbilities()
+    new AbilityDefinitionSpellBook(ABIL_HORN_SPELLBOOK)
+        ..setName("Horn of Mammoth SpellBook")
+        ..setHeroAbility(true)
+        ..setSpellList(1, commaList(
+            ABIL_HORN_HEALTH,
+            ABIL_HORN_MANA,
+            ABIL_HORN_HEAT
+            )
+        )
+
+    new AbilityDefinitionThunderClapCreep(ABIL_HORN_HEALTH)
+        ..setAnimationNames("throw")
+        ..setAreaofEffect(1, 350.0)
+        ..setIconNormal(Icons.bTNMarkOfFire)
+        ..setButtonPositionNormalX(0)
+        ..setButtonPositionNormalY(0)
+        ..setArtCaster(Abilities.ancestralSpiritCaster)
+        ..setCooldown(1, COOLDOWN)
+        ..setManaCost(1, 0)
+        ..setDamage(1, DAMAGE)
+        ..setMovementSpeedReduction(1, MS_SLOW_FACTOR)
+        ..setAttackSpeedReduction(1, AS_SLOW_FACTOR)
+        ..setDurationNormal(1, HEALTH_ABIL_DURATION_NORMAL)
+        ..setDurationHero(1, HEALTH_ABIL_DURATION_HERO)
+        ..setHotkeyNormal("Q")
+        ..setName("Full Heal")
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.enemies,
+            TargetsAllowed.ground,
+            TargetsAllowed.neutral
+            )
+        )
+        ..setTooltipNormal(1, makeToolTipNorm("Q", "Restore Health"))
+        ..setTooltipNormalExtended(1, TT_HORN_HEALTH)
+
+    new AbilityDefinitionWarStompcreep(ABIL_HORN_MANA)
+        ..setAnimationNames("throw")
+        ..setAreaofEffect(1, 300.0)
+        ..setIconNormal(Icons.bTNNeutralManaShield)
+        ..setBuffs(1, toRawCode(BUFF_MAMMOTH_HORN))
+        ..setButtonPositionNormalY(0)
+        ..setArtCaster(Abilities.resourceEffectTarget)
+        ..setCooldown(1, COOLDOWN)
+        ..setManaCost(1, 0)
+        ..setDamage(1, DAMAGE)
+        ..setDurationNormal(1, STUN_DURATION_NORMAL)
+        ..setDurationHero(1, STUN_DURATION_HERO)
+        ..setHotkeyNormal("W")
+        ..setName("Restore Mana")
+        ..setTooltipNormal(1, makeToolTipNorm("W", "Restore Mana"))
+        ..setTooltipNormalExtended(1, TT_HORN_MANA)
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.enemies,
+            TargetsAllowed.ground,
+            TargetsAllowed.neutral
+            )
+        )
+
+    new AbilityDefinitionPitLordHowlofTerror(ABIL_HORN_HEAT)
+        ..setAnimationNames("spell,throw")
+        ..setAreaofEffect(1, 400.0)
+        ..setIconNormal(Icons.bTNWallOfFire)
+        ..setBuffs(1, toRawCode(BUFF_MAMMOTH_HORN))
+        ..setButtonPositionNormalX(2)
+        ..setButtonPositionNormalY(0)
+        ..setArtCaster(Abilities.flameStrikeTarget)
+        ..setCooldown(1, COOLDOWN)
+        ..setManaCost(1, 0)
+        ..setDamageIncrease(1, 1.0)
+        ..setDefenseIncrease(1, 10)
+        ..setDurationNormal(1, 5.0)
+        ..setDurationHero(1, 5.0)
+        ..setHotkeyNormal("E")
+        ..setName("Restore Heat")
+        ..setTooltipNormal(1, makeToolTipNorm("E", "Restore Heat"))
+        ..setTooltipNormalExtended(1, TT_HORN_HEAT)
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.enemies,
+            TargetsAllowed.structure,
+            TargetsAllowed.ground,
+            TargetsAllowed.neutral
+            )
+        )
+
+@compiletime function createHornOfMammothItem()
+    createUsableItem(ITEM_HORN_MAMMOTH)
+        ..setAbilities(ABIL_HORN_SPELLBOOK.toRawCode())
+        ..setDescription("A Great item.")
+        ..setModelUsed(LocalItems.hornOfMammoth)
+        ..setInterfaceIcon(Icons.bTNHornOfFog)
+        ..setLumberCost(100)
+        ..setName("Horn Of the Mammoth")
+        ..setCanBeSoldToMerchants(false)
+        ..setCanBeSoldByMerchants(false)
+        ..setTooltipBasic("Horn of the Mammoth")
+        ..setTooltipExtended(UNIQUE_PREFIX + TT_HORN_ITEM)
+        ..setCooldownGroup(AbilityIds.cloudofFogItem.toRawCode())
+
+
+init
+    registerSpellEffectEvent(ABIL_HORN_HEALTH) ->
+        let caster = GetSpellAbilityUnit()
+        caster.setHP(caster.getMaxHP())
+
+    registerSpellEffectEvent(ABIL_HORN_MANA) ->
+        let caster = GetSpellAbilityUnit()
+        caster.setMana(caster.getMaxMana())
+
+    registerSpellEffectEvent(ABIL_HORN_HEAT) ->
+        let caster = GetSpellAbilityUnit()
+        caster.setHeat(gameConfig.getMaxHeat())

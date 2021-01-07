@@ -1,21 +1,21 @@
 package PumpUp
 
+// Standard lib Imports:
 import AbilityObjEditing
-import LocalObjectIDs
 import Icons
+
+// Third party Imports:
 import Lodash
+
+// Local Imports:
+import LocalObjectIDs
 import ToolTipsUtils
 
-let MANACOST = 0
 let COOLDOWN = 30.
-let CAST_RANGE = 1000.
 let HERO_DURATION = 20.
 let NORMAL_DURATION = 20.
-let BUFF = "B00O" //Pumped
 let ATTACK_SPEED_INCREASE = 0.20
 let MOVEMENT_SPEED_INCREASE = 0.10
-let ANIMATION_NAME = "spell,channel"
-let TOOLTIP_NORM = "Pump Up"
 let TOOLTIP_EXTENDED = ("Increase a friendly unit attack speed by {0} and movement speed by {1} for {2} seconds. Has {3} seconds cooldown.")
                         .format(ATTACK_SPEED_INCREASE.toToolTipOrange(), MOVEMENT_SPEED_INCREASE.toToolTipOrange(), NORMAL_DURATION.toToolTipLightBlue(), COOLDOWN.toToolTipLightBlue())
 
@@ -23,23 +23,23 @@ let TOOLTIP_EXTENDED = ("Increase a friendly unit attack speed by {0} and moveme
 class PumpUp extends AbilityDefinitionBloodlustCreep
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
         super(newAbilityId)
-        this.setName(TOOLTIP_NORM)
+        this.setName("Pump Up")
         this.setHotkeyNormal(hotkey)
         this.setCooldown(1, COOLDOWN)
-        this.setManaCost(1, MANACOST)
+        this.setManaCost(1, 0)
         this.setIconNormal(Icons.bTNBloodLust)
         this.setButtonPositionNormalX(buttonPos.a)
         this.setButtonPositionNormalY(buttonPos.b)
         this.setDurationHero(1, HERO_DURATION)
         this.setDurationNormal(1, NORMAL_DURATION)
         this.setTooltipNormalExtended(1, TOOLTIP_EXTENDED)
-        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
-        this.setAnimationNames(ANIMATION_NAME)
+        this.setTooltipNormal(1, makeToolTipNorm(hotkey, "Pump Up"))
+        this.setAnimationNames("spell,channel")
         this.setAttackSpeedIncrease(1, ATTACK_SPEED_INCREASE)
         this.setMovementSpeedIncrease(1, MOVEMENT_SPEED_INCREASE)
-        this.setBuffs(1, BUFF)
-        this.setCastRange(1, CAST_RANGE)
+        this.setCastRange(1, 1000.)
 
 
 @compiletime function createPumpUp()
     new PumpUp(ABILITY_PUMP_UP, "E", new Pair(2, 0))
+    new PumpUp(ABILITY_LEGACY_PUMP_UP, "W", new Pair(2, 0))

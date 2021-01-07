@@ -1,0 +1,200 @@
+package Hints
+
+// Standard library imports:
+import ClosureTimers
+import LinkedList
+import ClosureEvents
+import SoundUtils
+
+// Third-party imports:
+import Setting
+
+// Local imports:
+import ColorUtils
+import CraftMaster
+import Game
+import PingMinimap
+import PlayerExtensions
+import UnitExtensions
+import IdListConstant
+
+// The interval, in seconds, at which periodic hints are displayed.
+let TIME_BETWEEN_HINTS = 50.
+
+// The duration for notifications.
+let MESSAGE_DURATION = 10.
+
+// The duration for warnings for low stats.
+let WARNING_DURATION = 3.
+
+// The threshold for warnings for low stats.
+let WARNING_THRESHOLD = 25
+
+// The base message used for displaying basic hints.
+let HINT_MESSAGE = compiletime(
+    asList(
+        "Hint: ".color(GOLD_COLOR),
+        "{0}".color(GENERAL_COLOR)
+    ).join()
+)
+
+// The base message used for displaying the hint regarding subclasses.
+let SUBCLASS_MESSAGE = compiletime(
+    asList(
+        "You have reached level ".color(GENERAL_COLOR),
+        "{0}".color(GOLD_COLOR),  // The current level of the relevant hero.
+        ". Use the ability menu. [".color(GENERAL_COLOR),
+        "T".color(GOLD_COLOR),
+        "] to choose a subclass.".color(GENERAL_COLOR)
+    ).join()
+)
+
+// The sound used to notify a player of a hint.
+let HINT_SOUND = new SoundDefinition(Sounds.hint, false)
+
+// The setting used to disable hint messages.
+let enabled = new Setting("hints")
+
+class Hint
+    // The message displayed to the user for this hint.
+    private string message
+
+    // The location to ping, a value for which (0, 0) indicates null.
+    private vec2 ping = vec2(0, 0)
+
+    function initialize()
+
+    construct(string message)
+        this.message = message
+
+    construct(string message, vec2 ping)
+        this.message = message
+        this.ping = ping
+
+    function toString() returns string
+        return HINT_MESSAGE.format(message)
+
+    function display()
+        // Check all players.
+        // TODO: Facilitate this for boolean settings.
+        for index = 0 to bj_MAX_PLAYER_SLOTS - 1
+            // Ignore players that have disabled hints.
+            if enabled.get(players[index]).toBool()
+                // Display the message for the hint.
+                players[index].print(toString(), MESSAGE_DURATION)
+
+                // Ping the minimap for the given target, if any.
+                if ping != vec2(0, 0)
+                    pingMinimapForPlayer(players[index], ping)
+
+                // Accompany the display with a sound.
+                HINT_SOUND.playForPlayer(players[index])
+
+    static function isEnabled(player target) returns bool
+        return enabled.synchronized and enabled.get(target).toBool()
+
+function doPeriodicDisplay(LinkedList<Hint> hintList)
+    // Create an iterator to update periodically.
+    let iterator = hintList.iterator()
+
+    // Display the next hint periodically.
+    doPeriodically(TIME_BETWEEN_HINTS) cb ->
+        // Access the next hint.
+        iterator.next().display()
+
+        // Loop around once the final hint is displayed.
+        if not iterator.hasNext()
+            iterator.reset()
+
+
+function alarm(real stat, string message, player owner)
+    // Display a warning message, as necessary.
+    if stat <= WARNING_THRESHOLD
+        owner.print(message.color(COLOR_RED), WARNING_DURATION)
+
+
+function checkStat(unit troll)
+    // Do not check invalid trolls.
+    if troll == null or not troll.isAlive()
+        return
+    Log.trace("Checking stats for: " + troll.getName())
+
+    // Check for an alarm per stat.
+    alarm(troll.getHP(),   "Your health is low, eat some meat!", troll.getOwner())
+    alarm(troll.getMana(), "Your mana is low, get some sleep!",  troll.getOwner())
+    alarm(troll.getHeat(), "Your heat is low, stand by a fire!", troll.getOwner())
+
+function checkLevelingHint(unit target)
+    // Cache the level for the unit.
+    let level = target.getLevel()
+
+    // Ignore heroes that are not ready to choose a subclass.
+    if level < 6
+        return
+
+    // Ignore heroes that are not an unsubbed troll.
+    if not UNSUB_TROLL_UNIT_LIST.has(target.getTypeId())
+        return
+
+    // Avoid displaying a hint for a player that has disabled them.
+    if not enabled.get(target.getOwner()).toBool()
+        return
+
+    // Notify the player of their pending choice.
+    target.getOwner().print(
+        SUBCLASS_MESSAGE.format(target.getLevel().toString()),
+        MESSAGE_DURATION
+    )
+
+init
+    registerGameStartEvent() ->
+        let hints = asList(
+            new Hint("If you are new to this game, reading the quest log Surviving & Crafting, you should."),
+            new Hint("For help on building, refer to these shops or for some basics, the quest log.", gg_rct_vision.getCenter()),
+            new Hint("If you have no hunter, fires can be used to trap elk. They also make cheap lookouts."),
+            new Hint("If any of your stats - health, mana, heat (beside gold) - reach zero, " + "you die".color(RED_COLOR) + " instantly so keep them up at all times.".color(GENERAL_COLOR)),
+            new Hint("If you can't manage to craft what you want, type " + "-crafting".color(ENERGY_COLOR) + " to get some explanation.".color(GENERAL_COLOR)),
+            new Hint("To toggle hints, type " + "-h".color(HIGHLIGHT_COLOR)),
+            new Hint("The Master Crafter in the center of the map can help your team build if you do not have enough inventory slots.", craftMaster.getUnit().getPos()),
+            new Hint("Boats frequently travel up and down the streams. The fur trade is especially lucrative."),
+            new Hint("Remember to keep a watch on you and your team's stats. Remind someone if they are running low on anything."),
+            new Hint("Beware the mammoth. He is a strong foe and defeating him is a team effort, but you will be rewarded...", gg_rct_discoduck.getCenter()),
+            new Hint("Try not to sit around in your base the whole game. You can almost always be doing something useful."),
+            new Hint("Exploring unknown area may be dangerous, remember to carry meat."),
+            new Hint("If it seems you have collected all the items or hunted all the wildlife in one area, move to another. Sometimes fertile land is just an island away."),
+            new Hint("Fighting the bosses around the edges of the map is a good way to level up and gain valuable items."),
+            new Hint("Each island got bushes of special herb used for powerful potion, you can see their location by using a command, answer is in the quest log."),
+            new Hint("Speed, strategy, and meat are crucial to winning wars."),
+            new Hint("As a scout, you can reveal scout bush to pick up vision ward. Type " + "-ping scout".color(ENERGY_COLOR) + " to locate those bushes.".color(GENERAL_COLOR)),
+            new Hint("As a thief, you can blink on cliff to pick up item from thief bush, use cloak near the cliff to reveal it. Type " + "-ping thief".color(ENERGY_COLOR) + " to locate the bushes.".color(GENERAL_COLOR)),
+            new Hint("An old altar seems to require a certain magical artifact to be activated, who knows what might happen.", gg_rct_TheOne.getCenter()),
+            new Hint("Use quickmake skills and unload items to quickly manage the inventories of buildings."),
+            new Hint("Use " + "-changelog".color(ENERGY_COLOR) + " to view changelog for this version".color(GENERAL_COLOR)),
+            new Hint("Feel free to share feedback & idea on the Island Troll Tribes discord," + " https://discord.gg/Rh9JdKs".color(ENERGY_COLOR))
+        )
+
+        // Enable hints for new players automatically.
+        enabled.make("true", input -> input.isBool())
+
+        // Ensure the setting is initialized before beginning periodic displays.
+        enabled.finish() ->
+            // Begin displaying the static list of hints.
+            doPeriodicDisplay(hints)
+
+            // Check for contextual hints for stats periodically.
+            doPeriodically(WARNING_DURATION) cb ->
+                for index = 0 to bj_MAX_PLAYER_SLOTS - 1
+                    if enabled.get(players[index]).toBool()
+                        checkStat(players[index].getTroll())
+
+        // Initialize when the game begins to avoid displaying hints prematurely
+        // and avoid a race condition between finishing initializing the setting
+        // and registering a callback for when the game begins. This prevents
+        // players from disabling hints during game setup, but is worth the
+        // simplicity considering players only have to disable hints once.
+        enabled.initialize()
+
+    // Display a contextual hint when able to choose a subclass.
+    // TODO: Use a centralized system for displaying contextual hints.
+    EventListener.add(EVENT_PLAYER_HERO_LEVEL) ->
+        checkLevelingHint(GetTriggerUnit())

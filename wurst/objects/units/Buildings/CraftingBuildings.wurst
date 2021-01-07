@@ -1,0 +1,181 @@
+package CraftingBuildings
+
+// Standard library imports:
+import Assets
+import HashMap
+import LinkedList
+import AbilityObjEditing
+
+// Local imports:
+import LocalObjectIDs
+import Indicators
+import LocalAssets
+import ObjEditingUtils
+
+// The list of abilities that all buildings have.
+let abilities = asList(
+    LocalAbilityIds.inventoryBuilding,
+    ABILITY_DROP_ITEMS
+)
+
+// The indicators used for the publicly visible recipes.
+let indicators = new IterableMap<int, int>()
+    ..put('d117', UNIT_FORGE)
+    ..put('d118', UNIT_ARMORY)
+    ..put('d119', UNIT_WORKSHOP)
+    ..put('d120', UNIT_TANNERY)
+    ..put('d121', UNIT_POT)
+    ..put('d122', UNIT_WITCH_DOCTORS_HUT)
+
+// Add the given abilities to the standard list, rather than overwriting.
+function BuildingDefinition.addAbilities(LinkedList<int> additional)
+    this.setNormalAbilities(commaList(abilities, additional))
+
+// Default to the base ID most commonly used.
+function createBuilding(int newId) returns BuildingDefinition
+    return createBuilding(newId, UnitIds.farm)
+
+// Create a definition with common defaults.
+function createBuilding(int newId, int oldId) returns BuildingDefinition
+    return new BuildingDefinition(newId, oldId)
+        ..setNormalAbilities(commaList(abilities))
+        ..setBuildTime(15)
+        ..setAttacksEnabled(0)
+        ..setHitPointsMaximumBase(250)
+        ..setSightRadiusDay(1600)
+        ..setSightRadiusNight(1000)
+        ..setFoodProduced(0)
+        ..setManaMaximum(0)
+        ..setHideMinimapDisplay(true)
+        ..setPathingMap(PathingTextures.simpleSolid4x4)
+        ..setGroundTexture("")
+        ..setDefenseBase(5)
+        ..setSelectionScale(2.5)
+        ..setCollisionSize(144)
+
+@compiletime function createMixingPot() returns BuildingDefinition
+    return createBuilding(UNIT_POT)
+        ..setIconGameInterface(Icons.bTNSacrificialPit)
+        ..setModelFile(LocalBuildings.mixingPot)
+        ..setScalingValue(2)
+        ..setUnitSoundSet(Soundsets.templeofTides)
+        ..setTooltipBasic("You can mix herbs inside this pot.")
+        ..setTooltipExtended("This pot is so big it is able to hold large amounts of boiling water. Inside, herbs can be mixed into potions.")
+        ..setName("Mixing Pot")
+        ..setHitPointsMaximumBase(260)
+        ..setArmorType(ArmorType.Large)
+        ..setDeathTimeseconds(1)
+
+@compiletime function createTannery() returns BuildingDefinition
+    return createBuilding(UNIT_TANNERY)
+        ..setIconGameInterface(Icons.bTNPigFarm)
+        ..setModelFile(Buildings.pigFarm)
+        ..setScalingValue(.9)
+        ..setUnitSoundSet(Soundsets.pigFarm)
+        ..setTooltipBasic("You can turn hides into armor here.")
+        ..setTooltipExtended("This pot is so big it is able to hold large amounts of boiling water. Inside, herbs can be mixed into potions.")
+        ..setName("Tannery")
+        ..setHitPointsMaximumBase(275)
+
+@compiletime function createArmory() returns BuildingDefinition
+    return createBuilding(UNIT_ARMORY)
+        ..setIconGameInterface(LocalIcons.bTNArmory)
+        ..setModelFile(LocalBuildings.armory)
+        ..setScalingValue(.75)
+        ..setUnitSoundSet(Soundsets.warMill)
+        ..setTooltipBasic("You can enchant advanced armor.")
+        ..setTooltipExtended("You can enchant advanced armor here.")
+        ..setName("Armory")
+
+@compiletime function createForge() returns BuildingDefinition
+    return createBuilding(UNIT_FORGE)
+        ..setIconGameInterface(LocalIcons.bTNForge)
+        ..setModelFile(LocalBuildings.forge)
+        ..setScalingValue(.75)
+        ..setUnitSoundSet(Soundsets.warMill)
+        ..setTooltipBasic("You can refine metal and forge weapons here.")
+        ..setTooltipExtended("You can refine metal and forge weapons here.")
+        ..setName("Forge")
+
+@compiletime function createWitchDoctorsHut() returns BuildingDefinition
+    return createBuilding(UNIT_WITCH_DOCTORS_HUT)
+        ..setIconGameInterface(Icons.bTNVoodooLounge)
+        ..setModelFile(Buildings.voodooLounge1)
+        ..setScalingValue(.8)
+        ..setUnitSoundSet(Soundsets.voodooLounge)
+        ..setTooltipBasic("You can create a variety of magical items here.")
+        ..setTooltipExtended("You can create a variety of magical items here.")
+        ..setName("Witch Doctor's Hut")
+        ..setHitPointsMaximumBase(325)
+
+@compiletime function createWorkshop() returns BuildingDefinition
+    return createBuilding(UNIT_WORKSHOP)
+        ..setIconGameInterface(Icons.bTNTrollBurrow)
+        ..setModelFile(Buildings.trollBurrow)
+        ..setScalingValue(1)
+        ..setUnitSoundSet(Soundsets.voodooLounge)
+        ..setTooltipBasic("You can create a variety of magical items here.")
+        ..setTooltipExtended("You can create a variety of magical items here.")
+        ..setName("Workshop")
+        ..setArmorType(ArmorType.Large)
+
+
+@compiletime function createSmokeHouse() returns BuildingDefinition
+    return createBuilding(UNIT_SMOKE_HOUSE)
+        // ..addAbilities(asList(ABILITY_SMOKE_MEAT))
+        ..setIconGameInterface(Icons.bTNRockTower)
+        ..setBuildTime(10)
+        ..setModelFile(Buildings.furbolgHut)
+        ..setHitPointsMaximumBase(200)
+        ..setScalingValue(0.67)
+        ..setName("Smoke House")
+        ..setTooltipBasic("Build Smoke House")
+        ..setTooltipExtended("A small mud hut for storing items and food and you can smoke your meat.")
+
+@compiletime function createStorageHut() returns BuildingDefinition
+    return createBuilding(UNIT_STORAGE_HUT)
+        ..setNormalAbilities(commaList(
+            asList(
+                ABILITY_UNLOAD_ITEMS,
+                ABILITY_SHOP_SHARING,
+                LocalAbilityIds.inventoryBuilding,
+                ABILITY_DROP_ITEMS
+                )
+            )
+        )
+        ..setIconGameInterface(LocalIcons.bTNForestTrollHut1)
+        ..setModelFile("buildings\\other\\ForestTrollHut1\\ForestTrollHut1.mdl")
+        ..setHitPointsMaximumBase(230)
+        ..setName("Storage Hut")
+        ..setTooltipBasic("Build Storage HUt")
+        ..setTooltipExtended("Keeps your personal stuff")
+        ..setUnitSoundSet("ElvenFarm")
+
+
+@compiletime function createHatchery() returns BuildingDefinition
+    return createBuilding(UNIT_HATCHERY)
+        ..setNormalAbilities(commaList(
+            asList(
+                'A03Q',
+                LocalAbilityIds.inventoryBuilding,
+                ABILITY_SHOP_SHARING
+                )
+            )
+        )
+        ..setIconGameInterface(Icons.bTNSnowOwl)
+        ..setModelFile(Buildings.harpyNest)
+        ..setHitPointsMaximumBase(150)
+        ..setScalingValue(0.95)
+        ..setName("Hatchery")
+        ..setSelectionScale(2.0)
+        ..setUnitSoundSet("GryphonAviary")
+
+
+init
+    // Register the indicators used for neutral units on the tutorial island.
+    indicators.forEach() (integer originID, integer targetID) ->
+        registerIndicator(originID, targetID)
+
+        // Allow players to view recipes using the buildings.
+        registerCallback(targetID) (unit target) ->
+            target.addAbility(AbilityIds.neutralBuildinganyunit)

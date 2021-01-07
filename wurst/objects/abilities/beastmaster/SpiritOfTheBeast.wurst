@@ -1,0 +1,58 @@
+package SpiritOfTheBeast
+
+// Standard Library Imports:
+import AbilityObjEditing
+import BuffObjEditing
+import ObjectIds
+import Assets
+
+// Local Imports:
+import LocalObjectIDs
+
+let ICON = Icons.bTNEnchantedBears
+let TOOLTIP = "Spirit of the Beast"
+let TOOLTIP_EXT = ""+
+    "Animals are more at ease around the Beastmaster and move slowly. "+
+    "This makes them easier to hunt."
+
+@compiletime function createSpiritBeastBuff()
+    new BuffDefinition(BUFF_ATTRACTION, 'Basl') // Tornado Slow Aura
+        ..setIconNormal(1, Icons.bTNBerserk)
+        ..setTooltipNormal("Attraction")
+        ..setTooltipNormalExtended("This unit is attracted to the beastmaster")
+        ..setArtTarget(Abilities.generalAuraTarget)
+
+function createSpiritBeastSpell(int abilId) returns AbilityDefinitionUnholyAuracreep
+    return new AbilityDefinitionUnholyAuracreep(abilId)
+        ..presetAreaofEffect(lvl -> 400)
+        ..setIconNormal(ICON)
+        ..presetBuffs(lvl -> BUFF_ATTRACTION.toRawCode())
+        ..setCheckDependencies(false)
+        ..presetMovementSpeedIncrease(lvl -> -0.4)
+        ..presetLifeRegenerationIncrease(lvl -> 0)
+        ..setHeroAbility(true)
+        ..setLevels(1)
+        ..setName("Spirit of the Beast")
+        ..setRace(Race.Nightelf)
+        ..setArtTarget("")
+        ..setTargetAttachmentPoint("")
+        ..presetTargetsAllowed(lvl -> commaList(
+                TargetsAllowed.enemies,
+                TargetsAllowed.ground,
+                TargetsAllowed.nonhero,
+                TargetsAllowed.organic,
+                TargetsAllowed.vulnerable
+            )
+        )
+        ..presetTooltipNormal(lvl -> TOOLTIP)
+        ..presetTooltipNormalExtended(lvl -> TOOLTIP_EXT)
+
+@compiletime function createSpiritBeastBase() returns AbilityDefinitionUnholyAuracreep
+    return createSpiritBeastSpell(ABILITY_SPIRIT_BEAST)
+        ..setButtonPositionNormalX(1)
+        ..setButtonPositionNormalY(1)
+
+@compiletime function createSpiritBeastShapeShifter() returns AbilityDefinitionUnholyAuracreep
+    return createSpiritBeastSpell(ABILITY_SPIRIT_BEAST_SHAPESHIFTER)
+        ..setButtonPositionNormalX(0)
+        ..setButtonPositionNormalY(2)

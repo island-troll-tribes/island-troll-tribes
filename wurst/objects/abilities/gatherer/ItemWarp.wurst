@@ -1,0 +1,107 @@
+package ItemWarp
+
+// Standard library imports:
+import Assets
+import ChannelAbilityPreset
+import RegisterEvents
+
+// Third-party imports:
+import Lodash
+
+// Local imports:
+import ClosuresForItems
+import ColorUtils
+import LocalObjectIDs
+import ItemExtensions
+import Radars
+import TimerUtils
+import ToolTipsUtils
+
+let MAX_ITEM_PULLED = 150
+let COOLDOWN = 140.
+let MANACOST = 30
+let TOOLTIP_NORM = "Item Warp"
+let TOOLTIP_EXTENDED = ("Teleports items in the area around the gatherer right to him. "+
+                       "Has {0} range and {1} seconds cooldown. "+GOLD_COLOR.toColorString()+"Note : Items near "+
+                       "an ally campfire won't be warped, you don't want to mess up your base, do you?|r")
+
+let AOE = 900.
+let MISSILE_FLY_HEIGHT = 150.
+
+class ItemWarpSpell extends ChannelAbilityPreset
+    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
+        super(newAbilityId, 3, true)
+        this.presetManaCost(lvl -> MANACOST)
+        this.presetCooldown(lvl -> COOLDOWN - (lvl * 20))
+        this.setHeroAbility(true)
+        this.setItemAbility(false)
+        this.setRequiredLevel(0)
+        this.setLevelSkipRequirement(0)
+        this.presetTargetTypes(Targettype.NONE)
+        this.setHotkeyNormal(hotkey)
+        this.setName(TOOLTIP_NORM)
+        this.presetTooltipNormal(lvl -> makeToolTipNormHero(hotkey, TOOLTIP_NORM, lvl))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED.format((AOE * lvl).toToolTipOrange(), (COOLDOWN - (lvl * 20)).toToolTipLightBlue()))
+        this.setTooltipLearn(makeToolTipLearn(TOOLTIP_NORM))
+        this.setTooltipLearnExtended(TOOLTIP_EXTENDED.format( COLOR_ORANGE.toColorString()+"900/1800/2700|r", COLOR_LIGHT_BLUE.toColorString()+"120/100/80|r"))
+        this.setIconNormal(Icons.bTNNeutralManaShield)
+        this.setIconResearch(Icons.bTNNeutralManaShield)
+        this.setIconTurnOff(Icons.bTNNeutralManaShield)
+        this.setButtonPositionNormalX(buttonPos.a)
+        this.setButtonPositionNormalY(buttonPos.b)
+        this.setFollowThroughTime(1, 0.10)
+        this.setBaseOrderID(1, "fanofknives")
+
+@compiletime function createItemWarpSpell()
+    new ItemWarpSpell(ABILITY_ITEM_WARP, "E", new Pair(1, 1))
+
+// an instance for each item pulled
+class ItemPulled
+    use TimedLoop
+    item i
+    effect missile
+    unit target
+    vec2 vel
+    vec3 pos
+
+    construct(unit target, item i)
+        this.i = i
+        this.i.setVisible(false)
+        this.target = target
+        let itemPos = i.getPos()
+        this.pos = vec3(itemPos.x, itemPos.y, itemPos.getTerrainZ() + MISSILE_FLY_HEIGHT)
+        this.missile = addEffect(Abilities.devourMagicBirthMissile, this.pos)
+        this.startTimedLoop()
+
+    // TimedLoop module handles all periodic update
+    override function onTimedLoop()
+        vel = (target.getPos() - missile.getPos()).setLength(15)
+        vec3 newPos = this.pos + vel
+        let terrainZ = newPos.getTerrainZ()
+        newPos.z = terrainZ + MISSILE_FLY_HEIGHT
+        missile.setPos(newPos)
+        pos = newPos
+        // Destroy the instance once item reaches the target
+        if missile.getPos().inRange(target.getPos(), 100)
+            stopTimedLoopAndDestroy()
+
+    // Move item to target troll
+    ondestroy
+        missile.destr()
+        i.setPos(target.getPos())
+        i.setVisible(true)
+
+function onCast()
+    let caster = GetSpellAbilityUnit()
+    let range = AOE * caster.getAbilityLevel(ABILITY_ITEM_WARP)
+    var _itemPulledCount = 0
+
+    forItemsInMap() i ->
+        if i.getPos().distanceTo(caster.getPos()) < range and i.isPickupable() and _itemPulledCount < MAX_ITEM_PULLED
+        and not i.isAllyFireAround(600, caster) // Doesn't pull item near an ally camp fire, I don't want to mess up my base
+            new ItemPulled(caster, i)
+            removeRadarDummy(i)
+            _itemPulledCount++
+
+init
+    registerSpellEffectEvent(ABILITY_ITEM_WARP, () -> onCast())

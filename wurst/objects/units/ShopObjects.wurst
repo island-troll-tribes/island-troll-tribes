@@ -1,36 +1,69 @@
 package ShopObjects
 
+// Standard library imports:
 import Assets
-import UnitObjEditing
+import AbilityObjEditing
+import ObjectIdGenerator
+import ObjectIds
 
+// Local imports:
 import LocalObjectIDs
+import LocalAssets
 
-public function HeroDefinition.setTotemShopInterface()
+public function UnitOrHeroDefinition.setTotemShopInterface()
     this
-    ..setLumberCost(0)
-    ..setFoodCost(0)
-    ..setGoldCost(0)
-    ..setStockStartDelay(0)
-    ..setStockReplenishInterval(999) // Will be programatically refilled
-    ..setStockMaximum(1)
+        // Make the unit free and limit selection by stock.
+        ..setLumberCost(0)
+        ..setFoodCost(0)
+        ..setGoldCost(0)
+        ..setStockStartDelay(0)
+        // Use a long interval and refill programmatically.
+        ..setStockReplenishInterval(999)
+        ..setStockMaximum(1)
 
 @compiletime function createDummies()
     new HeroDefinition(UNIT_RANDOM_TROLL, UnitIds.shadowhunter)
-    ..setTotemShopInterface()
-    ..setName("Random Troll |cffffcc00(D)|r")
-    ..setTooltipBasic("Random")
-    ..setTooltipExtended("")
-    ..setHotkey("D")
-    ..setStockReplenishInterval(0)
-    ..setIconGameInterface(Icons.bTNSelectHeroOn)
-    ..setUnitSoundSet("")
+        ..setTotemShopInterface()
+        ..setName("Random Troll |cffffcc00(D)|r")
+        ..setTooltipBasic("Random")
+        ..setTooltipExtended("")
+        ..setHotkey("D")
+        ..setStockReplenishInterval(0)
+        ..setIconGameInterface(Icons.bTNSelectHeroOn)
+        ..setUnitSoundSet("")
 
     new HeroDefinition(UNIT_REPICK_TROLL, UnitIds.shadowhunter)
-    ..setTotemShopInterface()
-    ..setName("Repick Troll |cffffcc00(R)|r")
-    ..setTooltipBasic("Repick")
-    ..setTooltipExtended("")
-    ..setHotkey("R")
-    ..setStockReplenishInterval(0)
-    ..setIconGameInterface(Icons.bTNCancel)
-    ..setUnitSoundSet("")
+        ..setTotemShopInterface()
+        ..setName("Repick Troll |cffffcc00(R)|r")
+        ..setTooltipBasic("Repick")
+        ..setTooltipExtended("")
+        ..setHotkey("R")
+        ..setStockReplenishInterval(0)
+        ..setIconGameInterface(Icons.bTNCancel)
+        ..setUnitSoundSet("")
+
+@compiletime function createTotem()
+    let ABILITY_SELECT_UNITS_TOTEM = compiletime(UNIT_ID_GEN.next())
+
+    new AbilityDefinitionAlliedBuilding(ABILITY_SELECT_UNITS_TOTEM)
+        // Use a small radius to ensure a totem only selects itself.
+        ..presetActivationRadius(lvl -> 1)
+        ..presetShowSelectUnitButton(lvl -> false)
+
+    new BuildingDefinition(UNIT_TROLL_TOTEM, UnitIds.cantina)
+        ..setName("Troll Totem")
+        ..setDescription("Troll picker")
+        ..setModelFile(Buildings.taurenTotem1)
+        ..setTooltipBasic("Build Troll Totem")
+        ..setScalingValue(1.5)
+        ..setNormalAbilities(commaList(
+            AbilityIds.invulnerable,
+            'Asud',  // Sell Units, required to add stock via triggers.
+            ABILITY_SELECT_UNITS_TOTEM
+        ))
+        ..setPlacementRequires("")
+        ..setGroundTexture("")
+        // Use an oversized pathing to automatically space out hired units.
+        ..setPathingMap(PathingTextures.simpleSolid12x12)
+        // Update stock programmatically later.
+        ..setUnitsSold("")

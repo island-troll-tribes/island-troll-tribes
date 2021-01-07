@@ -7,6 +7,7 @@ import BuffObjEditing
 import ClosureEvents
 import ClosureTimers
 import HashMap
+import LocalObjectIDs
 
 // Third-party imports:
 import Lodash
@@ -16,7 +17,6 @@ import ColorUtils
 import TimerUtils
 import ToolTipsUtils
 
-let ABILITY_ID = 'ESOC'
 let DUMMY_AURA_ID = 'ESOA'
 let DUMMY_AURA_BUFF_INT = 'ESOB'
 let DUMMY_AURA_BUFF_STR = "ESOB"
@@ -92,7 +92,7 @@ class OverCharge extends AbilityDefinitionWindWalk
         this.setBuffs(1, "")
 
 @compiletime function createOverCharge()
-    new OverCharge(ABILITY_ID, "A", new Pair(0, 1))
+    new OverCharge(ABILITY_OVERCHARGE, "A", new Pair(0, 1))
     createDummyAuras()
     createBuffs()
 
@@ -115,7 +115,7 @@ public  function consumeOvercharge(unit u) returns bool
         return false
 
 function onCast()
-    var caster = GetSpellAbilityUnit()
+    let caster = GetSpellAbilityUnit()
 
     //Reset existing timer
     if removalTimers.has(caster)
@@ -132,4 +132,4 @@ function onCast()
     removalTimers.put(caster, t)
 
 init
-    registerSpellEffectEvent(ABILITY_ID, () -> onCast())
+    registerSpellEffectEvent(ABILITY_OVERCHARGE, () -> onCast())

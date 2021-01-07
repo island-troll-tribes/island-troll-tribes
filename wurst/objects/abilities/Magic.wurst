@@ -4,18 +4,46 @@ package Magic
 import Assets
 import ClosureTimers
 import DummyCaster
-import EventHelper
 import InstantDummyCaster
 import Orders
 import RegisterEvents
+import AbilityObjEditing
+import ObjectIds
+import ObjectIdGenerator
 
 // Local imports:
 import DiscoDuck
 import LocalObjectIDs
+import LocalAssets
 import Mammoth
 import ResourceSpawns
 import TheOne
 
+let ABILITY_DOOMSDAY = compiletime(ABIL_ID_GEN.next())
+
+// Magic meteor
+@compiletime function createMagicMeteor() returns AbilityDefinitionFlameStrikeCreep
+    return new AbilityDefinitionFlameStrikeCreep(ABILITY_DOOMSDAY)
+        ..setAreaofEffect(1, 900.0)
+        ..setBuffs(1, BuffIds.flameStrike.toRawCode())
+        ..setManaCost(1, 0)
+        ..setFullDamageDealt(1, 30.0)
+        ..setFullDamageInterval(1, 1.0)
+        ..setBuildingReduction(1, 0.5)
+        ..setArtEffect("")
+        ..setDurationHero(1, 4.0)
+        ..setName("Doomsday")
+        ..setArtSpecial(Units.infernalBirth)
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.enemies,
+            TargetsAllowed.friend,
+            TargetsAllowed.ground,
+            TargetsAllowed.neutral,
+            TargetsAllowed.self,
+            TargetsAllowed.structure,
+            TargetsAllowed.tree
+            )
+        )
 
 /**
     This function is called when the item "Magic" is used, it has random chance of triggering following effect :

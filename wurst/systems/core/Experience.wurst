@@ -4,7 +4,6 @@ package Experience
 import Assets
 import ClosureTimers
 import DummyRecycler
-import EventHelper
 import LinkedList
 import RegisterEvents
 import UpgradeObjEditing
@@ -18,8 +17,6 @@ import LocalObjectIDs
 import PlayerExtensions
 import UnitEntity
 import UnitExtensions
-
-import ObjectIDManager
 
 constant creepExp = [3, 25]
 constant heroExp = [0, 100, 120, 160, 220, 300]
@@ -47,7 +44,7 @@ let MAX_LEVEL = 30
     return 150 * level + 50 * level * level
 
 public function getMultiplier(unit troll) returns integer
-    switch getTrollClassType(troll)
+    switch troll.getTrollClassType()
         case BASE_CLASS
             return 4
         case SUB_CLASS
@@ -123,7 +120,7 @@ function performExperienceGain()
 
 function checkStatDeath(unit target)
     // Exit if no work is required.
-    if not target.isAlive() or (target.getMana() > 0 and target.getHeat() > 0)
+    if not target.isAlive() or (target.getMana() >= 1 and target.getHeat() >= 1)
         return
 
     // Cache the relevant properties of the target.

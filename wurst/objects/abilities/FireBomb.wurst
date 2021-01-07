@@ -1,62 +1,103 @@
 package FireBomb
 
-// Standard library imports:
-import DummyCaster
-import EventHelper
-import Orders
+// Standard lib Imports:
+import AbilityObjEditing
+import Assets
+import ObjectIdGenerator
+import ObjectIds
 import RegisterEvents
-import ObjEditingNatives
+import DummyCaster
+import Orders
+
+// Local Imports:
+import Items
+import LocalAssets
+import LocalObjectIDs
+import ToolTipsUtils
+import LocalItemObjEditing
+
+let ABIL_DUMMY_CAST_ID = compiletime(ABIL_ID_GEN.next())
+let ABIL_TRUE_CAST_ID = compiletime(ABIL_ID_GEN.next())
+
+let COOLDOWN = 15.
+let DURATION = 5.5
+let TOTAL_DAMAGE = 80.
+
+let TT = "" +
+    "A shell of destructible material that is highly flammable when thrown. " +
+    "Dealing approximatively {0} damage over {1} seconds. Good against buildings."
+    .format(TOTAL_DAMAGE.toToolTipRed(), DURATION.toToolTipLightBlue())
+    +makeToolTipCooldown(COOLDOWN)
 
 
 // The actual ability to be casted
-@compiletime function create_w3a_A0AC()
-    createObjectDefinition("w3a", 'A0AC', 'ANfs')
-        ..setLvlDataUnreal("aare", 1, 0, 170.0)
-        ..setLvlDataString("abuf", 1, 0, "B00R")
-        ..setLvlDataUnreal("acas", 1, 0, 0.5)
-        ..setLvlDataInt("amcs", 1, 0, 0)
-        ..setLvlDataUnreal("Hfs1", 1, 1, 80.0)
-        ..setLvlDataUnreal("Hfs2", 1, 2, 2.1)
-        ..setLvlDataUnreal("Hfs3", 1, 3, 15.0)
-        ..setLvlDataUnreal("adur", 1, 0, 5.5)
-        ..setLvlDataString("ansf", 0, 0, "")
-        ..setLvlDataString("aeat", 0, 0, "")
-        ..setLvlDataUnreal("ahdu", 1, 0, 0.0)
-        ..setLvlDataInt("amsp", 0, 0, 1000)
-        ..setLvlDataString("anam", 0, 0, "FireBomb Effect")
-        ..setLvlDataUnreal("aran", 1, 0, 10000.0)
-        ..setLvlDataString("asat", 0, 0, "Abilities\\Spells\\Human\\FlameStrike\\FlameStrike1.mdl,Abilities\\Spells\\Human\\FlameStrike\\FlameStrikeTarget.mdl")
-        ..setLvlDataString("atar", 1, 0, "enemies,friend,neutral,self,structure,tree")
-
+@compiletime function createTrueCast()
+    new AbilityDefinitionFlameStrikeCreep(ABIL_TRUE_CAST_ID)
+        ..setAreaofEffect(1, 170.0)
+        ..setBuffs(1, BuffIds.flameStrike.toRawCode())
+        ..setCastingTime(1, 0.5)
+        ..setManaCost(1, 0)
+        ..setFullDamageDealt(1, TOTAL_DAMAGE)
+        ..setFullDamageInterval(1, 2.1)
+        ..setHalfDamageDealt(1, 15.0)
+        ..setDurationNormal(1, DURATION)
+        ..setEditorSuffix("")
+        ..setArtEffect("")
+        ..setDurationHero(1, 0.0)
+        ..setMissileSpeed(1000)
+        ..setName("FireBomb Effect")
+        ..setCastRange(1, 10000.0)
+        ..setArtSpecial(Abilities.flameStrike11)
+        ..setTargetsAllowed(1, commaList(
+            TargetsAllowed.enemies,
+            TargetsAllowed.friend,
+            TargetsAllowed.neutral,
+            TargetsAllowed.self,
+            TargetsAllowed.structure,
+            TargetsAllowed.tree
+            )
+        )
 
 // The dummy ability for the item.
-@compiletime function create_w3a_A0AE()
-    createObjectDefinition("w3a", 'A0AE', 'ANcs')
-        ..setLvlDataUnreal("aare", 1, 0, 150.0)
-        ..setLvlDataString("aart", 0, 0, "ReplaceableTextures\\CommandButtons\\BTNChemicalRage.blp")
-        ..setLvlDataString("abuf", 1, 0, "")
-        ..setLvlDataInt("achd", 0, 0, 0)
-        ..setLvlDataUnreal("acdn", 1, 0, 15.0)
-        ..setLvlDataInt("amcs", 1, 0, 0)
-        ..setLvlDataUnreal("Ncs1", 1, 1, 0.0)
-        ..setLvlDataUnreal("Ncs2", 1, 2, 0.0)
-        ..setLvlDataInt("Ncs3", 1, 3, 4)
-        ..setLvlDataUnreal("Ncs4", 1, 4, 0.0)
-        ..setLvlDataUnreal("Ncs5", 1, 5, 0.0)
-        ..setLvlDataUnreal("Ncs6", 1, 6, 0.0)
-        ..setLvlDataUnreal("adur", 1, 0, 0.0)
-        ..setLvlDataString("aeff", 1, 0, "")
-        ..setLvlDataInt("aher", 0, 0, 0)
-        ..setLvlDataUnreal("ahdu", 1, 0, 0.0)
-        ..setLvlDataInt("alev", 0, 0, 1)
-        ..setLvlDataString("amat", 0, 0, "Abilities\\Weapons\\LordofFlameMissile\\LordofFlameMissile.mdl")
-        ..setLvlDataString("anam", 0, 0, "Fire Bomb Cast")
-        ..setLvlDataUnreal("aran", 1, 0, 700.0)
-        ..setLvlDataString("atar", 1, 0, "terrain")
+@compiletime function createDummyCast()
+    new AbilityDefinitionTinkererClusterRocketsLevel0(ABIL_DUMMY_CAST_ID)
+        ..setAreaofEffect(1, 150.0)
+        ..setBuffs(1, "")
+        ..setCheckDependencies(false)
+        ..setCooldown(1, COOLDOWN)
+        ..setManaCost(1, 0)
+        ..setDamageAmount(1, 0.0)
+        ..setDamageInterval(1, 0.0)
+        ..setMissileCount(1, 4)
+        ..setMaxDamage(1, 0.0)
+        ..setBuildingDamageFactor(1, 0.0)
+        ..setEffectDuration(1, 0.0)
+        ..setDurationNormal(1, 0.0)
+        ..setEffects(1, "")
+        ..setHeroAbility(false)
+        ..setDurationHero(1, 0.0)
+        ..setLevels(1)
+        ..setMissileArt(Abilities.lordofFlameMissile)
+        ..setName("Fire Bomb Cast")
+        ..setCastRange(1, 700.0)
+        ..setTargetsAllowed(1, "terrain")
+
+@compiletime function createFireBombItem()
+    createPerishableItem(ITEM_FIRE_BOMB)
+        ..setAbilities(ABIL_DUMMY_CAST_ID.toRawCode())
+        ..setInterfaceIcon(Icons.bTNLiquidFire)
+        ..setCooldownGroup(ABIL_DUMMY_CAST_ID.toRawCode())
+        ..setModelUsed(LocalItems.liquidFire)
+        ..setLumberCost(30)
+        ..setNameEnhance("Fire Bomb")
+        ..setScalingValue(1.5)
+        ..setNumberofCharges(2)
+        ..setTooltipExtended(TT)
+        ..setDescription(TT)
 
 function onFireBombCast()
     new DummyCaster()
         ..owner(GetSpellAbilityUnit().getOwner())
-        ..castPoint('A0AC', 1, OrderIds.flamestrike, EventData.getSpellTargetPos())
+        ..castPoint(ABIL_TRUE_CAST_ID, 1, OrderIds.flamestrike, EventData.getSpellTargetPos())
 init
-    registerSpellEffectEvent('A0AE', function onFireBombCast)
+    registerSpellEffectEvent(ABIL_DUMMY_CAST_ID, function onFireBombCast)

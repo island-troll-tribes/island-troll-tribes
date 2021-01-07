@@ -1,0 +1,75 @@
+package HostileAnimalAbilities
+
+// Standard lib Imports:
+import AbilityObjEditing
+import Assets
+
+// Local Imports:
+import LocalObjectIDs
+
+let BEAR_BLOCK_CHANGE = 0.5
+let BEAR_BLOCK_DAMAGE_IGNORED = 7.
+// let BEAR_BLOCK_TT = "" +
+//     "This unit has hard skin; ith as {0} to reduce incoming damage by {1}"
+//     .format(
+//         BEAR_BLOCK_CHANGE.toToolTipOrange(),
+//         BEAR_BLOCK_DAMAGE_IGNORED.toToolTipOrange()
+//     )
+
+let WOLF_LIFE_STEAL_AMOUNT = 0.35
+// let WOLF_LIFE_STEAL_TT = "This unit restore {0} of his damage dealt as hit point"
+//     .format(WOLF_LIFE_STEAL_AMOUNT.toToolTipRed())
+
+
+// TODO: Display a buff indicating that the unit has a passive ability
+// Hardened skin & vampiric attack does not seems to apply a buff on the caster
+@compiletime function createBearBlock() returns AbilityDefinitionHardenedSkin
+    // let buffId = BUFF_ID_GEN.next()
+    // new BuffDefinition(buffId, 'Basl')
+    //     ..setName(1, "Bear Block")
+    //     ..setTooltipNormal(1, "Hardened Skin")
+    //     ..setTooltipNormalExtended(1, BEAR_BLOCK_TT)
+    //     ..setIcon(Icons.bTNHardenedSkin)
+
+    return new AbilityDefinitionHardenedSkin(ABILITY_BEAR_BLOCK)
+        // ..setBuffs(1, buffId.toRawCode())
+        ..setCheckDependencies(false)
+        ..setChancetoReduceDamage(1, BEAR_BLOCK_CHANGE * 100)
+        ..setMinimumDamage(1, 0.0)
+        ..setIgnoredDamage(1, BEAR_BLOCK_DAMAGE_IGNORED)
+        ..setName("Bear Block")
+
+@compiletime function createBearBash() returns AbilityDefinitionBashcreep
+    return new AbilityDefinitionBashcreep(ABILITY_BASH)
+        ..setDurationHero(1, 1.0)
+
+
+@compiletime function createPantherShadowMeld() returns AbilityDefinitionShadowMeld
+    return new AbilityDefinitionShadowMeld(ABILITY_PANTHER_SHADOW_MELD)
+        ..setCheckDependencies(false)
+        ..setFadeDuration(1, 1.0)
+        ..setName("Panther Shadow Meld")
+
+
+@compiletime function createWolfVampAttack() returns AbilityDefinitionVampiricattack
+    // let buffId = BUFF_ID_GEN.next()
+    // new BuffDefinition(buffId, 'Basl')
+    //     ..setTooltipNormal("Wolf Life Steal Buff")
+    //     ..setTooltipNormalExtended(WOLF_LIFE_STEAL_TT)
+    //     ..setName("Wolf's Hunger")
+    //     ..setIcon(Icons.bTNVampiricAura)
+
+    return new AbilityDefinitionVampiricattack(ABILITY_WOLF_VAMPIRIC_ATTACK)
+        ..setIconNormal(Icons.bTNDireWolf)
+        // ..setBuffs(1, buffId.toRawCode())
+        ..setLifeStolenPerAttack(1, WOLF_LIFE_STEAL_AMOUNT)
+        ..setEditorSuffix("")
+        ..setName("Wolf Life Steal")
+
+@compiletime function createSnakePoison() returns AbilityDefinitionSlowPoison
+    return new AbilityDefinitionSlowPoison(ABILITY_SNAKE_POISON)
+        ..setDamagePerSecond(1, 0.0)
+        ..setMovementSpeedFactor(1, 0.20)
+        ..setAttackSpeedFactor(1, 0.07)
+        ..setDurationNormal(1, 150.0)
+        ..setDurationHero(1, 120.0)

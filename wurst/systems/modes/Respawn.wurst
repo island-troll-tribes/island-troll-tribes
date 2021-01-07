@@ -1,6 +1,8 @@
 package Respawn
 
 // Standard library imports:
+import Assets
+import ClosureForGroups
 import ClosureTimers
 import LinkedList
 import RegisterEvents
@@ -12,6 +14,7 @@ import Game
 import GameConfig
 import GroupExtensions
 import ForcedDuel
+import LocalObjectIDs
 import Mammoth
 import PlayerExtensions
 import TimerUtils
@@ -59,6 +62,10 @@ init
                 let msg = "{0}Grace period is over. Now you will not be automatically revived when you die! You can still be revived if your team builds a |c00ff0000Spirit Ward|r{1}!|r".format(GENERAL_COLOR.toColorString(), GENERAL_COLOR.toColorString())
                 printTimed(msg, 15)
 
+        // Add invulnerability to the Mammoth.
+        forUnitsOfType(UnitId2String(UNIT_MAMMOTH)) target ->
+            target.addAbility(AbilityIds.invulnerable)
+
         // Base the opening of the central gate on when the grace period ends.
         doAfter(
             // Compute the time at which the gate will be opened. A negative
@@ -74,8 +81,15 @@ init
             // Ensure that the gate is destroyed and not merely opened.
             MAMMOTH_GATE.setAnimation("death")
 
+            // Remove invulnerability from the Mammoth.
+            forUnitsOfType(UnitId2String(UNIT_MAMMOTH)) target ->
+                target.removeAbility(AbilityIds.invulnerable)
+
             // Notify players of the event.
-            printTimed("The gate to the Mammoth has been opened.", 15)
+            printTimed(
+                "The gate to the Mammoth has been opened.".color(GENERAL_COLOR),
+                15
+            )
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
         let dyingUnit = GetDyingUnit()

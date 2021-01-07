@@ -1,0 +1,94 @@
+package PetReleasing
+
+// Standard library imports:
+import ClosureEvents
+import ChannelAbilityPreset
+import ClosureTimers
+import LinkedList
+
+// Local imports:
+import ColorUtils
+import LocalObjectIDs
+import LocalAssets
+import Pets
+import Tribe
+import ToolTipsUtils
+import PlayerExtensions
+import GeometryUtils
+import OrderIds
+
+let RELEASE_WANDER_DISTANCE = 2000.
+let TRANSPARENCY_NUM_LOOPS = 51
+let TRANSPARENCY_PER_LOOP = 5
+let LOOP_FREQUENCY = .1
+
+function createReleasePetAbility(int newAbilId) returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(newAbilId, 1, true)
+        ..setAnimationNames("spell,throw")
+        ..setIconNormal(LocalIcons.bTNReleasePet)
+        ..setArtCaster("")
+        ..setCasterAttachmentPoint("")
+        ..setCooldown(1, 5.0)
+        ..setFollowThroughTime(1, 1.0)
+        ..setName("Release Pet")
+        ..setTooltipNormalExtended(1, "Releases your pet back into the wild allowing you to tame another. The released pet will run away never to be seen again.")
+        ..setRequirements(UPGD_PET_TAMED_TRUE.toRawCode())
+        ..setEditorSuffix("(Wurst)")
+        ..setBaseOrderID(1, "autoentangleinstant")
+
+@compiletime function createBaseReleaseSpell() returns ChannelAbilityPreset
+    return createReleasePetAbility(ABILITY_PET_RELEASE)
+    ..setButtonPositionNormalY(1)
+    ..setButtonPositionNormalX(0)
+    ..setHotkeyNormal("W")
+    ..setTooltipNormal(1, makeToolTipNorm("W", "Release Your Pet"))
+
+@compiletime function createShapeShifterReleaseSpell() returns ChannelAbilityPreset
+    return createReleasePetAbility(ABILITY_PET_RELEASE_SHAPESHIFTER)
+    ..setButtonPositionNormalY(1)
+    ..setButtonPositionNormalX(2)
+    ..setHotkeyNormal("S")
+    ..setTooltipNormal(1, makeToolTipNorm("S", "Release Your Pet"))
+
+public function releasePet(unit caster)
+    // Look up the pet.
+    let originalOwner = caster.getOwner()
+    let pet = originalOwner.getPet()
+
+    // Deregister the pet.
+    originalOwner.removePet()
+
+    originalOwner.setTechResearched(UPGD_PET_TAMED_TRUE, 0)
+    originalOwner.setTechResearched(UPGD_PET_TAMED_FALSE, 1)
+
+    // Prevent anything from interacting with the pet while it is despawning.
+    pet.addAbility(AbilityIds.locust)
+
+    // Transfer the ownership of the pet.
+    pet.setOwner(Player(PLAYER_NEUTRAL_PASSIVE), true)
+
+    // Start reducing transparency of pet.
+    doPeriodicallyCounted(LOOP_FREQUENCY, TRANSPARENCY_NUM_LOOPS) (CallbackCounted cb) ->
+        pet.setVertexColor(255, 255, 255, 255 - ((TRANSPARENCY_NUM_LOOPS - cb.getCount()) * TRANSPARENCY_PER_LOOP))
+        // Once the timer is finished remove the pet.
+        if cb.isLast()
+            pet.remove()
+
+    // Move the pet to a random point away from it.
+    pet.issuePointOrderById(OrderIds.smart, pet.getPos().polarOffset(randomAngle(), RELEASE_WANDER_DISTANCE))
+
+    // Notify the owning tribe.
+    let tribe = Tribe.ofPlayer(originalOwner)
+    if tribe != null
+        tribe.getMembers().forEach() (player member) ->
+            member.print("A pet was released!".color(GENERAL_COLOR))
+
+init
+    EventListener.onCast(ABILITY_PET_RELEASE) (unit caster) ->
+        // Delay relasing pet so that bonus stats can be removed. See PetGrowth.wurst.
+        nullTimer() ->
+            releasePet(caster)
+    EventListener.onCast(ABILITY_PET_RELEASE_SHAPESHIFTER) (unit caster) ->
+        // Delay relasing pet so that bonus stats can be removed. See PetGrowth.wurst.
+        nullTimer() ->
+            releasePet(caster)

@@ -5,6 +5,7 @@ import AbilityObjEditing
 import Assets
 import ClosureEvents
 import ClosureForGroups
+import ClosureKeyPresses
 import ClosureTimers
 import LastOrder
 import LinkedList
@@ -20,7 +21,6 @@ import DummyCorpse
 import LocalAssets
 import PlayerExtensions
 import SimError
-import StringExtensions
 import Transformation
 
 // The time for which new abilities are disabled to prevent accidental rollback.
@@ -376,8 +376,5 @@ init
         onDeath(EventData.getDyingUnit())
 
     // Create the trigger to allow for psuedo-hotkey functionality.
-    let t = CreateTrigger()..addAction(-> onKey(GetTriggerPlayer()))
-
-    // Listen to the activity of every player.
-    for index = 0 to bj_MAX_PLAYER_SLOTS - 1
-        t.registerPlayerKeyPress(players[index], OSKEY_Z, OSKEY_META.CTRL, true)
+    onKeyPress(OSKEY_Z, OSKEY_META.CTRL) ->
+        onKey(GetTriggerPlayer())

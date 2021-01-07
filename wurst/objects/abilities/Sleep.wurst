@@ -10,7 +10,6 @@ import ColorUtils
 import ChatCommands
 import ChatUtils
 import LocalObjectIDs
-import StringExtensions
 import UnitExtensions
 import ToolTipsUtils
 import ObjectIds
@@ -35,9 +34,10 @@ let TARGET_ALLOWED = commaList(
     TargetsAllowed.self
 )
 
-function AbilityDefinitionSleepcreep.setNameEnhance(string name)
-    this.setTooltipNormal(1, name)
-    this.setTooltipNormal(1, name.color(GENERAL_COLOR))
+function AbilityDefinitionSleepcreep.setNameEnhance(string hotkey, string name)
+    this.setName(name)
+    this.setHotkeyNormal(hotkey)
+    this.setTooltipNormal(1, makeToolTipNorm(hotkey, name))
 
 function createSleepAbility(int newId) returns AbilityDefinitionSleepcreep
     return new AbilityDefinitionSleepcreep(newId)
@@ -47,28 +47,27 @@ function createSleepAbility(int newId) returns AbilityDefinitionSleepcreep
         ..setStunDuration(1, INVUL_DURATION)
         ..setHeroAbility(false)
         ..setDurationHero(1, DURATION_HERO)
-        ..setHotkeyNormal("F")
         ..setName("Sleep")
         ..setCastRange(1, CAST_RANGE)
         ..setTargetsAllowed(1, TARGET_ALLOWED)
 
 @compiletime function createSleepOutside() returns AbilityDefinitionSleepcreep
     return createSleepAbility(ABILITY_SLEEP_OUTSIDE)
-        ..setNameEnhance("Sleep Outside")
+        ..setNameEnhance("F", "Sleep Outside")
         ..setTooltipNormalExtended(1, "The Troll can sleep outside to restore {0} mana but lose {1} health point and {2} heat. This can kill you if any of your stats reach 0."
         .format(MANA_RESTORED_BY_TROLL.toToolTipBlue(), SLEEP_OUTSIDE_HP_PENALTY.toToolTipRed(), SLEEP_OUTSIDE_HEAT_PENALTY.toString().color(COLOR_ORANGE))
         + formatCooldown(ABILITY_SLEEP_OUTSIDE))
 
 @compiletime function createSleepInsideTent() returns AbilityDefinitionSleepcreep
     return createSleepAbility(ABILITY_SLEEP_INSIDE_TENT)
-        ..setNameEnhance("Sleep Inside Tent")
+        ..setNameEnhance("F", "Sleep Inside Tent")
         ..setTooltipNormalExtended(1, "The Troll can sleep inside the tent to restore {0} mana."
         .format(MANA_RESTORED_BY_TENT.toToolTipBlue())
         + formatCooldown(ABILITY_SLEEP_INSIDE_TENT))
 
 @compiletime function createSleepInsideHut() returns AbilityDefinitionSleepcreep
     return createSleepAbility(ABILITY_SLEEP_INSIDE_HUT)
-        ..setNameEnhance("Sleep Inside Hut")
+        ..setNameEnhance("F", "Sleep Inside Hut")
         ..setTooltipNormalExtended(1, "The Troll can sleep inside the hut to restore {0} mana."
         .format(MANA_RESTORED_BY_HUTS.toToolTipBlue())
         + formatCooldown(ABILITY_SLEEP_INSIDE_HUT))

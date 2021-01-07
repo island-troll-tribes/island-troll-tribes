@@ -1,0 +1,80 @@
+package Fire
+
+// Standard library imports:
+import Assets
+import ObjectIds
+import UnitObjEditing
+
+// Local imports:
+import LocalAssets
+import LocalObjectIDs
+
+
+function createFire(int unitId) returns BuildingDefinition
+    return new BuildingDefinition(unitId, UnitIds.scouttower)
+        ..setIconGameInterface(Icons.bTNFire)
+        ..setDeathType(0)
+        ..setHitPointsMaximumBase(75)
+        ..setArtSpecial(Objects.nagaDeath)
+        ..setUnitClassification(commaList(
+            UnitClasses.mechanical,
+            UnitClasses.suicidal
+            )
+        )
+        ..setGroundTexture("")
+        ..setUpgradesTo("")
+        ..setUpgradesUsed("")
+        ..setModelFile(LocalBuildings.campFire)
+
+@compiletime function createBonFire() returns BuildingDefinition
+    return createFire(UNIT_BONFIRE)
+        ..setNormalAbilities(commaList(
+            ABILITY_BONFIRE_AURA,
+            ABILITY_SHOP_SHARING,
+            'Avul'
+            )
+        )
+        ..setCollisionSize(0.0)
+        ..setArmorType(ArmorType.Divine)
+        ..setHitPointsMaximumBase(1)
+        ..setName("Bonfire")
+        ..setPathingMap("")
+        ..setPlacementRequires("")
+        ..setTargetedAs("invulnerable")
+
+@compiletime function createCampFire() returns BuildingDefinition
+    return createFire(UNIT_FIRE)
+        ..setNormalAbilities(commaList(
+            ABILITY_COOK_MEAT,
+            ABILITY_CAMP_FIRE_UNSAFE_HEAT,
+            ABILITY_CAMP_FIRE_HEAT_CAST,
+            LocalAbilityIds.selectHero,
+            ABILITY_PACK_BUILDING
+            )
+        )
+        ..setDefaultActiveAbility(ABILITY_CAMP_FIRE_HEAT_CAST.toRawCode())
+        ..setName("Camp Fire")
+
+
+function createMageFires(int unitId) returns BuildingDefinition
+    return createFire(unitId)
+        ..setNormalAbilities(commaList(
+            ABILITY_COOK_MEAT,
+            ABILITY_MAGE_FIRE_UNSAFE_HEAT,
+            ABILITY_MAGE_FIRE_HEAT_CAST,
+            LocalAbilityIds.selectHero,
+            ABILITY_PACK_BUILDING
+            )
+        )
+        ..setDefaultActiveAbility(ABILITY_MAGE_FIRE_HEAT_CAST.toRawCode())
+        ..setName("Mage Fire")
+        ..setTintingColorGreen(100)
+        ..setHitPointsMaximumBase(50)
+
+
+@compiletime function createMageFire() returns BuildingDefinition
+    return createMageFires(UNIT_MAGE_FIRE)
+
+@compiletime function createMageFireSummoned() returns BuildingDefinition
+    return createMageFires(UNIT_MAGE_FIRE_SUMMONED)
+        ..setNameEditorSuffix("(Summoned)")

@@ -1,0 +1,88 @@
+package SpiritWard
+
+
+// Standard library imports:
+import Assets
+import ObjectIds
+import UnitObjEditing
+import HashMap
+import RegisterEvents
+import ClosureTimers
+
+// Local imports:
+import LocalObjectIDs
+import PlayerExtensions
+import Game
+import GameConfig
+
+@compiletime function createSpiritWard()
+    new BuildingDefinition(UNIT_SPIRIT_WARD, UnitIds.scouttower)
+        ..setNormalAbilities("" + toRawCode(ABILITY_SHOP_SHARING))
+        ..setIconGameInterface("ReplaceableTextures\\CommandButtons\\BTNAbsorbMagic.blp")
+        ..setAIPlacementRadius(24.0)
+        ..setCollisionSize(144.0)
+        ..setModelFile("Units\\Creeps\\MonsterLure\\MonsterLure.mdl")
+        ..setRepairGoldCost(0)
+        ..setHotkey("")
+        ..setHitPointsMaximumBase(100)
+        ..setRepairLumberCost(0)
+        ..setScalingValue(1.6)
+        ..setName("Spirit Ward")
+        ..setRepairTime(10)
+        ..setRevivesDeadHeros(true)
+        ..setTooltipBasic("Build Spirit Ward")
+        ..setGroundTexture("")
+        ..setTooltipExtended("Revives slain heroes")
+        ..setUnitSoundSet("")
+        ..setUpgradesTo("")
+        ..setUpgradesUsed("")
+
+let map = new HashMap<unit, unit>()
+
+function setWardStartedReviving(unit ward, unit hero)
+    map..put(ward, hero)..put(hero, ward)
+
+function setWardStoppedReviving(unit target)
+    if map.has(target)
+        let other = map.get(target)
+        map.remove(other)
+        map.remove(target)
+
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SELECTED) ->
+        let target = GetTriggerUnit()
+        if target.getTypeId() == UNIT_SPIRIT_WARD
+            let human = GetTriggerPlayer()
+            if human.isAllyOf(target.getOwner()) and not map.has(target)
+                target.setOwner(human, false)
+
+    registerPlayerUnitEvent(EVENT_PLAYER_HERO_REVIVE_START) ->
+        let hero = GetTriggerUnit()
+        let wards = CreateGroup()..enumUnitsSelected(hero.getOwner(), Condition(() -> begin
+            return GetFilterUnit().getTypeId() == UNIT_SPIRIT_WARD
+        end))
+        let ward = wards.next()
+        setWardStartedReviving(ward, hero)
+        wards.destr()
+
+    registerPlayerUnitEvent(EVENT_PLAYER_HERO_REVIVE_CANCEL) ->
+        setWardStoppedReviving(GetTriggerUnit())
+
+    registerPlayerUnitEvent(EVENT_PLAYER_HERO_REVIVE_FINISH) ->
+        let hero = GetTriggerUnit()
+        hero.getOwner().setGold(gameConfig.getHeatMaximum())
+        if map.has(hero)
+            let ward = map.get(hero)
+            doAfter(0) ->
+                setWardStoppedReviving(ward)
+
+    registerGameStartEvent() ->
+        registerPlayerEvent(EVENT_PLAYER_LEAVE) ->
+            let leaver = GetTriggerPlayer()
+            let tribe = leaver.getTribe()
+            if tribe != null
+                let wards = GetUnitsOfPlayerAndTypeId(leaver, UNIT_SPIRIT_WARD)
+                let newOwner = tribe.getForce().getRandomPlayer()
+
+                for ward from wards
+                    ward.setOwner(newOwner, true)

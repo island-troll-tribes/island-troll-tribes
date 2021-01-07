@@ -5,11 +5,16 @@ import HashMap
 import HashSet
 
 // Local imports:
-import CameraUtils
 import ForceExtensions
 import initlater Tribe
 import UnitExtensions
 import TrollUnitTextConstant
+
+// TODO: Although this import is not used, it is needed to avoid breaking the
+//       underlying hashtables used elsewhere. It's not clear if this is due to
+//       the initialization order of objects or just an odd behavior of the
+//       compiler. This should be reinvestigated once #593 is complete.
+import GameMode
 
 let newObs = new HashSet<player>()
 
@@ -19,7 +24,8 @@ public function player.getTribe() returns Tribe
     return Tribe.ofPlayer(this)
 
 public function player.getTribePlayer() returns player
-    return Tribe.ofPlayer(this).getNonMember()
+    let tribe = this.getTribe()
+    return tribe != null ? tribe.getNonMember() : null
 
 public function player.isPlaying() returns boolean
     return this.getController() == MAP_CONTROL_USER and this.getSlotState() == PLAYER_SLOT_STATE_PLAYING
@@ -68,12 +74,6 @@ public function player.setupObs()
 
     SetPlayerAllianceStateBJ(this, players[PLAYER_NEUTRAL_AGGRESSIVE], bj_ALLIANCE_NEUTRAL)
 
-public function player.setZoom(real zoom)
-    setZoom(this, zoom)
-
-public function player.getZoom() returns real
-    return getZoom(this)
-
 public function player.canControl(unit target) returns bool
     return GetPlayerAlliance(target.getOwner(), this, ALLIANCE_SHARED_CONTROL)
 
@@ -100,9 +100,3 @@ public function player.getTechCount(integer techid, boolean specificonly) return
 
 public function player.getTrollIcon() returns string
     return trollIcons.get(this.getTroll().getTypeId())
-
-public function player.hasVisibility(unit target) returns bool
-    return IsUnitVisible(target, this)
-
-public function player.hasVisibility(vec2 pos) returns bool
-    return IsVisibleToPlayer(pos.x, pos.y, this)

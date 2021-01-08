@@ -9,8 +9,7 @@ import Quest
 import SimError
 
 // Third-party imports:
-// TODO: Use this once .join is supported.
-// import LodashExtensions
+import Lodash
 
 // Local imports:
 import ChatCommands
@@ -33,10 +32,13 @@ public class ChangeLog
                 b.rev.toInt() - a.rev.toInt())
     end
 
+    // The version this changelog applies to.
     int major
     int minor
     char rev
-    let changes = new LinkedList<string>()
+
+    // The list of changes, which are human-readable descriptions.
+    let changes = new OwnedLinkedList<string>()
 
     construct(int major, int minor, int rev)
         this.major = major
@@ -53,8 +55,7 @@ public class ChangeLog
         )
 
     function add(string change)
-        // TODO: Do not format here once Lodash supports changes.joinBy.
-        this.changes.add(ENTRY_MSG.format(change))
+        this.changes.add(change)
 
     static function getVersion(string which) returns thistype
         if versions.has(which)
@@ -71,12 +72,12 @@ public class ChangeLog
         return TITLE_MSG.format(this.getVersionString())
 
     function getDescription() returns string
-        // TODO: Use changes.map here once Lodash supports changes.joinBy.
-        return this.changes.joinBy("\n")
+        return this.changes
+            .map((change, index) -> ENTRY_MSG.format(change))
+            .join("\n")
 
     function toString() returns string
         return this.getTitle() + "\n" + this.getDescription()
-
 
     static function handler(player triggerPlayer, LinkedList<string> args)
         let changelog = args.size() > 1
@@ -86,12 +87,10 @@ public class ChangeLog
         if changelog == null
             simError(triggerPlayer, "Invalid changelog specified.")
         else
-            // Precede the changes with the title.
-            triggerPlayer.print(changelog.getTitle(), 15)
-
             // Print each line individually to avoid truncation.
-            for change in changelog.changes
-                triggerPlayer.print(change, 15)
+            for line in changelog.toString().toLines()
+                triggerPlayer.print(line, 15)
+
 
 init
     registerCommandAll("changelog") (triggerPlayer, args) ->

@@ -1,16 +1,16 @@
 package GameStates
 
+// Standard library imports:
+import ClosureTimers
+
 // Third-party imports:
 import GameState
 
-// Local imports:
-import GameMode
-import Tribe
-import ClassSelector
-import Game
+// This state basic initialization defined by all packages.
+public let initialization = new LinearGameState()
 
-let modesSelection = modesSelection
-
+// This state handles
+public let modesSelection = new LinearGameState()
 
 // This state handles initialization between modes and class selection.
 public let tribeInitialization = new LinearGameState()
@@ -25,10 +25,9 @@ public let gameplay = new LinearGameState()
 public let postgame = new LinearGameState()
 
 init
-    // Entering this state immediately immediately makes it troublesome to
-    // register callbacks that will be executed upon entering it. Any package
-    // attempting to do so would import this package and thus this init block
-    // would execute before the initialization of the other package. This could
-    // be worked around using importing this package using initlater or by using
-    // a timer here to delay entering the state. It is
-    modesSelection.enter()
+    // Begin initialization immediately.
+    initialization.enter()
+
+    // Exit initialization as soon as possible.
+    nullTimer() ->
+        initialization.exit()

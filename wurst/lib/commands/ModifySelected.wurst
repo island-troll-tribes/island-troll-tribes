@@ -10,64 +10,86 @@ import Toolkit
 
 init
     // Sets hit points per unit to a given amount.
-    registerToolkitCommand("hp") (triggerPlayer, arguments) ->
-        forUnitsSelected(triggerPlayer) (unit target) ->
+    registerToolkitCommand("hp") (triggerer, arguments) ->
+        forUnitsSelected(triggerer) (unit target) ->
             target.setHP(arguments.get(1).toReal())
 
     // Sets mana points per unitto a given amount
-    registerToolkitCommand("mp") (triggerPlayer, arguments) ->
-        forUnitsSelected(triggerPlayer) (unit target) ->
+    registerToolkitCommand("mp") (triggerer, arguments) ->
+        forUnitsSelected(triggerer) (unit target) ->
             target.setMana(arguments.get(1).toReal())
 
     // Heals each unit fully.
-    registerToolkitCommand("heal") (triggerPlayer, arguments) ->
-        forUnitsSelected(triggerPlayer) (unit target) ->
+    registerToolkitCommand("heal") (triggerer, arguments) ->
+        forUnitsSelected(triggerer) (unit target) ->
             target.setHP(target.getMaxHP())
 
     // Recharges each unit fully.
-    registerToolkitCommand("recharge") (triggerPlayer, arguments) ->
-        forUnitsSelected(triggerPlayer) (unit target) ->
+    registerToolkitCommand("recharge") (triggerer, arguments) ->
+        forUnitsSelected(triggerer) (unit target) ->
             target.setMana(target.getMaxMana())
 
     // Kills each unit.
-    registerToolkitCommand("kill") (triggerPlayer, arguments) ->
-        forUnitsSelected(triggerPlayer) (unit target) ->
+    registerToolkitCommand("kill") (triggerer, arguments) ->
+        forUnitsSelected(triggerer) (unit target) ->
             target.kill()
 
     // Changes the owner for each unit, defaulting to the triggerer.
-    registerToolkitCommand("owner") (triggerPlayer, arguments) ->
+    registerToolkitCommand("owner") (triggerer, arguments) ->
         // Precompute the new owner based on the command.
         let owner = arguments.size() > 1
             ? players[arguments.get(1).toInt()]
-            : triggerPlayer
+            : triggerer
 
         // Modify ownership.
-        forUnitsSelected(triggerPlayer) (unit target) ->
+        forUnitsSelected(triggerer) (unit target) ->
             target.setOwner(owner, true)
 
     // Sets level for each hero.
-    registerToolkitCommand("lvl") (triggerPlayer, arguments) ->
-        forUnitsSelected(triggerPlayer) (unit target) ->
+    registerToolkitCommand("lvl") (triggerer, arguments) ->
+        forUnitsSelected(triggerer) (unit target) ->
             target.setLevel(arguments.get(1).toInt(), false)
 
     // Sets strength for each hero.
-    registerToolkitCommand("str") (triggerPlayer, arguments) ->
-        forUnitsSelected(triggerPlayer) (unit target) ->
+    registerToolkitCommand("str") (triggerer, arguments) ->
+        forUnitsSelected(triggerer) (unit target) ->
             target.setStr(arguments.get(1).toInt())
 
     // Sets agility for each hero.
-    registerToolkitCommand("agi") (triggerPlayer, arguments) ->
-        forUnitsSelected(triggerPlayer) (unit target) ->
+    registerToolkitCommand("agi") (triggerer, arguments) ->
+        forUnitsSelected(triggerer) (unit target) ->
             target.setAgi(arguments.get(1).toInt())
 
     // Sets intelligence for each hero.
-    registerToolkitCommand("int") (triggerPlayer, arguments) ->
-        forUnitsSelected(triggerPlayer) (unit target) ->
+    registerToolkitCommand("int") (triggerer, arguments) ->
+        forUnitsSelected(triggerer) (unit target) ->
             target.setInt(arguments.get(1).toInt())
 
-    // Removes cooldown for all abilities for the unit.
-    registerToolkitCommand("nocd") (triggerPlayer, arguments) ->
-        forUnitsSelected(triggerPlayer) (unit target) ->
+    // Removes cooldown for all abilities for each unit.
+    registerToolkitCommand("nocd") (triggerer, arguments) ->
+        forUnitsSelected(triggerer) (unit target) ->
             EventListener.add(EVENT_PLAYER_UNIT_SPELL_CAST) ->
                 nullTimer() ->
-                    target.resetCooldown()
+
+    // Toggles the given unit type (based on the integer index) for each unit.
+    registerToolkitCommand("settype") (triggerer, arguments) ->
+        // Coerce the inputs.
+        let utype = ConvertUnitType(arguments.get(1).toInt())
+
+        forUnitsSelected(triggerer) (unit target) ->
+            if arguments.size() > 2
+                target.setType(utype, arguments.get(2).toBool())
+            else
+                target.toggleType(utype)
+
+    // Toggles the given unit type (based on the integer index) for each unit.
+    registerToolkitCommand("gettype") (triggerer, arguments) ->
+        // Coerce the inputs.
+        let utype = ConvertUnitType(arguments.get(1).toInt())
+
+        forUnitsSelected(triggerer) (unit target) ->
+            triggerer.print("{0} is type {1}: {2}".format(
+                target.getName(),
+                utype.getHandleId().toString(),
+                target.isType(utype).toString()
+            ))

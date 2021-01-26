@@ -123,6 +123,15 @@ function checkStatDeath(unit target)
     if not target.isAlive() or (target.getMana() >= 1 and target.getHeat() >= 1)
         return
 
+    // Prevent unit from dying if it has the following buff
+    if target.hasAbility(BUFF_SEAL_OF_COURAGE)
+        if target.getMana() < 1
+            target.setMana(1)
+            return
+        if target.getHeat() < 1
+            target.getOwner().setGold(1)
+            return
+
     // Cache the relevant properties of the target.
     let owner = target.getOwner()
     let pos = target.getPos()

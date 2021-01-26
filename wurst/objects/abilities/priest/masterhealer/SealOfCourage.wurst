@@ -1,0 +1,79 @@
+package SealOfCourage
+
+
+// Standard lib imports:
+import ClosureEvents
+import ClosureTimers
+import DamageEvent
+import ChannelAbilityPreset
+import Assets
+import BuffObjEditing
+
+// Local imports:
+import LocalObjectIDs
+import ToolTipsUtils
+import LocalAssets
+import ColorUtils
+
+let COOLDOWN = 60.
+let DURATION = 3.
+
+let TOOLTIP_NORM = "Seal of Courage"
+let TOOLTIP_EXTENDED = "Places a seal on an allied unit preventing them from "+
+                        "taking fatal damage for {0} seconds."
+                        .format(DURATION.toToolTipLightBlue())+
+                        makeToolTipCooldown(COOLDOWN)+
+                        ("\n\nNote: Unit affected by Seal Of Courage cannot die "+
+                        "from mana or heat loss").color(SPECIAL_COLOR)
+
+
+@compiletime function createSealOfCourageBuff()
+    new BuffDefinition(BUFF_SEAL_OF_COURAGE, BuffIds.divineShield)
+    ..setIcon(Icons.bTNResurrection)
+    ..setTooltipNormal(1, TOOLTIP_NORM)
+    ..setTooltipNormalExtended(1,
+        "This unit is protected by a seal; it cannot die")
+
+function createSealOfCourage(int abilId) returns AbilityDefinitionRejuvinationcreep
+    return new AbilityDefinitionRejuvinationcreep(abilId)
+        ..presetManaCost(lvl -> 10)
+        ..presetCooldown(lvl -> COOLDOWN)
+        ..setHeroAbility(false)
+        ..setItemAbility(false)
+        ..presetTargetsAllowed(lvl -> commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.friend,
+            TargetsAllowed.ground,
+            TargetsAllowed.self
+        ))
+        ..setName(TOOLTIP_NORM)
+        ..presetTooltipNormal(lvl -> makeToolTipNorm("D", TOOLTIP_NORM))
+        ..presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+        ..setIconNormal(Icons.bTNResurrection)
+        ..setDurationHero(1, DURATION)
+        ..setDurationNormal(1, DURATION)
+        ..setBuffs(1, BUFF_SEAL_OF_COURAGE.toRawCode())
+        ..setArtTarget(Abilities.holyBoltSpecialArt)
+        // Spell won't cast if the following attribute == 0
+        ..setHitPointsGained(1, 0.01)
+
+@compiletime function createSealOfCourageMasterHealer()
+    createSealOfCourage(ABILITY_SEAL_OF_COURAGE)
+        ..setHotkeyNormal("Z")
+
+
+init
+    // This is supposed to prevent an unit from dying of fatal damage
+    // For some reason, it doesn't work perfectly
+    // Priest with 1 hp might die if 3 units with mage masher are attacking
+    // him, need more test case to understand why
+    EventListener.onTargetCast(ABILITY_SEAL_OF_COURAGE) (unit caster, unit target) ->
+        let cb = DamageEvent.addListener() ->
+            let target = DamageEvent.getTarget()
+            let dmgAmount = DamageEvent.getAmount()
+
+            if target.hasAbility(BUFF_SEAL_OF_COURAGE)
+                and target.getHP() < dmgAmount
+                DamageEvent.setAmount(0)
+        doAfter(DURATION) ->
+            destroy cb

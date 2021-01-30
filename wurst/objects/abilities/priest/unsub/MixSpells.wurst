@@ -4,16 +4,17 @@ package MixSpells
 import Assets
 import ClosureEvents
 import ChannelAbilityPreset
+import LinkedList
+import StandardTextTags
 
 // Third party imports:
 import Lodash
 
 // Local imports:
+import ColorUtils
+import LightningUtils
 import LocalObjectIDs
 import ToolTipsUtils
-import EffectUtils
-import TextTagUtils
-import ColorUtils
 
 let COOLDOWN = 50.
 let ENERGY_MANACOST = 0
@@ -29,6 +30,22 @@ let TARGET_ALLOWED = commaList(
     TargetsAllowed.ground,
     TargetsAllowed.hero,
     TargetsAllowed.notself
+)
+
+// TODO: Build these lists out programmatically.
+
+// The list of spells used to mix energy.
+let MIX_ENERGY_IDS = asList(
+    ABILITY_MIX_ENERGY,
+    ABILITY_MH_MIX_ENERGY,
+    ABILITY_SAGE_MIX_ENERGY
+)
+
+// The list of spells used to mix heat.
+let MIX_HEAT_IDS = asList(
+    ABILITY_MIX_HEAT,
+    ABILITY_MH_MIX_HEAT,
+    ABILITY_SAGE_MIX_HEAT
 )
 
 class MixHeat extends ChannelAbilityPreset
@@ -88,46 +105,72 @@ class MixEnergy extends ChannelAbilityPreset
     new MixEnergy(ABILITY_SAGE_MIX_ENERGY , "Z", new Pair(0, 2))
     new MixHeat  (ABILITY_SAGE_MIX_HEAT   , "X", new Pair(1, 2))
 
-function getMixDiffStr(int mixDiff) returns string
-    return "{0}{1}".format(mixDiff < 0 ? "" : "+", mixDiff.toString())
-
-function mixHeat(unit caster, unit target)
-    let targetHeat = target.getOwner().getGold()
-    let casterHeat = caster.getOwner().getGold()
-    let newHeat = (targetHeat + casterHeat) / 2.00
-
-    createFadingTextTag(target, getMixDiffStr((targetHeat - newHeat).toInt()), COLOR_ORANGE)
-    createFadingTextTag(caster, getMixDiffStr((casterHeat - newHeat).toInt()), COLOR_ORANGE)
-    target.getOwner().setGold(newHeat.toInt())
-    caster.getOwner().setGold(newHeat.toInt())
-
-function mixMana(unit caster, unit target)
-    let targetMana = target.getMana()
-    let casterMana = caster.getMana()
-    let newMana = (targetMana + casterMana) / 2.00
-
-    createFadingTextTag(target, getMixDiffStr((targetMana - newMana).toInt()), COLOR_TURQUOISE)
-    createFadingTextTag(caster, getMixDiffStr((casterMana - newMana).toInt()), COLOR_TURQUOISE)
-    target.setMana(newMana)
-    caster.setMana(newMana)
-
-function onCast()
-    let caster = GetSpellAbilityUnit()
-    let target = GetSpellTargetUnit()
-    let spell = GetSpellAbilityId()
-
-    // Could be prettier, but I am lazy
-    if spell == ABILITY_MIX_ENERGY or spell == ABILITY_MH_MIX_ENERGY or spell == ABILITY_SAGE_MIX_ENERGY
-        mixMana(caster, target)
-        attachLightningFX(caster, target, LIGHTNING_DRAIN_MANA, 1.0)
+function int.asSignedString() returns string
+    if this < 0
+        // Negative values are already well handled.
+        return this.toString()
+    else if this == 0
+        // Use a long dash to indicate zero.
+        return "--"
     else
-        mixHeat(caster, target)
-        attachLightningFX(caster, target, LIGHTNING_MAGIC_LEASH, 1.0)
+        // Prepend a plus to indicate positive values.
+        return "+" + this.toString()
+
+function mix(
+    unit caster,
+    unit target,
+    Function<unit, int> getter,
+    VoidBiFunction<unit, int> setter,
+    color color_,
+    string lightningType
+)
+    // The caster and the target are affected equally.
+    let targets = asOwnedList(target, caster)
+
+    // Compute the resulting value, the average of the current ones.
+    let result = targets
+        .map((target, index) -> getter.call(target))
+        .mean()
+        .toInt()
+
+    // Use lightning to display the visual effect of the casting.
+    attachLightningFX(caster, target, lightningType, 1.)
+
+    // Apply and display the effect for each affected unit.
+    for affected in targets
+        // Use a text tag to visualize the effect.
+        standardTextTag(
+            affected.getPos(),
+            (result - getter.call(affected)).asSignedString()
+        )
+            ..setColor(color_.withAlpha(255))
+
+        // Update the value.
+        setter.call(affected, result)
+
+    // Clean up the local state.
+    destroy targets
 
 init
-    registerSpellEffectEvent(ABILITY_MIX_ENERGY      , ()-> onCast())
-    registerSpellEffectEvent(ABILITY_MH_MIX_ENERGY   , ()-> onCast())
-    registerSpellEffectEvent(ABILITY_SAGE_MIX_ENERGY , ()-> onCast())
-    registerSpellEffectEvent(ABILITY_MIX_HEAT        , ()-> onCast())
-    registerSpellEffectEvent(ABILITY_MH_MIX_HEAT     , ()-> onCast())
-    registerSpellEffectEvent(ABILITY_SAGE_MIX_HEAT   , ()-> onCast())
+    for abilityID in MIX_ENERGY_IDS
+        EventListener.onTargetCast(abilityID) (caster, target) ->
+            mix(
+                caster,
+                target,
+                unit_ -> unit_.getMana().toInt(),
+                (unit_, value) -> unit_.setMana(value.toReal()),
+                COLOR_MANA,
+                LIGHTNING_DRAIN_MANA
+            )
+
+    for abilityID in MIX_HEAT_IDS
+        EventListener.onTargetCast(abilityID) (caster, target) ->
+            mix(
+                caster,
+                target,
+                unit_ -> unit_.getOwner().getGold(),
+                (unit_, value) -> unit_.getOwner().setGold(value),
+                COLOR_ORANGE,
+                LIGHTNING_MAGIC_LEASH
+            )
+

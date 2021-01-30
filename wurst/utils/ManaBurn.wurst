@@ -1,5 +1,8 @@
 package ManaBurn
 
+// Standard library imports:
+import StandardTextTags
+
 public function burnMana(unit target, real damage)
     // Exit if the unit does not hava mana.
     if target.getMaxMana() == 0
@@ -12,12 +15,5 @@ public function burnMana(unit target, real damage)
     target.setMana(target.getMana() - actual)
 
     // Create the text damage that mimics the effect.
-    CreateTextTag()
-        ..setText("-" + actual.floor().toString(), 10)
-        ..setPos(target.getPos3Zero())
-        ..setColor(colorA(82, 82, 255, 255))
-        ..setVelocity(0., 0.04)
-        ..setVisibility(localPlayer.hasVisibility(target))
-        ..setFadepoint(2.0)
-        ..setLifespan(5.0)
-        ..setPermanent(false)
+    createManaBurnTextTag(target, actual.floor())
+        ..matchVisibility(target)

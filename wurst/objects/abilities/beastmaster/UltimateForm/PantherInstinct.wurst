@@ -17,7 +17,6 @@ import ToolTipsUtils
 import LocalObjectIDs
 import ColorUtils
 
-// TODO: Use BuffObjEditing for generatign the ability and the buff.
 let BUFF_ID = compiletime(BUFF_ID_GEN.next())
 
 let DUMMY_ABIL_ID = compiletime(ABIL_ID_GEN.next())
@@ -44,7 +43,7 @@ let TOOLTIP_EXTENDED = "" +
         ..setTooltipNormal(1, TOOLTIP_NORM)
         ..setTooltipNormalExtended(1, "This unit uses panther inner instinct to dodge incoming damage")
 
-// I want the dodge buff to be dispellable
+// Base the buff using Inner Fire so that it is dispellable.
 @compiletime function createDummyInnerFire()
     new AbilityDefinitionInnerFire(DUMMY_ABIL_ID)
         ..setDummyAbility()
@@ -94,11 +93,12 @@ init
     // Negate damage for units under the effect of the buff.
     DamageEvent.addListener()  ->
         if DamageEvent.getTarget().hasAbility(BUFF_ID)
-            DamageEvent.setAmount(0)
-
             // Use a text tag to indicate each individual negation.
             standardTextTag(
                 DamageEvent.getTarget().getPos(),
-                "~" + DamageEvent.getAmount().round().toString()
+                "¬ " + DamageEvent.getAmount().round().toString()
             )
                 ..setColor(COLOR_RED.withAlpha(255))
+
+            // Modify the event after using the original value for the text.
+            DamageEvent.setAmount(0)

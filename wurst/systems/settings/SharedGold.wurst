@@ -8,7 +8,7 @@ import SimError
 
 // Third-party imports:
 import ChatCommands
-import LodashExtensions
+import Lodash
 import Setting
 
 // Local imports:
@@ -46,6 +46,13 @@ let LEAVE_MESSAGE = compiletime(
 
 // The help message for the manual trade command.
 let HELP_MESSAGE = "Command should be used as: -g [player] [amount]"
+
+// The new values
+let scheduled = new OwnedLinkedList<Pair<player, boolean>>()
+
+// The gold per pool, indexed by tribe player, which may temporarily differ from
+// the true gold of the tribe player when it pawns an item.
+let TRIBE_GOLD = new OwnedIterableMap<player, int>()
 
 function handleChatTrade(player origin, LinkedList<string> arguments)
     // Verify the arguments.
@@ -138,10 +145,19 @@ function player.syncGold()
             member.setLumber(value)
 
 function initialize()
+    // Fill in the initial value for the pools.
+    for tribe in Tribe.getTribes()
+        TRIBE_GOLD.put(tribe.getNonMember(), 0)
+
     // Prevent sharing initially.
     sharing.make("false", input -> input.isBool())
 
     sharing.action() (target, value) ->
+        // Schedule the change.
+        scheduled.add(new Pair(target, value.toBool()))
+
+        // Begin handling updates to process the change.
+
         // Add gold to pool upon sharing.
         if value.toBool()
             // Look up the tribe for the player.
@@ -193,11 +209,13 @@ function onLeaver(player target)
             member.print("Use -share-gold to access their gold.")
 
 function handleTransaction(unit origin)
-    // Delay to ensure that the triggering transaction has been executed.
+    // Delay to ensure that the triggering transaction has been executed. This
+    // is necessary because EVENT_PLAYER_UNIT_PAWN_ITEM fires prior to updating
+    // the gold of the player selling the item.
     nullTimer() ->
-        processTransaction(origin.getOwner())
+        update(origin.getOwner())
 
-function processTransaction(player origin)
+function update(player origin)
     Log.debug("Handling transaction involving: " + origin.getName())
     // Look up the tribe for the transactor.
     let tribe = origin.getTribe()

@@ -10,11 +10,11 @@ import DamageEvent
 import ClosureTimers
 import InstantDummyCaster
 import OrderIds
+import StandardTextTags
 
 // Local Imports:
 import ToolTipsUtils
 import LocalObjectIDs
-import TextTagUtils
 import ColorUtils
 
 let BUFF_ID = compiletime(BUFF_ID_GEN.next())
@@ -43,7 +43,7 @@ let TOOLTIP_EXTENDED = "" +
         ..setTooltipNormal(1, TOOLTIP_NORM)
         ..setTooltipNormalExtended(1, "This unit uses panther inner instinct to dodge incoming damage")
 
-// I want the dodge buff to be dispellable
+// Base the buff using Inner Fire so that it is dispellable.
 @compiletime function createDummyInnerFire()
     new AbilityDefinitionInnerFire(DUMMY_ABIL_ID)
         ..setDummyAbility()
@@ -74,22 +74,31 @@ let TOOLTIP_EXTENDED = "" +
 
 init
     EventListener.onCast(ABILITY_RENDO_PANTHER_INSTINCT) (unit caster) ->
-        InstantDummyCaster.castTarget(caster.getOwner(), DUMMY_ABIL_ID, 1, OrderIds.innerfire, caster)
-        let dmgListener = DamageEvent.addListener()  ->
-            let damaged = DamageEvent.getTarget()
-            if damaged.hasAbility(BUFF_ID)
-                let text = "Dodged " + DamageEvent.getAmount().round().toString()
-                // Create a small fading text to indicate how much damage has been dodged
-                // Think player would like to know what they have dodged
-                createFadingTextTag(caster, text, COLOR_RED)
-                    ..setText(text, 8)
-                    ..setVelocity(0, 0.06)
-                    ..setLifespan(3)
-                DamageEvent.setAmount(0)
+        // Add the buff to the target.
+        InstantDummyCaster.castTarget(
+            caster.getOwner(),
+            DUMMY_ABIL_ID,
+            1,
+            OrderIds.innerfire,
+            caster
+        )
 
+        // Add a visual effect as long as the buff persists.
         doPeriodically(0.3) cb ->
             if caster.isAlive() and caster.hasAbility(BUFF_ID)
                 flashEffect(Abilities.mirrorImageCaster, caster.getPos())
             else
-                destroy dmgListener
                 destroy cb
+
+    // Negate damage for units under the effect of the buff.
+    DamageEvent.addListener()  ->
+        if DamageEvent.getTarget().hasAbility(BUFF_ID)
+            // Use a text tag to indicate each individual negation.
+            standardTextTag(
+                DamageEvent.getTarget().getPos(),
+                "¬ " + DamageEvent.getAmount().round().toString()
+            )
+                ..setColor(COLOR_RED.withAlpha(255))
+
+            // Modify the event after using the original value for the text.
+            DamageEvent.setAmount(0)

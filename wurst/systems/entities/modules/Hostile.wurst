@@ -2,6 +2,7 @@ package Hostile
 
 // Standard library imports:
 import ClosureTimers
+import DummyRecycler
 import LinkedList
 import Sounds
 
@@ -12,8 +13,8 @@ import DummyCorpse
 import Sniff
 import UnitEntity
 import PingMinimap
+import PlayerExtensions
 import ColorUtils
-import StringExtensions
 
 import initlater GreenFish
 import initlater Fish
@@ -39,10 +40,20 @@ public abstract class Hostile extends UnitEntity
     override function onDeath()
         if dropOnDeath
             let pos = getPos()
-            let numCorpses = (getNumCorpses() * gameConfig.getFoodForKillProportion()).round()
+            let numCorpses = (
+                  getNumCorpses()
+                * gameConfig.getFoodForKillProportion()
+            ).round()
             let drops = getDrops()
             let numDrops = drops.size()
             let killer = EventData.getKillingUnit()
+
+            // Compute the unit responsible for the killer.
+            // TODO: This would not work if a player controlled multiple units.
+            //       Ideally each dummy cast would be mapped to a real unit.
+            let origin = killer != null and killer.getTypeId() == DUMMY_UNIT_ID
+                ? killer.getOwner().getTroll()
+                : killer
 
             if numDrops != 0
                 let dropsIter = drops.iterator()
@@ -51,8 +62,8 @@ public abstract class Hostile extends UnitEntity
                     let drop = createItem(dropsIter.next(), pos)
 
                     // Register the drop for sniffing.
-                    if killer != null
-                        onMove(killer, drop)
+                    if origin != null
+                        onMove(origin, drop)
 
                     // Deallocate resources when finished
                     if cb.isLast()

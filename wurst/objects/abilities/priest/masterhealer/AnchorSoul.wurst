@@ -37,7 +37,7 @@ let TOOLTIP_EXTENDED = new StringBuilder()
         1, "The soul of this unit is anchored and it cannot die."
     )
 
-function createAnchorSoul(int abilId) returns AbilityDefinitionRejuvinationcreep
+function createAnchorSoul(int abilId, string hotkey) returns AbilityDefinitionRejuvinationcreep
     return new AbilityDefinitionRejuvinationcreep(abilId)
         ..presetManaCost(lvl -> 10)
         ..presetCooldown(lvl -> COOLDOWN)
@@ -50,7 +50,8 @@ function createAnchorSoul(int abilId) returns AbilityDefinitionRejuvinationcreep
             TargetsAllowed.self
         ))
         ..setName(TOOLTIP_NORM)
-        ..presetTooltipNormal(lvl -> makeToolTipNorm("Z", TOOLTIP_NORM))
+        ..setHotkeyNormal(hotkey)
+        ..presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM))
         ..presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
         ..setIconNormal(Icons.bTNResurrection)
         ..presetDurationHero(lvl -> DURATION)
@@ -61,8 +62,7 @@ function createAnchorSoul(int abilId) returns AbilityDefinitionRejuvinationcreep
         ..setHitPointsGained(1, 0.01)
 
 @compiletime function createAnchorSoulMasterHealer()
-    createAnchorSoul(ABILITY_ANCHOR_SOUL)
-        ..setHotkeyNormal("Z")
+    createAnchorSoul(ABILITY_ANCHOR_SOUL, "Z")
 
 function onDamage()
     // Look up the state.

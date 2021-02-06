@@ -15,13 +15,17 @@ import ColorUtils
 LinkedList<player> damageTextPlayers = new LinkedList<player>()
 
 function onDamage()
-    // Exit for irrelevant damage.
-    if DamageEvent.getType() == DamageType.CODE
-        return
-
     // Look up the state.
     let target = DamageEvent.getTarget()
     let damage = DamageEvent.getAmount()
+
+    // Ignore triggered damage.
+    if DamageEvent.getType() == DamageType.CODE
+        return
+
+    // Ignore damage used to indicate debuffs.
+    if DamageEvent.getDamageType() == DAMAGE_TYPE_UNKNOWN and damage == 0
+        return
 
     // Compute a random offset to avoid stacking.
     let offset = vec2(GetRandomReal(-20, 20), GetRandomReal(0, 7.5))

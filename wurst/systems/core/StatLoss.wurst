@@ -16,8 +16,15 @@ import UnitUtils
 
 constant BUFF_FROZE_TO_BONE_ID = BUFF_FROZE_TO_BONE
 
+// TODO: Use a callback system to handle the various conditions.
+
 function checkStatDeath(unit target)
-    // Exit if no work is required.
+    // Prevent unit from dying if it is unkillable.
+    if target.hasAbility(BUFF_ANCHOR_SOUL)
+        target.setMana(max(target.getMana(), 1))
+        target.setHeat(max(target.getHeat(), 1))
+
+    // Exit if the unit is not dying.
     if not target.isAlive() or (target.getMana() >= 1 and target.getHeat() >= 1)
         return
 
@@ -32,12 +39,10 @@ function checkStatDeath(unit target)
 init
     registerGameStartEvent() ->
         let lossAmount = gameConfig.getStatLossAmount()
-        let maxHeat = gameConfig.getMaxHeat()
 
         doPeriodically(gameConfig.getStatGainInterval()) cb ->
             for troll in getTrolls()
-                let owner = troll.getOwner()
-                var heat = owner.getGold()
+                var heat = 0
 
                 if GetTimeOfDay() >= 6 and GetTimeOfDay() <= 18
                     heat += 3
@@ -54,7 +59,7 @@ init
                     else if gear.getTypeId() == ITEM_DD_PINION_FIRE
                         heat += 8
 
-                owner.setGold(min(maxHeat, heat))
+                troll.addHeat(heat)
 
         doPeriodically(gameConfig.getStatLossInterval()) cb ->
             for troll in getTrolls()

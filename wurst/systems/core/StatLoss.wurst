@@ -11,7 +11,6 @@ import GameConfig
 import TrollGroup
 import ItemExtensions
 import LocalObjectIDs
-import PlayerExtensions
 import UnitExtensions
 import UnitUtils
 
@@ -22,12 +21,12 @@ function checkStatDeath(unit target)
     if not target.isAlive() or (target.getMana() >= 1 and target.getHeat() >= 1)
         return
 
-    // Compute the nearest non-neutral enemy.
+    // Find the nearest enemy troll.
     let killer = findNearestUnit(target.getPos(), expRange) (nearby) ->
-        // Ignore players that are allied or do not have a troll.
-        return nearby.getOwner().getTroll() != null and target.isAllyOf(nearby)
+        return nearby.isTroll() and not target.isAllyOf(nearby)
 
     // Have the enemy kill the target, defaulting to a suicide.
+    DamageEvent.setNextDamageFromCode()
     (killer == null ? target : killer).damageTarget(target, target.getHP())
 
 init

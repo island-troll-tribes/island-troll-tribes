@@ -115,15 +115,13 @@ public function unit.getHeat() returns int
     return this.getOwner().getGold()
 
 public function unit.setHeat(int heat)
-    this.getOwner().setGold(heat)
+    this.getOwner().setGold(heat.clamp(0, gameConfig.getMaxHeat()))
 
-public function unit.addHeat(int heat)
-    let owner = this.getOwner()
-    owner.setGold(min(owner.getGold() + heat, gameConfig.getMaxHeat()))
+public function unit.addHeat(int delta)
+    this.setHeat(this.getOwner().getGold() + delta)
 
 public function unit.subHeat(int heat)
-    let owner = this.getOwner()
-    owner.setGold(max(owner.getGold() - heat, 0))
+    this.addHeat(-heat)
 
 public function unit.getItemMatching(Predicate<item> predicate) returns item
     let inventorySize = this.inventorySize()

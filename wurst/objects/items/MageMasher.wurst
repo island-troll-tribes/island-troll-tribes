@@ -3,18 +3,21 @@ package MageMasher
 // Standard lib Imports:
 import AbilityObjEditing
 import DamageType
+import DummyCaster
+import LinkedList
 import ObjectIdGenerator
 import Orders
-import DummyCaster
 
 // Local Imports:
 import LocalObjectIDs
-import Priest
-import Mage
-import UnitEntity
+import Classes
 
 let MANABURN_ID = compiletime(ABIL_ID_GEN.next())
 let DRAIN_AMOUNT = 10.
+let TARGET_CLASSES = asList(
+    UNIT_MAGE,
+    UNIT_PRIEST
+)
 
 @compiletime function createDummyManaburn()
     new AbilityDefinitionManaBurndemon(MANABURN_ID)
@@ -29,23 +32,33 @@ let DRAIN_AMOUNT = 10.
         ..presetCastingTime(lvl -> 0)
         ..presetMaxManaDrained(lvl -> DRAIN_AMOUNT)
 
-function mageMasherHit(unit attacker, unit target)
-    let owner = attacker.getOwner()
-    if isValidMasherTarget(owner, target)
-        new DummyCaster()
-            ..delay(0.45)
-            ..owner(owner)
-            ..origin(attacker.getPos())
-            ..castTarget(MANABURN_ID, 1, Orders.manaburn, target)
+function onDamage()
+    // Look up the state.
+    let origin = DamageEvent.getSource()
+    let target = DamageEvent.getTarget()
+    let owner = origin.getOwner()
 
-function isValidMasherTarget(player attackOwner, unit target) returns bool
-    let ent = UnitEntity.findForUnit(target)
-    return target.getOwner().isEnemyOf(attackOwner)
-        and target.isAlive()
-        and (ent instanceof Mage or ent instanceof Priest)
+    // Filter out irrelevant events.
+    if not origin.hasItemById(ITEM_MAGE_MASHER)
+        return
+
+    print("Checking mana burn.")
+    // Prevent targeting allies.
+    if origin.isAllyOf(target)
+        return
+    print("Isn't ally confirmed.")
+
+    // Restrict the effects to spellcasters.
+    if not TARGET_CLASSES.has(target.getTrollBaseClass())
+        return
+    print("Is caster confirmed.")
+
+    // Burn mana.
+    new DummyCaster()
+        ..delay(0.45)
+        ..owner(owner)
+        ..origin(origin.getPos())
+        ..castTarget(MANABURN_ID, 1, Orders.manaburn, target)
 
 init
-    DamageEvent.addListener() () ->
-        let attacker = DamageEvent.getSource()
-        if attacker.hasItemById(ITEM_MAGE_MASHER) and DamageEvent.getAttackType() == ATTACK_TYPE_HERO
-            mageMasherHit(attacker, GetTriggerUnit())
+    DamageEvent.addListener(-> onDamage())

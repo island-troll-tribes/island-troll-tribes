@@ -2,14 +2,13 @@ package SealOfCourage
 
 
 // Standard lib imports:
-import ClosureEvents
-import ClosureTimers
 import DamageEvent
 import ChannelAbilityPreset
 import Assets
 import BuffObjEditing
 
 // Local imports:
+import DamageListeners
 import LocalObjectIDs
 import ToolTipsUtils
 import LocalAssets
@@ -61,19 +60,20 @@ function createSealOfCourage(int abilId) returns AbilityDefinitionRejuvinationcr
     createSealOfCourage(ABILITY_SEAL_OF_COURAGE)
         ..setHotkeyNormal("Z")
 
+function onDamage()
+    // Look up the state.
+    let target = DamageEvent.getTarget()
+    let damage = DamageEvent.getAmount()
+
+    // Exit if this listener is not applicable.
+    if not target.hasAbility(BUFF_SEAL_OF_COURAGE)
+        return
+
+    // Ensure that the unit is not killed.
+    DamageEvent.setAmount(min(damage, target.getHP() - 1))
+
+
 
 init
-    // This is supposed to prevent an unit from dying of fatal damage
-    // For some reason, it doesn't work perfectly
-    // Priest with 1 hp might die if 3 units with mage masher are attacking
-    // him, need more test case to understand why
-    EventListener.onTargetCast(ABILITY_SEAL_OF_COURAGE) (unit caster, unit target) ->
-        let cb = DamageEvent.addListener() ->
-            let target = DamageEvent.getTarget()
-            let dmgAmount = DamageEvent.getAmount()
-
-            if target.hasAbility(BUFF_SEAL_OF_COURAGE)
-                and target.getHP() < dmgAmount
-                DamageEvent.setAmount(0)
-        doAfter(DURATION) ->
-            destroy cb
+    DamageEvent.addListener(DamageListenerPriorities.ANCHOR_SOUL castTo int) ->
+        onDamage()

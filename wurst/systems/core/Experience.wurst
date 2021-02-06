@@ -2,7 +2,6 @@ package Experience
 
 // Standard library imports:
 import Assets
-import ClosureTimers
 import DummyRecycler
 import LinkedList
 import RegisterEvents
@@ -11,7 +10,6 @@ import UpgradeObjEditing
 // Local imports:
 import Classes
 import BeastMaster
-import TrollGroup
 import Hunter
 import LocalObjectIDs
 import PlayerExtensions
@@ -21,7 +19,7 @@ import UnitExtensions
 constant creepExp = [3, 25]
 constant heroExp = [0, 100, 120, 160, 220, 300]
 constant expPerLevel = [0, 200]
-constant expRange = 1200.0
+public constant expRange = 1200.0
 public constant GOK_MULTIPLIER = 1.5
 
 // The maximum level a hero can achieve
@@ -118,46 +116,6 @@ function performExperienceGain()
     // Deallocate the structures used.
     destroy heroes
 
-function checkStatDeath(unit target)
-    // Exit if no work is required.
-    if not target.isAlive() or (target.getMana() >= 1 and target.getHeat() >= 1)
-        return
-
-    // Prevent unit from dying if it has the following buff
-    if target.hasAbility(BUFF_SEAL_OF_COURAGE)
-        if target.getMana() < 1
-            target.setMana(1)
-            return
-        if target.getHeat() < 1
-            target.getOwner().setGold(1)
-            return
-
-    // Cache the relevant properties of the target.
-    let owner = target.getOwner()
-    let pos = target.getPos()
-
-    // Compute the nearest non-neutral enemy.
-    let killer = ENUM_GROUP
-        ..enumUnitsInRange(
-            pos,
-            expRange,
-            Filter(() -> GetFilterUnit().getOwner().getTroll() != null)
-        )
-        .asList()
-        .filter(x -> not x.getOwner().isAllyOf(owner))
-        ..sortWith(
-            (a, b) -> (
-                a.getPos().distanceToSq(pos) - b.getPos().distanceToSq(pos)
-            ).toInt()
-        )
-        .getFirst()
-
-    // Have the enemy kill the target, if necessary.
-    if killer == null
-        target.kill()
-    else
-        killer.damageTarget(target, target.getHP() * 2, ATTACK_TYPE_CHAOS)
-
 // Unlock the research corresponding to the new level.
 // TODO: Make this private once compound requirements for abilities are fixed.
 public function unlockResearch(unit target)
@@ -178,10 +136,6 @@ init
 
     for i = 0 to PLAYER_NEUTRAL_AGGRESSIVE - 1
         players[i].setHandicapXP(0)
-
-    doPeriodically(ANIMATION_PERIOD) (cb) ->
-        for target in getTrolls()
-            checkStatDeath(target)
 
     registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH, function performExperienceGain)
 

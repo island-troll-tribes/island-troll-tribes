@@ -4,6 +4,7 @@ package Sleep
 import HashMap
 import AbilityObjEditing
 import ClosureEvents
+import DamageEvent
 
 // Local imports:
 import ColorUtils
@@ -14,6 +15,7 @@ import UnitExtensions
 import ToolTipsUtils
 import ObjectIds
 
+// TODO: Migrate to settings library.
 let protectionEnabled = new HashMap<player, boolean>()
 
 let MANA_RESTORED_BY_TROLL = 80.
@@ -42,6 +44,7 @@ function AbilityDefinitionSleepcreep.setNameEnhance(string hotkey, string name)
 function createSleepAbility(int newId) returns AbilityDefinitionSleepcreep
     return new AbilityDefinitionSleepcreep(newId)
         ..setButtonPositionNormalX(3)
+        ..setButtonPositionNormalY(2)
         ..setCooldown(1, COOLDOWN)
         ..setManaCost(1, 0)
         ..setStunDuration(1, INVUL_DURATION)
@@ -61,7 +64,7 @@ function createSleepAbility(int newId) returns AbilityDefinitionSleepcreep
 @compiletime function createSleepInsideTent() returns AbilityDefinitionSleepcreep
     return createSleepAbility(ABILITY_SLEEP_INSIDE_TENT)
         ..setNameEnhance("F", "Sleep Inside Tent")
-        ..setTooltipNormalExtended(1, "The Troll can sleep inside the tent to restore {0} mana."
+        ..presetTooltipNormalExtended(lvl -> "The Troll can sleep inside the tent to restore {0} mana."
         .format(MANA_RESTORED_BY_TENT.toToolTipBlue())
         + formatCooldown(ABILITY_SLEEP_INSIDE_TENT))
 
@@ -74,17 +77,22 @@ function createSleepAbility(int newId) returns AbilityDefinitionSleepcreep
 
 
 function onCast(unit caster, unit target, int abilId)
+    // Prevent teammates from locking a unit, as desired.
+    if caster.getOwner() != target.getOwner()
+        // TODO: Display a contextual hint here.
+        if protectionEnabled.get(target.getOwner())
+            caster.issueImmediateOrder("stop")
+            return
+
+    // Modify the unit as appropriate.
     switch abilId
         case ABILITY_SLEEP_OUTSIDE
-            // Sleep protection working only with troll sleep spell because I can't figure out how to make it work
-            // with building when tribe own building is enabled, can't get the player that issued an order through allied unit
-            if caster != target and protectionEnabled.get(target.getOwner())
-                caster.issueImmediateOrder("stop")
-            else
-                target
-                    ..addMana(MANA_RESTORED_BY_TROLL)
-                    ..subHP(SLEEP_OUTSIDE_HP_PENALTY)
-                    ..subHeat(SLEEP_OUTSIDE_HEAT_PENALTY)
+            // Mark the damage as triggered.
+            DamageEvent.setNextDamageFromCode()
+            target
+                ..addMana(MANA_RESTORED_BY_TROLL)
+                ..subHeat(SLEEP_OUTSIDE_HEAT_PENALTY)
+                ..damageTarget(target, SLEEP_OUTSIDE_HP_PENALTY)
         case ABILITY_SLEEP_INSIDE_TENT
             target
                 ..addMana(MANA_RESTORED_BY_TENT)

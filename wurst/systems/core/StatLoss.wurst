@@ -2,15 +2,33 @@ package StatLoss
 
 // Standard library imports:
 import ClosureTimers
+import DamageEvent
 
 // Local imports:
+import Experience
 import Game
 import GameConfig
 import TrollGroup
 import ItemExtensions
 import LocalObjectIDs
+import PlayerExtensions
+import UnitExtensions
+import UnitUtils
 
 constant BUFF_FROZE_TO_BONE_ID = BUFF_FROZE_TO_BONE
+
+function checkStatDeath(unit target)
+    // Exit if no work is required.
+    if not target.isAlive() or (target.getMana() >= 1 and target.getHeat() >= 1)
+        return
+
+    // Compute the nearest non-neutral enemy.
+    let killer = findNearestUnit(target.getPos(), expRange) (nearby) ->
+        // Ignore players that are allied or do not have a troll.
+        return nearby.getOwner().getTroll() != null and target.isAllyOf(nearby)
+
+    // Have the enemy kill the target, defaulting to a suicide.
+    (killer == null ? target : killer).damageTarget(target, target.getHP())
 
 init
     registerGameStartEvent() ->
@@ -70,6 +88,23 @@ init
                     if numStacksOfDepression > 2
                         energyLoss += GetRandomInt(1, 6) + GetRandomInt(1, 6)
 
-                troll.getOwner().subGold(heatLoss)
+                // Mark the damage as coming from an internal system.
+                DamageEvent.setNextDamageFromCode()
+
+                // Update the state.
+                troll.subHeat(heatLoss)
                 troll.subMana(energyLoss.toReal())
-                troll.subHP(healthLoss.toReal())
+
+                // Avoid waking the unit.
+                // TODO: This only used as a workaround. Locking a unit via
+                // sleep or stun should be simulated using an order listener to
+                // ignore orders or BlzPauseUnitEx and then this check can be
+                // removed.
+                if not troll.isType(UNIT_TYPE_SLEEPING)
+                    DamageEvent.setNextDamageFromCode()
+                    troll.damageTarget(troll, healthLoss.toReal())
+
+    // Kill units reaching zero in a stat as quickly as possible.
+    doPeriodically(ANIMATION_PERIOD) (cb) ->
+        for target in getTrolls()
+            checkStatDeath(target)

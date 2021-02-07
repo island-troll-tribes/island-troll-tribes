@@ -12,6 +12,7 @@ import Orders
 import Lodash
 
 // Local imports:
+import DamageListeners
 import LocalObjectIDs
 import OverCharge
 import ToolTipsUtils
@@ -152,7 +153,16 @@ class MeditateInstance
         // Cancel the channeling effect.
         instance.isChanneling = false
 
-    static function onDamage(unit target, real amount)
+    static function onDamage()
+        // Look up the state.
+        let target = DamageEvent.getTarget()
+        let amount = DamageEvent.getAmount()
+        let element = DamageEvent.getElement()
+
+        // Ignore fake damage.
+        if element != null and element.hasTag(FAKE_DAMAGE)
+            return
+
         // Ignore inconsequential damage.
         if amount < 0.5
             return
@@ -179,5 +189,5 @@ init
         if GetSpellAbilityId() == ABILITY_MEDITATE
             MeditateInstance.onEndCast(GetSpellAbilityUnit())
 
-    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DAMAGED) ->
-        MeditateInstance.onDamage(GetTriggerUnit(), GetEventDamage().abs())
+    DamageEvent.addListener(DamageListenerPriorities.MEDITATE castTo int) ->
+        MeditateInstance.onDamage()

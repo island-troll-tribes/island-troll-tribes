@@ -17,7 +17,7 @@ LinkedList<player> damageTextPlayers = new LinkedList<player>()
 function onDamage()
     // Look up the state.
     let target = DamageEvent.getTarget()
-    let damage = DamageEvent.getAmount()
+    let amount = DamageEvent.getAmount()
     let element = DamageEvent.getElement()
 
     // Ignore fake damage.
@@ -29,7 +29,7 @@ function onDamage()
         return
 
     // Ignore damage used by the engine to indicate debuffs.
-    if DamageEvent.getDamageType() == DAMAGE_TYPE_UNKNOWN and damage == 0
+    if DamageEvent.getDamageType() == DAMAGE_TYPE_UNKNOWN and amount == 0
         return
 
     // Compute a random offset to avoid stacking.
@@ -39,9 +39,9 @@ function onDamage()
     standardTextTag()
         ..setText(
             // Round damage before displaying.
-            damage.toInt().toString(),
+            amount.toInt().toString(),
             // Correlate the text size to the damage amount.
-            8 * SquareRoot(SquareRoot(damage / 20)).clamp(1, 1.4)
+            8 * SquareRoot(SquareRoot(amount / 20)).clamp(1, 1.4)
         )
         ..setColor(COLOR_RED.withAlpha(255))
         ..setPos((target.getPos() + offset).toVec3())
@@ -53,7 +53,8 @@ function player.canPlayerSeeDamageText(unit target) returns boolean
     return damageTextPlayers.has(this) and this.hasVisibility(target)
 
 init
-    DamageEvent.addListener(-> onDamage())
+    DamageEvent.addListener(DamageListenerPriorities.TAGS castTo int) ->
+        onDamage()
 
     registerCommandAll("sd") (triggerPlayer, args) ->
         if damageTextPlayers.has(triggerPlayer)

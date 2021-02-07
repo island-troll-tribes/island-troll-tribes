@@ -2,9 +2,9 @@ package StatLoss
 
 // Standard library imports:
 import ClosureTimers
-import DamageEvent
 
 // Local imports:
+import DamageListeners
 import Experience
 import Game
 import GameConfig
@@ -104,9 +104,9 @@ init
                 // sleep or stun should be simulated using an order listener to
                 // ignore orders or BlzPauseUnitEx and then this check can be
                 // removed.
-                if not troll.isType(UNIT_TYPE_SLEEPING)
-                    DamageEvent.setNextDamageFromCode()
-                    troll.damageTarget(troll, healthLoss.toReal())
+                DamageEvent.setNextDamageFromCode()
+                // troll.damageTarget(troll, )
+                troll.dealFakeDamage(troll, healthLoss.toReal())
 
     // Kill units reaching zero in a stat as quickly as possible.
     doPeriodically(ANIMATION_PERIOD) (cb) ->

@@ -3,8 +3,6 @@ package DamageListeners
 // Third-party imports:
 import public DamageTags
 
-import ClosureTimers
-
 // These constants are intended to be used as a global ordering for damage
 // listeners that require such an ordering. Because listeners are executed
 // starting with the lowest priority and enumeration values are incremental,
@@ -38,6 +36,7 @@ public enum DamageListenerPriorities
 // The string used to tag fake damage.
 public let FAKE_DAMAGE = "fake_damage"
 
+// Converts the relevent tag to an actual damage amount.
 function convertFakeDamage()
     // Look up the element for the event.
     let element = DamageEvent.getElement()
@@ -49,6 +48,7 @@ function convertFakeDamage()
     // Standardize the amount.
     DamageEvent.setAmount(element.getTag(FAKE_DAMAGE).toReal())
 
+// Applies the damage amount via SetUnitState
 function applyFakeDamage()
     // Look up the element for the event.
     let element = DamageEvent.getElement()
@@ -57,16 +57,6 @@ function applyFakeDamage()
     if element == null or not element.hasTag(FAKE_DAMAGE)
         return
 
-    let target = DamageEvent.getTarget()
-    let sleeping = target.isType(UNIT_TYPE_SLEEPING)
-    print("Catching damage for: " + target.getName())
-    if sleeping
-        nullTimer() ->
-            if target.isType(UNIT_TYPE_SLEEPING)
-                print("Kept unit sleeping")
-            else
-                print("Woke unit")
-
     // Replicate the damage via direct modification of hit points.
     DamageEvent.getTarget().subHP(DamageEvent.getAmount())
 
@@ -74,13 +64,17 @@ function applyFakeDamage()
     DamageEvent.setAmount(0)
 
 public function unit.dealFakeDamage(unit target, real amount)
-    // Create and set the element for the damage event.
-    DamageEvent.setNextDamageElement(
-        new DamageTags(FAKE_DAMAGE)
-            ..addTag(FAKE_DAMAGE, amount.toString())
-    )
+    // Create the element used to represent the damage.
+    let element = new DamageTags(FAKE_DAMAGE)
+        ..addTag(FAKE_DAMAGE, amount.toString())
 
-    print("deal damage")
+    // Set the element for the damage event.
+    DamageEvent.setNextDamageElement(element)
+
+    // Mark the damage as part of a trigger.
+    DamageEvent.setNextDamageFromCode()
+
+    // Fire the damage event.
     this.damageTarget(
         target,
         0,
@@ -90,12 +84,11 @@ public function unit.dealFakeDamage(unit target, real amount)
         DAMAGE_TYPE_UNKNOWN,
         WEAPON_TYPE_WHOKNOWS
     )
-    print("finishing block")
+
+    // Clean up the state.
+    destroy element
 
 init
-    // Negates damage for fake damage. This is required because the amount is
-    // checked prior to damage listeners when waking units. By using a negative
-    // amount, the value can be built into the event but not wake the unit.
     DamageEvent.addListener(DamageListenerPriorities.CONVERT_FAKE_DAMAGE castTo int) ->
         convertFakeDamage()
 

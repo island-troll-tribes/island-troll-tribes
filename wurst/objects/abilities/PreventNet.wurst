@@ -1,15 +1,27 @@
 package PreventNet
+
+// Standard lib imports:
+import Assets
 import RegisterEvents
-import UnitExtensions
-import LocalObjectIDs
+
+// Third party imports:
 import SimError
 
-public constant BUFF_ANTI_MAGIC_SHIELD = 'Bam2'
+// Local imports:
+import UnitExtensions
+import LocalObjectIDs
+
+
+public constant BUFF_ANTI_MAGIC_SHIELD = BuffIds.antiMagicShellExtra
 
 public function preventNet()
     let target = GetSpellTargetUnit()
     let caster = GetSpellAbilityUnit()
-    if target.isTroll() and (target.getAbilityLevel(BUFF_ANTI_MAGIC_SHIELD) > 0 or target.getAbilityLevel(BUFF_ENSNARE_GROUND) > 0) and caster.getTypeId() != UNIT_DISCO_DUCK and caster.getTypeId() != UNIT_ONE
+    if target.isTroll()
+        and (target.getAbilityLevel(BUFF_ANTI_MAGIC_SHIELD) > 0
+        or target.getAbilityLevel(BuffIds.ensnareGround) > 0)
+        and caster.getTypeId() != UNIT_DISCO_DUCK
+        and caster.getTypeId() != UNIT_ONE
         caster.issueImmediateOrder("stop")
         simError(caster.getOwner(), "Cannot ensnare target with Anti-Magic shield")
 

@@ -11,15 +11,19 @@ import DummyCaster
 import ChannelAbilityPreset
 import Assets
 import ToolTipsUtils
-import Lodash
 import LocalObjectIDs
 
-let DUMMY_STUN_ABILITY_ID = 'ESES'
-let DUMMY_BUFF_ABILITY_ID = 'XSSB'
-let IMPACT_STUN_DURATION_HERO = 0.10
-let IMPACT_STUN_DURATION_NORMAL = 0.10
+let BUFF_DMG_REDUCER      = compiletime(BUFF_ID_GEN.next())
+let BUFF_DAZE             = compiletime(BUFF_ID_GEN.next())
+let DUMMY_DAZE_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
+let DUMMY_BUFF_ABILITY_ID = compiletime(ABIL_ID_GEN.next())
+
 let COOLDOWN = 35.
 let MANACOST = 20
+
+let IMPACT_DAZE_DURATION_HERO = 0.5
+let IMPACT_DAZE_DURATION_NORMAL = 0.5
+let DAZE_ATTACK_SPEED_FACTOR = 0.8
 let ORB_ATTACK_RADIUS = 575.
 let ORB_ATTACK_COOLDOWN = 0.35
 let ORB_IMPACT_DAMAGE = 40.
@@ -34,91 +38,92 @@ let ORB_PERIODICINTERVAL_LOOP = 0.03125
 let ORB_ANGULARORBITSPEED = 100.
 let ORB_ORBIT_RADIUS = 150.
 let ORB_ORBIT_HEIGHT = 140.
+
 let ABILITY_ICON = Icons.bTNGolemStormBolt
 let TOOLTIP_NORM = "Earth Guardians"
-let TOOLTIP_EXT = ("Channels to conjure 7 orbs that circle around you, striking enemies that come close for {0} damage. Subsequent impacts on the same target do {1} damage. Has {2} seconds cooldown.").format(ORB_IMPACT_DAMAGE.toToolTipRed(),
-                  ORB_IMPACT_DAMAGE_SAMETARGET.toToolTipRed(), COOLDOWN.toToolTipLightBlue())
+let TOOLTIP_EXT = (
+    "Channels to conjure 7 earth orbs that circle around you, striking enemies "+
+    "that come close for {0} damage and slow their attack speed by {1}. "+
+    "Subsequent impacts on the same target do {2} damage.")
+    .format(
+        DAZE_ATTACK_SPEED_FACTOR.toToolTipOrange(),
+        ORB_IMPACT_DAMAGE.toToolTipRed(),
+        ORB_IMPACT_DAMAGE_SAMETARGET.toToolTipRed()
+    ) + makeToolTipCooldown(COOLDOWN)
 
-let ORB_EFFECT_PATH = Abilities.ancientProtectorMissile
-let ORB_IMPACT_EFFECT = Objects.impaleTargetDust
 
+@compiletime function createDazeAbility()
+    new BuffDefinition(BUFF_DAZE, 'BHtc')
+    ..setIcon(Icons.bTNStun)
+    ..setTooltipNormal(1, "Dazed")
+    ..setTooltipNormalExtended(1,
+        "This unit is dazed; its movement and attack speed are reduced")
 
-function createDummySpell()
-    new AbilityDefinitionFireBolt(DUMMY_STUN_ABILITY_ID)
+    new AbilityDefinitionSlowCreep(DUMMY_DAZE_ABILITY_ID)
+    ..setDummyAbility()
     ..setAnimationNames("")
-    ..setMissileSpeed(20000)
-    ..setBuffs(1, "BSTN")
+    ..setBuffs(1, BUFF_DAZE.toRawCode())
     ..setMissileArt("")
     ..setMissileHomingEnabled(true)
-    ..setCastRange(1, 9999)
-    ..setCooldown(1, 0)
     ..setCastingTime(1, 0)
-    ..setDamage(1, 0)
-    ..setDurationHero(1, IMPACT_STUN_DURATION_HERO)
-    ..setDurationNormal(1, IMPACT_STUN_DURATION_NORMAL)
-    ..setHeroAbility(false)
+    ..setDurationHero(1, IMPACT_DAZE_DURATION_HERO)
+    ..setDurationNormal(1, IMPACT_DAZE_DURATION_NORMAL)
     ..setItemAbility(false)
     ..setLevels(1)
     ..setManaCost(1, 0)
     ..setRace(Race.Creeps)
-    ..setName("Orb stun Dummy Spell")
+    ..setName("Orb daze Dummy Spell")
+    ..setMovementSpeedFactor(1, 0.0)
+    ..setAttackSpeedFactor(1, DAZE_ATTACK_SPEED_FACTOR)
 
-function createDummyBuff()
-    new BuffDefinition('XSFB', 'Bclf')
-    ..setIcon(Icons.bTNResistantSkin)
-    ..setTooltipNormal(1, "Hit by earth orbs")
-    ..setTooltipNormalExtended(1, "Hit by earth orbs")
 
-function createBuffSpell()
-    new AbilityDefinitionAlchemistAcidBomb('XSSB')
-    ..setAnimationNames("")
-    ..setMissileSpeed(20000)
-    ..setBuffs(1, "XSFB")
-    ..setMissileArt("")
-    ..setMissileHomingEnabled(true)
-    ..setCastRange(1, 9999)
-    ..setCooldown(1, 0)
-    ..setCastingTime(1, 0)
-    ..setDurationHero(1, ORB_SAMETARGET_BUFF_MARKER_DURATION)
-    ..setDurationNormal(1, ORB_SAMETARGET_BUFF_MARKER_DURATION)
-    ..setHeroAbility(false)
-    ..setItemAbility(false)
-    ..setLevels(1)
-    ..setManaCost(1, 0)
-    ..setRace(Race.Creeps)
-    ..setName("Orb stun Dummy Spell")
-    ..setArmorPenalty(1, 0)
-    ..setAreaofEffect(1, 1)
-    ..setAttackSpeedReduction(1, 0)
-    ..setMovementSpeedReduction(1, 0)
-    ..setSecondaryDamage(1, 0)
-    ..setPrimaryDamage(1, 0)
+// Dummy spell to apply a buff used to check if the target has been recently
+// hit by an orb, if yes, reduce next orb damage on impact
+@compiletime function createDamageReducer()
+    new BuffDefinition(BUFF_DMG_REDUCER, 'Bclf')
+        ..setIcon(Icons.bTNResistantSkin)
+        ..setTooltipNormal(1, "Hit by earth orbs")
+        ..setTooltipNormalExtended(1, "Hit by earth orbs")
 
-class EarthGuardian extends ChannelAbilityPreset
-    construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
-        super(newAbilityId, 1, true)
-        this.setTargetType(1, 0)
-        this.setAnimationNames("spell,channel")
-        this.setIconNormal(ABILITY_ICON)
-        this.setIconResearch(ABILITY_ICON)
-        this.setIconTurnOff(ABILITY_ICON)
-        this.setHeroAbility(false)
-        this.setHotkeyNormal(hotkey)
-        this.setButtonPositionNormalX(buttonPos.a)
-        this.setButtonPositionNormalY(buttonPos.b)
-        this.setName("Storm, Earth and Fire")
-        this.setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
-        this.setTooltipNormalExtended(1, TOOLTIP_EXT)
-        this.setFollowThroughTime(1, CHANNEL_DURATION)
-        this.setCooldown(1, COOLDOWN)
-        this.setManaCost(1, MANACOST)
-        this.setBaseOrderID(1, "auravampiric")
+    new AbilityDefinitionAlchemistAcidBomb(DUMMY_BUFF_ABILITY_ID)
+        ..setDummyAbility()
+        ..setMissileSpeed(20000)
+        ..setBuffs(1, BUFF_DMG_REDUCER.toRawCode())
+        ..setMissileArt("")
+        ..setDurationHero(1, ORB_SAMETARGET_BUFF_MARKER_DURATION)
+        ..setDurationNormal(1, ORB_SAMETARGET_BUFF_MARKER_DURATION)
+        ..setHeroAbility(false)
+        ..setLevels(1)
+        ..setName("Orb Damage Reducer Dummy Spell")
+        ..setArmorPenalty(1, 0)
+        ..setAreaofEffect(1, 1)
+        ..setAttackSpeedReduction(1, 0)
+        ..setMovementSpeedReduction(1, 0)
+        ..setSecondaryDamage(1, 0)
+        ..setPrimaryDamage(1, 0)
+
+
+function createEarthGuardian(int abilId, string hotkey) returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(abilId, 1, true)
+        ..setTargetType(1, 0)
+        ..setAnimationNames("spell,channel")
+        ..setIconNormal(ABILITY_ICON)
+        ..setIconResearch(ABILITY_ICON)
+        ..setIconTurnOff(ABILITY_ICON)
+        ..setHeroAbility(false)
+        ..setHotkeyNormal(hotkey)
+        ..presetButtonPosNormal(1, 0)
+        ..setName(TOOLTIP_NORM)
+        ..setTooltipNormal(1, makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+        ..setFollowThroughTime(1, CHANNEL_DURATION)
+        ..setCooldown(1, COOLDOWN)
+        ..setManaCost(1, MANACOST)
+        ..setBaseOrderID(1, "auravampiric")
 
 @compiletime function createEarthGuardian()
-    new EarthGuardian(ABILITY_EARTH_GUARDIAN, "W", new Pair(1, 0))
-    createDummySpell()
-    createDummyBuff()
-    createBuffSpell()
+    createEarthGuardian(ABILITY_EARTH_GUARDIAN, "W")
+
 
 let instances = new HashMap<unit, EarthGuardianInstance>()
 
@@ -133,7 +138,7 @@ class EarthGuardianOrb
     construct (unit owner, EarthGuardianInstance earthGuardian, vec3 startPos)
         ownerUnit = owner
         instance = earthGuardian
-        projectile = addEffect(ORB_EFFECT_PATH, startPos)
+        projectile = addEffect(Abilities.ancientProtectorMissile, startPos)
         projectile.setScale(0.65)
         targetUnit = null
 
@@ -201,15 +206,20 @@ class EarthGuardianOrb
 
     function onImpactEffect()
         if (targetUnit.isAlive() and not targetUnit.isInvulnerable())
-            if (targetUnit.hasAbility('XSFB')) //If hit previously by another orb
+            if (targetUnit.hasAbility(BUFF_DMG_REDUCER)) //If hit previously by another orb
                 UnitDamageTarget(ownerUnit, targetUnit, ORB_IMPACT_DAMAGE_SAMETARGET, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
             else
                 UnitDamageTarget(ownerUnit, targetUnit, ORB_IMPACT_DAMAGE, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, null)
-            new DummyCaster()                 ..owner(ownerUnit.getOwner())
+            new DummyCaster()
+                ..owner(ownerUnit.getOwner())
+                ..origin(ownerUnit.getPos())
+                ..castTarget(DUMMY_DAZE_ABILITY_ID, 1, Orders.slow, targetUnit)
+            new DummyCaster()
+                ..owner(ownerUnit.getOwner())
                 ..origin(ownerUnit.getPos())
                 ..castTarget(DUMMY_BUFF_ABILITY_ID, 1, Orders.acidbomb, targetUnit)
 
-        let efx = addEffect(ORB_IMPACT_EFFECT, projectile.getPos3())
+        let efx = addEffect(Objects.impaleTargetDust, projectile.getPos3())
         efx.setScale(1)
         doAfter(3) ->
             efx.destr()

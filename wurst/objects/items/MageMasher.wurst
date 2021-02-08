@@ -1,44 +1,46 @@
 package MageMasher
 
 // Standard lib Imports:
-import AbilityObjEditing
 import DamageType
-import DummyCaster
+import Abilities
 import LinkedList
-import ObjectIdGenerator
-import Orders
+import StandardTextTags
 
 // Local Imports:
 import LocalObjectIDs
 import Classes
+import LightningUtils
 
-let MANABURN_ID = compiletime(ABIL_ID_GEN.next())
-let DRAIN_AMOUNT = 10.
+let DRAIN_MIN_AMOUNT = 10.
+let DRAIN_PCT_AMOUNT = 0.05
 let TARGET_CLASSES = asList(
     UNIT_MAGE,
     UNIT_PRIEST
 )
 
-@compiletime function createDummyManaburn()
-    new AbilityDefinitionManaBurndemon(MANABURN_ID)
-        ..setAnimationNames("")
-        ..setHeroAbility(false)
-        ..setItemAbility(false)
-        ..setLevels(1)
-        ..presetCooldown(lvl -> 0)
-        ..presetBoltDelay(lvl -> 0.15)
-        ..presetBoltLifetime(lvl -> 0.4)
-        ..presetCastRange(lvl -> 500)
-        ..presetCastingTime(lvl -> 0)
-        ..presetMaxManaDrained(lvl -> DRAIN_AMOUNT)
+function manaburn(unit target, unit caster, real amount)
+    // Spawn manaburn lightning FX
+    attachLightningFX(caster, target, LIGHTNING_MANA_BURN, 0.8)
+    flashEffect(Abilities.manaBurnTarget, target, "origin")
+
+    // Decrease target mana
+    target.subMana(amount)
+
+    // Deal spell damage
+    caster.damageTarget(target, amount, ATTACK_TYPE_NORMAL)
+
+    // Emulate manaburn texttag
+    createManaBurnTextTag(target, amount.toInt())
 
 function onDamage()
     // Look up the state.
     let origin = DamageEvent.getSource()
     let target = DamageEvent.getTarget()
-    let owner = origin.getOwner()
 
     // Filter out irrelevant events.
+    if not DamageEvent.getType() == DamageType.ATTACK
+        return
+
     if not origin.hasItemById(ITEM_MAGE_MASHER)
         return
 
@@ -50,12 +52,8 @@ function onDamage()
     if not TARGET_CLASSES.has(target.getTrollBaseClass())
         return
 
-    // Burn mana.
-    new DummyCaster()
-        ..delay(0.45)
-        ..owner(owner)
-        ..origin(origin.getPos())
-        ..castTarget(MANABURN_ID, 1, Orders.manaburn, target)
+    manaburn(target, origin, max(DRAIN_PCT_AMOUNT * target.getMana(), DRAIN_MIN_AMOUNT))
+
 
 init
     DamageEvent.addListener(-> onDamage())

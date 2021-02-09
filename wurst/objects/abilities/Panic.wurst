@@ -3,7 +3,12 @@ package Panic
 // Standard lib Imports:
 import AbilityObjEditing
 
+// Third-party imports:
+import StringBuilder
+
 // Local Imports:
+import DamageListeners
+import LocalAssets
 import LocalObjectIDs
 import ToolTipsUtils
 
@@ -12,16 +17,23 @@ let AS_FACTOR = 0.2
 let DAMAGE_FACTOR = 0.1
 let DURATION = 15.
 let COOLDOWN = 15.
-let TT = "" +
-    ("Causes your troll to go into a panic making him move {0} faster and attack {1} faster. "+
-    "Causes you to take {2} extra damage.")
+let TT = new StringBuilder()
+    ..add(
+        "Causes your troll to go into a panic, making him move {0} faster " +
+        "and attack {1} faster, but take {2} extra damage.|n"
+    )
+    ..add(makeToolTipDuration(DURATION, COOLDOWN))
+    ..add(
+        "Tip: Use this as often as possible to maximize efficiency.",
+        colorA(255, 255, 201, 255)
+    )
+
+    .build()
     .format(
         MS_FACTOR.toToolTipOrange(),
         AS_FACTOR.toToolTipOrange(),
         DAMAGE_FACTOR.toToolTipRed()
     )
-    +makeToolTipDuration(DURATION, COOLDOWN)+
-    "|n|cffffd700Tip: Use this as much as possible for maximal gathering and combat efficiency|r"
 
 @compiletime function createPanic() returns AbilityDefinitionBerserk
     return new AbilityDefinitionBerserk(ABILITY_PANIC)
@@ -30,10 +42,27 @@ let TT = "" +
         ..setManaCost(1, 20)
         ..setMovementSpeedIncrease(1, MS_FACTOR)
         ..setAttackSpeedIncrease(1, AS_FACTOR)
-        ..setDamageTakenIncrease(1, DAMAGE_FACTOR)
+        // Use a damage listener to handle this.
+        ..setDamageTakenIncrease(1, 0)
         ..setDurationNormal(1, DURATION)
         ..setDurationHero(1, DURATION)
         ..setHotkeyNormal("N")
         ..setName("Panic")
         ..setTooltipNormal(1, makeToolTipNorm("N", "Panic"))
         ..setTooltipNormalExtended(1, TT)
+
+function onDamage()
+    // Filter for units under the effects of Panic.
+    if not DamageEvent.getTarget().hasAbility(BuffIds.berserk)
+        return
+
+    // Exit if the damage is used for internal systems.
+    if DamageEvent.getElement().hasTag(FAKE_DAMAGE)
+        return
+
+    // Scale the damage.
+    DamageEvent.setAmount(DamageEvent.getAmount() * (1 + DAMAGE_FACTOR))
+
+init
+    DamageEvent.addListener(DamageListenerPriorities.PANIC castTo int) ->
+        onDamage()

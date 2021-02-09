@@ -7,6 +7,7 @@ import ClosureEvents
 import SoundUtils
 
 // Third-party imports:
+import Lodash
 import Setting
 
 // Local imports:
@@ -106,12 +107,10 @@ function doPeriodicDisplay(LinkedList<Hint> hintList)
         if not iterator.hasNext()
             iterator.reset()
 
-
-function alarm(real stat, string message, player owner)
+function unit.alarm(string message, Function<unit, real> getter)
     // Display a warning message, as necessary.
-    if stat <= WARNING_THRESHOLD
-        owner.print(message.color(COLOR_RED), WARNING_DURATION)
-
+    if getter.call(this) <= WARNING_THRESHOLD
+        this.getOwner().print(message.color(COLOR_RED), WARNING_DURATION)
 
 function checkStat(unit troll)
     // Do not check invalid trolls.
@@ -120,9 +119,10 @@ function checkStat(unit troll)
     Log.trace("Checking stats for: " + troll.getName())
 
     // Check for an alarm per stat.
-    alarm(troll.getHP(),   "Your health is low, eat some meat!", troll.getOwner())
-    alarm(troll.getMana(), "Your mana is low, get some sleep!",  troll.getOwner())
-    alarm(troll.getHeat(), "Your heat is low, stand by a fire!", troll.getOwner())
+    troll
+        ..alarm("Your health is low, eat some meat!", target -> target.getHP())
+        ..alarm("Your mana is low, get some sleep!", target -> target.getMana())
+        ..alarm("Your heat is low, stand by a fire!", target -> target.getHeat().toReal())
 
 function checkLevelingHint(unit target)
     // Cache the level for the unit.

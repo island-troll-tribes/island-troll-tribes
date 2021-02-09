@@ -14,7 +14,7 @@ import Hostile
 import LocalObjectIDs
 import LocalSoundUtils
 import UnitExtensions
-
+import UnitUtils
 
 public class AncientHydra extends Hostile
     private static let unitTypeId = UNIT_ANCIENT_HYDRA
@@ -45,19 +45,25 @@ public class AncientHydra extends Hostile
     function attackCenter()
         let hydra = getUnit()
 
-        if frostReady
-            forNearestUnit(getPos(), 600, Filter(-> begin
-                return not GetFilterUnit().getOwner().isAllyOf(players[PLAYER_NEUTRAL_AGGRESSIVE])
-            end), closest -> begin
-                if closest != null
-                    hydra.issuePointOrder("breathoffrost", closest.getPos())
-                    frostReady = false
-                    doAfter(10, -> begin
-                        frostReady = true
-                    end)
-            end)
+        // Reset position to avoid neutral guarding behavior.
+        hydra.setPos(hydra.getPos())
 
-        if frostReady
+        // Continue attacking if Breath of Frost cannot be used.
+        if not frostReady
+            return
+
+        // Search for a nearby target to attack.
+        let nearest = findNearestUnit(getPos(), 600) (target) ->
+            return not target.isAllyOf(hydra)
+
+        // Use of Breath of Frost if there is a target.
+        if nearest != null
+            hydra.issuePointOrder("breathoffrost", nearest.getPos())
+            frostReady = false
+            doAfter(10) ->
+                frostReady = true
+        // Continue moving and attacking otherwise.
+        else
             hydra.issuePointOrder("attack", gg_rct_discoduck.getCenter())
 
     override function getNumCorpses() returns int

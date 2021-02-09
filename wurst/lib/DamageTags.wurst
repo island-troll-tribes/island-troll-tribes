@@ -1,0 +1,42 @@
+package DamageTags
+
+// Standard library imports:
+import public DamageEvent
+import HashMap
+
+// Supports a set of tags for a damage event via a simple mapping of key-value
+// pairs. Tags can also be simply used as indicators, in which case the tag is
+// simply mapped to null.
+public class DamageTags extends DamageElement
+    // The tags and their values for this event.
+    let tags = new IterableMap<string, string>()
+
+    // Forwards the constructor.
+    construct(string name)
+        super(name, COLOR_WHITE)
+
+    // Adds an indicator tag.
+    function addTag(string tag)
+        tags.put(tag, null)
+
+    // Adds a tag with the given value.
+    function addTag(string tag, string value)
+        tags.put(tag, value)
+
+    // Checks if the given tag applies to this event.
+    function hasTag(string tag) returns boolean
+        return tags.has(tag)
+
+    // Gets the value for the given tag.
+    function getTag(string tag) returns string
+        return tags.get(tag)
+
+// Extensions of the base class to minimize manual typecasting:
+
+public function DamageElement.hasTag(string tag) returns boolean
+    return (this instanceof DamageTags) and (this castTo DamageTags).hasTag(tag)
+
+public function DamageElement.getTag(string tag) returns string
+    return (this instanceof DamageTags)
+        ? (this castTo DamageTags).getTag(tag)
+        : null

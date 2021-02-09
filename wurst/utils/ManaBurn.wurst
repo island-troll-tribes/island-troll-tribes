@@ -1,19 +1,44 @@
 package ManaBurn
 
 // Standard library imports:
+import Assets
 import StandardTextTags
 
-public function burnMana(unit target, real damage)
+// Local Imports:
+import LightningUtils
+
+function apply(unit caster, unit target, real damage, boolean burn)
     // Exit if the unit does not hava mana.
     if target.getMaxMana() == 0
         return
 
+    // Treat the target as the source if none was given.
+    let origin = (caster != null) ? caster : target
+
     // Compute the amount of mana damage done.
     let actual = min(target.getMana(), damage)
+
+    // Deal spell damage, if requested.
+    if burn
+        origin.damageTarget(target, actual, ATTACK_TYPE_NORMAL)
 
     // Update the mana.
     target.setMana(target.getMana() - actual)
 
-    // Create the text damage that mimics the effect.
+    // Replicate the visual effects.
+    attachLightningFX(origin, target, LIGHTNING_MANA_BURN, 0.8)
+    flashEffect(Abilities.manaBurnTarget, target, AttachmentPoints.origin)
     createManaBurnTextTag(target, actual.floor())
         ..matchVisibility(target)
+
+public function drainMana(unit caster, unit target, real damage)
+    apply(caster, target, damage, false)
+
+public function unit.drainMana(unit target, real damage)
+    drainMana(this, target, damage)
+
+public function burnMana(unit caster, unit target, real damage)
+    apply(caster, target, damage, true)
+
+public function unit.burnMana(unit target, real damage)
+    burnMana(this, target, damage)

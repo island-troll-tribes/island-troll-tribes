@@ -2,35 +2,21 @@ package MageMasher
 
 // Standard lib Imports:
 import DamageType
-import Abilities
 import LinkedList
-import StandardTextTags
+
+// Third-party imports:
+import ManaBurn
 
 // Local Imports:
 import LocalObjectIDs
 import Classes
-import LightningUtils
 
 let DRAIN_MIN_AMOUNT = 10.
 let DRAIN_PCT_AMOUNT = 0.05
-let TARGET_CLASSES = asList(
+let DRAIN_TARGET_CLASSES = asList(
     UNIT_MAGE,
     UNIT_PRIEST
 )
-
-function manaburn(unit target, unit caster, real amount)
-    // Spawn manaburn lightning FX
-    attachLightningFX(caster, target, LIGHTNING_MANA_BURN, 0.8)
-    flashEffect(Abilities.manaBurnTarget, target, "origin")
-
-    // Decrease target mana
-    target.subMana(amount)
-
-    // Deal spell damage
-    caster.damageTarget(target, amount, ATTACK_TYPE_NORMAL)
-
-    // Emulate manaburn texttag
-    createManaBurnTextTag(target, amount.toInt())
 
 function onDamage()
     // Look up the state.
@@ -49,11 +35,15 @@ function onDamage()
         return
 
     // Restrict the effects to spellcasters.
-    if not TARGET_CLASSES.has(target.getTrollBaseClass())
+    if not DRAIN_TARGET_CLASSES.has(target.getTrollBaseClass())
         return
 
-    manaburn(target, origin, max(DRAIN_PCT_AMOUNT * target.getMana(), DRAIN_MIN_AMOUNT))
-
+    // Apply the validated effect.
+    origin.burnMana(
+        target,
+        max(DRAIN_PCT_AMOUNT * target.getMana(), DRAIN_MIN_AMOUNT)
+    )
 
 init
-    DamageEvent.addListener(-> onDamage())
+    DamageEvent.addListener() ->
+        onDamage()

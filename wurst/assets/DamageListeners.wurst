@@ -1,17 +1,100 @@
 package DamageListeners
 
+// Third-party imports:
+import public DamageTags
+
 // These constants are intended to be used as a global ordering for damage
 // listeners that require such an ordering. Because listeners are executed
 // starting with the lowest priority and enumeration values are incremental,
 // the below priorities will be executed in order of declaration. Only the
 // reason for the priority will be documented here.
 public enum DamageListenerPriorities
+    // Normalizes the damage of FAKE_DAMAGE events for other listeners.
+    CONVERT_FAKE_DAMAGE
+
     // All non-code damage received by a unit under the effects of Panic has its
     // value increased proportionally.
     PANIC
+
+    // Any real damage received by a unit while under the effects of Meditate
+    // causes the Meditate effect to end.
+    MEDITATE
+
     // All damage received by a unit under the effects of Anchor Soul is reduced
     // to avoid killing said unit, which must be performed after any listeners
     // that could increase the damage.
     ANCHOR_SOUL
+
+    // All damage received by a unit under the effects of Panther Instinct is negated.
+    PANTHER_INSTINCT
+
     // Final damage can be displayed via text tags.
     TAGS
+
+    // Final damage is tallied on the scoreboard.
+    SCORE
+
+    // Converts fake damage to triggered HP loss to avoid waking units.
+    APPLY_FAKE_DAMAGE
+
+// The string used to tag fake damage.
+public let FAKE_DAMAGE = "fake_damage"
+
+// Converts the relevent tag to an actual damage amount.
+function convertFakeDamage()
+    // Look up the element for the event.
+    let element = DamageEvent.getElement()
+
+    // Filter out irrelevant events.
+    if element == null or not element.hasTag(FAKE_DAMAGE)
+        return
+
+    // Standardize the amount.
+    DamageEvent.setAmount(element.getTag(FAKE_DAMAGE).toReal())
+
+// Applies the damage amount via SetUnitState
+function applyFakeDamage()
+    // Look up the element for the event.
+    let element = DamageEvent.getElement()
+
+    // Filter out irrelevant events.
+    if element == null or not element.hasTag(FAKE_DAMAGE)
+        return
+
+    // Replicate the damage via direct modification of hit points.
+    DamageEvent.getTarget().subHP(DamageEvent.getAmount())
+
+    // Null the damage to avoid applying it twice.
+    DamageEvent.setAmount(0)
+
+public function unit.dealFakeDamage(unit target, real amount)
+    // Create the element used to represent the damage.
+    let element = new DamageTags(FAKE_DAMAGE)
+        ..addTag(FAKE_DAMAGE, amount.toString())
+
+    // Set the element for the damage event.
+    DamageEvent.setNextDamageElement(element)
+
+    // Mark the damage as part of a trigger.
+    DamageEvent.setNextDamageFromCode()
+
+    // Fire the damage event.
+    this.damageTarget(
+        target,
+        0,
+        false,
+        false,
+        ATTACK_TYPE_NORMAL,
+        DAMAGE_TYPE_UNKNOWN,
+        WEAPON_TYPE_WHOKNOWS
+    )
+
+    // Clean up the state.
+    destroy element
+
+init
+    DamageEvent.addListener(DamageListenerPriorities.CONVERT_FAKE_DAMAGE castTo int) ->
+        convertFakeDamage()
+
+    DamageEvent.addListener(DamageListenerPriorities.APPLY_FAKE_DAMAGE castTo int) ->
+        applyFakeDamage()

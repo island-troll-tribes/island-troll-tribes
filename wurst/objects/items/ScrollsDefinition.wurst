@@ -94,7 +94,7 @@ public let CYCLONE_TT = "Grants the unit the ability to cast Cyclone which tosse
 @compiletime function createEntaglingRootAbility()
     new AbilityDefinitionEnsnareCreep(ABILITY_ROOT_TROLL)
         ..setDummyAbility()
-        ..setBuffs(1, commaList('BEer', 'BEer')) // Buff Entangling Root
+        ..setBuffs(1, commaList(BuffIds.entanglingRoots, BuffIds.entanglingRoots))
         ..setMissileArt("")
         ..setDurationHero(1, ROOT_DURATION_HERO)
         ..setDurationNormal(1, ROOT_DURATION_NORMAL)
@@ -240,7 +240,7 @@ public let CYCLONE_TT = "Grants the unit the ability to cast Cyclone which tosse
 
 @compiletime function createBuffStoneArmor() returns BuffDefinition
     // Frost armor buff slow enemy attacker by 15%, this value is a map constant
-    return new BuffDefinition(BUFF_STONE_ARMOR, 'BUfa') // Frost armor buff
+    return new BuffDefinition(BUFF_STONE_ARMOR, BuffIds.frostArmor)
     ..setIcon(Icons.bTNResistantSkin)
     ..setArtTarget(1, Abilities.aIdaTarget)
     ..setTargetAttachmentPoint0(1, "overhead")
@@ -248,7 +248,7 @@ public let CYCLONE_TT = "Grants the unit the ability to cast Cyclone which tosse
     ..setTooltipNormalExtended(1, "This unit is protected by a stone armor. Its armor is increased.")
 
 @compiletime function createBuffHaste() returns BuffDefinition
-    return new BuffDefinition(BUFF_HASTE, 'Bspe') // Speed Bonus Buff
+    return new BuffDefinition(BUFF_HASTE, BuffIds.speedBonus)
     ..setName(1, "Speed Boost")
     ..setArtTarget(1, Abilities.speedTarget)
     ..setTooltipNormal(1, "Speed Boost")
@@ -358,11 +358,6 @@ public let CYCLONE_TT = "Grants the unit the ability to cast Cyclone which tosse
         ..setTooltipExtended(CYCLONE_TT)
 
 
-// Cyclone Buff Ids, I believe Cyclone Extra is the buff applied to air unit, didn't confirm
-// Those buff are set in all cyclone-based abilities
-let BUFF_CYCLONE = 'Bcyc'
-let BUFF_CYCLONE_EXTRA = 'Bcy2'
-
 function onCyclone(unit target)
     // Following code give the ability Ghost (visible) to the unit targeted by cyclone
     // It allows other unit to walk through the target while it's tossed in the air
@@ -370,7 +365,7 @@ function onCyclone(unit target)
 
     // periodically checking if the unit is still tossed in the air
     doPeriodicallyTimed(0.1, 15) buffPoller ->
-        if not target.hasAbility(BUFF_CYCLONE) and not target.hasAbility(BUFF_CYCLONE_EXTRA)
+        if not target.hasAbility(BuffIds.cyclone) and not target.hasAbility(BuffIds.cycloneExtra)
             target.removeAbility(GHOST_VIS_ID)
             buffPoller.stop()
 

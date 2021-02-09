@@ -7,8 +7,14 @@ import LinkedList
 import ObjectIdGenerator
 import ObjectIds
 
+// Third-party imports:
+import ManaBurn
+import StringBuilder
+
 // Local Imports:
+import Classes
 import ColorUtils
+import DamageListeners
 import Items
 import LocalAssets
 import LocalItemObjEditing
@@ -56,20 +62,33 @@ let DRAIN_TARGET_CLASSES = asList(
     UNIT_PRIEST
 )
 
-let TT_COMMON = ""+
-    "Increases the attack damage of the unit by " + "{0}".color(RED_COLOR) + " when worn. "+
-    "Wielder can cut trees."
+let TT_COMMON = new StringBuilder()
+    ..add("Increases the attack damage of the wielder by ")
+    ..add("{0}", COLOR_RED.withAlpha(0))
+    ..add(" and allows them to fell trees.")
+    .build()
+    // This is needed to for the stack trace compiler to perform correctly.
+    // TODO: Remove this call once the compiler is fixed.
+    .format()
 
-let TT_MM = (TT_COMMON +
-    " Can cast silence which has a {0} area of effect, lasting {1} seconds "+
-    "with a {2} second cooldown. ")
+public let TT_MM = new StringBuilder()
+    ..add(TT_COMMON)
+    ..add(
+        "Can cast silence which has a {1} area of effect, a duration of {2} " +
+        "seconds, and a cooldown of {3} seconds. "
+    )
+    ..add(
+        "Each hit burns {4} mana (minimum {5}) against Mages, Priests, and " +
+        "their subclasses.")
+    .build("\n")
     .format(
+        DMG_MASHER.toString(),
         SILENCE_AOE.toToolTipLightBlue(),
         SILENCE_DURATION_HERO.toToolTipLightBlue(),
-        SILENCE_COOLDOWN.toToolTipLightBlue()
-    )+
-    "Every hit burns {0} mana against mages, priests, and their subclasses."
-    .format(6..toToolTipBlue())
+        SILENCE_COOLDOWN.toToolTipLightBlue(),
+        DRAIN_PCT_AMOUNT.toToolTipLightBlue(),
+        DRAIN_MIN_AMOUNT.toToolTipLightBlue()
+    )
 
 let TT_BA = "A two handed axe. " + TT_COMMON +
     " Can cast purge, removes all buffs from a target unit, and slows its movement speed." +
@@ -217,3 +236,35 @@ function createAxe(int axeId) returns ItemDefinition
         ..setCastRange(1, PURGE_CAST_RANGE)
         ..setCooldown(1, PURGE_COOLDOWN)
         ..setEditorSuffix("(Wurst)")
+
+
+function onMageMasherDamage()
+    // Look up the state.
+    let origin = DamageEvent.getSource()
+    let target = DamageEvent.getTarget()
+
+    // Restrict mana burn to damage from attacks.
+    if not DamageEvent.getType() == DamageType.ATTACK
+        return
+
+    // Filter out irrelevant attacks.
+    if not origin.hasItemById(ITEM_MAGE_MASHER)
+        return
+
+    // Prevent targeting allies.
+    if origin.isAllyOf(target)
+        return
+
+    // Restrict the effect to spellcasters.
+    if not DRAIN_TARGET_CLASSES.has(target.getTrollBaseClass())
+        return
+
+    // Apply the validated effect.
+    origin.burnMana(
+        target,
+        max(DRAIN_PCT_AMOUNT * target.getMana(), DRAIN_MIN_AMOUNT)
+    )
+
+init
+    DamageEvent.addListener() ->
+        onMageMasherDamage()

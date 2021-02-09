@@ -53,10 +53,6 @@ constant BUFF_SPIKED_TRAP_SLOW    = compiletime(BUFF_ID_GEN.next())
 constant BUFF_BEAR_TRAP_LOCK_GROUND = compiletime(BUFF_ID_GEN.next())
 constant BUFF_BEAR_TRAP_LOCK_AIR    = compiletime(BUFF_ID_GEN.next())
 
-constant BUFF_SPIKED_TRAP_ORIGINAL_ID = 'Bcri'
-constant BUFF_BEAR_TRAP_GROUND_ORIGINAL_ID = 'Beng'
-constant BUFF_BEAR_TRAP_AIR_ORIGINAL_ID    = 'Bena'
-
 constant SPIKED_TRAP_PATH    = LocalAbilities.spiketrap
 constant BEAR_TRAP_PATH      = LocalAbilities.bearTrap
 constant BEAR_TRAP_BUFF_PATH = LocalAbilities.bearTrapBuff
@@ -76,21 +72,21 @@ constant TOOLTIP_EXTENDED_BEAR_TRAP = "Troll walking through this trap will be i
 
 // Buff
 function createBuff()
-    new BuffDefinition(BUFF_SPIKED_TRAP_SLOW, BUFF_SPIKED_TRAP_ORIGINAL_ID)
+    new BuffDefinition(BUFF_SPIKED_TRAP_SLOW, BuffIds.cripple)
         ..setIcon(Icons.bTNMeatapult)
         ..setArtTarget(1, Objects.humanBloodCinematicEffect)
         ..setTargetAttachmentPoint0(1, "chest")
         ..setTooltipNormal(1, "Spike Trap Slow")
         ..setTooltipNormalExtended(1, "This unit has been crippled by an spiked trap, it's movement speed has been greatly reduced.")
 
-    new BuffDefinition(BUFF_BEAR_TRAP_LOCK_GROUND, BUFF_BEAR_TRAP_GROUND_ORIGINAL_ID)
+    new BuffDefinition(BUFF_BEAR_TRAP_LOCK_GROUND, BuffIds.ensnareGround)
         ..setIcon(Icons.bTNMeatapult)
         ..setArtTarget(1, BEAR_TRAP_BUFF_PATH)
         ..setTargetAttachmentPoint0(1, "origin")
         ..setTooltipNormal(1, "Bear Trap Lock")
         ..setTooltipNormalExtended(1, "This unit has been crippled by an spiked trap, it's movement speed has been greatly reduced.")
 
-    new BuffDefinition(BUFF_BEAR_TRAP_LOCK_AIR, BUFF_BEAR_TRAP_AIR_ORIGINAL_ID)
+    new BuffDefinition(BUFF_BEAR_TRAP_LOCK_AIR, BuffIds.ensnareAir)
         ..setIcon(BEAR_TRAP_ICON)
         ..setArtTarget(1, BEAR_TRAP_BUFF_PATH)
         ..setTargetAttachmentPoint0(1, "origin")
@@ -298,7 +294,9 @@ let trapList = new HashMap<int, Pair<int, int>>()
 function onTrapDeath(unit trap)
     forUnitsInRange(trap.getPos(), TRAP_EFFECT_RADIUS + 25) u ->
         let trapId = trap.getTypeId()
-        if u.isTroll() and u.getOwner().isEnemyOf(trap.getOwner()) and not (u.hasAbility('Bams') or u.hasAbility('Bam2'))
+        if u.isTroll() and u.getOwner().isEnemyOf(trap.getOwner())
+            and not (u.hasAbility(BuffIds.antiMagicShell)
+            or u.hasAbility(BuffIds.antiMagicShellExtra))
             // Grant temporary vision for the dummy caster.
             let vision = createVision(
                 trap.getOwner(),

@@ -3,6 +3,8 @@ package WitchDoctorsHut
 // Local imports:
 import Building
 import LocalObjectIDs
+import UnitExtensions
+import GameConfig
 
 public class WitchDoctorsHut extends Building
     private static let unitTypeId = UNIT_WITCH_DOCTORS_HUT
@@ -29,5 +31,10 @@ public class WitchDoctorsHut extends Building
         getUnit().addAbility(ABILITY_QM_ULTRA_POISON)
         getUnit().addAbility(ABILITY_WDH_SPELLBOOK_ID)
 
+        // I didn't know how to retrieve the recipe building on demo island
+        // after the mode selection
+        // so I decided to ignore them when disabling quick make ability
+        if gameConfig.getEliminationEnabled() and getUnit().getOwner() != players[PLAYER_NEUTRAL_PASSIVE]
+            getUnit().disableAbility(ABILITY_QM_SPIRIT_WARD, "-Elimination mode Off")
 init
     WitchDoctorsHut.initialize()

@@ -1,0 +1,356 @@
+package ItemRecipeExtended
+
+// Standard library imports:
+import LinkedList
+import HashMap
+import ClosureEvents
+import ClosureTimers
+import ErrorHandling
+
+// Extension library imports:
+import ItemRecipe
+import Lodash
+
+// Local imports:
+import ClosuresForItems
+import LocalObjectIDs
+import ObjectIDManager
+import IdListConstant
+import ResourceSpawns
+import UnitExtensions
+import ColorUtils
+
+public let ingredientStrings = new HashMap<int, string>()
+// Herbs
+    ..put(ITEM_BLUE_HERB           , "Blue Herb"   .color(COLOR_TURQUOISE))
+    ..put(ITEM_ORANGE_HERB         , "Orange Herb" .color(COLOR_ORANGE))
+    ..put(ITEM_PURPLE_HERB         , "Purple Herb" .color(COLOR_VIOLET))
+    ..put(ITEM_YELLOW_HERB         , "Yellow Herb" .color(COLOR_YELLOW))
+    ..put(ITEM_RIVER_ROOT          , "River Root"  .color(COLOR_TEAL))
+    ..put(ITEM_RIVER_STEM          , "River Stem"  .color(COLOR_GRAY))
+    ..put(ITEM_ATHELAS_SEED        , "Athelas Seed".color(COLOR_GREEN))
+
+// Basic Materials
+    ..put(ITEM_STONE               , "Stone"           .color(COLOR_GRAY))
+    ..put(ITEM_FLINT               , "Flint"           .color(COLOR_RED))
+    ..put(ITEM_TINDER              , "Tinder"          .color(COLOR_GREEN))
+    ..put(ITEM_BONE                , "Bone"            .color(GOLD_COLOR))
+    ..put(ITEM_STICK               , "Stick"           .color(COLOR_GREEN))
+    ..put(ITEM_MANA_CRYSTAL        , "Mana Crystal"    .color(COLOR_LIGHT_BLUE))
+    ..put(ITEM_ELK_HIDE            , "Elk Hide"        .color(COLOR_ORANGE))
+    ..put(ITEM_JUNGLE_WOLF_HIDE    , "Jungle Wolf Hide".color(COLOR_ORANGE))
+    ..put(ITEM_JUNGLE_BEAR_HIDE    , "Jungle Bear Hide".color(COLOR_ORANGE))
+    ..put(ITEM_CLAY_BALL           , "Clay Ball"       .color(COLOR_ORANGE))
+    ..put(ITEM_MUSHROOM            , "Mushroom"        .color(COLOR_GREEN))
+    ..put(ITEM_MAGIC               , "Magic"           .color(COLOR_TURQUOISE))
+    ..put(ITEM_BANANA              , "Banana"          .color(COLOR_PEANUT))
+    ..put(ITEM_THISTLES            , "Thisle"          .color(COLOR_GREEN))
+
+// Crafted Materials
+    ..put(ITEM_SPIRIT_WIND        , "Spirit of Wind"    .color(COLOR_LAVENDER))
+    ..put(ITEM_SPIRIT_WATER       , "Spirit of Water"   .color(COLOR_TURQUOISE))
+    ..put(ITEM_SPIRIT_DARKNESS    , "Spirit of Darkness".color(COLOR_VIOLET))
+    ..put(ITEM_ANABOLIC_POTION    , "Anabolic Potion"   .color(COLOR_MAROON))
+    ..put(ITEM_IRON_INGOT         , "Iron Ingot"        .color(COLOR_RED))
+    ..put(ITEM_STEEL_INGOT        , "Steel Ingot"       .color(COLOR_RED))
+    ..put(ITEM_SPEAR              , "Spear"             .color(HIGHLIGHT_COLOR))
+    ..put(ITEM_POISON             , "Poison"            .color(COLOR_GREEN))
+    ..put(ITEM_ULTRA_POISON       , "Ultra Poison"      .color(COLOR_GREEN))
+    ..put(ITEM_SHIELD             , "Shield"            .color(COLOR_PEANUT))
+    ..put(ITEM_NETS               , "Nets"              .color(COLOR_LIGHT_BLUE))
+    ..put(ITEM_ELK_SKIN_GLOVES    , "Elk Skin Gloves"   .color(COLOR_PEANUT))
+    ..put(ITEM_ELK_SKIN_COAT      , "Elk Skin Coat"     .color(COLOR_PEANUT))
+    ..put(ITEM_ELK_SKIN_BOOTS     , "Elk Skin Boots"    .color(COLOR_PEANUT))
+    ..put(ITEM_WOLF_SKIN_GLOVES   , "Wolf Skin Gloves"  .color(COLOR_PEANUT))
+    ..put(ITEM_WOLF_SKIN_COAT     , "Wolf Skin Coat"    .color(COLOR_PEANUT))
+    ..put(ITEM_WOLF_SKIN_BOOTS    , "Wolf Skin Boots"   .color(COLOR_PEANUT))
+    ..put(ITEM_BEAR_SKIN_GLOVES   , "Bear Skin Gloves"  .color(COLOR_PEANUT))
+    ..put(ITEM_BEAR_SKIN_COAT     , "Bear Skin Coat"    .color(COLOR_PEANUT))
+    ..put(ITEM_BEAR_SKIN_BOOTS    , "Bear Skin Boots"   .color(COLOR_PEANUT))
+    ..put(ITEM_BONE_BOOTS         , "Bone Boots"        .color(COLOR_ORANGE))
+    ..put(ITEM_BONE_COAT          , "Bone Coat"         .color(COLOR_ORANGE))
+    ..put(ITEM_BONE_GLOVES        , "Bone Gloves"       .color(COLOR_ORANGE))
+    ..put(ITEM_BONE_SHIELD        , "Bone Shield"       .color(COLOR_ORANGE))
+    ..put(ITEM_SMOKE_BOMB         , "Smoke Bomb"        .color(COLOR_VIOLET))
+    ..put(ITEM_TENT_KIT           , "Tent Kit"          .color(COLOR_PEANUT))
+
+// Artifact Materials
+    ..put(ITEM_HYDRA_SCALE        , "Hydra Scale".color(ARTIFACT_COLOR))
+
+
+/**
+    This class is used to handle Island Troll Tribes quick making & item crafting
+    It was implemented in order to gain more feature related to item crafting
+    It extends the ItemRecipe class contained in https://github.com/crojewsk/wurstExtLibs
+    Previous crafting system relied on a list of Jass if statement triggered upon item pick up
+
+    The ItemRecipe class supports:
+    - unordered or ordered recipes types
+    - crafting triggered upon pickup, inventory movement or on cast event
+    - a dissassembling function which revert the crafted item and refund its ingredient
+    - batches, a feature to fill several items into same spot
+    - Unit requirement, which allows to create crafting restriction related to units
+    - assembly of recipes despite unit's inventory being full
+    - crafting event, fires an event upon item crafting
+    - recipe alteration at runtime (if statement were kinda static)
+    - can take the number of charges into account when crafting
+    - pickupable recipe can be crafted upon inventory item move event
+
+   The ItemRecipeExt class adds:
+   - quick make ability logic, allowing the casting unit to pick up ingredient around and craft
+   - recipe string generation, which compute a string listing the ingredients of the recipe
+   - a function to retrieve missing ingredient upon quick make cast (not actually used)
+   - a function to print missing ingredient (not actually used)
+
+   Note : perishable attribute behavior differ depending on whether the ingredient has charges
+   - With charges : perishable on false will consume the exact count of charges, on true it will consume all charges
+   - Without charges : perishable on false won't consume the ingredient upon assemble
+**/
+public class ItemRecipeExt extends ItemRecipe
+    var pickUpRange = 700.
+
+    /**
+        Reward is the item crafted
+        Charges is the number of charges assigned to the crafted item
+        Ordered define if recipe shall respect the order in which the items are added to execute the crafting
+        Permanent define is crafted item can be disassembled, do not confuse with the Item classification field
+        pickupable define is item can be crafted upon EVENT_PLAYER_UNIT_PICKUP_ITEM
+        quickMakeAbilId is the quick make ability used to craft the recipe
+    */
+    construct(int reward, int charges, boolean ordered, boolean permanent, boolean pickupable, int quickMakeAbilId)
+        super(reward, charges, ordered, permanent, pickupable)
+        if quickMakeAbilId != 0
+            // Maybe I should save the listener in a variable and destory it upon
+            // instances destruction? Is this even neccessary?
+            EventListener.onCast(quickMakeAbilId) (unit caster) ->
+                onQuickMakeCast(caster)
+
+    function onQuickMakeCast(unit caster)
+        let pos = caster.getPos()
+        let items = new OwnedLinkedList<item>()
+        let inventory = caster.getInventory()
+
+        if caster.isTroll()
+            pickUpRange = 100
+        if caster.getTypeId() == UNIT_CRAFT_MASTER
+            pickUpRange = 300
+
+        caster.dropItems()
+
+        // Look for ingredients in pickUpRange radius around the caster
+        findIngredient(items, pos)
+
+        // Testing if the recipe can be assembled
+        if this.test(caster, items) != null
+            for elem in items
+                // Remove transmutable item from inventory list
+                inventory.remove(elem)
+                caster.addItemHandle(elem)
+            customAssemble(caster)
+        // This piece of code would display a message upon crafting failure
+        // indicating which ingredients are missing
+        // however, there is no way to display this message for the triggering player
+        // as the buildings are shared, we cannot retrieve the player who casted quickmake
+        // else
+        //     printMissingIngredient(items, caster.getOwner())
+
+        onQuickMakeEnd(caster, inventory)
+
+        destroy items
+        destroy inventory
+
+    // In some case, I don't want to rely on ItemRecipe assemble behavior, I don't know if there's
+    // a proper way to "avoid" using it
+    // In the case of the tannery, I cannot use quickmake if I rely on ItemRecipe onCast assemble
+    // because it occurs before the quickmake execution, if you have 2 elk hide in tannery, it
+    // will craft the item then quickmake will pick up 2 other elk hide, so I decided to not
+    // set the ItemRecipe ability
+    // set the function to protected because I don't want it used outside of the instance
+    // I believe that's ok?
+    protected function customAssemble(unit caster)
+        if caster.getTypeId() == UNIT_TANNERY
+            this.assemble(caster)
+
+    /**
+        Look for recipe ingredients in a pickUpRange radius around pos
+        and add them to the items list
+    **/
+    function findIngredient(OwnedLinkedList<item> items, vec2 pos)
+        let iter = this.getIngredients().iterator()
+
+        while iter.hasNext()
+            let ingredient = iter.next()
+            let found = findNearestItem(pos, pickUpRange, i -> i.getTypeId() == ingredient.itemTypeId)
+
+            if found != null
+                // If found item is part of a batch, skip the next batch ingredients
+                while iter.hasNext() and iter.lookahead().index == ingredient.index
+                    iter.next()
+                items.add(found)
+                // We don't want to iterate over same item multiple time
+                found.setVisible(false)
+        iter.close()
+        // Setting the items visible again so they aren't "lost" even if recipe assemble fails
+        for elem in items
+            elem.setVisible(true)
+
+    private function onQuickMakeEnd(unit caster, LinkedList<item> inventory)
+        // Previous system used to disable transmutation to avoid unwanted crafting
+        // when moving items down the inventory
+        // I did this hacky thing, should reproduce same behavior
+        this.requirement.removeUnit(caster.getTypeId())
+        this.requirement.addUnit(UNIT_CRAFT_MASTER)
+
+        for elem in inventory
+            caster.addItemHandle(elem)
+        caster.moveInventoryDown()
+
+        this.requirement.removeUnit(UNIT_CRAFT_MASTER)
+        this.requirement.addUnit(caster.getTypeId())
+
+    /**
+        Call this function if you want to generate the recipe string and add it to the
+        quick make ability, append the recipe string at the end of the extended tooltip
+    **/
+    function generateRecipeString(int quickMakeAbilId)
+        // nullTimer used to let the ItemRecipe instance initialize itself
+        nullTimer() ->
+            let quickMakeTooltip = getAbilityExtendedTooltip(quickMakeAbilId, 0)
+            let newToolTip = quickMakeTooltip + "\n\n"  + getRecipeString(this.getIngredients(), "\n")
+            setAbilityExtendedTooltip(quickMakeAbilId, newToolTip, 0)
+
+    /**
+        Compare current recipe with an item list and returns the missing recipe ingredient
+    **/
+    function getMissingIngredient(LinkedList<item> items) returns LinkedList<RecipeIngredient>
+        let iter = this.getIngredients().iterator()
+        var slot = 0
+        let missingIngredients = new LinkedList<RecipeIngredient>
+
+        while iter.hasNext()
+            var ingredient = iter.next()
+            let idx = ingredient.index
+            let itm = items.get(slot)
+
+            while ingredient.index == idx
+                if itm != null and ingredient.itemTypeId == itm.getTypeId()
+                    missingIngredients.removeIf(ingredient -> ingredient.index == idx)
+                    break
+                else
+                    missingIngredients.add(ingredient)
+                if not iter.hasNext() or iter.lookahead().index != idx
+                    break
+                ingredient = iter.next()
+
+            // Seek node which is not part of this batch
+            while iter.hasNext()
+                if iter.lookahead().index != idx
+                    break
+                iter.next()
+            slot++
+        iter.close()
+        return missingIngredients
+
+    /**
+        Compare this recipe with an item list, display the missing ingredients
+        to specified player
+    **/
+    // This is not implemented due to current tribe building ownership logic
+    // We cannot retrieve the player who orders a shared unit
+    // If you cast a quickmake spell on a building owned by the tribe,
+    // the spell cast event will return the tribe player as triggered unit owner
+    // Still, I wanted to code this, sounded cool quality of life improvement
+    function printMissingIngredient(LinkedList<item> items, player whichPlayer)
+        let missingIngredient = this.getMissingIngredient(items)
+        if missingIngredient.size() > 0
+            let missingIngredientStr = getRecipeString(missingIngredient, " ")
+            let msg = "You are missing ".color(GENERAL_COLOR) + missingIngredientStr +
+                      " to craft this item".color(GENERAL_COLOR)
+            printTimedToPlayer(msg, 5, whichPlayer)
+
+/**
+    Takes an ingredient list and return a formatted recipe string
+    e.g, a list containing a tinder, 2 flint, 1 stick or bone, 1 flint, 5 charged thistles
+    and a "\n" space as separator will return the following string
+
+    1x tinder
+    2x flint
+    1x stick/bone
+    1x flint
+    5x thistles
+**/
+function getRecipeString(LinkedList<RecipeIngredient> ingredients, string separator) returns string
+    var recipeStr = ""
+    let iter = ingredients.iterator()
+
+    while iter.hasNext()
+        var ingredient = iter.next()
+        var ingredientCounter = 1
+
+        while iter.hasNext() and iter.lookahead().itemTypeId == ingredient.itemTypeId
+            ingredientCounter++
+            ingredient = iter.next()
+
+        if ingredientCounter == 1 and ingredient.charges > 0
+            ingredientCounter = ingredient.charges
+
+        recipeStr += "{0}x ".format(ingredientCounter.toString())
+        recipeStr += getIngredientName(ingredient)
+
+        while iter.hasNext() and ingredient.index == iter.lookahead().index
+            recipeStr += "/"
+            ingredient = iter.next()
+            recipeStr += getIngredientName(ingredient)
+
+        if iter.hasNext()
+            recipeStr += separator
+    return recipeStr
+
+/**
+    Returns a colored string corresponding to the item name
+    it's just a string mapped with the ingredient itemTypeId
+**/
+function getIngredientName(RecipeIngredient ingredient) returns string
+    var toRet = ""
+    // Check if the ingredient is initialized in our ingredientString Hashmap
+    if not ingredientStrings.has(ingredient.itemTypeId)
+        error("Ingredient {0} is not registered for recipe string creation".format(ingredient.itemTypeId.asObjectName()))
+        // Maybe do not return anything, otherwise this will report only the first error encountered
+        // during this getRecipeString() call
+        return toRet
+    toRet += ingredientStrings.get(ingredient.itemTypeId)
+    if ingredient.perishable == false and ingredient.charges  == 0
+        toRet += " (Refunded after crafting)".color(GOLD_COLOR)
+    return toRet
+
+
+public class ItemRecipeArmor extends ItemRecipeExt
+    construct(int reward, int quickMakeAbilId)
+        super(reward, 0, true, true, false, quickMakeAbilId)
+
+public class ItemRecipeGear extends ItemRecipeExt
+    construct(int reward, int quickMakeAbilId)
+        super(reward, 0, true, true, true, quickMakeAbilId)
+
+    construct(int reward, int charges, int quickMakeAbilId)
+        super(reward, charges, true, true, true, quickMakeAbilId)
+
+public class ItemRecipeBuildingKit extends ItemRecipeExt
+    construct(int reward, int quickMakeAbilId)
+        super(reward, 1, true, true, true, quickMakeAbilId)
+
+    construct(int reward, int charges, int quickMakeAbilId)
+        super(reward, charges, true, true, true, quickMakeAbilId)
+
+
+init
+    registerItemRecipeEvent() ->
+        let ingredientUsed = getEventItemRecipeIngredients()
+        let itemRecipeUnit = getEventItemRecipeUnit()
+
+        // Filter recipe island demo gatherer unit
+        if not itemRecipeUnit.getPos().isInRect(gg_rct_vision)
+            for ingredient in ingredientUsed
+                // Mephisto added this so I assume it was present in previous transmute system
+                if (MATERIAL_COUNTER_LIST.has(ingredient.getTypeId()))
+                    lowerItem(1)

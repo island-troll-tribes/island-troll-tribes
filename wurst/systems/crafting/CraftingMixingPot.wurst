@@ -1,0 +1,171 @@
+package CraftingMixingPot
+
+// Extension library imports:
+import ItemRestriction
+
+// Local imports:
+import CraftingExtensions
+import ItemRecipeMixing
+import LocalObjectIDs
+import GameMode
+
+
+init
+    GameMode.onModeSelectionFinish() ->
+        let mixingUnits = new UnitRequirement("mixingUnits")
+        mixingUnits.addUnit(UNIT_POT)
+        mixingUnits.addUnit(UNIT_HERB_MASTER)
+        mixingUnits.addUnit(UNIT_OMNIGATHERER)
+
+        new ItemRecipeMixing(ITEM_ANABOLIC_POTION, 1, ABILITY_QM_ANABOLIC_POTION)
+            ..addItem(ITEM_RIVER_STEM)
+            ..addItem(ITEM_RIVER_STEM)
+            ..addItem(ITEM_RIVER_STEM)
+            ..addItem(ITEM_RIVER_STEM)
+            ..generateRecipeString(ABILITY_QM_ANABOLIC_POTION)
+            ..addUnitRequirement(mixingUnits)
+
+        new ItemRecipeMixing(ITEM_BEE_HIVE, 1, ABILITY_QM_BEE_HIVE)
+            ..addColorHerb()
+            ..addItem(ITEM_RIVER_STEM)
+            ..addItem(ITEM_RIVER_STEM)
+            ..generateRecipeString(ABILITY_QM_BEE_HIVE)
+            ..addUnitRequirement(mixingUnits)
+
+        new ItemRecipeMixing(ITEM_NETHER_POTION, 2, ABILITY_QM_NETHER_POTION)
+            ..addColorHerb()
+            ..addItem(ITEM_RIVER_STEM)
+            ..addItem(ITEM_RIVER_STEM)
+            ..addItem(ITEM_ATHELAS_SEED)
+            ..addItem(ITEM_ATHELAS_SEED)
+            ..generateRecipeString(ABILITY_QM_NETHER_POTION)
+            ..addUnitRequirement(mixingUnits)
+
+        new ItemRecipeMixing(ITEM_DRUNKS_POTION, 2, ABILITY_QM_DRUNKS_POTION)
+            ..addColorHerb()
+            ..addItem(ITEM_RIVER_ROOT)
+            ..addItem(ITEM_RIVER_ROOT)
+            ..addItem(ITEM_ATHELAS_SEED)
+            ..addItem(ITEM_ATHELAS_SEED)
+            ..generateRecipeString(ABILITY_QM_DRUNKS_POTION)
+            ..addUnitRequirement(mixingUnits)
+
+        new ItemRecipeMixing(ITEM_HEALING_POTION, 1, ABILITY_QM_HEALING_POTION)
+            ..addItem(ITEM_ATHELAS_SEED)
+            ..addItem(ITEM_RIVER_ROOT)
+            ..generateRecipeString(ABILITY_QM_HEALING_POTION)
+            ..addUnitRequirement(mixingUnits)
+
+        new ItemRecipeMixing(ITEM_MANA_POTION, 1, ABILITY_QM_MANA_POTION)
+            ..addItem(ITEM_RIVER_STEM)
+            ..addItem(ITEM_ATHELAS_SEED)
+            ..generateRecipeString(ABILITY_QM_MANA_POTION)
+            ..addUnitRequirement(mixingUnits)
+
+        new ItemRecipeMixing(ITEM_ANTI_MAGIC_POTION, 2, ABILITY_QM_ANTI_MAGIC_POTION)
+            ..addColorHerb()
+            ..addItem(ITEM_ATHELAS_SEED)
+            ..generateRecipeString(ABILITY_QM_ANTI_MAGIC_POTION)
+            ..addUnitRequirement(mixingUnits)
+
+        new ItemRecipeMixing(ITEM_CURE_ALL, 2, ABILITY_QM_CURE_ALL)
+            ..addItem(ITEM_ATHELAS_SEED)
+            ..addItem(ITEM_ATHELAS_SEED)
+            ..addItem(ITEM_ATHELAS_SEED)
+            ..generateRecipeString(ABILITY_QM_CURE_ALL)
+            ..addUnitRequirement(mixingUnits)
+
+        new ItemRecipeMixing(ITEM_SPIRIT_DARKNESS, 0, ABILITY_QM_SPIRIT_DARKNESS)
+            ..addItem(ITEM_RIVER_STEM)
+            ..addItem(ITEM_RIVER_ROOT)
+            ..addItem(ITEM_ATHELAS_SEED)
+            ..addItem(ITEM_ATHELAS_SEED)
+            ..generateRecipeString(ABILITY_QM_SPIRIT_DARKNESS)
+            ..addUnitRequirement(mixingUnits)
+
+        new ItemRecipeMixing(ITEM_SPIRIT_WATER, 0, ABILITY_QM_SPIRIT_WATER)
+            ..addItem(ITEM_RIVER_ROOT)
+            ..addItem(ITEM_RIVER_ROOT)
+            ..generateRecipeString(ABILITY_QM_SPIRIT_WATER)
+            ..addUnitRequirement(mixingUnits)
+
+        new ItemRecipeMixing(ITEM_SPIRIT_WIND, 0, ABILITY_QM_SPIRIT_WIND)
+            ..addItem(ITEM_RIVER_STEM)
+            ..addItem(ITEM_RIVER_STEM)
+            ..generateRecipeString(ABILITY_QM_SPIRIT_WIND)
+            ..addUnitRequirement(mixingUnits)
+
+        // Complex Mixing recipes
+        // If you have 4 herbs of the same color and you execute the ItemRecipe
+        // assemble method, it will successfully craft, which is not really secure
+        // Nevertheless, I made sure mix herb abilities & quick make cast goes through the
+        // old mixing logic before attempting an assemble
+        new ItemRecipeMixing(ITEM_ACID_BOMB, 1, ABILITY_QM_ACID_BOMB, 3)
+            ..addColorHerb()
+            ..addColorHerb()
+            ..addColorHerb()
+            ..addColorHerb()
+            ..addItem(ITEM_RIVER_STEM)
+            ..addItem(ITEM_RIVER_STEM)
+            ..addUnitRequirement(mixingUnits)
+
+        new ItemRecipeMixing(ITEM_DISEASE_POTION, 1, ABILITY_QM_DISEASE_POTION, 3)
+            ..addItem(ITEM_RIVER_ROOT)
+            ..addColorHerb()
+            ..addColorHerb()
+            ..addColorHerb()
+            ..addColorHerb()
+            ..addUnitRequirement(mixingUnits)
+
+        new ItemRecipeMixing(ITEM_ESSENCE_BEES, 1, ABILITY_QM_ESSENCE_BEES, 2)
+            ..addColorHerb()
+            ..addColorHerb()
+            ..addColorHerb()
+            ..addColorHerb()
+            ..addUnitRequirement(mixingUnits)
+
+        new ItemRecipeMixing(ITEM_FERVOR_POTION, 1, ABILITY_QM_FERVOR_POTION, 2)
+            ..addItem(ITEM_ATHELAS_SEED)
+            ..addColorHerb()
+            ..addColorHerb()
+            ..addColorHerb()
+            ..addUnitRequirement(mixingUnits)
+
+        new ItemRecipeMixing(ITEM_GEM_OF_KNOWLEDGE, 0, ABILITY_QM_GEM_OF_KNOWLEDGE, 3)
+            ..addColorHerb()
+            ..addColorHerb()
+            ..addColorHerb()
+            ..addColorHerb()
+            ..addUnitRequirement(mixingUnits)
+
+        new ItemRecipeMixing(ITEM_OMNICURE, 1, ABILITY_QM_OMNICURE, 1)
+            ..addItem(ITEM_ATHELAS_SEED)
+            ..addItem(ITEM_ATHELAS_SEED)
+            ..addColorHerb()
+            ..addColorHerb()
+            ..addUnitRequirement(mixingUnits)
+
+        new ItemRecipeMixing(ITEM_POTION_TWIN_ISLANDS, 1, ABILITY_QM_TWIN_ISLANDS)
+            ..addItem(ITEM_ORANGE_HERB)
+            ..addItem(ITEM_ORANGE_HERB)
+            ..addItem(ITEM_ORANGE_HERB)
+            ..addItem(ITEM_PURPLE_HERB)
+            ..addItem(ITEM_PURPLE_HERB)
+            ..addItem(ITEM_PURPLE_HERB)
+            ..addUnitRequirement(mixingUnits)
+
+        new ItemRecipeMixing(ITEM_POTION_TWIN_ISLANDS, 1, 0)
+            ..addItem(ITEM_BLUE_HERB)
+            ..addItem(ITEM_BLUE_HERB)
+            ..addItem(ITEM_BLUE_HERB)
+            ..addItem(ITEM_YELLOW_HERB)
+            ..addItem(ITEM_YELLOW_HERB)
+            ..addItem(ITEM_YELLOW_HERB)
+            ..addUnitRequirement(mixingUnits)
+
+        new ItemRecipeMixing(ITEM_ORACLE_POTION, 2, ABILITY_QM_ORACLE_POTION)
+            ..addColorHerb()
+            ..addItem(ITEM_ATHELAS_SEED)
+            ..addItem(ITEM_ATHELAS_SEED)
+            ..generateRecipeString(ABILITY_QM_ORACLE_POTION)
+            ..addUnitRequirement(mixingUnits)

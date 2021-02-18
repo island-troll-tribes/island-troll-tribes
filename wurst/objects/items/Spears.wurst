@@ -27,7 +27,8 @@ public let POISON_RESPAWN_CHANCE  = 0.5
 public let RPOISON_RESPAWN_CHANCE = 0.5
 public let UPOISON_RESPAWN_CHANCE = 0.5
 
-let DARK_SPEAR_MANA_BURN_PERCENTAGE = .30
+let DARK_SPEAR_MANA_BURN_PERCENTAGE = .40
+let DARK_SPEAR_MIN_MANA_BURN        = 10.
 
 @compiletime function createAbilSpearHitDetection()
     new AbilityDefinitionThunderBoltCreep(ABILITY_SPEAR_HIT_DETECTION)
@@ -91,7 +92,8 @@ function onSpearImpact(unit caster, unit target, SpearType spearType)
             spawnItemChance(POISON_RESPAWN_CHANCE, ITEM_POISON_SPEAR, target.getPos())
         case DarkSpear
             spawnItemChance(DARK_RESPAWN_CHANCE, ITEM_DARK_SPEAR, target.getPos())
-            let burnAmount = target.getMana() * DARK_SPEAR_MANA_BURN_PERCENTAGE
+            let burnAmount = DARK_SPEAR_MIN_MANA_BURN +
+                (target.getMana() * DARK_SPEAR_MANA_BURN_PERCENTAGE)
 
             // Perform the mana reduction.
             caster.drainMana(target, burnAmount)

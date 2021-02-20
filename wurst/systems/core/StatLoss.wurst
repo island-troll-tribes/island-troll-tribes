@@ -4,23 +4,45 @@ package StatLoss
 import ClosureTimers
 
 // Local imports:
+import DamageListeners
+import Experience
 import Game
 import GameConfig
 import TrollGroup
 import ItemExtensions
 import LocalObjectIDs
+import UnitExtensions
+import UnitUtils
 
 constant BUFF_FROZE_TO_BONE_ID = BUFF_FROZE_TO_BONE
+
+// TODO: Use a callback system to handle the various conditions.
+
+function checkStatDeath(unit target)
+    // Prevent unit from dying if it is unkillable.
+    if target.hasAbility(BUFF_ANCHOR_SOUL)
+        target.setMana(max(target.getMana(), 1))
+        target.setHeat(max(target.getHeat(), 1))
+
+    // Exit if the unit is not dying.
+    if not target.isAlive() or (target.getMana() >= 1 and target.getHeat() >= 1)
+        return
+
+    // Find the nearest enemy troll.
+    let killer = findNearestUnit(target.getPos(), expRange) (nearby) ->
+        return nearby.isTroll() and not target.isAllyOf(nearby)
+
+    // Have the enemy kill the target, defaulting to a suicide.
+    DamageEvent.setNextDamageFromCode()
+    (killer == null ? target : killer).damageTarget(target, target.getHP())
 
 init
     registerGameStartEvent() ->
         let lossAmount = gameConfig.getStatLossAmount()
-        let maxHeat = gameConfig.getMaxHeat()
 
         doPeriodically(gameConfig.getStatGainInterval()) cb ->
             for troll in getTrolls()
-                let owner = troll.getOwner()
-                var heat = owner.getGold()
+                var heat = 0
 
                 if GetTimeOfDay() >= 6 and GetTimeOfDay() <= 18
                     heat += 3
@@ -37,7 +59,7 @@ init
                     else if gear.getTypeId() == ITEM_DD_PINION_FIRE
                         heat += 8
 
-                owner.setGold(min(maxHeat, heat))
+                troll.addHeat(heat)
 
         doPeriodically(gameConfig.getStatLossInterval()) cb ->
             for troll in getTrolls()
@@ -70,6 +92,18 @@ init
                     if numStacksOfDepression > 2
                         energyLoss += GetRandomInt(1, 6) + GetRandomInt(1, 6)
 
-                troll.getOwner().subGold(heatLoss)
+                // Update the state.
+                troll.subHeat(heatLoss)
                 troll.subMana(energyLoss.toReal())
-                troll.subHP(healthLoss.toReal())
+
+                // Avoid waking the unit.
+                // TODO: This only used as a workaround. Locking a unit via
+                // sleep or stun should be simulated using an order listener to
+                // ignore orders or BlzPauseUnitEx and then this check can be
+                // removed.
+                troll.dealFakeDamage(troll, healthLoss.toReal())
+
+    // Kill units reaching zero in a stat as quickly as possible.
+    doPeriodically(ANIMATION_PERIOD) (cb) ->
+        for target in getTrolls()
+            checkStatDeath(target)

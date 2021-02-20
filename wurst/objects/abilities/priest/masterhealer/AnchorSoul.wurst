@@ -1,0 +1,81 @@
+package AnchorSoul
+
+// Standard lib imports:
+import DamageEvent
+import ChannelAbilityPreset
+import Assets
+import BuffObjEditing
+
+// Third-party imports:
+import StringBuilder
+
+// Local imports:
+import DamageListeners
+import LocalAssets
+import LocalObjectIDs
+import ToolTipsUtils
+
+let COOLDOWN = 60.
+let DURATION = 3.
+
+let TOOLTIP_NORM = "Anchor Soul"
+let TOOLTIP_EXTENDED = new StringBuilder()
+    ..add("Anchors the soul of the target to reality, preventing the unit ")
+    ..add("from dying momentarily. While in effect, the target cannot be ")
+    ..add("reduced to zero health, energy, or heat.|n")
+    ..add(makeToolTipDuration(DURATION, COOLDOWN))
+    .build()
+    // This is needed to for the stack trace compiler to perform correctly.
+    // TODO: Remove this call once the compiler is fixed.
+    .format()
+
+@compiletime function createAnchorSoulBuff()
+    new BuffDefinition(BUFF_ANCHOR_SOUL, BuffIds.divineShield)
+    ..setIcon(Icons.bTNResurrection)
+    ..setTooltipNormal(1, TOOLTIP_NORM)
+    ..setTooltipNormalExtended(
+        1, "The soul of this unit is anchored and it cannot die."
+    )
+
+function createAnchorSoul(int abilId, string hotkey) returns AbilityDefinitionRejuvinationcreep
+    return new AbilityDefinitionRejuvinationcreep(abilId)
+        ..presetManaCost(lvl -> 10)
+        ..presetCooldown(lvl -> COOLDOWN)
+        ..setHeroAbility(false)
+        ..setItemAbility(false)
+        ..presetTargetsAllowed(lvl -> commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.friend,
+            TargetsAllowed.ground,
+            TargetsAllowed.self
+        ))
+        ..setName(TOOLTIP_NORM)
+        ..setHotkeyNormal(hotkey)
+        ..presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, TOOLTIP_NORM))
+        ..presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED)
+        ..setIconNormal(Icons.bTNResurrection)
+        ..presetDurationHero(lvl -> DURATION)
+        ..presetDurationNormal(lvl -> DURATION)
+        ..presetBuffs(lvl -> BUFF_ANCHOR_SOUL.toRawCode())
+        ..setArtTarget(Abilities.holyBoltSpecialArt)
+        // Rejuventation requires a positive value to function.
+        ..setHitPointsGained(1, 0.01)
+
+@compiletime function createAnchorSoulMasterHealer()
+    createAnchorSoul(ABILITY_ANCHOR_SOUL, "Z")
+
+function onDamage()
+    // Look up the state.
+    let target = DamageEvent.getTarget()
+    let damage = DamageEvent.getAmount()
+
+    // Exit if this listener is not applicable.
+    if not target.hasAbility(BUFF_ANCHOR_SOUL)
+        return
+
+    // Ensure that the unit is not killed.
+    DamageEvent.setAmount(min(damage, target.getHP() - 1))
+
+init
+    DamageEvent.addListener(DamageListenerPriorities.ANCHOR_SOUL castTo int) ->
+        onDamage()

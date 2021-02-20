@@ -4,6 +4,7 @@ package UnitExtensions
 import ItemObjEditing
 import LinkedList
 import ObjectIdGenerator
+import Assets
 
 // Third-party imports:
 import StackNSplit
@@ -17,11 +18,6 @@ import TrollGroup
 import HashMap
 import IdListConstant
 import LocalObjectIDs
-import ManaBurn
-
-public let BUFF_ENSNARE_GROUND = 'Beng'
-public let BUFF_ENSNARE_AIR = 'Bena'
-public let BUFF_ENTANGLE = 'BEer'
 
 
 constant DUMMY_ITEM_ID = compiletime(ITEM_ID_GEN.next())
@@ -111,19 +107,17 @@ public function unit.isStructure() returns boolean
 public function unit.isTroll() returns boolean
     return TROLL_UNIT_LIST.has(this.getTypeId())
 
-public function unit.getHeat() returns real
-    return this.getOwner().getGold().toReal()
+public function unit.getHeat() returns int
+    return this.getOwner().getGold()
 
 public function unit.setHeat(int heat)
-    this.getOwner().setGold(heat)
+    this.getOwner().setGold(heat.clamp(0, gameConfig.getMaxHeat()))
 
-public function unit.addHeat(int heat)
-    let owner = this.getOwner()
-    owner.setGold(min(owner.getGold() + heat, gameConfig.getMaxHeat()))
+public function unit.addHeat(int delta)
+    this.setHeat(this.getOwner().getGold() + delta)
 
 public function unit.subHeat(int heat)
-    let owner = this.getOwner()
-    owner.setGold(max(owner.getGold() - heat, 0))
+    this.addHeat(-heat)
 
 public function unit.getItemMatching(Predicate<item> predicate) returns item
     let inventorySize = this.inventorySize()
@@ -197,9 +191,9 @@ public function unit.addOrStackItem(item itm) returns bool
 
 public function unit.isImmobilized() returns bool
     return (
-        this.getAbilityLevel(BUFF_ENSNARE_AIR) > 0 or
-        this.getAbilityLevel(BUFF_ENSNARE_GROUND) > 0 or
-        this.getAbilityLevel(BUFF_ENTANGLE) > 0 or
+        this.getAbilityLevel(BuffIds.ensnareGround) > 0 or
+        this.getAbilityLevel(BuffIds.ensnareAir) > 0 or
+        this.getAbilityLevel(BuffIds.entanglingRoots) > 0 or
         this.getAbilityLevel(BUFF_ENTANGLE_BRAMBLES_ID) > 0
     )
 
@@ -226,9 +220,6 @@ public function unit.isEnemyDefense() returns bool
 
 public function unit.isConstructing() returns bool
     return isConstructing(this)
-
-public function unit.burnMana(real damage)
-    burnMana(this, damage)
 
 public function unit.registerTroll()
     addTroll(this)

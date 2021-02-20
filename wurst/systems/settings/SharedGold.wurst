@@ -8,7 +8,7 @@ import SimError
 
 // Third-party imports:
 import ChatCommands
-import LodashExtensions
+import Lodash
 import Setting
 
 // Local imports:
@@ -47,6 +47,24 @@ let LEAVE_MESSAGE = compiletime(
 // The help message for the manual trade command.
 let HELP_MESSAGE = "Command should be used as: -g [player] [amount]"
 
+// The scheduled toggles to the setting.
+let scheduled = new OwnedLinkedList<player>()
+
+// The gold per pool, indexed by tribe player, which may temporarily differ from
+// the true gold of the tribe player when it pawns an item.
+let pools = new OwnedIterableMap<Tribe, int>()
+
+// The number of pending transactions that haven't been processed, a semaphore.
+var pending = 0
+
+// Checks whether the player is truly sharing gold.
+function player.isSharing() returns bool
+    // Check whether the scheduled toggles change the setting from its true value.
+    return xor(
+        sharing.get(this).toBool(),
+        scheduled.lodashFilter(member -> member == this).length().isOdd()
+    )
+
 function handleChatTrade(player origin, LinkedList<string> arguments)
     // Verify the arguments.
     if arguments.size() != 2 and arguments.size() != 3
@@ -78,7 +96,7 @@ function handleChatTrade(player origin, LinkedList<string> arguments)
         simError(origin, "That player is not in your tribe.")
     else if not target.isIngame()
         simError(origin, "That player has left the game.")
-    else if sharing.get(origin).toBool() and sharing.get(target).toBool()
+    else if origin.isSharing() and target.isSharing()
         simError(origin, "You are already sharing gold with that player.")
     else
         // Perform the transaction.
@@ -107,55 +125,58 @@ function handleChatTrade(player origin, LinkedList<string> arguments)
             MESSAGE_DURATION
         )
 
-        // Attempt to sync the gold for those involved.
-        target.syncGold()
-        origin.syncGold()
+        // Sync the gold for all those involved.
+        handleTransaction(origin)
 
+// Syncs gold for all members of the tribe that share gold.
+function Tribe.syncGold()
+    Log.debug("Syncing gold for: " + this.getName())
 
-// Syncs gold for the tribe to that of the given player.
-function player.syncGold()
-    Log.debug("Syncing gold based on: " + this.getName())
-    // Ignore players that are not sharing.
-    if not sharing.get(this).toBool()
-        return
+    // Look up the value for the pool.
+    let value = pools.get(this)
 
-    // Look up the tribe for the player.
-    let tribe = this.getTribe()
-
-    // Ignore players without a tribe.
-    if tribe == null
-        return
-
-    // Cache the value used for syncing.
-    let value = this.getLumber()
+    // Update the tracking value for the tribe.
+    pools.put(this, value)
 
     // Update the shared pool.
-    tribe.getNonMember().setLumber(value)
+    this.getNonMember().setLumber(value)
 
     // Sync each player in the pool.
-    for member in tribe.getMembers()
+    for member in this.getMembers()
         if sharing.get(member).toBool()
             member.setLumber(value)
 
+function Tribe.updateGold(int differential)
+    // Compute the new value for the pool.
+    let value = pools.get(this) + differential
+
+    // Update the tracking value for the tribe.
+    pools.put(this, value)
+
+    // Sync the gold after the update.
+    this.syncGold()
+
 function initialize()
+    // Fill in the initial value for the pools.
+    for tribe in Tribe.getTribes()
+        pools.put(tribe, 0)
+
     // Prevent sharing initially.
     sharing.make("false", input -> input.isBool())
 
+    // Delay the actual action to ensure gold is synced first.
     sharing.action() (target, value) ->
-        // Add gold to pool upon sharing.
-        if value.toBool()
-            // Look up the tribe for the player.
-            let tribe = target.getTribe()
+        // Look up the tribe for the player.
+        let tribe = target.getTribe()
 
-            // Ignore players without a tribe.
-            if tribe != null
-                // Add their gold into the pool and sync.
-                target
-                    ..addLumber(tribe.getNonMember().getLumber())
-                    .syncGold()
-        else
-            // Reset gold upon disabling sharing.
-            target.setLumber(0)
+        // Ignore settings for players without a tribe.
+        if tribe != null
+            // Schedule the change.
+            scheduled.add(target)
+
+            // Begin handling updates to process the change.
+            doPeriodically(ANIMATION_PERIOD) (cb) ->
+                handleScheduled(cb)
 
     // Allow manual trading in addition to automatic pooling.
     sharing.finish() ->
@@ -176,6 +197,41 @@ function initialize()
     // Initialize the setting.
     sharing.initialize()
 
+function handleScheduled(CallbackPeriodic cb)
+    // Continue polling if there are pending transactions.
+    if pending != 0
+        return
+    Log.debug("Beginning to handle scheduled toggles.")
+
+    // Apply all relevant scheduled updates after sync.
+    while scheduled.size() > 0
+        // Handle toggling a player at a time.
+        let target = scheduled.dequeue()
+        Log.debug("Handling scheduled toggle for: " + target.getName())
+
+        // Apply the change, keeping in mind that dequeueing above will
+        // change the computation of the true value of the setting.
+        Log.debug("Updating setting to: " + target.isSharing().toString())
+        handleSetting(target, target.isSharing())
+
+    // Cease polling once work is complete.
+    destroy cb
+
+// Handles the actual work for toggling the setting.
+function handleSetting(player target, boolean value)
+    // Add gold to pool upon sharing.
+    if value
+        // Look up the tribe for the player.
+        let tribe = target.getTribe()
+
+        // Ignore players without a tribe.
+        if tribe != null
+            // Add their gold into the pool.
+            tribe.updateGold(target.getLumber())
+    else
+        // Reset gold upon disabling sharing.
+        target.setLumber(0)
+
 // Share gold upon leaving.
 function onLeaver(player target)
     sharing.put(target, "true")
@@ -193,12 +249,10 @@ function onLeaver(player target)
             member.print("Use -share-gold to access their gold.")
 
 function handleTransaction(unit origin)
-    // Delay to ensure that the triggering transaction has been executed.
-    nullTimer() ->
-        processTransaction(origin.getOwner())
+    handleTransaction(origin.getOwner())
 
-function processTransaction(player origin)
-    Log.debug("Handling transaction involving: " + origin.getName())
+function handleTransaction(player origin)
+    Log.debug("Scheduling transaction for: " + origin.getName())
     // Look up the tribe for the transactor.
     let tribe = origin.getTribe()
 
@@ -207,31 +261,38 @@ function processTransaction(player origin)
         Log.error("Transactor does not have a tribe: " + origin.getName())
         return
 
-    // Compute the set of tribemates whose gold delta affects the tribe.
-    let targets = tribe.getMembers()
-        .lodashFilter(
-            member -> (
-                // Ignore members that are not sharing gold.
-                sharing.get(member).toBool() and
-                // Filter out members whose gold did not change.
-                member.getLumber() != tribe.getNonMember().getLumber()
-            )
-        )
+    // Acquire the semaphore.
+    pending += 1
 
-    // Alarm on multiple matches, an unexpected condition.
-    if targets.size() > 1
-        Log.error("Failed to identify true transactor among: {0}".format(
-            targets.joinBy(target -> target.getName(), ", ")
-        ))
-    // Handle the player whose gold changed due to the transaction.
-    else if targets.size() == 1
-        targets.dequeue().syncGold()
-    // Log the case that the true transaction was not sharing gold.
-    else
-        Log.debug("Ignoring transaction.")
+    // Delay to ensure that the triggering transaction has been executed. This
+    // is necessary because EVENT_PLAYER_UNIT_PAWN_ITEM fires prior to updating
+    // the gold of the player selling the item.
+    nullTimer() ->
+        handleTransactions(tribe)
 
-    // Clean up the local state.
-    destroy targets
+// Handle pending transactions for all members of the tribe.
+function handleTransactions(Tribe tribe)
+    Log.debug("Handling transaction involving: " + tribe.getName())
+
+    // Look up the current gold for relevant pool.
+    let current = pools.get(tribe)
+
+    // Compute the gold differential across all members.
+    let differential = tribe.getMembers()
+        // Ignore members that are not sharing gold.
+        .lodashFilter(member -> sharing.get(member).toBool())
+        // Also consider the tribe player, which can pawn items.
+        ..add(tribe.getNonMember())
+        // Compute the differential for this player.
+        .map(member -> member.getLumber() - current)
+        .sum()
+
+    // Apply the differential to the pool.
+    Log.debug("Gold differential: {0}".format(differential.toString()))
+    tribe.updateGold(differential)
+
+    // Release the semaphore.
+    pending -= 1
 
 init
     // Delay initialization until tribes are set.

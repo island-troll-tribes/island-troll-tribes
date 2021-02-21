@@ -8,7 +8,7 @@ import LinkedList
 import ChatCommands
 import ChatUtils
 import ColorUtils
-import Game
+import GameStates
 import GameMode
 import PingMinimap
 import PlayerExtensions
@@ -118,11 +118,11 @@ init
         )
         triggerPlayer.makeObserverNew()
 
-    GameMode.onModeSelectionFinish() ->
+    GameStates.modesSelection.onExit() state ->
         deregisterCommandAll("obs")
         deregisterCommandAll("obs-new")
 
-    registerGameStartEvent() ->
+    GameStates.tribeInitialization.onExit() state ->
         registerCommandAll("ac", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))
         registerCommandAll("sc", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))
         registerCommandAll("p", (triggerPlayer, args) -> handlePlayerAllianceSettingToggle(triggerPlayer, args))

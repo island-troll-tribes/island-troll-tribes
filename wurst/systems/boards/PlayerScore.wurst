@@ -5,14 +5,12 @@ import HashMap
 import LinkedList
 import ClosureTimers
 import ClosureEvents
-import DamageEvent
 
 // Local imports:
 import DamageListeners
-import GameMode
 import Tribe
 import ColorUtils
-import GameConfig
+import GameStates
 import ChatCommands
 import HealingSystem
 import UnitExtensions
@@ -48,7 +46,8 @@ public class Score
             playerScores.put(tribe.getNonMember(), new Score(tribe.getNonMember()))
 
     static function initialize()
-        registerTribeInitializationFinishEvent(function createScoreMap)
+        GameStates.tribeInitialization.onExit() state ->
+            createScoreMap()
 
     IterableMap<string, int> playerKill
     int damageTroll = 0
@@ -142,87 +141,85 @@ function getTribeHealing(player _player) returns string
 init
 
     Score.initialize()
-    GameMode.onModeSelectionFinish() ->
-        if gameConfig.isPlayerScoreEnabled()
-            // Register kill count if unit has been killed by a player
-            EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
-                let unitKilledId = GetDyingUnit().getTypeId()
-                let killerOwner = GetKillingUnit().getOwner()
-                let categoryName = getUnitCategory(unitKilledId)
+    // Register kill count if unit has been killed by a player
+    EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
+        let unitKilledId = GetDyingUnit().getTypeId()
+        let killerOwner = GetKillingUnit().getOwner()
+        let categoryName = getUnitCategory(unitKilledId)
 
-                if playerScores.has(killerOwner)
-                    and categoryName != null
-                    playerScores.get(killerOwner).addKill(categoryName)
-                    scoreBoardEntries.get(categoryName).addValue(killerOwner, 1)
+        if playerScores.has(killerOwner)
+            and categoryName != null
+            playerScores.get(killerOwner).addKill(categoryName)
+            scoreBoardEntries.get(categoryName).addValue(killerOwner, 1)
 
 
-            // Register damage dealt amount if unit damaged is a troll
-            DamageEvent.addListener(DamageListenerPriorities.SCORE castTo int) ->
-                let attackerOwner = DamageEvent.getSource().getOwner()
-                let target = DamageEvent.getTarget()
-                let dmgAmount = DamageEvent.getAmount()
+    // Register damage dealt amount if unit damaged is a troll
+    DamageEvent.addListener(DamageListenerPriorities.SCORE castTo int) () ->
+        let attackerOwner = DamageEvent.getSource().getOwner()
+        let target = DamageEvent.getTarget()
+        let dmgAmount = DamageEvent.getAmount()
 
-                if playerScores.has(attackerOwner)
-                    and target.getOwner().isEnemyOf(attackerOwner)
-                    and target.isTroll()
-                    playerScores.get(attackerOwner).addDamage(dmgAmount.toInt())
-                    scoreBoardEntries.get("Damage Dealt")
-                        .addValue(attackerOwner, dmgAmount.toInt())
-
-
-            // Register healing amount if player heals an ally
-            onUnitHealed() ->
-                let instance = getHealingInstance()
-                let caster = instance.getCaster()
-                let target = instance.getTarget()
-                let healerOwner = caster.getOwner()
-                let healingAmount = instance.getTrueAmount()
-
-                if playerScores.has(healerOwner)
-                    // Do not take pet healing into account, atleast for now
-                    if target.isTroll()
-                        if healerOwner != target.getOwner()
-                            playerScores.get(healerOwner).addAllyHealing(healingAmount.toInt())
-
-                        // Do not include self healing consumable items
-                        // I have mixed opinion on this, we should differentiate healing done from ability/item
-                        // This we can "quantify" how much cooked meat priest can actually save through healing spells
-                        // Still, I think having the healing done from meat could also be useful
-                        else if healerOwner == target.getOwner()
-                            and instance.getHealingType() != HealingType.ITEM
-                            playerScores.get(healerOwner).addSelfHealing(healingAmount.toInt())
-
-                        // Healing's kind of an edge case due to the string format "self/ally"
-                        let healingStr = playerScores.get(healerOwner).getHealing()
-                        scoreBoardEntries.get("Healing self/ally")
-                            .updateEntry(healerOwner.getName(), healingStr, null)
-
-                        let tribeHealingStr = getTribeHealing(healerOwner)
-                        scoreBoardEntries.get("Healing self/ally")
-                            .updateTribeEntry(healerOwner, tribeHealingStr)
+        if playerScores.has(attackerOwner)
+            and target.getOwner().isEnemyOf(attackerOwner)
+            and target.isTroll()
+            playerScores.get(attackerOwner).addDamage(dmgAmount.toInt())
+            scoreBoardEntries.get("Damage Dealt")
+                .addValue(attackerOwner, dmgAmount.toInt())
 
 
-            // Register cooked meat eaten amount
-            EventListener.add(EVENT_PLAYER_UNIT_USE_ITEM) ->
-                let itm = GetManipulatedItem()
-                let itemId = itm.getTypeId()
-                let user = GetManipulatingUnit()
-                let owner = user.getOwner()
+    // Register healing amount if player heals an ally
+    onUnitHealed() ->
+        let instance = getHealingInstance()
+        let caster = instance.getCaster()
+        let target = instance.getTarget()
+        let healerOwner = caster.getOwner()
+        let healingAmount = instance.getTrueAmount()
 
-                // Other unit apart from troll can eat, like pets
-                if itemId == ITEM_COOKED_MEAT
-                    and playerScores.has(owner)
-                    playerScores.get(owner).addMeatEaten()
-                    scoreBoardEntries.get("Meat Eaten").addValue(owner, 1)
+        if playerScores.has(healerOwner)
+            // Do not take pet healing into account, atleast for now
+            if target.isTroll()
+                if healerOwner != target.getOwner()
+                    playerScores.get(healerOwner).addAllyHealing(healingAmount.toInt())
 
-            // Register gold acquired
-            EventListener.add(EVENT_PLAYER_UNIT_PAWN_ITEM) ->
-                let owner = GetTriggerUnit().getOwner()
-                if playerScores.has(owner)
-                    playerScores.get(owner).addGold()
+                // Do not include self healing consumable items
+                // I have mixed opinion on this, we should differentiate healing done from ability/item
+                // This we can "quantify" how much cooked meat priest can actually save through healing spells
+                // Still, I think having the healing done from meat could also be useful
+                else if healerOwner == target.getOwner()
+                    and instance.getHealingType() != HealingType.ITEM
+                    playerScores.get(healerOwner).addSelfHealing(healingAmount.toInt())
+
+                // Healing's kind of an edge case due to the string format "self/ally"
+                let healingStr = playerScores.get(healerOwner).getHealing()
+                scoreBoardEntries.get("Healing self/ally")
+                    .updateEntry(healerOwner.getName(), healingStr, null)
+
+                let tribeHealingStr = getTribeHealing(healerOwner)
+                scoreBoardEntries.get("Healing self/ally")
+                    .updateTribeEntry(healerOwner, tribeHealingStr)
 
 
-            // Dunno if I should let player see their score during the game, but I'll let this
-            // here as trial, might be useful for debug, only display the triggered player score
-            registerCommandAll("score") (player triggerPlayer, LinkedList<string> arguments) ->
-                playerScores.get(triggerPlayer).printScore()
+    // Register cooked meat eaten amount
+    EventListener.add(EVENT_PLAYER_UNIT_USE_ITEM) ->
+        let itm = GetManipulatedItem()
+        let itemId = itm.getTypeId()
+        let user = GetManipulatingUnit()
+        let owner = user.getOwner()
+
+        // Other unit apart from troll can eat, like pets
+        if itemId == ITEM_COOKED_MEAT
+            and playerScores.has(owner)
+            playerScores.get(owner).addMeatEaten()
+            scoreBoardEntries.get("Meat Eaten").addValue(owner, 1)
+
+    // Register gold acquired
+    EventListener.add(EVENT_PLAYER_UNIT_PAWN_ITEM) ->
+        let owner = GetTriggerUnit().getOwner()
+        if playerScores.has(owner)
+            playerScores.get(owner).addGold()
+
+
+    // Dunno if I should let player see their score during the game, but I'll let this
+    // here as trial, might be useful for debug, only display the triggered player score
+    registerCommandAll("score") (player triggerPlayer, LinkedList<string> arguments) ->
+        playerScores.get(triggerPlayer).printScore()

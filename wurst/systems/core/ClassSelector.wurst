@@ -12,6 +12,7 @@ import LodashExtensions
 // Local imports:
 import ColorUtils
 import GameConfig
+import GameStates
 import LocalObjectIDs
 import PlayerExtensions
 import RandomPerk
@@ -34,11 +35,6 @@ let spawnList = asList(
     gg_rct_revive_12
 )
 
-let listeners = CreateTrigger()
-
-public function registerClassSelectionEndEvent(code listener)
-    listeners.addAction(listener)
-
 public class ClassSelector
     static let spawners = new IterableMap<unit, thistype>()
 
@@ -59,7 +55,10 @@ public class ClassSelector
             tribe.setSpawn(spawn)
             new ClassSelector(tribe)
 
-    static function startClassSelection()
+    static function initialize()
+        registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SELL) ->
+            findByTotem(GetSellingUnit()).handleUnitSold()
+
         initializeSpawns()
 
         var selectionTime = 0
@@ -77,14 +76,8 @@ public class ClassSelector
 
         clock.doAfter(selectionTime.toReal()) ->
             spawners.values().each(spawner -> spawner.endSelection())
-            listeners.execute()
             clockDialog.destr()
-
-    static function initialize()
-        registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SELL) ->
-            findByTotem(GetSellingUnit()).handleUnitSold()
-
-        registerTribeInitializationFinishEvent(function startClassSelection)
+            GameStates.classSelection.exit()
 
     Tribe tribe
     let pool = new LinkedList<int>()
@@ -221,4 +214,5 @@ public class ClassSelector
         IssueNeutralImmediateOrderById(p, totem, trollId)
 
 init
-    ClassSelector.initialize()
+    GameStates.classSelection.onEnter() state ->
+        ClassSelector.initialize()

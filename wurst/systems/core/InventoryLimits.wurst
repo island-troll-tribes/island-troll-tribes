@@ -4,8 +4,7 @@ import ItemExtensions
 import RegisterEvents
 import GameConfig
 import Lodash
-import LodashExtensions
-import Game
+import GameStates
 import LocalObjectIDs
 
 class Restriction
@@ -53,6 +52,6 @@ init
     ..add(new Restriction(i -> i.isPinion().toInt()))
     ..add(new Restriction(i -> i.isShield().toInt()))
 
-    registerGameStartEvent() ->
+    GameStates.gameplay.onEnter() state ->
         if gameConfig.getInventoryLimits()
             registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM, function enforceInventoryLimits)

@@ -11,14 +11,11 @@ import Toolkit
 // Local imports:
 import Classes
 import ColorUtils
-import Game
 import GameConfig
 import GameMode
-import ChatUtils
+import GameStates
 
 init
-    GameMode.initialize()
-
     new GameMode("players-per-tribe", "ppt", "General", "Set the number of players in each tribe, eg: \"-ppt 6\"") (mode, args) ->
         if args.size() < 2
             mode.error("Must supply # of tribes to \"ppt\"")
@@ -200,7 +197,7 @@ init
     new GameMode("test-mode", "tm", "Testing", "No one can lose, enables test commands") (mode, args) ->
         mode.message("Test mode enabled".color(SPECIAL_COLOR))
         gameConfig.setTestMode(true)
-        GameMode.onModeSelectionFinish() ->
+        GameStates.modesSelection.onExit() state ->
             if gameConfig.isTestModeEnabled()
                 enableToolkit()
 

@@ -1,6 +1,6 @@
 package ShrinkingMap
 import ClosureTimers
-import Game
+import GameStates
 import GameConfig
 import LocalObjectIDs
 import TimerUtils
@@ -61,7 +61,8 @@ function burnThings()
         // }
 
 init
-    registerGameStartEvent() ->
+    GameStates.gameplay.onEnter() state ->
         if gameConfig.isForestFireEnabled()
             let timeout = gameConfig.getForestFireAfter()
-            FOREST_FIRE_TIMER = getTimer()..doAfter(timeout.toReal(), () -> burnThings())
+            FOREST_FIRE_TIMER = getTimer()
+                ..doAfter(timeout.toReal(), -> burnThings())

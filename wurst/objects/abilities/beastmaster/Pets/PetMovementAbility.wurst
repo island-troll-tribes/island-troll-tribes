@@ -4,15 +4,11 @@ package PetMovementAbility
 // Standard Library Imports:
 import ChannelAbilityPreset
 import ClosureEvents
-import ClosureTimers
-import LodashExtensions
 import Assets
 
 // Local Imports:
 import LocalObjectIDs
 import PetMovement
-import Tribe
-import Game
 import ToolTipsUtils
 import ColorUtils
 
@@ -78,14 +74,6 @@ function togglePetControl(player triggerer)
         // Reset the player's controls to auto mode.
         PET_CONTROLS.put(triggerer, CONTROL_MODE.AUTO)
 
-// Initialize all player's controls to auto at the beginning of the game.
-function initializeControls()
-    Tribe.getTribes().each(t -> t.getMembers().each(member -> PET_CONTROLS.put(member, CONTROL_MODE.AUTO)))
-
 init
     EventListener.onCast(ABILITY_TOGGLE_PET_CONTROL, _ -> togglePetControl(EventData.getTriggerPlayer()))
     EventListener.onCast(ABILITY_TOGGLE_PET_CONTROL_SHAPESHIFTER, _ -> togglePetControl(EventData.getTriggerPlayer()))
-
-    registerGameStartEvent() ->
-        nullTimer() ->
-            initializeControls()

@@ -11,7 +11,6 @@ import ClosureEvents
 import Toolkit
 
 // Local imports:
-import GameMode
 import Tribe
 import Boards
 import ColorUtils
@@ -20,7 +19,7 @@ import LocalAssets
 import UnitExtensions
 import PlayerExtensions
 import Transformation
-import Game
+import GameStates
 import TribeBoard
 
 let KILL_COLUMN_WIDTH = 0.055
@@ -182,7 +181,7 @@ public function initScoreBoard()
 
 
 init
-    GameMode.onModeSelectionFinish() ->
+    GameStates.modesSelection.onExit() state ->
         if gameConfig.isPlayerScoreEnabled()
             initScoreBoard()
             EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
@@ -233,7 +232,7 @@ init
                         scoreBoardEntries.get("Level")
                             .updateEntry(owner.getName(), lvl, owner.getTrollIcon())
 
-            registerGameStartEvent() ->
+            GameStates.gameplay.onEnter() state ->
                 for tribe in Tribe.getTribes()
                     for member in tribe.getMembers()
                         scoreBoardEntries.get("Level")
@@ -242,7 +241,7 @@ init
                     scoreBoard.board.setTitle(getGameTimersBoardTitle())
 
     // Block this command from being used prior to the tribe board creation.
-    registerGameStartEvent() ->
+    GameStates.gameplay.onEnter() state ->
         registerToolkitCommand("scoreboard") (triggerer, arguments) ->
             // Check the current visibility.
             let visibility = scoreBoard.board.isDisplayed()

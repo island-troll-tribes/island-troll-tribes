@@ -13,7 +13,7 @@ import Lodash
 
 // Local imports:
 import ColorUtils
-
+import GameStates
 
 // The interval, in seconds, during which modes can be selected.
 let MODES_TIME_LIMIT = 60.0
@@ -33,7 +33,6 @@ public interface GameModeHandler
 public class GameMode
     static let list = new OwnedLinkedList<thistype>()
     static let modeboard = CreateMultiboard()
-    static let listeners = CreateTrigger()
     static let modes = new HashMap<string, thistype>()
     static let clock = getTimer()
     static var modePlayer = players[0]
@@ -50,10 +49,9 @@ public class GameMode
         print(modePlayer.getNameColored() + " can choose game modes.".color(GENERAL_COLOR))
         printTimedToPlayer("You can select modes.".color(GENERAL_COLOR), 10, modePlayer)
 
-        nullTimer() ->
-            createModeBoard()
-            createModeQuests()
-            registerAll(modePlayer)
+        createModeBoard()
+        createModeQuests()
+        registerAll(modePlayer)
 
         clock.doAfter(MODES_TIME_LIMIT) ->
             endModeSelection()
@@ -74,15 +72,12 @@ public class GameMode
     static function endModeSelection()
         removeModeBoard()
         deregisterAll()
-        listeners.execute()
+        GameStates.modesSelection.exit()
 
     static function endModeSelection(bool forced)
         if forced
             clock.release()
         endModeSelection()
-
-    static function onModeSelectionFinish(code c)
-        listeners.addAction(c)
 
     static function registerAll(player modesPlayer)
         for mode in list
@@ -226,3 +221,7 @@ public class GameMode
 
     function error(string msg)
         print(msg.color(RED_COLOR))
+
+init
+    GameStates.modesSelection.onEnter() states ->
+        GameMode.initialize()

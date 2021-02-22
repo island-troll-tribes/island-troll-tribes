@@ -1,27 +1,22 @@
 package Tribe
 
 // Standard library imports:
+import ClosureTimers
 import HashMap
 import LinkedList
 
 // Third-party imports:
 import Lodash
-import LodashExtensions
 
 // Local imports:
 import ColorUtils
 import GameConfig
-import GameMode
+import GameStates
 import TribeUtils
 import PlayerExtensions
 import initlater TribeBoard
 import initlater Boards
 import initlater ScoreBoard
-
-let listeners = CreateTrigger()
-
-public function registerTribeInitializationFinishEvent(code listener)
-    listeners.addAction(listener)
 
 let names = asList(
     "Darkspear",
@@ -56,15 +51,15 @@ public class Tribe
     var defeated = true
 
     static function initialize()
-        GameMode.onModeSelectionFinish(function onModesFinish)
-
-    static function onModesFinish()
         resetAllianceState()
         let numTribes = gameConfig.getNumTribes()
         names.shuffle()
         for tribeId = 0 to numTribes - 1
             new Tribe(tribeId, names.dequeue() + " Tribe")
-        listeners.execute()
+
+        // Exit immediately, as this state is only used for bookkeeping.
+        nullTimer() ->
+            GameStates.tribeInitialization.exit()
 
     static function resetAllianceState()
         for i = 0 to PLAYER_NEUTRAL_AGGRESSIVE - 1
@@ -171,5 +166,7 @@ public class Tribe
     function getName() returns string
         return name
 
+
 init
-    Tribe.initialize()
+    GameStates.tribeInitialization.onEnter() state ->
+        Tribe.initialize()

@@ -7,7 +7,7 @@ import UnitObjEditing
 import ClosureForGroups
 
 // Local imports:
-import Game
+import GameStates
 import GameConfig
 import DummyUnits
 import LocalObjectIDs
@@ -198,8 +198,9 @@ function createMerchantShip(int newId) returns UnitDefinition
         )
 
 init
-    registerGameStartEvent() ->
+    // Remove stationary merchants if trading is disabled.
+    GameStates.gameplay.onEnter() state ->
         if not gameConfig.getTradeEnabled()
-            forUnitsAll() (unit u) ->
-                if u.getTypeId() == UNIT_TROLL_MERCHANT
-                    u.remove()
+            forUnitsAll() target ->
+                if target.getTypeId() == UNIT_TROLL_MERCHANT
+                    target.remove()

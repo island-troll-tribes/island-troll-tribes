@@ -11,7 +11,6 @@ import ClosureEvents
 import Toolkit
 
 // Local imports:
-import GameMode
 import Tribe
 import Boards
 import ColorUtils
@@ -20,7 +19,7 @@ import LocalAssets
 import UnitExtensions
 import PlayerExtensions
 import Transformation
-import Game
+import GameStates
 import TribeBoard
 
 let KILL_COLUMN_WIDTH = 0.055
@@ -182,67 +181,66 @@ public function initScoreBoard()
 
 
 init
-    GameMode.onModeSelectionFinish() ->
-        if gameConfig.isPlayerScoreEnabled()
-            initScoreBoard()
-            EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
-                let owner = EventData.getDyingUnit().getOwner()
-                if EventData.getDyingUnit().isTroll()
-                    and owner.getTribe() != null
-                    let playerName = owner.getName()
+    GameStates.tribeInitialization.onExit() state ->
+        initScoreBoard()
+        EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
+            let owner = EventData.getDyingUnit().getOwner()
+            if EventData.getDyingUnit().isTroll()
+                and owner.getTribe() != null
+                let playerName = owner.getName()
 
+                scoreBoardEntries.get("PlayerName")
+                    .updateEntry(owner.getName(), playerName, iconPlayerDefeated)
+
+                if owner.getTribe().isDefeated()
+                    let tribePlayer = owner.getTribePlayer()
+                    let tribeName = tribePlayer.getName()
                     scoreBoardEntries.get("PlayerName")
-                        .updateEntry(owner.getName(), playerName, iconPlayerDefeated)
+                        .updateEntry(tribePlayer.getName(), tribeName, iconPlayerDefeated)
 
-                    if owner.getTribe().isDefeated()
-                        let tribePlayer = owner.getTribePlayer()
-                        let tribeName = tribePlayer.getName()
-                        scoreBoardEntries.get("PlayerName")
-                            .updateEntry(tribePlayer.getName(), tribeName, iconPlayerDefeated)
+        EventListener.add(EVENT_PLAYER_HERO_REVIVE_FINISH) ->
+            if EventData.getRevivingUnit().isTroll()
+                let owner = EventData.getRevivingUnit().getOwner()
+                let playerName = owner.getName()
 
-            EventListener.add(EVENT_PLAYER_HERO_REVIVE_FINISH) ->
-                if EventData.getRevivingUnit().isTroll()
-                    let owner = EventData.getRevivingUnit().getOwner()
-                    let playerName = owner.getName()
+                scoreBoardEntries.get("PlayerName")
+                    .updateEntry(owner.getName(), playerName, iconPlayerInGame)
 
-                    scoreBoardEntries.get("PlayerName")
-                        .updateEntry(owner.getName(), playerName, iconPlayerInGame)
+        EventListener.add(EVENT_PLAYER_LEAVE) ->
+            let p = EventData.getTriggerPlayer()
+            if not p.isObserver()
+                and not p.isObserverNew()
+                scoreBoardEntries.get("PlayerName")
+                    .updateEntryColor(p.getName(), COLOR_GRAY)
 
-            EventListener.add(EVENT_PLAYER_LEAVE) ->
-                let p = EventData.getTriggerPlayer()
-                if not p.isObserver()
-                    and not p.isObserverNew()
-                    scoreBoardEntries.get("PlayerName")
-                        .updateEntryColor(p.getName(), COLOR_GRAY)
+        EventListener.add(EVENT_PLAYER_HERO_LEVEL) ->
+            if EventData.getTriggerUnit().isTroll()
+                let owner = GetTriggerUnit().getOwner()
+                let level = owner.getTroll().getLevel().toString()
 
-            EventListener.add(EVENT_PLAYER_HERO_LEVEL) ->
-                if EventData.getTriggerUnit().isTroll()
-                    let owner = GetTriggerUnit().getOwner()
-                    let level = owner.getTroll().getLevel().toString()
+                scoreBoardEntries.get("Level")
+                    .updateEntry(owner.getName(), level, null)
 
+        registerAfterEffect() (unit target, int unitID) ->
+            if target.isTroll()
+                let owner = target.getOwner()
+                // For some reason, the troll level isn't updated in time with this event,
+                // but the name is waiting a bit to get the correct level
+                nullTimer() ->
+                    let lvl = owner.getTroll().getLevel().toString()
                     scoreBoardEntries.get("Level")
-                        .updateEntry(owner.getName(), level, null)
+                        .updateEntry(owner.getName(), lvl, owner.getTrollIcon())
 
-            registerAfterEffect() (unit target, int unitID) ->
-                if target.isTroll()
-                    let owner = target.getOwner()
-                    // For some reason, the troll level isn't updated in time with this event,
-                    // but the name is waiting a bit to get the correct level
-                    nullTimer() ->
-                        let lvl = owner.getTroll().getLevel().toString()
-                        scoreBoardEntries.get("Level")
-                            .updateEntry(owner.getName(), lvl, owner.getTrollIcon())
-
-            registerGameStartEvent() ->
-                for tribe in Tribe.getTribes()
-                    for member in tribe.getMembers()
-                        scoreBoardEntries.get("Level")
-                        .updateEntryIcon(member.getName(), member.getTrollIcon())
-                doPeriodically(1) (CallbackPeriodic cb) ->
-                    scoreBoard.board.setTitle(getGameTimersBoardTitle())
+    GameStates.gameplay.onEnter() state ->
+        for tribe in Tribe.getTribes()
+            for member in tribe.getMembers()
+                scoreBoardEntries.get("Level")
+                .updateEntryIcon(member.getName(), member.getTrollIcon())
+        doPeriodically(1) (CallbackPeriodic cb) ->
+            scoreBoard.board.setTitle(getGameTimersBoardTitle())
 
     // Block this command from being used prior to the tribe board creation.
-    registerGameStartEvent() ->
+    GameStates.gameplay.onEnter() state ->
         registerToolkitCommand("scoreboard") (triggerer, arguments) ->
             // Check the current visibility.
             let visibility = scoreBoard.board.isDisplayed()

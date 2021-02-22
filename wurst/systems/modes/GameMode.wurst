@@ -5,17 +5,17 @@ import Assets
 import ClosureTimers
 import HashMap
 import LinkedList
-
-// Third-party imports:
-import Lodash
-import LodashExtensions
-
-// Local imports:
-import ChatCommands
-import ColorUtils
 import TimerUtils
 
+// Third-party imports:
+import ChatCommands
+import Lodash
 
+// Local imports:
+import ColorUtils
+import GameStates
+
+// The interval, in seconds, during which modes can be selected.
 let MODES_TIME_LIMIT = 60.0
 
 let DISPLAY_STRING = compiletime(
@@ -33,24 +33,25 @@ public interface GameModeHandler
 public class GameMode
     static let list = new OwnedLinkedList<thistype>()
     static let modeboard = CreateMultiboard()
-    static let listeners = CreateTrigger()
     static let modes = new HashMap<string, thistype>()
     static let clock = getTimer()
     static var modePlayer = players[0]
 
+    // Handles global initialization for all modes.
     static function initialize()
+        // Select the player allowed to input modes.
         for i = 0 to bj_MAX_PLAYERS - 1
             if players[i].isIngame()
                 modePlayer = players[i]
                 break
 
+        // Notify players of the selection.
         print(modePlayer.getNameColored() + " can choose game modes.".color(GENERAL_COLOR))
         printTimedToPlayer("You can select modes.".color(GENERAL_COLOR), 10, modePlayer)
 
-        nullTimer() ->
-            createModeBoard()
-            createModeQuests()
-            registerAll(modePlayer)
+        createModeBoard()
+        createModeQuests()
+        registerAll(modePlayer)
 
         clock.doAfter(MODES_TIME_LIMIT) ->
             endModeSelection()
@@ -71,15 +72,12 @@ public class GameMode
     static function endModeSelection()
         removeModeBoard()
         deregisterAll()
-        listeners.execute()
+        GameStates.modesSelection.exit()
 
     static function endModeSelection(bool forced)
         if forced
             clock.release()
         endModeSelection()
-
-    static function onModeSelectionFinish(code c)
-        listeners.addAction(c)
 
     static function registerAll(player modesPlayer)
         for mode in list
@@ -98,26 +96,26 @@ public class GameMode
         let displayableModes = list.filter(mode -> mode.display)
 
         modeboard
-        ..setColumnCount(2)
-        ..setRowCount(displayableModes.size())
-        ..setTitle("Modes - 00:{0}".format(MODES_TIME_LIMIT.toString(0)))
-        ..setItemsStyle(true, false)
-        ..display(true)
-        ..minimize()
-        ..maximize(modePlayer)
+            ..setColumnCount(2)
+            ..setRowCount(displayableModes.size())
+            ..setTitle("Modes - 00:{0}".format(MODES_TIME_LIMIT.toString(0)))
+            ..setItemsStyle(true, false)
+            ..display(true)
+            ..minimize()
+            ..maximize(modePlayer)
 
         for row = 0 to displayableModes.size() - 1
             let mode = displayableModes.get(row)
 
             modeboard.getItem(row, 1)
-            ..setValue(mode.description)
-            ..setWidth(.60)
-            ..release()
+                ..setValue(mode.description)
+                ..setWidth(.60)
+                ..release()
 
             modeboard.getItem(row, 0)
-            ..setValue(mode.getDisplayString())
-            ..setWidth(.15)
-            ..release()
+                ..setValue(mode.getDisplayString())
+                ..setWidth(.15)
+                ..release()
 
         doPeriodically(1.0) cb ->
             let remaining = clock.getRemaining()
@@ -136,19 +134,19 @@ public class GameMode
         .groupBy(mode -> mode.category)
         .map((category, modes) -> begin
             return modes
-            .chunk(10)
-            .map((modes, i) -> begin
-                let contents = modes
-                    .map(mode -> mode.getDisplayString() + "\n" + mode.description)
-                    .joinBy("\n\n")
+                .chunk(10)
+                .map((modes, i) -> begin
+                    let contents = modes
+                        .map(mode -> mode.getDisplayString() + "\n" + mode.description)
+                        .joinBy("\n\n")
 
-                return CreateQuestBJ(
-                    bj_QUESTTYPE_OPT_DISCOVERED,
-                    (category + " Modes (" + (i + 1).toString() + ")").color(GOLD_COLOR),
-                    contents,
-                    Icons.bTNBansheeMaster
-                )
-            end)
+                    return CreateQuestBJ(
+                        bj_QUESTTYPE_OPT_DISCOVERED,
+                        (category + " Modes (" + (i + 1).toString() + ")").color(GOLD_COLOR),
+                        contents,
+                        Icons.bTNBansheeMaster
+                    )
+                end)
         end)
 
     let description = ""
@@ -223,3 +221,7 @@ public class GameMode
 
     function error(string msg)
         print(msg.color(RED_COLOR))
+
+init
+    GameStates.modesSelection.onEnter() states ->
+        GameMode.initialize()

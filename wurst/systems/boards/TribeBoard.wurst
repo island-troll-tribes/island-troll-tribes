@@ -8,19 +8,18 @@ import LinkedList
 import ClosureEvents
 
 // Third-party imports:
-import LodashExtensions
+import Lodash
 
 // Local imports:
 import ColorUtils
 import Boards
-import Game
+import GameStates
 import PlayerExtensions
 import Tribe
 import UnitExtensions
 import Transformation
 
 let PERIOD = 1.0
-let ENERGY_ICON = "ui\\widgets\\tooltips\\human\\tooltipmanaicon.blp"
 
 /**
     This class create & update a board for a tribe, displaying the tribe member following stats :
@@ -83,7 +82,7 @@ class TribeBoard
             board
                 .getItem(row, column)
                 ..setStyle(true, true)
-                ..setIcon(ENERGY_ICON)
+                ..setIcon(Textures.toolTipManaIcon)
                 ..setWidth(0.04)
                 ..release()
             column++
@@ -183,7 +182,7 @@ class TribeBoard
 
 
 init
-    registerGameStartEvent() ->
+    GameStates.gameplay.onEnter() state ->
         nullTimer() ->
             Tribe.getTribes().each(tribe -> new TribeBoard(tribe))
 

@@ -1,0 +1,61 @@
+package PopUpEvent
+
+// Standard lib imports:
+import Icons
+import ClosureEvents
+
+// Third party imoports:
+import PopUpUI
+import PlayerExtensions
+import ItemExtensions
+import UnitExtensions
+
+// Position of the initial pop up
+// Has to handle 4:3 display otherwise some player might not see the frame
+@configurable let BOTTOM_RIGHT_OFFSET_X = 0.8
+@configurable let BOTTOM_RIGHT_OFFSET_Y = 0.155
+@configurable let POP_UP_LIFETIME = 5.
+
+function createPopUpBot(player _p, string iconLeft, string iconMiddle, string iconRight)
+    let initialPos = vec2(BOTTOM_RIGHT_OFFSET_X, BOTTOM_RIGHT_OFFSET_Y)
+    let offScreenPos = initialPos - vec2(0, 0.03)
+    new PopUpFrame(_p, initialPos, offScreenPos, POP_UP_LIFETIME)
+        ..setIcons(iconLeft, iconMiddle, iconRight)
+        ..setScale(0.5)
+        // Moves frames upward
+        ..updateFramesPosition(vec2(0, 1))
+
+function displayToAlly(player _p, string iconLeft, string iconMiddle, string iconRight)
+    for i = 0 to bj_MAX_PLAYERS - 1
+        if players[i].isIngame() and players[i].isAllyOf(_p)
+            createPopUpBot(_p, iconLeft, iconMiddle, iconRight)
+
+function display(player _p, string iconLeft, string iconMiddle, string iconRight)
+    for i = 0 to bj_MAX_PLAYERS - 1
+        if players[i].isIngame()
+            createPopUpBot(_p, iconLeft, iconMiddle, iconRight)
+
+
+init
+    // Display a pop up on item bought so teammate knows where the money goes
+    EventListener.add(EVENT_PLAYER_UNIT_SELL_ITEM) ->
+        let u = EventData.getBuyingUnit()
+        if u.isTroll()
+            let owner = u.getOwner()
+            let itmIcon = EventData.getSoldItem().getIconPath()
+            // No native function to get an unit icon, need to register them ourself
+            let buyerIcon = owner.getTrollIcon()
+            displayToAlly(owner, buyerIcon, Icons.bTNMGExchange, itmIcon)
+
+    // Display a pop up on artifact item pick up so we can clearly tell
+    // who picked up important item such as horn of mammoth
+    EventListener.add(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
+        let itm = EventData.getManipulatedItem()
+        let u = EventData.getTriggerUnit()
+
+        if itm.isArtifact() and u.isTroll()
+            let owner = u.getOwner()
+            // No native function to get an unit icon, need to register them ourself
+            let unitIcon = owner.getTrollIcon()
+            let itmIcon = EventData.getManipulatedItem().getIconPath()
+            displayToAlly(owner, unitIcon, Icons.bTNPickUpItem, itmIcon)

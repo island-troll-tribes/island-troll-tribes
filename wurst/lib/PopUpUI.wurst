@@ -1,0 +1,124 @@
+package PopUpUI
+
+// Standard lib imports:
+import ClosureTimers
+import HashMap
+import LinkedList
+
+@configurable let DEFAULT_TRANSITION_SPEED = 0.3
+@configurable let DEFAULT_POP_UP_ANIMATION_PERIOD = 0.03
+
+
+public class PopUpFrame
+    // The pop up frames list per player
+    static let popUpPerPlayer = new HashMap<player, LinkedList<PopUpFrame>>
+
+    // The frame which is displayed, defined in the PopUp.fdf
+    private framehandle popUpFrame = null
+
+    // Current position of the frame
+    private var currentPos = vec2(0, 0)
+
+    // Initial position of the frame
+    private var initialPos = vec2(0, 0)
+
+    // Player whom the frame is displayed
+    private player _p
+
+    // Periodic movement callback
+    CallbackCounted movementLoop
+
+    // Relative point used as reference to position the frame
+    private framepointtype point = FRAMEPOINT_BOTTOMRIGHT
+
+    static function initialize()
+        // Init PopUp tracker map
+        for i = 0 to bj_MAX_PLAYERS - 1
+            if players[i].isIngame()
+                popUpPerPlayer.put(players[i], new LinkedList<PopUpFrame>)
+
+    static function ofPlayer(player query) returns LinkedList<PopUpFrame>
+        return popUpPerPlayer.get(query)
+
+    /**
+        If initialPos != currentPos, the frame will slide toward initialPos
+        upon creation
+    */
+    construct(player _p, vec2 initialPos, vec2 currentPos, real lifetime)
+        this._p = _p
+        this.initialPos = initialPos
+        this.currentPos = currentPos
+
+        // Create frame with 0 as context so we can setup icon right away
+        popUpFrame = createSimpleFrame("PopUpPanel", GAME_UI, 0)
+            ..hide()
+            ..show(_p)
+        PopUpFrame.ofPlayer(_p).addtoStart(this)
+
+        // Destroy frame after lifetime seconds
+        doAfter(lifetime) ->
+            destroy this
+
+    /**
+        Moves the frame to the new coordinates over DEFAULT_TRANSITION_SPEED seconds
+        Refresh the frame position every DEFAULT_POP_UP_ANIMATION_PERIOD seconds
+    **/
+    private function slide(vec2 newPos)
+        let stepCount = (DEFAULT_TRANSITION_SPEED / DEFAULT_POP_UP_ANIMATION_PERIOD)
+        let stepY = (newPos.y - currentPos.y) / stepCount
+        let stepX = (newPos.x - currentPos.x) / stepCount
+        movementLoop = doPeriodicallyCounted(DEFAULT_POP_UP_ANIMATION_PERIOD, stepCount.toInt()) cb ->
+            if movementLoop != cb or this == null
+                destroy cb
+            this.setAbsPoint(currentPos + vec2(stepX, stepY))
+
+    function updateFramesPosition(vec2 direction)
+        let popUpList = PopUpFrame.ofPlayer(this._p)
+
+        // Go over all the registered frames and move them toward vec2 direction
+        for popUp in popUpList
+            let offset = popUp.getFrameDimension() * direction
+            let idx = popUpList.indexOf(popUp)
+            let newPos = popUp.initialPos + offset.op_mult(idx.toReal())
+            popUp.setCurrentPos(newPos, true)
+
+    function setIcons(string iconLeft, string iconMiddle, string iconRight)
+        getFrame("IconLeft")
+            ..setTexture(iconLeft, 0, true)
+        getFrame("IconMiddle")
+            ..setTexture(iconMiddle, 0, true)
+        getFrame("IconRight")
+            ..setTexture(iconRight, 0, true)
+
+    private function setAbsPoint(vec2 pos)
+        this.currentPos = pos
+        popUpFrame.setAbsPoint(point, pos.x, pos.y)
+
+    function setFramepointType(framepointtype point)
+        this.point = point
+
+    function setCurrentPos(vec2 pos, boolean slide)
+        if slide
+            this.slide(pos)
+        else
+            this.setAbsPoint(pos)
+
+    function getCurrentPos() returns vec2
+        return this.currentPos
+
+    function setScale(real scale)
+        this.popUpFrame.setScale(scale)
+
+    function getFrameDimension() returns vec2
+        return vec2(this.popUpFrame.getWidth(), this.popUpFrame.getHeight())
+
+    ondestroy
+        popUpPerPlayer.get(_p).remove(this)
+        popUpFrame.remove()
+
+
+init
+    if loadTOCFile("MyTableOfContent.toc") == false
+        print("toc file loading failure")
+    else
+        PopUpFrame.initialize()

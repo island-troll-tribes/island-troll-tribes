@@ -18,8 +18,15 @@ function getUnitAttackSpeed(unit u, real bonusAttackSpeed) returns real
     let agi = u.getAgi(true)
     let baseAS = u.getAttackCooldown(1)
 
+
     // Each agility point give 1% attack speed, it is defined in the map constant
-    return baseAS / (1 + agi * 0.01 + bonusAttackSpeed)
+    let attackSpeed = baseAS / (1 + agi * 0.01 + bonusAttackSpeed)
+
+    // This attribute can be used to cap the attack animation speed
+    // attack speed cannot go lower than this value
+    let animBackSwingPoint = BlzGetUnitRealField(u, UNIT_RF_CAST_BACK_SWING)
+
+    return attackSpeed > animBackSwingPoint ? attackSpeed : animBackSwingPoint
 
 function getUnitDPS(unit u, int damage, real bonusAttackSpeed) returns real
     let speed = getUnitAttackSpeed(u, bonusAttackSpeed)

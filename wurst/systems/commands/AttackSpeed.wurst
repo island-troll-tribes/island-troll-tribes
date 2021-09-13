@@ -17,6 +17,8 @@ let HELP_MESSAGE = (
 function getUnitAttackSpeed(unit u, real bonusAttackSpeed) returns real
     let agi = u.getAgi(true)
     let baseAS = u.getAttackCooldown(1)
+
+    // Each agility point give 1% attack speed, it is defined in the map constant
     return baseAS / (1 + agi * 0.01 + bonusAttackSpeed)
 
 function getUnitDPS(unit u, int damage, real bonusAttackSpeed) returns real
@@ -26,6 +28,7 @@ function getUnitDPS(unit u, int damage, real bonusAttackSpeed) returns real
 
 init
     registerCommandAll("dps") (triggerPlayer, args) ->
+
         // Max bonus attack speed's capped at 400% by wc3 engine
         let bonusAttackSpeed = (args.get(1).toInt().abs() mod 400) / 100
 
@@ -34,15 +37,11 @@ init
         let damage = args.get(2).toInt().abs() mod 100
 
         if args.size() < 3
-            printTimedToPlayer(
-                HELP_MESSAGE,
-                10,
-                triggerPlayer
-            )
-
+            printTimedToPlayer(HELP_MESSAGE, 10, triggerPlayer)
         else
-            // Fetch the desired statistic.
             let units = ENUM_GROUP..enumUnitsSelected(triggerPlayer, null)
+
+            // If no units are selected, fetch the player troll unit
             if units.isEmpty()
                 let hero = triggerPlayer.getTroll()
                 if hero.isAlive()
@@ -59,8 +58,4 @@ init
                             getUnitDPS(u, damage, bonusAttackSpeed)
                                 .toString(2).color(HIGHLIGHT_COLOR)
                             )
-                    printTimedToPlayer(
-                        msg,
-                        5,
-                        triggerPlayer
-                    )
+                    printTimedToPlayer(msg, 5, triggerPlayer)

@@ -3,19 +3,64 @@ package AttackSpeed
 // Local imports:
 import ChatCommands
 import ColorUtils
+import PlayerExtensions
+import UnitExtensions
+
+
+let HELP_MESSAGE = (
+    "This command requires attack speed bonus & damage as options :\n"+
+    "-dps [attack speed from items & abilities] [unit current damage]\n"+
+    "For example, \"-as 50 15\" if your unit benefit from 50% attack "+
+    "speed bonus and has 15 damage"
+    ).color(GOLD_COLOR)
+
+function getUnitAttackSpeed(unit u, real bonusAttackSpeed) returns real
+    let agi = u.getAgi(true)
+    let baseAS = u.getAttackCooldown(1)
+    return baseAS / (1 + agi * 0.01 + bonusAttackSpeed)
+
+function getUnitDPS(unit u, int damage, real bonusAttackSpeed) returns real
+    let speed = getUnitAttackSpeed(u, bonusAttackSpeed)
+    return damage / speed
+
 
 init
-    registerCommandAll("as") (triggerPlayer, args) ->
-        // Fetch the desired statistic.
-        let speed = ENUM_GROUP
-            ..enumUnitsSelected(triggerPlayer, null)
-            .next()
-            .getAttackCooldown(args.size() > 1 ? args.get(1).toInt() : 1)
+    registerCommandAll("dps") (triggerPlayer, args) ->
+        // Max bonus attack speed's capped at 400% by wc3 engine
+        let bonusAttackSpeed = (args.get(1).toInt().abs() mod 400) / 100
 
-        // Display the statistic.
-        printTimedToPlayer(
-            "Basic Attack Speed (does not include bonus)"
-            .color(ENERGY_COLOR) + ": "  + speed.toString(),
-            10,
-            triggerPlayer
-        )
+        // Capping input damage at 1000 to avoid unexpected behavior
+        // It is impossible to reach this amount of damage in ITT
+        let damage = args.get(2).toInt().abs() mod 100
+
+        if args.size() < 3
+            printTimedToPlayer(
+                HELP_MESSAGE,
+                10,
+                triggerPlayer
+            )
+
+        else
+            // Fetch the desired statistic.
+            let units = ENUM_GROUP..enumUnitsSelected(triggerPlayer, null)
+            if units.isEmpty()
+                let hero = triggerPlayer.getTroll()
+                if hero.isAlive()
+                    units.add(hero)
+
+            for u in units
+                // Display the statistic.
+                if u.isTroll()
+                    let msg = "{0} has {1} attack speed, deals {2} DPS"
+                        .format(
+                            u.getProperName().color(SPECIAL_COLOR),
+                            getUnitAttackSpeed(u, bonusAttackSpeed)
+                                .toString(2).color(HIGHLIGHT_COLOR),
+                            getUnitDPS(u, damage, bonusAttackSpeed)
+                                .toString(2).color(HIGHLIGHT_COLOR)
+                            )
+                    printTimedToPlayer(
+                        msg,
+                        5,
+                        triggerPlayer
+                    )

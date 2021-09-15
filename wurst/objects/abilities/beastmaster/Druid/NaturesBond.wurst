@@ -67,9 +67,12 @@ let BUFF_ID = compiletime(BUFF_ID_GEN.next())
 
 
 function onHeal(HealingInstance instance)
+    // First check if the unit is affected by Nature's Bond.
+    // Then if the unit has the buff and is not a pet, it must be the troll that own's the pet.
     if not instance.target.hasAbility(BUFF_ID) or instance.target.isPet()
         return
 
+    // If the unit is the owner of a pet heal the pet 50% of the amount the troll healed.
     if pets.has(instance.target.getOwner())
         new HealingInstance(instance.target.getOwner().getPet(), instance.caster, instance.trueAmount * HEAL_DIST, instance.healingType)
 

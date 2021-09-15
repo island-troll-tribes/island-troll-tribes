@@ -30,9 +30,10 @@ let TOOLTIP_EXT   = "Imbue your target with the strength of the forest, giving i
     + " armor for " + DURATION.toToolTipOrange() + " seconds."
     + makeToolTipCooldown(COOLDOWN)
 let BUFF_TOOLTIP = "The spirits of nature are protecting this unit and reflecting damage it takes back."
+let BUFF_ID = compiletime(BUFF_ID_GEN.next())
 
 @compiletime function createBarkSkinBuff() returns BuffDefinition
-    return new BuffDefinition(BUFF_BARK_SKIN, BuffIds.spikedCarapace)
+    return new BuffDefinition(BUFF_ID, BuffIds.spikedCarapace)
         ..setIcon(ICON)
         ..setName(1, NAME)
         ..setArtTarget(1, Abilities.barkSkinTarget)
@@ -50,7 +51,7 @@ let BUFF_TOOLTIP = "The spirits of nature are protecting this unit and reflectin
     ..presetTooltipNormalExtended(LVL -> TOOLTIP_EXT)
     ..setRequirements("")
     ..setCheckDependencies(false)
-    ..setBuffs(1, BUFF_BARK_SKIN.toRawCode())
+    ..setBuffs(1, BUFF_ID.toRawCode())
     ..setArtTarget(Abilities.barkSkinTarget)
 
 @compiletime function createBarkSkinAbility() returns ChannelAbilityPreset
@@ -80,7 +81,7 @@ let BUFF_TOOLTIP = "The spirits of nature are protecting this unit and reflectin
     ..setIconNormal(ICON)
     ..presetBaseOrderID(LVL -> "blink")
     ..presetTargetTypes(Targettype.UNIT)
-    ..setBuffs(1, BUFF_BARK_SKIN.toRawCode())
+    ..setBuffs(1, BUFF_ID.toRawCode())
 
 function onCast(unit target)
     target.addAbility(ABILITY_BARK_SKIN_CARAPACE)

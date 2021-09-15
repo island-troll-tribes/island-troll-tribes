@@ -1,0 +1,147 @@
+package AutoPet
+
+// Standard Library Imports:
+import ClosureEvents
+import Orders
+import LastOrder
+import LinkedList
+import ChannelAbilityPreset
+import Assets
+
+// Third-party imports:
+import Setting
+
+// Local Imports:
+import LocalObjectIDs
+import Pets
+import Classes
+import ToolTipsUtils
+import ColorUtils
+
+
+// SETTINGS SETUP
+let enabled = new Setting("auto-pet")
+
+public function player.isPetAuto() returns bool
+    return enabled.synchronized and enabled.get(this).toBool()
+
+  
+// PET MOVEMENT CONTROL
+
+// Pet will randomly choose a position in this radius from target position in automatic mode.
+// This is done to prevent the pet and troll from stacking as well as an aesthetic choice.
+let PET_MOVE_RANGE = 200.
+
+// The orders that the pet is allowed to copy using auto movement.
+let ALLOWED_ORDERS = asList(
+    Orders.smart,
+    Orders.move,
+    Orders.attack,
+    Orders.stop,
+    Orders.holdposition
+)
+
+let STR_AUTOMATIC = "Automatic".color(COLOR_ORANGE)
+let STR_MANUAL = "Manual".color(COLOR_YELLOW)
+
+let NAME     = "Toggle Pet Control"
+let TOOLTIP  = "Toggle pet control."
+let TOOLTIP_EXT = "Toggle between " + STR_MANUAL + " and " + STR_AUTOMATIC + " pet controls with this ability " +
+                    "or the command -auto-pet. This setting is saved between games.\n\n" +
+                    STR_MANUAL + " : Manual mode uses regular unit controls.\n\n" +
+                    STR_AUTOMATIC + " : In automatic mode the pet will copy actions taken by the owner."
+let ORDER_ID = "barkskinoff"
+
+
+function createTogglePetControlSpell(int newAbilId) returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(newAbilId, 1, true)
+        ..setDummyAbility()
+        ..setAnimationNames("")
+        ..presetTargetTypes(Targettype.NONE)
+        ..setIconNormal(Icons.bTNSelectUnit)
+        ..setHeroAbility(true)
+        ..setName(NAME)
+        ..setLevels(1)
+        ..setTooltipNormalExtended(1, TOOLTIP_EXT)
+        ..presetBaseOrderID(lvl -> ORDER_ID)
+        ..setAnimationNames("")
+        ..setCheckDependencies(true)
+        ..setRequirements(UPGD_PET_TAMED_TRUE.toRawCode())
+        ..setEditorSuffix("(Wurst)")
+
+@compiletime function createBaseToggleSpell() returns ChannelAbilityPreset
+    return createTogglePetControlSpell(ABILITY_TOGGLE_PET_CONTROL)
+        ..setButtonPositionNormalX(3)
+        ..setButtonPositionNormalY(0)
+        ..setHotkeyNormal("R")
+        ..setTooltipNormal(1, makeToolTipNorm("R", TOOLTIP))
+
+@compiletime function createShapeShifterToggleSpell() returns ChannelAbilityPreset
+    return createTogglePetControlSpell(ABILITY_TOGGLE_PET_CONTROL_SHAPESHIFTER)
+        ..setButtonPositionNormalX(3)
+        ..setButtonPositionNormalY(1)
+        ..setHotkeyNormal("F")
+        ..setTooltipNormal(1, makeToolTipNorm("F", TOOLTIP))
+
+// Auto control pet movement.
+function autoMovePet()
+    // Store the moving unit.
+    let u = EventData.getTriggerUnit()
+
+    // Verify the moving unit has a pet and is a derivitive of Beastmaster.
+    if not u.getOwner().getPet() != null or not  u.getTrollBaseClass() == UNIT_BEASTMASTER
+        return
+
+    // Exit if the player is using manual control mode.
+    if not EventData.getTriggerPlayer().isPetAuto()
+        return
+
+    // Store the pet of moving unit.
+    let pet = u.getOwner().getPet()
+
+    let prevOrder = u.getLastOrder()
+
+    // Compute the type of the previous order.
+    let orderType = prevOrder == null
+        ? OrderType.IMMEDIATE
+        : prevOrder.orderType
+
+    // Exit if the pet is not allowed to copy the order.
+    if not ALLOWED_ORDERS.has(prevOrder.orderId)
+        return
+
+    // Issue the previous order to the pet.
+    switch orderType
+        case POINT
+            // Moves the pet to a random position near the target.
+            let targetPos = prevOrder.targetPosition + vec2(GetRandomReal(-PET_MOVE_RANGE, PET_MOVE_RANGE), GetRandomReal(-PET_MOVE_RANGE, PET_MOVE_RANGE))
+            pet.issuePointOrderById(prevOrder.orderId, targetPos)
+        case TARGET
+            pet.issueTargetOrderById(prevOrder.orderId, prevOrder.target)
+        case IMMEDIATE
+            pet.issueImmediateOrderById(prevOrder.orderId)
+
+function togglePetControl(player triggerer)
+    enabled.put(triggerer,
+        triggerer.isPetAuto() == true? "false" : "true"
+    )
+
+init
+    // Enable auto pet initially.
+    enabled.make("true", input -> input.isBool())
+
+    enabled.initialize()
+
+    // Used to toggle auto pet on and off.
+    EventListener.onCast(ABILITY_TOGGLE_PET_CONTROL, _ -> togglePetControl(EventData.getTriggerPlayer()))
+    EventListener.onCast(ABILITY_TOGGLE_PET_CONTROL_SHAPESHIFTER, _ -> togglePetControl(EventData.getTriggerPlayer()))
+
+    // Issues order to pet.
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER) ->
+        autoMovePet()
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER) ->
+        autoMovePet()
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_ISSUED_ORDER) ->
+        autoMovePet()
+
+    

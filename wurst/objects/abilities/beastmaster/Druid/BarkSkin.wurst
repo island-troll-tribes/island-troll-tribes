@@ -8,6 +8,7 @@ import ClosureTimers
 import BuffObjEditing
 import BuffIds
 import Abilities
+import DamageEvent
 
 // Local Imports:
 import LocalObjectIDs
@@ -16,7 +17,7 @@ import ToolTipsUtils
 
 let COOLDOWN = 45.
 let MANA_COST = 15
-let ARMOR_BONUS = 4.
+let ARMOR_BONUS = 4
 let THORNS_DMG = .15
 let DURATION = 15.
 let CAST_RANGE = 15.
@@ -26,46 +27,42 @@ let HOTKEY = "R"
 let NAME = "Bark Skin"
 let ICON = Icons.bTNThornShield
 let TOOLTIP_BASIC = "Bark Skin"
-let TOOLTIP_EXT   = "Imbue your target with the strength of the forest, giving it " + ARMOR_BONUS.toToolTipGreen()
+let TOOLTIP_EXT   = "Imbue your target with the strength of the forest, giving it " + ARMOR_BONUS.toReal().toToolTipGreen()
     + " armor for " + DURATION.toToolTipOrange() + " seconds."
     + makeToolTipCooldown(COOLDOWN)
 let BUFF_TOOLTIP = "The spirits of nature are protecting this unit and reflecting damage it takes back."
 let BUFF_ID = compiletime(BUFF_ID_GEN.next())
 
 @compiletime function createBarkSkinBuff() returns BuffDefinition
-    return new BuffDefinition(BUFF_ID, BuffIds.spikedCarapace)
+    return new BuffDefinition(BUFF_ID, BuffIds.innerFire)
         ..setIcon(ICON)
         ..setName(1, NAME)
-        ..setArtTarget(1, Abilities.barkSkinTarget)
-        ..setTargetAttachmentPoint0(1, "chest")
+        ..setArtTarget(1, Abilities.spikeBarrier)
+        ..setTargetAttachmentPoint0(1, "origin")
         ..setTooltipNormal(1, "Bark Skin")
         ..setTooltipNormalExtended(1, BUFF_TOOLTIP)
         ..setEditorSuffix(1, "(Wurst)")
 
-@compiletime function createBarkSkinAbilityEffect() returns AbilityDefinitionCryptLordSpikedCarapace
-    return new AbilityDefinitionCryptLordSpikedCarapace(ABILITY_BARK_SKIN_CARAPACE)
+@compiletime function createBarkSkinAbilityEffect() returns AbilityDefinitionInnerFire
+    return new AbilityDefinitionInnerFire(ABILITY_BARK_SKIN)
     ..setName(NAME)
-    ..presetDefenseBonus(LVL -> ARMOR_BONUS)
-    ..presetReturnedDamageFactor(LVL -> THORNS_DMG)
+    ..setIconNormal(ICON)
+    ..presetDurationHero(LVL -> DURATION)
+    ..presetDurationNormal(LVL -> DURATION)
+    ..presetCastRange(LVL -> CAST_RANGE)
+    ..presetHotkey(HOTKEY)
+    ..presetAutocastRange(LVL -> 0)
+    ..presetLifeRegenRate(LVL -> 0)
+    ..presetDefenseIncrease(LVL -> ARMOR_BONUS)
+    ..presetDamageIncrease(LVL -> 0)
     ..presetTooltipNormal(LVL -> TOOLTIP_BASIC)
     ..presetTooltipNormalExtended(LVL -> TOOLTIP_EXT)
+    ..presetButtonPosNormal(BUTTON_POS_X, BUTTON_POS_Y)
     ..setRequirements("")
     ..setCheckDependencies(false)
     ..setBuffs(1, BUFF_ID.toRawCode())
-    ..setArtTarget(Abilities.barkSkinTarget)
-
-@compiletime function createBarkSkinAbility() returns ChannelAbilityPreset
-    return new ChannelAbilityPreset(ABILITY_BARK_SKIN, 1, true)
-    ..setName(NAME)
-    ..presetDurationHero(LVL -> DURATION)
-    ..presetDurationNormal(LVL -> DURATION)
-    ..presetCooldown(LVL -> COOLDOWN)
-    ..presetManaCost(LVL -> MANA_COST)
-    ..presetCastRange(LVL -> CAST_RANGE)
-    ..presetButtonPosNormal(BUTTON_POS_X, BUTTON_POS_Y)
-    ..presetHotkey(HOTKEY)
-    ..presetTooltipNormal(LVL -> TOOLTIP_BASIC)
-    ..presetTooltipNormalExtended(LVL -> TOOLTIP_EXT)
+    ..setArtTarget("")
+    ..setBuffs(1, BUFF_ID.toRawCode())
     ..presetTargetsAllowed(lvl -> commaList(
         TargetsAllowed.air,
         TargetsAllowed.ground,
@@ -76,19 +73,17 @@ let BUFF_ID = compiletime(BUFF_ID_GEN.next())
         TargetsAllowed.organic,
         TargetsAllowed.nonancient
     ))
-    ..setRequirements("")
-    ..setCheckDependencies(false)
-    ..setIconNormal(ICON)
-    ..presetBaseOrderID(LVL -> "blink")
-    ..presetTargetTypes(Targettype.UNIT)
-    ..setBuffs(1, BUFF_ID.toRawCode())
 
-function onCast(unit target)
-    target.addAbility(ABILITY_BARK_SKIN_CARAPACE)
-    target.disableAbility(ABILITY_BARK_SKIN_CARAPACE, false, true)
-    doAfter(DURATION) -> 
-        target.removeAbility(ABILITY_BARK_SKIN_CARAPACE)
+function onDamage()
+    if not DamageEvent.getType() == DamageType.ATTACK
+        return
+    
+    let target = DamageEvent.getTarget()
+    let source = DamageEvent.getSource()
+    let amount = DamageEvent.getAmount() * THORNS_DMG
+    DamageEvent.setNextDamageId(ABILITY_BARK_SKIN)
+    UnitDamageTarget(target, source, amount, true, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_NORMAL, null)
 
 init
-    EventListener.onTargetCast(ABILITY_BARK_SKIN) (unit caster, unit target) ->
-        onCast(target)
+    DamageEvent.addListener() ->
+        onDamage()

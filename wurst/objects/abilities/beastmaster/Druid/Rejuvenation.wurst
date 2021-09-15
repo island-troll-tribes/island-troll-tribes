@@ -1,0 +1,50 @@
+package Rejuvenation
+
+// Standard Library Imports:
+import AbilityObjEditing
+import ObjectIds
+
+// Local Imports:
+import LocalObjectIDs
+import ToolTipsUtils
+
+
+let COOLDOWN = 30.
+let MANA_COST = 30
+let HEAL_AMOUNT = 150.
+let DURATION = 10.
+let CAST_RANGE = 15.
+let BUTTON_POS_X = 2
+let BUTTON_POS_Y = 0
+let HOTKEY = "E"
+let NAME = "Rejuvenation"
+let TOOLTIP_BASIC = "Rejuvenation"
+let TOOLTIP_EXT   = "Heal target ally for " + HEAL_AMOUNT.toToolTipGreen() + " over " + DURATION.toToolTipOrange()
+                    + " seconds. " + makeToolTipCooldown(COOLDOWN)
+
+@compiletime function createRejuvenationAbility() returns AbilityDefinitionRejuvination
+    return new AbilityDefinitionRejuvination(ABILITY_REJUVENATION)
+        ..setName(NAME)
+        ..presetManaPointsGained(LVL -> 0)
+        ..presetHitPointsGained(LVL -> HEAL_AMOUNT)
+        ..presetAllowWhenFull(LVL -> 1)
+        ..presetDurationHero(LVL -> DURATION)
+        ..presetDurationNormal(LVL -> DURATION)
+        ..presetCooldown(LVL -> COOLDOWN)
+        ..presetManaCost(LVL -> MANA_COST)
+        ..presetCastRange(LVL -> CAST_RANGE)
+        ..presetButtonPosNormal(BUTTON_POS_X, BUTTON_POS_Y)
+        ..presetHotkey(HOTKEY)
+        ..presetTooltipNormal(LVL -> TOOLTIP_BASIC)
+        ..presetTooltipNormalExtended(LVL -> TOOLTIP_EXT)
+        ..presetTargetsAllowed(lvl -> commaList(
+            TargetsAllowed.air,
+            TargetsAllowed.ground,
+            TargetsAllowed.friend,
+            TargetsAllowed.vulnerable,
+            TargetsAllowed.invulnerable,
+            TargetsAllowed.self,
+            TargetsAllowed.organic,
+            TargetsAllowed.nonancient
+        ))
+        ..setRequirements("")

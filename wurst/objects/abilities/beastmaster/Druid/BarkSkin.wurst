@@ -1,0 +1,93 @@
+package BarkSkin
+
+// Standard Library Imports:
+import Icons
+import ChannelAbilityPreset
+import ClosureEvents
+import ClosureTimers
+import BuffObjEditing
+import BuffIds
+import Abilities
+
+// Local Imports:
+import LocalObjectIDs
+import ToolTipsUtils
+
+
+let COOLDOWN = 45.
+let MANA_COST = 15
+let ARMOR_BONUS = 4.
+let THORNS_DMG = .15
+let DURATION = 15.
+let CAST_RANGE = 15.
+let BUTTON_POS_X = 3
+let BUTTON_POS_Y = 2
+let HOTKEY = "R"
+let NAME = "Bark Skin"
+let ICON = Icons.bTNThornShield
+let TOOLTIP_BASIC = "Bark Skin"
+let TOOLTIP_EXT   = "Imbue your target with the strength of the forest, giving it " + ARMOR_BONUS.toToolTipGreen()
+    + " armor for " + DURATION.toToolTipOrange() + " seconds."
+    + makeToolTipCooldown(COOLDOWN)
+let BUFF_TOOLTIP = "The spirits of nature are protecting this unit and reflecting damage it takes back."
+
+@compiletime function createBarkSkinBuff() returns BuffDefinition
+    return new BuffDefinition(BUFF_BARK_SKIN, BuffIds.spikedCarapace)
+        ..setIcon(ICON)
+        ..setName(1, NAME)
+        ..setArtTarget(1, Abilities.barkSkinTarget)
+        ..setTargetAttachmentPoint0(1, "chest")
+        ..setTooltipNormal(1, "Bark Skin")
+        ..setTooltipNormalExtended(1, BUFF_TOOLTIP)
+        ..setEditorSuffix(1, "(Wurst)")
+
+@compiletime function createBarkSkinAbilityEffect() returns AbilityDefinitionCryptLordSpikedCarapace
+    return new AbilityDefinitionCryptLordSpikedCarapace(ABILITY_BARK_SKIN_CARAPACE)
+    ..setName(NAME)
+    ..presetDefenseBonus(LVL -> ARMOR_BONUS)
+    ..presetReturnedDamageFactor(LVL -> THORNS_DMG)
+    ..presetTooltipNormal(LVL -> TOOLTIP_BASIC)
+    ..presetTooltipNormalExtended(LVL -> TOOLTIP_EXT)
+    ..setRequirements("")
+    ..setCheckDependencies(false)
+    ..setBuffs(1, BUFF_BARK_SKIN.toRawCode())
+    ..setArtTarget(Abilities.barkSkinTarget)
+
+@compiletime function createBarkSkinAbility() returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(ABILITY_BARK_SKIN, 1, true)
+    ..setName(NAME)
+    ..presetDurationHero(LVL -> DURATION)
+    ..presetDurationNormal(LVL -> DURATION)
+    ..presetCooldown(LVL -> COOLDOWN)
+    ..presetManaCost(LVL -> MANA_COST)
+    ..presetCastRange(LVL -> CAST_RANGE)
+    ..presetButtonPosNormal(BUTTON_POS_X, BUTTON_POS_Y)
+    ..presetHotkey(HOTKEY)
+    ..presetTooltipNormal(LVL -> TOOLTIP_BASIC)
+    ..presetTooltipNormalExtended(LVL -> TOOLTIP_EXT)
+    ..presetTargetsAllowed(lvl -> commaList(
+        TargetsAllowed.air,
+        TargetsAllowed.ground,
+        TargetsAllowed.friend,
+        TargetsAllowed.vulnerable,
+        TargetsAllowed.invulnerable,
+        TargetsAllowed.self,
+        TargetsAllowed.organic,
+        TargetsAllowed.nonancient
+    ))
+    ..setRequirements("")
+    ..setCheckDependencies(false)
+    ..setIconNormal(ICON)
+    ..presetBaseOrderID(LVL -> "blink")
+    ..presetTargetTypes(Targettype.UNIT)
+    ..setBuffs(1, BUFF_BARK_SKIN.toRawCode())
+
+function onCast(unit target)
+    target.addAbility(ABILITY_BARK_SKIN_CARAPACE)
+    target.disableAbility(ABILITY_BARK_SKIN_CARAPACE, false, true)
+    doAfter(DURATION) -> 
+        target.removeAbility(ABILITY_BARK_SKIN_CARAPACE)
+
+init
+    EventListener.onTargetCast(ABILITY_BARK_SKIN) (unit caster, unit target) ->
+        onCast(target)

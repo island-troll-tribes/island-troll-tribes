@@ -1,0 +1,78 @@
+package NaturesBond
+
+// Standard Library Imports:
+import Icons
+import ChannelAbilityPreset
+import BuffObjEditing
+import BuffIds
+import Abilities
+
+// Local Imports:
+import LocalObjectIDs
+import ToolTipsUtils
+import ColorUtils
+import HealingSystem
+import Pets
+
+
+let COOLDOWN = 60.
+let MANA_COST = 20
+let HEAL_DIST = .5
+let DURATION = 15.
+let CAST_RANGE = 15
+let BUTTON_POS_X = 3
+let BUTTON_POS_Y = 2
+let HOTKEY = "D"
+let AOE = 4000
+let NAME = "Nature's Bond"
+let ICON = Icons.bTNSpiritLink
+let TOOLTIP_BASIC = "Nature's Bond"
+let TOOLTIP_EXT   = "The strong bond between the Druid and his pet causes them to split all damage between themselves for "
+    + DURATION.toToolTipOrange() + " seconds. They also share " + (HEAL_DIST*100).toToolTipGreen() + " %".color(HEALTH_COLOR)
+    + " of any healing with eachother."
+    + makeToolTipCooldown(COOLDOWN)
+let BUFF_TOOLTIP = "This unit is sharing damage and healing with another."
+let BUFF_ID = compiletime(BUFF_ID_GEN.next())
+
+@compiletime function createNaturesBond() returns BuffDefinition
+    return new BuffDefinition(BUFF_ID, BuffIds.spiritLink)
+        ..setIcon(ICON)
+        ..setName(1, NAME)
+        ..setArtTarget(1, Abilities.spiritLinkZapTarget)
+        ..setTargetAttachmentPoint0(1, "chest")
+        ..setTooltipNormal(1, "Nature's Bond")
+        ..setTooltipNormalExtended(1, BUFF_TOOLTIP)
+        ..setEditorSuffix(1, "(Wurst)")
+
+@compiletime function createSpiritLinkAbility() returns AbilityDefinitionSpiritLink
+    return new AbilityDefinitionSpiritLink(ABILITY_NATURES_BOND)
+    ..setName(NAME)
+    ..presetManaCost(LVL -> MANA_COST)
+    ..presetHotkey(HOTKEY)
+    ..presetTooltipNormal(LVL -> TOOLTIP_BASIC)
+    ..presetTooltipNormalExtended(LVL -> TOOLTIP_EXT)
+    ..setRequirements("")
+    ..setCheckDependencies(false)
+    ..presetDurationHero(LVL -> DURATION)
+    ..presetDurationNormal(LVL -> DURATION)
+    ..setBuffs(1, BUFF_ID.toRawCode())
+    ..presetMaximumNumberofTargets(lvl -> 2)
+    ..presetTargetsAllowed(LVL -> commaList(
+        TargetsAllowed.playerunits,
+        TargetsAllowed.organic,
+        TargetsAllowed.friend,
+        TargetsAllowed.allies,
+        TargetsAllowed.self
+    ))
+
+
+function onHeal(HealingInstance instance)
+    if not instance.target.hasAbility(BUFF_ID) or instance.target.isPet()
+        return
+
+    if pets.has(instance.target.getOwner())
+        new HealingInstance(instance.target.getOwner().getPet(), instance.caster, instance.trueAmount * HEAL_DIST, instance.healingType)
+
+init
+    onUnitHealed() ->
+        onHeal(getHealingInstance())

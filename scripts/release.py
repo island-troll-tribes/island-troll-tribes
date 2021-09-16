@@ -20,6 +20,9 @@ from jinja2 import Template
 from parse import search
 from yaml import dump, Dumper, load, Loader
 
+# Local Imports:
+from generate_loading_screen import generate_loading_screen
+
 # The template for the changelog file.
 template = Template(
     """

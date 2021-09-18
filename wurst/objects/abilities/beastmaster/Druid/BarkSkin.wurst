@@ -16,7 +16,7 @@ import ToolTipsUtils
 let COOLDOWN = 45.
 let MANA_COST = 15
 let ARMOR_BONUS = 4
-let THORNS_DMG = .15
+let THORNS_DMG = 2.
 let DURATION = 15.
 let CAST_RANGE = 15.
 let BUTTON_POS_X = 3
@@ -26,7 +26,7 @@ let NAME = "Bark Skin"
 let ICON = Icons.bTNThornShield
 let TOOLTIP_BASIC = "Bark Skin"
 let TOOLTIP_EXT   = "Imbue your target with the strength of nature, giving it " + ARMOR_BONUS.toReal().toToolTipGreen()
-    + " armor and causes the target to reflect back some damage taken for " + DURATION.toToolTipOrange() + " seconds."
+    + " armor and causes the target to reflect back " + THORNS_DMG.toToolTipRed() + " damage for " + DURATION.toToolTipOrange() + " seconds."
     + makeToolTipCooldown(COOLDOWN)
 let BUFF_TOOLTIP = "The spirits of nature are protecting this unit and reflecting damage it takes back."
 let BUFF_ID = compiletime(BUFF_ID_GEN.next())
@@ -48,33 +48,34 @@ let BUFF_ID = compiletime(BUFF_ID_GEN.next())
 
 @compiletime function createBarkSkinAbilityEffect() returns AbilityDefinitionInnerFire
     return new AbilityDefinitionInnerFire(ABILITY_BARK_SKIN)
-    ..setName(NAME)
-    ..setIconNormal(ICON)
-    ..presetDurationHero(LVL -> DURATION)
-    ..presetDurationNormal(LVL -> DURATION)
-    ..presetCastRange(LVL -> CAST_RANGE)
-    ..presetHotkey(HOTKEY)
-    ..presetAutocastRange(LVL -> 0)
-    ..presetLifeRegenRate(LVL -> 0)
-    ..presetDefenseIncrease(LVL -> ARMOR_BONUS)
-    ..presetDamageIncrease(LVL -> 0)
-    ..presetTooltipNormal(LVL -> TOOLTIP_BASIC)
-    ..presetTooltipNormalExtended(LVL -> TOOLTIP_EXT)
-    ..presetButtonPosNormal(BUTTON_POS_X, BUTTON_POS_Y)
-    ..setRequirements("")
-    ..setCheckDependencies(false)
-    ..setBuffs(1, BUFF_ID.toRawCode())
-    ..setArtTarget("")
+        ..setName(NAME)
+        ..setIconNormal(ICON)
+        ..presetDurationHero(LVL -> DURATION)
+        ..presetDurationNormal(LVL -> DURATION)
+        ..presetCastRange(LVL -> CAST_RANGE)
+        ..presetCooldown(LVL -> COOLDOWN)
+        ..presetHotkey(HOTKEY)
+        ..presetAutocastRange(LVL -> 0)
+        ..presetLifeRegenRate(LVL -> 0)
+        ..presetDefenseIncrease(LVL -> ARMOR_BONUS)
+        ..presetDamageIncrease(LVL -> 0)
+        ..presetTooltipNormal(LVL -> TOOLTIP_BASIC)
+        ..presetTooltipNormalExtended(LVL -> TOOLTIP_EXT)
+        ..presetButtonPosNormal(BUTTON_POS_X, BUTTON_POS_Y)
+        ..setRequirements("")
+        ..setCheckDependencies(false)
+        ..setBuffs(1, BUFF_ID.toRawCode())
+        ..setArtTarget("")
 
 function onDamage()
     if not DamageEvent.getType() == DamageType.ATTACK
         return
+
+    if not DamageEvent.getTarget().hasAbility(BUFF_ID)
+        return
     
-    let target = DamageEvent.getTarget()
-    let source = DamageEvent.getSource()
-    let amount = DamageEvent.getAmount() * THORNS_DMG
     DamageEvent.setNextDamageId(ABILITY_BARK_SKIN)
-    UnitDamageTarget(target, source, amount, true, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_NORMAL, null)
+    UnitDamageTarget(DamageEvent.getTarget(), DamageEvent.getSource(), THORNS_DMG, true, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_NORMAL, null)
 
 init
     DamageEvent.addListener() ->

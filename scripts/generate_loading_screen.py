@@ -56,7 +56,7 @@ def generate_loading_screen(changelogs, title):
     changelogs[0] = "*" + changelogs[0]
     changelogs = "\n*".join(changelogs)
 
-    title = f"Version {version} released on the" + date.today().strftime("%d/%m/%Y")
+    title = f"Version {version} released on the " + date.today().strftime("%d/%m/%Y")
 
     draw = ImageDraw.Draw(img)
 
@@ -73,7 +73,11 @@ def generate_loading_screen(changelogs, title):
     draw.text((IMG_BACKDROP_OFFSET_X , IMG_CHANGELOG_OFFSET_Y), changelogs,
               font=font_changelog, fill=color)
 
-    img.save("imports/LoadingScreen.tga")
+    try:
+        img.save("imports/LoadingScreen.tga")
+        print("Saved new image in imports/LoadingScreen.tga")
+    except e:
+        raise e
 
 
 if __name__ == "__main__":

@@ -1,0 +1,74 @@
+package DamagePerSecond
+
+// Standard library imports:
+import LinkedList
+
+// Local imports:
+import ChatCommands
+import ColorUtils
+import GameConstants
+import PlayerExtensions
+import UnitExtensions
+
+
+let HELP_MESSAGE = (
+    "This command requires attack speed bonus & damage as options:\n"+
+    "-dps [attack speed from items & abilities] [unit current damage]\n"+
+    "For example, \"-as 50 15\" if your unit benefit from 50% attack "+
+    "speed bonus and has 15 damage"
+).color(GOLD_COLOR)
+
+function getUnitAttackSpeed(unit u, real bonusAttackSpeed) returns real
+    // Look up the base statistics for the unit.
+    let agi = u.getAgi(true)
+    let baseAS = u.getAttackCooldown(1)
+
+    // Calculate the total attack speed after bonuses have been applied.
+    let attackSpeed = baseAS / (
+        1 + agi * GameConstants.agiAttackSpeedBonus + bonusAttackSpeed)
+
+    // Look up the animation speed for the attack, which acts as a floor.
+    let animBackSwingPoint = BlzGetUnitRealField(u, UNIT_RF_CAST_BACK_SWING)
+
+    // Apply the floor to the attack speed and output the result
+    return max(attackSpeed, animBackSwingPoint)
+
+function getUnitDPS(unit u, int damage, real bonusAttackSpeed) returns real
+    return damage / getUnitAttackSpeed(u, bonusAttackSpeed)
+
+function handleCommand(player triggerer, LinkedList<string> args)
+    // Validate the inputs.
+    if args.size() != 3
+        printTimedToPlayer(HELP_MESSAGE, 10, triggerer)
+        return
+
+    // Cap the bonus attack speed at 400, the behavior of the engine.
+    let bonusAttackSpeed = min(args.get(1).toInt(), 400) / 100
+
+    // Parse the input damage.
+    let damage = args.get(2).toInt()
+
+    // Attempt to display the attack speed for selected units.
+    let units = ENUM_GROUP..enumUnitsSelected(triggerer, null)
+
+    // Default to the troll of the triggering player if no units are selected.
+    if units.isEmpty() and triggerer.getTroll().isAlive()
+        units.add(triggerer.getTroll())
+
+    // Display the statistics for each troll.
+    for u in units
+        if u.isTroll()
+            triggerer.print(
+                "{0} has {1} attack speed and deals {2} DPS.".format(
+                    u.getProperName().color(SPECIAL_COLOR),
+                    getUnitAttackSpeed(u, bonusAttackSpeed)
+                        .toString(2).color(HIGHLIGHT_COLOR),
+                    getUnitDPS(u, damage, bonusAttackSpeed)
+                        .toString(2).color(HIGHLIGHT_COLOR)
+                ),
+                5
+            )
+
+init
+    registerCommandAll("dps") (triggerer, args) ->
+        handleCommand(triggerer, args)

@@ -21,13 +21,14 @@ function apply(unit caster, unit target, real damage, boolean burn)
     // Deal spell damage, if requested.
     if burn
         origin.damageTarget(target, actual, ATTACK_TYPE_NORMAL)
+        // Replicate the visual effects.
+        attachLightningFX(origin, target, LIGHTNING_MANA_BURN, 0.8)
+        flashEffect(Abilities.manaBurnTarget, target, AttachmentPoints.origin)
 
     // Update the mana.
     target.setMana(target.getMana() - actual)
 
-    // Replicate the visual effects.
-    attachLightningFX(origin, target, LIGHTNING_MANA_BURN, 0.8)
-    flashEffect(Abilities.manaBurnTarget, target, AttachmentPoints.origin)
+    // Display mana reduced
     createManaBurnTextTag(target, actual.floor())
         ..matchVisibility(target)
 

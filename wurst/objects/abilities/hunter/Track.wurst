@@ -12,20 +12,22 @@ import Lodash
 import ColorUtils
 import LocalObjectIDs
 import ToolTipsUtils
+import LocalAssets
 
-let ICON = "ReplaceableTextures\\CommandButtons\\ATCTrack.blp"
 
 let BUFF_ID = compiletime(BUFF_ID_GEN.next())
 let CAST_RANGE = 700.
-let ARMOR_REDUCED = 4
+let GREATER_TRACK_ARMOR_REDUCED = 5
 let COOLDOWN = 50.
-let MANACOST = 0
-let DURATION = 30.
+let DURATION = 10.
 let TOOLTIP_NORM = "Track"
-let TOOLTIP_EXTENDED = "Gives vision of the tracked unit and reduces armor by "+COLOR_RED.toColorString()+"{0}|r."
+let TOOLTIP_EXTENDED = "Gives vision of the tracked unit and reduces armor by "+
+    "{0}".color(COLOR_RED)
 
 let COOLDOWN_DECREASE_VALUE = 5.
 let DURATION_INCREASE_VALUE = 5.
+let GREATER_TRACK_DURATION = DURATION + DURATION_INCREASE_VALUE * 3
+let GREATER_TRACK_COOLDOWN = COOLDOWN - COOLDOWN_DECREASE_VALUE * 3
 let TARGET_ALLOWED = "air,ground,enemies,neutral"
 
 function createBuff()
@@ -46,20 +48,24 @@ class Track extends AbilityDefinitionFaerieFire
         this.setName(TOOLTIP_NORM)
         this.setTooltipLearn("Learn " + TOOLTIP_NORM)
         this.setTooltipLearnExtended(TOOLTIP_EXTENDED.format("1/2/3|r"))
-        this.presetTooltipNormal(lvl ->makeToolTipNormHero(hotkey, TOOLTIP_NORM, lvl))
-        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED.format(lvl.toString())+makeToolTipDuration(
-                                         DURATION - (4 - lvl) * DURATION_INCREASE_VALUE, COOLDOWN - lvl * COOLDOWN_DECREASE_VALUE))
+        this.presetTooltipNormal(lvl -> makeToolTipNormHero(hotkey, TOOLTIP_NORM, lvl))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED.format(lvl.toString())+
+            makeToolTipDuration(
+                                DURATION + lvl * DURATION_INCREASE_VALUE,
+                                COOLDOWN - lvl * COOLDOWN_DECREASE_VALUE
+                                )
+                            )
         this.setButtonPositionNormalX(buttonPos.a)
         this.setButtonPositionNormalY(buttonPos.b)
         this.setButtonPositionTurnOffX(buttonPos.a)
         this.setButtonPositionTurnOffY(buttonPos.b)
-        this.setIconNormal(ICON)
-        this.setIconTurnOff(ICON)
-        this.setIconResearch(ICON)
-        this.setManaCost(1, MANACOST)
+        this.setIconNormal(LocalIcons.aTCTrack)
+        this.setIconTurnOff(LocalIcons.aTCTrack)
+        this.setIconResearch(LocalIcons.aTCTrack)
+        this.setManaCost(1, 0)
         this.presetCooldown(lvl -> COOLDOWN - lvl * COOLDOWN_DECREASE_VALUE)
-        this.presetDurationHero(lvl -> DURATION - (4 - lvl) * DURATION_INCREASE_VALUE) // 15,20,25 seconds
-        this.presetDurationNormal(lvl -> DURATION)
+        this.presetDurationHero(lvl -> DURATION + lvl * DURATION_INCREASE_VALUE) // 15,20,25 seconds
+        this.presetDurationNormal(lvl -> DURATION + lvl * DURATION_INCREASE_VALUE)
         this.presetBuffs(lvl -> toRawCode(BUFF_ID))
         this.setCheckDependencies(false)
         this.presetTargetsAllowed(lvl -> TARGET_ALLOWED)
@@ -71,17 +77,22 @@ public class GreaterTrack extends Track
     construct(int newAbilityId, string hotkey, Pair<int, int> buttonPos)
         super(newAbilityId, hotkey, buttonPos)
         this.presetTooltipNormal(lvl -> makeToolTipNorm(hotkey, "Greater "+TOOLTIP_NORM))
-        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED.format("4"))
+        this.presetTooltipNormalExtended(lvl -> TOOLTIP_EXTENDED
+            .format(GREATER_TRACK_ARMOR_REDUCED.toString()) +
+            makeToolTipDuration(
+                                GREATER_TRACK_DURATION,
+                                GREATER_TRACK_COOLDOWN)
+            )
         this.setButtonPositionNormalX(buttonPos.a)
         this.setButtonPositionNormalY(buttonPos.b)
         this.setButtonPositionTurnOffX(buttonPos.a)
         this.setButtonPositionTurnOffY(buttonPos.b)
-        this.presetCooldown(lvl -> COOLDOWN)
-        this.presetDurationHero(lvl -> DURATION)
-        this.presetDurationNormal(lvl -> DURATION)
+        this.presetCooldown(lvl -> GREATER_TRACK_COOLDOWN)
+        this.presetDurationHero(lvl -> GREATER_TRACK_DURATION)
+        this.presetDurationNormal(lvl -> GREATER_TRACK_DURATION)
         this.setHeroAbility(false)
         this.setLevels(1)
-        this.presetDefenseReduction(lvl -> ARMOR_REDUCED)
+        this.presetDefenseReduction(lvl -> GREATER_TRACK_ARMOR_REDUCED)
 
 
 @compiletime function createTrack()

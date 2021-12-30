@@ -19,16 +19,15 @@ let COOLDOWN = 60.
 let MANA_COST = 20
 let HEAL_DIST = .5
 let DURATION = 15.
-let CAST_RANGE = 15
+let CAST_RANGE = 15.
 let BUTTON_POS_X = 3
 let BUTTON_POS_Y = 2
 let HOTKEY = "D"
-let AOE = 4000
 let NAME = "Nature's Bond"
 let ICON = Icons.bTNSpiritLink
 let TOOLTIP_BASIC = "Nature's Bond"
 let TOOLTIP_EXT   = "The strong bond between the Druid and his pet causes them to split all damage between themselves for "
-    + DURATION.toToolTipOrange() + " seconds. They also share " + (HEAL_DIST*100).toToolTipGreen() + " %".color(HEALTH_COLOR)
+    + DURATION.toToolTipOrange() + " seconds. They also share " + (HEAL_DIST).toToolTipGreen()
     + " of any healing with eachother."
     + makeToolTipCooldown(COOLDOWN)
 let BUFF_TOOLTIP = "This unit is sharing damage and healing with another."
@@ -46,25 +45,27 @@ let BUFF_ID = compiletime(BUFF_ID_GEN.next())
 
 @compiletime function createSpiritLinkAbility() returns AbilityDefinitionSpiritLink
     return new AbilityDefinitionSpiritLink(ABILITY_NATURES_BOND)
-    ..setName(NAME)
-    ..presetManaCost(LVL -> MANA_COST)
-    ..presetHotkey(HOTKEY)
-    ..presetCooldown(LVL -> COOLDOWN)
-    ..presetTooltipNormal(LVL -> TOOLTIP_BASIC)
-    ..presetTooltipNormalExtended(LVL -> TOOLTIP_EXT)
-    ..setRequirements("")
-    ..setCheckDependencies(false)
-    ..presetDurationHero(LVL -> DURATION)
-    ..presetDurationNormal(LVL -> DURATION)
-    ..setBuffs(1, BUFF_ID.toRawCode())
-    ..presetMaximumNumberofTargets(lvl -> 2)
-    ..presetTargetsAllowed(LVL -> commaList(
-        TargetsAllowed.playerunits,
-        TargetsAllowed.organic,
-        TargetsAllowed.friend,
-        TargetsAllowed.allies,
-        TargetsAllowed.self
-    ))
+        ..setName(NAME)
+        ..presetManaCost(LVL -> MANA_COST)
+        ..presetHotkey(HOTKEY)
+        ..presetCooldown(LVL -> COOLDOWN)
+        ..presetCastRange(LVL -> CAST_RANGE)
+        ..presetAreaofEffect(LVL -> CAST_RANGE)
+        ..presetTooltipNormal(LVL -> TOOLTIP_BASIC)
+        ..presetTooltipNormalExtended(LVL -> TOOLTIP_EXT)
+        ..setRequirements("")
+        ..setCheckDependencies(false)
+        ..presetDurationHero(LVL -> DURATION)
+        ..presetDurationNormal(LVL -> DURATION)
+        ..setBuffs(1, BUFF_ID.toRawCode())
+        ..presetMaximumNumberofTargets(lvl -> 2)
+        ..presetTargetsAllowed(LVL -> commaList(
+            TargetsAllowed.playerunits,
+            TargetsAllowed.organic,
+            TargetsAllowed.air,
+            TargetsAllowed.ground,
+            TargetsAllowed.self
+        ))
 
 
 function onHeal(HealingInstance instance)

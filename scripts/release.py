@@ -284,6 +284,9 @@ if __name__ == "__main__":
     # Update the build file for the map.
     build, target = update_build(version)
 
+    # Draw changelogs on the loading screen
+    generate_loading_screen(changelogs=list(changes), version=version)
+
     # Construct the markdown used to link the changelog.
     changelog = "\n".join(
         f"[{change}]({pull.html_url})"

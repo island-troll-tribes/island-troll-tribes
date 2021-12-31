@@ -10,7 +10,6 @@ import Abilities
 // Local Imports:
 import LocalObjectIDs
 import ToolTipsUtils
-import ColorUtils
 import HealingSystem
 import Pets
 
@@ -19,17 +18,15 @@ let COOLDOWN = 60.
 let MANA_COST = 20
 let HEAL_DIST = .5
 let DURATION = 15.
-let CAST_RANGE = 15.
-let BUTTON_POS_X = 3
-let BUTTON_POS_Y = 2
+let CAST_RANGE = 99999.
 let HOTKEY = "D"
 let NAME = "Nature's Bond"
 let ICON = Icons.bTNSpiritLink
-let TOOLTIP_BASIC = "Nature's Bond"
-let TOOLTIP_EXT   = "The strong bond between the Druid and his pet causes them to split all damage between themselves for "
-    + DURATION.toToolTipOrange() + " seconds. They also share " + (HEAL_DIST).toToolTipGreen()
-    + " of any healing with eachother."
-    + makeToolTipCooldown(COOLDOWN)
+let TOOLTIP_EXT   = (""+
+    "The strong bond between the Druid and his pet causes them to split all "+
+    "damage between themselves. They also share {0} of any healing with eachother."
+    ).format((HEAL_DIST).toToolTipGreen())
+    + makeToolTipDuration(DURATION, COOLDOWN)
 let BUFF_TOOLTIP = "This unit is sharing damage and healing with another."
 let BUFF_ID = compiletime(BUFF_ID_GEN.next())
 
@@ -39,32 +36,35 @@ let BUFF_ID = compiletime(BUFF_ID_GEN.next())
         ..setName(1, NAME)
         ..setArtTarget(1, Abilities.spiritLinkZapTarget)
         ..setTargetAttachmentPoint0(1, "chest")
-        ..setTooltipNormal(1, "Nature's Bond")
+        ..setTooltipNormal(1, NAME)
         ..setTooltipNormalExtended(1, BUFF_TOOLTIP)
         ..setEditorSuffix(1, "(Wurst)")
 
 @compiletime function createSpiritLinkAbility() returns AbilityDefinitionSpiritLink
     return new AbilityDefinitionSpiritLink(ABILITY_NATURES_BOND)
         ..setName(NAME)
-        ..presetManaCost(LVL -> MANA_COST)
+        ..presetManaCost(_ -> MANA_COST)
         ..presetHotkey(HOTKEY)
-        ..presetCooldown(LVL -> COOLDOWN)
-        ..presetCastRange(LVL -> CAST_RANGE)
-        ..presetAreaofEffect(LVL -> CAST_RANGE)
-        ..presetTooltipNormal(LVL -> TOOLTIP_BASIC)
-        ..presetTooltipNormalExtended(LVL -> TOOLTIP_EXT)
+        ..presetCooldown(_ -> COOLDOWN)
+        ..presetCastRange(_ -> CAST_RANGE)
+        ..presetAreaofEffect(_ -> CAST_RANGE)
+        ..presetTooltipNormal(_ -> makeToolTipNorm(HOTKEY, NAME))
+        ..presetTooltipNormalExtended(_ -> TOOLTIP_EXT)
         ..setRequirements("")
         ..setCheckDependencies(false)
-        ..presetDurationHero(LVL -> DURATION)
-        ..presetDurationNormal(LVL -> DURATION)
+        ..presetDurationHero(_ -> DURATION)
+        ..presetDurationNormal(_ -> DURATION)
         ..setBuffs(1, BUFF_ID.toRawCode())
-        ..presetMaximumNumberofTargets(lvl -> 2)
-        ..presetTargetsAllowed(LVL -> commaList(
+        ..presetMaximumNumberofTargets(_ -> 2)
+        // Note: Once spirit link is casted, it will link to friendly units
+        // even allied, I don't think we can alter this behavior
+        // To obtain desired behavior, we need to trigger the damage
+        // distribution effect
+        ..presetTargetsAllowed(_ -> commaList(
             TargetsAllowed.playerunits,
             TargetsAllowed.organic,
             TargetsAllowed.air,
-            TargetsAllowed.ground,
-            TargetsAllowed.self
+            TargetsAllowed.ground
         ))
 
 
@@ -76,7 +76,12 @@ function onHeal(HealingInstance instance)
 
     // If the unit is the owner of a pet heal the pet 50% of the amount the troll healed.
     if pets.has(instance.target.getOwner())
-        new HealingInstance(instance.target.getOwner().getPet(), instance.caster, instance.trueAmount * HEAL_DIST, instance.healingType)
+        new HealingInstance(
+            instance.target.getOwner().getPet(),
+            instance.caster,
+            instance.amount * HEAL_DIST,
+            instance.healingType
+            )
 
 init
     onUnitHealed() ->

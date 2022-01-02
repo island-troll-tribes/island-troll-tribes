@@ -1,0 +1,51 @@
+package Rejuvenation
+
+// Standard Library Imports:
+import AbilityObjEditing
+import ClosureEvents
+import ClosureTimers
+
+// Local Imports:
+import LocalObjectIDs
+import ToolTipsUtils
+import HealingSystem
+
+
+let COOLDOWN = 30.
+let MANA_COST = 30
+let HEAL_AMOUNT = 150.
+let HEAL_TICKS = 3
+let DURATION = 10.
+let HOTKEY = "E"
+let NAME = "Rejuvenation"
+let TOOLTIP_EXT   = "" +
+    "Heal target ally for {0} over {1} seconds.".format(
+    HEAL_AMOUNT.toToolTipGreen(),
+    DURATION.toToolTipLightBlue())
+    +makeToolTipCooldown(COOLDOWN)
+
+@compiletime function createRejuvenationAbility() returns AbilityDefinitionRejuvination
+    return new AbilityDefinitionRejuvination(ABILITY_REJUVENATION)
+        ..setName(NAME)
+        ..presetManaPointsGained(_ -> 0)
+        // This cannot be 0 or the spell won't cast.
+        ..presetHitPointsGained(_ -> 0.1)
+        ..presetAllowWhenFull(_ -> 1)
+        ..presetDurationHero(_ -> DURATION)
+        ..presetDurationNormal(_ -> DURATION)
+        ..presetCooldown(_ -> COOLDOWN)
+        ..presetManaCost(_ -> MANA_COST)
+        ..presetCastRange(_ -> 150.)
+        ..presetButtonPosNormal(2, 0)
+        ..presetHotkey(HOTKEY)
+        ..presetTooltipNormal(_ -> makeToolTipNorm(HOTKEY, NAME))
+        ..presetTooltipNormalExtended(_ -> TOOLTIP_EXT)
+        ..setRequirements("")
+
+function onHeal(unit caster, unit target)
+    doPeriodicallyCounted(DURATION / HEAL_TICKS, HEAL_TICKS) (CallbackCounted cb) ->
+        new HealingInstance(target, caster, HEAL_AMOUNT / HEAL_TICKS, HealingType.ABILITY)
+
+init
+    EventListener.onTargetCast(ABILITY_REJUVENATION) (unit caster, unit target) ->
+        onHeal(caster, target)

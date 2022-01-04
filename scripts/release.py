@@ -20,6 +20,9 @@ from jinja2 import Template
 from parse import search
 from yaml import dump, Dumper, load, Loader
 
+# Local Imports:
+from generate_loading_screen import generate_loading_screen
+
 # The template for the changelog file.
 template = Template(
     """
@@ -281,6 +284,9 @@ if __name__ == "__main__":
 
     # Update the build file for the map.
     build, target = update_build(version)
+
+    # Draw changelogs on the loading screen
+    generate_loading_screen(changelogs=list(changes), version=version)
 
     # Construct the markdown used to link the changelog.
     changelog = "\n".join(

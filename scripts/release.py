@@ -108,7 +108,8 @@ def update_build(version):
     name = f"{name.rsplit(maxsplit=1)[0]} {version}"
 
     # Strip whitespace for the filename to ease access.
-    filename = ".".join(name.split())
+    # Remove color code if it exist in the name string
+    filename = ".".join((name[10:] if name[0] == "|" else name).split())
 
     # Update the build file.
     build["buildMapData"].update({

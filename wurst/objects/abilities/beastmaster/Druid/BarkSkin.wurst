@@ -1,0 +1,87 @@
+package BarkSkin
+
+// Standard Library Imports:
+import Assets
+import ChannelAbilityPreset
+import BuffObjEditing
+import DamageEvent
+
+// Local Imports:
+import LocalObjectIDs
+import ToolTipsUtils
+
+
+let COOLDOWN = 45.
+let ARMOR_BONUS = 4
+let THORNS_DMG = 0.3
+let DURATION = 10.
+let HOTKEY = "R"
+let ICON = Icons.bTNThornShield
+let NAME = "Bark Skin"
+let TOOLTIP_EXT   = (""+
+    "Imbue your target with the strength of nature, making its skin tough as "+
+    "bark, gives {0} armor and reflect {1} flat damage upon melee attack to its attacker."
+    ).format(ARMOR_BONUS.toReal().toToolTipGreen(),THORNS_DMG.toToolTipRed())
+    + makeToolTipDuration(DURATION, COOLDOWN)
+let BUFF_TOOLTIP = "This unit has bark skin; increasing its armor and reflects damage."
+let BUFF_ID = compiletime(BUFF_ID_GEN.next())
+
+@compiletime function createBarkSkinBuff() returns BuffDefinition
+    return new BuffDefinition(BUFF_ID, BuffIds.innerFire)
+        ..setIcon(ICON)
+        ..setName(1, NAME)
+        ..setTargetAttachments(1, 2)
+        ..setArtTarget(1, commaList(
+            Abilities.thornyShieldTargetChestMountLeft,
+            Abilities.thornyShieldTargetChestMountRight
+            ))
+        ..setTargetAttachmentPoint0(1, "chest")
+        ..setTargetAttachmentPoint1(1, "chest")
+        ..setTooltipNormal(1, NAME)
+        ..setTooltipNormalExtended(1, BUFF_TOOLTIP)
+        ..setEditorSuffix(1, "(Wurst)")
+
+@compiletime function createBarkSkinAbilityEffect() returns AbilityDefinitionInnerFire
+    return new AbilityDefinitionInnerFire(ABILITY_BARK_SKIN)
+        ..setName(NAME)
+        ..setIconNormal(ICON)
+        ..setIconTurnOff(ICON)
+        ..presetDurationHero(_ -> DURATION)
+        ..presetDurationNormal(_ -> DURATION)
+        ..presetCastRange(_ -> 200.)
+        ..presetCooldown(_ -> COOLDOWN)
+        ..presetHotkey(HOTKEY)
+        ..setArtTarget(Objects.entBirthTarget)
+        ..presetAutocastRange(_ -> 0)
+        ..presetLifeRegenRate(_ -> 0)
+        ..presetDefenseIncrease(_ -> ARMOR_BONUS)
+        ..presetDamageIncrease(_ -> 0)
+        ..presetTooltipNormal(_ -> makeToolTipNorm(HOTKEY, NAME))
+        ..presetTooltipNormalExtended(_ -> TOOLTIP_EXT)
+        ..presetButtonPosNormal(3, 2)
+        ..setRequirements("")
+        ..setCheckDependencies(false)
+        ..setBuffs(1, BUFF_ID.toRawCode())
+        ..presetTooltipTurnOff(_ -> "")
+        ..presetTooltipTurnOffExtended(_ -> "")
+
+function onDamage()
+    if not DamageEvent.getTarget().hasAbility(BUFF_ID)
+        return
+    // Check if damage comes from basic attack
+    if not DamageEvent.getType() == DamageType.ATTACK
+        return
+    // Check if unit is melee
+    if not DamageEvent.getSource().isType(UNIT_TYPE_MELEE_ATTACKER)
+        return
+
+    DamageEvent.setNextDamageId(ABILITY_BARK_SKIN)
+
+    // ATTACK_TYPE_CHAOS to deal flat damage seems to be enough
+    UnitDamageTarget(DamageEvent.getTarget(), DamageEvent.getSource(),
+    DamageEvent.getAmount() * THORNS_DMG, true, false, ATTACK_TYPE_CHAOS, DAMAGE_TYPE_NORMAL, null)
+
+
+init
+    DamageEvent.addListener() ->
+        onDamage()

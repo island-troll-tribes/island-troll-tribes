@@ -91,7 +91,13 @@ function onCast(unit origin, int targetID)
     allies.destr()
 
 init
-    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_FINISH) ->
+    // This event does not use EVENT_PLAYER_UNIT_SPELL_EFFECT, the standard for
+    // triggers, in order to avoid stuttering. When using that event, the unit
+    // must wait for its Art - Animation Cast Point timer (unit field ucpt) to
+    // finish before executing the trigger, which is global across all casting
+    // times for the unit. Avoiding this means that the trigger cannot using
+    // the ClosureEvents package, a necessary trade-off.
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_SPELL_CAST) ->
         // Look up the transformation indicated by the ability.
         let formID = TRANSFORMATIONS.get(EventData.getSpellAbilityId())
 

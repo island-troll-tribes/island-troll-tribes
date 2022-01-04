@@ -68,6 +68,8 @@ init
             let uid = trollClass.asObjectID()
             if not trollClass.isRegisteredObjectName() or uid.getTrollClassType() != ClassType.BASE_CLASS
                 mode.error("Invalid class selection")
+            else if gameConfig.getClassBanned() == uid
+                mode.message("This class has been banned, unban it to enable all random")
             else
                 gameConfig.setAllTrollEnabled(uid)
                 mode.message(("All " + classArgs.joinBy(" ")).color(ENERGY_COLOR) + " enabled")
@@ -309,3 +311,35 @@ init
                     )
             )
         )
+
+    new GameMode("ban", "b", "General", "ban 1 class, retype class name to unban (Hunter, Mage, Priest, Beastmaster, Scout, Thief, Gatherer)", true) (mode, args) ->
+        if args.size() < 2
+            mode.error("Must specify the class name to ban")
+        else
+            let trollClass = "UNIT_" + args.get(1).toUpperCase()
+            let uid = trollClass.asObjectID()
+
+            if not trollClass.isRegisteredObjectName()
+                or uid.getTrollClassType() != ClassType.BASE_CLASS
+                mode.error("Invalid class selection")
+            else
+                let previousBan = gameConfig.getClassBanned()
+
+                // get class name with first letter upper for pretty print display
+                let prevClassName = previousBan.asObjectName().substring("UNIT_".length()).toLowerCase().firstUpper()
+                let className = trollClass.substring("UNIT_".length()).toLowerCase().firstUpper()
+
+                // Check if -all mode already set with this unit
+                if gameConfig.getAllTrollUnitId() == uid
+                    mode.message("Cannot ban {0} as it has been registered as the all random class".format(className.color(SPECIAL_COLOR)))
+                // If class's already banned, unban it
+                else if previousBan == uid
+                    mode.message("Unbanned {0} class".format(prevClassName.color(SPECIAL_COLOR)))
+                    gameConfig.setClassBanned(0)
+                else
+                    // Unban previously banned class and set new one
+                    // Seems a bit repetitive with the previous if though
+                    if previousBan != 0
+                        mode.message("Unbanned {0} class".format(prevClassName.color(SPECIAL_COLOR)))
+                    gameConfig.setClassBanned(uid)
+                    mode.message("Banned {0} class".format(className.color(SPECIAL_COLOR)))

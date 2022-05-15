@@ -68,6 +68,9 @@ let BUFF_ID = compiletime(BUFF_ID_GEN.next())
 function onDamage()
     if not DamageEvent.getTarget().hasAbility(BUFF_ID)
         return
+    // Ignore damage coming from barkskin reflect
+    if DamageEvent.getId() == ABILITY_BARK_SKIN
+        return
     // Check if damage comes from basic attack
     if not DamageEvent.getType() == DamageType.ATTACK
         return
@@ -79,7 +82,7 @@ function onDamage()
 
     // ATTACK_TYPE_CHAOS to deal flat damage seems to be enough
     UnitDamageTarget(DamageEvent.getTarget(), DamageEvent.getSource(),
-    DamageEvent.getAmount() * THORNS_DMG, true, false, ATTACK_TYPE_CHAOS, DAMAGE_TYPE_NORMAL, null)
+    DamageEvent.getAmount() * THORNS_DMG, false, false, ATTACK_TYPE_CHAOS, null, null)
 
 
 init

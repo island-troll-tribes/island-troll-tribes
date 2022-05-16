@@ -18,6 +18,7 @@ import Items
 import LocalItemObjEditing
 import HealingSystem
 import ColorUtils
+import HealingDebuff
 
 // Dummy abilities, I don't think they belong in LocalObjectsIDs
 let ABILITY_CLOAK_HEALING = compiletime(ABIL_ID_GEN.next())
@@ -75,6 +76,7 @@ public let CLOAK_FROST_TT   = COMMON_TT + ("can be cast to emit {0} ice waves, e
 
 public let CLOAK_HEALING_TT = COMMON_TT + "can be cast to restore all {0} health points to nearby allies over {1} seconds."
                               .format(HEALTH_RESTORED.toToolTipGreen(), RESTORE_DURATION.toToolTipLightBlue()) + makeToolTipCooldown(RESTORE_COOLDOWN)
+                              + "\nLast tick of healing applies " + "Heal Reduction".color(SPECIAL_COLOR) + ".\n\n" + DEBUFF_HEAL_TOOLTIP_SUFFIX
 public let CLOAK_MANA_TT    = COMMON_TT + "can be cast to restore {0} mana points to nearby allies over {1} seconds."
                               .format(CLOAK_MANA_RESTORED.toToolTipBlue(), RESTORE_DURATION.toToolTipLightBlue()) + makeToolTipCooldown(RESTORE_COOLDOWN)
 
@@ -234,6 +236,8 @@ function castRejuvHeal(unit caster, unit target, real duration, real amount)
         if not target.hasAbility(BUFF_HEAL)
             destroy cb
         new HealingInstance(target, caster, amount / duration, HealingType.ABILITY)
+        if cb.isLast()
+            target.addHealDebuff()
 
 function castRejuv(unit caster, int rejuvAbility)
     forUnitsInRange(caster.getPos(), RESTORE_RADIUS) (unit u) ->

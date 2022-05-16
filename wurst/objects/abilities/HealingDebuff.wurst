@@ -1,0 +1,48 @@
+package HealingDebuff
+
+// Standard library imports:
+import BuffObjEditing
+import HashMap
+import TimerUtils
+import ClosureTimers
+
+// Local imports:
+import LocalAssets
+import HealingSystem
+import ColorUtils
+import ToolTipsUtils
+
+@configurable let debuffDuration = 30.
+@configurable let debuffFactor = 0.5
+
+public let DEBUFF_HEAL_TOOLTIP_SUFFIX = ("Heal Reduction\n".color(SPECIAL_COLOR) +
+    "Subsequent healing from Cloak and troll abilities are reduced by {0}, last {1} seconds.")
+    .format(debuffFactor.toToolTipRed(), debuffDuration.toToolTipLightBlue())
+let unitToTimer = new HashMap<unit, timer>
+
+let healDebuff = compiletime(createDummyBuffObject("Heal Reduction",
+    "Subsequent healing from abilities are reduced by 50%", LocalIcons.bTNCloakOfHealing))
+
+public function unit.addHealDebuff()
+    if not this.hasAbility(healDebuff.abilId)
+        this.addAbility(healDebuff.abilId)
+    startDebuffDuration(this)
+
+function startDebuffDuration(unit u)
+    // Remove the unit & release the timer if it exists
+    if unitToTimer.has(u)
+        unitToTimer.getAndRemove(u).release()
+
+    // Init new timer
+    let buffTimer = getTimer()
+    unitToTimer.put(u, buffTimer)
+    buffTimer.doAfter(debuffDuration) ->
+        unitToTimer.getAndRemove(u)
+        u.removeAbility(healDebuff.abilId)
+
+
+init
+    onUnitHealed() ->
+        let instance = getHealingInstance()
+        if instance.getTarget().hasAbility(healDebuff.buffId) and instance.healingType == HealingType.ABILITY
+            instance.scaleMultiplier(1 - debuffFactor)

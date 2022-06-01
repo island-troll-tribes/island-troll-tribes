@@ -129,7 +129,6 @@ def update_build(version):
 
 
 def get_changelog(repo, sha, marker="$changelog: "):
-    print("Taking until", sha)
     # Accept abbreviations by allowing partial matches for the SHA.
     def predicate(commit):
         return not commit.sha.startswith(sha)

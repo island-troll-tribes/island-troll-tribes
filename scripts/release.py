@@ -1,4 +1,4 @@
-#!/usr/bin/python3.8
+#!/usr/bin/env python3.8
 
 # Standard library imports:
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
@@ -129,6 +129,7 @@ def update_build(version):
 
 
 def get_changelog(repo, sha, marker="$changelog: "):
+    print("Taking until", sha)
     # Accept abbreviations by allowing partial matches for the SHA.
     def predicate(commit):
         return not commit.sha.startswith(sha)
@@ -137,6 +138,10 @@ def get_changelog(repo, sha, marker="$changelog: "):
     for commit in takewhile(predicate, repo.get_commits()):
         # Examine each PR associated with the commit.
         for pull in commit.get_pulls():
+            # Skip pull requests without text, which translates to a null body.
+            if not pull.body:
+                continue
+
             # Consider each line of the PR message separately.
             for line in pull.body.split("\n"):
                 # Verify that the line marks a changelog item.

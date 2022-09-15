@@ -1,78 +1,71 @@
 package SpearsDefinition
 
 // Standard library imports:
-import AbilityObjEditing
 import Assets
 import BuffObjEditing
-import ObjectIds
-import ObjectIdGenerator
 
-// Local imports:
-// TODO: Although this import is not used, it is needed to avoid breaking the
-//       underlying hashtables used elsewhere. It's not clear if this is due to
-//       the initialization order of objects or just an odd behavior of the
-//       compiler. This should be reinvestigated once #593 is complete.
 import Spears
 import Items
 import LocalAssets
 import LocalItemObjEditing
 import LocalObjectIDs
 import ToolTipsUtils
+import ChannelAbilityPreset
 
-let BUFF_DARK = compiletime(BUFF_ID_GEN.next())
-let BUFF_POISON = compiletime(BUFF_ID_GEN.next())
+public let BUFF_DARK = compiletime(BUFF_ID_GEN.next())
+public let BUFF_POISON = compiletime(BUFF_ID_GEN.next())
 
-let SPEAR_DMG = 40.
-let IRON_DMG  = 70.
-let STEEL_DMG = 100.
-let DARK_DMG  = 40.
-let DARK_MANA_BURN = 0.4
+public let SPEAR_DMG = 40.
+public let IRON_DMG  = 70.
+public let STEEL_DMG = 100.
+public let DARK_DMG  = 40.
+public let DARK_MANA_BURN = 0.4
 
 //[Initial, Decaying]
-let POISON_DMG  = [10., 6. ]
-let RPOISON_DMG = [20., 10.]
-let UPOISON_DMG = [40., 16.]
+public let POISON_DMG  = [10., 6. ]
+public let RPOISON_DMG = [20., 10.]
+public let UPOISON_DMG = [40., 16.]
 
-let SPEAR_COOLDOWN   = 2.
-let IRON_COOLDOWN    = 5.
-let STEEL_COOLDOWN   = 8.
-let DARK_COOLDOWN    = 5.
-let POISON_COOLDOWN  = 2.
-let RPOISON_COOLDOWN = 5.
-let UPOISON_COOLDOWN = 8.
+public let SPEAR_COOLDOWN   = 2.
+public let IRON_COOLDOWN    = 5.
+public let STEEL_COOLDOWN   = 8.
+public let DARK_COOLDOWN    = 5.
+public let POISON_COOLDOWN  = 2.
+public let RPOISON_COOLDOWN = 5.
+public let UPOISON_COOLDOWN = 8.
 
-let SPEAR_STUN_DURATION = 0.10
-let IRON_STUN_DURATION  = 0.20
-let STEEL_STUN_DURATION = 0.30
-let DARK_STUN_DURATION  = 0.50
+public let SPEAR_STUN_DURATION = 0.10
+public let IRON_STUN_DURATION  = 0.20
+public let STEEL_STUN_DURATION = 0.30
+public let DARK_STUN_DURATION  = 0.50
 
 //[Attack Speed, Movement Speed]
-let POISON_DEBUFF  = [0.30, 0.20]
-let RPOISON_DEBUFF = [0.40, 0.30]
-let UPOISON_DEBUFF = [0.50, 0.40]
+public let POISON_DEBUFF  = [0.30, 0.20]
+public let RPOISON_DEBUFF = [0.40, 0.30]
+public let UPOISON_DEBUFF = [0.50, 0.40]
 
-let POISON_DURATION = 40.
-let CAST_RANGE = 1000.
+public let POISON_DURATION = 40.
+public let CAST_RANGE = 1000.
 
 
 let TT_COMMON   = "" +
     "A spear with one use. Deals {0} damage on striking a target. "+
-    "Has {1} chance of being recoverable."
+    "Has {1} chance of being recoverable if thrown at an hostile. "+
+    "Will recover if it kills a troll."
 
 let TT_DARK_PRE_FORMAT = "" +
     "A spear with one use. Deals {0} damage and zaps 10 plus {1} of current energy on hit. "+
-    "Not recoverable"
+    "Not recoverable."
 
 let TT_PS   = "" + "Hurls a poisoned spear at a target enemy unit, "+
     "dealing {0} initial damage and {1} damage every " + "{0} seconds. "
     .format(3..toToolTipLightBlue())+
-    "{2} attack speed and {3} movement decrease. " +
-    "Has {0} chance of being recoverable. "
-    .format(0.50.toToolTipLightBlue())
+    "{2} attack speed and {3} movement decrease. "+
+    "Not recoverable."
 
-let TT_SPEAR = TT_COMMON.format(SPEAR_DMG.toToolTipRed(), 0.60.toToolTipLightBlue()) + makeToolTipCooldown(SPEAR_COOLDOWN)
-let TT_IRON  = TT_COMMON.format(IRON_DMG .toToolTipRed(), 0.60.toToolTipLightBlue()) + makeToolTipCooldown(IRON_COOLDOWN)
-let TT_STEEL = TT_COMMON.format(STEEL_DMG.toToolTipRed(), 0.60.toToolTipLightBlue()) + makeToolTipCooldown(STEEL_COOLDOWN)
+let TT_SPEAR = TT_COMMON.format(SPEAR_DMG.toToolTipRed(), 0.66.toToolTipLightBlue()) + makeToolTipCooldown(SPEAR_COOLDOWN)
+let TT_IRON  = TT_COMMON.format(IRON_DMG .toToolTipRed(), 0.66.toToolTipLightBlue()) + makeToolTipCooldown(IRON_COOLDOWN)
+let TT_STEEL = TT_COMMON.format(STEEL_DMG.toToolTipRed(), 0.66.toToolTipLightBlue()) + makeToolTipCooldown(STEEL_COOLDOWN)
 let TT_DARK  = TT_DARK_PRE_FORMAT.format(DARK_DMG .toToolTipRed(), DARK_MANA_BURN.toToolTipLightBlue())
 
 let TT_POISON  = TT_PS.format(
@@ -191,15 +184,11 @@ function createSpear(int spearId) returns ItemDefinition
         ..setTintingColor2Green(255)
         ..setTintingColor3Blue(100)
 
-
-public function createSpearAbility(int newId) returns AbilityDefinitionThunderBoltCreep
-    return new AbilityDefinitionThunderBoltCreep(newId)
-        ..setManaCost(1, 0)
+public function createSpearAbility(int newId) returns ChannelAbilityPreset
+    return new ChannelAbilityPreset(newId, 1, true)
+        ..setHeroAbility(false)
         ..setItemAbility(true)
-        ..setIconNormal(Icons.bTNThoriumRanged)
-        ..setMissileHomingEnabled(true)
-        ..setMissileSpeed(700)
-        ..setMissileArt(Abilities.banditmissile)
+        ..setTargetType(1, 1)
         ..setTargetsAllowed(1, commaList(
             TargetsAllowed.air,
             TargetsAllowed.enemies,
@@ -209,90 +198,42 @@ public function createSpearAbility(int newId) returns AbilityDefinitionThunderBo
             TargetsAllowed.terrain
             )
         )
-        ..setEditorSuffix("(Wurst)")
+        ..setCastRange(1, CAST_RANGE)
 
-@compiletime function createBasicSpearAbility() returns AbilityDefinitionThunderBoltCreep
-    return createSpearAbility(ABILITY_SPEAR)
+@compiletime function createBasicSpearAbility()
+    createSpearAbility(ABILITY_SPEAR)
         ..setName("Spear Cast ({0})".format("Spear"))
-        ..setDamage(1, SPEAR_DMG)
-        ..setDurationHero(1, SPEAR_STUN_DURATION)
         ..setCooldown(1, SPEAR_COOLDOWN)
-        ..setCastRange(1, CAST_RANGE)
 
-@compiletime function createIronSpearAbility() returns AbilityDefinitionThunderBoltCreep
-    return createSpearAbility(ABILITY_SPEAR_IRON)
+@compiletime function createIronSpearAbility()
+    createSpearAbility(ABILITY_SPEAR_IRON)
         ..setName("Spear Cast ({0})".format("Iron"))
-        ..setDamage(1, IRON_DMG)
-        ..setDurationHero(1, IRON_STUN_DURATION)
         ..setCooldown(1, IRON_COOLDOWN)
-        ..setCastRange(1, CAST_RANGE)
 
-@compiletime function createSteelSpearAbility() returns AbilityDefinitionThunderBoltCreep
-    return createSpearAbility(ABILITY_SPEAR_STEEL)
+@compiletime function createSteelSpearAbility()
+    createSpearAbility(ABILITY_SPEAR_STEEL)
         ..setName("Spear Cast ({0})".format("Steel"))
-        ..setDamage(1, STEEL_DMG)
-        ..setDurationHero(1, STEEL_STUN_DURATION)
         ..setCooldown(1, STEEL_COOLDOWN)
-        ..setCastRange(1, CAST_RANGE)
 
-@compiletime function createDarkSpearAbility() returns AbilityDefinitionThunderBoltCreep
-    return createSpearAbility(ABILITY_SPEAR_DARK)
+@compiletime function createDarkSpearAbility()
+    createSpearAbility(ABILITY_SPEAR_DARK)
         ..setName("Spear Cast ({0})".format("Dark"))
-        ..setDamage(1, DARK_DMG)
-        ..setDurationHero(1, DARK_STUN_DURATION)
         ..setCooldown(1, DARK_COOLDOWN)
-        ..setCastRange(1, CAST_RANGE)
-        ..setMissileArt(Abilities.blackArrowMissile)
-        ..setBuffs(1, toRawCode(BUFF_DARK))
 
-
-function createPoisonSpearAbility(int newId) returns AbilityDefinitionShadowStrikeCreep
-    return new AbilityDefinitionShadowStrikeCreep(newId)
-        ..setCheckDependencies(false)
-        ..setMissileArc(0.30)
-        ..setMissileArt(Abilities.dryadmissile)
-        ..setIconNormal(Icons.bTNPoisonArrow)
-        ..setMissileSpeed(700)
-        ..setItemAbility(true)
-        ..setManaCost(1, 0)
-        ..setBuffs(1, BUFF_POISON.toRawCode())
-        ..setEditorSuffix("(Wurst)")
-
-@compiletime function createBasicPoisonSpearAbility() returns AbilityDefinitionShadowStrikeCreep
-    return createPoisonSpearAbility(ABILITY_SPEAR_POISON)
+@compiletime function createBasicPoisonSpearAbility()
+    createSpearAbility(ABILITY_SPEAR_POISON)
         ..setName("Poison Spear Cast Basic")
         ..setCooldown(1, POISON_COOLDOWN)
-        ..setInitialDamage(1, POISON_DMG [0])
-        ..setDecayingDamage(1, POISON_DMG [1])
-        ..setMovementSpeedFactor(1, POISON_DEBUFF [0])
-        ..setAttackSpeedFactor(1, POISON_DEBUFF [1])
-        ..setDurationHero(1, POISON_DURATION)
-        ..setDurationNormal(1, POISON_DURATION)
-        ..setCastRange(1, CAST_RANGE)
 
-@compiletime function createRefinedPoisonSpearAbility() returns AbilityDefinitionShadowStrikeCreep
-    return createPoisonSpearAbility(ABILITY_SPEAR_RPOISON)
+@compiletime function createRefinedPoisonSpearAbility()
+    createSpearAbility(ABILITY_SPEAR_RPOISON)
         ..setName("Poison Spear Cast Refined")
         ..setCooldown(1, RPOISON_COOLDOWN)
-        ..setInitialDamage(1, RPOISON_DMG [0])
-        ..setDecayingDamage(1, RPOISON_DMG [1])
-        ..setMovementSpeedFactor(1, RPOISON_DEBUFF [0])
-        ..setAttackSpeedFactor(1, RPOISON_DEBUFF [1])
-        ..setDurationHero(1, POISON_DURATION)
-        ..setDurationNormal(1, POISON_DURATION)
-        ..setCastRange(1, CAST_RANGE)
 
-@compiletime function createUltraPoisonSpearAbility() returns AbilityDefinitionShadowStrikeCreep
-    return createPoisonSpearAbility(ABILITY_SPEAR_UPOISON)
+@compiletime function createUltraPoisonSpearAbility()
+    createSpearAbility(ABILITY_SPEAR_UPOISON)
         ..setName("Poison Spear Cast Ultra")
         ..setCooldown(1, UPOISON_COOLDOWN)
-        ..setInitialDamage(1, UPOISON_DMG [0])
-        ..setDecayingDamage(1, UPOISON_DMG [1])
-        ..setMovementSpeedFactor(1, UPOISON_DEBUFF [0])
-        ..setAttackSpeedFactor(1, UPOISON_DEBUFF [1])
-        ..setDurationHero(1, POISON_DURATION)
-        ..setDurationNormal(1, POISON_DURATION)
-        ..setCastRange(1, CAST_RANGE)
 
 @compiletime function createDarkSpearBuff()
     // I believe this buff was made just so we can see the effect when dark spear hit?
@@ -310,3 +251,66 @@ function createPoisonSpearAbility(int newId) returns AbilityDefinitionShadowStri
     ..setTooltipNormal("Poison Slow")
     ..setTooltipNormalExtended(1, "This unit has been hit by a poison spear; it takes damage over time and its movement and attack speed are slowed")
     ..setEditorSuffix(1, "(Wurst)")
+
+
+public function createDummySpearAbility(int newId) returns AbilityDefinitionThunderBoltCreep
+    return new AbilityDefinitionThunderBoltCreep(newId)
+        ..setMissileHomingEnabled(true)
+        ..setMissileArc(0.30)
+        ..setMissileSpeed(700)
+        ..setMissileArt(Abilities.banditmissile)
+        ..setEditorSuffix("(Wurst)")
+        ..setDummyAbility()
+
+function createDummyPoisonSpearAbility(int newId) returns AbilityDefinitionShadowStrikeCreep
+    return new AbilityDefinitionShadowStrikeCreep(newId)
+        ..setMissileHomingEnabled(true)
+        ..setMissileArc(0.30)
+        ..setMissileSpeed(700)
+        ..setMissileArt(Abilities.dryadmissile)
+        ..setBuffs(1, BUFF_POISON.toRawCode())
+        ..setEditorSuffix("(Wurst)")
+        ..setDummyAbility()
+
+@compiletime function createDummyAbilities()
+    createDummySpearAbility(DUMMY_ABILITY_SPEAR)
+        ..setDamage(1, SPEAR_DMG)
+        ..setDurationHero(1, SPEAR_STUN_DURATION)
+
+    createDummySpearAbility(DUMMY_ABILITY_SPEAR_IRON)
+        ..setDamage(1, IRON_DMG)
+        ..setDurationHero(1, IRON_STUN_DURATION)
+        
+    createDummySpearAbility(DUMMY_ABILITY_SPEAR_STEEL)
+        ..setDamage(1, STEEL_DMG)
+        ..setDurationHero(1, STEEL_STUN_DURATION)
+
+    createDummySpearAbility(DUMMY_ABILITY_SPEAR_DARK)
+        ..setDamage(1, DARK_DMG)
+        ..setDurationHero(1, DARK_STUN_DURATION)
+        ..setMissileArt(Abilities.blackArrowMissile)
+        ..setBuffs(1, toRawCode(BUFF_DARK))
+
+    createDummyPoisonSpearAbility(DUMMY_ABILITY_SPEAR_POISON)
+        ..setInitialDamage(1, POISON_DMG [0])
+        ..setDecayingDamage(1, POISON_DMG [1])
+        ..setMovementSpeedFactor(1, POISON_DEBUFF [0])
+        ..setAttackSpeedFactor(1, POISON_DEBUFF [1])
+        ..setDurationHero(1, POISON_DURATION)
+        ..setDurationNormal(1, POISON_DURATION)
+        
+    createDummyPoisonSpearAbility(DUMMY_ABILITY_SPEAR_RPOISON)
+        ..setInitialDamage(1, RPOISON_DMG [0])
+        ..setDecayingDamage(1, RPOISON_DMG [1])
+        ..setMovementSpeedFactor(1, RPOISON_DEBUFF [0])
+        ..setAttackSpeedFactor(1, RPOISON_DEBUFF [1])
+        ..setDurationHero(1, POISON_DURATION)
+        ..setDurationNormal(1, POISON_DURATION)
+
+    createDummyPoisonSpearAbility(DUMMY_ABILITY_SPEAR_UPOISON)
+        ..setInitialDamage(1, UPOISON_DMG [0])
+        ..setDecayingDamage(1, UPOISON_DMG [1])
+        ..setMovementSpeedFactor(1, UPOISON_DEBUFF [0])
+        ..setAttackSpeedFactor(1, UPOISON_DEBUFF [1])
+        ..setDurationHero(1, POISON_DURATION)
+        ..setDurationNormal(1, POISON_DURATION)

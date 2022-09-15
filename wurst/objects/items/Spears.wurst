@@ -9,6 +9,8 @@ import Orders
 import AbilityObjEditing
 import ObjectIds
 import ObjectIdGenerator
+import UnitExtensions
+import Assets
 
 // Third-party imports:
 import ManaBurn
@@ -18,37 +20,25 @@ import LocalObjectIDs
 
 let ABILITY_SPEAR_HIT_DETECTION = compiletime(ABIL_ID_GEN.next())
 
+public let DUMMY_ABILITY_SPEAR = compiletime(ABIL_ID_GEN.next())
+public let DUMMY_ABILITY_SPEAR_IRON = compiletime(ABIL_ID_GEN.next())
+public let DUMMY_ABILITY_SPEAR_STEEL = compiletime(ABIL_ID_GEN.next())
+public let DUMMY_ABILITY_SPEAR_POISON = compiletime(ABIL_ID_GEN.next())
+public let DUMMY_ABILITY_SPEAR_RPOISON = compiletime(ABIL_ID_GEN.next())
+public let DUMMY_ABILITY_SPEAR_UPOISON = compiletime(ABIL_ID_GEN.next())
+public let DUMMY_ABILITY_SPEAR_DARK = compiletime(ABIL_ID_GEN.next())
+
 // If you change the following, update tooltip manually in SpearsDefinition
 public let SPEAR_RESPAWN_CHANCE   = 0.666
 public let IRON_RESPAWN_CHANCE    = 0.666
 public let STEEL_RESPAWN_CHANCE   = 0.666
 public let DARK_RESPAWN_CHANCE    = 0.
-public let POISON_RESPAWN_CHANCE  = 0.5
-public let RPOISON_RESPAWN_CHANCE = 0.5
-public let UPOISON_RESPAWN_CHANCE = 0.5
+public let POISON_RESPAWN_CHANCE  = 0.
+public let RPOISON_RESPAWN_CHANCE = 0.
+public let UPOISON_RESPAWN_CHANCE = 0.
 
 let DARK_SPEAR_MANA_BURN_PERCENTAGE = .40
 let DARK_SPEAR_MIN_MANA_BURN        = 10.
-
-@compiletime function createAbilSpearHitDetection()
-    new AbilityDefinitionThunderBoltCreep(ABILITY_SPEAR_HIT_DETECTION)
-        ..setDummyAbility()
-        ..setMissileArt("")
-        ..setMissileHomingEnabled(true)
-        ..setMissileSpeed(700)
-        ..setDamage(1, 0)
-        ..setDurationHero(1, 0.01)
-        ..setDurationNormal(1, 0.01)
-        ..setTargetsAllowed(1, commaList(
-            TargetsAllowed.air,
-            TargetsAllowed.enemies,
-            TargetsAllowed.ground,
-            TargetsAllowed.neutral,
-            TargetsAllowed.organic,
-            TargetsAllowed.terrain
-        ))
-        ..setName("SPEAR HIT")
-        ..setEditorSuffix("(Wurst)")
 
 enum SpearType
     Spear
@@ -59,63 +49,73 @@ enum SpearType
     UltraPoisonSpear
     RefinedPoisonSpear
 
-let spellToSpearType = new HashMap<int, SpearType>
-let spearListeners = new HashMap<unit, EventListener>()
+class SpearDefinition
+    SpearType spearType
+    int itemId
+    int abilityId
+    real recoveryChance
+    real deathRecoveryChance
+
+    construct(SpearType aSpearType, int aItemId, int aAbilityId, real aRecoveryChance, real aDeathRecoveryChance)
+        spearType = aSpearType
+        itemId = aItemId
+        abilityId = aAbilityId
+        recoveryChance = aRecoveryChance
+        deathRecoveryChance = aDeathRecoveryChance
+
+ 
+let spellToDefinition = new HashMap<int, SpearDefinition>()
 let darkSpearCounters = new HashMap<unit, int>()
 
-function onSpear(unit caster, unit target, SpearType spearType)
+function createSpearsDefinition()
+    spellToDefinition.put(ABILITY_SPEAR, new SpearDefinition(SpearType.Spear, ITEM_SPEAR, DUMMY_ABILITY_SPEAR, SPEAR_RESPAWN_CHANCE, 1.))
+    spellToDefinition.put(ABILITY_SPEAR_IRON, new SpearDefinition(SpearType.IronSpear, ITEM_IRON_SPEAR, DUMMY_ABILITY_SPEAR_IRON, IRON_RESPAWN_CHANCE, 1.))
+    spellToDefinition.put(ABILITY_SPEAR_STEEL, new SpearDefinition(SpearType.SteelSpear, ITEM_STEEL_SPEAR, DUMMY_ABILITY_SPEAR_STEEL, STEEL_RESPAWN_CHANCE, 1.))
+    spellToDefinition.put(ABILITY_SPEAR_POISON, new SpearDefinition(SpearType.PoisonSpear, ITEM_POISON_SPEAR, DUMMY_ABILITY_SPEAR_POISON, POISON_RESPAWN_CHANCE, 0.))
+    spellToDefinition.put(ABILITY_SPEAR_RPOISON, new SpearDefinition(SpearType.RefinedPoisonSpear, ITEM_REFINED_POISON_SPEAR, DUMMY_ABILITY_SPEAR_RPOISON, RPOISON_RESPAWN_CHANCE, 0.))
+    spellToDefinition.put(ABILITY_SPEAR_UPOISON, new SpearDefinition(SpearType.UltraPoisonSpear, ITEM_ULTRA_POISON_SPEAR, DUMMY_ABILITY_SPEAR_UPOISON, UPOISON_RESPAWN_CHANCE, 0.))
+    spellToDefinition.put(ABILITY_SPEAR_DARK, new SpearDefinition(SpearType.DarkSpear, ITEM_DARK_SPEAR, DUMMY_ABILITY_SPEAR_DARK, DARK_RESPAWN_CHANCE, 0.))
+
+function onSpear(unit caster, unit target, SpearDefinition spearDefinition)
     let dummyCaster = new DummyCaster()
         ..delay(8)
         ..owner(caster.getOwner())
         ..origin(caster.getPos())
-    let dummy = dummyCaster.castTarget(ABILITY_SPEAR_HIT_DETECTION, 1, Orders.creepthunderbolt, target)
 
-    bindSpearDamageListener(dummy, caster, target, spearType)
+    Log.debug("Casting")
+    let dummy = dummyCaster.castTarget(spearDefinition.abilityId, 1, Orders.creepthunderbolt, target)
 
-function bindSpearDamageListener(unit dummy, unit caster, unit target, SpearType spearType)
-    let listener = EventListener.add(EVENT_UNIT_DAMAGED) ->
-        let damaged = GetTriggerUnit()
-        if damaged == target and GetEventDamageSource() == dummy
-            if spearListeners.has(dummy)
-                destroy spearListeners.getAndRemove(dummy)
-                onSpearImpact(caster, target, spearType)
+    EventListener listener = null
+    EventListener deathListener = null
 
-    spearListeners.put(dummy, listener)
+    listener = EventListener.add(EVENT_PLAYER_UNIT_DAMAGED) ->
+        if GetEventDamageSource() == dummy and GetEventDamage() != 0. and GetTriggerUnit() == target
+            onSpearImpact(caster, target, spearDefinition)
 
-function onSpearImpact(unit caster, unit target, SpearType spearType)
-    switch spearType
-        case UltraPoisonSpear
-            spawnItemChance(UPOISON_RESPAWN_CHANCE, ITEM_ULTRA_POISON_SPEAR, target.getPos())
-        case RefinedPoisonSpear
-            spawnItemChance(RPOISON_RESPAWN_CHANCE, ITEM_REFINED_POISON_SPEAR, target.getPos())
-        case PoisonSpear
-            spawnItemChance(POISON_RESPAWN_CHANCE, ITEM_POISON_SPEAR, target.getPos())
-        case DarkSpear
-            spawnItemChance(DARK_RESPAWN_CHANCE, ITEM_DARK_SPEAR, target.getPos())
+    deathListener = EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
+        if GetKillingUnit() == dummy and GetTriggerUnit() == target
+            onSpearKill(caster, target, spearDefinition)
+
+    doAfter(8.) ->
+        destroy listener
+        destroy deathListener
+
+function onSpearKill(unit _caster, unit target, SpearDefinition spearDefinition)
+    if target.isTroll()
+        spawnItemChance(spearDefinition.deathRecoveryChance, spearDefinition.itemId, target.getPos())
+
+function onSpearImpact(unit caster, unit target, SpearDefinition spearDefinition)
+    if target.isTroll()
+        if spearDefinition.spearType == SpearType.DarkSpear
             let burnAmount = DARK_SPEAR_MIN_MANA_BURN +
                 (target.getMana() * DARK_SPEAR_MANA_BURN_PERCENTAGE)
 
             // Perform the mana reduction.
             caster.drainMana(target, burnAmount)
-        case SteelSpear
-            spawnItemChance(STEEL_RESPAWN_CHANCE, ITEM_STEEL_SPEAR, target.getPos())
-        case IronSpear
-            spawnItemChance(IRON_RESPAWN_CHANCE, ITEM_IRON_SPEAR, target.getPos())
-        case Spear
-            spawnItemChance(SPEAR_RESPAWN_CHANCE, ITEM_SPEAR, target.getPos())
-
-    if target.isType(UNIT_TYPE_HERO) and not spearType == SpearType.DarkSpear
-        addSpearResistance(target)
-
-
-function removeDarkSpearCounter(unit target)
-    // Deduct counters by 1 or remove from map if they go to 0
-    if darkSpearCounters.has(target)
-        let currentCounters = darkSpearCounters.get(target)
-        if currentCounters > 1
-            darkSpearCounters.put(target, currentCounters - 1)
         else
-            darkSpearCounters.remove(target)
+            addSpearResistance(target)
+    else
+        spawnItemChance(spearDefinition.recoveryChance, spearDefinition.itemId, target.getPos())
 
 function addSpearResistance(unit u)
     SetPlayerAbilityAvailable(u.getOwner(), ABILITY_SPEAR_RESIST, false)
@@ -138,17 +138,11 @@ function onSpell()
     let caster = GetSpellAbilityUnit()
     let target = GetSpellTargetUnit()
     let spell = GetSpellAbilityId()
-    if spellToSpearType.has(spell)
-        onSpear(caster, target, spellToSpearType.get(spell))
+    let spearDefinition = spellToDefinition.get(spell)
+    if spearDefinition != null
+        onSpear(caster, target, spearDefinition)
 
 init
-    spellToSpearType.put(ABILITY_SPEAR        , SpearType.Spear)
-    spellToSpearType.put(ABILITY_SPEAR_DARK   , SpearType.DarkSpear)
-    spellToSpearType.put(ABILITY_SPEAR_IRON   , SpearType.IronSpear)
-    spellToSpearType.put(ABILITY_SPEAR_STEEL  , SpearType.SteelSpear)
-    spellToSpearType.put(ABILITY_SPEAR_POISON , SpearType.PoisonSpear)
-    spellToSpearType.put(ABILITY_SPEAR_RPOISON, SpearType.RefinedPoisonSpear)
-    spellToSpearType.put(ABILITY_SPEAR_UPOISON, SpearType.UltraPoisonSpear)
-
+    createSpearsDefinition()
     EventListener.add(EVENT_PLAYER_UNIT_SPELL_EFFECT) ->
         onSpell()

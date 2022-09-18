@@ -30,7 +30,7 @@ public class HealingInstance
     real trueAmount
 
     // The factor that the healing will be scaled by.
-    real multiplier
+    real multiplier = 1
 
     // The unit to be healed.
     unit target
@@ -38,27 +38,35 @@ public class HealingInstance
     // The unit responsible for the healing.
     unit caster
 
-    /** Creates a new HealingInstance, fires onUnitHealed events for it and applies the healing after possible event modifications */
+    // Whether a text tag should be shown for the healing.
+    bool showTag
+
     construct(unit target, real amount, HealingType healingType)
-        this.healingType = healingType
-        this.amount = amount
-        // Compute the actual amount of health to be healed.
-        // TODO: Fire a separate event after healing with the true amount.
-        this.trueAmount = min(target.getMissingHP(), amount)
-        this.multiplier = 1
-        this.target = target
-        this.caster = target
-        execute()
+        constructor(target, target, amount, healingType, true)
 
     construct(unit target, unit caster, real amount, HealingType healingType)
+        constructor(target, caster, amount, healingType, true)
+
+    construct(unit target, unit caster, real amount, HealingType healingType, bool showTag)
+        constructor(target, caster, amount, healingType, showTag)
+
+    private function constructor(
+        unit target,
+        unit caster,
+        real amount,
+        HealingType healingType,
+        bool showTag
+    )
         this.healingType = healingType
         this.amount = amount
         // Compute the actual amount of health to be healed.
         // TODO: Fire a separate event after healing with the true amount.
         this.trueAmount = min(target.getMissingHP(), amount)
-        this.multiplier = 1
         this.target = target
         this.caster = caster
+        this.showTag = showTag
+
+        // Execute the parametrized healing.
         execute()
 
     private function fireHealingEvent()
@@ -75,15 +83,16 @@ public class HealingInstance
         let modifiedHealAmount = this.amount * this.multiplier
 
         // Perform the operation.
-        target.setHP(target.getHP() + modifiedHealAmount)
+        this.target.setHP(this.target.getHP() + modifiedHealAmount)
 
         // Create a text tag to visualize the effect.
-        standardTextTag(
-            target.getPos(),
-            "+{0}".format(modifiedHealAmount.floor().toString())
-        )
-            ..setColor(colorA(31, 191, 0, 255))
-            ..matchVisibility(this.target)
+        if this.showTag
+            standardTextTag(
+                target.getPos(),
+                "+{0}".format(modifiedHealAmount.floor().toString())
+            )
+                ..setColor(colorA(31, 191, 0, 255))
+                ..matchVisibility(this.target)
 
         // Destroy upon completion.
         destroy this

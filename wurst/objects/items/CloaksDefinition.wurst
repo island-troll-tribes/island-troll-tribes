@@ -1,14 +1,17 @@
 package CloaksDefinition
 
 // Standard library imports:
-import Orders
 import Assets
-import ClosureEvents
-import ClosureTimers
 import BuffObjEditing
-import ClosureForGroups
-import InstantDummyCaster
 import ChannelAbilityPreset
+import ClosureEvents
+import ClosureForGroups
+import ClosureTimers
+import HashMap
+import InstantDummyCaster
+import LinkedList
+import OnUnitEnterLeave
+import Orders
 
 // Local imports:
 import LocalObjectIDs
@@ -19,7 +22,7 @@ import LocalItemObjEditing
 import HealingSystem
 import ColorUtils
 
-// Dummy abilities, I don't think they belong in LocalObjectsIDs
+// Create the ability IDs for the dummy castings.
 let ABILITY_CLOAK_HEALING = compiletime(ABIL_ID_GEN.next())
 let ABILITY_CLOAK_MANA    = compiletime(ABIL_ID_GEN.next())
 let ABILITY_CLOAK_FROST   = compiletime(ABIL_ID_GEN.next())
@@ -27,26 +30,27 @@ let ABILITY_CLOAK_FROST   = compiletime(ABIL_ID_GEN.next())
 let FLAMES_WEARER_MODEL = Abilities.immolationREDTarget
 let FLAMES_TARGET_MODEL = Abilities.immolationRedDamage
 
-let RESTORE_RADIUS   = 700.
-let FROST_RADIUS  = 500.
-let FLAMES_RADIUS = 300.
+let RESTORE_RADIUS = 700.
+let FROST_RADIUS   = 500.
+let FLAMES_RADIUS  = 300.
 
-let HEALTH_RESTORED = 150.
-let  CLOAK_MANA_RESTORED   = 100.
+let HEALTH_RESTORED      = 150.
+let HEALTH_RESTORED_BASE = 1.
+let CLOAK_MANA_RESTORED  = 100.
 
 let FROST_DMG = 5.
 let FROST_MS_DEBUFF = 0.35
 let FROST_AS_DEBUFF = 0.35
+let FROST_INTERVAL_PROC = 1.
 
 let FLAMES_DMG = 7.
 
 let RESTORE_COOLDOWN = 35.
-let FROST_COOLDOWN = 35.
+let FROST_COOLDOWN   = 35.
 
-let RESTORE_DURATION = 5.
+let RESTORE_DURATION      = 15.
 let FROST_CASTER_DURATION = 5.
 let FROST_TARGET_DURATION = 2.
-let FROST_INTERVAL_PROC = 1.
 
 let HEAL_BUFF_TT   = "This unit benefit from Mana Rejuvenation; it is restoring mana points over time."
 let MANA_BUFF_TT   = "This unit benefit from Health Rejuvenation; it is healing health points over time."
@@ -61,8 +65,11 @@ let BUFF_FROST_CASTER = compiletime(createDummyBuffObject("Frost Cloak Caster", 
 let BUFF_FROST_TARGET = compiletime(createDummyBuffObject("Frost Cloak Target", FROST_TARGET_BUFF_TT,
                             Icons.bTNFrost, Abilities.frostDamage, "chest"))
 
-// We can fetch the armor ability data this way, I find it cleaner as it lookup the data field from the ability
-let COMMON_TT  = "Provides +{0} armor, +{1} all stats and ".format(getAbilityDataField(ABILITY_ARMOR_BONUS_3, "DataA1").color(COLOR_GREEN), "3".color(COLOR_GREEN))
+// Parametrize the tooltip with the basic ability data.
+let COMMON_TT  = "Provides +{0} armor, +{1} all stats and ".format(
+    getAbilityDataField(ABILITY_ARMOR_BONUS_3, "DataA1").color(COLOR_GREEN),
+    "3".color(COLOR_GREEN)
+)
 
 public let CLOAK_FLAMES_TT  = COMMON_TT + "burns nearby enemies within melee range for {0} damage per second.".format(getAbilityDataField(ABILITY_CLOAK_FLAMES, "DataA1").color(COLOR_RED))
 public let CLOAK_FROST_TT   = COMMON_TT + ("can be cast to emit {0} ice waves, each wave freezes nearby enemy units dealing {1} damage, and slowing their movement and attack speeds by {2} for {3} seconds."+
@@ -168,7 +175,10 @@ function createCloak(int newId) returns ItemDefinition
 @compiletime function createAbilityRejuvenationHealth() returns AbilityDefinitionRejuvinationcreep
     return new AbilityDefinitionRejuvinationcreep(ABILITY_REJUV_HEALING)
         ..setDummyAbility()
-        ..setHitPointsGained(1, 1) // We use the healing system to heal, see function castRejuvHeal
+        // Use a dummy value for built-in healing, which is required to be
+        // positive in order for the buff to work. Actual healing is handled by
+        // healing system.
+        ..setHitPointsGained(1, 1)
         ..setManaPointsGained(1, 0)
         ..setDurationHero(1, RESTORE_DURATION)
         ..setDurationNormal(1, RESTORE_DURATION)
@@ -227,25 +237,113 @@ function createCloak(int newId) returns ItemDefinition
         ..setItemAbility(true)
         ..setEditorSuffix("(Wurst)")
 
+class HealingCloakState
+    // The unit whose state this is tracking.
+    unit target
+
+    // The in-progress timers currently affecting the target.
+    let timers = new LinkedList<CallbackCounted>()
+
+    // The global set of states.
+    static let states = new HashMap<unit, HealingCloakState>()
+
+    /** Outputs the state for the given unit, creating one as necessary. */
+    static function getState(unit target) returns thistype
+        // Look up the state for the unit.
+        var state = states.get(target)
+
+        // Initialize the state, as necessary.
+        if state == null
+            state = new HealingCloakState(target)
+
+            // Track the state globally.
+            states.put(target, state)
+
+        // Output the state.
+        return state
+
+    construct(unit target)
+        this.target = target
+        // this.timers = new LinkedList<CallbackCounted>()
+
+    ondestroy
+        // Unschedule any existing timers.
+        destroy this.timers..forEach(callback -> destroy callback)
+
+    static function cleanup(unit target)
+        // Retrieve the state for the unit.
+        let state = states.getAndRemove(target)
+
+        // No clean up is necessary for units not assigned a state.
+        if state == null
+            return
+
+        // Destroy the state.
+        destroy state
+
+    static function initialize()
+        registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
+            cleanup(EventData.getDyingUnit())
+
+        onLeave() ->
+            cleanup(getEnterLeaveUnit())
 
 function castRejuvHeal(unit caster, unit target, real duration, real amount)
-    // Every second we check if the unit has the rejuv buff, if yes, new healing instance
-    doPeriodicallyCounted(1, duration.toInt()) (CallbackCounted cb) ->
-        if not target.hasAbility(BUFF_HEAL)
+    // Look up the state for the unit.
+    let state = HealingCloakState.getState(target)
+
+    // Set the interval between ticks.
+    let tickInterval = ANIMATION_PERIOD
+
+    // Compute the total number of ticks.
+    let tickCount = (duration / tickInterval).floor()
+
+    // Compute the amount healed per tick.
+    let tickAmount = amount / tickCount
+
+    // Create a timer to heal the unit periodically.
+    let cb = doPeriodicallyCounted(tickInterval, tickCount) cb ->
+        // Cancel the healing early if the unit is purged.
+        if not target.hasAbility(BUFF_HEAL) or cb.isLast()
+            // Clean up this timer.
             destroy cb
-        new HealingInstance(target, caster, amount / duration, HealingType.ABILITY)
+
+            // Remove references.
+            state.timers.remove(cb)
+
+        // Block concurrent healing from multiple castings.
+        if cb == state.timers.getFirst()
+            new HealingInstance(
+                target,
+                caster,
+                tickAmount,
+                HealingType.ABILITY,
+                false
+            )
+
+    // Register the timer within the state.
+    state.timers.add(cb)
 
 function castRejuv(unit caster, int rejuvAbility)
-    forUnitsInRange(caster.getPos(), RESTORE_RADIUS) (unit u) ->
-        if u.isAlive()
-            and u.getOwner().isAllyOf(caster.getOwner())
-            and u.getOwner() != players[PLAYER_NEUTRAL_PASSIVE]
-            and not u.isHidden()
-            and not u.isType(UNIT_TYPE_STRUCTURE)
+    // Check all possible targets around the caster.
+    forUnitsInRange(caster.getPos(), RESTORE_RADIUS) (unit target) ->
+        // Apply the effect to living units of nearby allies.
+        if (
+                target.isAlive()
+            and target.getOwner().isAllyOf(caster.getOwner())
+            and target.getOwner() != players[PLAYER_NEUTRAL_PASSIVE]
+            and not target.isHidden()
+            and not target.isType(UNIT_TYPE_STRUCTURE)
+        )
 
-            InstantDummyCaster.castTarget(caster.getOwner(), rejuvAbility, 1, Orders.rejuvination, u)
+            // Apply the per-unit effect, which includes the buff.
+            InstantDummyCaster.castTarget(
+                caster.getOwner(),
+                rejuvAbility, 1, Orders.rejuvination, target)
+
+            // Apply the triggered effect, as necessary..
             if rejuvAbility == ABILITY_REJUV_HEALING
-                castRejuvHeal(caster, u, RESTORE_DURATION, HEALTH_RESTORED)
+                castRejuvHeal(caster, target, RESTORE_DURATION, HEALTH_RESTORED)
 
 function castAoESlowDebuff(unit caster)
     forUnitsInRange(caster.getPos(), FROST_RADIUS) (unit u) ->
@@ -281,6 +379,7 @@ function isValidTarget(unit caster, unit target) returns bool
         and target.isAlive()
         and not target.isHidden()
         and not target.isType(UNIT_TYPE_STRUCTURE)
+
 
 init
     EventListener.onCast(ABILITY_CLOAK_HEALING, caster -> castRejuv(caster, ABILITY_REJUV_HEALING))

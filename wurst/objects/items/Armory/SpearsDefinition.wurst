@@ -4,6 +4,7 @@ package SpearsDefinition
 import Assets
 import BuffObjEditing
 
+// Local imports:
 import Spears
 import Items
 import LocalAssets
@@ -21,10 +22,15 @@ public let STEEL_DMG = 100.
 public let DARK_DMG  = 40.
 public let DARK_MANA_BURN = 0.4
 
-//[Initial, Decaying]
+// Initial and decay damage for each type of poison.
 public let POISON_DMG  = [10., 6. ]
 public let RPOISON_DMG = [20., 10.]
 public let UPOISON_DMG = [40., 16.]
+
+// Attack and movement speed reduction for each type of poison.
+public let POISON_DEBUFF  = [0.30, 0.20]
+public let RPOISON_DEBUFF = [0.40, 0.30]
+public let UPOISON_DEBUFF = [0.50, 0.40]
 
 public let SPEAR_COOLDOWN   = 2.
 public let IRON_COOLDOWN    = 5.
@@ -38,11 +44,6 @@ public let SPEAR_STUN_DURATION = 0.10
 public let IRON_STUN_DURATION  = 0.20
 public let STEEL_STUN_DURATION = 0.30
 public let DARK_STUN_DURATION  = 0.50
-
-//[Attack Speed, Movement Speed]
-public let POISON_DEBUFF  = [0.30, 0.20]
-public let RPOISON_DEBUFF = [0.40, 0.30]
-public let UPOISON_DEBUFF = [0.50, 0.40]
 
 public let POISON_DURATION = 40.
 public let CAST_RANGE = 1000.
@@ -73,21 +74,24 @@ let TT_POISON  = TT_PS.format(
     POISON_DMG[1].toToolTipRed(),
     POISON_DEBUFF[0].toToolTipOrange(),
     POISON_DEBUFF[1].toToolTipOrange()) +
-    makeToolTipDuration(POISON_DURATION, POISON_COOLDOWN)
+    makeToolTipDuration(POISON_DURATION, POISON_COOLDOWN
+)
 
 let TT_RPOISON = TT_PS.format(
     RPOISON_DMG[0].toToolTipRed(),
     RPOISON_DMG[1].toToolTipRed(),
     RPOISON_DEBUFF[0].toToolTipOrange(),
     RPOISON_DEBUFF[1].toToolTipOrange()) +
-    makeToolTipDuration(POISON_DURATION, RPOISON_COOLDOWN)
+    makeToolTipDuration(POISON_DURATION, RPOISON_COOLDOWN
+)
 
 let TT_UPOISON = TT_PS.format(
     UPOISON_DMG[0].toToolTipRed(),
     UPOISON_DMG[1].toToolTipRed(),
     UPOISON_DEBUFF[0].toToolTipOrange(),
     UPOISON_DEBUFF[1].toToolTipOrange()) +
-    makeToolTipDuration(POISON_DURATION, UPOISON_COOLDOWN)
+    makeToolTipDuration(POISON_DURATION, UPOISON_COOLDOWN
+)
 
 function createSpear(int spearId) returns ItemDefinition
     return createPerishableItem(spearId)
@@ -236,7 +240,6 @@ public function createSpearAbility(int newId) returns ChannelAbilityPreset
         ..setCooldown(1, UPOISON_COOLDOWN)
 
 @compiletime function createDarkSpearBuff()
-    // I believe this buff was made just so we can see the effect when dark spear hit?
     new BuffDefinition(BUFF_DARK, BuffIds.stunnedPause)
     ..setArtTarget(1, Abilities.deathandDecayTarget)
     ..setName(1, "Dark Spear Buff")
@@ -244,7 +247,6 @@ public function createSpearAbility(int newId) returns ChannelAbilityPreset
     ..setEditorSuffix(1, "(Wurst)")
 
 @compiletime function createPoisonSpearBuff()
-    // I believe this buff was made just so we can see the effect when dark spear hit?
     new BuffDefinition(BUFF_POISON, BuffIds.shadowStrike)
     ..setIcon(Icons.bTNEnvenomedSpear)
     ..setName(1, "Poison Slow")
@@ -280,7 +282,7 @@ function createDummyPoisonSpearAbility(int newId) returns AbilityDefinitionShado
     createDummySpearAbility(DUMMY_ABILITY_SPEAR_IRON)
         ..setDamage(1, IRON_DMG)
         ..setDurationHero(1, IRON_STUN_DURATION)
-        
+
     createDummySpearAbility(DUMMY_ABILITY_SPEAR_STEEL)
         ..setDamage(1, STEEL_DMG)
         ..setDurationHero(1, STEEL_STUN_DURATION)
@@ -298,7 +300,7 @@ function createDummyPoisonSpearAbility(int newId) returns AbilityDefinitionShado
         ..setAttackSpeedFactor(1, POISON_DEBUFF [1])
         ..setDurationHero(1, POISON_DURATION)
         ..setDurationNormal(1, POISON_DURATION)
-        
+
     createDummyPoisonSpearAbility(DUMMY_ABILITY_SPEAR_RPOISON)
         ..setInitialDamage(1, RPOISON_DMG [0])
         ..setDecayingDamage(1, RPOISON_DMG [1])

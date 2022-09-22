@@ -3,6 +3,7 @@ package Spears
 // Standard library imports:
 import ClosureEvents
 import ClosureTimers
+import DamageEvent
 import DummyCaster
 import HashMap
 import Orders
@@ -14,6 +15,7 @@ import Assets
 
 // Third-party imports:
 import ManaBurn
+import ObjectIDManager
 
 // Local imports:
 import LocalObjectIDs
@@ -40,109 +42,287 @@ public let UPOISON_RESPAWN_CHANCE = 0.
 let DARK_SPEAR_MANA_BURN_PERCENTAGE = .40
 let DARK_SPEAR_MIN_MANA_BURN        = 10.
 
-enum SpearType
-    Spear
-    DarkSpear
-    IronSpear
-    SteelSpear
-    PoisonSpear
-    UltraPoisonSpear
-    RefinedPoisonSpear
+// The amount of time allotted for spears to be in-flight.
+let FLIGHT_ALLOWANCE = 10.
 
-class SpearDefinition
-    SpearType spearType
+// This class allows for a damage listener to reference itself upon firing.
+class Wrapper
+    DamageListener listener = null
+
+class Spear
+    // The ID of the item associated with this spear.
     int itemId
-    int abilityId
-    real recoveryChance
-    real deathRecoveryChance
 
-    construct(SpearType aSpearType, int aItemId, int aAbilityId, real aRecoveryChance, real aDeathRecoveryChance)
-        spearType = aSpearType
-        itemId = aItemId
-        abilityId = aAbilityId
-        recoveryChance = aRecoveryChance
-        deathRecoveryChance = aDeathRecoveryChance
+    // The ID of the ability used to indicate the usage of the spear, which is
+    // what the item casts directly.
+    int usageAbilityId
 
- 
-let spellToDefinition = new HashMap<int, SpearDefinition>()
-let darkSpearCounters = new HashMap<unit, int>()
+    // The ID of the ability used to actually fire the missile for the spear.
+    int dummyAbilityId
+
+    // The ID of the order used to execute the dummy ability.
+    int dummyOrderId
+
+    static private let definitions = new HashMap<int, thistype>()
+
+    construct(
+        int itemId,
+        int usageAbilityId,
+        int dummyAbilityId,
+        int dummyOrderId
+    )
+        // Store the parameters.
+        this.itemId         = itemId
+        this.usageAbilityId = usageAbilityId
+        this.dummyAbilityId = dummyAbilityId
+        this.dummyOrderId   = dummyOrderId
+
+        // Register the definition.
+        definitions.put(usageAbilityId, this)
+
+    static function getDefinition(int abilityId) returns thistype
+        return definitions.get(abilityId)
+
 
 function createSpearsDefinition()
-    spellToDefinition.put(ABILITY_SPEAR, new SpearDefinition(SpearType.Spear, ITEM_SPEAR, DUMMY_ABILITY_SPEAR, SPEAR_RESPAWN_CHANCE, 1.))
-    spellToDefinition.put(ABILITY_SPEAR_IRON, new SpearDefinition(SpearType.IronSpear, ITEM_IRON_SPEAR, DUMMY_ABILITY_SPEAR_IRON, IRON_RESPAWN_CHANCE, 1.))
-    spellToDefinition.put(ABILITY_SPEAR_STEEL, new SpearDefinition(SpearType.SteelSpear, ITEM_STEEL_SPEAR, DUMMY_ABILITY_SPEAR_STEEL, STEEL_RESPAWN_CHANCE, 1.))
-    spellToDefinition.put(ABILITY_SPEAR_POISON, new SpearDefinition(SpearType.PoisonSpear, ITEM_POISON_SPEAR, DUMMY_ABILITY_SPEAR_POISON, POISON_RESPAWN_CHANCE, 0.))
-    spellToDefinition.put(ABILITY_SPEAR_RPOISON, new SpearDefinition(SpearType.RefinedPoisonSpear, ITEM_REFINED_POISON_SPEAR, DUMMY_ABILITY_SPEAR_RPOISON, RPOISON_RESPAWN_CHANCE, 0.))
-    spellToDefinition.put(ABILITY_SPEAR_UPOISON, new SpearDefinition(SpearType.UltraPoisonSpear, ITEM_ULTRA_POISON_SPEAR, DUMMY_ABILITY_SPEAR_UPOISON, UPOISON_RESPAWN_CHANCE, 0.))
-    spellToDefinition.put(ABILITY_SPEAR_DARK, new SpearDefinition(SpearType.DarkSpear, ITEM_DARK_SPEAR, DUMMY_ABILITY_SPEAR_DARK, DARK_RESPAWN_CHANCE, 0.))
 
-function onSpear(unit caster, unit target, SpearDefinition spearDefinition)
+function onSpearThrow(unit caster, unit target, Spear spear)
+    // Create a persistent dummy caster.
     let dummyCaster = new DummyCaster()
-        ..delay(50) // poison spears last 40 seconds
+        // Allow for the in-flight time of the missile.
+        ..delay(FLIGHT_ALLOWANCE)
         ..owner(caster.getOwner())
         ..origin(caster.getPos())
 
-    Log.debug("Casting")
-    let dummy = dummyCaster.castTarget(spearDefinition.abilityId, 1, Orders.creepthunderbolt, target)
+    // Apply the actual effect to the target.
+    let dummy = dummyCaster.castTarget(
+        spear.dummyAbilityId,
+        1,
+        spear.dummyOrderId,
+        target
+    )
 
-    EventListener listener = null
-    EventListener deathListener = null
+    // Create a wrapper to hold listener.
+    let wrapper = new Wrapper()
 
-    listener = EventListener.add(EVENT_PLAYER_UNIT_DAMAGED) ->
-        if GetEventDamageSource() == dummy and GetEventDamage() != 0. and GetTriggerUnit() == target
-            onSpearImpact(caster, target, spearDefinition)
+    // Create a listener to detect when the missile hits the unit, the priority
+    // of which is irrelevant because the listener functions independently.
+    wrapper.listener = DamageEvent.addListener() ->
+        onSpearCollision(caster, target, dummy, spear, wrapper)
 
-    deathListener = EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
-        if GetKillingUnit() == dummy and GetTriggerUnit() == target
-            onSpearKill(caster, target, spearDefinition)
+    // Note the action.
+    Log.debug(
+        "Spear {0} was thrown by {1}:{2}, targeting {3}:{4}.".format(
+            spear.itemId.asObjectName(),
+            caster.getOwner().getNameColored(),
+            caster.getName(),
+            target.getOwner().getNameColored(),
+            target.getName()
+        )
+    )
 
-    doAfter(8.) ->
-        destroy listener
-        destroy deathListener
+    // Clean up the wrapper object later.
+    doAfter(FLIGHT_ALLOWANCE) ->
+        // Verify that the spear impacted, if the unit did not die beforehand.
+        // TODO: Manage a state synchronized to the lifespan of the unit, which
+        // will prevent the situation where a unit dies, canceling the impact,
+        // and then revives before this timer fires.
+        if wrapper.listener != null and target.isAlive()
+            Log.error(
+                "Spear {0} thrown by {1}:{2} failed to impact {3}:{4}.".format(
+                    spear.itemId.asObjectName(),
+                    caster.getOwner().getNameColored(),
+                    caster.getName(),
+                    target.getOwner().getNameColored(),
+                    target.getName()
+                )
+            )
 
-function onSpearKill(unit _caster, unit target, SpearDefinition spearDefinition)
+            // Ensure the listener is cleaned up before the dummy is recycled.
+            destroy wrapper.listener
+
+        // Clean up the wrapper after its contents are sanitized.
+        destroy wrapper
+
+function onSpearCollision(unit caster, unit target, unit dummy, Spear spear, Wrapper wrapper)
+    // Ignore damage not caused by the caster.
+    if DamageEvent.getSource() != dummy
+        return
+
+    // Ignore damage caused to other units.
+    if DamageEvent.getTarget() != target
+        return
+
+    // Ignore damage used by the engine to indicate debuffs.
+    if DamageEvent.getAmount() == 0
+        return
+
+    // Note the action.
+    Log.debug(
+        "Spear {0} thrown by {1}:{2} collided with {3}:{4}.".format(
+            spear.itemId.asObjectName(),
+            caster.getOwner().getNameColored(),
+            caster.getName(),
+            target.getOwner().getNameColored(),
+            target.getName()
+        )
+    )
+
+    // Check for the death of the unit after the damage on impact is applied.
+    nullTimer() ->
+        onSpearImpact(caster, target, spear, wrapper)
+
+function onSpearImpact(unit caster, unit target, Spear spear, Wrapper wrapper)
+    // Ignore duplicate checks for the same impact, which may result if damage
+    // is dealt twice for a single spear before the null timers can fire.
+    if wrapper.listener == null
+        return
+
+    // Destroy the listener so that it only fires once.
+    destroy wrapper.listener
+
+    // Null the reference in order to facilitate the above check.
+    wrapper.listener = null
+
+    // Note the action.
+    Log.debug(
+        "Spear {0} thrown by {1}:{2} impacted {3}:{4}.".format(
+            spear.itemId.asObjectName(),
+            caster.getOwner().getNameColored(),
+            caster.getName(),
+            target.getOwner().getNameColored(),
+            target.getName()
+        )
+    )
+    Log.debug(
+        "On impact, target HP is {0} and is {1}.".format(
+            target.getHP().toString(),
+            target.isAlive() ? "alive" : "dead"
+        )
+    )
+
+    // Recover the spear if it killed the target upon impact.
+    if not target.isAlive()
+        createItem(spear.itemId, target.getPos())
+        return
+
+    // Handle any effects specific to targets that are trolls.
     if target.isTroll()
-        spawnItemChance(spearDefinition.deathRecoveryChance, spearDefinition.itemId, target.getPos())
+        // Handle the rider for dark spears, as necessary.
+        // TODO: Support a dispatcher system for spear impacts.
+        if spear.dummyAbilityId == DUMMY_ABILITY_SPEAR_DARK
+            onDarkSpear(caster, target)
 
-function onSpearImpact(unit caster, unit target, SpearDefinition spearDefinition)
-    if target.isTroll()
-        if spearDefinition.spearType == SpearType.DarkSpear
-            let burnAmount = DARK_SPEAR_MIN_MANA_BURN +
-                (target.getMana() * DARK_SPEAR_MANA_BURN_PERCENTAGE)
-
-            // Perform the mana reduction.
-            caster.drainMana(target, burnAmount)
-        else
-            addSpearResistance(target)
-    else
-        spawnItemChance(spearDefinition.recoveryChance, spearDefinition.itemId, target.getPos())
+        // Update resistance for the unit.
+        addSpearResistance(target)
 
 function addSpearResistance(unit u)
+    // Ensure the ability is hidden while the unit possesses it.
     SetPlayerAbilityAvailable(u.getOwner(), ABILITY_SPEAR_RESIST, false)
+
+    // Increment the level of resistance, starting from zero.
     if not u.hasAbility(ABILITY_SPEAR_RESIST)
         u.addAbility(ABILITY_SPEAR_RESIST)
     else if u.getAbilityLevel(ABILITY_SPEAR_RESIST) < 6
         u.incAbilityLevel(ABILITY_SPEAR_RESIST)
 
-    doAfter(1) ->
+    // Undo the resistance shortly afterwards.
+    doAfter(1.) ->
         if u.getAbilityLevel(ABILITY_SPEAR_RESIST) > 1
             u.decAbilityLevel(ABILITY_SPEAR_RESIST)
         else
             u.removeAbility(ABILITY_SPEAR_RESIST)
 
-function spawnItemChance(real chance, int itemId, vec2 pos)
-    if GetRandomReal(0, 1) <= chance
-        createItem(itemId, pos)
+function onSpearThrow()
+    // Look up the spear definition for the indicator ability.
+    let spear = Spear.getDefinition(EventData.getSpellAbilityId())
 
-function onSpell()
-    let caster = GetSpellAbilityUnit()
-    let target = GetSpellTargetUnit()
-    let spell = GetSpellAbilityId()
-    let spearDefinition = spellToDefinition.get(spell)
-    if spearDefinition != null
-        onSpear(caster, target, spearDefinition)
+    // Ignore irrelevant abilities.
+    if spear == null
+        return
+
+    // Execute the effect.
+    onSpearThrow(
+        EventData.getSpellAbilityUnit(),
+        EventData.getSpellTargetUnit(),
+        spear
+    )
+
+function onDarkSpear(unit caster, unit target)
+    // Allow the mana drain to affect only trolls.
+    if not target.isTroll()
+        return
+
+    // Compute the amount of mana to drain.
+    let drainAmount = DARK_SPEAR_MIN_MANA_BURN +
+        (target.getMana() * DARK_SPEAR_MANA_BURN_PERCENTAGE)
+
+    // Note the action.
+    Log.debug(
+        "Dark spear throw by {0}:{1} will drain {2} mana for {3}:{4}.".format(
+            caster.getOwner().getNameColored(),
+            caster.getName(),
+            drainAmount.toString(),
+            target.getOwner().getNameColored(),
+            target.getName()
+        )
+    )
+
+    // Perform the mana reduction.
+    target.drainMana(target, drainAmount)
+
 
 init
-    createSpearsDefinition()
+    // Create a listener for the various spear throws.
     EventListener.add(EVENT_PLAYER_UNIT_SPELL_EFFECT) ->
-        onSpell()
+        onSpearThrow()
+
+    // Create the spear definitions.
+    new Spear(
+        ITEM_SPEAR,
+        ABILITY_SPEAR,
+        DUMMY_ABILITY_SPEAR,
+        Orders.creepthunderbolt
+    )
+
+    new Spear(
+        ITEM_IRON_SPEAR,
+        ABILITY_SPEAR_IRON,
+        DUMMY_ABILITY_SPEAR_IRON,
+        Orders.creepthunderbolt
+    )
+
+    new Spear(
+        ITEM_STEEL_SPEAR,
+        ABILITY_SPEAR_STEEL,
+        DUMMY_ABILITY_SPEAR_STEEL,
+        Orders.creepthunderbolt
+    )
+
+    new Spear(
+        ITEM_POISON_SPEAR,
+        ABILITY_SPEAR_POISON,
+        DUMMY_ABILITY_SPEAR_POISON,
+        Orders.shadowstrike
+    )
+
+    new Spear(
+        ITEM_REFINED_POISON_SPEAR,
+        ABILITY_SPEAR_RPOISON,
+        DUMMY_ABILITY_SPEAR_RPOISON,
+        Orders.shadowstrike
+    )
+
+    new Spear(
+        ITEM_ULTRA_POISON_SPEAR,
+        ABILITY_SPEAR_UPOISON,
+        DUMMY_ABILITY_SPEAR_UPOISON,
+        Orders.shadowstrike
+    )
+
+    new Spear(
+        ITEM_DARK_SPEAR,
+        ABILITY_SPEAR_DARK,
+        DUMMY_ABILITY_SPEAR_DARK,
+        Orders.creepthunderbolt
+    )

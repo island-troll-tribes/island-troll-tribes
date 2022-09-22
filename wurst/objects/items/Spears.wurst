@@ -6,12 +6,8 @@ import ClosureTimers
 import DamageEvent
 import DummyCaster
 import HashMap
-import Orders
-import AbilityObjEditing
-import ObjectIds
 import ObjectIdGenerator
 import UnitExtensions
-import Assets
 
 // Third-party imports:
 import ManaBurn
@@ -200,22 +196,22 @@ function onSpearImpact(unit caster, unit target, Spear spear, Wrapper wrapper)
         // Update resistance for the unit.
         addSpearResistance(target)
 
-function addSpearResistance(unit u)
+function addSpearResistance(unit target)
     // Ensure the ability is hidden while the unit possesses it.
-    SetPlayerAbilityAvailable(u.getOwner(), ABILITY_SPEAR_RESIST, false)
+    SetPlayerAbilityAvailable(target.getOwner(), ABILITY_SPEAR_RESIST, false)
 
     // Increment the level of resistance, starting from zero.
-    if not u.hasAbility(ABILITY_SPEAR_RESIST)
-        u.addAbility(ABILITY_SPEAR_RESIST)
-    else if u.getAbilityLevel(ABILITY_SPEAR_RESIST) < 6
-        u.incAbilityLevel(ABILITY_SPEAR_RESIST)
+    if not target.hasAbility(ABILITY_SPEAR_RESIST)
+        target.addAbility(ABILITY_SPEAR_RESIST)
+    else if target.getAbilityLevel(ABILITY_SPEAR_RESIST) < 6
+        target.incAbilityLevel(ABILITY_SPEAR_RESIST)
 
     // Undo the resistance shortly afterwards.
     doAfter(1.) ->
-        if u.getAbilityLevel(ABILITY_SPEAR_RESIST) > 1
-            u.decAbilityLevel(ABILITY_SPEAR_RESIST)
+        if target.getAbilityLevel(ABILITY_SPEAR_RESIST) > 1
+            target.decAbilityLevel(ABILITY_SPEAR_RESIST)
         else
-            u.removeAbility(ABILITY_SPEAR_RESIST)
+            target.removeAbility(ABILITY_SPEAR_RESIST)
 
 function onSpearThrow()
     // Look up the spear definition for the indicator ability.
@@ -254,7 +250,6 @@ function onDarkSpear(unit caster, unit target)
 
     // Perform the mana reduction.
     target.drainMana(target, drainAmount)
-
 
 init
     // Create a listener for the various spear throws.

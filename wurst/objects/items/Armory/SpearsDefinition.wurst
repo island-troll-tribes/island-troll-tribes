@@ -3,6 +3,8 @@ package SpearsDefinition
 // Standard library imports:
 import Assets
 import BuffObjEditing
+import ChannelAbilityPreset
+import Orders
 
 // Local imports:
 import Spears
@@ -11,87 +13,116 @@ import LocalAssets
 import LocalItemObjEditing
 import LocalObjectIDs
 import ToolTipsUtils
-import ChannelAbilityPreset
 
-public let BUFF_DARK = compiletime(BUFF_ID_GEN.next())
-public let BUFF_POISON = compiletime(BUFF_ID_GEN.next())
+// Generate the object IDs used locally.
+let BUFF_DARK                   = compiletime(BUFF_ID_GEN.next())
+let BUFF_POISON                 = compiletime(BUFF_ID_GEN.next())
+let DUMMY_ABILITY_SPEAR         = compiletime(ABIL_ID_GEN.next())
+let DUMMY_ABILITY_SPEAR_IRON    = compiletime(ABIL_ID_GEN.next())
+let DUMMY_ABILITY_SPEAR_STEEL   = compiletime(ABIL_ID_GEN.next())
+let DUMMY_ABILITY_SPEAR_POISON  = compiletime(ABIL_ID_GEN.next())
+let DUMMY_ABILITY_SPEAR_RPOISON = compiletime(ABIL_ID_GEN.next())
+let DUMMY_ABILITY_SPEAR_UPOISON = compiletime(ABIL_ID_GEN.next())
 
-public let SPEAR_DMG = 40.
-public let IRON_DMG  = 70.
-public let STEEL_DMG = 100.
-public let DARK_DMG  = 40.
-public let DARK_MANA_BURN = 0.4
+// The range of every spear.
+let CAST_RANGE = 1000.
+
+// Impact damage for each thunderbolt-like spear.
+let SPEAR_DMG = 40.
+let IRON_DMG  = 70.
+let STEEL_DMG = 100.
+let DARK_DMG  = 40.
+
+// The stun duration for each thunderbolt-like spear.
+let SPEAR_STUN_DURATION = 0.10
+let IRON_STUN_DURATION  = 0.20
+let STEEL_STUN_DURATION = 0.30
+let DARK_STUN_DURATION  = 0.50
 
 // Initial and decay damage for each type of poison.
-public let POISON_DMG  = [10., 6. ]
-public let RPOISON_DMG = [20., 10.]
-public let UPOISON_DMG = [40., 16.]
+let POISON_DMG  = [10., 6. ]
+let RPOISON_DMG = [20., 10.]
+let UPOISON_DMG = [40., 16.]
 
 // Attack and movement speed reduction for each type of poison.
-public let POISON_DEBUFF  = [0.30, 0.20]
-public let RPOISON_DEBUFF = [0.40, 0.30]
-public let UPOISON_DEBUFF = [0.50, 0.40]
+let POISON_DEBUFF  = [0.30, 0.20]
+let RPOISON_DEBUFF = [0.40, 0.30]
+let UPOISON_DEBUFF = [0.50, 0.40]
 
-public let SPEAR_COOLDOWN   = 2.
-public let IRON_COOLDOWN    = 5.
-public let STEEL_COOLDOWN   = 8.
-public let DARK_COOLDOWN    = 5.
-public let POISON_COOLDOWN  = 2.
-public let RPOISON_COOLDOWN = 5.
-public let UPOISON_COOLDOWN = 8.
+// The cooldown for each spear.
+let SPEAR_COOLDOWN   = 2.
+let IRON_COOLDOWN    = 5.
+let STEEL_COOLDOWN   = 8.
+let DARK_COOLDOWN    = 5.
+let POISON_COOLDOWN  = 2.
+let RPOISON_COOLDOWN = 5.
+let UPOISON_COOLDOWN = 8.
 
-public let SPEAR_STUN_DURATION = 0.10
-public let IRON_STUN_DURATION  = 0.20
-public let STEEL_STUN_DURATION = 0.30
-public let DARK_STUN_DURATION  = 0.50
+// Miscellaneous effect parameters.
+let POISON_DURATION = 40.
+let POISON_TICK_INTERVAL = 3.
 
-public let POISON_DURATION = 40.
-public let CAST_RANGE = 1000.
+// Basic descriptors that apply to all spears.
+let TT_INTRO = "A spear that can be thrown at a target.\n"
+let TT_OUTRO = "\nRecovers if it kills the target immediately.\n"
 
+// The base tooltip for each class of spear.
+let TT_STANDARD_BASE = "" +
+    TT_INTRO +
+    "Deals {0} damage." +
+    TT_OUTRO
 
-let TT_COMMON   = "" +
-    "A spear with one use. Deals {0} damage on striking a target. "+
-    "Has {1} chance of being recoverable if thrown at an hostile. "+
-    "Will recover if it kills a troll."
+let TT_DARK_BASE = "" +
+    TT_INTRO +
+    " Deals {0} damage and zaps {1} plus {2} of current energy. " +
+    TT_OUTRO
 
-let TT_DARK_PRE_FORMAT = "" +
-    "A spear with one use. Deals {0} damage and zaps 10 plus {1} of current energy on hit. "+
-    "Not recoverable."
+let TT_POISON_BASE = "" +
+    TT_INTRO +
+    "Applies a poison that deals {0} initial damage and {1} damage every " +
+    "{0} seconds, ".format(POISON_TICK_INTERVAL.toToolTipLightBlue()) +
+    "as well as a {2} attack speed and {3} movement decrease. " +
+    TT_OUTRO
 
-let TT_PS   = "" + "Hurls a poisoned spear at a target enemy unit, "+
-    "dealing {0} initial damage and {1} damage every " + "{0} seconds. "
-    .format(3..toToolTipLightBlue())+
-    "{2} attack speed and {3} movement decrease. "+
-    "Not recoverable."
+// The parametrized tooltip for each spear.
+let TT_STONE = TT_STANDARD_BASE.format(
+    SPEAR_DMG.toToolTipRed()
+) + makeToolTipCooldown(SPEAR_COOLDOWN)
 
-let TT_SPEAR = TT_COMMON.format(SPEAR_DMG.toToolTipRed(), 0.66.toToolTipLightBlue()) + makeToolTipCooldown(SPEAR_COOLDOWN)
-let TT_IRON  = TT_COMMON.format(IRON_DMG .toToolTipRed(), 0.66.toToolTipLightBlue()) + makeToolTipCooldown(IRON_COOLDOWN)
-let TT_STEEL = TT_COMMON.format(STEEL_DMG.toToolTipRed(), 0.66.toToolTipLightBlue()) + makeToolTipCooldown(STEEL_COOLDOWN)
-let TT_DARK  = TT_DARK_PRE_FORMAT.format(DARK_DMG .toToolTipRed(), DARK_MANA_BURN.toToolTipLightBlue())
+let TT_IRON  = TT_STANDARD_BASE.format(
+    IRON_DMG .toToolTipRed()
+) + makeToolTipCooldown(IRON_COOLDOWN)
 
-let TT_POISON  = TT_PS.format(
+let TT_STEEL = TT_STANDARD_BASE.format(
+    STEEL_DMG.toToolTipRed()
+) + makeToolTipCooldown(STEEL_COOLDOWN)
+
+let TT_DARK  = TT_DARK_BASE.format(
+    DARK_DMG .toToolTipRed(),
+    DARK_SPEAR_MANA_BURN_BASE.toToolTipLightBlue(),
+    DARK_SPEAR_MANA_BURN_PERCENTAGE.toToolTipLightBlue()
+) + makeToolTipCooldown(DARK_COOLDOWN)
+
+let TT_POISON  = TT_POISON_BASE.format(
     POISON_DMG[0].toToolTipRed(),
     POISON_DMG[1].toToolTipRed(),
     POISON_DEBUFF[0].toToolTipOrange(),
-    POISON_DEBUFF[1].toToolTipOrange()) +
-    makeToolTipDuration(POISON_DURATION, POISON_COOLDOWN
-)
+    POISON_DEBUFF[1].toToolTipOrange()
+) + makeToolTipDuration(POISON_DURATION, POISON_COOLDOWN)
 
-let TT_RPOISON = TT_PS.format(
+let TT_RPOISON = TT_POISON_BASE.format(
     RPOISON_DMG[0].toToolTipRed(),
     RPOISON_DMG[1].toToolTipRed(),
     RPOISON_DEBUFF[0].toToolTipOrange(),
-    RPOISON_DEBUFF[1].toToolTipOrange()) +
-    makeToolTipDuration(POISON_DURATION, RPOISON_COOLDOWN
-)
+    RPOISON_DEBUFF[1].toToolTipOrange()
+) + makeToolTipDuration(POISON_DURATION, RPOISON_COOLDOWN)
 
-let TT_UPOISON = TT_PS.format(
+let TT_UPOISON = TT_POISON_BASE.format(
     UPOISON_DMG[0].toToolTipRed(),
     UPOISON_DMG[1].toToolTipRed(),
     UPOISON_DEBUFF[0].toToolTipOrange(),
-    UPOISON_DEBUFF[1].toToolTipOrange()) +
-    makeToolTipDuration(POISON_DURATION, UPOISON_COOLDOWN
-)
+    UPOISON_DEBUFF[1].toToolTipOrange()
+) + makeToolTipDuration(POISON_DURATION, UPOISON_COOLDOWN)
 
 function createSpear(int spearId) returns ItemDefinition
     return createPerishableItem(spearId)
@@ -100,12 +131,12 @@ function createSpear(int spearId) returns ItemDefinition
         ..setCooldownGroup(toRawCode(ABILITY_SPEAR))
         ..setModelUsed(LocalItems.spears)
 
-@compiletime function createBasicSpear() returns ItemDefinition
+@compiletime function createStoneSpear() returns ItemDefinition
     return createSpear(ITEM_SPEAR)
-        ..setNameEnhance("Spear")
+        ..setNameEnhance("Stone Spear")
         ..setInterfaceIcon(Icons.bTNSteelRanged)
         ..setHotkey("Q")
-        ..setTooltipExtended(TT_SPEAR)
+        ..setTooltipExtended(TT_STONE)
         ..setLumberCost(5)
         ..setAbilities(commaList(ABILITY_SPEAR))
         ..setStockReplenishInterval(120)
@@ -254,7 +285,6 @@ public function createSpearAbility(int newId) returns ChannelAbilityPreset
     ..setTooltipNormalExtended(1, "This unit has been hit by a poison spear; it takes damage over time and its movement and attack speed are slowed")
     ..setEditorSuffix(1, "(Wurst)")
 
-
 public function createDummySpearAbility(int newId) returns AbilityDefinitionThunderBoltCreep
     return new AbilityDefinitionThunderBoltCreep(newId)
         ..setMissileHomingEnabled(true)
@@ -316,3 +346,54 @@ function createDummyPoisonSpearAbility(int newId) returns AbilityDefinitionShado
         ..setAttackSpeedFactor(1, UPOISON_DEBUFF [1])
         ..setDurationHero(1, POISON_DURATION)
         ..setDurationNormal(1, POISON_DURATION)
+
+init
+    // Create the spear definitions.
+    new Spear(
+        ITEM_SPEAR,
+        ABILITY_SPEAR,
+        DUMMY_ABILITY_SPEAR,
+        Orders.creepthunderbolt
+    )
+
+    new Spear(
+        ITEM_IRON_SPEAR,
+        ABILITY_SPEAR_IRON,
+        DUMMY_ABILITY_SPEAR_IRON,
+        Orders.creepthunderbolt
+    )
+
+    new Spear(
+        ITEM_STEEL_SPEAR,
+        ABILITY_SPEAR_STEEL,
+        DUMMY_ABILITY_SPEAR_STEEL,
+        Orders.creepthunderbolt
+    )
+
+    new Spear(
+        ITEM_POISON_SPEAR,
+        ABILITY_SPEAR_POISON,
+        DUMMY_ABILITY_SPEAR_POISON,
+        Orders.shadowstrike
+    )
+
+    new Spear(
+        ITEM_REFINED_POISON_SPEAR,
+        ABILITY_SPEAR_RPOISON,
+        DUMMY_ABILITY_SPEAR_RPOISON,
+        Orders.shadowstrike
+    )
+
+    new Spear(
+        ITEM_ULTRA_POISON_SPEAR,
+        ABILITY_SPEAR_UPOISON,
+        DUMMY_ABILITY_SPEAR_UPOISON,
+        Orders.shadowstrike
+    )
+
+    new Spear(
+        ITEM_DARK_SPEAR,
+        ABILITY_SPEAR_DARK,
+        DUMMY_ABILITY_SPEAR_DARK,
+        Orders.creepthunderbolt
+    )

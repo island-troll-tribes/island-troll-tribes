@@ -20,27 +20,11 @@ import ObjectIDManager
 // Local imports:
 import LocalObjectIDs
 
-let ABILITY_SPEAR_HIT_DETECTION = compiletime(ABIL_ID_GEN.next())
-
-public let DUMMY_ABILITY_SPEAR = compiletime(ABIL_ID_GEN.next())
-public let DUMMY_ABILITY_SPEAR_IRON = compiletime(ABIL_ID_GEN.next())
-public let DUMMY_ABILITY_SPEAR_STEEL = compiletime(ABIL_ID_GEN.next())
-public let DUMMY_ABILITY_SPEAR_POISON = compiletime(ABIL_ID_GEN.next())
-public let DUMMY_ABILITY_SPEAR_RPOISON = compiletime(ABIL_ID_GEN.next())
-public let DUMMY_ABILITY_SPEAR_UPOISON = compiletime(ABIL_ID_GEN.next())
+// TODO: Move these to spear definitions once an abstract system for collision
+// side-effects is supported.
+public let DARK_SPEAR_MANA_BURN_PERCENTAGE = .40
+public let DARK_SPEAR_MANA_BURN_BASE        = 10.
 public let DUMMY_ABILITY_SPEAR_DARK = compiletime(ABIL_ID_GEN.next())
-
-// If you change the following, update tooltip manually in SpearsDefinition
-public let SPEAR_RESPAWN_CHANCE   = 0.666
-public let IRON_RESPAWN_CHANCE    = 0.666
-public let STEEL_RESPAWN_CHANCE   = 0.666
-public let DARK_RESPAWN_CHANCE    = 0.
-public let POISON_RESPAWN_CHANCE  = 0.
-public let RPOISON_RESPAWN_CHANCE = 0.
-public let UPOISON_RESPAWN_CHANCE = 0.
-
-let DARK_SPEAR_MANA_BURN_PERCENTAGE = .40
-let DARK_SPEAR_MIN_MANA_BURN        = 10.
 
 // The amount of time allotted for spears to be in-flight.
 let FLIGHT_ALLOWANCE = 10.
@@ -49,7 +33,7 @@ let FLIGHT_ALLOWANCE = 10.
 class Wrapper
     DamageListener listener = null
 
-class Spear
+public class Spear
     // The ID of the item associated with this spear.
     int itemId
 
@@ -254,7 +238,7 @@ function onDarkSpear(unit caster, unit target)
         return
 
     // Compute the amount of mana to drain.
-    let drainAmount = DARK_SPEAR_MIN_MANA_BURN +
+    let drainAmount = DARK_SPEAR_MANA_BURN_BASE +
         (target.getMana() * DARK_SPEAR_MANA_BURN_PERCENTAGE)
 
     // Note the action.
@@ -276,53 +260,3 @@ init
     // Create a listener for the various spear throws.
     EventListener.add(EVENT_PLAYER_UNIT_SPELL_EFFECT) ->
         onSpearThrow()
-
-    // Create the spear definitions.
-    new Spear(
-        ITEM_SPEAR,
-        ABILITY_SPEAR,
-        DUMMY_ABILITY_SPEAR,
-        Orders.creepthunderbolt
-    )
-
-    new Spear(
-        ITEM_IRON_SPEAR,
-        ABILITY_SPEAR_IRON,
-        DUMMY_ABILITY_SPEAR_IRON,
-        Orders.creepthunderbolt
-    )
-
-    new Spear(
-        ITEM_STEEL_SPEAR,
-        ABILITY_SPEAR_STEEL,
-        DUMMY_ABILITY_SPEAR_STEEL,
-        Orders.creepthunderbolt
-    )
-
-    new Spear(
-        ITEM_POISON_SPEAR,
-        ABILITY_SPEAR_POISON,
-        DUMMY_ABILITY_SPEAR_POISON,
-        Orders.shadowstrike
-    )
-
-    new Spear(
-        ITEM_REFINED_POISON_SPEAR,
-        ABILITY_SPEAR_RPOISON,
-        DUMMY_ABILITY_SPEAR_RPOISON,
-        Orders.shadowstrike
-    )
-
-    new Spear(
-        ITEM_ULTRA_POISON_SPEAR,
-        ABILITY_SPEAR_UPOISON,
-        DUMMY_ABILITY_SPEAR_UPOISON,
-        Orders.shadowstrike
-    )
-
-    new Spear(
-        ITEM_DARK_SPEAR,
-        ABILITY_SPEAR_DARK,
-        DUMMY_ABILITY_SPEAR_DARK,
-        Orders.creepthunderbolt
-    )

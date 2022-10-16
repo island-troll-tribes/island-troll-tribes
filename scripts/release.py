@@ -184,7 +184,7 @@ def build_map(base, target):
         # Forward the list of arguments from the arguments file.
         ["grill", "build", base, *get_args()],
         # Capture the output to avoid excessive noise.
-        capture_output=True
+        capture_output=False,
     )
 
     # Validate that the build succeeded, independent of the return code.
@@ -298,12 +298,13 @@ if __name__ == "__main__":
         for change, pull in zip(changes, pulls)
     )
 
+    # Build the map.
+    build_map(args.base, target)
+
     # Update the repository with the modified files.
     if args.dry_run:
         print("Changelog:", changelog, sep="\n")
     else:
-        # Verify that the map can be built.
-        build_map(args.base, target)
 
         # Push the changes.
         update_repo(args.remote, [package, build], version)

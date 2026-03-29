@@ -266,7 +266,7 @@ export class TradeShipSystem {
   /** Spawn a single trade ship on a route */
   private spawnShip(merchant: MerchantInventory, route: TradeRoute): void {
     const startStop = route.stops[0];
-    const neutralPassive = MapPlayer.fromIndex(PLAYER_NEUTRAL_PASSIVE);
+    const neutralPassive = MapPlayer.fromIndex(PLAYER_NEUTRAL_PASSIVE)!;
 
     const ship = Unit.create(
       neutralPassive,

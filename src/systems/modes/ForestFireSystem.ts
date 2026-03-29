@@ -133,10 +133,10 @@ export class ForestFireSystem {
   private applyFireDamage(): void {
     const damagePerTick = LIFE_DRAIN_PERCENT_PER_SECOND * LIFE_DRAIN_PERIOD;
 
-    const g = CreateGroup();
-    GroupEnumUnitsInRect(g, GetWorldBounds(), null);
+    const g = CreateGroup()!;
+    GroupEnumUnitsInRect(g, GetWorldBounds()!, undefined);
     ForGroup(g, () => {
-      const u = Unit.fromHandle(GetEnumUnit());
+      const u = Unit.fromHandle(GetEnumUnit()!);
       if (!u || !u.isAlive()) return;
 
       const dx = u.x - MAP_CENTER_X;
@@ -164,9 +164,9 @@ export class ForestFireSystem {
   /** Destroy destructibles (trees) in a ring */
   private destroyTreesInRing(innerRadius: number, outerRadius: number): void {
     // Enumerate destructibles in the world bounds and destroy trees in range
-    const worldBounds = GetWorldBounds();
-    EnumDestructablesInRect(worldBounds, null, () => {
-      const dest = GetEnumDestructable();
+    const worldBounds = GetWorldBounds()!;
+    EnumDestructablesInRect(worldBounds, undefined, () => {
+      const dest = GetEnumDestructable()!;
       const dx = GetDestructableX(dest) - MAP_CENTER_X;
       const dy = GetDestructableY(dest) - MAP_CENTER_Y;
       const dist = Math.sqrt(dx * dx + dy * dy);
@@ -177,7 +177,7 @@ export class ForestFireSystem {
           "Abilities/Spells/Other/BreathOfFire/BreathOfFireDamage.mdl",
           GetDestructableX(dest),
           GetDestructableY(dest)
-        );
+        )!;
         DestroyEffect(fx);
 
         // Kill the tree

@@ -204,7 +204,7 @@ export class CraftingEngine {
     );
     let found: Item | null = null;
 
-    EnumItemsInRect(r, null, () => {
+    EnumItemsInRect(r, undefined, () => {
       const item = Item.fromHandle(GetEnumItem());
       if (item && item.typeId === itemTypeId && item.visible) {
         found = item;
@@ -221,7 +221,7 @@ export class CraftingEngine {
     for (let i = 0; i < 6; i++) {
       const item = UnitItemInSlot(unit.handle, i);
       if (item) {
-        items.push(Item.fromHandle(item));
+        items.push(Item.fromHandle(item)!);
       }
     }
     return items;
@@ -232,7 +232,7 @@ export class CraftingEngine {
     for (let i = 5; i >= 0; i--) {
       const item = UnitItemInSlot(unit.handle, i);
       if (item) {
-        unit.removeItem(Item.fromHandle(item));
+        unit.removeItem(Item.fromHandle(item)!);
       }
     }
   }

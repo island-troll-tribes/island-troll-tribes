@@ -131,7 +131,7 @@ export class ClassSelectionSystem {
 
     const config = GameConfig.getInstance();
     const tribeManager = TribeManager.getInstance();
-    const tribeId = tribeManager.getPlayerTribe(playerId);
+    const tribeId = tribeManager.getTribeForPlayer(player)?.id;
 
     // Check for banned class
     if (config.BANNED_CLASS_ID === classInfo.id) {
@@ -175,7 +175,7 @@ export class ClassSelectionSystem {
       // Pick a random available class
       const config = GameConfig.getInstance();
       const tribeManager = TribeManager.getInstance();
-      const tribeId = tribeManager.getPlayerTribe(i);
+      const tribeId = tribeManager.getTribeForPlayer(p)?.id;
       const tribeSet = tribeId !== undefined ? this.tribeSelections.get(tribeId) : undefined;
 
       const available = BASE_CLASSES.filter(c => {

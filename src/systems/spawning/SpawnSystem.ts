@@ -145,9 +145,9 @@ export class SpawnSystem {
   private handleItemSpawning(): void {
     const config = GameConfig.getInstance();
     for (const island of this.islands) {
-      const count = Math.ceil(island.itemSpawnCount * config.getItemBase());
+      const count = Math.ceil(island.itemSpawnCount * config.ITEM_SPAWN_RATE);
       for (let i = 0; i < count; i++) {
-        if (this.itemCurrent >= config.getItemMax()) break;
+        if (this.itemCurrent >= config.MAX_ITEMS) break;
         this.spawnItemForIsland(island);
         this.itemCurrent++;
       }
@@ -157,9 +157,9 @@ export class SpawnSystem {
   private handleAnimalSpawning(): void {
     const config = GameConfig.getInstance();
     for (const island of this.islands) {
-      const count = Math.ceil(island.animalSpawnCount * config.getFoodBase());
+      const count = Math.ceil(island.animalSpawnCount * config.FOOD_SPAWN_RATE);
       for (let i = 0; i < count; i++) {
-        if (this.animalCurrent >= config.getMaxAnimals()) break;
+        if (this.animalCurrent >= config.MAX_ANIMALS) break;
         this.spawnAnimalForIsland(island);
         this.animalCurrent++;
       }
@@ -184,8 +184,8 @@ export class SpawnSystem {
   /** Decrease spawn rates over time (original: item -0.2, food -0.3 per cycle) */
   private adjustBaseSpawnRates(): void {
     const config = GameConfig.getInstance();
-    config.setItemBase(Math.max(0.15, config.getItemBase() - 0.2));
-    config.setFoodBase(Math.max(0.15, config.getFoodBase() - 0.3));
+    config.ITEM_SPAWN_RATE = Math.max(0.15, config.ITEM_SPAWN_RATE - 0.2);
+    config.FOOD_SPAWN_RATE = Math.max(0.15, config.FOOD_SPAWN_RATE - 0.3);
   }
 
   /** Track item removal (called when items are picked up or destroyed) */

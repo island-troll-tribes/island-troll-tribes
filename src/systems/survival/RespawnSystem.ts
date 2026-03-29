@@ -194,8 +194,10 @@ export class RespawnSystem {
     const tribeManager = TribeManager.getInstance();
 
     // Check if tribe has a Spirit Ward
-    const tribeId = tribeManager.getPlayerTribe(playerId);
-    if (tribeId === undefined) return;
+    const playerHandle = MapPlayer.fromIndex(playerId);
+    if (!playerHandle) return;
+    const tribe = tribeManager.getTribeForPlayer(playerHandle);
+    if (tribe === undefined) return;
 
     // TODO: Check for Spirit Ward building in tribe
     // For now, always allow respawn if system is enabled
@@ -246,7 +248,8 @@ export class RespawnSystem {
 
     const config = GameConfig.getInstance();
     const tribeManager = TribeManager.getInstance();
-    const tribeId = tribeManager.getPlayerTribe(playerId);
+    const playerHandle = MapPlayer.fromIndex(playerId);
+    const tribe = playerHandle ? tribeManager.getTribeForPlayer(playerHandle) : undefined;
 
     // Find respawn location (prefer tribe structures)
     let respawnX = troll.x;

@@ -307,7 +307,7 @@ export class SurvivalSystem {
     const size = unit.inventorySize;
     for (let i = 0; i < size; i++) {
       const item = UnitItemInSlot(unit.handle, i);
-      if (item !== null && COAT_IDS.has(GetItemTypeId(item))) {
+      if (item != null && COAT_IDS.has(GetItemTypeId(item!))) {
         return true;
       }
     }
@@ -322,7 +322,7 @@ export class SurvivalSystem {
     const size = unit.inventorySize;
     for (let i = 0; i < size; i++) {
       const item = UnitItemInSlot(unit.handle, i);
-      if (item !== null && COAT_IDS.has(GetItemTypeId(item))) {
+      if (item != null && COAT_IDS.has(GetItemTypeId(item!))) {
         return 5;
       }
     }
@@ -337,7 +337,7 @@ export class SurvivalSystem {
     const size = unit.inventorySize;
     for (let i = 0; i < size; i++) {
       const item = UnitItemInSlot(unit.handle, i);
-      if (item !== null && BOOTS_IDS.has(GetItemTypeId(item))) {
+      if (item != null && BOOTS_IDS.has(GetItemTypeId(item!))) {
         return 2;
       }
     }
@@ -352,7 +352,7 @@ export class SurvivalSystem {
     const size = unit.inventorySize;
     for (let i = 0; i < size; i++) {
       const item = UnitItemInSlot(unit.handle, i);
-      if (item !== null && GLOVES_IDS.has(GetItemTypeId(item))) {
+      if (item != null && GLOVES_IDS.has(GetItemTypeId(item!))) {
         return 2;
       }
     }
@@ -366,7 +366,7 @@ export class SurvivalSystem {
     const size = unit.inventorySize;
     for (let i = 0; i < size; i++) {
       const item = UnitItemInSlot(unit.handle, i);
-      if (item !== null && GetItemTypeId(item) === ITEM_DD_PINION_FIRE) {
+      if (item != null && GetItemTypeId(item!) === ITEM_DD_PINION_FIRE) {
         return 8;
       }
     }
@@ -389,12 +389,12 @@ export class SurvivalSystem {
       GetUnitX(unit.handle),
       GetUnitY(unit.handle),
       searchRange,
-      null
+      undefined
     );
 
     let found = false;
     g.for(() => {
-      const enumUnit = GetEnumUnit();
+      const enumUnit = GetEnumUnit()!;
       if (!found && FIRE_UNIT_IDS.has(GetUnitTypeId(enumUnit))) {
         // Check that the fire is allied.
         if (IsUnitAlly(enumUnit, unit.owner.handle)) {
@@ -581,7 +581,7 @@ export class SurvivalSystem {
       GetUnitX(origin.handle),
       GetUnitY(origin.handle),
       range,
-      null
+      undefined
     );
 
     let nearest: unit | null = null;
@@ -591,7 +591,7 @@ export class SurvivalSystem {
     const oy = GetUnitY(origin.handle);
 
     g.for(() => {
-      const u = GetEnumUnit();
+      const u = GetEnumUnit()!;
       // Must be an alive enemy troll.
       if (
         UnitAlive(u) &&
@@ -611,7 +611,7 @@ export class SurvivalSystem {
     g.clear();
 
     if (nearest !== null) {
-      return Unit.fromHandle(nearest);
+      return Unit.fromHandle(nearest) ?? null;
     }
     return null;
   }

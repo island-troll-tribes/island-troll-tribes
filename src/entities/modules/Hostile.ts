@@ -31,7 +31,7 @@ export abstract class Hostile extends UnitEntity {
       const pos = this.getPos();
       const config = GameConfig.getInstance();
       const numCorpses = Math.round(
-        this.getNumCorpses() * config.getFoodForKillProportion()
+        this.getNumCorpses() * config.FOOD_PER_KILL_MULTIPLIER
       );
       const drops = this.getDrops();
 

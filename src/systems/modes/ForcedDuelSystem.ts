@@ -73,10 +73,10 @@ export class ForcedDuelSystem {
 
     // Gather all living trolls
     const trolls: Unit[] = [];
-    const g = CreateGroup();
-    GroupEnumUnitsInRect(g, GetWorldBounds(), null);
+    const g = CreateGroup()!;
+    GroupEnumUnitsInRect(g, GetWorldBounds()!, undefined);
     ForGroup(g, () => {
-      const u = Unit.fromHandle(GetEnumUnit());
+      const u = Unit.fromHandle(GetEnumUnit()!);
       if (u && u.isHero() && u.isAlive() && u.owner.id < 12) {
         trolls.push(u);
       }

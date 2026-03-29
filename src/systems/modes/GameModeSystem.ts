@@ -70,7 +70,7 @@ export class GameModeSystem {
     const config = GameConfig.getInstance();
 
     // First player is the mode selector
-    this.selectionPlayer = MapPlayer.fromIndex(0);
+    this.selectionPlayer = MapPlayer.fromIndex(0) ?? null;
 
     // Display available modes
     this.displayModes();
@@ -110,7 +110,7 @@ export class GameModeSystem {
   /** Handle chat input during mode selection */
   private onChat(): void {
     const player = MapPlayer.fromEvent();
-    const message = GetEventPlayerChatString().toLowerCase().trim();
+    const message = (GetEventPlayerChatString() ?? "").toLowerCase().trim();
 
     // Only the selection player can set modes (but anyone can view help)
     if (!message.startsWith("-")) return;

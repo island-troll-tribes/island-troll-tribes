@@ -51,7 +51,7 @@ export class TalentTreeFrame {
 
   private createContainer(): void {
     // Create the main backdrop frame
-    this.container = new Frame("TalentTreeContainer", Frame.fromOrigin(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
+    this.container = new Frame("TalentTreeContainer", Frame.fromOrigin(ORIGIN_FRAME_GAME_UI, 0)!, 0, 0);
     this.container.setAbsPoint(FRAMEPOINT_CENTER, 0.4, 0.38);
     this.container.setSize(FRAME_WIDTH, FRAME_HEIGHT);
     this.container.visible = false;

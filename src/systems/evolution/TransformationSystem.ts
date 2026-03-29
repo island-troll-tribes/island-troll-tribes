@@ -198,9 +198,9 @@ export class TransformationSystem {
     }
 
     // Save stats (WC3 can reset them during Bear Form morph)
-    const str = origin.getStr(false);
-    const agi = origin.getAgi(false);
-    const int = origin.getInt(false);
+    const str = origin.strength;
+    const agi = origin.agility;
+    const int = origin.intelligence;
     const hp = origin.life;
     const mp = origin.mana;
 
@@ -209,9 +209,9 @@ export class TransformationSystem {
     origin.removeAbility(abilityId);
 
     // Restore stats
-    origin.setStr(str, true);
-    origin.setAgi(agi, true);
-    origin.setInt(int, true);
+    origin.strength = str;
+    origin.agility = agi;
+    origin.intelligence = int;
     origin.life = hp;
     origin.mana = mp;
 
@@ -229,9 +229,9 @@ export class TransformationSystem {
    */
   upgradeUnit(origin: Unit, targetId: number): void {
     // Save stats before the transformation
-    const str = origin.getStr(false);
-    const agi = origin.getAgi(false);
-    const int = origin.getInt(false);
+    const str = origin.strength;
+    const agi = origin.agility;
+    const int = origin.intelligence;
 
     // Perform the transformation
     this.transformUnit(origin, targetId);
@@ -245,9 +245,9 @@ export class TransformationSystem {
     }
 
     // Restore stats (they get wiped by level reset)
-    origin.setStr(str, true);
-    origin.setAgi(agi, true);
-    origin.setInt(int, true);
+    origin.strength = str;
+    origin.agility = agi;
+    origin.intelligence = int;
 
     // Close the ability menu for the local player
     if (GetLocalPlayer() === origin.owner.handle) {

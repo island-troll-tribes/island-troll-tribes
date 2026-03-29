@@ -38,8 +38,8 @@ interface BoardColumn {
 }
 
 export class ScoreboardFrame {
-  private tribeBoard: number | null = null; // multiboard handle as number
-  private scoreBoard: number | null = null;
+  private tribeBoard: multiboard | null = null;
+  private scoreBoard: multiboard | null = null;
   private updateTimer: Timer | null = null;
   private playerStats: Map<number, PlayerStats> = new Map();
   private showingDetailed = false;
@@ -99,24 +99,24 @@ export class ScoreboardFrame {
     const cols = ScoreboardFrame.TRIBE_COLUMNS;
     const rows = this.countActivePlayers() + 1; // +1 for header
 
-    this.tribeBoard = CreateMultiboardBJ(cols.length, rows, "Island Troll Tribes");
+    this.tribeBoard = CreateMultiboardBJ(cols.length, rows, "Island Troll Tribes") ?? null;
 
     // Set column widths and header row
     for (let c = 0; c < cols.length; c++) {
-      MultiboardSetItemWidthBJ(this.tribeBoard, c + 1, 0, cols[c].width * 100);
+      MultiboardSetItemWidthBJ(this.tribeBoard!, c + 1, 0, cols[c].width * 100);
 
       // Header row
-      MultiboardSetItemValueBJ(this.tribeBoard, c + 1, 1, cols[c].label);
-      MultiboardSetItemStyleBJ(this.tribeBoard, c + 1, 1, true, false);
+      MultiboardSetItemValueBJ(this.tribeBoard!, c + 1, 1, cols[c].label);
+      MultiboardSetItemStyleBJ(this.tribeBoard!, c + 1, 1, true, false);
 
       if (cols[c].iconPath) {
-        MultiboardSetItemIconBJ(this.tribeBoard, c + 1, 1, cols[c].iconPath!);
-        MultiboardSetItemStyleBJ(this.tribeBoard, c + 1, 1, true, true);
+        MultiboardSetItemIconBJ(this.tribeBoard!, c + 1, 1, cols[c].iconPath!);
+        MultiboardSetItemStyleBJ(this.tribeBoard!, c + 1, 1, true, true);
       }
     }
 
-    MultiboardDisplayBJ(true, this.tribeBoard);
-    MultiboardMinimizeBJ(false, this.tribeBoard);
+    MultiboardDisplayBJ(true, this.tribeBoard!);
+    MultiboardMinimizeBJ(false, this.tribeBoard!);
   }
 
   /** Start the 1-second periodic update for the tribe board */
@@ -147,7 +147,7 @@ export class ScoreboardFrame {
       }
     }
 
-    MultiboardSetTitleTextBJ(this.tribeBoard, title);
+    MultiboardSetTitleText(this.tribeBoard!, title);
 
     // Update each player row
     let row = 2; // Row 1 is header
@@ -156,8 +156,8 @@ export class ScoreboardFrame {
       if (!p || p.slotState !== PLAYER_SLOT_STATE_PLAYING) continue;
 
       // Name (column 1)
-      MultiboardSetItemValueBJ(this.tribeBoard, 1, row, p.name);
-      MultiboardSetItemColorBJ(this.tribeBoard, 1, row,
+      MultiboardSetItemValueBJ(this.tribeBoard!, 1, row, p.name);
+      MultiboardSetItemColorBJ(this.tribeBoard!, 1, row,
         this.getPlayerColorR(i), this.getPlayerColorG(i), this.getPlayerColorB(i), 255);
 
       // Level (column 2) - need hero unit reference
@@ -165,7 +165,7 @@ export class ScoreboardFrame {
       // Mana (column 4)
       // Heat (column 5) - stored as gold
       const gold = p.getState(PLAYER_STATE_RESOURCE_GOLD);
-      MultiboardSetItemValueBJ(this.tribeBoard, 5, row, gold.toString());
+      MultiboardSetItemValueBJ(this.tribeBoard!, 5, row, gold.toString());
 
       row++;
     }
@@ -201,12 +201,12 @@ export class ScoreboardFrame {
     const cols = ScoreboardFrame.SCORE_COLUMNS;
     const rows = this.countActivePlayers() + 1;
 
-    this.scoreBoard = CreateMultiboardBJ(cols.length, rows, "Scoreboard");
+    this.scoreBoard = CreateMultiboardBJ(cols.length, rows, "Scoreboard") ?? null;
 
     for (let c = 0; c < cols.length; c++) {
-      MultiboardSetItemWidthBJ(this.scoreBoard, c + 1, 0, cols[c].width * 100);
-      MultiboardSetItemValueBJ(this.scoreBoard, c + 1, 1, cols[c].label);
-      MultiboardSetItemStyleBJ(this.scoreBoard, c + 1, 1, true, false);
+      MultiboardSetItemWidthBJ(this.scoreBoard!, c + 1, 0, cols[c].width * 100);
+      MultiboardSetItemValueBJ(this.scoreBoard!, c + 1, 1, cols[c].label);
+      MultiboardSetItemStyleBJ(this.scoreBoard!, c + 1, 1, true, false);
     }
   }
 

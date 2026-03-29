@@ -74,7 +74,7 @@ export class ExperienceSystem {
     for (let i = 0; i < 12; i++) {
       const p = MapPlayer.fromIndex(i);
       if (p) {
-        p.setHandicapXP(0);
+        p.handicapXp = 0;
       }
     }
 
@@ -101,10 +101,10 @@ export class ExperienceSystem {
 
     // Enumerate allied heroes in XP range
     const heroes: Unit[] = [];
-    const g = CreateGroup();
-    GroupEnumUnitsInRange(g, killPos.x, killPos.y, config.EXP_RANGE, null);
+    const g = CreateGroup()!;
+    GroupEnumUnitsInRange(g, killPos.x, killPos.y, config.EXP_RANGE, undefined);
     ForGroup(g, () => {
-      const u = Unit.fromHandle(GetEnumUnit());
+      const u = Unit.fromHandle(GetEnumUnit()!);
       if (u && u.isHero() && u.isAlly(killer.owner) && u.isAlive()) {
         heroes.push(u);
       }
@@ -130,7 +130,7 @@ export class ExperienceSystem {
         experience = Math.floor(experience * config.GOK_MULTIPLIER);
       }
 
-      hero.setXp(hero.getXp() + experience, true);
+      hero.experience = hero.experience + experience;
     }
   }
 

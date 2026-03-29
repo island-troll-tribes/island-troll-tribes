@@ -163,13 +163,13 @@ export class TalentInstance {
 
     switch (effect.stat) {
       case "strength":
-        unit.setStr(unit.getStr(false) + effect.value, true);
+        unit.strength = unit.strength + effect.value;
         break;
       case "agility":
-        unit.setAgi(unit.getAgi(false) + effect.value, true);
+        unit.agility = unit.agility + effect.value;
         break;
       case "intelligence":
-        unit.setInt(unit.getInt(false) + effect.value, true);
+        unit.intelligence = unit.intelligence + effect.value;
         break;
       case "maxHP":
         unit.maxLife += effect.value;
@@ -185,13 +185,13 @@ export class TalentInstance {
 
     switch (effect.stat) {
       case "strength":
-        unit.setStr(unit.getStr(false) - effect.value, true);
+        unit.strength = unit.strength - effect.value;
         break;
       case "agility":
-        unit.setAgi(unit.getAgi(false) - effect.value, true);
+        unit.agility = unit.agility - effect.value;
         break;
       case "intelligence":
-        unit.setInt(unit.getInt(false) - effect.value, true);
+        unit.intelligence = unit.intelligence - effect.value;
         break;
       case "maxHP":
         unit.maxLife -= effect.value;

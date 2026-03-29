@@ -19,7 +19,7 @@ compiletime(({ objectData }) => {
     id: string, name: string, tier: number,
     damage: number, atkSpeed: number, moveSpeed: number,
     sightDay: number, sightNight: number, scaling?: number,
-    model?: string,
+    model?: string, heroAbils?: string, normalAbils?: string,
   ) {
     const u = objectData.units.copy(BASE, id);
     if (!u) return;
@@ -54,63 +54,99 @@ compiletime(({ objectData }) => {
     u.sightRadiusNight = sightNight;
 
     if (scaling) u.scalingValueundefined = scaling;
+    if (heroAbils) u.hero = heroAbils;
+    if (normalAbils) u.normal = normalAbils;
   }
 
   // Custom model paths
   const M = "Models\\Units\\";
   const S = "Models\\Units\\Skins\\";
 
-  //                id       name                  tier dmg  as    ms   sD    sN    scale  model
+  // Hero ability strings: comma-separated FourCC IDs for hero abilities (class selectors)
+  // Normal ability strings: comma-separated FourCC IDs for normal (always-on) abilities
+  // Ability FourCC IDs reference those defined in ClassAbilityObjects.ts
+
   // ── Hunter Line ──
-  makeTroll("O001", "Hunter",              0, 13, 1.75, 300, 1000,  500, undefined, "units\\creeps\\ForestTrollTrapper\\ForestTrollTrapper");
-  makeTroll("O002", "Hunter",              0, 13, 1.75, 300, 1000,  500, undefined, S+"AxeTroll.mdx");
-  makeTroll("O010", "Warrior",             1, 16, 1.65, 300, 1300,  800, undefined, M+"TrollOverlord.mdx");
-  makeTroll("O011", "Tracker",             1, 14, 1.75, 310, 1300,  800, undefined, "units\\creeps\\IceTroll\\IceTroll");
-  makeTroll("O012", "Juggernaut",          2, 18, 1.60, 330, 1700, 1400, 1.35,     M+"TrollOverlord.mdx");
+  // Hunter: hero=[Track, Warrior selector, Tracker selector], normal=[Hunter Web]
+  makeTroll("O001", "Hunter",              0, 13, 1.75, 300, 1000,  500, undefined, "units\\creeps\\ForestTrollTrapper\\ForestTrollTrapper", "A073,A011,A00T", "A09Q");
+  makeTroll("O002", "Hunter",              0, 13, 1.75, 300, 1000,  500, undefined, S+"AxeTroll.mdx", "A073,A011,A00T", "A09Q");
+  // Warrior: hero=[Giant Swing, Juggernaut selector], normal=[Warrior Spellbook, Hunter Web]
+  makeTroll("O010", "Warrior",             1, 16, 1.65, 300, 1300,  800, undefined, M+"TrollOverlord.mdx", "A01P,A013", "A012,A09Q");
+  // Tracker: hero=[Tracker Spellbook, Juggernaut selector], normal=[Hunter Web]
+  makeTroll("O011", "Tracker",             1, 14, 1.75, 310, 1300,  800, undefined, "units\\creeps\\IceTroll\\IceTroll", "A00U,A013", "A09Q");
+  // Juggernaut: hero=[Rage], normal=[Hunter Web, Juggernaut Spellbook]
+  makeTroll("O012", "Juggernaut",          2, 18, 1.60, 330, 1700, 1400, 1.35,     M+"TrollOverlord.mdx", "A01K", "A09Q,A014");
 
   // ── Mage Line ──
-  makeTroll("O003", "Mage",               0, 11, 1.77, 270,  950,  500, undefined, "units\\creeps\\WitchDoctor\\WitchDoctor");
-  makeTroll("O004", "Mage",               0, 11, 1.77, 270,  950,  500, undefined, S+"TrollShaman.mdx");
-  makeTroll("O030", "Elementalist",        1, 11, 1.75, 280, 1250,  800, undefined, M+"Elementalist.mdx");
-  makeTroll("O031", "Elementalist",        1, 11, 1.75, 280, 1250,  800, undefined, S+"ChaosTrollNecromancer.mdx");
-  makeTroll("O032", "Hypnotist",           1, 11, 1.75, 280, 1250,  800, undefined, M+"TrollSlasher.mdx");
-  makeTroll("O033", "Dementia Master",     2, 14, 1.50, 300, 1600, 1200, undefined, "units\\creeps\\DarkTrollShadowPriest\\DarkTrollShadowPriest");
+  // Mage: hero=[Mage Spellbook, Elementalist sel, Hypnotist sel, DM sel], normal=[Negative Blast]
+  makeTroll("O003", "Mage",               0, 11, 1.77, 270,  950,  500, undefined, "units\\creeps\\WitchDoctor\\WitchDoctor", "A000,A004,A018,A006", "A03K");
+  makeTroll("O004", "Mage",               0, 11, 1.77, 270,  950,  500, undefined, S+"TrollShaman.mdx", "A001,A004,A018,A006", "A03M");
+  // Elementalist: hero=[Elementalist New Spellbook, DM selector], normal=[Sub Mage Inherited Spellbook]
+  makeTroll("O030", "Elementalist",        1, 11, 1.75, 280, 1250,  800, undefined, M+"Elementalist.mdx", "A005,A006", "A002");
+  makeTroll("O031", "Elementalist",        1, 11, 1.75, 280, 1250,  800, undefined, S+"ChaosTrollNecromancer.mdx", "A005,A006", "A003");
+  // Hypnotist: hero=[Hypnotist Spellbook, DM selector], normal=[Sub Mage Inherited Spellbook]
+  makeTroll("O032", "Hypnotist",           1, 11, 1.75, 280, 1250,  800, undefined, M+"TrollSlasher.mdx", "A019,A006", "A002");
+  // Dementia Master: hero=[DM Spellbook], normal=[DM Inherited Spellbook]
+  makeTroll("O033", "Dementia Master",     2, 14, 1.50, 300, 1600, 1200, undefined, "units\\creeps\\DarkTrollShadowPriest\\DarkTrollShadowPriest", "A007", "A008");
 
   // ── Priest Line ──
-  makeTroll("O005", "Priest",              0, 10, 1.77, 270, 1100,  650, undefined, "units\\creeps\\HeroShadowHunter\\HeroShadowHunter");
-  makeTroll("O040", "Booster",             1, 10, 1.75, 280, 1250,  800, undefined, "units\\creeps\\ForestTrollShadowPriest\\ForestTrollShadowPriest");
-  makeTroll("O041", "Booster",             1, 10, 1.75, 280, 1250,  800, undefined, S+"ForestTrollCaster.mdx");
-  makeTroll("O042", "Master Healer",       1, 10, 1.75, 280, 1250,  800, undefined, M+"HeroShadowHunter.mdx");
-  makeTroll("O043", "Master Healer",       1, 10, 1.75, 280, 1250,  800, undefined, S+"DrakkariHero.mdx");
-  makeTroll("O044", "Sage",                2, 13, 1.50, 300, 1800,  800, undefined, M+"Sage.mdx");
+  // Priest: hero=[Priest Spellbook, Booster sel, Master Healer sel, Sage sel], normal=[The Glow]
+  makeTroll("O005", "Priest",              0, 10, 1.77, 270, 1100,  650, undefined, "units\\creeps\\HeroShadowHunter\\HeroShadowHunter", "A009,A01B,A00B,A00D", "A40G");
+  // Booster: hero=[Booster Spellbook, Sage selector], normal=[Sub Priest Spellbook]
+  makeTroll("O040", "Booster",             1, 10, 1.75, 280, 1250,  800, undefined, "units\\creeps\\ForestTrollShadowPriest\\ForestTrollShadowPriest", "A01E,A00D", "A00A");
+  makeTroll("O041", "Booster",             1, 10, 1.75, 280, 1250,  800, undefined, S+"ForestTrollCaster.mdx", "A01E,A00D", "A00A");
+  // Master Healer: hero=[Master Healer Spellbook, Sage selector], normal=[Sub Priest Spellbook]
+  makeTroll("O042", "Master Healer",       1, 10, 1.75, 280, 1250,  800, undefined, M+"HeroShadowHunter.mdx", "A00C,A00D", "A00A");
+  makeTroll("O043", "Master Healer",       1, 10, 1.75, 280, 1250,  800, undefined, S+"DrakkariHero.mdx", "A00C,A00D", "A00A");
+  // Sage: hero=[Sage Spellbook], normal=[Sage Inherited Spellbook]
+  makeTroll("O044", "Sage",                2, 13, 1.50, 300, 1800,  800, undefined, M+"Sage.mdx", "A00E", "A00F");
 
   // ── Beastmaster Line ──
-  makeTroll("O006", "Beastmaster",         0, 13, 1.77, 300, 1400,  675, undefined, "units\\creeps\\Shaman\\Shaman");
-  makeTroll("O007", "Beastmaster",         0, 13, 1.77, 300, 1400,  675, undefined, S+"Shama1.mdx");
-  makeTroll("O020", "Shapeshifter Wolf",   1, 10, 1.40, 310, 1500, 1000, undefined, "units\\creeps\\DireWolf\\DireWolf");
-  makeTroll("O021", "Shapeshifter Bear",   1, 17, 2.50, 300, 1500, 1000, 1.15,     "units\\creeps\\GrizzlyBear\\GrizzlyBear");
-  makeTroll("O022", "Shapeshifter Panther",1, 12, 1.75, 320, 1500, 1000, undefined, M+"Panther.mdx");
-  makeTroll("O023", "Shapeshifter Tiger",  1, 13, 1.75, 320, 1500, 1000, 1.10,     M+"Tiger.mdx");
-  makeTroll("O024", "Druid",               1, 13, 1.75, 300, 1500, 1000, undefined, M+"DruidoftheClawForestTrollV3.mdx");
-  makeTroll("O025", "Jungle Tyrant",       2, 17, 1.55, 330, 1700, 1000, undefined, "units\\creeps\\JungleBeast\\JungleBeast");
+  // Beastmaster: hero=[Spirit Beast, Shapeshifter sel, Druid sel], normal=[Pet Spells, Spirit Beast]
+  makeTroll("O006", "Beastmaster",         0, 13, 1.77, 300, 1400,  675, undefined, "units\\creeps\\Shaman\\Shaman", "A09E,A017,A015", "A06Q,A09E");
+  makeTroll("O007", "Beastmaster",         0, 13, 1.77, 300, 1400,  675, undefined, S+"Shama1.mdx", "A09E,A017,A015", "A06Q,A09E");
+  // Shapeshifter Wolf: hero=[Shapeshifter Form, JT selector], normal=[Wolf Hunger]
+  makeTroll("O020", "Shapeshifter Wolf",   1, 10, 1.40, 310, 1500, 1000, undefined, "units\\creeps\\DireWolf\\DireWolf", "A017,A01F", "A02J");
+  // Shapeshifter Bear: hero=[Shapeshifter Form, JT selector], normal=[Bear Bulwark, Armor Bonus 4]
+  makeTroll("O021", "Shapeshifter Bear",   1, 17, 2.50, 300, 1500, 1000, 1.15,     "units\\creeps\\GrizzlyBear\\GrizzlyBear", "A017,A01F", "A027");
+  // Shapeshifter Panther: hero=[Shapeshifter Form, JT selector], normal=[Panther Prowl]
+  makeTroll("O022", "Shapeshifter Panther",1, 12, 1.75, 320, 1500, 1000, undefined, M+"Panther.mdx", "A017,A01F", "A09N");
+  // Shapeshifter Tiger: hero=[Shapeshifter Form, JT selector], normal=[Tiger Vicious Strike]
+  makeTroll("O023", "Shapeshifter Tiger",  1, 13, 1.75, 320, 1500, 1000, 1.10,     M+"Tiger.mdx", "A017,A01F", "A02H");
+  // Druid: hero=[Druid Spellbook, JT selector], normal=[Pet Spells]
+  makeTroll("O024", "Druid",               1, 13, 1.75, 300, 1500, 1000, undefined, M+"DruidoftheClawForestTrollV3.mdx", "A016,A01F", "A06Q");
+  // Jungle Tyrant: hero=[], normal=[JT Evolution, Pet Spells, Rendo Devour]
+  makeTroll("O025", "Jungle Tyrant",       2, 17, 1.55, 330, 1700, 1000, undefined, "units\\creeps\\JungleBeast\\JungleBeast", undefined, "A01G,A06Q,A0A5");
 
   // ── Thief Line ──
-  makeTroll("O008", "Thief",               0, 10, 2.00, 300,  800, 1800, undefined, "units\\creeps\\DarkTrollTrapper\\DarkTrollTrapper");
-  makeTroll("O050", "Escape Artist",       1, 12, 1.85, 300, 1400, 1800, undefined, "units\\creeps\\DarkTroll\\DarkTroll");
-  makeTroll("O051", "Contortionist",       1, 11, 1.75, 300, 1400, 1800, undefined, M+"Troll_for_Super_Panda.mdx");
-  makeTroll("O052", "Assassin",            2, 14, 1.85, 300, 1600, 1800, undefined, "units\\creeps\\DarkTrollTrapper\\DarkTrollTrapper");
+  // Thief: hero=[Cloak, EA sel, Contortionist sel, Assassin sel], normal=[Teleport]
+  makeTroll("O008", "Thief",               0, 10, 2.00, 300,  800, 1800, undefined, "units\\creeps\\DarkTrollTrapper\\DarkTrollTrapper", "A066,A00I,A00K,A00M", "A060");
+  // Escape Artist: hero=[EA Spellbook, Assassin selector], normal=[Teleport]
+  makeTroll("O050", "Escape Artist",       1, 12, 1.85, 300, 1400, 1800, undefined, "units\\creeps\\DarkTroll\\DarkTroll", "A00J,A00M", "A060");
+  // Contortionist: hero=[Contortionist Spellbook, Assassin selector], normal=[Teleport]
+  makeTroll("O051", "Contortionist",       1, 11, 1.75, 300, 1400, 1800, undefined, M+"Troll_for_Super_Panda.mdx", "A00L,A00M", "A060");
+  // Assassin: hero=[Assassinate], normal=[Assassin Spellbook, Teleport]
+  makeTroll("O052", "Assassin",            2, 14, 1.85, 300, 1600, 1800, undefined, "units\\creeps\\DarkTrollTrapper\\DarkTrollTrapper", "A02G", "A00N,A060");
 
   // ── Scout Line ──
-  makeTroll("O009", "Scout",               0, 10, 2.00, 300, 1300, 1300, undefined, M+"ScoutUnsub.mdx");
-  makeTroll("O060", "Observer",            1, 12, 1.70, 300, 1500, 1600, 1.10,     M+"Observer.mdx");
-  makeTroll("O061", "Trapper",             1, 12, 1.70, 300, 1300, 1500, 1.10,     M+"Trapper.mdx");
-  makeTroll("O062", "Spy",                 2, 15, 1.60, 330, 1600, 1800, 1.10,     M+"Spy.mdx");
+  // Scout: hero=[Reveal, Observer sel, Trapper sel, Spy sel], normal=[Ping Enemy]
+  makeTroll("O009", "Scout",               0, 10, 2.00, 300, 1300, 1300, undefined, M+"ScoutUnsub.mdx", "A070,A00O,A40Q,A00Q", "A077");
+  // Observer: hero=[Observer Ward Area, Spy selector], normal=[Observer Spellbook, Greater Reveal]
+  makeTroll("O060", "Observer",            1, 12, 1.70, 300, 1500, 1600, 1.10,     M+"Observer.mdx", "A07B,A00Q", "A00P,A071");
+  // Trapper: hero=[Trapper Spellbook, Spy selector], normal=[Greater Reveal]
+  makeTroll("O061", "Trapper",             1, 12, 1.70, 300, 1300, 1500, 1.10,     M+"Trapper.mdx", "A40R,A00Q", "A071");
+  // Spy: hero=[Chain Reveal], normal=[Spy Inherited Spellbook]
+  makeTroll("O062", "Spy",                 2, 15, 1.60, 330, 1600, 1800, 1.10,     M+"Spy.mdx", "A072", "A00R");
 
   // ── Gatherer Line ──
-  makeTroll("O00A", "Gatherer",            0, 10, 2.00, 300, 1800,  900, undefined, M+"Gatherer.mdx");
-  makeTroll("O070", "Radar Gatherer",      1, 10, 1.70, 310, 1800, 1800, undefined, M+"TerrorTroll.mdx");
-  makeTroll("O071", "Herb Master",         1, 10, 1.70, 300, 1800, 1800, undefined, "units\\creeps\\IceTrollShadowPriest\\IceTrollShadowPriest");
-  makeTroll("O072", "Omnigatherer",        2, 15, 1.45, 300, 1800, 1800, undefined, M+"TerrorTroll.mdx");
+  // Gatherer: hero=[Item Radar, Radar Gatherer sel, Herb Master sel, Omnigatherer sel], normal=[Salve Recipe]
+  makeTroll("O00A", "Gatherer",            0, 10, 2.00, 300, 1800,  900, undefined, M+"Gatherer.mdx", "A07F,A00V,A00Y,A00Z", "A0FB");
+  // Radar Gatherer: hero=[Tele Radar Gather, Omnigatherer sel], normal=[Radar Gatherer Spellbook]
+  makeTroll("O070", "Radar Gatherer",      1, 10, 1.70, 310, 1800, 1800, undefined, M+"TerrorTroll.mdx", "A08A,A00Z", "A00W");
+  // Herb Master: hero=[Tele Herb Gather, Omnigatherer sel], normal=[Mix Herbs]
+  makeTroll("O071", "Herb Master",         1, 10, 1.70, 300, 1800, 1800, undefined, "units\\creeps\\IceTrollShadowPriest\\IceTrollShadowPriest", "A089,A00Z", "A05Q");
+  // Omnigatherer: hero=[Item Warp], normal=[Omnigatherer Inherited Spellbook]
+  makeTroll("O072", "Omnigatherer",        2, 15, 1.45, 300, 1800, 1800, undefined, M+"TerrorTroll.mdx", "A08B", "A010");
 
   // ── Special ──
   makeTroll("O080", "Repick Troll",        0, 10, 2.00, 270,  800,  500);

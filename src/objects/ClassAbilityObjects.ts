@@ -47,65 +47,137 @@ compiletime(({ objectData }) => {
 
   // ═══════════════════════════════════════════════════════════════════
   // SPELLBOOKS (one per class/subclass)
-  // These are container abilities that hold other abilities
+  // These are container abilities that hold other abilities.
+  // spellList is a comma-separated string of ability FourCC IDs.
   // ═══════════════════════════════════════════════════════════════════
   // Base: 'Aspb' = Spell Book
   const SB = "Aspb";
 
-  a(SB, "A000", "Mage Spellbook");
-  a(SB, "A001", "Mage Legacy Spellbook");
-  a(SB, "A002", "Sub Mage Inherited Spellbook");
-  a(SB, "A003", "Sub Mage Legacy Inherited Spellbook");
-  a(SB, "A004", "Elementalist");
-  a(SB, "A005", "Elementalist New Spellbook");
-  a(SB, "A006", "Dementia Master");
-  a(SB, "A007", "Dementia Master Spellbook");
-  a(SB, "A008", "Dementia Master Inherited Spellbook");
-  a(SB, "A009", "Priest Spellbook");
-  a(SB, "A00A", "Sub Priest Spellbook");
-  a(SB, "A00B", "Master Healer");
-  a(SB, "A00C", "Master Healer Spellbook");
-  a(SB, "A00D", "Sage");
-  a(SB, "A00E", "Sage Spellbook");
-  a(SB, "A00F", "Sage Inherited Spellbook");
-  a(SB, "A00G", "Sub Thief Spellbook");
-  a(SB, "A00H", "Physical Spellbook Thief");
-  a(SB, "A00I", "Escape Artist");
-  a(SB, "A00J", "Escape Artist Spellbook");
-  a(SB, "A00K", "Contortionist");
-  a(SB, "A00L", "Contortionist Spellbook");
-  a(SB, "A00M", "Assassin");
-  a(SB, "A00N", "Assassin Spellbook");
-  a(SB, "A00O", "Observer");
-  a(SB, "A00P", "Observer Spellbook");
-  a(SB, "A00Q", "Spy");
-  a(SB, "A00R", "Spy Inherited Spellbook");
-  a(SB, "A00S", "Spy Inherited Skill");
-  a(SB, "A00T", "Tracker");
-  a(SB, "A00U", "Tracker Spellbook");
-  a(SB, "A00V", "Radar Gatherer");
-  a(SB, "A00W", "Radar Gatherer Spellbook");
-  a(SB, "A00X", "Gatherer Spellbook");
-  a(SB, "A00Y", "Herb Master");
-  a(SB, "A00Z", "Omnigatherer");
-  a(SB, "A010", "Omnigatherer Inherited Spellbook");
-  a(SB, "A011", "Warrior");
-  a(SB, "A012", "Warrior Spellbook");
-  a(SB, "A013", "Juggernaut");
-  a(SB, "A014", "Juggernaut Spellbook");
-  a(SB, "A015", "Druid");
-  a(SB, "A016", "Druid Spellbook");
-  a(SB, "A017", "Shapeshifter");
-  a(SB, "A018", "Hypnotist");
-  a(SB, "A019", "Hypnotist Spellbook");
-  a(SB, "A01A", "Hypnotist Legacy Spellbook");
-  a(SB, "A01B", "Booster");
-  a(SB, "A01E", "Booster Spellbook");
-  a(SB, "A01F", "Jungle Tyrant");
-  a(SB, "A01G", "Jungle Tyrant Evolution");
-  a(SB, "A01H", "Spellbook Placeholder");
-  a(SB, "A40Q", "Trapper");
-  a(SB, "A40R", "Trapper Spellbook");
+  // Helper: create spellbook with spell list
+  function sb(newId: string, name: string, spells?: string, levels?: number) {
+    const ab = a(SB, newId, name, levels) as any;
+    if (ab && spells) ab.spellList = spells;
+    return ab;
+  }
+
+  // ── Mage Line Spellbooks ──
+  // Mage Spellbook (levels 1-3): Spirit Prison, Flame Spray, Pump Up, Reduce Food, Mage Fire, Depress, Metronome
+  sb("A000", "Mage Spellbook", "A05X,A031,A01N,A08C,A036,A03C,A03S", 3);
+  sb("A001", "Mage Legacy Spellbook", "A05Y,A032,A01O,A08D,A037,A03D,A03T", 3);
+  // Sub Mage Inherited: base mage spells carried into sub-classes
+  sb("A002", "Sub Mage Inherited Spellbook", "A05X,A031,A01N,A08C,A036,A03C,A03S");
+  sb("A003", "Sub Mage Legacy Inherited Spellbook", "A05Y,A032,A01O,A08D,A037,A03D,A03T");
+  // Elementalist selector (hero ability)
+  sb("A004", "Elementalist");
+  // Elementalist New Spellbook (levels 1-3): Zap, Earth Guardian, Frost Blast, Meteor, Overcharge, Meditate
+  sb("A005", "Elementalist New Spellbook", "A044,A048,A033,A035,A03Y,A05T", 3);
+  // Dementia Master selector (hero ability)
+  sb("A006", "Dementia Master");
+  // Dementia Master Spellbook (levels 1-3): Dark Gate, Invoke Rune 1/2/3, Activate Rune, Dementia Summoning
+  sb("A007", "Dementia Master Spellbook", "A042,A40H,A40I,A40J,ACTR,A03B", 3);
+  // Dementia Master Inherited: all DM spells
+  sb("A008", "Dementia Master Inherited Spellbook", "A038,A039,A03A,A03G,A03I,A03J");
+
+  // ── Priest Line Spellbooks ──
+  // Priest Spellbook (levels 1-3): Anti-Magic AOE, Cure All, Pump Up, Ranged Heal, Magic Mist, Healing Wave, Mix Energy, Mix Heat
+  sb("A009", "Priest Spellbook", "A04B,A05C,A01N,A057,A049,A050,A05K,A05L", 3);
+  // Sub Priest Spellbook: inherited base priest spells
+  sb("A00A", "Sub Priest Spellbook", "A04B,A05C,A01N,A057,A049,A050,A05K,A05L");
+  // Master Healer selector (hero ability)
+  sb("A00B", "Master Healer");
+  // Master Healer Spellbook (levels 1-3): MH Mix Energy/Heat, MH Healing Wave, Ranged Heal, Magic Mist, Self Preservation, Replenish Energy, Replenish Health, Anchor Soul
+  sb("A00C", "Master Healer Spellbook", "A05M,A05N,A051,A057,A049,A02C,A058,A059,A05W", 3);
+  // Sage selector (hero ability)
+  sb("A00D", "Sage");
+  // Sage Spellbook (levels 1-3): Sage Increase Metabolism, Maximum Fervor, Light Gate
+  sb("A00E", "Sage Spellbook", "A05J,A30J,A043", 3);
+  // Sage Inherited: all sage spells
+  sb("A00F", "Sage Inherited Spellbook", "A04B,A05C,A01N,A057,A049,A02C,A052,A05H,A05W,A05A,A046");
+
+  // ── Thief Line Spellbooks ──
+  sb("A00G", "Sub Thief Spellbook");
+  sb("A00H", "Physical Spellbook Thief");
+  // Escape Artist selector (hero ability)
+  sb("A00I", "Escape Artist");
+  // Escape Artist Spellbook (levels 1-3): Camouflage, Blur, Jump, placeholders, Sub Cloak
+  sb("A00J", "Escape Artist Spellbook", "A060,A01Z,A01Y,A01H,A01H,A067", 3);
+  // Contortionist selector (hero ability)
+  sb("A00K", "Contortionist");
+  // Contortionist Spellbook (levels 1-3): Nether Fade, Tele Thief, Smoke Stream, placeholders, Sub Cloak
+  sb("A00L", "Contortionist Spellbook", "A068,A064,A062,A01H,A01H,A067", 3);
+  // Assassin selector (hero ability)
+  sb("A00M", "Assassin");
+  // Assassin Spellbook: Nether Fade, Blur, Assassinate, Jump, AS Smoke Stream, AS Tele Thief, AS Camouflage
+  sb("A00N", "Assassin Spellbook", "A068,A01Z,A02G,A01Y,A063,A065,A061");
+
+  // ── Scout Line Spellbooks ──
+  // Observer selector (hero ability)
+  sb("A00O", "Observer");
+  // Observer Spellbook: Advanced Radar Spellbook
+  sb("A00P", "Observer Spellbook", "A0JN");
+  // Spy selector (hero ability)
+  sb("A00Q", "Spy");
+  // Spy Inherited Spellbook: Track Trap, Spiked Trap, Greater Reveal, Spy Ward Area, Spy Ping Enemy, Spy Bear Trap, Shadow Sight
+  sb("A00R", "Spy Inherited Spellbook", "A01W,A01U,A071,A07A,A078,A07C,A07E");
+  sb("A00S", "Spy Inherited Skill");
+
+  // ── Tracker Line Spellbooks ──
+  // Tracker selector (hero ability)
+  sb("A00T", "Tracker");
+  // Tracker Spellbook (levels 1-3): Dysentery, Sniff, Hide Beacon, Query Beacon, placeholders, Tracker Track
+  sb("A00U", "Tracker Spellbook", "A30L,A075,A408,A409,A01H,A074", 3);
+
+  // ── Gatherer Line Spellbooks ──
+  // Radar Gatherer selector (hero ability)
+  sb("A00V", "Radar Gatherer");
+  // Radar Gatherer Spellbook: all gather spells + Tele-Gather + Mix Herbs
+  sb("A00W", "Radar Gatherer Spellbook", "A080,A082,A085,A081,A083,A086,A084,A088,A05Q");
+  // Gatherer Spellbook (levels 1-3): Find Tinder/Stick/Mushroom/Clay/Flint/Stone/Mana
+  sb("A00X", "Gatherer Spellbook", "A080,A082,A085,A081,A083,A086,A084", 3);
+  // Herb Master selector (hero ability)
+  sb("A00Y", "Herb Master");
+  // Omnigatherer selector (hero ability)
+  sb("A00Z", "Omnigatherer");
+  // Omnigatherer Inherited Spellbook: all gather + Tele-Gather + Mix Herbs
+  sb("A010", "Omnigatherer Inherited Spellbook", "A080,A082,A085,A081,A083,A086,A084,A088,A05Q");
+
+  // ── Hunter Line Spellbooks ──
+  // Warrior selector (hero ability)
+  sb("A011", "Warrior");
+  // Warrior Spellbook: Endurance, Giant Swing
+  sb("A012", "Warrior Spellbook", "A02B,A01P");
+  // Juggernaut selector (hero ability)
+  sb("A013", "Juggernaut");
+  // Juggernaut Spellbook: Dysentery, Sniff, Hide Beacon, Query Beacon, Giant Swing SS, Tracker Track
+  sb("A014", "Juggernaut Spellbook", "A30L,A075,A408,A409,A01Q,A074");
+
+  // ── Beastmaster Line Spellbooks ──
+  // Druid selector (hero ability)
+  sb("A015", "Druid");
+  // Druid Spellbook (levels 1-3): Sentinel, Druid Roar, Rejuvenation, Bark Skin, Spiritual Guidance, Spirit Beast
+  sb("A016", "Druid Spellbook", "A07D,A09I,A054,A023,A05V,A09E", 3);
+  // Shapeshifter selector (hero ability) — contains transform abilities
+  // Shapeshifter Form (levels 1-4): Transform Wolf/Bear/Panther/Tiger + pet spells + Spirit Beast
+  sb("A017", "Shapeshifter", "A09M,A09J,A09K,A09L,A091,A093,A095,A09D,A09F", 4);
+  // Hypnotist selector (hero ability)
+  sb("A018", "Hypnotist");
+  // Hypnotist Spellbook (levels 1-3): Hypnosis, Dream Eater, Anger, Depression Orb, Depression Aura, Seizures, Jealousy, Stupefy
+  sb("A019", "Hypnotist Spellbook", "A06E,A06C,A01L,A03F,A03E,A06B,A069,A03P", 3);
+  sb("A01A", "Hypnotist Legacy Spellbook", "A06F,A06D,A01M,A03F,A03E,A06B,A06A,A03Q", 3);
+  // Booster selector (hero ability)
+  sb("A01B", "Booster");
+  // Booster Spellbook (levels 1-3): Lightning Shield, Fortitude, Pump Up, Troll Battle Call, Spirit Link, Angelic Elemental, Increase Metabolism
+  sb("A01E", "Booster Spellbook", "A03Z,A02A,A01N,A05G,A05U,A045,A05I", 3);
+  // Jungle Tyrant selector (hero ability)
+  sb("A01F", "Jungle Tyrant");
+  // Jungle Tyrant Evolution (levels 1-3): Rendo Hawk Eye, Snake Toxin, Panther Instinct, Elk Jump, Wolf Bite, Spirit Beast
+  sb("A01G", "Jungle Tyrant Evolution", "A0A0,A0A3,A0A4,A0A1,A0A2,A09E", 3);
+  // Spellbook Placeholder (empty)
+  sb("A01H", "Spellbook Placeholder");
+  // Trapper selector (hero ability)
+  sb("A40Q", "Trapper");
+  // Trapper Spellbook (levels 1-3): Track Trap, Spiked Trap, Bear Trap, Shadow Sight
+  sb("A40R", "Trapper Spellbook", "A01W,A01U,A01V,A07E", 3);
 
   // ═══════════════════════════════════════════════════════════════════
   // COMBAT ABILITIES

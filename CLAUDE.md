@@ -6,10 +6,15 @@ Island Troll Tribes is a Warcraft III team survival map where players control tr
 ## Architecture
 
 ### Build Pipeline
-- **Language**: TypeScript → Lua via TypeScript-to-Lua (TSTL)
-- **Framework**: W3TS (Warcraft III TypeScript wrappers for JASS natives)
-- **Build**: `npm run build` → TSTL transpilation → Lua output → map compilation
+- **Language**: TypeScript → Lua via TypeScript-to-Lua (TSTL) targeting Lua 5.3
+- **Framework**: W3TS v3.0+ by cipherxof/TriggerHappy (github.com/cipherxof/w3ts)
+- **Build**: `npm run build` → TSTL transpilation → single bundled Lua file → packaged into .w3x
+- **Plugins**: war3-transformer (compile-time object gen), war3-objectdata (WC3 object files)
+- **UI Option**: w3ts-jsx (github.com/voces/w3ts-jsx) for React-like WC3 frame components
+- **Map Tool**: Ceres (github.com/ceres-wc3/ceres) for .w3x archive packaging
 - **Source**: `/src/` directory, organized by domain
+- **CRITICAL**: Entry point uses `addScriptHook(W3TS_HOOK.MAIN_AFTER, main)` - NOT direct call
+- **CRITICAL**: WC3 requires ALL Lua bundled into ONE file (configured via tsconfig tstl.luaBundle)
 
 ### Directory Structure
 ```
@@ -85,11 +90,17 @@ src/
 
 ## WC3 Modding Notes
 
-### W3TS Framework
-- Wraps JASS natives: `Unit`, `Item`, `Frame`, `Timer`, `Trigger`, `MapPlayer`, `Force`, `Rectangle`
+### W3TS Framework (cipherxof/w3ts v3.0.2)
+- **GitHub**: github.com/cipherxof/w3ts (77 stars, MIT license)
+- **Template**: github.com/cipherxof/wc3-ts-template (61 stars)
+- **Docs**: cipherxof.github.io/w3ts/
+- 29 wrapper classes: Unit, Item, Frame, Timer, Trigger, MapPlayer, Force, Rect, Point, Effect, Sound, Group, Dialog, Quest, Destructable, Camera, Region, TextTag, Leaderboard, Multiboard, FogModifier, Image, WeatherEffect, etc.
 - Use W3TS wrappers exclusively; avoid raw JASS natives
 - `FourCC("xxxx")` converts 4-char strings to integer IDs
-- Events use `Trigger.registerAnyUnitEvent()` + `Trigger.addAction()`
+- Events: `Trigger.registerAnyUnitEvent()` + `Trigger.addAction()`
+- Static factories: `Unit.create(owner, unitId, x, y, facing)`
+- **MUST** use `addScriptHook(W3TS_HOOK.MAIN_AFTER, ...)` for init (triggers fail if registered too early)
+- w3ts-jsx available for React-like UI: `<backdrop>`, `<text>`, `<button>` components with hooks
 
 ### Object Editor Data
 - Unit types, abilities, items, buffs defined in .w3u/.w3a/.w3t/.w3h files inside base.w3x

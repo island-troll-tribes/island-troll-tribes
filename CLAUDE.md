@@ -197,7 +197,7 @@ The original Wurst code is in `/wurst/` (518 files). Key mappings:
 - `wurst/systems/trade/TradeShip*.wurst` → `src/systems/trade/TradeShipSystem.ts`
 - `wurst/systems/core/Respawn.wurst` → `src/systems/survival/RespawnSystem.ts`
 
-## Current Status (75+ TypeScript files implemented)
+## Current Status (80+ TypeScript files implemented)
 
 ### Completed
 - [x] Project structure scaffolded
@@ -206,10 +206,10 @@ The original Wurst code is in `/wurst/` (518 files). Key mappings:
 - [x] Troll class system (BaseTroll, TrollDefinition, TrollRegistry, 28 definitions)
 - [x] Talent system architecture (TalentDefinition, TalentInstance, TalentRegistry)
 - [x] Crafting engine (CraftingEngine, RecipeDefinition)
-- [x] Mixing system (herb combination priority logic)
-- [x] Tanning system (hide-to-armor conversion)
-- [x] Spawn system (items, animals, fish, time-interpolated weights)
-- [x] Survival system (heat/cold/energy stat degradation with gear bonuses)
+- [x] Mixing system (herb combination priority logic, real AbilityIds wired)
+- [x] Tanning system (hide-to-armor conversion, real AbilityIds wired)
+- [x] Spawn system (weighted random selection, fish/hawks, staggered initial bursts)
+- [x] Survival system (heat/cold/energy stat degradation, real BuffIds, fire types wired)
 - [x] Respawn system (grace period auto-revive, quadratic post-grace delay)
 - [x] Experience system (custom XP, class multipliers, shared range XP)
 - [x] Transformation system (Bear Form trick, 35 evolution pairs, stat preservation)
@@ -220,23 +220,34 @@ The original Wurst code is in `/wurst/` (518 files). Key mappings:
 - [x] Forest fire system (shrinking map, expanding fire ring, tree destruction, % HP drain)
 - [x] All 8 animal entities (Elk, Wolf, Bear, Panther, Snake, Fish, GreenFish, Hawk)
 - [x] All 6 boss entities (AncientHydra, LesserHydra, Mammoth, AlligatorMan, DiscoDuck, TheOne)
-- [x] All 12 building entities (Forge, Armory, Tannery, MixingPot, Workshop, WDH, CampFire, Tent, MudHut, TrollHut, Hatchery, TeleportBeacon)
+- [x] All 12 building entities with abilities wired on unit types
 - [x] Scoreboard UI (TribeBoard live stats + ScoreBoard detailed stats)
 - [x] Talent tree frame UI
 - [x] GameConfig with all mode-configurable fields
 - [x] ItemIds (157 items), UnitIds (135 units), AbilityIds (486+ abilities, 20 buffs)
-- [x] Main.ts wired with all systems
+- [x] Main.ts wired with all systems including SurvivalSystem
 - [x] Documentation (README.md, docs/SYSTEMS.md)
 - [x] Compiletime object definitions (TrollObjects, AnimalObjects, BuildingObjects, ItemObjects, AbilityObjects, ClassAbilityObjects, BuffObjects)
-- [x] All 102 crafting recipes in AllRecipes.ts
-- [x] Spellbook spell lists wired (~40 spellbooks with contained ability FourCC lists)
+- [x] All 101 crafting recipes with QM ability IDs wired
+- [x] Spellbook spell lists wired (~40 class + 7 building/crafting spellbooks)
 - [x] Troll hero/normal ability strings wired (42 troll variants → class spellbooks)
 - [x] Item stat bonus abilities (speed, armor, str, int, all stats, attack speed)
 - [x] Talent ability IDs wired to real AbilityIds constants
 - [x] war3-transformer patched for w3h (buff) support
 - [x] Build pipeline (TSTL → Lua + object data → .w3x packaging via StormLib)
+- [x] Ability stats filled in (cooldown, mana, range, AOE, duration) from Wurst source
+- [x] Item/building custom model paths in object definitions
+- [x] Building abilities wired (QM spellbooks, heat aura, sleep abilities)
+- [x] QM abilities set to instant cast (cd=0, mana=0, range=0)
+- [x] Item ability stats (spears, cloaks, potions, scrolls, auras)
+- [x] WC3 native declarations (GetRandom*, Create*, Player, GetRect*)
 
 ### Remaining
-- [ ] Fill in ability property values (cooldown, mana cost, damage, range) from Wurst source
-- [ ] Wire item/building custom model paths in object definitions
+- [ ] Implement respawn location logic (find tribe structures)
+- [ ] Implement Spirit Ward building check for respawn eligibility
+- [ ] Implement meat cooking trigger on CampFire
+- [ ] Implement TeleportBeacon ability and event listeners
+- [ ] Implement Hatchery egg hatching/pet raising
+- [ ] Implement mode voting UI, class selection UI, final scoreboard UI
+- [ ] Add map rect data for island spawn regions (requires base.w3x map data)
 - [ ] Testing in WC3 Reforged

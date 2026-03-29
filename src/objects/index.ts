@@ -14,4 +14,5 @@ import "./AnimalObjects";
 import "./BuildingObjects";
 import "./ItemObjects";
 import "./AbilityObjects";
+import "./ClassAbilityObjects";
 import "./BuffObjects";

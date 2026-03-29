@@ -197,7 +197,7 @@ The original Wurst code is in `/wurst/` (518 files). Key mappings:
 - `wurst/systems/trade/TradeShip*.wurst` → `src/systems/trade/TradeShipSystem.ts`
 - `wurst/systems/core/Respawn.wurst` → `src/systems/survival/RespawnSystem.ts`
 
-## Current Status (65+ TypeScript files implemented)
+## Current Status (75+ TypeScript files implemented)
 
 ### Completed
 - [x] Project structure scaffolded
@@ -227,10 +227,16 @@ The original Wurst code is in `/wurst/` (518 files). Key mappings:
 - [x] ItemIds (157 items), UnitIds (135 units), AbilityIds (486+ abilities, 20 buffs)
 - [x] Main.ts wired with all systems
 - [x] Documentation (README.md, docs/SYSTEMS.md)
+- [x] Compiletime object definitions (TrollObjects, AnimalObjects, BuildingObjects, ItemObjects, AbilityObjects, ClassAbilityObjects, BuffObjects)
+- [x] All 102 crafting recipes in AllRecipes.ts
+- [x] Spellbook spell lists wired (~40 spellbooks with contained ability FourCC lists)
+- [x] Troll hero/normal ability strings wired (42 troll variants → class spellbooks)
+- [x] Item stat bonus abilities (speed, armor, str, int, all stats, attack speed)
+- [x] Talent ability IDs wired to real AbilityIds constants
+- [x] war3-transformer patched for w3h (buff) support
+- [x] Build pipeline (TSTL → Lua + object data → .w3x packaging via StormLib)
 
 ### Remaining
-- [ ] Port all 93 crafting recipes to AllRecipes.ts (currently 10 representative)
-- [ ] Port all troll abilities as talent definitions with real ability IDs
-- [ ] Wire actual FourCC IDs from base.w3x (most are compile-time generated)
-- [ ] Map compilation pipeline (TSTL → Lua → .w3x packaging)
+- [ ] Fill in ability property values (cooldown, mana cost, damage, range) from Wurst source
+- [ ] Wire item/building custom model paths in object definitions
 - [ ] Testing in WC3 Reforged

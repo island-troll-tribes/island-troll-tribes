@@ -74,7 +74,7 @@ export const TALENT_DEFINITIONS: TalentDefinition[] = [
     iconPath: "ReplaceableTextures/CommandButtons/BTNTrack.blp",
     maxRank: 1,
     effectsPerRank: [
-      [{ type: TalentEffectType.GrantAbility, abilityId: 0 }], // Placeholder ability ID
+      [{ type: TalentEffectType.GrantAbility, abilityId: AbilityIds.TRACK }],
     ],
     allowedClasses: ["hunter"],
     treePosition: { row: 0, col: 1 },
@@ -87,7 +87,7 @@ export const TALENT_DEFINITIONS: TalentDefinition[] = [
     iconPath: "ReplaceableTextures/CommandButtons/BTNCriticalStrike.blp",
     maxRank: 3,
     effectsPerRank: [
-      [{ type: TalentEffectType.GrantAbility, abilityId: 0 }],
+      [{ type: TalentEffectType.GrantAbility, abilityId: AbilityIds.GIANT_SWING }],
       [{ type: TalentEffectType.Custom, customHandler: "giant_swing_rank2" }],
       [{ type: TalentEffectType.Custom, customHandler: "giant_swing_rank3" }],
     ],
@@ -104,7 +104,7 @@ export const TALENT_DEFINITIONS: TalentDefinition[] = [
     iconPath: "ReplaceableTextures/CommandButtons/BTNCommand.blp",
     maxRank: 3,
     effectsPerRank: [
-      [{ type: TalentEffectType.GrantAbility, abilityId: 0 }],
+      [{ type: TalentEffectType.GrantAbility, abilityId: AbilityIds.ENDURANCE }],
       [{ type: TalentEffectType.Custom, customHandler: "endurance_rank2" }],
       [{ type: TalentEffectType.Custom, customHandler: "endurance_rank3" }],
     ],
@@ -121,7 +121,7 @@ export const TALENT_DEFINITIONS: TalentDefinition[] = [
     iconPath: "ReplaceableTextures/CommandButtons/BTNPlagueCloud.blp",
     maxRank: 1,
     effectsPerRank: [
-      [{ type: TalentEffectType.GrantAbility, abilityId: 0 }],
+      [{ type: TalentEffectType.GrantAbility, abilityId: AbilityIds.DYSENTERY }],
     ],
     prerequisites: ["hunter_track"],
     allowedClasses: ["hunter"],
@@ -136,7 +136,7 @@ export const TALENT_DEFINITIONS: TalentDefinition[] = [
     iconPath: "ReplaceableTextures/CommandButtons/BTNFarSight.blp",
     maxRank: 1,
     effectsPerRank: [
-      [{ type: TalentEffectType.GrantAbility, abilityId: 0 }],
+      [{ type: TalentEffectType.GrantAbility, abilityId: AbilityIds.SNIFF }],
     ],
     allowedClasses: ["hunter"],
     requiredLevel: 2,
@@ -154,7 +154,7 @@ export const TALENT_DEFINITIONS: TalentDefinition[] = [
     iconPath: "ReplaceableTextures/CommandButtons/BTNManaBurn.blp",
     maxRank: 1,
     effectsPerRank: [
-      [{ type: TalentEffectType.GrantAbility, abilityId: 0 }],
+      [{ type: TalentEffectType.GrantAbility, abilityId: AbilityIds.SPIRIT_PRISON }],
     ],
     allowedClasses: ["mage"],
     treePosition: { row: 0, col: 0 },
@@ -167,7 +167,7 @@ export const TALENT_DEFINITIONS: TalentDefinition[] = [
     iconPath: "ReplaceableTextures/CommandButtons/BTNBreathOfFire.blp",
     maxRank: 1,
     effectsPerRank: [
-      [{ type: TalentEffectType.GrantAbility, abilityId: 0 }],
+      [{ type: TalentEffectType.GrantAbility, abilityId: AbilityIds.FLAME_SPRAY }],
     ],
     allowedClasses: ["mage"],
     treePosition: { row: 0, col: 1 },
@@ -180,7 +180,7 @@ export const TALENT_DEFINITIONS: TalentDefinition[] = [
     iconPath: "ReplaceableTextures/CommandButtons/BTNBerserk.blp",
     maxRank: 1,
     effectsPerRank: [
-      [{ type: TalentEffectType.GrantAbility, abilityId: 0 }],
+      [{ type: TalentEffectType.GrantAbility, abilityId: AbilityIds.PUMP_UP }],
     ],
     allowedClasses: ["mage"],
     treePosition: { row: 0, col: 2 },
@@ -193,7 +193,7 @@ export const TALENT_DEFINITIONS: TalentDefinition[] = [
     iconPath: "ReplaceableTextures/CommandButtons/BTNFire.blp",
     maxRank: 1,
     effectsPerRank: [
-      [{ type: TalentEffectType.GrantAbility, abilityId: 0 }],
+      [{ type: TalentEffectType.GrantAbility, abilityId: AbilityIds.MAGE_FIRE }],
     ],
     prerequisites: ["mage_flame_spray"],
     allowedClasses: ["mage"],
@@ -208,7 +208,7 @@ export const TALENT_DEFINITIONS: TalentDefinition[] = [
     iconPath: "ReplaceableTextures/CommandButtons/BTNCurse.blp",
     maxRank: 1,
     effectsPerRank: [
-      [{ type: TalentEffectType.GrantAbility, abilityId: 0 }],
+      [{ type: TalentEffectType.GrantAbility, abilityId: AbilityIds.DEPRESS }],
     ],
     prerequisites: ["mage_pump_up"],
     allowedClasses: ["mage"],
@@ -223,7 +223,7 @@ export const TALENT_DEFINITIONS: TalentDefinition[] = [
     iconPath: "ReplaceableTextures/CommandButtons/BTNCharm.blp",
     maxRank: 1,
     effectsPerRank: [
-      [{ type: TalentEffectType.GrantAbility, abilityId: 0 }],
+      [{ type: TalentEffectType.GrantAbility, abilityId: AbilityIds.METRONOME }],
     ],
     prerequisites: ["mage_mage_fire", "mage_depress"],
     allowedClasses: ["mage"],
@@ -242,7 +242,7 @@ export const TALENT_DEFINITIONS: TalentDefinition[] = [
     iconPath: "ReplaceableTextures/CommandButtons/BTNAntiMagicShell.blp",
     maxRank: 1,
     effectsPerRank: [
-      [{ type: TalentEffectType.GrantAbility, abilityId: 0 }],
+      [{ type: TalentEffectType.GrantAbility, abilityId: AbilityIds.ANTI_MAGIC_AOE }],
     ],
     allowedClasses: ["priest"],
     treePosition: { row: 0, col: 0 },
@@ -255,7 +255,7 @@ export const TALENT_DEFINITIONS: TalentDefinition[] = [
     iconPath: "ReplaceableTextures/CommandButtons/BTNResurrection.blp",
     maxRank: 1,
     effectsPerRank: [
-      [{ type: TalentEffectType.GrantAbility, abilityId: 0 }],
+      [{ type: TalentEffectType.GrantAbility, abilityId: AbilityIds.CURE_ALL }],
     ],
     allowedClasses: ["priest"],
     treePosition: { row: 0, col: 1 },
@@ -268,7 +268,7 @@ export const TALENT_DEFINITIONS: TalentDefinition[] = [
     iconPath: "ReplaceableTextures/CommandButtons/BTNHealingWave.blp",
     maxRank: 3,
     effectsPerRank: [
-      [{ type: TalentEffectType.GrantAbility, abilityId: 0 }],
+      [{ type: TalentEffectType.GrantAbility, abilityId: AbilityIds.HEALING_WAVE }],
       [{ type: TalentEffectType.Custom, customHandler: "healing_wave_rank2" }],
       [{ type: TalentEffectType.Custom, customHandler: "healing_wave_rank3" }],
     ],

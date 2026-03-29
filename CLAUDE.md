@@ -113,6 +113,35 @@ src/
 - Max 12 player slots + 4 neutral players
 - Frame API requires Reforged 1.32+
 - Item visibility trick for recipe matching (setVisible false → search → restore)
+- **CRITICAL: Lua GC is disabled in WC3 1.32+** (Blizzard disabled it to prevent desync).
+  The replacement GC is inadequate - if allocation rate exceeds marking rate, garbage is never collected.
+  TSTL generates many temporary tables, so we MUST:
+  - Reuse objects/tables on hot paths (timers, per-frame logic)
+  - Avoid allocations on fast timers (< 1s intervals)
+  - Use object pools / handle recyclers for frequently created/destroyed objects
+  - Minimize closures in tight loops (each closure = a new Lua table)
+  - Pre-allocate arrays where possible
+
+### Heat/Cold Survival System (from original)
+- Heat stored as player's **gold resource** (0 to heatMaximum, default 100)
+- Stat loss every **3 seconds**: heat, mana, HP degrade by statLossAmount (default 1)
+- Camouflage **triples** all stat losses
+- Bonfire aura reduces heat loss by 2
+- Frozen debuff adds 1-5 random extra heat loss
+- Death triggers when mana < 1 OR heat < 1
+- Daytime (6:00-18:00 game time) grants +3 heat passively
+- Equipment bonuses: coat +5, boots/gloves +2 each, fire pinion +8
+- Grace period default: 480 seconds (8 minutes), revive delay 10s
+- Post-grace respawn delay: (game_minutes)^2 seconds (quadratic)
+
+### Community Resources
+- **HiveWorkshop**: hiveworkshop.com (main WC3 modding community)
+- **ITT Discord**: discord.gg/hYzTRYf
+- **ITT Wiki**: islandtrolltribes.fandom.com
+- **ITT on Hive**: hiveworkshop.com/threads/island-troll-tribes.297609/
+- **WC3MapTranslator**: github.com/ChiefOfGxBxL/WC3MapTranslator (binary↔JSON for map files)
+- **UI Frame Tutorial**: hiveworkshop.com/threads/the-big-ui-frame-tutorial.335296/
+- **JASS Reference**: lep.nrw/jassbot/ (searchable API browser)
 
 ## Development Conventions
 

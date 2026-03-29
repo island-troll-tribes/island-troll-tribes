@@ -38,6 +38,7 @@ import { TradeShipSystem } from "./systems/trade/TradeShipSystem";
 import { RespawnSystem } from "./systems/survival/RespawnSystem";
 import { ForcedDuelSystem } from "./systems/modes/ForcedDuelSystem";
 import { ForestFireSystem } from "./systems/modes/ForestFireSystem";
+import { SurvivalSystem } from "./systems/survival/SurvivalSystem";
 
 // Compiletime object definitions (evaluated at build time by war3-transformer)
 import "./objects";
@@ -72,6 +73,7 @@ function main(): void {
   const respawnSystem = RespawnSystem.getInstance();
   const forcedDuelSystem = ForcedDuelSystem.getInstance();
   const forestFireSystem = ForestFireSystem.getInstance();
+  const survivalSystem = SurvivalSystem.getInstance();
 
   // Initialize UI
   const uiManager = UIManager.getInstance();
@@ -108,6 +110,7 @@ function main(): void {
     spawnSystem.startSpawnCycles();
     craftingEngine.enable();
     experienceSystem.enable();
+    survivalSystem.startStatLossCycle();
     tradeShipSystem.start();
     respawnSystem.initialize();
     forcedDuelSystem.schedule();

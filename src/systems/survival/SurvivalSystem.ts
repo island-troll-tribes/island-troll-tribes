@@ -35,30 +35,29 @@ import { Timer, Unit, MapPlayer, Group } from "w3ts";
 import { GameConfig } from "../../config/GameConfig";
 import { ItemIds } from "../../data/ItemIds";
 import { UnitTypeIds } from "../../data/UnitIds";
+import { BuffIds } from "../../data/AbilityIds";
 
-// ─── Buff / Ability FourCC placeholders ─────────────────────────────────
-// These must match the compiled IDs from the WC3 object editor.
-// TODO: Wire to actual IDs extracted from base.w3x.
+// ─── Buff IDs (from BuffIds in AbilityIds.ts) ───────────────────────────
 
 /** Buff applied by the bonfire aura ability (reduces heat loss by 2). */
-const BUFF_BON_FIRE_HEAT = FourCC("B000");
+const BUFF_BON_FIRE_HEAT = BuffIds.BON_FIRE_HEAT;
 
 /** Buff applied when a unit is camouflaged (triples stat loss). */
-const BUFF_CAMOUFLAGE = FourCC("B001");
+const BUFF_CAMOUFLAGE = BuffIds.CAMOFLAGE;
 
 /** Frozen-to-the-bone debuff (adds 1-5 random extra heat loss). */
-const BUFF_FROZE_TO_BONE = FourCC("B002");
+const BUFF_FROZE_TO_BONE = BuffIds.FROZE_TO_BONE;
 
 /** The Glow buff from Priest (+2 heat gain per gain tick). */
-const BUFF_THE_GLOW = FourCC("B003");
+const BUFF_THE_GLOW = BuffIds.THE_GLOW;
 
 /** Anchor Soul buff (prevents stat-death). */
-const BUFF_ANCHOR_SOUL = FourCC("B004");
+const BUFF_ANCHOR_SOUL = BuffIds.ANCHOR_SOUL;
 
 /** Depression debuffs from Hypnotist abilities. */
-const BUFF_DEPRESSED_AURA = FourCC("B005");
-const BUFF_DEPRESSED_ARROW = FourCC("B006");
-const BUFF_DEPRESSED_THISTLE = FourCC("B007");
+const BUFF_DEPRESSED_AURA = BuffIds.DEPRESSED_AURA;
+const BUFF_DEPRESSED_ARROW = BuffIds.DEPRESSED_ARROW;
+const BUFF_DEPRESSED_THISTLE = BuffIds.DEPRESSED_THISTLE;
 
 // ─── Fire ranges (from Heat.wurst) ─────────────────────────────────────
 const CAMP_FIRE_HEAT_RANGE = 380.0;
@@ -110,17 +109,14 @@ const GLOVES_IDS: ReadonlySet<number> = new Set([
   ItemIds.BATTLE_GLOVES,
 ]);
 
-/**
- * Fire Pinion item ID.
- * TODO: Add to ItemIds.ts once the Pinion items are defined there.
- * Using a placeholder FourCC for now.
- */
-const ITEM_DD_PINION_FIRE = FourCC("I0E0");
+/** Fire Pinion item ID — grants +8 heat per gain tick. */
+const ITEM_DD_PINION_FIRE = ItemIds.DD_PINION_FIRE;
 
 /** Unit type IDs that count as fires for the heat-cast system. */
 const FIRE_UNIT_IDS: ReadonlySet<number> = new Set([
   UnitTypeIds.CAMP_FIRE,
-  // TODO: Add MAGE_FIRE unit type ID once defined in UnitIds.ts.
+  UnitTypeIds.MAGE_FIRE,
+  UnitTypeIds.MAGE_FIRE_SUMMONED,
 ]);
 
 // ─── Troll tracking helper ──────────────────────────────────────────────

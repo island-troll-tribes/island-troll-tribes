@@ -19,14 +19,11 @@ import { TribeManager } from "../../core/TribeManager";
 /** Pause duration before duel starts (seconds) */
 const PRE_DUEL_PAUSE = 3.0;
 
-/**
- * Duel area center and radius.
- * TODO: Extract actual coordinates from base.w3x gg_rct_Dualing_Area.
- */
+/** Duel area extracted from base.w3x gg_rct_Dualing_Area */
 const DUEL_AREA = {
-  centerX: 0,
-  centerY: 0,
-  radius: 2000,
+  centerX: -4352,
+  centerY: -11968,
+  radius: 1440,  // half of width (2912-(-5792))/2 = 1440
 };
 
 // ─── ForcedDuelSystem ────────────────────────────────────────────────────

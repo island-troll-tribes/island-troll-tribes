@@ -144,52 +144,74 @@ const MERCHANT_SHIPS: MerchantInventory[] = [
 // ─── Trade Routes ────────────────────────────────────────────────────────
 
 /**
- * Predefined trade routes. In the actual game, these coordinates come from
- * preplaced WC3 map rectangles (gg_rct_ship_*). The exact coords will need
- * to be extracted from the .w3x map file. These are placeholder routes that
- * follow the general N/S and E/W patterns from the original.
- *
- * TODO: Extract actual waypoint coordinates from base.w3x map regions.
+ * Trade routes extracted from base.w3x region data (gg_rct_ship_*).
+ * O = origin (spawn), numbered stops along the route.
  */
 const TRADE_ROUTES: TradeRoute[] = [
   {
-    name: "North-South Left",
+    // Top origin → through TL stops → through center → through BL stops → Bottom origin
+    name: "Top-to-Bottom Left",
     stops: [
-      { x: -6000, y: 6000, pauseForTrade: false },
-      { x: -4000, y: 3000, pauseForTrade: true },
-      { x: -3000, y: 0, pauseForTrade: true },
-      { x: -4000, y: -3000, pauseForTrade: true },
-      { x: -6000, y: -6000, pauseForTrade: false },
+      { x: -848, y: 11184, pauseForTrade: false },     // ship TO (origin)
+      { x: -448, y: 6432, pauseForTrade: true },        // ship T 1
+      { x: -272, y: 4720, pauseForTrade: true },        // ship T 2
+      { x: 80, y: 3616, pauseForTrade: true },          // ship T 3
+      { x: -160, y: 2944, pauseForTrade: true },        // ship TL 4
+      { x: -752, y: 2672, pauseForTrade: true },        // ship TL 3
+      { x: -1536, y: 2368, pauseForTrade: true },       // ship TL 2
+      { x: -2576, y: 1632, pauseForTrade: true },       // ship TL 1
+      { x: -4080, y: 112, pauseForTrade: true },        // ship BL 6
+      { x: -3056, y: -1616, pauseForTrade: true },      // ship BL 5
+      { x: -2064, y: -2224, pauseForTrade: true },      // ship BL 4
+      { x: -1792, y: -2720, pauseForTrade: true },      // ship BL 3
+      { x: -1648, y: -3408, pauseForTrade: true },      // ship BL 2
+      { x: 80, y: -4080, pauseForTrade: true },         // ship BL 1
+      { x: 240, y: -5440, pauseForTrade: true },        // ship B 1
+      { x: -112, y: -11856, pauseForTrade: false },     // ship BO (exit)
     ],
   },
   {
-    name: "South-North Right",
+    // Bottom origin → through BR stops → through center → through TR stops → Top origin
+    name: "Bottom-to-Top Right",
     stops: [
-      { x: 6000, y: -6000, pauseForTrade: false },
-      { x: 4000, y: -3000, pauseForTrade: true },
-      { x: 3000, y: 0, pauseForTrade: true },
-      { x: 4000, y: 3000, pauseForTrade: true },
-      { x: 6000, y: 6000, pauseForTrade: false },
+      { x: -112, y: -11856, pauseForTrade: false },     // ship BO (origin)
+      { x: 240, y: -5440, pauseForTrade: true },        // ship B 1
+      { x: 1152, y: -4096, pauseForTrade: true },       // ship BR 3
+      { x: 1024, y: -3072, pauseForTrade: true },       // ship BR 2
+      { x: 3280, y: -1968, pauseForTrade: true },       // ship BR 1
+      { x: 3776, y: 1600, pauseForTrade: true },        // ship TR 3
+      { x: 2672, y: 2576, pauseForTrade: true },        // ship TR 2
+      { x: 1296, y: 2800, pauseForTrade: true },        // ship TR 1
+      { x: 80, y: 3616, pauseForTrade: true },          // ship T 3
+      { x: -272, y: 4720, pauseForTrade: true },        // ship T 2
+      { x: -448, y: 6432, pauseForTrade: true },        // ship T 1
+      { x: -848, y: 11184, pauseForTrade: false },      // ship TO (exit)
     ],
   },
   {
-    name: "East-West Top",
+    // Left origin → through L stops → through center → through R stops → Right origin
+    name: "Left-to-Right",
     stops: [
-      { x: 6000, y: 4000, pauseForTrade: false },
-      { x: 3000, y: 3000, pauseForTrade: true },
-      { x: 0, y: 3500, pauseForTrade: true },
-      { x: -3000, y: 3000, pauseForTrade: true },
-      { x: -6000, y: 4000, pauseForTrade: false },
+      { x: -12464, y: 896, pauseForTrade: false },      // ship LO (origin)
+      { x: -8080, y: 880, pauseForTrade: true },        // ship L 1
+      { x: -6112, y: 288, pauseForTrade: true },        // ship L 2
+      { x: -4112, y: 336, pauseForTrade: true },        // ship L 3
+      { x: 3712, y: -576, pauseForTrade: true },        // ship R 2
+      { x: 6800, y: -192, pauseForTrade: true },        // ship R 1
+      { x: 11264, y: -720, pauseForTrade: false },      // ship RO (exit)
     ],
   },
   {
-    name: "West-East Bottom",
+    // Right origin → through R stops → through center → through L stops → Left origin
+    name: "Right-to-Left",
     stops: [
-      { x: -6000, y: -4000, pauseForTrade: false },
-      { x: -3000, y: -3000, pauseForTrade: true },
-      { x: 0, y: -3500, pauseForTrade: true },
-      { x: 3000, y: -3000, pauseForTrade: true },
-      { x: 6000, y: -4000, pauseForTrade: false },
+      { x: 11264, y: -720, pauseForTrade: false },      // ship RO (origin)
+      { x: 6800, y: -192, pauseForTrade: true },        // ship R 1
+      { x: 3712, y: -576, pauseForTrade: true },        // ship R 2
+      { x: -4112, y: 336, pauseForTrade: true },        // ship L 3
+      { x: -6112, y: 288, pauseForTrade: true },        // ship L 2
+      { x: -8080, y: 880, pauseForTrade: true },        // ship L 1
+      { x: -12464, y: 896, pauseForTrade: false },      // ship LO (exit)
     ],
   },
 ];

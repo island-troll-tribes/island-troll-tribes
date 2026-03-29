@@ -42,10 +42,8 @@ export class SpawnSystem {
 
   private itemSpawnInfo: SpawnInfo[] = [];
   private animalSpawnInfo: SpawnInfo[] = [];
-  private fishSpawnInfo: SpawnInfo[] = [];
   private islands: IslandConfig[] = [];
   private fishRegions: Rectangle[] = [];
-  private hawkRegions: Rectangle[] = [];
   private gameStartTime = 0;
   private itemCurrent = 0;
   private animalCurrent = 0;
@@ -56,7 +54,6 @@ export class SpawnSystem {
   private constructor() {
     this.initItemSpawnInfo();
     this.initAnimalSpawnInfo();
-    this.initFishSpawnInfo();
     this.initIslands();
   }
 
@@ -92,14 +89,6 @@ export class SpawnSystem {
     ];
   }
 
-  /** Initialize fish spawn weights */
-  private initFishSpawnInfo(): void {
-    this.fishSpawnInfo = [
-      { id: UnitTypeIds.FISH, initialWeight: 100, finalWeight: 100, weightChangeTime: 0 },
-      { id: UnitTypeIds.GREEN_FISH, initialWeight: 0, finalWeight: 30, weightChangeTime: 480 },
-    ];
-  }
-
   /** Initialize island spawner configurations */
   private initIslands(): void {
     // Island configs will be populated with actual map rects via addIslandRegion()
@@ -126,11 +115,6 @@ export class SpawnSystem {
   /** Register a fish spawning region */
   addFishRegion(rect: Rectangle): void {
     this.fishRegions.push(rect);
-  }
-
-  /** Register a hawk spawning region */
-  addHawkRegion(rect: Rectangle): void {
-    this.hawkRegions.push(rect);
   }
 
   /** Get the time-adjusted spawn weight for a SpawnInfo */
@@ -295,25 +279,25 @@ export class SpawnSystem {
   private spawnFishAndHawks(): void {
     const config = GameConfig.getInstance();
 
-    // Spawn fish in water regions
+    // Original uses a 13-sided roll per spawn region:
+    // 4/13 = Hawk, 2/13 = Green Fish, 7/13 = Fish
     for (const region of this.fishRegions) {
-      const fishCount = Math.ceil(4 * config.FOOD_SPAWN_RATE);
-      for (let i = 0; i < fishCount; i++) {
-        if (this.fishCurrent >= config.MAX_ANIMALS) break;
-        const fishId = this.weightedSelect(this.fishSpawnInfo);
-        if (fishId === 0) continue;
-        const pos = this.getRandomPosInRect(region);
-        const facing = GetRandomReal(0, 360);
-        CreateUnit(Player(NEUTRAL_PASSIVE), fishId, pos.x, pos.y, facing);
-        this.fishCurrent++;
-      }
-    }
+      if (this.fishCurrent >= config.MAX_ANIMALS) break;
 
-    // Spawn hawks in each hawk region
-    for (const region of this.hawkRegions) {
+      const roll = GetRandomInt(1, 13);
+      let unitId: number;
+      if (roll <= 4) {
+        unitId = UnitTypeIds.HAWK;
+      } else if (roll <= 6) {
+        unitId = UnitTypeIds.GREEN_FISH;
+      } else {
+        unitId = UnitTypeIds.FISH;
+      }
+
       const pos = this.getRandomPosInRect(region);
       const facing = GetRandomReal(0, 360);
-      CreateUnit(Player(NEUTRAL_PASSIVE), UnitTypeIds.HAWK, pos.x, pos.y, facing);
+      CreateUnit(Player(NEUTRAL_PASSIVE), unitId, pos.x, pos.y, facing);
+      this.fishCurrent++;
     }
   }
 

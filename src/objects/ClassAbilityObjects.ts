@@ -229,38 +229,54 @@ compiletime(({ objectData }) => {
   // Jump — cd=40, mana=30
   setStats(a(CH, "A01Y", "Jump", 1), 40, 30, 600);
 
-  // Blur — Evasion based; cd=40, mana=30, dur=11
+  // Blur — Evasion based; 15/25/35% dodge chance
   a("AEev", "A01Z", "Blur", 3);
 
   // Defensive abilities
+  // Hardened Skin — passive, reduces damage by 5
   a("Assk", "A020", "Hardened Skin", 1);
-  a(CH, "A021", "Panic", 1);
-  a(CH, "A022", "Exhaust", 1);
-  a("Askb", "A023", "Bark Skin", 3);
+  // Panic — cd=15, mana=20, dur=15, +30% MS, +20% AS, +10% dmg taken
+  setStats(a(CH, "A021", "Panic", 1), 15, 20, 0, 0, 15, 15);
+  // Exhaust — applied after Anger, dur=4, -50% AS, -25% MS
+  setStats(a(CH, "A022", "Exhaust", 1), 0, 0, 0, 0, 4, 4);
+  // Bark Skin — cd=45, range=200, dur=10, +4 armor, 0.3 thorns
+  setStats(a("Askb", "A023", "Bark Skin", 3), 45, 0, 200, 0, 10, 10);
+  // Spell Shield — passive, blocks 1 negative spell every 40s
   a("AHad", "A024", "Spell Shield", 1);
+  // Spell Damage Reduction — passive, 15% magic resist
   a("Amim", "A025", "Spell Damage Reduction", 1);
+  // Magic Resist — passive, 10% per level
   a("Amim", "A026", "Magic Resist", 1);
-  a("AHad", "A027", "Bear Bulwark", 1);
+  // Bear Bulwark — cd=45, mana=20, aoe=600, dur=10, +4 armor aura
+  setStats(a("AHad", "A027", "Bear Bulwark", 1), 45, 20, 0, 600, 10, 10);
+  // Bear Block — passive block
   a("AHad", "A028", "Bear Block", 1);
+  // Bear Endurance — passive endurance aura
   a("AOae", "A029", "Bear Endurance", 1);
+  // Fortitude — passive, +3 armor aura
   a("Assk", "A02A", "Fortitude", 1);
+  // Endurance — passive, 35% damage reduction
   a("AOae", "A02B", "Endurance", 3);
-  a("Assk", "A02C", "Self Preservation", 1);
-  a("AOre", "A02D", "Reincarnation", 1);
+  // Self Preservation — cd=60, mana=0, +50 all stats
+  setStats(a("Assk", "A02C", "Self Preservation", 1), 60, 0);
+  // Reincarnation — cd=240, mana=100
+  setStats(a("AOre", "A02D", "Reincarnation", 1), 240, 100);
   a(CH, "A02E", "Supersub Courage", 1);
 
   // Assassinate — Wind Walk based; cd=65, mana=20, dur=8, 50% ms, backstab dmg 20-80
   setStats(a("AOwk", "A02F", "Assasinate", 1), 65, 0, 0, 0, 8, 8);
   setStats(a("AOwk", "A02G", "Assassinate", 4), 65, 20, 0, 0, 8, 8);
   a(CH, "A02H", "Tiger Vicious Strike", 1);
-  a("ACcr", "A02I", "Tiger Vicious Strike Cripple", 1);
+  // Tiger Vicious Strike Cripple — cd=15, dur=9/6, -35% MS, -10% AS
+  setStats(a("ACcr", "A02I", "Tiger Vicious Strike Cripple", 1), 15, 0, 0, 0, 9, 6);
 
   // Wolf abilities
   a(CH, "A02J", "Wolf Hunger", 1);
+  // Wolf Vampiric Attack — passive, 15% lifesteal
   a("AOvd", "A02K", "Wolf Vampiric Attack", 1);
 
   // Misc combat
-  a(CH, "A02L", "Hurl Boulder", 1);
+  setStats(a(CH, "A02L", "Hurl Boulder", 1), 15, 10, 500);
   a(CH, "A02M", "Null Damage", 1);
   a(CH, "A02N", "Null Damage Sub", 1);
 
@@ -283,8 +299,10 @@ compiletime(({ objectData }) => {
   setStats(a(CH, "A036", "Mage Fire", 1), 20, 10, 400);
   setStats(a(CH, "A037", "Legacy Mage Fire", 1), 20, 10, 400);
   setStats(a(CH, "A038", "Dementia Master Mage Fire", 1), 20, 10, 400);
-  a(CH, "A039", "Dementia Master Anger", 1);
-  a(CH, "A03A", "Dementia Master Stupefy", 1);
+  // DM Anger — same as Anger; cd=12, mana=20, dur=10
+  setStats(a(CH, "A039", "Dementia Master Anger", 1), 12, 20, 0, 0, 10, 10);
+  // DM Stupefy Field — cd=60, mana=10, dur=10
+  setStats(a(CH, "A03A", "Dementia Master Stupefy", 1), 60, 10, 0, 0, 10, 10);
   setStats(a(CH, "A03B", "Dementia Summoning", 1), 60, 30, 300);
   // Depress — cd=20, mana=10, range=500
   setStats(a(CH, "A03C", "Depress", 1), 20, 10, 500);
@@ -306,15 +324,20 @@ compiletime(({ objectData }) => {
   // Metronome — cd=12, mana=10
   setStats(a(CH, "A03S", "Metronome", 1), 12, 10, 600);
   setStats(a(CH, "A03T", "Legacy Metronome", 1), 12, 10, 600);
-  a("AUfn", "A03U", "Metronome Frost Nova", 1);
-  a("AUfn", "A03V", "Metronome Frost Nova Ult", 1);
-  a("AUim", "A03W", "Metronome Impale", 1);
-  a("ANmb", "A03X", "Metronome Mana Burn", 1);
+  // Metronome Frost Nova — cd=45, mana=20, dmg=10 area/15 target, dur=0.01
+  setStats(a("AUfn", "A03U", "Metronome Frost Nova", 1), 45, 20, 0, 0, 0.01, 0.01);
+  // Metronome Frost Nova Ult — cd=45, mana=20, aoe=600, dur=5, dmg=15 area/45 target
+  setStats(a("AUfn", "A03V", "Metronome Frost Nova Ult", 1), 45, 20, 0, 600, 5, 5);
+  // Metronome Impale — cd=45, mana=20, dur=0.5, dmg=10
+  setStats(a("AUim", "A03W", "Metronome Impale", 1), 45, 20, 0, 0, 0.5, 0.5);
+  // Metronome Mana Burn — cd=45, mana=20, drain=6
+  setStats(a("ANmb", "A03X", "Metronome Mana Burn", 1), 45, 20);
   // Overcharge — cd=30, mana=20
   setStats(a(CH, "A03Y", "Overcharge", 1), 30, 20);
   // Lightning Shield — cd=15, mana=10, range=600
   setStats(a("AOls", "A03Z", "Lightning Shield", 1), 15, 10, 600);
-  a("ACcy", "A040", "Cyclone", 1);
+  // Cyclone — cd=30, mana=15, range=500, dur=6/2
+  setStats(a("ACcy", "A040", "Cyclone", 1), 30, 15, 500, 0, 6, 2);
   // Tsunami — cd=45, mana=25, range=800, aoe=300
   setStats(a(CH, "A041", "Tsunami", 1), 45, 25, 800, 300);
   // Dark Gate — cd=60, mana=30, range=99999
@@ -509,23 +532,33 @@ compiletime(({ objectData }) => {
   a("Abrf", "A09M", "Transform Wolf", 1);
 
   // Form-specific
-  a("AOwk", "A09N", "Panther Prowl", 1);
+  // Panther Prowl — cd=60, mana=20, dur=20, -50% MS, 2s fade time
+  setStats(a("AOwk", "A09N", "Panther Prowl", 1), 60, 20, 0, 0, 20, 20);
+  // Panther Shadow Meld — passive stealth when stationary
   a("Amds", "A09O", "Panther Shadow Meld", 1);
   a(CH, "A09P", "Snake Poison", 1);
-  a("ACen", "A09Q", "Hunter Web", 1);
+  // Hunter Web — ensnare, cd=12, range=600, dur=7/3
+  setStats(a("ACen", "A09Q", "Hunter Web", 1), 12, 0, 600, 0, 7, 3);
   a(CH, "A09R", "Elk Critter", 1);
+  // Cat Grace — passive evasion, 10/15/20%
   a("AEev", "A09S", "Cat Grace", 3);
 
   // ═══════════════════════════════════════════════════════════════════
   // RENDO PET ABILITIES
   // ═══════════════════════════════════════════════════════════════════
 
-  a(CH, "A0A0", "Rendo Hawk Eye", 1);
-  a(CH, "A0A1", "Rendo Elk Jump", 1);
-  a(CH, "A0A2", "Rendo Wolf Bite", 1);
-  a(CH, "A0A3", "Rendo Snake Toxin", 1);
-  a(CH, "A0A4", "Rendo Panther Instinct", 1);
-  a(CH, "A0A5", "Rendo Devour", 1);
+  // Rendo Hawk Eye — cd=60, mana=10, dur=25
+  setStats(a(CH, "A0A0", "Rendo Hawk Eye", 1), 60, 10, 0, 0, 25, 25);
+  // Rendo Elk Jump — cd=60, mana=20, range=99999 (550 jump)
+  setStats(a(CH, "A0A1", "Rendo Elk Jump", 1), 60, 20, 99999);
+  // Rendo Wolf Bite — cd=60, mana=20, range=128, dur=15
+  setStats(a(CH, "A0A2", "Rendo Wolf Bite", 1), 60, 20, 128, 0, 15, 15);
+  // Rendo Snake Toxin — cd=1, mana=10, dur=15 (poison 5s)
+  setStats(a(CH, "A0A3", "Rendo Snake Toxin", 1), 1, 10, 0, 0, 15, 15);
+  // Rendo Panther Instinct — cd=1, mana=20, dur=4
+  setStats(a(CH, "A0A4", "Rendo Panther Instinct", 1), 1, 20, 0, 0, 4, 4);
+  // Rendo Devour — cd=25, mana=0, range=128
+  setStats(a(CH, "A0A5", "Rendo Devour", 1), 25, 0, 128);
 
   // ═══════════════════════════════════════════════════════════════════
   // BUILDING/CRAFTING SPELLBOOKS

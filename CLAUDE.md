@@ -192,8 +192,12 @@ The original Wurst code is in `/wurst/` (518 files). Key mappings:
 - `wurst/lib/Transformation.wurst` → `src/systems/evolution/TransformationSystem.ts`
 - `wurst/config/GameConstants.wurst` → `src/config/GameConfig.ts`
 - `wurst/assets/LocalObjectIDs.wurst` → `src/data/ItemIds.ts`, `UnitIds.ts`, `AbilityIds.ts`
+- `wurst/systems/modes/ForcedDuel.wurst` → `src/systems/modes/ForcedDuelSystem.ts`
+- `wurst/systems/modes/ShrinkingMap.wurst` → `src/systems/modes/ForestFireSystem.ts`
+- `wurst/systems/trade/TradeShip*.wurst` → `src/systems/trade/TradeShipSystem.ts`
+- `wurst/systems/core/Respawn.wurst` → `src/systems/survival/RespawnSystem.ts`
 
-## Current Status (55+ TypeScript files implemented)
+## Current Status (65+ TypeScript files implemented)
 
 ### Completed
 - [x] Project structure scaffolded
@@ -206,27 +210,27 @@ The original Wurst code is in `/wurst/` (518 files). Key mappings:
 - [x] Tanning system (hide-to-armor conversion)
 - [x] Spawn system (items, animals, fish, time-interpolated weights)
 - [x] Survival system (heat/cold/energy stat degradation with gear bonuses)
+- [x] Respawn system (grace period auto-revive, quadratic post-grace delay)
 - [x] Experience system (custom XP, class multipliers, shared range XP)
 - [x] Transformation system (Bear Form trick, 35 evolution pairs, stat preservation)
 - [x] Game mode system (50+ modes, chat selection, category organization)
 - [x] Class selection system (totem-based, auto-random, tribe duplicate prevention)
+- [x] Trade ship system (6 ships, paired rotation, merchant inventories, route waypoints)
+- [x] Forced duel system (arena teleport, stat reset, pre-duel pause)
+- [x] Forest fire system (shrinking map, expanding fire ring, tree destruction, % HP drain)
 - [x] All 8 animal entities (Elk, Wolf, Bear, Panther, Snake, Fish, GreenFish, Hawk)
 - [x] All 6 boss entities (AncientHydra, LesserHydra, Mammoth, AlligatorMan, DiscoDuck, TheOne)
 - [x] All 12 building entities (Forge, Armory, Tannery, MixingPot, Workshop, WDH, CampFire, Tent, MudHut, TrollHut, Hatchery, TeleportBeacon)
 - [x] Scoreboard UI (TribeBoard live stats + ScoreBoard detailed stats)
 - [x] Talent tree frame UI
 - [x] GameConfig with all mode-configurable fields
-- [x] ItemIds (157 items), UnitIds (135 units)
+- [x] ItemIds (157 items), UnitIds (135 units), AbilityIds (486+ abilities, 20 buffs)
 - [x] Main.ts wired with all systems
+- [x] Documentation (README.md, docs/SYSTEMS.md)
 
 ### Remaining
-- [ ] AbilityIds.ts (486+ abilities, 20 buffs) - comprehensive file
 - [ ] Port all 93 crafting recipes to AllRecipes.ts (currently 10 representative)
 - [ ] Port all troll abilities as talent definitions with real ability IDs
 - [ ] Wire actual FourCC IDs from base.w3x (most are compile-time generated)
-- [ ] Implement Trade ship system
-- [ ] Implement Forced Duel system
-- [ ] Implement Forest Fire (shrinking map) system
-- [ ] Implement Grace Period / Respawn system
 - [ ] Map compilation pipeline (TSTL → Lua → .w3x packaging)
 - [ ] Testing in WC3 Reforged

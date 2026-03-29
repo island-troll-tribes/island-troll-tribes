@@ -34,6 +34,10 @@ import { GameModeSystem } from "./systems/modes/GameModeSystem";
 import { ClassSelectionSystem } from "./systems/selection/ClassSelectionSystem";
 import { TransformationSystem } from "./systems/evolution/TransformationSystem";
 import { ExperienceSystem } from "./systems/combat/ExperienceSystem";
+import { TradeShipSystem } from "./systems/trade/TradeShipSystem";
+import { RespawnSystem } from "./systems/survival/RespawnSystem";
+import { ForcedDuelSystem } from "./systems/modes/ForcedDuelSystem";
+import { ForestFireSystem } from "./systems/modes/ForestFireSystem";
 
 /**
  * Main game initialization.
@@ -61,6 +65,10 @@ function main(): void {
   const classSelection = ClassSelectionSystem.getInstance();
   const transformSystem = TransformationSystem.getInstance();
   const experienceSystem = ExperienceSystem.getInstance();
+  const tradeShipSystem = TradeShipSystem.getInstance();
+  const respawnSystem = RespawnSystem.getInstance();
+  const forcedDuelSystem = ForcedDuelSystem.getInstance();
+  const forestFireSystem = ForestFireSystem.getInstance();
 
   // Initialize UI
   const uiManager = UIManager.getInstance();
@@ -97,6 +105,10 @@ function main(): void {
     spawnSystem.startSpawnCycles();
     craftingEngine.enable();
     experienceSystem.enable();
+    tradeShipSystem.start();
+    respawnSystem.initialize();
+    forcedDuelSystem.schedule();
+    forestFireSystem.schedule();
     uiManager.showGameplayHUD();
   });
 

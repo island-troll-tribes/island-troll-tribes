@@ -133,6 +133,7 @@ export namespace ItemIds {
   export const DRUNKS_POTION = FourCC("I09B");
   export const ANTI_MAGIC_POTION = FourCC("I09C");
   export const OMNICURE = FourCC("I09D");
+  export const ELEMENTAL_SHIELD_POTION = FourCC("I09E");
 
   // ─── Scrolls ───────────────────────────────────────────────────────
   export const SCROLL_STONE_ARMOR = FourCC("I0A0"); // ITEM_SCROLL_STONE_ARMOR

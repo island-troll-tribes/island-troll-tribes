@@ -84,6 +84,7 @@ export class GameConfig {
   FORCED_DUEL_AFTER = 0; // 0 = disabled
   SELECTION_TIME_ALLOWED = 60;
   FOREST_FIRE_AFTER = 0; // 0 = disabled
+  FOREST_FIRE_DISTANCE = 4000; // min safe radius when fire active
 
   // ─── Game Rules ────────────────────────────────────────────────────
   START_WITH_FIRE = false;
@@ -132,6 +133,7 @@ export class GameConfig {
     this.FORCED_DUEL_AFTER = 0;
     this.SELECTION_TIME_ALLOWED = 60;
     this.FOREST_FIRE_AFTER = 0;
+    this.FOREST_FIRE_DISTANCE = 4000;
     this.START_WITH_FIRE = false;
     this.START_WITH_ONE_FIRE = false;
     this.START_WITH_SPIRIT_WARD = false;

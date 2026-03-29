@@ -201,6 +201,9 @@ export namespace ItemIds {
   export const DD_PINION_FIRE = FourCC("I0E5");
   export const DD_PINION_PAIN = FourCC("I0E6");
   export const DD_PINION_SHADOW = FourCC("I0E7");
+  export const HYDRA_SCALE_BOOTS = FourCC("I0E8");
+  export const HYDRA_SCALE_GLOVES = FourCC("I0E9");
+  export const HYDRA_SCALE_COAT = FourCC("I0EA");
 
   // ─── Legacy / Convenience Aliases ──────────────────────────────────
   // These preserve backward compatibility with code using older names.

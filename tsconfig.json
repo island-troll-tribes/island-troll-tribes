@@ -16,7 +16,10 @@
     "jsx": "react",
     "jsxFactory": "createElement",
     "jsxFragmentFactory": "Fragment",
-    "types": ["w3ts"],
+    "types": [
+      "w3ts",
+      "war3-transformer/types"
+    ],
     "baseUrl": ".",
     "paths": {
       "@core/*": ["src/core/*"],
@@ -29,17 +32,25 @@
       "@ui/*": ["src/ui/*"],
       "@lib/*": ["src/lib/*"],
       "@utils/*": ["src/utils/*"]
-    }
+    },
+    "plugins": [
+      {
+        "transform": "war3-transformer",
+        "mapDir": "./base.w3x",
+        "entryFile": "./src/main.ts",
+        "outputDir": "./dist/IslandTrollTribes.w3x"
+      }
+    ]
   },
   "tstl": {
     "luaTarget": "5.3",
     "luaBundle": "dist/tstl_output.lua",
-    "luaBundleEntry": "src/main.ts",
-    "luaLibImport": "require-minimal",
+    "luaBundleEntry": "./src/main.ts",
+    "luaLibImport": "require",
     "noImplicitSelf": true,
-    "luaPlugins": [
-      { "name": "war3-transformer" }
-    ]
+    "noHeader": true,
+    "sourceMapTraceback": false,
+    "noResolvePaths": ["typescript", "typescript-to-lua"]
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist"]

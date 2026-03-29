@@ -38,7 +38,7 @@ import { join, resolve, dirname } from "node:path";
 // ─── Configuration ───────────────────────────────────────────────────────
 
 const ROOT_DIR = resolve(dirname(new URL(import.meta.url).pathname), "..");
-const DEFAULT_BASE_MAP = join(ROOT_DIR, "maps", "base.w3x");
+const DEFAULT_BASE_MAP = join(ROOT_DIR, "base.w3x");
 const DEFAULT_OUTPUT = join(ROOT_DIR, "dist", "IslandTrollTribes.w3x");
 const TSTL_OUTPUT = join(ROOT_DIR, "dist", "tstl_output.lua");
 

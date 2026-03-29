@@ -39,6 +39,8 @@ import { RespawnSystem } from "./systems/survival/RespawnSystem";
 import { ForcedDuelSystem } from "./systems/modes/ForcedDuelSystem";
 import { ForestFireSystem } from "./systems/modes/ForestFireSystem";
 import { SurvivalSystem } from "./systems/survival/SurvivalSystem";
+import { MixingSystem } from "./systems/crafting/MixingSystem";
+import { TanningSystem } from "./systems/crafting/TanningSystem";
 
 // Compiletime object definitions (evaluated at build time by war3-transformer)
 import "./objects";
@@ -74,6 +76,8 @@ function main(): void {
   const forcedDuelSystem = ForcedDuelSystem.getInstance();
   const forestFireSystem = ForestFireSystem.getInstance();
   const survivalSystem = SurvivalSystem.getInstance();
+  const mixingSystem = MixingSystem.getInstance();
+  const tanningSystem = TanningSystem.getInstance();
 
   // Initialize UI
   const uiManager = UIManager.getInstance();
@@ -109,6 +113,8 @@ function main(): void {
   stateManager.onPhaseEnter(GamePhase.Gameplay, () => {
     spawnSystem.startSpawnCycles();
     craftingEngine.enable();
+    mixingSystem.enable();
+    tanningSystem.enable();
     experienceSystem.enable();
     survivalSystem.startStatLossCycle();
     tradeShipSystem.start();

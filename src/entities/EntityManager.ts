@@ -20,6 +20,38 @@
 
 import { Unit, Trigger } from "w3ts";
 
+// Animal entities
+import { Elk } from "./animals/Elk";
+import { Wolf } from "./animals/Wolf";
+import { Bear } from "./animals/Bear";
+import { Panther } from "./animals/Panther";
+import { Snake } from "./animals/Snake";
+import { Fish } from "./animals/Fish";
+import { GreenFish } from "./animals/GreenFish";
+import { Hawk } from "./animals/Hawk";
+
+// Boss entities
+import { AlligatorMan } from "./bosses/AlligatorMan";
+import { AncientHydra } from "./bosses/AncientHydra";
+import { LesserHydra } from "./bosses/LesserHydra";
+import { Mammoth } from "./bosses/Mammoth";
+import { DiscoDuck } from "./bosses/DiscoDuck";
+import { TheOne } from "./bosses/TheOne";
+
+// Building entities
+import { Forge } from "./buildings/Forge";
+import { Armory } from "./buildings/Armory";
+import { Tannery } from "./buildings/Tannery";
+import { MixingPot } from "./buildings/MixingPot";
+import { Workshop } from "./buildings/Workshop";
+import { WitchDoctorHut } from "./buildings/WitchDoctorHut";
+import { CampFire } from "./buildings/CampFire";
+import { Tent } from "./buildings/Tent";
+import { MudHut } from "./buildings/MudHut";
+import { TrollHut } from "./buildings/TrollHut";
+import { Hatchery } from "./buildings/Hatchery";
+import { TeleportBeacon } from "./buildings/TeleportBeacon";
+
 export type EntityFactory = (unit: Unit) => UnitEntity;
 
 export abstract class UnitEntity {
@@ -138,7 +170,39 @@ export class EntityManager {
   /** Register all entity factories - called during initialization */
   registerAllFactories(): void {
     // Troll classes are registered by TrollRegistry.initialize()
-    // Animals, bosses, buildings registered by their respective modules
+
+    // Animals
+    Elk.register();
+    Wolf.register();
+    Bear.register();
+    Panther.register();
+    Snake.register();
+    Fish.register();
+    GreenFish.register();
+    Hawk.register();
+
+    // Bosses
+    AlligatorMan.register();
+    AncientHydra.register();
+    LesserHydra.register();
+    Mammoth.register();
+    DiscoDuck.register();
+    TheOne.register();
+
+    // Buildings
+    Forge.register();
+    Armory.register();
+    Tannery.register();
+    MixingPot.register();
+    Workshop.register();
+    WitchDoctorHut.register();
+    CampFire.register();
+    Tent.register();
+    MudHut.register();
+    TrollHut.register();
+    Hatchery.register();
+    TeleportBeacon.register();
+
     this.setupEventTriggers();
   }
 

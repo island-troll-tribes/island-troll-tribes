@@ -30,3 +30,6 @@ declare function GetRectMinX(r: rect): number;
 declare function GetRectMaxX(r: rect): number;
 declare function GetRectMinY(r: rect): number;
 declare function GetRectMaxY(r: rect): number;
+
+/** Create a rect from coordinates */
+declare function Rect(minX: number, minY: number, maxX: number, maxY: number): rect;

@@ -17,6 +17,7 @@ import { Timer, Rectangle, MapPlayer } from "w3ts";
 import { GameConfig } from "../../config/GameConfig";
 import { UnitTypeIds } from "../../data/UnitIds";
 import { ItemIds } from "../../data/ItemIds";
+import * as MapRects from "../../data/MapRects";
 
 /** Spawn weight configuration for an item or animal type */
 export interface SpawnInfo {
@@ -89,20 +90,55 @@ export class SpawnSystem {
     ];
   }
 
-  /** Initialize island spawner configurations */
+  /** Initialize island spawner configurations with map rects from war3map.j */
   private initIslands(): void {
-    // Island configs will be populated with actual map rects via addIslandRegion()
-    // Preserved spawn counts from original:
-    // NW: 15 items, 4 animals
-    // NE: 16 items, 4 animals
-    // SE: 16 items, 4 animals
-    // SW: 23 items, 6 animals (largest island)
-    this.islands = [
-      { itemSpawnCount: 15, animalSpawnCount: 4, spawnRegions: [] },
-      { itemSpawnCount: 16, animalSpawnCount: 4, spawnRegions: [] },
-      { itemSpawnCount: 16, animalSpawnCount: 4, spawnRegions: [] },
-      { itemSpawnCount: 23, animalSpawnCount: 6, spawnRegions: [] },
-    ];
+    // NW island: 15 items, 4 animals
+    this.islands.push({
+      itemSpawnCount: 15, animalSpawnCount: 4,
+      spawnRegions: [
+        { rect: MapRects.createRect(MapRects.spawnArea1_1), weight: MapRects.spawnArea1_1.weight },
+        { rect: MapRects.createRect(MapRects.spawnArea1_2), weight: MapRects.spawnArea1_2.weight },
+        { rect: MapRects.createRect(MapRects.spawnArea1_3), weight: MapRects.spawnArea1_3.weight },
+      ],
+    });
+
+    // NE island: 16 items, 4 animals
+    this.islands.push({
+      itemSpawnCount: 16, animalSpawnCount: 4,
+      spawnRegions: [
+        { rect: MapRects.createRect(MapRects.spawnArea2_1), weight: MapRects.spawnArea2_1.weight },
+        { rect: MapRects.createRect(MapRects.spawnArea2_2), weight: MapRects.spawnArea2_2.weight },
+        { rect: MapRects.createRect(MapRects.spawnArea2_3), weight: MapRects.spawnArea2_3.weight },
+      ],
+    });
+
+    // SE island: 16 items, 4 animals
+    this.islands.push({
+      itemSpawnCount: 16, animalSpawnCount: 4,
+      spawnRegions: [
+        { rect: MapRects.createRect(MapRects.spawnArea3_1), weight: MapRects.spawnArea3_1.weight },
+        { rect: MapRects.createRect(MapRects.spawnArea3_2), weight: MapRects.spawnArea3_2.weight },
+        { rect: MapRects.createRect(MapRects.spawnArea3_3), weight: MapRects.spawnArea3_3.weight },
+      ],
+    });
+
+    // SW island (largest): 23 items, 6 animals
+    this.islands.push({
+      itemSpawnCount: 23, animalSpawnCount: 6,
+      spawnRegions: [
+        { rect: MapRects.createRect(MapRects.spawnArea4_1), weight: MapRects.spawnArea4_1.weight },
+        { rect: MapRects.createRect(MapRects.spawnArea4_2), weight: MapRects.spawnArea4_2.weight },
+        { rect: MapRects.createRect(MapRects.spawnArea4_3), weight: MapRects.spawnArea4_3.weight },
+      ],
+    });
+
+    // Fish/ocean spawn regions (combined fish_new + out + our rects)
+    for (const r of MapRects.fishRects) {
+      this.fishRegions.push(MapRects.createRect(r));
+    }
+    for (const r of MapRects.oceanRects) {
+      this.fishRegions.push(MapRects.createRect(r));
+    }
   }
 
   /** Register a spawn region for an island (called during map init) */

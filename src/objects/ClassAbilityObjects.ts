@@ -709,69 +709,85 @@ compiletime(({ objectData }) => {
   ];
 
   for (const [id, name] of qmAbilities) {
-    a(CH, id, name, 1);
+    setStats(a(CH, id, name, 1), 0, 0, 0);
   }
 
   // ═══════════════════════════════════════════════════════════════════
   // ITEM ABILITIES (active use abilities on items)
   // ═══════════════════════════════════════════════════════════════════
 
+  // Banana Healing — instant, 38 HP
   a(CH, "A300", "Banana Healing", 1);
+  // Anabolic Evasion — passive evasion from boots
   a("AEev", "A301", "Anabolic Evasion", 1);
   a(CH, "A302", "Bone Thistle", 1);
   a(CH, "A303", "Dark Thistle", 1);
   a(CH, "A304", "Thistle", 1);
-  a(CH, "A305", "Spear", 1);
-  a(CH, "A306", "Spear Cast", 1);
-  a(CH, "A307", "Spear Dark", 1);
-  a(CH, "A308", "Spear Iron", 1);
-  a(CH, "A309", "Spear Steel", 1);
-  a(CH, "A30A", "Spear Poison", 1);
-  a(CH, "A30B", "Spear Refined Poison", 1);
-  a(CH, "A30C", "Spear Ultra Poison", 1);
+  // Spear abilities — cd varies, range=1000, projectile speed=700
+  setStats(a(CH, "A305", "Spear", 1), 2, 0, 1000);          // 40 dmg
+  setStats(a(CH, "A306", "Spear Cast", 1), 2, 0, 1000);
+  setStats(a(CH, "A307", "Spear Dark", 1), 5, 0, 1000);     // 40 dmg
+  setStats(a(CH, "A308", "Spear Iron", 1), 5, 0, 1000);     // 70 dmg
+  setStats(a(CH, "A309", "Spear Steel", 1), 8, 0, 1000);    // 100 dmg
+  setStats(a(CH, "A30A", "Spear Poison", 1), 2, 0, 1000);   // 10+6/s, 40s
+  setStats(a(CH, "A30B", "Spear Refined Poison", 1), 5, 0, 1000); // 20+10/s, 40s
+  setStats(a(CH, "A30C", "Spear Ultra Poison", 1), 8, 0, 1000);  // 40+16/s, 40s
   a("Amim", "A30D", "Spear Resist", 1);
-  a("ANia", "A30E", "Cloak of Flames", 1);
-  a(CH, "A30F", "Ice Veil", 1);
+  // Cloak of Flames — immolation 7/s, aoe=300
+  setStats(a("ANia", "A30E", "Cloak of Flames", 1), 0, 0, 0, 300);
+  // Ice Veil — aoe=500, dur=5 caster/2 target, 35% slow
+  setStats(a(CH, "A30F", "Ice Veil", 1), 0, 0, 0, 500, 5, 5);
   a(CH, "A30G", "Ice Veil Debuff", 1);
-  a(CH, "A30H", "Nether Potion Banish", 1);
-  a(CH, "A30I", "Drunk Potion", 1);
-  a(CH, "A30J", "Maximum Fervor", 1);
-  a(CH, "A30K", "Haste AOE", 1);
-  a(CH, "A30L", "Dysentery", 1);
-  a(CH, "A30M", "Root Cast", 1);
-  a("AEer", "A30N", "Root Troll", 1);
-  a("AEer", "A30O", "Root Hostile", 1);
+  // Nether Potion Banish — cd=20, range=350, dur=40/15
+  setStats(a(CH, "A30H", "Nether Potion Banish", 1), 20, 0, 350, 0, 40, 15);
+  // Drunk Potion — cd=25, range=550, dur=13/7, silence+slow+miss
+  setStats(a(CH, "A30I", "Drunk Potion", 1), 25, 0, 550, 0, 13, 7);
+  // Maximum Fervor — range=512, buff self + debuff enemies
+  setStats(a(CH, "A30J", "Maximum Fervor", 1), 0, 0, 0, 512);
+  // Haste AOE — cd=35, aoe=600, dur=7, +5 MS
+  setStats(a(CH, "A30K", "Haste AOE", 1), 35, 0, 0, 600, 7, 7);
+  // Dysentery — dur=25, 3/s dmg, aoe=200, -30% healing
+  setStats(a(CH, "A30L", "Dysentery", 1), 0, 0, 0, 200, 25, 25);
+  // Root Cast — cd=45, range=450, dur=8/4, 5/s dmg on non-trolls
+  setStats(a(CH, "A30M", "Root Cast", 1), 45, 0, 450, 0, 8, 4);
+  setStats(a("AEer", "A30N", "Root Troll", 1), 0, 0, 0, 0, 8, 4);
+  setStats(a("AEer", "A30O", "Root Hostile", 1), 0, 0, 0, 0, 8, 8);
   a(CH, "A30P", "Bramble", 1);
-  a("AOae", "A30Q", "Bonfire Aura", 1);
-  a("AOae", "A30R", "Pain Aura", 1);
-  a(CH, "A30S", "Hydra Claws Poison", 1);
-  a(CH, "A30T", "Hydra Breath", 1);
+  // Bonfire Aura — aoe=200, heat reduction
+  setStats(a("AOae", "A30Q", "Bonfire Aura", 1), 0, 0, 0, 200);
+  // Pain Aura — aoe=5000, 1 HP/s degen
+  setStats(a("AOae", "A30R", "Pain Aura", 1), 0, 0, 0, 5000);
+  // Hydra Claws Poison — dur=7/4.5, -15% AS, -25% MS, 2/s dmg
+  setStats(a(CH, "A30S", "Hydra Claws Poison", 1), 0, 0, 0, 0, 7, 4.5);
+  // Hydra Breath — range=800, 20/s dmg, dur=10
+  setStats(a(CH, "A30T", "Hydra Breath", 1), 0, 0, 800, 0, 10, 10);
   a(CH, "A30U", "Extreme Heat", 1);
 
   // ═══════════════════════════════════════════════════════════════════
   // SPECIAL/MISC ABILITIES
   // ═══════════════════════════════════════════════════════════════════
 
-  a(CH, "A400", "Attack Tree", 1);
+  setStats(a(CH, "A400", "Attack Tree", 1), 3, 0, 128);
   a(CH, "A401", "Drop Items", 1);
   a(CH, "A402", "Unload Items", 1);
   a(CH, "A403", "Pack Building", 1);
   a(CH, "A404", "Shop Sharing", 1);
-  a(CH, "A405", "Sleep Outside", 1);
-  a(CH, "A406", "Sleep Inside Tent", 1);
-  a(CH, "A407", "Sleep Inside Hut", 1);
+  setStats(a(CH, "A405", "Sleep Outside", 1), 5, 0);
+  setStats(a(CH, "A406", "Sleep Inside Tent", 1), 5, 0);
+  setStats(a(CH, "A407", "Sleep Inside Hut", 1), 5, 0);
   a(CH, "A408", "Hide Beacon", 1);
   a(CH, "A409", "Query Beacon", 1);
-  a(CH, "A40A", "Camp Fire Heat Cast", 1);
-  a(CH, "A40B", "Mage Fire Heat Cast", 1);
-  a(CH, "A40C", "Camp Fire Unsafe Heat", 1);
-  a(CH, "A40D", "Mage Fire Unsafe Heat", 1);
+  setStats(a(CH, "A40A", "Camp Fire Heat Cast", 1), 0, 0, 200);
+  setStats(a(CH, "A40B", "Mage Fire Heat Cast", 1), 0, 0, 200);
+  setStats(a(CH, "A40C", "Camp Fire Unsafe Heat", 1), 0, 0, 200);
+  setStats(a(CH, "A40D", "Mage Fire Unsafe Heat", 1), 0, 0, 200);
   a(CH, "A40E", "Ward Destroy", 1);
   a(CH, "A40F", "Hero Glow", 1);
   a(CH, "A40G", "The Glow", 1);
-  a(CH, "A40H", "Invoke Rune 1", 1);
-  a(CH, "A40I", "Invoke Rune 2", 1);
-  a(CH, "A40J", "Invoke Rune 3", 1);
+  // Invoke Runes — cd=20, mana=15
+  setStats(a(CH, "A40H", "Invoke Rune 1", 1), 20, 15);
+  setStats(a(CH, "A40I", "Invoke Rune 2", 1), 20, 15);
+  setStats(a(CH, "A40J", "Invoke Rune 3", 1), 20, 15);
   a(CH, "A40K", "GUI Druid", 1);
 
   // Inventory abilities

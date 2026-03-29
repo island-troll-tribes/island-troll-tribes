@@ -262,17 +262,17 @@ export const ALL_RECIPES: RecipeDefinition[] = [
 
   r("hydra_scale_boots", "Hydra Scale Boots", Tannery,
     [ItemIds.HYDRA_SCALE, ItemIds.HYDRA_SCALE],
-    ItemIds.BEAR_SKIN_BOOTS, "ReplaceableTextures/CommandButtons/BTNNagaArmorUp3.blp", // TODO: needs HYDRA_SCALE_BOOTS ID
+    ItemIds.HYDRA_SCALE_BOOTS, "ReplaceableTextures/CommandButtons/BTNNagaArmorUp3.blp",
     undefined, QM.QM_HYDRA_SCALE_BOOTS),
 
   r("hydra_scale_gloves", "Hydra Scale Gloves", Tannery,
     [ItemIds.HYDRA_SCALE, ItemIds.HYDRA_SCALE],
-    ItemIds.BEAR_SKIN_GLOVES, "ReplaceableTextures/CommandButtons/BTNNagaArmorUp3.blp", // TODO: needs HYDRA_SCALE_GLOVES ID
+    ItemIds.HYDRA_SCALE_GLOVES, "ReplaceableTextures/CommandButtons/BTNNagaArmorUp3.blp",
     undefined, QM.QM_HYDRA_SCALE_GLOVES),
 
   r("hydra_scale_coat", "Hydra Scale Coat", Tannery,
     [ItemIds.HYDRA_SCALE, ItemIds.HYDRA_SCALE, ItemIds.HYDRA_SCALE],
-    ItemIds.BEAR_SKIN_COAT, "ReplaceableTextures/CommandButtons/BTNNagaArmorUp3.blp", // TODO: needs HYDRA_SCALE_COAT ID
+    ItemIds.HYDRA_SCALE_COAT, "ReplaceableTextures/CommandButtons/BTNNagaArmorUp3.blp",
     undefined, QM.QM_HYDRA_SCALE_COAT),
 
   // ═══════════════════════════════════════════════════════════════════════

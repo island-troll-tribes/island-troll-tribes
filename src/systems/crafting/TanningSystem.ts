@@ -22,24 +22,25 @@
 
 import { Unit, Item, Trigger } from "w3ts";
 import { ItemIds } from "../../data/ItemIds";
+import { AbilityIds } from "../../data/AbilityIds";
 
-// ─── Ability IDs (placeholders -- must be mapped to real object IDs) ────────
+// ─── Ability IDs (wired to real QM constants from AbilityIds.ts) ────────
 
-export const ABILITY_QM_ELK_SKIN_BOOTS = FourCC("A0T0");
-export const ABILITY_QM_ELK_SKIN_GLOVES = FourCC("A0T1");
-export const ABILITY_QM_ELK_SKIN_COAT = FourCC("A0T2");
+export const ABILITY_QM_ELK_SKIN_BOOTS = AbilityIds.QM_ELK_SKIN_BOOTS;
+export const ABILITY_QM_ELK_SKIN_GLOVES = AbilityIds.QM_ELK_SKIN_GLOVES;
+export const ABILITY_QM_ELK_SKIN_COAT = AbilityIds.QM_ELK_SKIN_COAT;
 
-export const ABILITY_QM_JUNGLE_WOLF_SKIN_BOOTS = FourCC("A0T3");
-export const ABILITY_QM_JUNGLE_WOLF_SKIN_GLOVES = FourCC("A0T4");
-export const ABILITY_QM_JUNGLE_WOLF_SKIN_COAT = FourCC("A0T5");
+export const ABILITY_QM_JUNGLE_WOLF_SKIN_BOOTS = AbilityIds.QM_JUNGLE_WOLF_SKIN_BOOTS;
+export const ABILITY_QM_JUNGLE_WOLF_SKIN_GLOVES = AbilityIds.QM_JUNGLE_WOLF_SKIN_GLOVES;
+export const ABILITY_QM_JUNGLE_WOLF_SKIN_COAT = AbilityIds.QM_JUNGLE_WOLF_SKIN_COAT;
 
-export const ABILITY_QM_JUNGLE_BEAR_SKIN_BOOTS = FourCC("A0T6");
-export const ABILITY_QM_JUNGLE_BEAR_SKIN_GLOVES = FourCC("A0T7");
-export const ABILITY_QM_JUNGLE_BEAR_SKIN_COAT = FourCC("A0T8");
+export const ABILITY_QM_JUNGLE_BEAR_SKIN_BOOTS = AbilityIds.QM_JUNGLE_BEAR_SKIN_BOOTS;
+export const ABILITY_QM_JUNGLE_BEAR_SKIN_GLOVES = AbilityIds.QM_JUNGLE_BEAR_SKIN_GLOVES;
+export const ABILITY_QM_JUNGLE_BEAR_SKIN_COAT = AbilityIds.QM_JUNGLE_BEAR_SKIN_COAT;
 
-export const ABILITY_QM_HYDRA_SCALE_BOOTS = FourCC("A0T9");
-export const ABILITY_QM_HYDRA_SCALE_GLOVES = FourCC("A0TA");
-export const ABILITY_QM_HYDRA_SCALE_COAT = FourCC("A0TB");
+export const ABILITY_QM_HYDRA_SCALE_BOOTS = AbilityIds.QM_HYDRA_SCALE_BOOTS;
+export const ABILITY_QM_HYDRA_SCALE_GLOVES = AbilityIds.QM_HYDRA_SCALE_GLOVES;
+export const ABILITY_QM_HYDRA_SCALE_COAT = AbilityIds.QM_HYDRA_SCALE_COAT;
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 

@@ -23,6 +23,7 @@
 
 import { Unit, Item, Trigger } from "w3ts";
 import { ItemIds } from "../../data/ItemIds";
+import { AbilityIds } from "../../data/AbilityIds";
 
 // ─── Herb item IDs ──────────────────────────────────────────────────────────
 
@@ -45,16 +46,16 @@ const SPECIAL_HERB_IDS: number[] = [
   ItemIds.PURPLE_HERB,
 ];
 
-// ─── Ability IDs (placeholders -- must be mapped to real object IDs) ────────
+// ─── Ability IDs (wired to real constants from AbilityIds.ts) ────────
 
 /** Mix Herbs ability on Herb Master troll */
-export const ABILITY_MIX_HERBS = FourCC("A0M0");
+export const ABILITY_MIX_HERBS = AbilityIds.MIX_HERBS;
 
 /** Mix Herbs ability on Mixing Pot building */
-export const ABILITY_POT_MIX_HERBS = FourCC("A0M1");
+export const ABILITY_POT_MIX_HERBS = AbilityIds.POT_MIX_HERBS;
 
 /** Mix Herbs ability on Omnigatherer */
-export const ABILITY_OMNIGATHERER_MIX_HERBS = FourCC("A0M2");
+export const ABILITY_OMNIGATHERER_MIX_HERBS = AbilityIds.OMNIGATHERER_MIX_HERBS;
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 

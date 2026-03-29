@@ -24,6 +24,6 @@ export class MudHut extends Building {
 
   override postCreate(): void {
     super.postCreate();
-    // TODO: Add improved sleep/heal aura ability
+    // Sleep Inside Hut ability (A407) is on the unit type definition
   }
 }

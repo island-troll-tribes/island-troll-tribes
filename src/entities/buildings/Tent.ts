@@ -24,6 +24,6 @@ export class Tent extends Building {
 
   override postCreate(): void {
     super.postCreate();
-    // TODO: Add sleep/heal aura ability
+    // Sleep Inside Tent ability (A406) is on the unit type definition
   }
 }

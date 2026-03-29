@@ -13,7 +13,7 @@
  * - Base spawn rates decrease over time (item: -0.2/cycle, food: -0.3/cycle)
  */
 
-import { Timer, Rectangle } from "w3ts";
+import { Timer, Rectangle, MapPlayer } from "w3ts";
 import { GameConfig } from "../../config/GameConfig";
 import { UnitTypeIds } from "../../data/UnitIds";
 import { ItemIds } from "../../data/ItemIds";
@@ -34,12 +34,18 @@ export interface IslandConfig {
   spawnRegions: { rect: Rectangle; weight: number }[];
 }
 
+/** Neutral passive player for spawned animals/fish */
+const NEUTRAL_PASSIVE = 15;
+
 export class SpawnSystem {
   private static instance: SpawnSystem;
 
   private itemSpawnInfo: SpawnInfo[] = [];
   private animalSpawnInfo: SpawnInfo[] = [];
+  private fishSpawnInfo: SpawnInfo[] = [];
   private islands: IslandConfig[] = [];
+  private fishRegions: Rectangle[] = [];
+  private hawkRegions: Rectangle[] = [];
   private gameStartTime = 0;
   private itemCurrent = 0;
   private animalCurrent = 0;
@@ -50,6 +56,7 @@ export class SpawnSystem {
   private constructor() {
     this.initItemSpawnInfo();
     this.initAnimalSpawnInfo();
+    this.initFishSpawnInfo();
     this.initIslands();
   }
 
@@ -85,9 +92,17 @@ export class SpawnSystem {
     ];
   }
 
+  /** Initialize fish spawn weights */
+  private initFishSpawnInfo(): void {
+    this.fishSpawnInfo = [
+      { id: UnitTypeIds.FISH, initialWeight: 100, finalWeight: 100, weightChangeTime: 0 },
+      { id: UnitTypeIds.GREEN_FISH, initialWeight: 0, finalWeight: 30, weightChangeTime: 480 },
+    ];
+  }
+
   /** Initialize island spawner configurations */
   private initIslands(): void {
-    // Island configs will be populated with actual map rects
+    // Island configs will be populated with actual map rects via addIslandRegion()
     // Preserved spawn counts from original:
     // NW: 15 items, 4 animals
     // NE: 16 items, 4 animals
@@ -101,6 +116,23 @@ export class SpawnSystem {
     ];
   }
 
+  /** Register a spawn region for an island (called during map init) */
+  addIslandRegion(islandIndex: number, rect: Rectangle, weight: number): void {
+    if (islandIndex >= 0 && islandIndex < this.islands.length) {
+      this.islands[islandIndex].spawnRegions.push({ rect, weight });
+    }
+  }
+
+  /** Register a fish spawning region */
+  addFishRegion(rect: Rectangle): void {
+    this.fishRegions.push(rect);
+  }
+
+  /** Register a hawk spawning region */
+  addHawkRegion(rect: Rectangle): void {
+    this.hawkRegions.push(rect);
+  }
+
   /** Get the time-adjusted spawn weight for a SpawnInfo */
   getAdjustedWeight(info: SpawnInfo): number {
     if (info.weightChangeTime === 0) return info.finalWeight;
@@ -111,20 +143,91 @@ export class SpawnSystem {
   }
 
   private getElapsedTime(): number {
-    // Uses WC3 game timer
-    return 0; // TODO: Wire to actual game timer
+    return TimerGetElapsed(GetGameTimer()) - this.gameStartTime;
+  }
+
+  /** Perform weighted random selection from a pool of SpawnInfos */
+  private weightedSelect(pool: SpawnInfo[]): number {
+    let totalWeight = 0;
+    for (const info of pool) {
+      totalWeight += this.getAdjustedWeight(info);
+    }
+
+    if (totalWeight <= 0) return 0;
+
+    let roll = GetRandomReal(0, totalWeight);
+    for (const info of pool) {
+      const w = this.getAdjustedWeight(info);
+      roll -= w;
+      if (roll <= 0) return info.id;
+    }
+
+    // Fallback: return last entry
+    return pool[pool.length - 1].id;
+  }
+
+  /** Get a random position within a Rectangle */
+  private getRandomPosInRect(rect: Rectangle): { x: number; y: number } {
+    const r = rect.handle;
+    return {
+      x: GetRandomReal(GetRectMinX(r), GetRectMaxX(r)),
+      y: GetRandomReal(GetRectMinY(r), GetRectMaxY(r)),
+    };
+  }
+
+  /** Select a random region from an island's spawn regions, weighted */
+  private selectRegion(island: IslandConfig): Rectangle | null {
+    if (island.spawnRegions.length === 0) return null;
+
+    let totalWeight = 0;
+    for (const region of island.spawnRegions) {
+      totalWeight += region.weight;
+    }
+
+    let roll = GetRandomReal(0, totalWeight);
+    for (const region of island.spawnRegions) {
+      roll -= region.weight;
+      if (roll <= 0) return region.rect;
+    }
+
+    return island.spawnRegions[island.spawnRegions.length - 1].rect;
   }
 
   /** Start the spawn cycles (called when gameplay phase begins) */
   startSpawnCycles(): void {
-    this.gameStartTime = this.getElapsedTime();
+    this.gameStartTime = TimerGetElapsed(GetGameTimer());
 
     // Initial spawns (triple burst like original)
     this.handleAnimalSpawning();
     // Staggered: animals at 0/5/10s, items at 15/20s, fish at 25s
-    const initTimer = new Timer();
-    initTimer.start(5, false, () => {
+    const initTimer1 = new Timer();
+    initTimer1.start(5, false, () => {
       this.handleAnimalSpawning();
+      initTimer1.destroy();
+    });
+
+    const initTimer2 = new Timer();
+    initTimer2.start(10, false, () => {
+      this.handleAnimalSpawning();
+      initTimer2.destroy();
+    });
+
+    const initTimer3 = new Timer();
+    initTimer3.start(15, false, () => {
+      this.handleItemSpawning();
+      initTimer3.destroy();
+    });
+
+    const initTimer4 = new Timer();
+    initTimer4.start(20, false, () => {
+      this.handleItemSpawning();
+      initTimer4.destroy();
+    });
+
+    const initTimer5 = new Timer();
+    initTimer5.start(25, false, () => {
+      this.spawnFishAndHawks();
+      initTimer5.destroy();
     });
 
     // Main 120-second spawn cycle
@@ -166,19 +269,52 @@ export class SpawnSystem {
     }
   }
 
-  private spawnItemForIsland(_island: IslandConfig): void {
-    // Weighted random selection from item pool using adjusted weights
-    // TODO: Implement with actual map rect spawning
+  private spawnItemForIsland(island: IslandConfig): void {
+    const region = this.selectRegion(island);
+    if (!region) return;
+
+    const itemId = this.weightedSelect(this.itemSpawnInfo);
+    if (itemId === 0) return;
+
+    const pos = this.getRandomPosInRect(region);
+    CreateItem(itemId, pos.x, pos.y);
   }
 
-  private spawnAnimalForIsland(_island: IslandConfig): void {
-    // Weighted random selection from animal pool
-    // TODO: Implement with actual unit creation
+  private spawnAnimalForIsland(island: IslandConfig): void {
+    const region = this.selectRegion(island);
+    if (!region) return;
+
+    const unitId = this.weightedSelect(this.animalSpawnInfo);
+    if (unitId === 0) return;
+
+    const pos = this.getRandomPosInRect(region);
+    const facing = GetRandomReal(0, 360);
+    CreateUnit(Player(NEUTRAL_PASSIVE), unitId, pos.x, pos.y, facing);
   }
 
   private spawnFishAndHawks(): void {
-    // Spawn in river/ocean rects
-    // TODO: Implement with actual map rects
+    const config = GameConfig.getInstance();
+
+    // Spawn fish in water regions
+    for (const region of this.fishRegions) {
+      const fishCount = Math.ceil(4 * config.FOOD_SPAWN_RATE);
+      for (let i = 0; i < fishCount; i++) {
+        if (this.fishCurrent >= config.MAX_ANIMALS) break;
+        const fishId = this.weightedSelect(this.fishSpawnInfo);
+        if (fishId === 0) continue;
+        const pos = this.getRandomPosInRect(region);
+        const facing = GetRandomReal(0, 360);
+        CreateUnit(Player(NEUTRAL_PASSIVE), fishId, pos.x, pos.y, facing);
+        this.fishCurrent++;
+      }
+    }
+
+    // Spawn hawks in each hawk region
+    for (const region of this.hawkRegions) {
+      const pos = this.getRandomPosInRect(region);
+      const facing = GetRandomReal(0, 360);
+      CreateUnit(Player(NEUTRAL_PASSIVE), UnitTypeIds.HAWK, pos.x, pos.y, facing);
+    }
   }
 
   /** Decrease spawn rates over time (original: item -0.2, food -0.3 per cycle) */

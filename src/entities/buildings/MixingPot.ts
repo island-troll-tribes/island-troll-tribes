@@ -26,8 +26,7 @@ export class MixingPot extends Building {
 
   override postCreate(): void {
     super.postCreate();
-    // Crafting abilities are added by the CraftingEngine
-    // based on recipes tagged with CraftingStation.MixingPot
-    // TODO: Add ABILITY_POT_MIX_HERBS for herb threshold mixing
+    // QM abilities, POT_MIX_HERBS (A05S), and Mixing Pot Spellbook (A103)
+    // are all on the unit type definition in BuildingObjects.ts
   }
 }

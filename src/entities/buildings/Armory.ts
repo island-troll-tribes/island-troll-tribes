@@ -24,7 +24,6 @@ export class Armory extends Building {
 
   override postCreate(): void {
     super.postCreate();
-    // Crafting abilities are added by the CraftingEngine
-    // based on recipes tagged with CraftingStation.Armory
+    // QM abilities are on the unit type definition in BuildingObjects.ts
   }
 }

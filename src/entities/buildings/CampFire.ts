@@ -25,7 +25,7 @@ export class CampFire extends Building {
 
   override postCreate(): void {
     super.postCreate();
-    // TODO: Add heat aura ability
+    // Heat aura (A30Q) and heat cast (A40A) are on the unit type definition
     // TODO: Add meat cooking trigger (raw meat dropped nearby -> cooked meat)
   }
 }

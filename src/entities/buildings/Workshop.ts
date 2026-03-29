@@ -24,7 +24,6 @@ export class Workshop extends Building {
 
   override postCreate(): void {
     super.postCreate();
-    // Crafting abilities are added by the CraftingEngine
-    // based on recipes tagged with CraftingStation.Workshop
+    // QM abilities and Workshop Spellbook (A105) are on the unit type definition
   }
 }

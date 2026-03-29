@@ -24,7 +24,6 @@ export class WitchDoctorHut extends Building {
 
   override postCreate(): void {
     super.postCreate();
-    // Crafting abilities are added by the CraftingEngine
-    // based on recipes tagged with CraftingStation.WitchDoctorHut
+    // QM abilities and WDH Spellbook (A104) are on the unit type definition
   }
 }

@@ -67,10 +67,18 @@ compiletime(({ objectData }) => {
     "A100,A101");
 
   // ── Living Buildings ──
-  makeBuilding("hhou", "h008", "Camp Fire",          100, 900, 600, undefined, MB+"CampFire.mdx");
-  makeBuilding("hhou", "h009", "Tent",               100, 900, 600);
-  makeBuilding("hhou", "h00A", "Mud Hut",            250, 900, 600, 0.80, MB+"IglooFixed.mdx");
-  makeBuilding("hhou", "h00B", "Troll Hut",          250, 900, 600, 0.80, MB+"IglooFixed.mdx");
+  // Camp Fire: Bonfire heat aura (A30Q) + Camp Fire Heat Cast (A40A)
+  makeBuilding("hhou", "h008", "Camp Fire", 100, 900, 600, undefined, MB+"CampFire.mdx",
+    "A30Q,A40A");
+  // Tent: Sleep Inside Tent (A406)
+  makeBuilding("hhou", "h009", "Tent", 100, 900, 600, undefined, undefined,
+    "A406");
+  // Mud Hut: Sleep Inside Hut (A407)
+  makeBuilding("hhou", "h00A", "Mud Hut", 250, 900, 600, 0.80, MB+"IglooFixed.mdx",
+    "A407");
+  // Troll Hut: Sleep Inside Hut (A407)
+  makeBuilding("hhou", "h00B", "Troll Hut", 250, 900, 600, 0.80, MB+"IglooFixed.mdx",
+    "A407");
   makeBuilding("hhou", "h00C", "Hatchery",           200, 900, 600);  // uses Buildings.harpyNest
   makeBuilding("hhou", "h00D", "Teleportation Beacon", 300, 900, 600);  // uses Buildings.elvenGuardTower1
 

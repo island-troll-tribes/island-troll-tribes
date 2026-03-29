@@ -31,7 +31,7 @@ export class Forge extends Building {
 
   override postCreate(): void {
     super.postCreate();
-    // Crafting abilities are added by the CraftingEngine
-    // based on recipes tagged with CraftingStation.Forge
+    // QM abilities, shield spellbook (A102), and armor spellbook (A0B7)
+    // are on the unit type definition in BuildingObjects.ts
   }
 }

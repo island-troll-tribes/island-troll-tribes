@@ -39,6 +39,9 @@ import { RespawnSystem } from "./systems/survival/RespawnSystem";
 import { ForcedDuelSystem } from "./systems/modes/ForcedDuelSystem";
 import { ForestFireSystem } from "./systems/modes/ForestFireSystem";
 
+// Compiletime object definitions (evaluated at build time by war3-transformer)
+import "./objects";
+
 /**
  * Main game initialization.
  *

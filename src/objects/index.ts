@@ -13,3 +13,5 @@ import "./TrollObjects";
 import "./AnimalObjects";
 import "./BuildingObjects";
 import "./ItemObjects";
+import "./AbilityObjects";
+import "./BuffObjects";

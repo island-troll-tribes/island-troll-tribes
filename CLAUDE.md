@@ -26,30 +26,33 @@ src/
 │   ├── EntityManager.ts       # Factory registry, event routing
 │   ├── modules/               # Hostile, BonyAnimal (entity hierarchy base)
 │   ├── trolls/                # BaseTroll, TrollDefinition, TrollRegistry
-│   ├── animals/               # Elk, Wolf, Bear, Snake, Panther, Fish, Hawk
-│   ├── bosses/                # Hydra, Mammoth, AlligatorMan, DiscoDuck, TheOne
-│   └── buildings/             # Forge, Armory, MixingPot, Workshop, etc.
-├── talents/                   # NEW: Component-based talent system
+│   ├── animals/               # Elk, Wolf, Bear, Snake, Panther, Fish, GreenFish, Hawk
+│   ├── bosses/                # AncientHydra, LesserHydra, Mammoth, AlligatorMan, DiscoDuck, TheOne
+│   └── buildings/             # Forge, Armory, Tannery, MixingPot, Workshop, WitchDoctorHut, CampFire, Tent, MudHut, TrollHut, Hatchery, TeleportBeacon
+├── talents/                   # Component-based talent system (replaces legacy spellbook)
 │   ├── TalentDefinition.ts    # Data interfaces for talent definitions
 │   ├── TalentInstance.ts      # Runtime talent attached to a troll
 │   └── TalentRegistry.ts     # Central talent management + player tracking
 ├── systems/                   # Game systems
-│   ├── crafting/              # CraftingEngine, RecipeDefinition
-│   ├── spawning/              # SpawnSystem (items, animals, fish)
-│   ├── trade/                 # TradeShip coordinator
-│   ├── survival/              # Heat/cold mechanics
-│   ├── combat/                # Experience, damage
-│   └── modes/                 # GameMode voting, ForcedDuel, Respawn
+│   ├── crafting/              # CraftingEngine, RecipeDefinition, MixingSystem, TanningSystem
+│   ├── spawning/              # SpawnSystem (items, animals, fish, time-interpolated weights)
+│   ├── survival/              # SurvivalSystem (heat/cold/energy stat degradation)
+│   ├── combat/                # ExperienceSystem (custom XP, class multipliers, shared XP)
+│   ├── evolution/             # TransformationSystem (Bear Form trick, stat preservation)
+│   ├── selection/             # ClassSelectionSystem (totem-based class picking)
+│   ├── modes/                 # GameModeSystem (50+ modes, chat command selection)
+│   ├── trade/                 # TradeShip coordinator (TODO)
+│   └── [future]               # ForcedDuel, ForestFire, GracePeriod
 ├── data/                      # Pure data definitions (NO logic)
-│   ├── trolls/                # All 28 troll class definitions
+│   ├── trolls/                # All 28 troll class definitions + 7 family groupings
 │   ├── talents/               # All talent + tree definitions
 │   ├── recipes/               # All 93 crafting recipes
-│   ├── ItemIds.ts             # FourCC item constants
-│   └── UnitIds.ts             # FourCC unit constants
+│   ├── ItemIds.ts             # 157 FourCC item constants
+│   ├── UnitIds.ts             # 135 FourCC unit constants
+│   └── AbilityIds.ts          # 486+ ability + 20 buff FourCC constants (TODO)
 ├── ui/                        # UI system
 │   ├── UIManager.ts           # UI coordinator across game phases
-│   ├── frames/                # Custom WC3 frames (TalentTree, etc.)
-│   └── boards/                # Scoreboards (Tribe, Observer)
+│   └── frames/                # TalentTreeFrame, ScoreboardFrame
 ├── lib/                       # Shared utilities
 └── utils/                     # Helper functions
 ```
@@ -73,13 +76,33 @@ src/
 - **Stats**: All start at 1/1/1 (str/agi/int), Sub at 6/6/6, Super at 9/9/9
 - **Inventory slots**: Gatherer=6, Thief/Scout=5, Priest/BM=4, Hunter/Mage=3
 - **XP multiplier**: Base=4x, Sub=3x, Super=2x (higher tier = less bonus XP)
+- **Transformation**: Uses WC3 Bear Form ability trick for unit type swapping
 
 ### Crafting System
 - **7 crafting stations**: Forge, Armory, Tannery, MixingPot, Workshop, WitchDoctorHut, CraftMaster
 - **~93 recipes** total across all stations
 - **Recipe format**: Ordered slot list, each slot accepts 1+ item type IDs
 - **Search ranges**: Troll=100, CraftMaster=300, Buildings=700
-- **Special handlers**: Mixing (herb threshold), Tanning (hide→armor)
+- **Special handlers**: MixingSystem (herb combination priority), TanningSystem (hide→armor)
+
+### Survival System (Heat/Cold)
+- Heat stored as player's **gold resource** (0 to heatMaximum, default 100)
+- Stat loss every **3 seconds**: heat, mana, HP degrade by statLossAmount (default 1)
+- Camouflage **triples** all stat losses
+- Bonfire aura reduces heat loss by 2
+- Frozen debuff adds 1-5 random extra heat loss
+- Death triggers when mana < 1 OR heat < 1
+- Daytime (6:00-18:00 game time) grants +3 heat passively
+- Equipment bonuses: coat +5, boots/gloves +2 each, fire pinion +8
+- Stat gain timer (35s): adds heat from gear
+- Grace period default: 480 seconds (8 minutes)
+
+### Game Mode System
+- 50+ configurable modes in 8 categories (General, Pro, Troll Selection, Economy, Hard, Casual, Special, Testing)
+- First player selects modes via chat commands during 60-second selection phase
+- Modes modify `GameConfig` fields that affect gameplay
+- Composable (multiple active), chainable (one enables others), toggle-able
+- Key modes: -ffa, -1v1, -sf (start with fire), -el (elimination), -fd (forced duel), -sv (survival), -tm (test)
 
 ### Spawn System
 - **4 islands**: NW(15/4), NE(16/4), SE(16/4), SW(23/6) (items/animals)
@@ -104,8 +127,11 @@ src/
 
 ### Object Editor Data
 - Unit types, abilities, items, buffs defined in .w3u/.w3a/.w3t/.w3h files inside base.w3x
-- FourCC IDs in `/src/data/` are placeholders - must be mapped to actual IDs
+- FourCC IDs in `/src/data/` are placeholders - must be mapped to actual IDs at build time
+- war3-transformer plugin handles compile-time object generation (same as Wurst's compiletime())
 - Transformation uses BearForm ability to swap unit types (WC3 engine trick)
+- Most IDs in original Wurst are `compiletime(XXX_ID_GEN.next())` - assigned sequentially at build time
+- Some IDs are hardcoded FourCC values (e.g., `'Avul'`, `'Aloc'`, `'I057'`) - preserved in our code
 
 ### WC3 Limitations
 - No true classes at runtime - JASS is procedural, Lua via TSTL
@@ -121,18 +147,6 @@ src/
   - Use object pools / handle recyclers for frequently created/destroyed objects
   - Minimize closures in tight loops (each closure = a new Lua table)
   - Pre-allocate arrays where possible
-
-### Heat/Cold Survival System (from original)
-- Heat stored as player's **gold resource** (0 to heatMaximum, default 100)
-- Stat loss every **3 seconds**: heat, mana, HP degrade by statLossAmount (default 1)
-- Camouflage **triples** all stat losses
-- Bonfire aura reduces heat loss by 2
-- Frozen debuff adds 1-5 random extra heat loss
-- Death triggers when mana < 1 OR heat < 1
-- Daytime (6:00-18:00 game time) grants +3 heat passively
-- Equipment bonuses: coat +5, boots/gloves +2 each, fire pinion +8
-- Grace period default: 480 seconds (8 minutes), revive delay 10s
-- Post-grace respawn delay: (game_minutes)^2 seconds (quadratic)
 
 ### Community Resources
 - **HiveWorkshop**: hiveworkshop.com (main WC3 modding community)
@@ -158,43 +172,61 @@ src/
 - **New recipe**: Add entry to `src/data/recipes/AllRecipes.ts`
 - **New item type**: Add FourCC to `src/data/ItemIds.ts`
 - **New unit type**: Add FourCC to `src/data/UnitIds.ts`
+- **New ability**: Add FourCC to `src/data/AbilityIds.ts`
 
 ### Legacy Wurst Code Reference
 The original Wurst code is in `/wurst/` (518 files). Key mappings:
 - `wurst/systems/core/Classes.wurst` → `src/entities/trolls/TrollRegistry.ts`
 - `wurst/systems/core/GameStates.wurst` → `src/core/GameStateManager.ts`
 - `wurst/systems/core/Tribe.wurst` → `src/core/TribeManager.ts`
+- `wurst/systems/core/StatLoss.wurst` → `src/systems/survival/SurvivalSystem.ts`
 - `wurst/systems/crafting/QuickMake.wurst` → `src/systems/crafting/CraftingEngine.ts`
+- `wurst/systems/crafting/Mixing.wurst` → `src/systems/crafting/MixingSystem.ts`
+- `wurst/systems/crafting/Tanning.wurst` → `src/systems/crafting/TanningSystem.ts`
 - `wurst/systems/entities/UnitEntity.wurst` → `src/entities/EntityManager.ts`
 - `wurst/systems/spawns/ResourceSpawns.wurst` → `src/systems/spawning/SpawnSystem.ts`
+- `wurst/systems/modes/GameMode.wurst` → `src/systems/modes/GameModeSystem.ts`
+- `wurst/systems/boards/*.wurst` → `src/ui/frames/ScoreboardFrame.ts`
+- `wurst/objects/abilities/TrollUpgrade.wurst` → `src/systems/evolution/TransformationSystem.ts`
 - `wurst/objects/abilities/SpellBookHashMap.wurst` → `src/data/talents/AllTalentDefinitions.ts`
-- `wurst/objects/abilities/TrollUpgrade.wurst` → `src/entities/trolls/TrollRegistry.ts`
+- `wurst/lib/Transformation.wurst` → `src/systems/evolution/TransformationSystem.ts`
 - `wurst/config/GameConstants.wurst` → `src/config/GameConfig.ts`
+- `wurst/assets/LocalObjectIDs.wurst` → `src/data/ItemIds.ts`, `UnitIds.ts`, `AbilityIds.ts`
 
-## Current Status
+## Current Status (55+ TypeScript files implemented)
+
+### Completed
 - [x] Project structure scaffolded
 - [x] Core infrastructure (GameState, PlayerManager, TribeManager)
 - [x] Entity system (UnitEntity, Hostile, BonyAnimal hierarchy)
-- [x] Troll class system (BaseTroll, TrollDefinition, TrollRegistry)
-- [x] All 28 troll definitions as data
+- [x] Troll class system (BaseTroll, TrollDefinition, TrollRegistry, 28 definitions)
 - [x] Talent system architecture (TalentDefinition, TalentInstance, TalentRegistry)
 - [x] Crafting engine (CraftingEngine, RecipeDefinition)
-- [x] Spawn system framework
-- [x] UI framework (UIManager, TalentTreeFrame)
-- [ ] Port all 93 crafting recipes from Wurst
-- [ ] Port all troll abilities as talent definitions
-- [ ] Extract actual FourCC IDs from base.w3x
-- [ ] Implement Mixing.ts (herb combination logic)
-- [ ] Implement Tanning.ts (hide→armor logic)
-- [ ] Implement Experience system
+- [x] Mixing system (herb combination priority logic)
+- [x] Tanning system (hide-to-armor conversion)
+- [x] Spawn system (items, animals, fish, time-interpolated weights)
+- [x] Survival system (heat/cold/energy stat degradation with gear bonuses)
+- [x] Experience system (custom XP, class multipliers, shared range XP)
+- [x] Transformation system (Bear Form trick, 35 evolution pairs, stat preservation)
+- [x] Game mode system (50+ modes, chat selection, category organization)
+- [x] Class selection system (totem-based, auto-random, tribe duplicate prevention)
+- [x] All 8 animal entities (Elk, Wolf, Bear, Panther, Snake, Fish, GreenFish, Hawk)
+- [x] All 6 boss entities (AncientHydra, LesserHydra, Mammoth, AlligatorMan, DiscoDuck, TheOne)
+- [x] All 12 building entities (Forge, Armory, Tannery, MixingPot, Workshop, WDH, CampFire, Tent, MudHut, TrollHut, Hatchery, TeleportBeacon)
+- [x] Scoreboard UI (TribeBoard live stats + ScoreBoard detailed stats)
+- [x] Talent tree frame UI
+- [x] GameConfig with all mode-configurable fields
+- [x] ItemIds (157 items), UnitIds (135 units)
+- [x] Main.ts wired with all systems
+
+### Remaining
+- [ ] AbilityIds.ts (486+ abilities, 20 buffs) - comprehensive file
+- [ ] Port all 93 crafting recipes to AllRecipes.ts (currently 10 representative)
+- [ ] Port all troll abilities as talent definitions with real ability IDs
+- [ ] Wire actual FourCC IDs from base.w3x (most are compile-time generated)
 - [ ] Implement Trade ship system
-- [ ] Implement Heat/cold survival mechanics
-- [ ] Implement Game mode voting
-- [ ] Implement Class selector UI
-- [ ] Implement Scoreboard UI
-- [ ] Implement all 7+ boss entities
-- [ ] Implement all 8+ animal entities
-- [ ] Implement all 10+ building entities
-- [ ] Wire actual WC3 object IDs
-- [ ] Map compilation pipeline
+- [ ] Implement Forced Duel system
+- [ ] Implement Forest Fire (shrinking map) system
+- [ ] Implement Grace Period / Respawn system
+- [ ] Map compilation pipeline (TSTL → Lua → .w3x packaging)
 - [ ] Testing in WC3 Reforged

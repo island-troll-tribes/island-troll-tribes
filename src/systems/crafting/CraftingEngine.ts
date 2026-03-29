@@ -23,6 +23,8 @@ import { RecipeDefinition, CraftingStation } from "./RecipeDefinition";
 import { ALL_RECIPES } from "../../data/recipes/AllRecipes";
 import { TrollRegistry } from "../../entities/trolls/TrollRegistry";
 import { ItemIds } from "../../data/ItemIds";
+import { mix } from "./MixingSystem";
+import { tan } from "./TanningSystem";
 
 /** Special herb item IDs for threshold checking */
 const SPECIAL_HERBS = [
@@ -237,16 +239,12 @@ export class CraftingEngine {
 
   /** Handle Mixing Pot special recipes (herb combinations) */
   private handleMixing(caster: Unit): void {
-    // Mixing pot recipes use special multi-condition evaluation
-    // instead of the standard slot-matching system.
-    // This will be implemented when porting Mixing.wurst
+    mix(caster);
   }
 
   /** Handle Tannery special recipes (hide-to-armor conversion) */
   private handleTanning(caster: Unit, abilityId: number): void {
-    // Tanning uses a different validation flow:
-    // checks exact inventory contents against a HashMap lookup.
-    // This will be implemented when porting Tanning.wurst
+    tan(caster, abilityId);
   }
 
   /** Get all recipes for a specific station */

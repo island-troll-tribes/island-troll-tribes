@@ -30,6 +30,10 @@ import { TribeManager } from "./core/TribeManager";
 import { PlayerManager } from "./core/PlayerManager";
 import { EntityManager } from "./entities/EntityManager";
 import { UIManager } from "./ui/UIManager";
+import { GameModeSystem } from "./systems/modes/GameModeSystem";
+import { ClassSelectionSystem } from "./systems/selection/ClassSelectionSystem";
+import { TransformationSystem } from "./systems/evolution/TransformationSystem";
+import { ExperienceSystem } from "./systems/combat/ExperienceSystem";
 
 /**
  * Main game initialization.
@@ -53,33 +57,46 @@ function main(): void {
   // Initialize game systems
   const craftingEngine = CraftingEngine.getInstance();
   const spawnSystem = SpawnSystem.getInstance();
+  const gameModeSystem = GameModeSystem.getInstance();
+  const classSelection = ClassSelectionSystem.getInstance();
+  const transformSystem = TransformationSystem.getInstance();
+  const experienceSystem = ExperienceSystem.getInstance();
 
   // Initialize UI
   const uiManager = UIManager.getInstance();
 
-  // Wire up the state machine transitions
+  // ═══════════════════════════════════════════════════════════════════
+  // STATE MACHINE TRANSITIONS
+  // ═══════════════════════════════════════════════════════════════════
+
   stateManager.onPhaseEnter(GamePhase.Initialization, () => {
     config.loadDefaults();
     playerManager.initialize();
     entityManager.registerAllFactories();
+    transformSystem.initialize();
   });
 
   stateManager.onPhaseEnter(GamePhase.ModesSelection, () => {
-    uiManager.showModeSelection();
+    gameModeSystem.startSelection(() => {
+      stateManager.advancePhase();
+    });
   });
 
   stateManager.onPhaseEnter(GamePhase.TribeInitialization, () => {
-    tribeManager.formTribes(config.getNumTribes());
+    tribeManager.formTribes(config.NUM_TRIBES);
     stateManager.advancePhase();
   });
 
   stateManager.onPhaseEnter(GamePhase.ClassSelection, () => {
-    uiManager.showClassSelection();
+    classSelection.start(() => {
+      stateManager.advancePhase();
+    });
   });
 
   stateManager.onPhaseEnter(GamePhase.Gameplay, () => {
     spawnSystem.startSpawnCycles();
     craftingEngine.enable();
+    experienceSystem.enable();
     uiManager.showGameplayHUD();
   });
 

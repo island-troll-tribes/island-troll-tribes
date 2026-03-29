@@ -531,12 +531,33 @@ compiletime(({ objectData }) => {
   // BUILDING/CRAFTING SPELLBOOKS
   // ═══════════════════════════════════════════════════════════════════
 
-  a(SB, "A100", "Building Craft Spellbook");
-  a(SB, "A101", "Building Craft Second Spellbook");
-  a(SB, "A102", "Forge Spellbook");
-  a(SB, "A103", "Mixing Pot Spellbook");
-  a(SB, "A104", "Witch Doctor Hut Spellbook");
-  a(SB, "A105", "Workshop Spellbook");
+  // Building Craft Spellbook: building kit recipes (primary page)
+  sb("A100", "Building Craft Spellbook",
+    "A20I,A22R,A211,A21S,A204,A22Y,A21R,A22X,A22P,A21W,A22Q", 1);
+
+  // Building Craft Second Spellbook: overflow building kits
+  sb("A101", "Building Craft Second Spellbook",
+    "A22T,A22Q,A213", 1);
+
+  // Forge Spellbook: shield recipes (second page of Forge)
+  sb("A102", "Forge Spellbook",
+    "A228,A20H,A21E,A22L", 1);
+
+  // Mixing Pot Spellbook: overflow mixing pot recipes
+  sb("A103", "Mixing Pot Spellbook",
+    "A20Q,A200,A20C,A20Y,A212,A21V,A22U,A21T,A20R,A20Z,A20S", 1);
+
+  // Witch Doctor Hut Spellbook: overflow WDH recipes
+  sb("A104", "Witch Doctor Hut Spellbook",
+    "A223,A222,A226,A21O,A22D", 1);
+
+  // Workshop Spellbook: overflow workshop recipes
+  sb("A105", "Workshop Spellbook",
+    "A229,A210,A20W,A22S", 1);
+
+  // Armor Spellbook: bone/iron/steel boots, gloves, coats (Forge armor page)
+  sb("A0B7", "Armor Spellbook",
+    "A20E,A21A,A22H,A20G,A21C,A22J,A20F,A21B,A22I", 1);
   a(CH, "A106", "Building Select Long Range", 1);
 
   // ═══════════════════════════════════════════════════════════════════

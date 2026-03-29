@@ -10,6 +10,7 @@ compiletime(({ objectData }) => {
   function makeBuilding(
     baseType: string, id: string, name: string, hp: number,
     sightDay?: number, sightNight?: number, scaling?: number, model?: string,
+    normalAbils?: string,
   ) {
     const u = objectData.units.copy(baseType, id);
     if (!u) return;
@@ -19,6 +20,7 @@ compiletime(({ objectData }) => {
     if (sightNight) u.sightRadiusNight = sightNight;
     if (scaling) u.scalingValueundefined = scaling;
     if (model) u.modelFile = model;
+    if (normalAbils) u.normal = normalAbils;
   }
 
   function makeSpecial(
@@ -36,13 +38,33 @@ compiletime(({ objectData }) => {
   const MB = "Models\\Buildings\\";
 
   // ── Crafting Buildings ──
-  makeBuilding("hhou", "h001", "Forge",              500, 900, 600, undefined, MB+"Forge.mdx");
-  makeBuilding("hhou", "h002", "Armory",             500, 900, 600, undefined, MB+"Armory.mdx");
-  makeBuilding("hhou", "h003", "Tannery",            500, 900, 600);  // uses Buildings.pigFarm (default)
-  makeBuilding("hhou", "h004", "Mixing Pot",         350, 900, 600, undefined, MB+"MixingPot.mdl");
-  makeBuilding("hhou", "h005", "Workshop",           500, 900, 600, undefined, MB+"OrcLumbermill(noground)V2.01.mdx");
-  makeBuilding("hhou", "h006", "Witch Doctor's Hut", 500, 900, 600);  // uses Buildings.voodooLounge1
-  makeBuilding("hhou", "h007", "Craft Master",       750, 900, 600);  // uses Buildings.nerubianZiggurat
+  // Forge: direct QM (ingots, weapons) + Forge Spellbook (shields A102) + Armor Spellbook (boots/gloves/coats A0B7)
+  makeBuilding("hhou", "h001", "Forge", 500, 900, 600, undefined, MB+"Forge.mdx",
+    "A21D,A22K,A219,A22G,A22B,A21F,A22M,A20O,A21N,A102,A0B7");
+
+  // Armory: 5 direct QM recipes
+  makeBuilding("hhou", "h002", "Armory", 500, 900, 600, undefined, MB+"Armory.mdx",
+    "A201,A208,A20A,A209,A20B");
+
+  // Tannery: 12 direct QM recipes (3 hides x boots/gloves/coats + 3 hydra scale)
+  makeBuilding("hhou", "h003", "Tannery", 500, 900, 600, undefined, undefined,
+    "A20T,A20V,A20U,A21J,A21L,A21K,A21G,A21I,A21H,A216,A218,A217");
+
+  // Mixing Pot: direct QM + POT_MIX_HERBS (A05S) + Mixing Pot Spellbook (A103)
+  makeBuilding("hhou", "h004", "Mixing Pot", 350, 900, 600, undefined, MB+"MixingPot.mdl",
+    "A214,A05S,A21Q,A20N,A203,A202,A21X,A22F,A22E,A22C,A103");
+
+  // Workshop: direct QM + Workshop Spellbook (A105)
+  makeBuilding("hhou", "h005", "Workshop", 500, 900, 600, undefined, MB+"OrcLumbermill(noground)V2.01.mdx",
+    "A21M,A215,A20P,A20X,A21P,A21Y,A220,A22W,A21U,A20D,A105");
+
+  // Witch Doctor's Hut: direct QM + WDH Spellbook (A104)
+  makeBuilding("hhou", "h006", "Witch Doctor's Hut", 500, 900, 600, undefined, undefined,
+    "A221,A225,A224,A227,A20J,A20K,A20L,A20M,A21Y,A22V,A104");
+
+  // Craft Master: Building spellbooks (A100 + A101)
+  makeBuilding("hhou", "h007", "Craft Master", 750, 900, 600, undefined, undefined,
+    "A100,A101");
 
   // ── Living Buildings ──
   makeBuilding("hhou", "h008", "Camp Fire",          100, 900, 600, undefined, MB+"CampFire.mdx");

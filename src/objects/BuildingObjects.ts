@@ -9,7 +9,7 @@ declare function compiletime<T>(fn: (ctx: CompiletimeContext) => T): T;
 compiletime(({ objectData }) => {
   function makeBuilding(
     baseType: string, id: string, name: string, hp: number,
-    sightDay?: number, sightNight?: number, scaling?: number,
+    sightDay?: number, sightNight?: number, scaling?: number, model?: string,
   ) {
     const u = objectData.units.copy(baseType, id);
     if (!u) return;
@@ -18,41 +18,46 @@ compiletime(({ objectData }) => {
     if (sightDay) u.sightRadiusDay = sightDay;
     if (sightNight) u.sightRadiusNight = sightNight;
     if (scaling) u.scalingValueundefined = scaling;
+    if (model) u.modelFile = model;
   }
 
   function makeSpecial(
-    baseType: string, id: string, name: string, hp: number, moveSpeed?: number,
+    baseType: string, id: string, name: string, hp: number, moveSpeed?: number, model?: string,
   ) {
     const u = objectData.units.copy(baseType, id);
     if (!u) return;
     u.name = name;
     u.hitPointsMaximumBase = hp;
     if (moveSpeed) u.speedBase = moveSpeed;
+    if (model) u.modelFile = model;
   }
 
+  // Model path constants
+  const MB = "Models\\Buildings\\";
+
   // ── Crafting Buildings ──
-  makeBuilding("hhou", "h001", "Forge",              500, 900, 600);
-  makeBuilding("hhou", "h002", "Armory",             500, 900, 600);
-  makeBuilding("hhou", "h003", "Tannery",            500, 900, 600);
-  makeBuilding("hhou", "h004", "Mixing Pot",         350, 900, 600);
-  makeBuilding("hhou", "h005", "Workshop",           500, 900, 600);
-  makeBuilding("hhou", "h006", "Witch Doctor's Hut", 500, 900, 600);
-  makeBuilding("hhou", "h007", "Craft Master",       750, 900, 600);
+  makeBuilding("hhou", "h001", "Forge",              500, 900, 600, undefined, MB+"Forge.mdx");
+  makeBuilding("hhou", "h002", "Armory",             500, 900, 600, undefined, MB+"Armory.mdx");
+  makeBuilding("hhou", "h003", "Tannery",            500, 900, 600);  // uses Buildings.pigFarm (default)
+  makeBuilding("hhou", "h004", "Mixing Pot",         350, 900, 600, undefined, MB+"MixingPot.mdl");
+  makeBuilding("hhou", "h005", "Workshop",           500, 900, 600, undefined, MB+"OrcLumbermill(noground)V2.01.mdx");
+  makeBuilding("hhou", "h006", "Witch Doctor's Hut", 500, 900, 600);  // uses Buildings.voodooLounge1
+  makeBuilding("hhou", "h007", "Craft Master",       750, 900, 600);  // uses Buildings.nerubianZiggurat
 
   // ── Living Buildings ──
-  makeBuilding("hhou", "h008", "Camp Fire",          100, 900, 600);
+  makeBuilding("hhou", "h008", "Camp Fire",          100, 900, 600, undefined, MB+"CampFire.mdx");
   makeBuilding("hhou", "h009", "Tent",               100, 900, 600);
-  makeBuilding("hhou", "h00A", "Mud Hut",            250, 900, 600, 0.80);
-  makeBuilding("hhou", "h00B", "Troll Hut",          250, 900, 600, 0.80);
-  makeBuilding("hhou", "h00C", "Hatchery",           200, 900, 600);
-  makeBuilding("hhou", "h00D", "Teleportation Beacon", 300, 900, 600);
+  makeBuilding("hhou", "h00A", "Mud Hut",            250, 900, 600, 0.80, MB+"IglooFixed.mdx");
+  makeBuilding("hhou", "h00B", "Troll Hut",          250, 900, 600, 0.80, MB+"IglooFixed.mdx");
+  makeBuilding("hhou", "h00C", "Hatchery",           200, 900, 600);  // uses Buildings.harpyNest
+  makeBuilding("hhou", "h00D", "Teleportation Beacon", 300, 900, 600);  // uses Buildings.elvenGuardTower1
 
   // ── Defense / Utility Buildings ──
-  makeBuilding("hhou", "h00E", "Ensnare Trap",       100);
-  makeBuilding("hhou", "h00F", "Spirit Ward",        200, 900, 600);
-  makeBuilding("hwtw", "h00G", "Omnitower",          400, 1200, 800);
-  makeBuilding("hhou", "h00H", "Storage Hut",        250, 900, 600);
-  makeBuilding("hhou", "h00I", "Smoke House",        250, 900, 600);
+  makeBuilding("hhou", "h00E", "Ensnare Trap",       100);  // uses Buildings.circleOfPower1
+  makeBuilding("hhou", "h00F", "Spirit Ward",        200, 900, 600, undefined, "Units\\Creeps\\MonsterLure\\MonsterLure.mdl");
+  makeBuilding("hwtw", "h00G", "Omnitower",          400, 1200, 800);  // uses Buildings.watchTower
+  makeBuilding("hhou", "h00H", "Storage Hut",        250, 900, 600, undefined, "buildings\\other\\ForestTrollHut1\\ForestTrollHut1.mdl");
+  makeBuilding("hhou", "h00I", "Smoke House",        250, 900, 600);  // uses Buildings.furbolgHut
 
   // ── Special Units ──
   makeSpecial("nwlg", "n070", "Living Clay",         100, 270);
@@ -64,12 +69,12 @@ compiletime(({ objectData }) => {
   makeSpecial("hhou", "n076", "Uber Hive",           300);
   makeSpecial("hhou", "n077", "Meat",                 50);
   makeSpecial("ngme", "n078", "Troll Merchant",      500);
-  makeSpecial("hhou", "n079", "Fire",                 50);
-  makeSpecial("hhou", "n07A", "Mage Fire",            75);
-  makeSpecial("hhou", "n07B", "Mage Fire (Summoned)", 75);
+  makeSpecial("hhou", "n079", "Fire",                 50, undefined, MB+"CampFire.mdx");
+  makeSpecial("hhou", "n07A", "Mage Fire",            75, undefined, MB+"CampFire.mdx");
+  makeSpecial("hhou", "n07B", "Mage Fire (Summoned)", 75, undefined, MB+"CampFire.mdx");
   makeSpecial("nbot", "n07C", "Troll Transport Ship", 400, 300);
   makeSpecial("nwlg", "n07D", "Locust Skeleton",      50, 200);
-  makeSpecial("hhou", "n07E", "Building Tree",       500);
+  makeSpecial("hhou", "n07E", "Building Tree",       500, undefined, "Doodads\\Cinematic\\EyeOfSargeras\\EyeOfSargeras.mdl");
   makeSpecial("hhou", "n07F", "Hidden Stash",        100);
   makeSpecial("hhou", "n07G", "Ominous Altar",       500);
   makeSpecial("hhou", "n07H", "Troll Totem",         300);

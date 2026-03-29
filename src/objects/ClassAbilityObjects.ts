@@ -45,6 +45,18 @@ compiletime(({ objectData }) => {
   // Channel ability base — used for most custom troll spells
   const CH = "ANcl";
 
+  // Helper: set ability stats (cooldown, manaCost, castRange, areaOfEffect, duration)
+  function setStats(ab: any, cd?: number, mana?: number, range?: number, aoe?: number, durN?: number, durH?: number) {
+    if (!ab) return ab;
+    if (cd !== undefined) ab.cooldown = cd;
+    if (mana !== undefined) ab.manaCost = mana;
+    if (range !== undefined) ab.castRange = range;
+    if (aoe !== undefined) ab.areaOfEffect = aoe;
+    if (durN !== undefined) ab.durationNormal = durN;
+    if (durH !== undefined) ab.durationHero = durH;
+    return ab;
+  }
+
   // ═══════════════════════════════════════════════════════════════════
   // SPELLBOOKS (one per class/subclass)
   // These are container abilities that hold other abilities.
@@ -180,43 +192,44 @@ compiletime(({ objectData }) => {
   sb("A40R", "Trapper Spellbook", "A01W,A01U,A01V,A07E", 3);
 
   // ═══════════════════════════════════════════════════════════════════
-  // COMBAT ABILITIES
+  // COMBAT ABILITIES (with stats from Wurst source)
+  // setStats(ab, cooldown, manaCost, castRange, aoeRadius, durationNormal, durationHero)
   // ═══════════════════════════════════════════════════════════════════
 
-  // Bash — based on Bash (Aakb = Bash)
+  // Bash — based on Bash (AHbh)
   a("AHbh", "A01I", "Bash", 1);
 
   // Critical Strike — based on Critical Strike (AOcr)
   a("AOcr", "A01J", "Critical Strike", 3);
 
-  // Rage — based on Endurance Aura
+  // Rage — Endurance Aura based
   a("AOae", "A01K", "Rage", 3);
   a("AOae", "A01L", "Anger", 3);
   a("AOae", "A01M", "Legacy Anger", 3);
   a("AOae", "A01N", "Pump Up", 3);
   a("AOae", "A01O", "Legacy Pump Up", 3);
 
-  // Giant Swing — based on Pulverize (War Stomp variant)
-  a("AOws", "A01P", "Giant Swing", 3);
-  a("AOws", "A01Q", "Giant Swing SS", 3);
+  // Giant Swing — War Stomp based; 19-23% chance, 200-250 full/400-500 half radius
+  setStats(a("AOws", "A01P", "Giant Swing", 3), 0, 0, 0, 250);
+  setStats(a("AOws", "A01Q", "Giant Swing SS", 3), 0, 0, 0, 250);
 
-  // Ensnare/Traps — based on Ensnare
-  a("ACen", "A01R", "Ensnare", 1);
-  a("ACen", "A01S", "Ensnare Trap", 1);
-  a("ACen", "A01T", "Boss Ensnare", 1);
+  // Ensnare — cd=10, range=700, dur=8 normal / 2.5 hero
+  setStats(a("ACen", "A01R", "Ensnare", 1), 10, 0, 700, 0, 8, 2.5);
+  setStats(a("ACen", "A01S", "Ensnare Trap", 1), 10, 0, 700, 0, 8, 2.5);
+  setStats(a("ACen", "A01T", "Boss Ensnare", 1), 10, 0, 700, 0, 8, 2.5);
 
   // Traps — Channel-based
-  a(CH, "A01U", "Spiked Trap", 1);
-  a(CH, "A01V", "Bear Trap", 1);
-  a(CH, "A01W", "Track Trap", 1);
+  setStats(a(CH, "A01U", "Spiked Trap", 1), 15, 0, 200);
+  setStats(a(CH, "A01V", "Bear Trap", 1), 20, 0, 200);
+  setStats(a(CH, "A01W", "Track Trap", 1), 10, 0, 200);
 
   // Howl of Terror
-  a("AOhw", "A01X", "Howl of Terror", 1);
+  setStats(a("AOhw", "A01X", "Howl of Terror", 1), 30, 10, 0, 500, 10, 5);
 
-  // Jump — Channel-based
-  a(CH, "A01Y", "Jump", 1);
+  // Jump — cd=40, mana=30
+  setStats(a(CH, "A01Y", "Jump", 1), 40, 30, 600);
 
-  // Blur — based on Evasion
+  // Blur — Evasion based; cd=40, mana=30, dur=11
   a("AEev", "A01Z", "Blur", 3);
 
   // Defensive abilities
@@ -236,9 +249,9 @@ compiletime(({ objectData }) => {
   a("AOre", "A02D", "Reincarnation", 1);
   a(CH, "A02E", "Supersub Courage", 1);
 
-  // Assassinate / Tiger abilities
-  a("AOwk", "A02F", "Assasinate", 1);
-  a("AOwk", "A02G", "Assassinate", 4);
+  // Assassinate — Wind Walk based; cd=65, mana=20, dur=8, 50% ms, backstab dmg 20-80
+  setStats(a("AOwk", "A02F", "Assasinate", 1), 65, 0, 0, 0, 8, 8);
+  setStats(a("AOwk", "A02G", "Assassinate", 4), 65, 20, 0, 0, 8, 8);
   a(CH, "A02H", "Tiger Vicious Strike", 1);
   a("ACcr", "A02I", "Tiger Vicious Strike Cripple", 1);
 
@@ -255,176 +268,236 @@ compiletime(({ objectData }) => {
   // MAGIC ABILITIES
   // ═══════════════════════════════════════════════════════════════════
 
-  a(CH, "A030", "Firebolt", 1);
-  a(CH, "A031", "Flame Spray", 1);
-  a(CH, "A032", "Legacy Flame Spray", 1);
-  a(CH, "A033", "Frost Blast", 1);
-  a(CH, "A034", "Frost Armor", 1);
-  a("AHfs", "A035", "Meteor", 1);
-  a(CH, "A036", "Mage Fire", 1);
-  a(CH, "A037", "Legacy Mage Fire", 1);
-  a(CH, "A038", "Dementia Master Mage Fire", 1);
+  // Firebolt
+  setStats(a(CH, "A030", "Firebolt", 1), 10, 10, 600);
+  // Flame Spray — cd=15, mana=8, range=400
+  setStats(a(CH, "A031", "Flame Spray", 1), 15, 8, 400);
+  setStats(a(CH, "A032", "Legacy Flame Spray", 1), 15, 8, 400);
+  // Frost Blast — cd=35, mana=12, range=1650, aoe=250, slow 2-5s
+  setStats(a(CH, "A033", "Frost Blast", 1), 35, 12, 1650, 250, 5, 5);
+  // Frost Armor
+  setStats(a(CH, "A034", "Frost Armor", 1), 30, 15, 600, 0, 20, 20);
+  // Meteor — cd=28, mana=24, range=800, aoe=240, burn 5s
+  setStats(a("AHfs", "A035", "Meteor", 1), 28, 24, 800, 240, 5, 5);
+  // Mage Fire — cd=20, mana=10, range=400
+  setStats(a(CH, "A036", "Mage Fire", 1), 20, 10, 400);
+  setStats(a(CH, "A037", "Legacy Mage Fire", 1), 20, 10, 400);
+  setStats(a(CH, "A038", "Dementia Master Mage Fire", 1), 20, 10, 400);
   a(CH, "A039", "Dementia Master Anger", 1);
   a(CH, "A03A", "Dementia Master Stupefy", 1);
-  a(CH, "A03B", "Dementia Summoning", 1);
-  a(CH, "A03C", "Depress", 1);
-  a(CH, "A03D", "Legacy Depress", 1);
+  setStats(a(CH, "A03B", "Dementia Summoning", 1), 60, 30, 300);
+  // Depress — cd=20, mana=10, range=500
+  setStats(a(CH, "A03C", "Depress", 1), 20, 10, 500);
+  setStats(a(CH, "A03D", "Legacy Depress", 1), 20, 10, 500);
   a("AOae", "A03E", "Depression Aura", 1);
-  a(CH, "A03F", "Depression Orb", 1);
+  setStats(a(CH, "A03F", "Depression Orb", 1), 30, 15, 500);
   a("AOae", "A03G", "Dementia Depression Aura", 1);
   a("AOae", "A03H", "DD Depress Aura", 1);
   a("ANia", "A03I", "DD Immolation", 1);
   a("AIms", "A03J", "DD Move Speed", 1);
-  a(CH, "A03K", "Negative Blast", 1);
-  a(CH, "A03M", "Legacy Negative Blast", 1);
-  a(CH, "A03N", "Negative Blast Sub", 1);
-  a(CH, "A03P", "Stupefy", 1);
-  a(CH, "A03Q", "Stupefy Legacy", 1);
-  a("AHfs", "A03R", "Doomsday", 1);
-  a(CH, "A03S", "Metronome", 1);
-  a(CH, "A03T", "Legacy Metronome", 1);
+  // Negative Blast — cd=5, mana=5, range=300
+  setStats(a(CH, "A03K", "Negative Blast", 1), 5, 5, 300);
+  setStats(a(CH, "A03M", "Legacy Negative Blast", 1), 5, 5, 300);
+  setStats(a(CH, "A03N", "Negative Blast Sub", 1), 5, 5, 300);
+  // Stupefy — cd=20, mana=15, range=400
+  setStats(a(CH, "A03P", "Stupefy", 1), 20, 15, 400);
+  setStats(a(CH, "A03Q", "Stupefy Legacy", 1), 20, 15, 400);
+  setStats(a("AHfs", "A03R", "Doomsday", 1), 60, 40, 800, 300, 5, 5);
+  // Metronome — cd=12, mana=10
+  setStats(a(CH, "A03S", "Metronome", 1), 12, 10, 600);
+  setStats(a(CH, "A03T", "Legacy Metronome", 1), 12, 10, 600);
   a("AUfn", "A03U", "Metronome Frost Nova", 1);
   a("AUfn", "A03V", "Metronome Frost Nova Ult", 1);
   a("AUim", "A03W", "Metronome Impale", 1);
   a("ANmb", "A03X", "Metronome Mana Burn", 1);
-  a(CH, "A03Y", "Overcharge", 1);
-  a("AOls", "A03Z", "Lightning Shield", 1);
+  // Overcharge — cd=30, mana=20
+  setStats(a(CH, "A03Y", "Overcharge", 1), 30, 20);
+  // Lightning Shield — cd=15, mana=10, range=600
+  setStats(a("AOls", "A03Z", "Lightning Shield", 1), 15, 10, 600);
   a("ACcy", "A040", "Cyclone", 1);
-  a(CH, "A041", "Tsunami", 1);
-  a(CH, "A042", "Dark Gate", 1);
-  a(CH, "A043", "Light Gate", 1);
-  a("ACcl", "A044", "Zap", 1);
-  a(CH, "A045", "Angelic Elemental", 1);
-  a(CH, "A046", "Sage Angelic Elemental", 1);
-  a(CH, "A047", "Skeletal Minion", 1);
-  a(CH, "A048", "Earth Guardian", 1);
-  a(CH, "A049", "Magic Mist", 1);
-  a("AAbm", "A04A", "Anti-Magic", 1);
-  a(CH, "A04B", "Anti-Magic AOE", 1);
+  // Tsunami — cd=45, mana=25, range=800, aoe=300
+  setStats(a(CH, "A041", "Tsunami", 1), 45, 25, 800, 300);
+  // Dark Gate — cd=60, mana=30, range=99999
+  setStats(a(CH, "A042", "Dark Gate", 1), 60, 30, 99999);
+  // Light Gate — cd=60, mana=30, range=99999
+  setStats(a(CH, "A043", "Light Gate", 1), 60, 30, 99999);
+  // Zap (Chain Lightning) — cd=15, mana=12, range=700
+  setStats(a("ACcl", "A044", "Zap", 1), 15, 12, 700);
+  // Angelic Elemental — cd=45, mana=20
+  setStats(a(CH, "A045", "Angelic Elemental", 1), 45, 20, 300);
+  setStats(a(CH, "A046", "Sage Angelic Elemental", 1), 45, 20, 300);
+  setStats(a(CH, "A047", "Skeletal Minion", 1), 45, 20, 300);
+  // Earth Guardian — cd=45, mana=20
+  setStats(a(CH, "A048", "Earth Guardian", 1), 45, 20, 300);
+  // Magic Mist — cd=25, mana=15, range=600, aoe=400
+  setStats(a(CH, "A049", "Magic Mist", 1), 25, 15, 600, 400, 10, 10);
+  // Anti-Magic — cd=1, mana=5, range=600, dur=10
+  setStats(a("AAbm", "A04A", "Anti-Magic", 1), 1, 5, 600, 0, 10, 10);
+  // Anti-Magic AOE — cd=20, mana=20, aoe=600, dur=10
+  setStats(a(CH, "A04B", "Anti-Magic AOE", 1), 20, 20, 0, 600, 10, 10);
 
   // ═══════════════════════════════════════════════════════════════════
   // PRIEST/HEALING ABILITIES
   // ═══════════════════════════════════════════════════════════════════
 
-  a(CH, "A050", "Healing Wave", 1);
-  a(CH, "A051", "MH Healing Wave", 1);
-  a(CH, "A052", "Sage Healing Wave", 1);
-  a(CH, "A053", "Healing Potion", 1);
-  a(CH, "A054", "Rejuvenation", 1);
+  // Healing Wave — cd=20, mana=10, range=6000, 50hp primary, 7 bounces
+  setStats(a(CH, "A050", "Healing Wave", 1), 20, 10, 6000);
+  setStats(a(CH, "A051", "MH Healing Wave", 1), 18, 10, 6000);
+  setStats(a(CH, "A052", "Sage Healing Wave", 1), 16, 10, 6000);
+  setStats(a(CH, "A053", "Healing Potion", 1), 0, 0);
+  // Rejuvenation — cd=30, mana=30, range=150, 150hp over 10s
+  setStats(a(CH, "A054", "Rejuvenation", 1), 30, 30, 150, 0, 10, 10);
   a(CH, "A055", "Rejuv Healing", 1);
   a(CH, "A056", "Rejuv Mana", 1);
-  a(CH, "A057", "Ranged Heal", 1);
-  a(CH, "A058", "Replenish Energy", 1);
-  a(CH, "A059", "Replenish Health", 1);
-  a(CH, "A05A", "Sage Replenish Energy", 1);
+  // Ranged Heal — cd=5, mana=15, range=6000
+  setStats(a(CH, "A057", "Ranged Heal", 1), 5, 15, 6000);
+  // Replenish Energy — cd=5, mana=20+5/sec, aoe=500
+  setStats(a(CH, "A058", "Replenish Energy", 1), 5, 20, 0, 500);
+  // Replenish Health — cd=5, mana=20+5/sec, aoe=500
+  setStats(a(CH, "A059", "Replenish Health", 1), 5, 20, 0, 500);
+  setStats(a(CH, "A05A", "Sage Replenish Energy", 1), 5, 20, 0, 500);
   a(CH, "A05B", "Breath of Life", 1);
-  a("AAbm", "A05C", "Cure All", 1);
-  a("AAbm", "A05D", "Cure All Item", 1);
-  a("AAbm", "A05E", "Omnicure", 1);
-  a("AAbm", "A05F", "Omnicure Item", 1);
-  a(CH, "A05G", "Troll Battle Call", 1);
-  a(CH, "A05H", "Sage Troll Battle Call", 1);
-  a(CH, "A05I", "Increase Metabolism", 1);
-  a(CH, "A05J", "Sage Increase Metabolism", 1);
-  a(CH, "A05K", "Mix Energy", 1);
-  a(CH, "A05L", "Mix Heat", 1);
-  a(CH, "A05M", "MH Mix Energy", 1);
-  a(CH, "A05N", "MH Mix Heat", 1);
-  a(CH, "A05O", "Sage Mix Energy", 1);
-  a(CH, "A05P", "Sage Mix Heat", 1);
-  a(CH, "A05Q", "Mix Herbs", 1);
-  a(CH, "A05R", "Omnigatherer Mix Herbs", 1);
-  a(CH, "A05S", "Pot Mix Herbs", 1);
-  a(CH, "A05T", "Meditate", 1);
-  a(CH, "A05U", "Spirit Link", 1);
-  a(CH, "A05V", "Spiritual Guidance", 1);
-  a(CH, "A05W", "Anchor Soul", 1);
-  a(CH, "A05X", "Spirit Prison", 1);
-  a(CH, "A05Y", "Legacy Spirit Prison", 1);
+  // Cure All — cd=10, mana=5, range=600
+  setStats(a("AAbm", "A05C", "Cure All", 1), 10, 5, 600);
+  setStats(a("AAbm", "A05D", "Cure All Item", 1), 10, 5, 600);
+  setStats(a("AAbm", "A05E", "Omnicure", 1), 8, 5, 600);
+  setStats(a("AAbm", "A05F", "Omnicure Item", 1), 8, 5, 600);
+  // Troll Battle Call — cd=30, mana=15, aoe=600
+  setStats(a(CH, "A05G", "Troll Battle Call", 1), 30, 15, 0, 600);
+  setStats(a(CH, "A05H", "Sage Troll Battle Call", 1), 25, 15, 0, 600);
+  // Increase Metabolism — cd=40, mana=20, range=600
+  setStats(a(CH, "A05I", "Increase Metabolism", 1), 40, 20, 600);
+  setStats(a(CH, "A05J", "Sage Increase Metabolism", 1), 35, 20, 600);
+  // Mix Energy/Heat — cd=5, range=600
+  setStats(a(CH, "A05K", "Mix Energy", 1), 5, 0, 600);
+  setStats(a(CH, "A05L", "Mix Heat", 1), 5, 0, 600);
+  setStats(a(CH, "A05M", "MH Mix Energy", 1), 4, 0, 600);
+  setStats(a(CH, "A05N", "MH Mix Heat", 1), 4, 0, 600);
+  setStats(a(CH, "A05O", "Sage Mix Energy", 1), 3, 0, 600);
+  setStats(a(CH, "A05P", "Sage Mix Heat", 1), 3, 0, 600);
+  setStats(a(CH, "A05Q", "Mix Herbs", 1), 3, 5, 300);
+  setStats(a(CH, "A05R", "Omnigatherer Mix Herbs", 1), 3, 5, 300);
+  setStats(a(CH, "A05S", "Pot Mix Herbs", 1), 3, 5, 300);
+  // Meditate — cd=72, mana=0, channel 7s, 18 mana/sec
+  setStats(a(CH, "A05T", "Meditate", 1), 72, 0);
+  // Spirit Link — cd=30, mana=20, aoe=4000, dur=20
+  setStats(a(CH, "A05U", "Spirit Link", 1), 30, 20, 0, 4000, 20, 20);
+  setStats(a(CH, "A05V", "Spiritual Guidance", 1), 30, 15, 0, 500);
+  // Anchor Soul — cd=60, mana=30, range=600
+  setStats(a(CH, "A05W", "Anchor Soul", 1), 60, 30, 600);
+  // Spirit Prison — cd=25, mana=15, range=400
+  setStats(a(CH, "A05X", "Spirit Prison", 1), 25, 15, 400);
+  setStats(a(CH, "A05Y", "Legacy Spirit Prison", 1), 25, 15, 400);
   a(CH, "A05Z", "Spirit Prison Cage", 1);
 
   // ═══════════════════════════════════════════════════════════════════
-  // THIEF ABILITIES
+  // THIEF ABILITIES (with stats from Wurst source)
   // ═══════════════════════════════════════════════════════════════════
 
+  // Camouflage — passive stealth (similar to Shadow Meld)
   a(CH, "A060", "Camouflage", 1);
   a(CH, "A061", "AS Camouflage", 1);
-  a(CH, "A062", "Smoke Stream", 1);
-  a(CH, "A063", "AS Smoke Stream", 1);
-  a(CH, "A064", "Tele Thief", 1);
-  a(CH, "A065", "AS Tele Thief", 1);
-  a("AOwk", "A066", "Cloak", 3);
-  a("AOwk", "A067", "Sub Cloak", 3);
-  a("AOwk", "A068", "Nether Fade", 1);
-  a(CH, "A069", "Jealousy", 1);
-  a(CH, "A06A", "Legacy Jealousy", 1);
-  a(CH, "A06B", "Seizures", 1);
-  a(CH, "A06C", "Dream Eater", 1);
-  a(CH, "A06D", "Legacy Dream Eater", 1);
-  a(CH, "A06E", "Hypnosis", 1);
-  a(CH, "A06F", "Legacy Hypnosis", 1);
+  // Smoke Stream — cd=20, mana=15, range=400
+  setStats(a(CH, "A062", "Smoke Stream", 1), 20, 15, 400);
+  setStats(a(CH, "A063", "AS Smoke Stream", 1), 20, 15, 400);
+  // Tele Thief — cd=30, mana=0, range=600
+  setStats(a(CH, "A064", "Tele Thief", 1), 30, 0, 600);
+  setStats(a(CH, "A065", "AS Tele Thief", 1), 30, 0, 600);
+  // Cloak — Wind Walk based; cd=65, dur=8/6/4 by level, 20% ms
+  setStats(a("AOwk", "A066", "Cloak", 3), 65, 0, 0, 0, 8, 8);
+  setStats(a("AOwk", "A067", "Sub Cloak", 3), 55, 0, 0, 0, 8, 8);
+  // Nether Fade — Wind Walk variant; cd=50, dur=10
+  setStats(a("AOwk", "A068", "Nether Fade", 1), 50, 0, 0, 0, 10, 10);
+  // Jealousy — cd=20, mana=15, range=500
+  setStats(a(CH, "A069", "Jealousy", 1), 20, 15, 500);
+  setStats(a(CH, "A06A", "Legacy Jealousy", 1), 20, 15, 500);
+  // Seizures — cd=25, mana=20, range=400
+  setStats(a(CH, "A06B", "Seizures", 1), 25, 20, 400);
+  // Dream Eater — cd=20, mana=10, range=300
+  setStats(a(CH, "A06C", "Dream Eater", 1), 20, 10, 300);
+  setStats(a(CH, "A06D", "Legacy Dream Eater", 1), 20, 10, 300);
+  // Hypnosis — cd=20, mana=10, range=300, dur=5, damage=20
+  setStats(a(CH, "A06E", "Hypnosis", 1), 20, 10, 300, 0, 5, 5);
+  setStats(a(CH, "A06F", "Legacy Hypnosis", 1), 20, 10, 300, 0, 5, 5);
 
   // ═══════════════════════════════════════════════════════════════════
-  // SCOUT ABILITIES
+  // SCOUT ABILITIES (with stats from Wurst source)
   // ═══════════════════════════════════════════════════════════════════
 
-  a(CH, "A070", "Reveal", 3);
-  a(CH, "A071", "Greater Reveal", 1);
-  a(CH, "A072", "Chain Reveal", 3);
-  a("Afae", "A073", "Track", 3);
-  a("Afae", "A074", "Tracker Track", 3);
-  a(CH, "A075", "Sniff", 1);
+  // Reveal — cd=20, mana=0, aoe=600+600*lvl (600/1200/1800), dur=8
+  setStats(a(CH, "A070", "Reveal", 3), 20, 0, 0, 1800, 8, 8);
+  // Greater Reveal — cd=20, aoe=2700, dur=10
+  setStats(a(CH, "A071", "Greater Reveal", 1), 20, 0, 0, 2700, 10, 10);
+  // Chain Reveal — cd=50
+  setStats(a(CH, "A072", "Chain Reveal", 3), 50, 0);
+  // Track — Faerie Fire based; cd=50-40, range=700, dur=10-20, armor reduction 1-3
+  setStats(a("Afae", "A073", "Track", 3), 50, 0, 700, 0, 10, 10);
+  setStats(a("Afae", "A074", "Tracker Track", 3), 50, 0, 700, 0, 10, 10);
+  // Sniff — cd=3, mana=0, aoe=40, trail=300s
+  setStats(a(CH, "A075", "Sniff", 1), 3, 0, 0, 40);
   a(CH, "A076", "Sniff Track", 1);
-  a(CH, "A077", "Ping Enemy", 1);
-  a(CH, "A078", "Spy Ping Enemy", 1);
-  a(CH, "A079", "Ward Area", 1);
-  a(CH, "A07A", "Spy Ward Area", 1);
-  a(CH, "A07B", "Observer Ward Area", 1);
-  a(CH, "A07C", "Spy Bear Trap", 1);
-  a(CH, "A07D", "Sentinel", 1);
+  // Ping Enemy — cd=30, mana=0
+  setStats(a(CH, "A077", "Ping Enemy", 1), 30, 0);
+  setStats(a(CH, "A078", "Spy Ping Enemy", 1), 25, 0);
+  // Ward Area — cd=70, mana=10, aoe=600, dur=480
+  setStats(a(CH, "A079", "Ward Area", 1), 70, 10, 0, 600, 480, 480);
+  // Spy Ward Area — cd=40
+  setStats(a(CH, "A07A", "Spy Ward Area", 1), 40, 10, 0, 600, 480, 480);
+  // Observer Ward Area — cd=60/50/40 by level
+  setStats(a(CH, "A07B", "Observer Ward Area", 1), 60, 10, 0, 600, 480, 480);
+  setStats(a(CH, "A07C", "Spy Bear Trap", 1), 20, 0, 200);
+  // Sentinel — cd=60, mana=15
+  setStats(a(CH, "A07D", "Sentinel", 1), 60, 15);
   a(CH, "A07E", "Shadow Sight", 1);
-  a(CH, "A07F", "Item Radar", 1);
+  // Item Radar — cd=50, mana=15, range=3300+200*lvl, dur=10
+  setStats(a(CH, "A07F", "Item Radar", 1), 50, 15, 5000, 0, 10, 10);
 
   // ═══════════════════════════════════════════════════════════════════
-  // GATHERER ABILITIES
+  // GATHERER ABILITIES (with stats from Wurst source)
   // ═══════════════════════════════════════════════════════════════════
 
-  a(CH, "A080", "Find Tinder", 1);
-  a(CH, "A081", "Find Clay Ball", 1);
-  a(CH, "A082", "Find Stick", 1);
-  a(CH, "A083", "Find Flint", 1);
-  a(CH, "A084", "Find Mana Crystal", 1);
-  a(CH, "A085", "Find Mushroom", 1);
-  a(CH, "A086", "Find Stone", 1);
-  a("Acur", "A087", "Tele-Gathering", 3);
-  a("Acur", "A088", "Omni Tele-Gathering", 1);
-  a("Acur", "A089", "Herb Tele-Gathering", 3);
-  a("Acur", "A08A", "Radar Tele-Gathering", 3);
-  a(CH, "A08B", "Item Warp", 1);
-  a(CH, "A08C", "Reduce Food", 1);
-  a(CH, "A08D", "Legacy Reduce Food", 1);
-  a(CH, "A08E", "Cook Meat", 1);
+  // Find abilities — cd=50 (shared), mana=15, range=3300-5000
+  setStats(a(CH, "A080", "Find Tinder", 1), 50, 15, 5000, 0, 10, 10);
+  setStats(a(CH, "A081", "Find Clay Ball", 1), 50, 15, 5000, 0, 10, 10);
+  setStats(a(CH, "A082", "Find Stick", 1), 50, 15, 5000, 0, 10, 10);
+  setStats(a(CH, "A083", "Find Flint", 1), 50, 15, 5000, 0, 10, 10);
+  setStats(a(CH, "A084", "Find Mana Crystal", 1), 50, 15, 5000, 0, 10, 10);
+  setStats(a(CH, "A085", "Find Mushroom", 1), 50, 15, 5000, 0, 10, 10);
+  setStats(a(CH, "A086", "Find Stone", 1), 50, 15, 5000, 0, 10, 10);
+  // Tele-Gathering — Curse based; dur=30+20*lvl
+  setStats(a("Acur", "A087", "Tele-Gathering", 3), 60, 15, 99999, 0, 70, 70);
+  // Omni Tele-Gathering — dur=110
+  setStats(a("Acur", "A088", "Omni Tele-Gathering", 1), 50, 15, 99999, 0, 110, 110);
+  setStats(a("Acur", "A089", "Herb Tele-Gathering", 3), 60, 15, 99999, 0, 70, 70);
+  setStats(a("Acur", "A08A", "Radar Tele-Gathering", 3), 60, 15, 99999, 0, 70, 70);
+  // Item Warp — cd=30, mana=10, range=99999
+  setStats(a(CH, "A08B", "Item Warp", 1), 30, 10, 99999);
+  setStats(a(CH, "A08C", "Reduce Food", 1), 10, 5, 300);
+  setStats(a(CH, "A08D", "Legacy Reduce Food", 1), 10, 5, 300);
+  setStats(a(CH, "A08E", "Cook Meat", 1), 5, 0, 200);
 
   // ═══════════════════════════════════════════════════════════════════
-  // BEASTMASTER/PET ABILITIES
+  // BEASTMASTER/PET ABILITIES (with stats from Wurst source)
   // ═══════════════════════════════════════════════════════════════════
 
-  a(CH, "A090", "Pet Tame", 1);
-  a(CH, "A091", "Pet Tame Shapeshifter", 1);
-  a(CH, "A092", "Pet Release", 1);
-  a(CH, "A093", "Pet Release Shapeshifter", 1);
-  a(CH, "A094", "Pet Sleep", 1);
-  a(CH, "A095", "Pet Sleep Shapeshifter", 1);
+  // Pet Tame — cd=10, mana=0, range=300
+  setStats(a(CH, "A090", "Pet Tame", 1), 10, 0, 300);
+  setStats(a(CH, "A091", "Pet Tame Shapeshifter", 1), 10, 0, 300);
+  setStats(a(CH, "A092", "Pet Release", 1), 5, 0, 300);
+  setStats(a(CH, "A093", "Pet Release Shapeshifter", 1), 5, 0, 300);
+  setStats(a(CH, "A094", "Pet Sleep", 1), 5, 0, 300);
+  setStats(a(CH, "A095", "Pet Sleep Shapeshifter", 1), 5, 0, 300);
   a(CH, "A096", "Pet Revive Info", 1);
   a("AId1", "A097", "Pet Armor", 1);
   a("AItg", "A098", "Pet Damage", 1);
   a("Amim", "A099", "Pet Magic Resist", 1);
-  a(CH, "A09A", "Feed Pet", 1);
-  a(CH, "A09B", "Grow Pet", 1);
+  setStats(a(CH, "A09A", "Feed Pet", 1), 5, 0, 300);
+  setStats(a(CH, "A09B", "Grow Pet", 1), 30, 0, 300);
   a(CH, "A09C", "Toggle Pet Control", 1);
   a(CH, "A09D", "Toggle Pet Control Shapeshifter", 1);
-  a(CH, "A09E", "Spirit Beast", 1);
-  a(CH, "A09F", "Spirit Beast Shapeshifter", 1);
+  // Spirit Beast — passive aura, aoe=400, -40% animal MS
+  setStats(a(CH, "A09E", "Spirit Beast", 1), 0, 0, 0, 400);
+  setStats(a(CH, "A09F", "Spirit Beast Shapeshifter", 1), 0, 0, 0, 400);
   a(CH, "A09G", "Shapeshifter Form", 1);
   a(CH, "A09H", "Nature's Bond", 1);
   a(CH, "A09I", "Druid Roar", 1);

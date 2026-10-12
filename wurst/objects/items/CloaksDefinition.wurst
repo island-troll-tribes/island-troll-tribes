@@ -353,11 +353,12 @@ function castRejuvHeal(unit caster, unit target, real duration, real amount)
     let cb = doPeriodicallyCounted(tickInterval, tickCount) cb ->
         // Cancel the healing early if the unit is purged.
         if not target.hasAbility(BUFF_HEAL) or cb.isLast()
-            // Clean up this timer.
-            destroy cb
-
             // Remove references.
             state.timers.remove(cb)
+
+            // Clean up this timer.
+            destroy cb
+            return
 
         // Block concurrent healing from multiple castings.
         if cb == state.timers.getFirst()
@@ -423,6 +424,7 @@ function castIceVeil(unit caster)
         if not (caster.hasAbility(BUFF_FROST_CASTER.buffId))
             dummy.remove()
             destroy cb
+            return
         castAoESlowDebuff(caster)
         if cb.isLast()
             dummy.remove()

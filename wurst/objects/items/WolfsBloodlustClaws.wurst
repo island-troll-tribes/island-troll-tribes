@@ -82,12 +82,13 @@ class WolfGlovesInstance
     construct(unit wearer)
         this.wearer = wearer
         this.baseClock = 0
-        cb = doPeriodically(0.125) (CallbackPeriodic cb) ->
+        cb = doPeriodically(0.125) (CallbackPeriodic periodic) ->
             if not wearer.isAlive()
-                destroy cb
-            if cb != null          
-                if not wearer.hasAbility(BuffIds.bloodlust)
-                    InstantDummyCaster.castTarget(wearer.getOwner(), WOLFS_BLOODLUST_CLAWS_BLOODLUST, 1, OrderIds.bloodlust, wearer)
+                destroy periodic
+                cb = null
+                return
+            if not wearer.hasAbility(BuffIds.bloodlust)
+                InstantDummyCaster.castTarget(wearer.getOwner(), WOLFS_BLOODLUST_CLAWS_BLOODLUST, 1, OrderIds.bloodlust, wearer)
 
     ondestroy
         if cb != null

@@ -86,9 +86,6 @@ public function unit.addXp(int toAdd)
 public function unit.setXp(int newXpVal)
     this.setXp(newXpVal, true)
 
-public function unit.removeBuffs(bool removePositive, bool removeNegative)
-    UnitRemoveBuffs(this, removePositive, removeNegative)
-
 public function unit.isStructure() returns boolean
     return IsUnitType(this, UNIT_TYPE_STRUCTURE)
 
@@ -122,7 +119,8 @@ public function unit.getItemMatching(Predicate<item> predicate) returns item
             return itm
     return null
 
-public function unit.hasItemEquipped(item itm) returns bool
+/** Checks ITT's custom equipment slots (not the native loadout slots behind the stdlib's hasItemEquipped). */
+public function unit.hasItemInEquipmentSlots(item itm) returns bool
     let equippedItems = this.getOwner().getEquipmentSlots().currentItems
     if equippedItems == null
         return false
@@ -160,12 +158,6 @@ public function unit.dropItems(int count)
 
 public function unit.dropItems()
     this.dropItems(this.inventorySize())
-
-public function unit.addSleep(bool value)
-    UnitAddSleep(this, value)
-
-public function unit.setCreepGuard(bool value)
-    SetUnitCreepGuard(this, value)
 
 public function unit.addOrStackItem(item itm) returns bool
     //Stackables

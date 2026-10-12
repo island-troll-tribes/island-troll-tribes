@@ -2,6 +2,7 @@ package ObjectIDManager
 
 // Standard library imports:
 import ErrorHandling
+import Execute
 import HashMap
 import ObjectIdGenerator
 import ObjectIds
@@ -71,6 +72,16 @@ public function int.registerObjectID(string name)
     this.registerObjectID(name, inferType(name))
 
 public function int.registerObjectID(string name, IDType type_)
+    // LocalObjectIDs registers over a thousand names during one package init,
+    // which exceeds the Jass per-thread op limit, so give each its own thread.
+    if compiletime
+        storeObjectID(this, name, type_)
+    else
+        let id = this
+        execute() ->
+            storeObjectID(id, name, type_)
+
+function storeObjectID(int id, string name, IDType type_)
     // Use uppercase for object names.
     let key = name.toUpperCase()
 
@@ -79,9 +90,9 @@ public function int.registerObjectID(string name, IDType type_)
         error("Duplicate name detected: {}".format(name))
 
     // Update the dictionaries.
-    values.put(key, this)
+    values.put(key, id)
     types.put(key, type_)
-    names.put(this, key)
+    names.put(id, key)
 
 public function string.asObjectID() returns int
     // Look up the ID for the name.

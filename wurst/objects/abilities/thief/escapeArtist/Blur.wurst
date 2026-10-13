@@ -240,7 +240,7 @@ class State
             ..setAnimation(8)
 
         // Track the afterimage.
-        afterimages.addUnit(afterimage)
+        afterimages.add(afterimage)
 
         // Create a timer per afterimage to manage it.
         doPeriodicallyCounted(AFTERIMAGE_INTERVAL, AFTERIMAGE_COUNT) cb ->
@@ -249,7 +249,7 @@ class State
                 afterimage.remove()
 
                 // Cease tracking the afterimage.
-                afterimages.removeUnit(afterimage)
+                afterimages.remove(afterimage)
             else
                 // Compute the remaining proportion of lifespan.
                 let proportion = (cb.getCount() - 1).toReal() / AFTERIMAGE_COUNT
@@ -280,10 +280,10 @@ class State
         afterimages.forEachIn() afterimage ->
             forUnitsInRange(afterimage.getPos(), 200) target ->
                 if isValidTarget(target)
-                    nextTargets.addUnit(target)
+                    nextTargets.add(target)
 
         // Refresh the duration for any unit as it leaves the area of effect.
-        for target in lastTargets..removeGroup(nextTargets)
+        for target in lastTargets..remove(nextTargets)
             dazzle(target)
 
         // Dazzle any targets that are not yet dazzled.

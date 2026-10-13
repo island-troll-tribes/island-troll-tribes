@@ -135,13 +135,13 @@ init
         let unitsAround = CreateGroup()..enumUnitsInRange(caster.getPos(), 2700)
         unitsAround.forEachIn() elem ->
             if elem.getOwner().isAllyOf(owner)
-                unitsAround.removeUnit(elem)
+                unitsAround.remove(elem)
 
         // Cast greater reveal on a random nearby unit.
         for i = 0 to lvl
-            let randomUnit = unitsAround.getRandomUnit()
+            let randomUnit = unitsAround.getRandom()
             if randomUnit != null
                 if InstantDummyCaster.castTarget(owner, ABILITY_ID_GREATER_REVEAL_DUMMY, lvl, Orders.farsight, randomUnit) == false
                     error("Reveal cast failed, this isn't supposed to happen, report this please.")
-                unitsAround.removeUnit(randomUnit)
+                unitsAround.remove(randomUnit)
         unitsAround.destr()

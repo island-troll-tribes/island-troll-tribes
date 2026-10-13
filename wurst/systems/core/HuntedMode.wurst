@@ -1,0 +1,64 @@
+package HuntedMode
+
+// Standard library imports:
+import ClosureTimers
+import LinkedList
+
+// Local imports:
+import ColorUtils
+import GameMode
+import GameStates
+import PlayerExtensions
+import Tribe
+
+// Prototype mode "-hunted": a tribe's last living troll can't hide forever. Every
+// INTERVAL seconds its position is revealed to every other tribe for REVEAL seconds
+// (minimap ping plus vision). Only applies to tribes that started with 2+ members.
+
+constant INTERVAL = 20.
+constant REVEAL = 3.
+constant RADIUS = 450.
+
+bool enabled = false
+
+function lastSurvivor(Tribe tribe) returns unit
+    let members = tribe.getMembers()
+    if members.size() < 2
+        return null
+    unit survivor = null
+    var alive = 0
+    for p in members
+        let troll = p.getTroll()
+        if troll != null and UnitAlive(troll)
+            alive++
+            survivor = troll
+    return alive == 1 ? survivor : null
+
+function revealToEnemies(Tribe tribe, unit troll)
+    let x = GetUnitX(troll)
+    let y = GetUnitY(troll)
+    for other in Tribe.getTribes()
+        if other != tribe and not other.isDefeated()
+            for enemy in other.getMembers()
+                let fog = CreateFogModifierRadius(enemy, FOG_OF_WAR_VISIBLE, x, y, RADIUS, true, false)
+                FogModifierStart(fog)
+                doAfter(REVEAL) ->
+                    DestroyFogModifier(fog)
+                if GetLocalPlayer() == enemy
+                    PingMinimapEx(x, y, REVEAL, 255, 80, 40, true)
+    DisplayTimedTextToPlayer(GetOwningPlayer(troll), 0, 0, 4, "You are the last of your tribe: " + "you are being hunted".color(COLOR_RED))
+
+init
+    new GameMode("hunted", "hu", "General", "A tribe's last living troll is revealed to enemies every 20 s") (mode, args) ->
+        mode.deregister()
+        enabled = true
+        mode.message("The last troll of a tribe is " + "hunted".color(ENERGY_COLOR))
+
+    GameStates.gameplay.onEnter() state ->
+        if enabled
+            doPeriodically(INTERVAL) cb ->
+                for tribe in Tribe.getTribes()
+                    if not tribe.isDefeated()
+                        let survivor = lastSurvivor(tribe)
+                        if survivor != null
+                            revealToEnemies(tribe, survivor)

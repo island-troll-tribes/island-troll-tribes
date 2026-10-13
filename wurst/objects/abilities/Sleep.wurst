@@ -14,6 +14,7 @@ import LocalObjectIDs
 import UnitExtensions
 import ToolTipsUtils
 import ObjectIds
+import SurvivalModes
 
 // TODO: Migrate to settings library.
 let protectionEnabled = new HashMap<player, boolean>()
@@ -83,6 +84,19 @@ function onCast(unit caster, unit target, int abilId)
         if protectionEnabled.get(target.getOwner())
             caster.issueImmediateOrder("stop")
             return
+
+    // Prototype mode: energy over the sleep, heat cost while asleep (a warm hut costs none).
+    if slowSleepEnabled()
+        switch abilId
+            case ABILITY_SLEEP_OUTSIDE
+                DamageEvent.setNextDamageFromCode()
+                target.damageTarget(target, SLEEP_OUTSIDE_HP_PENALTY)
+                startSlowSleep(target, MANA_RESTORED_BY_TROLL, SLEEP_OUTSIDE_HEAT_PENALTY)
+            case ABILITY_SLEEP_INSIDE_TENT
+                startSlowSleep(target, MANA_RESTORED_BY_TENT, SLEEP_OUTSIDE_HEAT_PENALTY div 2)
+            case ABILITY_SLEEP_INSIDE_HUT
+                startSlowSleep(target, MANA_RESTORED_BY_HUTS, 0)
+        return
 
     // Modify the unit as appropriate.
     switch abilId

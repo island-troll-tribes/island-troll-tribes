@@ -13,7 +13,52 @@ import GameMode
 
 constant DAY_SPEED = 0.6
 
+// -slow-sleep (ss): sleeping restores energy over the sleep instead of instantly.
+// Each 0.5 s tick is worth 25% more than the one before, so the full amount needs the
+// full 6 s and waking early gives much less. Heat is lost while asleep.
+constant SLEEP_TICK = 0.5
+constant SLEEP_TICKS = 12
+constant SLEEP_GROWTH = 1.25
+constant BUFF_SLEEPING = 'BUsl'
+constant BUFF_SLEEPING_PAUSED = 'BUsp'
+
 bool coldNights = false
+bool slowSleep = false
+
+public function slowSleepEnabled() returns bool
+    return slowSleep
+
+function isAsleep(unit u) returns bool
+    return GetUnitAbilityLevel(u, BUFF_SLEEPING) > 0 or GetUnitAbilityLevel(u, BUFF_SLEEPING_PAUSED) > 0
+
+/** Restores up to `totalMana` and drains up to `totalHeat` over the sleep, weighted toward the end. */
+public function startSlowSleep(unit target, real totalMana, int totalHeat)
+    var weightSum = 0.
+    var w = 1.
+    for i = 1 to SLEEP_TICKS
+        weightSum += w
+        w *= SLEEP_GROWTH
+    let unitWeight = totalMana / weightSum
+    let heatPerTick = totalHeat.toReal() / SLEEP_TICKS
+    // First tick after a short delay so the sleep buff is on the unit.
+    doAfter(0.1) ->
+        var tick = 0
+        var weight = 1.
+        var heatOwed = 0.
+        doPeriodically(SLEEP_TICK) cb ->
+            tick++
+            if not UnitAlive(target) or not isAsleep(target) or tick > SLEEP_TICKS
+                destroy cb
+            else
+                SetUnitState(target, UNIT_STATE_MANA, GetUnitState(target, UNIT_STATE_MANA) + unitWeight * weight)
+                weight *= SLEEP_GROWTH
+                heatOwed += heatPerTick
+                if heatOwed >= 1.
+                    let whole = heatOwed.toInt()
+                    heatOwed -= whole
+                    // Heat is stored as the owner's gold in ITT.
+                    let owner = GetOwningPlayer(target)
+                    SetPlayerState(owner, PLAYER_STATE_RESOURCE_GOLD, max(0, GetPlayerState(owner, PLAYER_STATE_RESOURCE_GOLD) - whole))
 
 public function isNight() returns bool
     return GetTimeOfDay() < 6. or GetTimeOfDay() > 18.
@@ -29,6 +74,11 @@ init
         mode.deregister()
         coldNights = true
         mode.message("Nights are now " + "colder".color(ENERGY_COLOR))
+
+    new GameMode("slow-sleep", "ss", "General", "Sleep restores energy gradually and costs heat; waking early gives much less") (mode, args) ->
+        mode.deregister()
+        slowSleep = true
+        mode.message("Sleep is now " + "gradual".color(ENERGY_COLOR))
 
     new GameMode("long-days", "ld", "General", "Daytime passes at 60% speed") (mode, args) ->
         mode.deregister()

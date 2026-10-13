@@ -15,6 +15,7 @@ import LocalObjectIDs
 import LocalAssets
 import ToolTipsUtils
 import HealingPotion
+import FoodOverTime
 
 constant ABIL_MEAT   = compiletime(ABIL_ID_GEN.next())
 constant ABIL_BANANA = compiletime(ABIL_ID_GEN.next())
@@ -117,7 +118,10 @@ function onSelfHealItem()
     let itemId = itm.getTypeId()
     let user = GetManipulatingUnit()
     if itemSelfHealAmount.has(itemId)
-        new HealingInstance(user, itemSelfHealAmount.get(itemId), HealingType.ITEM)
+        if foodHealsOverTime()
+            startFoodHeal(user, itemSelfHealAmount.get(itemId))
+        else
+            new HealingInstance(user, itemSelfHealAmount.get(itemId), HealingType.ITEM)
 
 function onSpellEffect()
     let caster = GetSpellAbilityUnit()

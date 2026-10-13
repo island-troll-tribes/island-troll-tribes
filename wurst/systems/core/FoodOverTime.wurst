@@ -1,0 +1,35 @@
+package FoodOverTime
+
+// Standard library imports:
+import ClosureTimers
+
+// Local imports:
+import ColorUtils
+import GameMode
+import HealingSystem
+
+// Prototype mode "-meat-hot": food heals over time instead of instantly. Each item eaten
+// starts its own heal-over-time, so eating several stacks. Every tick is a normal ITEM
+// healing instance, so the food healing reduction still applies per tick.
+
+constant DURATION = 8.
+constant TICK = 0.5
+
+bool enabled = false
+
+public function foodHealsOverTime() returns bool
+    return enabled
+
+/** Heals `total` over DURATION seconds in TICK steps. */
+public function startFoodHeal(unit target, real total)
+    let ticks = (DURATION / TICK).toInt()
+    let perTick = total / ticks
+    doPeriodicallyCounted(TICK, ticks) cb ->
+        if UnitAlive(target)
+            new HealingInstance(target, target, perTick, HealingType.ITEM, false)
+
+init
+    new GameMode("meat-hot", "mh", "General", "Food heals over 8 seconds instead of instantly; eating more stacks") (mode, args) ->
+        mode.deregister()
+        enabled = true
+        mode.message("Food now heals " + "over 8 seconds".color(ENERGY_COLOR) + " and stacks")

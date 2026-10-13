@@ -1,0 +1,37 @@
+package SurvivalModes
+
+// Standard library imports:
+import ClosureTimers
+
+// Local imports:
+import ColorUtils
+import GameMode
+
+// Prototype survival modes, off unless chosen in mode selection:
+// -cold-nights (cn): heat loss is half again as high at night.
+// -long-days (ld): daytime passes at 60% speed, so the early survival phase lasts longer.
+
+constant DAY_SPEED = 0.6
+
+bool coldNights = false
+
+public function isNight() returns bool
+    return GetTimeOfDay() < 6. or GetTimeOfDay() > 18.
+
+/** Extra heat lost per stat-loss tick at night when cold nights are on. */
+public function extraNightHeatLoss(int baseLoss) returns int
+    if coldNights and isNight()
+        return max(1, baseLoss div 2)
+    return 0
+
+init
+    new GameMode("cold-nights", "cn", "General", "Heat loss is 50% higher at night") (mode, args) ->
+        mode.deregister()
+        coldNights = true
+        mode.message("Nights are now " + "colder".color(ENERGY_COLOR))
+
+    new GameMode("long-days", "ld", "General", "Daytime passes at 60% speed") (mode, args) ->
+        mode.deregister()
+        doPeriodically(1.) cb ->
+            SetTimeOfDayScale(isNight() ? 1. : DAY_SPEED)
+        mode.message("Days are now " + "longer".color(ENERGY_COLOR))
